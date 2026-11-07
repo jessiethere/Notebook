@@ -5,6 +5,14 @@
 export const DEMO_KEY = "little-days.demo-social";
 export const SAVE_TYPES = ["work", "template", "recipe", "cover", "pack"];
 export const REPORT_REASONS = ["spam", "harassment", "privacy", "copyright", "other"];
+export const AVATARS = ["🌷", "🌼", "🍓", "🐰", "🐱", "🌿", "☁️", "📖", "☕", "🌙"];
+export const DEFAULT_PROFILE = {
+  name: "",
+  avatar: "🌷",
+  bio: "",
+  defaultCommentsOpen: true,
+  friendRequests: "everyone", // or "following"
+};
 const DAY = 24 * 60 * 60 * 1000;
 const newId = () => globalThis.crypto.randomUUID();
 
@@ -48,6 +56,7 @@ export function createDemoState(now = Date.now()) {
   }));
   return {
     version: 1,
+    profile: { ...DEFAULT_PROFILE },
     users: USERS.map((user) => ({ ...user })),
     works,
     following: ["u-xiaoman"],
@@ -72,7 +81,11 @@ export function loadDemo(storage) {
     const raw = storage.getItem(DEMO_KEY);
     if (raw) {
       const state = JSON.parse(raw);
-      if (state?.version === 1 && Array.isArray(state.works)) return state;
+      if (state?.version === 1 && Array.isArray(state.works)) {
+        // Older demo saves had no profile yet.
+        state.profile = { ...DEFAULT_PROFILE, ...(state.profile || {}) };
+        return state;
+      }
     }
   } catch {}
   return createDemoState();
@@ -305,4 +318,45 @@ export function deleteMessage(state, userId, messageId) {
 }
 export function deleteConversation(state, userId) {
   state.conversations = state.conversations.filter((c) => c.userId !== userId);
+}
+
+/* ---------- My profile (manage my own community presence) ---------- */
+
+export function updateProfile(state, values) {
+  const next = { ...state.profile };
+  if (values.name != null) next.name = String(values.name).trim().slice(0, 30);
+  if (values.bio != null) next.bio = String(values.bio).trim().slice(0, 120);
+  if (values.avatar != null) {
+    if (!AVATARS.includes(values.avatar)) throw new Error("community.avatar.error");
+    next.avatar = values.avatar;
+  }
+  if (values.defaultCommentsOpen != null) next.defaultCommentsOpen = Boolean(values.defaultCommentsOpen);
+  if (values.friendRequests != null) {
+    if (!["everyone", "following"].includes(values.friendRequests)) throw new Error("community.setting");
+    next.friendRequests = values.friendRequests;
+  }
+  state.profile = next;
+  return next;
+}
+export function myWorks(state) {
+  return state.works.filter((work) => work.authorId === "me");
+}
+export function savedWorks(state, type = "") {
+  return discover(state).filter((work) => work.savedAs && (!type || work.savedAs === type));
+}
+export function myStats(state) {
+  const works = myWorks(state);
+  return {
+    works: works.length,
+    likes: works.reduce((sum, work) => sum + work.likes, 0),
+    following: state.following.length,
+    friends: state.friends.length,
+    saved: savedWorks(state).length,
+  };
+}
+// Friend requests the person has chosen to see; with "following only" the
+// rest wait quietly (they are never auto-accepted).
+export function visibleIncoming(state) {
+  const all = state.requests.incoming.filter((id) => !state.blocked.includes(id));
+  return state.profile?.friendRequests === "following" ? all.filter((id) => state.following.includes(id)) : all;
 }

@@ -3,13 +3,17 @@ import { escapeHTML as esc } from "./personal-ui.mjs";
 import { stickerURL } from "./library.mjs";
 import * as C from "./community.mjs";
 
-const TABS = ["discover", "following", "popular", "categories", "search", "friends", "messages", "mine"];
+// Four main sections; Discover has its own feed filters and search.
+const TABS = ["discover", "friends", "messages", "me"];
+const FEEDS = ["all", "following", "popular", "categories"];
 
 function avatar(user, size = "") {
   return `<span class="c-avatar ${size}" aria-hidden="true">${esc(user?.avatar || "✿")}</span>`;
 }
 function author(demo, id, ctx) {
-  return id === "me" ? { name: ctx.t("community.me"), handle: "@me", avatar: "🌷" } : C.userById(demo, id);
+  return id === "me"
+    ? { name: demo.profile?.name || ctx.t("community.me"), handle: "@me", avatar: demo.profile?.avatar || "🌷" }
+    : C.userById(demo, id);
 }
 
 export function workCoverHTML(work, ctx, large = false) {
@@ -76,28 +80,63 @@ function workDetailHTML(demo, view, ctx, helpers) {
   }</section></article>`;
 }
 
-function friendsHTML(demo, ctx) {
+function friendsHTML(demo, view, ctx) {
   const { t } = ctx;
   const row = (userId, buttons) => {
     const user = C.userById(demo, userId);
-    return user ? `<li class="c-user">${avatar(user)}<span><b>${esc(user.name)}</b><small>${esc(user.handle)}</small></span><span class="c-relations">${buttons}</span></li>` : "";
+    return user ? `<li class="c-user">${avatar(user)}<span><b>${esc(user.name)}</b><small>${esc(user.handle)} · ${esc(user.bio || "")}</small></span><span class="c-relations">${buttons}</span></li>` : "";
   };
   const btn = (action, userId, label, cls = "secondary") => `<button class="${cls} small" data-action="${action}" data-user="${esc(userId)}">${t(label)}</button>`;
+  const incoming = C.visibleIncoming(demo);
+  const waiting = demo.requests.incoming.length - incoming.length;
   const pending = [...demo.requests.incoming, ...demo.requests.outgoing];
-  const others = demo.users.filter((u) => !demo.friends.includes(u.id) && !demo.blocked.includes(u.id) && !pending.includes(u.id));
-  return `<div class="c-explain"><b>${t("community.followVsFriends")}</b><p>${t("community.followVsFriendsText")}</p></div>${
-    demo.requests.incoming.length
-      ? `<h3 class="c-h">${t("community.incoming")}</h3><ul class="c-list">${demo.requests.incoming.map((id) => row(id, btn("community-friend-accept", id, "community.accept", "primary") + btn("community-friend-decline", id, "community.decline"))).join("")}</ul>`
+  const q = (view.peopleQuery || "").trim().toLowerCase();
+  const others = demo.users.filter(
+    (u) =>
+      !demo.friends.includes(u.id) &&
+      !demo.blocked.includes(u.id) &&
+      !pending.includes(u.id) &&
+      (!q || `${u.name} ${u.handle} ${u.bio}`.toLowerCase().includes(q)),
+  );
+  return `<section class="friend-list"><h3 class="c-h">${t("community.myFriends")} · ${demo.friends.length}</h3><ul class="c-list">${demo.friends.map((id) => row(id, btn("community-open-chat", id, "community.message", "primary") + btn("community-friend-remove", id, "community.removeFriend") + btn("community-block", id, "community.block"))).join("") || `<li class="save-help">${t("community.noFriends")}</li>`}</ul></section>${
+    incoming.length || waiting
+      ? `<h3 class="c-h">${t("community.incoming")} · ${incoming.length}</h3><ul class="c-list">${incoming.map((id) => row(id, btn("community-friend-accept", id, "community.accept", "primary") + btn("community-friend-decline", id, "community.decline"))).join("")}</ul>${waiting ? `<p class="save-help">${t("community.requestsWaiting", { count: waiting })}</p>` : ""}`
       : ""
-  }<h3 class="c-h">${t("community.friends")} · ${demo.friends.length}</h3><ul class="c-list">${demo.friends.map((id) => row(id, btn("community-open-chat", id, "community.message", "primary") + btn("community-friend-remove", id, "community.removeFriend") + btn("community-block", id, "community.block"))).join("") || `<li class="save-help">${t("community.noFriends")}</li>`}</ul>${
+  }${
     demo.requests.outgoing.length
       ? `<h3 class="c-h">${t("community.outgoing")}</h3><ul class="c-list">${demo.requests.outgoing.map((id) => row(id, btn("community-simulate-accept", id, "community.simulateAccept") + btn("community-friend-cancel", id, "community.cancelRequest"))).join("")}</ul>`
       : ""
-  }<h3 class="c-h">${t("community.people")}</h3><ul class="c-list">${others.map((u) => row(u.id, relationButtons(demo, u.id, ctx) + btn("community-block", u.id, "community.block") + btn("community-report-user", u.id, "community.report"))).join("")}</ul>${
-    demo.blocked.length
-      ? `<h3 class="c-h">${t("community.blocked")}</h3><ul class="c-list">${demo.blocked.map((id) => row(id, btn("community-unblock", id, "community.unblock"))).join("")}</ul>`
-      : ""
-  }`;
+  }<h3 class="c-h">${t("community.people")}</h3><input class="c-search" id="people-search" data-people-search value="${esc(view.peopleQuery || "")}" placeholder="${t("community.peopleSearch")}" aria-label="${t("community.peopleSearch")}"><ul class="c-list">${others.map((u) => row(u.id, relationButtons(demo, u.id, ctx) + btn("community-block", u.id, "community.block") + btn("community-report-user", u.id, "community.report"))).join("") || `<li class="save-help">${t("community.nothing")}</li>`}</ul><div class="c-explain"><b>${t("community.followVsFriends")}</b><p>${t("community.followVsFriendsText")}</p></div>`;
+}
+
+function profileHTML(demo, view, ctx) {
+  const { t } = ctx;
+  const me = author(demo, "me", ctx);
+  const stats = C.myStats(demo);
+  const stat = (value, label, jump) => `<button class="p-stat" data-action="community-jump" data-target="${jump}"><b>${value}</b><span>${t(label)}</span></button>`;
+  const edit = view.editProfile
+    ? `<div class="p-edit"><span class="small-label">${t("community.avatar")}</span><div class="p-avatars">${C.AVATARS.map((a) => `<button data-action="community-avatar" data-avatar="${a}" class="${demo.profile.avatar === a ? "selected" : ""}" aria-pressed="${demo.profile.avatar === a}">${a}</button>`).join("")}</div><label class="field">${t("community.profileName")}<input id="profile-name" maxlength="30" value="${esc(demo.profile.name)}" placeholder="${t("community.me")}"></label><label class="field">${t("community.profileBio")}<textarea id="profile-bio" maxlength="120" placeholder="${t("community.bioPlaceholder")}">${esc(demo.profile.bio)}</textarea></label><div class="dialog-actions"><button class="secondary" data-action="community-profile-cancel">${t("cancel")}</button><button class="primary" data-action="community-profile-save">${t("save")}</button></div></div>`
+    : "";
+  const savedType = view.savedType || "";
+  const saved = C.savedWorks(demo, savedType);
+  const mine = C.myWorks(demo);
+  const manage = mine
+    .map(
+      (work) =>
+        `<li class="p-work">${workCoverHTML(work, ctx)}<span class="p-work-copy"><b>${esc(work.title)}</b><small>♡ ${work.likes} · 💬 ${C.commentCount(work)} · ☆ ${work.saves}</small><span class="c-relations"><button class="secondary small" data-action="community-open-work" data-work="${esc(work.id)}">${t("community.view")}</button><label class="check-label"><input type="checkbox" data-action="community-toggle-comments" data-work="${esc(work.id)}" ${work.commentsOpen ? "checked" : ""}> ${t("community.commentsOpen")}</label><button class="secondary danger small" data-action="community-unpublish" data-work="${esc(work.id)}">${t("community.unpublish")}</button></span></span></li>`,
+    )
+    .join("");
+  const following = demo.following
+    .map((id) => C.userById(demo, id))
+    .filter(Boolean)
+    .map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.handle)}</small></span><span class="c-relations"><button class="secondary small" data-action="community-follow" data-user="${esc(u.id)}">${t("community.unfollow")}</button></span></li>`)
+    .join("");
+  const blocked = demo.blocked
+    .map((id) => C.userById(demo, id))
+    .filter(Boolean)
+    .map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b></span><span class="c-relations"><button class="secondary small" data-action="community-unblock" data-user="${esc(u.id)}">${t("community.unblock")}</button></span></li>`)
+    .join("");
+  return `<section class="p-card">${avatar(me, "lg")}<div class="p-who"><h2>${esc(me.name)}</h2><small>@me · ${t("community.privateJournal")}</small><p>${esc(demo.profile.bio || t("community.bioEmpty"))}</p></div><button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button></section>${edit}<div class="p-stats">${stat(stats.works, "community.statWorks", "p-works")}${stat(stats.likes, "community.statLikes", "p-works")}${stat(stats.following, "community.statFollowing", "p-following")}${stat(stats.friends, "community.statFriends", "friends")}${stat(stats.saved, "community.statSaved", "p-saved")}</div><section id="p-works" class="p-section"><div class="section-heading"><h3>${t("community.myPosts")}</h3></div><button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p><ul class="p-works">${manage || `<li class="save-help">${t("community.noWorks")}</li>`}</ul></section><section id="p-saved" class="p-section"><h3>${t("community.mySaved")}</h3><div class="material-categories"><button data-action="community-saved-type" data-type="" class="${savedType ? "" : "selected"}">${t("all")}</button>${C.SAVE_TYPES.map((type) => `<button data-action="community-saved-type" data-type="${type}" class="${savedType === type ? "selected" : ""}">${t("community.savedType." + type)}</button>`).join("")}</div>${saved.length ? `<div class="work-grid">${saved.map((w) => workCardHTML(demo, w, ctx)).join("")}</div>` : `<p class="save-help">${t("community.noSaved")}</p>`}</section><section id="p-following" class="p-section"><h3>${t("community.myFollowing")} · ${demo.following.length}</h3><ul class="c-list">${following || `<li class="save-help">${t("community.followingEmpty")}</li>`}</ul></section><section class="p-section"><h3>${t("community.settings")}</h3><label class="check-label"><input type="checkbox" data-profile-setting="defaultCommentsOpen" ${demo.profile.defaultCommentsOpen ? "checked" : ""}> ${t("community.defaultComments")}</label><label class="field">${t("community.whoCanRequest")}<select data-profile-setting="friendRequests"><option value="everyone" ${demo.profile.friendRequests === "everyone" ? "selected" : ""}>${t("community.requestsEveryone")}</option><option value="following" ${demo.profile.friendRequests === "following" ? "selected" : ""}>${t("community.requestsFollowing")}</option></select></label><p class="save-help">${t("community.messagesFriendsOnly")}</p></section><section class="p-section"><h3>${t("community.blocked")} · ${demo.blocked.length}</h3><ul class="c-list">${blocked || `<li class="save-help">${t("community.noBlocked")}</li>`}</ul></section><button class="secondary full-width" data-action="community-reset">↺ ${t("community.reset")}</button>`;
 }
 
 function messagesHTML(demo, view, ctx, helpers) {
@@ -156,29 +195,31 @@ function publishHTML(demo, view, journal, ctx) {
 export function communityHTML(demo, view, journal, ctx, helpers) {
   const { t } = ctx;
   const unread = C.unreadCount(demo);
-  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="icon-button" data-action="community-reset" aria-label="${t("community.reset")}">↺</button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
+  const requests = C.visibleIncoming(demo).length;
+  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
   if (view.workId) return header + workDetailHTML(demo, view, ctx, helpers);
-  const tabs = `<nav class="community-tabs" aria-label="${t("community.title")}">${TABS.map((tab) => `<button data-action="community-tab" data-tab="${tab}" class="${view.tab === tab ? "selected" : ""}" aria-pressed="${view.tab === tab}">${t("community.tab." + tab)}${tab === "messages" && unread ? ` <i class="c-badge">${unread}</i>` : ""}${tab === "friends" && demo.requests.incoming.length ? ` <i class="c-badge">${demo.requests.incoming.length}</i>` : ""}</button>`).join("")}</nav>`;
+  const badge = (n) => (n ? ` <i class="c-badge">${n}</i>` : "");
+  const tabs = `<nav class="community-tabs main" aria-label="${t("community.title")}">${TABS.map((tab) => `<button data-action="community-tab" data-tab="${tab}" class="${view.tab === tab ? "selected" : ""}" aria-pressed="${view.tab === tab}">${t("community.tab." + tab)}${tab === "messages" ? badge(unread) : tab === "friends" ? badge(requests) : ""}</button>`).join("")}</nav>`;
   let body = "";
-  if (view.tab === "discover") body = grid(demo, C.discover(demo), ctx);
-  else if (view.tab === "following")
-    body = grid(demo, C.followingFeed(demo), ctx) || `<div class="empty">${t("community.followingEmpty")}</div>`;
-  else if (view.tab === "popular")
-    body = `<div class="segmented"><button data-action="community-period" data-period="week" class="${view.period === "week" ? "selected" : ""}">${t("community.week")}</button><button data-action="community-period" data-period="month" class="${view.period === "month" ? "selected" : ""}">${t("community.month")}</button></div><p class="save-help">${t("community.popularHow")}</p>${grid(demo, C.popular(demo, view.period), ctx, true) || `<div class="empty">${t("community.nothing")}</div>`}`;
-  else if (view.tab === "categories") {
-    const list = C.categories(demo);
-    const current = view.category || list[0];
-    body = `<div class="material-categories">${list.map((c) => `<button data-action="community-category" data-category="${esc(c)}" class="${c === current ? "selected" : ""}">${esc(c)}</button>`).join("")}</div>${grid(demo, C.discover(demo).filter((w) => w.category === current), ctx)}`;
-  } else if (view.tab === "search") {
-    const results = C.search(demo, view.query || "");
-    body = `<input class="c-search" id="community-search" data-community-search value="${esc(view.query || "")}" placeholder="${t("community.searchPlaceholder")}" aria-label="${t("community.tab.search")}">${results.users.length ? `<h3 class="c-h">${t("community.creators")}</h3><ul class="c-list">${results.users.map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.handle)} · ${esc(u.bio)}</small></span>${relationButtons(demo, u.id, ctx)}</li>`).join("")}</ul>` : ""}${results.works.length ? `<h3 class="c-h">${t("community.works")}</h3>${grid(demo, results.works, ctx)}` : view.query ? `<div class="empty">${t("community.nothing")}</div>` : ""}`;
-  } else if (view.tab === "friends") body = friendsHTML(demo, ctx);
+  if (view.tab === "discover") {
+    const feed = FEEDS.includes(view.feed) ? view.feed : "all";
+    const query = view.query || "";
+    const chips = `<div class="feed-chips">${FEEDS.map((f) => `<button data-action="community-feed" data-feed="${f}" class="${feed === f && !query ? "selected" : ""}">${t("community.feed." + f)}</button>`).join("")}</div>`;
+    const searchBox = `<input class="c-search" id="community-search" data-community-search value="${esc(query)}" placeholder="${t("community.searchPlaceholder")}" aria-label="${t("community.tab.search")}">`;
+    if (query) {
+      const results = C.search(demo, query);
+      body = `${searchBox}${chips}${results.users.length ? `<h3 class="c-h">${t("community.creators")}</h3><ul class="c-list">${results.users.map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.handle)} · ${esc(u.bio)}</small></span>${relationButtons(demo, u.id, ctx)}</li>`).join("")}</ul>` : ""}${results.works.length ? `<h3 class="c-h">${t("community.works")}</h3>${grid(demo, results.works, ctx)}` : `<div class="empty">${t("community.nothing")}</div>`}`;
+    } else if (feed === "following")
+      body = searchBox + chips + (grid(demo, C.followingFeed(demo), ctx) || `<div class="empty">${t("community.followingEmpty")}</div>`);
+    else if (feed === "popular")
+      body = `${searchBox}${chips}<div class="segmented"><button data-action="community-period" data-period="week" class="${view.period === "week" ? "selected" : ""}">${t("community.week")}</button><button data-action="community-period" data-period="month" class="${view.period === "month" ? "selected" : ""}">${t("community.month")}</button></div><p class="save-help">${t("community.popularHow")}</p>${grid(demo, C.popular(demo, view.period), ctx, true) || `<div class="empty">${t("community.nothing")}</div>`}`;
+    else if (feed === "categories") {
+      const list = C.categories(demo);
+      const current = view.category || list[0];
+      body = `${searchBox}${chips}<div class="material-categories">${list.map((c) => `<button data-action="community-category" data-category="${esc(c)}" class="${c === current ? "selected" : ""}">${esc(c)}</button>`).join("")}</div>${grid(demo, C.discover(demo).filter((w) => w.category === current), ctx)}`;
+    } else body = searchBox + chips + grid(demo, C.discover(demo), ctx);
+  } else if (view.tab === "friends") body = friendsHTML(demo, view, ctx);
   else if (view.tab === "messages") body = messagesHTML(demo, view, ctx, helpers);
-  else if (view.tab === "mine") {
-    const mine = demo.works.filter((w) => w.authorId === "me");
-    body = view.publish
-      ? publishHTML(demo, view, journal, ctx)
-      : `<button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p>${grid(demo, mine, ctx) || `<div class="empty">${t("community.noWorks")}</div>`}`;
-  }
+  else if (view.tab === "me") body = view.publish ? publishHTML(demo, view, journal, ctx) : profileHTML(demo, view, ctx);
   return header + tabs + `<div class="community-body">${body}</div>`;
 }

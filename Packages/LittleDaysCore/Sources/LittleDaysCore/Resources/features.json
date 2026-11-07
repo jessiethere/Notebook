@@ -15,6 +15,12 @@
       "title": "My Books",
       "subtitle": "手帐本",
       "symbol": "book"
+    },
+    {
+      "id": "community",
+      "title": "Community",
+      "subtitle": "社区",
+      "symbol": "users"
     }
   ],
   "templates": [

@@ -119,3 +119,26 @@ test("messages: friends only, unread counts, simulated replies, delete own messa
   C.deleteConversation(state, "u-xiaoman");
   assert.equal(state.conversations.length, 0);
 });
+
+test("my profile: edit name/bio/avatar, stats, saved items by type, request filter", () => {
+  const state = C.createDemoState(NOW);
+  assert.throws(() => C.updateProfile(state, { avatar: "<img>" }), /avatar/);
+  C.updateProfile(state, { name: "  小日子  ", bio: "慢慢记录", avatar: "🐰" });
+  assert.deepEqual([state.profile.name, state.profile.bio, state.profile.avatar], ["小日子", "慢慢记录", "🐰"]);
+  C.saveAs(state, "w5", "recipe");
+  C.saveAs(state, "w8", "cover");
+  assert.deepEqual(C.savedWorks(state, "recipe").map((w) => w.id), ["w5"]);
+  assert.equal(C.savedWorks(state).length, 2);
+  const stats = C.myStats(state);
+  assert.equal(stats.saved, 2);
+  assert.equal(stats.friends, 1);
+  assert.equal(stats.works, 0);
+  assert.deepEqual(C.visibleIncoming(state), ["u-mumu"]);
+  C.updateProfile(state, { friendRequests: "following" });
+  assert.deepEqual(C.visibleIncoming(state), [], "requests from people I don't follow wait quietly");
+  assert.ok(state.requests.incoming.includes("u-mumu"), "never auto-accepted or dropped");
+  assert.throws(() => C.updateProfile(state, { friendRequests: "nobody" }));
+  // Old demo saves without a profile still load.
+  const memory = { value: JSON.stringify({ ...C.createDemoState(NOW), profile: undefined }), getItem: () => memory.value, setItem: (k, v) => (memory.value = v) };
+  assert.equal(C.loadDemo(memory).profile.avatar, "🌷");
+});

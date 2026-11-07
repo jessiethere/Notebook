@@ -20,6 +20,8 @@ public struct LittleDaysRootView: View {
                         case "calendar": CalendarView(selectedDate: $selectedDate, openStudio: { tab = "studio" })
                         case "studio": StudioView(date: DayKey.string(selectedDate))
                         case "growth": GrowthView()
+                        // The shipping app is the Web shell; the prototype only points there.
+                        case "community": Text(store.t("community.demoNote")).font(.caption).padding(23)
                         default: BooksView(openStudio: { date in selectedDate = DayKey.date(date); tab = "studio" })
                         }
                     }
@@ -28,7 +30,7 @@ public struct LittleDaysRootView: View {
                     .toolbarBackground(store.color("cream"), for: .navigationBar)
                     .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showSettings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel(store.t("settings")) } }
                 }
-                .tabItem { Label(store.t("nav." + item.id), systemImage: item.symbol == "leaf" ? "leaf" : item.symbol == "plus" ? "plus.circle.fill" : item.symbol) }
+                .tabItem { Label(store.t("nav." + item.id), systemImage: item.symbol == "leaf" ? "leaf" : item.symbol == "plus" ? "plus.circle.fill" : item.symbol == "users" ? "person.2" : item.symbol) }
                 .tag(item.id)
             }
         }

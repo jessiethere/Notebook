@@ -84,14 +84,16 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
 
     // 3. Community demo: clearly labelled, separate storage.
     const journalBefore = JSON.stringify((await read()).entries);
-    await nav("home");
-    await page.locator(".community-banner").click();
+    // Community is in the bottom menu.
+    await nav("community");
     await page.waitForSelector(".demo-banner");
+    assert.equal(await page.locator("#navigation [data-page='community'].active").count(), 1);
+    assert.deepEqual(await page.$$eval(".community-tabs.main [data-action='community-tab']", (els) => els.map((el) => el.dataset.tab)), ["discover", "friends", "messages", "me"]);
     assert.match(await page.locator(".demo-banner").innerText(), /演示/);
     assert.ok((await page.locator(".work-card").count()) >= 8);
-    for (const tab of ["following", "popular", "categories", "search"]) {
-      await page.locator(`[data-action="community-tab"][data-tab="${tab}"]`).click();
-      await page.waitForSelector(`[data-tab="${tab}"].selected`);
+    for (const feed of ["following", "popular", "categories", "all"]) {
+      await page.locator(`[data-action="community-feed"][data-feed="${feed}"]`).click();
+      await page.waitForSelector(`[data-feed="${feed}"].selected`);
     }
     await page.locator("#community-search").fill("kyoto");
     await page.waitForSelector(".work-card");
@@ -148,7 +150,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
 
     // Publishing: nothing selected by default; explicit pages + media + confirmation.
     await page.locator('[data-action="community-back"]').click();
-    await page.locator('[data-action="community-tab"][data-tab="mine"]').click();
+    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
     await page.locator('[data-action="community-publish-start"]').click();
     await page.locator('[data-publish="date"]').selectOption(today);
     await page.waitForSelector("[data-publish-page]");
@@ -178,6 +180,51 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.ok(!("little-days.demo-social" in JSON.parse(JSON.stringify(journal))));
     passed.push("publish needs explicit page/media + confirmation; comments toggle; unpublish; journal stays private");
 
+    // My profile: manage my community presence.
+    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
+    await page.locator('[data-action="community-profile-edit"]').click();
+    await page.locator('[data-action="community-avatar"][data-avatar="🐰"]').click();
+    await page.locator("#profile-name").fill("小日子收藏家");
+    await page.locator("#profile-bio").fill("记录早餐、散步和慢慢变好的自己");
+    await page.locator('[data-action="community-profile-save"]').click();
+    assert.match(await page.locator(".p-card").innerText(), /小日子收藏家[\s\S]*慢慢变好/);
+    assert.equal(await page.locator(".p-card .c-avatar").innerText(), "🐰");
+    // Saved items by type (the cover saved earlier).
+    await page.locator('[data-action="community-saved-type"][data-type="cover"]').click();
+    assert.match(await page.locator("#p-saved").innerText(), /Kyoto/);
+    await page.locator('[data-action="community-saved-type"][data-type="recipe"]').click();
+    assert.match(await page.locator("#p-saved").innerText(), /还没有收藏/);
+    // Following list with unfollow; blocked list with unblock.
+    assert.match(await page.locator("#p-following").innerText(), /River/);
+    await page.locator('#p-following [data-action="community-follow"][data-user="u-river"]').click();
+    assert.doesNotMatch(await page.locator("#p-following").innerText(), /River/);
+    await page.locator('[data-action="community-unblock"][data-user="u-june"]').click();
+    // Settings persist.
+    await page.locator('[data-profile-setting="defaultCommentsOpen"]').uncheck();
+    await page.locator('[data-profile-setting="friendRequests"]').selectOption("following");
+    demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
+    assert.deepEqual([demo.profile.name, demo.profile.avatar, demo.profile.defaultCommentsOpen, demo.profile.friendRequests], ["小日子收藏家", "🐰", false, "following"]);
+    assert.ok(!demo.blocked.includes("u-june") && !demo.following.includes("u-river"));
+    // New posts follow the default; my name appears on my post.
+    await page.locator('[data-action="community-publish-start"]').click();
+    assert.equal(await page.locator('[data-publish="commentsOpen"]').count(), 0, "comments option appears after choosing a day");
+    await page.locator('[data-publish="date"]').selectOption(today);
+    assert.equal(await page.locator('[data-publish="commentsOpen"]').isChecked(), false);
+    await page.locator("[data-publish-page]").first().check();
+    await page.locator('[data-publish="confirmed"]').check();
+    await page.locator('[data-action="community-publish-submit"]').click();
+    await page.waitForSelector(".work-detail");
+    assert.match(await page.locator(".work-author").innerText(), /小日子收藏家/);
+    assert.match(await page.locator(".c-comments").innerText(), /关闭了评论/);
+    await page.locator('[data-action="community-back"]').click();
+    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
+    assert.equal(await page.locator(".p-work").count(), 1);
+    assert.equal(await page.locator('.p-stat b').first().innerText(), "1");
+    // Stats jump to the friends list.
+    await page.locator('[data-action="community-jump"][data-target="friends"]').click();
+    await page.waitForSelector(".friend-list");
+    passed.push("community in bottom menu; profile edit, stats, saved by type, following/blocked, settings, my posts");
+
     // English labels and narrow widths.
     await nav("home");
     await page.locator('[data-page="settings"]').click();
@@ -187,7 +234,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.match(await page.locator(".demo-banner").innerText(), /Demo/);
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
-      for (const tab of ["discover", "friends", "messages", "mine"]) {
+      for (const tab of ["discover", "friends", "messages", "me"]) {
         await page.locator(`[data-action="community-tab"][data-tab="${tab}"]`).click();
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${tab} ${width}`);
       }

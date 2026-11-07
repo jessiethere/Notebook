@@ -145,6 +145,10 @@ let activeMomentId = null,
   demoSocial = null,
   communityView = {
     tab: "discover",
+    feed: "all",
+    peopleQuery: "",
+    savedType: "",
+    editProfile: false,
     workId: null,
     chatUser: null,
     period: "week",
@@ -292,7 +296,7 @@ function openStudio(date = dateKey()) {
 }
 function navigation() {
   // Sub-pages highlight the tab they belong to.
-  const current = { journey: "growth", day: "calendar", community: "home" }[page] || page;
+  const current = { journey: "growth", day: "calendar" }[page] || page;
   $("#navigation").innerHTML = features.tabs
     .map(
       (tab) =>
@@ -366,7 +370,7 @@ function home() {
     month: "short",
     day: "numeric",
   });
-  return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="community-tab" data-tab="discover" aria-label="${t("community.title")}">${icon("users")}</button><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
+  return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
  <section class="hero"><div class="hero-top"><span>✧ &nbsp; TODAY'S LITTLE MOMENT</span><button data-action="edit-today">${t(entry ? "home.continue" : "home.begin")} ↗</button></div><div class="hero-content"><div class="polaroid">${safePhoto(coverPhoto(entry)) ? `<img src="${esc(safePhoto(coverPhoto(entry)))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.placeholder")}</span></div>`}</div><div class="hero-copy"><span class="scribble">slow down, feel more.</span><h3>${esc(entry?.title || t("home.blankTitle"))}</h3><p>${esc(entry?.body?.slice(0, 48) || t("home.blankBody"))}</p></div></div><span class="hero-flower">🌼</span>${entry?.isDemo ? `<span class="tiny-demo">${t("home.sample")}</span>` : ""}</section>
  <button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button><div class="quick-actions">${[
    ["photo", "home.photo", "quick-photo"],
@@ -951,7 +955,7 @@ function editorClips() {
 // Re-rendering keeps the field you are typing in focused (e.g. after media loads).
 function focusKey(element) {
   if (!element || !$("#app").contains(element)) return null;
-  for (const attr of ["id", "data-moment-field", "data-editor-field", "data-publish", "data-community-search"])
+  for (const attr of ["id", "data-moment-field", "data-editor-field", "data-publish", "data-community-search", "data-people-search"])
     if (element.hasAttribute(attr)) return `[${attr}="${CSS.escape(element.getAttribute(attr))}"]`;
   return null;
 }
@@ -2091,16 +2095,16 @@ async function communityAction(target) {
         openCommunity({ replyTo: null });
         break;
       case "community-toggle-comments":
-        Community.setCommentsOpen(demo, work, target.checked);
+        Community.setCommentsOpen(demo, target.dataset.work || work, target.checked);
         persistSocial();
         openCommunity();
         break;
       case "community-unpublish":
         if (!(await askConfirm(t("community.unpublishConfirm")))) break;
-        Community.unpublish(demo, work);
+        Community.unpublish(demo, target.dataset.work || work);
         persistSocial();
         toast(t("community.unpublished"));
-        openCommunity({ workId: null, tab: "mine" });
+        openCommunity({ workId: null, tab: "me" });
         break;
       case "community-follow":
         Community.toggleFollow(demo, user);
@@ -2195,7 +2199,38 @@ async function communityAction(target) {
         openCommunity({ chatUser: null });
         break;
       case "community-publish-start":
-        openCommunity({ publish: { date: "", pages: [], media: [], title: "", category: "Daily Life", commentsOpen: true, confirmed: false } });
+        openCommunity({
+          tab: "me",
+          publish: { date: "", pages: [], media: [], title: "", category: "Daily Life", commentsOpen: demo.profile.defaultCommentsOpen !== false, confirmed: false },
+        });
+        $("#app-scroll").scrollTop = 0;
+        break;
+      case "community-feed":
+        openCommunity({ feed: target.dataset.feed, query: "" });
+        break;
+      case "community-jump":
+        if (target.dataset.target === "friends") openCommunity({ tab: "friends" });
+        else document.getElementById(target.dataset.target)?.scrollIntoView({ block: "start", behavior: "smooth" });
+        break;
+      case "community-profile-edit":
+        openCommunity({ editProfile: !communityView.editProfile });
+        break;
+      case "community-profile-cancel":
+        openCommunity({ editProfile: false });
+        break;
+      case "community-avatar":
+        Community.updateProfile(demo, { avatar: target.dataset.avatar });
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-profile-save":
+        Community.updateProfile(demo, { name: $("#profile-name").value, bio: $("#profile-bio").value });
+        persistSocial();
+        toast(t("community.profileSaved"));
+        openCommunity({ editProfile: false });
+        break;
+      case "community-saved-type":
+        openCommunity({ savedType: target.dataset.type || "" });
         break;
       case "community-publish-cancel":
         openCommunity({ publish: null });
@@ -2222,6 +2257,11 @@ async function communityAction(target) {
   return true;
 }
 function handleCommunityInput(target) {
+  if (target.dataset.peopleSearch != null) {
+    communityView.peopleQuery = target.value;
+    render();
+    return true;
+  }
   if (target.dataset.communitySearch != null) {
     communityView.query = target.value;
     const caret = target.selectionStart;
@@ -2239,6 +2279,14 @@ function handleCommunityInput(target) {
   return false;
 }
 function handleCommunityChange(target) {
+  if (target.dataset.profileSetting) {
+    const key = target.dataset.profileSetting;
+    Community.updateProfile(social(), { [key]: target.type === "checkbox" ? target.checked : target.value });
+    persistSocial();
+    toast(t("community.settingSaved"));
+    render();
+    return true;
+  }
   const p = communityView.publish;
   if (!p) return false;
   if (target.dataset.publish === "date") {

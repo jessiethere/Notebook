@@ -48,6 +48,14 @@
 
 ## 更新日志
 
+### 2026-11-07 — 社区：底部菜单、好友列表、我的个人主页
+
+- 需求：社区放到下面的菜单；好友列表难找；需要“我的个人主页”管理自己的社区。
+- 修改：共享 `features.json` 新增第 6 个底部菜单 `community`（SwiftUI 原型根视图给出占位与 `person.2` 图标）；`Public/js/community.mjs` 新增 `profile`（头像/昵称/简介/新发布默认评论/好友申请来源）、`updateProfile`、`myWorks`、`savedWorks`、`myStats`、`visibleIncoming`，旧演示数据自动补默认资料；`community-view.mjs` 改为 4 个主页签（发现含推荐/关注/热门/分类 + 搜索）、好友页以好友列表开头并可搜索创作者、新增 `profileHTML`；`app.js` 新动作（feed、jump、资料编辑/头像/保存、收藏类型、设置）、首页去掉重复的社区图标（保留社区卡片）、焦点保持支持搜索框；`styles.css`；`i18n.json`（约 45 条）；测试 `community.test.mjs`（+1）、`v33-browser.cjs`（新页签结构 + 个人主页组）；ROADMAP/PRODUCT_SPEC。
+- 运行与测试：Node 43、Python 12；`browser`、`v3`、`v31`、`v32`、`v33`（6 组）全部通过；iOS 外壳副本一致。会话开始已按规则以 `--host 0.0.0.0` 重新启动 localhost:8080 并登记。
+- 已知问题：仍为本机演示；“只看我关注的人的好友申请”只隐藏、不自动处理（演示）。
+- 下一步：Collaborative Journal 演示，或按用户在链接中的反馈调整。
+
 ### 2026-11-07 — V3.3：写作优先、按照片数量选模板、写小故事入口、社区本机演示
 
 - 需求：合并 PR #3（已合并 `b5efd6f`）；小故事的文字编辑不应与字体/模板平级以鼓励创作；模板先选照片数量（可只有标题/文字）再排版；写小事件的入口难找；可以做社区本地版。

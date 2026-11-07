@@ -2466,5 +2466,177 @@
   "community.blockedUser": {
     "zh": "已屏蔽该用户。",
     "en": "This user is blocked."
+  },
+  "nav.community": {
+    "zh": "社区",
+    "en": "Community"
+  },
+  "community.tab.me": {
+    "zh": "我的",
+    "en": "Me"
+  },
+  "community.feed.all": {
+    "zh": "推荐",
+    "en": "For you"
+  },
+  "community.feed.following": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.feed.popular": {
+    "zh": "热门",
+    "en": "Popular"
+  },
+  "community.feed.categories": {
+    "zh": "分类",
+    "en": "Categories"
+  },
+  "community.myFriends": {
+    "zh": "我的好友",
+    "en": "My friends"
+  },
+  "community.requestsWaiting": {
+    "zh": "另有 {count} 个申请来自你没有关注的人，按你的设置暂不显示。",
+    "en": "{count} more requests from people you don't follow are hidden by your setting."
+  },
+  "community.peopleSearch": {
+    "zh": "搜索创作者的名字或 @账号",
+    "en": "Search creators by name or @handle"
+  },
+  "community.avatar": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "community.profileName": {
+    "zh": "社区昵称",
+    "en": "Display name"
+  },
+  "community.profileBio": {
+    "zh": "一句话介绍",
+    "en": "Short bio"
+  },
+  "community.bioPlaceholder": {
+    "zh": "比如：记录早餐、散步和慢慢变好的自己",
+    "en": "e.g. Breakfasts, walks and growing gently"
+  },
+  "community.bioEmpty": {
+    "zh": "还没有介绍。",
+    "en": "No bio yet."
+  },
+  "community.privateJournal": {
+    "zh": "手帐默认私人",
+    "en": "journals stay private"
+  },
+  "community.editProfile": {
+    "zh": "编辑资料",
+    "en": "Edit profile"
+  },
+  "community.profileSaved": {
+    "zh": "个人资料已保存（演示）",
+    "en": "Profile saved (demo)"
+  },
+  "community.statWorks": {
+    "zh": "发布",
+    "en": "Posts"
+  },
+  "community.statLikes": {
+    "zh": "获赞",
+    "en": "Likes"
+  },
+  "community.statFollowing": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.statFriends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.statSaved": {
+    "zh": "收藏",
+    "en": "Saved"
+  },
+  "community.myPosts": {
+    "zh": "我的发布",
+    "en": "My posts"
+  },
+  "community.view": {
+    "zh": "查看",
+    "en": "View"
+  },
+  "community.mySaved": {
+    "zh": "我的收藏",
+    "en": "Saved"
+  },
+  "community.savedType.work": {
+    "zh": "作品",
+    "en": "Works"
+  },
+  "community.savedType.template": {
+    "zh": "模板",
+    "en": "Templates"
+  },
+  "community.savedType.recipe": {
+    "zh": "食谱",
+    "en": "Recipes"
+  },
+  "community.savedType.cover": {
+    "zh": "封面灵感",
+    "en": "Cover ideas"
+  },
+  "community.savedType.pack": {
+    "zh": "素材包",
+    "en": "Packs"
+  },
+  "community.noSaved": {
+    "zh": "还没有收藏。",
+    "en": "Nothing saved yet."
+  },
+  "community.myFollowing": {
+    "zh": "我关注的人",
+    "en": "Following"
+  },
+  "community.unfollow": {
+    "zh": "取消关注",
+    "en": "Unfollow"
+  },
+  "community.settings": {
+    "zh": "隐私与互动设置（演示）",
+    "en": "Privacy & interaction (demo)"
+  },
+  "community.defaultComments": {
+    "zh": "新发布的作品默认允许评论",
+    "en": "Allow comments on new posts by default"
+  },
+  "community.whoCanRequest": {
+    "zh": "谁可以向我发送好友申请",
+    "en": "Who can send me friend requests"
+  },
+  "community.requestsEveryone": {
+    "zh": "所有人",
+    "en": "Everyone"
+  },
+  "community.requestsFollowing": {
+    "zh": "只有我关注的人",
+    "en": "Only people I follow"
+  },
+  "community.messagesFriendsOnly": {
+    "zh": "私信始终只对互相确认的好友开放；成为好友也不会看到你的私人手帐。",
+    "en": "Messages are always friends-only, and friends never see your private journals."
+  },
+  "community.noBlocked": {
+    "zh": "没有屏蔽任何人。",
+    "en": "You haven't blocked anyone."
+  },
+  "community.settingSaved": {
+    "zh": "设置已保存（演示）",
+    "en": "Setting saved (demo)"
+  },
+  "community.avatar.error": {
+    "zh": "请选择列表里的头像。",
+    "en": "Choose one of the avatars."
+  },
+  "community.setting": {
+    "zh": "无法识别的设置。",
+    "en": "Unknown setting."
   }
 }
