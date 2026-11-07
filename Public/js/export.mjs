@@ -26,7 +26,8 @@ function wrapText(ctx, text, x, y, width, lineHeight, maxLines) {
   }
   if (row < maxLines) ctx.fillText(line, x, y + row * lineHeight);
 }
-export async function exportJournalImage(editor) {
+export async function exportJournalImage(editor, options = {}) {
+  const resolvePhoto = options.resolvePhoto || safePhoto;
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1350;
@@ -61,8 +62,8 @@ export async function exportJournalImage(editor) {
   ctx.rotate((-4 * Math.PI) / 180);
   ctx.fillStyle = "#FFFDFB";
   ctx.fillRect(-400, -310, 800, 635);
-  if (safePhoto(editor.photo)) {
-    const image = await loadImage(safePhoto(editor.photo));
+  if (resolvePhoto(editor.photo)) {
+    const image = await loadImage(resolvePhoto(editor.photo));
     const ratio = Math.max(760 / image.width, 560 / image.height);
     ctx.save();
     ctx.beginPath();
@@ -80,17 +81,22 @@ export async function exportJournalImage(editor) {
   ctx.restore();
   ctx.fillStyle = editor.template === "cute" ? "#DDBBB3BB" : "#C5CEB1BB";
   ctx.fillRect(405, 90, 270, 65);
-  const font =
-    editor.font === "serif"
+  const font = options.fontFamily
+    ? options.fontFamily(editor.font, options.catalog)
+    : editor.font === "serif"
       ? 'Georgia, "Songti SC", SimSun, serif'
       : editor.font === "rounded"
         ? '"Trebuchet MS", "Microsoft YaHei", sans-serif'
         : "sans-serif";
-  ctx.fillStyle = "#2F2A26";
-  ctx.font = `54px ${font}`;
+  await document.fonts.ready;
+  ctx.fillStyle = editor.textStyle?.color || "#2F2A26";
+  ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
   wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
   ctx.fillStyle = "#998C7A";
-  ctx.font = `34px ${font}`;
+  const bodyFont = options.fontFamily
+    ? options.fontFamily(editor.bodyFont || editor.font, options.catalog)
+    : font;
+  ctx.font = `34px ${bodyFont}`;
   wrapText(ctx, editor.body || "", 129, 1110, 820, 58, 3);
   ctx.font = "125px sans-serif";
   ctx.fillText(editor.mood, 875, 820);
@@ -99,6 +105,48 @@ export async function exportJournalImage(editor) {
     ctx.translate((layer.x / 100) * 1080, (layer.y / 100) * 1350);
     ctx.rotate((layer.rotation * Math.PI) / 180);
     ctx.scale(layer.scale, layer.scale);
+    const asset =
+      layer.assetId &&
+      options.catalog?.stickers.find((item) => item.id === layer.assetId);
+    const source = asset
+      ? `/library/stickers/${asset.file}`
+      : layer.kind === "photo"
+        ? resolvePhoto(layer.mediaRef)
+        : "";
+    if (source) {
+      const image = await loadImage(source);
+      const size = layer.kind === "photo" ? 450 : 184;
+      if (layer.kind === "photo") {
+        ctx.fillStyle = "#FFFDF8";
+        ctx.fillRect(-size / 2 - 10, -size / 2 - 10, size + 20, size + 40);
+        const side = Math.min(image.width, image.height);
+        ctx.drawImage(
+          image,
+          (image.width - side) / 2,
+          (image.height - side) / 2,
+          side,
+          side,
+          -size / 2,
+          -size / 2,
+          size,
+          size,
+        );
+      } else ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      ctx.restore();
+      continue;
+    }
+    if (layer.kind === "text") {
+      const family = options.fontFamily
+        ? options.fontFamily(layer.fontId || editor.font, options.catalog)
+        : font;
+      ctx.font = `${layer.weight || 400} ${(layer.fontSize || 16) * 3.375}px ${family}`;
+      ctx.fillStyle = layer.color || "#2F2A26";
+      ctx.textAlign = layer.align || "left";
+      ctx.textBaseline = "top";
+      wrapText(ctx, layer.text, -350, -40, 700, (layer.fontSize || 16) * 5, 6);
+      ctx.restore();
+      continue;
+    }
     ctx.font = "140px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";

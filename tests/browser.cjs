@@ -83,7 +83,7 @@ const path = require("node:path");
     await page
       .locator('[data-action="editor-mode"][data-mode="creative"]')
       .click();
-    await page.locator('[data-action="sticker"]').first().click();
+    await page.locator('[data-action="asset-sticker"]').first().click();
     const layer = page.locator(".layer").first();
     await layer.scrollIntoViewIfNeeded();
     const box = await layer.boundingBox();
@@ -125,9 +125,7 @@ const path = require("node:path");
         ),
       );
     await page.waitForFunction(() =>
-      document
-        .querySelector(".canvas-photo img")
-        ?.src.startsWith("data:image/jpeg"),
+      document.querySelector(".canvas-photo img")?.src.startsWith("blob:"),
     );
     const downloadPromise = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();

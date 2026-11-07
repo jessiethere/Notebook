@@ -22,9 +22,9 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 ## 字体与层级
 
 - 品牌与英文页标题：Georgia / 系统 Serif；中文主文案：平台系统黑体；手帐温柔宋体采用 Songti SC / SimSun 回退。
-- Rounded 模式采用 Trebuchet MS / Microsoft YaHei 回退，目前未打包手写或商用字体。
+- 保留旧 Rounded / Serif / System 字体，同时加入 Cormorant Garamond、Caveat、Quicksand、Libre Baskerville、DM Sans、Pacifico、Ma Shan Zheng 的实际本地 TTF；每款附 SIL OFL，可按许可用于商业 App。
 - iPhone 内容区标题 25–30 px；区域标题 14–17 px；正文随场景 11–15 px；小型英文标签仅作辅助，不承载唯一操作说明。
-- 原生采用系统字体与语义字号，后续须做 Dynamic Type 与 VoiceOver 实测。
+- 原生主界面采用系统字体与语义字号，手帐可选择授权字体；后续须做 Dynamic Type 与 VoiceOver 实测。
 
 ## 布局与组件
 
@@ -48,3 +48,27 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 ## 资产
 
 照片在 Core 资源中只保存一份，两个预览服务器及原生共用。来源和说明见 [ASSETS.md](ASSETS.md)。Web 截图位于 `docs/images/`，由初始示例资料生成，不能替代交互验收。
+
+
+## V3 · 精品书架与封面系统
+
+- 六种封面：Minimal Linen / Vintage Leather / Floral Notebook / Pastel Cute / Travel Album / Scrapbook Collage。
+- 使用书脊、细边框、亚麻/皮革/拼贴质感、原创图形和有层级的标题，不用纯色块加 Emoji 代替设计。
+- 允许封面照片、颜色、字体、装饰；编辑时即时预览。封面字体跟随实际字体文件，用户标题不自动翻译。
+- 书架保留 2 列主封面与 Home 3 列缩略封面；小尺寸标题控制行数，长标题在详情完整显示。
+
+## V3 · 字体、贴纸与媒体
+
+字体分类为 Elegant Serif、Handwritten、Cute Rounded、Vintage、Minimal Sans、Decorative、Chinese Fonts。权威资源是 library.json；CSS 由 tools/sync_library.py 生成。TTF 原文件保留作者/保留名称与 OFL，不把“看起来像手写”的系统回退冒充实际字体。
+
+原创贴纸十类 23 款，使用统一的暖灰描边、柔粉/鼠尾草/奶油色与留白。SVG 透明背景、可无限缩放；480px 透明 PNG 供 SwiftUI。旧 Emoji 图层保留兼容，新的素材选择器优先原创图形。
+
+音频与视频卡片是纸张感容器、简短标题、低干扰工具和浏览器原生播放控件；视频可指定封面。录音时清楚显示状态/秒数与停止按钮，失败不假报已保存。不在本轮暗示已有音乐库、剪辑或转写。
+
+## V3 · 双语与用户内容
+
+- 共享 i18n.json 为 UI 文案唯一来源；Settings 切换简体中文/English，五页、表单、按钮、错误与状态都有对应词条。
+- 用户的书本名称、正文、字段值、文件名和音视频不自动翻译。
+- 系统字段预设标签可以双语；用户改写标签后视为自己的内容。日期/数字使用当前 locale，后续货币控件也必须显式指定币种与 locale。
+- 英文按钮允许自然换行，保持 375/390/430 宽度无严重横向溢出。授权链接放在 Settings，不占据主要创作流程。
+- Private 为唯一可用可见性；Public / Shared 暂禁用并解释后续阶段，不用“开关已打开”的演示误导用户内容已经被安全分享。

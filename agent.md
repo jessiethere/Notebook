@@ -2,39 +2,52 @@
 
 ## 固定约定
 
-- 仓库：https://github.com/jessiethere/Notebook；产品名称 Little Days（手帐文具店）。
-- 理念：记录生活的美好，也收藏一点点变好的自己。
-- 最终 iPhone 使用 Swift / SwiftUI；Windows localhost 使用独立 HTML 交互预览。未经用户确认，不得改为 React；不能把 HTML 页面称为运行中的 SwiftUI。
-- 任务开始先读 AGENTS.md、agent.md、README.md，检查最新代码/分支/提交，再接续现有进度。
-- 每次修改代码、配置、设计或文档，必须更新本文件和 README 日志，并随对应代码一起提交。保留历史。
-- 完成回复使用中文，说明完成内容、可用功能、Windows 启动、未完成事项、真实测试结果、下一步建议。
+- 仓库：https://github.com/jessiethere/Notebook；产品 Little Days（手帐文具店）。理念：记录生活的美好，也收藏一点点变好的自己 / Collect moments, grow gently.
+- 继续在现有 SwiftUI + HTML 交互预览 + Vapor + 共享 Core 上增量开发，不重建、不未经确认切换 React。
+- 开始先读 AGENTS.md、agent.md、README.md、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE，检查最新分支/代码/提交。
+- 每次改动同步维护本文件与 README 的日志，一起提交；保留历史。真实用户记录、媒体、备份和密钥不能提交公开 GitHub。
+- 不把 HTML 预览称作 SwiftUI；不把本地私人状态/旧标签页提示称作服务端授权/多人协作。
+- 完成时用中文说明功能、文件、Windows 测试方式、真实可用与演示/设计范围、测试结果和下一步。
 
 ## 当前状态
 
-- 第一阶段已有可运行、可交互的 Web 预览；产品/设计/架构文件齐全。
-- Home、Calendar、Growth、Studio、My Books 全部可导航；Web 支持习惯/时长/自定义主题、历史补记、照片/文字/心情、模板/贴纸编辑、草稿/PNG 导出和手帐本。
-- 原生 UI Package 与 iOS App 工程已建立五页基础，Core 与 Web 共用 JSON/照片及同名数据字段；NativeStore 写本机 JSON 文件。原生功能尚未与 Web 全部对齐。
-- Windows 推荐 `py -3 tools/preview.py` → http://localhost:8080，无需 Swift/Node/Xcode；也可双击 Start-Windows.cmd。现有 Vapor `bash start.sh` 保留。
-- 样例不是用户记录；初始手帐标注“示例”。Web 数据仅存当前 origin 的 LocalStorage，原生文件独立；没有跨端同步。
+- V3 Phase 1 个人增强已实现于 Web：原五页保留，新增自定义封面/主题/通用字段、真实字体/原创贴纸、多文字/照片层、视频/音频/录音、双语 Settings、IndexedDB 与备份/恢复。
+- Windows 默认无需 Git：下载 ZIP，全部解压，双击 Start-Windows.cmd；手动 `py -3 tools\preview.py --open` → http://localhost:8080。之前用户的错误来自没有 Git、终端在用户目录和将 preview.py 写成 preview\.py。
+- schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
+- 新媒体在 IndexedDB，LocalStorage 只存轻量数据；本机备份是用户主动下载文件，不上传服务器。
+- 原生 Core 支持 V3 Codable；SwiftUI 基础页面增加共享双语、字体注册/选择与 PNG 封面。原生音视频/完整封面字段编辑和画布未对齐 Web。
+- 没有真实账号、社区、好友、私信、协作或背景音乐。未来后端方案仅为文档设计。
 
-## 关键决定与原因
+## 关键决策
 
-- 保留既有 Vapor，增加 Python 标准库开发服务器，以免 Windows 用户先安装/编译 Swift Web 依赖。
-- 最终原生 SwiftUI 不依赖 Vapor：Native UI Package 只依赖 Packages/LittleDaysCore。
-- 暂不采用 SwiftWasm/Tokamak，完整 SwiftUI/照片/手势兼容性未在本仓库验证，不引入未经验证的复杂栈。
-- 共享 design-tokens.json、features.json、seed.json 与 Media；CSS 回退由脚本生成；模型字段、日期/去重规则保持一致。HTML 与 SwiftUI 视图分别实现，差异明确列出。
-- 同一日期一篇 Journal，HabitCheck 以 (habitId,date) 唯一关联，不往 Journal 复制打卡信息。
-- 基础阶段用 LocalStorage 和原子 JSON 文件；Web 存储失败不替换成功状态，不自动删除损坏记录。
+- 保留 Vapor，Windows 预览使用 Python 标准库；不引入前端构建框架或未经验证的 SwiftUI Web 兼容层。
+- 共享 library.json / i18n.json、TTF+完整 OFL、原创 SVG+透明 PNG；CSS 从共享目录生成；Native 与 Web 使用同名数据类型/资源 ID。
+- generic BookField schema 统一渲染七种字段，系统预设标签可双语，用户的名称/正文/字段值不自动翻译。
+- Private 是本轮唯一可用权限；公开和 Shared 禁用。真正的访问控制必须在未来 Vapor 后端实现，好友关系不继承私人内容权限。
+- Blob 事务先完成再更新元数据；迁移/恢复失败不清除原记录。导出备份最多 100 MB 媒体，导入文件 150 MB；暂不自动删除旧 Blob，以保护撤销和恢复。
+- 保存元数据比较已读快照，检测旧标签页；不是跨客户端原子事务。协作将采用数据库 expectedRevision/409 与版本历史。
 
-## 未完成事项与下一步
+## 已知问题与下一步
 
-- 需要 macOS + Xcode 16+ 执行原生 iOS 编译、模拟器/真机验证；目前只有语法、清单和工程 plist 检查。
-- 需要 Windows 实机确认 Python Launcher 与 CMD 双击入口。Linux 已运行同一 Python 脚本，不能称作 Windows 实机测试。
-- 先完善照片裁切/变换、自由文本、多图、胶带/相框，提升导出一致性；将 Web 功能移植到原生 PhotosPicker/手势。
-- 迁移图片到 IndexedDB / 媒体文件，增加备份与数据交换；目前无浏览器/iPhone 自动同步。
-- 后续实现素材商店、字体授权、习惯编辑/归档、提醒、复杂里程碑和发布配置。
+- Windows CMD/Python Launcher/默认浏览器仍未实机验证；Linux 已验证 ZIP 布局、空格路径、跨目录与 HTTP。
+- SwiftUI 只有语法/共享模型检查，未进行 iOS SDK 类型检查、模拟器或真机验证；优先原生构建与个人能力对齐。
+- Web 新媒体只在当前浏览器 origin；换 localhost/127.0.0.1/端口不会自动同步。需导出备份，暂无云同步、备份加密或分卷。
+- 格式兼容性依浏览器；本轮为 Chromium。PNG 不含可播放媒体、不是完整所见即所得；主照片裁切、滤镜、完整相框和信息卡片待开发。
+- Blob 清理/保留与大规模媒体存储后续完善；本轮不自动清理被替换文件。
+- Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-07 — V3 Phase 1：自定义书本、素材、多媒体与双语
+
+- 本次需求：在已有项目上实施 V3 第一阶段，保留数据与架构，增强主题/封面、字体/贴纸、视频/音频，整理完整后续路线并提交。
+- 修改/新增文件：Public/app.js、样式与入口；model/export 与新 media/library/personal-ui/i18n 模块；Core Models/Resources、catalog/翻译、七款 TTF/OFL、23 SVG/PNG 与测试；Native 五页/NativeStore、新 BookCoverView/SettingsView；Vapor 资源路由/测试；Windows 启动器/Python 服务/字体生成工具；Node/Python/E2E 测试与锁文件；AGENTS、README、agent、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、ASSETS，以及 ROADMAP/WINDOWS_PREVIEW/截图。
+- 实现功能：任意书本名称/描述/主题；六种封面、字体/颜色/装饰/照片、后续编辑；七种通用字段与六套预设；七类真实字体、中英混排/预览、独立文字框；十类原创贴纸、复制/变换、照片拼贴层；视频封面/播放、音频上传/录音/播放、进度/时长；双语偏好；IndexedDB、旧照片迁移、本机备份导出/确认恢复、旧标签页提示。
+- 技术决策及原因：增量模块化，不换 React；标准 Web API 的 IndexedDB/MediaRecorder 与 Python 无构建预览满足 Windows；共享资源与可选 Codable 字段保持兼容；正版字体/原创图形满足商业资产来源；Private 默认且不假装已经上线社交。
+- 运行与测试结果：Linux Debian 13，Node 24.22.1 / Python 3.12.14 / Swift 6.0.3 / Playwright 1.62.1。22 项 Node（含真实 IndexedDB 语义的 fake-indexeddb）、9 项 Python（HTTP/资源/ZIP 空格路径/跨目录/端口/完整性）、5 项 Core Swift（旧格式与 V3 round-trip/许可）、2 项 Vapor（含字体/SVG/共享 JSON），共 38 项全部通过。原有浏览器回归与 V3 E2E 均通过：六种封面、任意书本/8 字段示例、七款字体真实加载、原创贴纸/文字层、Blob 图片/视频/音频/虚拟麦克风录音、刷新后真实播放、播放互斥、备份取消/确认恢复、双语偏好/内容保留、旧照片迁移与旧标签页检测、375/390/430 宽度；无页面脚本异常。另通过 23 个 480px RGBA 透明 PNG 检查、SwiftUI 源文件语法解析、JS/Shell/Python 语法、文档链接与历史日志保留复核。Windows CMD 实机、iOS SDK 构建/模拟器/真机未验证，不能由以上结果替代。
+- 已知问题：Windows 实机和 iOS SDK 尚不可验证；原生新功能不等同 Web 完成；本地媒体容量、导出差异、格式/原生控件语言依赖浏览器；本机旧标签页检测不代替真正协作事务。
+- 尚未完成：真实社交/账号/权限/媒体后端、协作邀请/角色/版本、音乐/剪辑/转写、自定义素材包、主照片高级裁切/滤镜、可靠云媒体和保留清理机制、原生全面对齐。
+- 下一步建议：先 Windows/iOS 实测与原生个人功能补齐，按 ROADMAP 分阶段推进，不把后端设计或社交演示称为已上线功能。
 
 ### 2026-11-07 — Little Days 第一阶段：SwiftUI 基础与 Windows 交互预览
 

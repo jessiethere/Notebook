@@ -6,6 +6,7 @@ public struct LittleDaysRootView: View {
     @StateObject private var store = NativeStore()
     @State private var tab = "home"
     @State private var selectedDate = Date()
+    @State private var showSettings = false
 
     public init() {}
 
@@ -25,15 +26,18 @@ public struct LittleDaysRootView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(store.color("cream"))
                     .toolbarBackground(store.color("cream"), for: .navigationBar)
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showSettings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel(store.t("settings")) } }
                 }
-                .tabItem { Label(item.title, systemImage: item.symbol == "leaf" ? "leaf" : item.symbol == "plus" ? "plus.circle.fill" : item.symbol) }
+                .tabItem { Label(store.t("nav." + item.id), systemImage: item.symbol == "leaf" ? "leaf" : item.symbol == "plus" ? "plus.circle.fill" : item.symbol) }
                 .tag(item.id)
             }
         }
         .tint(store.color("accent"))
         .environmentObject(store)
-        .alert("记录需要你的注意", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
-            Button("知道了") { store.error = nil }
+        .environment(\.locale, Locale(identifier: store.language == "en" ? "en_US" : "zh_CN"))
+        .sheet(isPresented: $showSettings) { SettingsView().environmentObject(store) }
+        .alert(store.t("native.attention"), isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
+            Button(store.t("native.ok")) { store.error = nil }
         } message: { Text(store.error ?? "") }
     }
 }

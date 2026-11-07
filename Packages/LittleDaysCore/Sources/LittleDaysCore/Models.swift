@@ -21,6 +21,64 @@ public struct JournalBook: Codable, Identifiable, Equatable {
     public var category: String
     public var color: String
     public var cover: String
+    public var description: String?
+    public var coverTemplate: String?
+    public var coverFont: String?
+    public var coverDecoration: String?
+    public var coverImage: String?
+    public var visibility: String?
+    public var fields: [BookField]?
+}
+
+public struct BookField: Codable, Identifiable, Equatable {
+    public var id: String
+    public var label: String
+    public var type: String
+    public var options: [String]?
+    public var labelZh: String?
+    public var labelEn: String?
+}
+
+public struct JournalMedia: Codable, Identifiable, Equatable {
+    public var id: String
+    public var kind: String
+    public var name: String
+    public var mime: String
+    public var source: String
+    public var size: Int?
+    public var duration: Double?
+    public var poster: String?
+}
+
+public struct JournalTextStyle: Codable, Equatable {
+    public var size: Double?
+    public var color: String?
+    public var weight: Int?
+    public var spacing: Double?
+}
+
+public enum JSONValue: Codable, Equatable {
+    case string(String), number(Double), bool(Bool), object([String: JSONValue]), array([JSONValue]), null
+    public init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer()
+        if value.decodeNil() { self = .null }
+        else if let decoded = try? value.decode(Bool.self) { self = .bool(decoded) }
+        else if let decoded = try? value.decode(String.self) { self = .string(decoded) }
+        else if let decoded = try? value.decode(Double.self) { self = .number(decoded) }
+        else if let decoded = try? value.decode([String: JSONValue].self) { self = .object(decoded) }
+        else { self = .array(try value.decode([JSONValue].self)) }
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .number(let value): try container.encode(value)
+        case .bool(let value): try container.encode(value)
+        case .object(let value): try container.encode(value)
+        case .array(let value): try container.encode(value)
+        case .null: try container.encodeNil()
+        }
+    }
 }
 
 public struct StickerLayer: Codable, Identifiable, Equatable {
@@ -31,6 +89,14 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var y: Double
     public var scale: Double
     public var rotation: Double
+    public var assetId: String?
+    public var mediaRef: String?
+    public var fontId: String?
+    public var fontSize: Double?
+    public var color: String?
+    public var weight: Int?
+    public var spacing: Double?
+    public var align: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -56,6 +122,11 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var layers: [StickerLayer]
     public var isDemo: Bool
     public var updatedAt: String
+    public var media: [JournalMedia]?
+    public var fieldValues: [String: JSONValue]?
+    public var textStyle: JournalTextStyle?
+    public var bodyFont: String?
+    public var visibility: String?
 
     public init(id: String = UUID().uuidString, date: String, title: String = "", body: String = "", mood: String = "☀️", bookId: String = "daily", photo: String = "", template: String = "cute", font: String = "serif", isDemo: Bool = false) {
         self.id = id
@@ -70,6 +141,9 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
         self.layers = []
         self.isDemo = isDemo
         self.updatedAt = ISO8601DateFormatter().string(from: Date())
+        self.media = []
+        self.fieldValues = [:]
+        self.visibility = "private"
     }
 }
 

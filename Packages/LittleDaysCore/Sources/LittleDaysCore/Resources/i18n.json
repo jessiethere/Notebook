@@ -1,0 +1,1162 @@
+{
+  "nav.home": {
+    "zh": "首页",
+    "en": "Home"
+  },
+  "nav.calendar": {
+    "zh": "日历",
+    "en": "Calendar"
+  },
+  "nav.studio": {
+    "zh": "创作",
+    "en": "Studio"
+  },
+  "nav.growth": {
+    "zh": "成长",
+    "en": "Growth"
+  },
+  "nav.books": {
+    "zh": "手帐本",
+    "en": "My Books"
+  },
+  "settings": {
+    "zh": "设置",
+    "en": "Settings"
+  },
+  "language": {
+    "zh": "界面语言",
+    "en": "Language"
+  },
+  "private": {
+    "zh": "私人",
+    "en": "Private"
+  },
+  "public": {
+    "zh": "公开",
+    "en": "Public"
+  },
+  "shared": {
+    "zh": "协作",
+    "en": "Shared"
+  },
+  "cancel": {
+    "zh": "取消",
+    "en": "Cancel"
+  },
+  "create": {
+    "zh": "创建",
+    "en": "Create"
+  },
+  "save": {
+    "zh": "保存",
+    "en": "Save"
+  },
+  "edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "delete": {
+    "zh": "删除",
+    "en": "Delete"
+  },
+  "copy": {
+    "zh": "复制",
+    "en": "Duplicate"
+  },
+  "back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "close": {
+    "zh": "关闭",
+    "en": "Close"
+  },
+  "loading": {
+    "zh": "正在打开你的文具店…",
+    "en": "Opening your stationery shop…"
+  },
+  "brand.subtitle": {
+    "zh": "手 帐 文 具 店",
+    "en": "YOUR LITTLE STATIONERY SHOP"
+  },
+  "brand.note": {
+    "zh": "小日子，慢慢记。",
+    "en": "A little more you, every day."
+  },
+  "brand.motto": {
+    "zh": "记录生活的美好，也收藏一点点变好的自己。",
+    "en": "Collect moments, grow gently."
+  },
+  "preview.label": {
+    "zh": "HTML 交互预览 · 非 SwiftUI 运行画面",
+    "en": "Interactive HTML preview · not running SwiftUI"
+  },
+  "preview.footer": {
+    "zh": "数据保存在当前浏览器 · 示例内容可编辑",
+    "en": "Saved in this browser · sample entries are editable"
+  },
+  "home.greeting": {
+    "zh": "今天，也有小美好。",
+    "en": "A little lovely, today."
+  },
+  "home.subtitle": {
+    "zh": "记录生活，也记录一点点变好的自己。",
+    "en": "Collect a moment. Grow a little, gently."
+  },
+  "home.continue": {
+    "zh": "继续记录",
+    "en": "Keep writing"
+  },
+  "home.begin": {
+    "zh": "开始记录",
+    "en": "Start a page"
+  },
+  "home.blankTitle": {
+    "zh": "为今天，留一点位置。",
+    "en": "A little space for today."
+  },
+  "home.blankBody": {
+    "zh": "一张照片，一句心情。\n平凡的日子也值得被收藏。",
+    "en": "A photo, a feeling.\nEven ordinary days deserve a page."
+  },
+  "home.sample": {
+    "zh": "示例手帐 · 可编辑",
+    "en": "Sample journal · editable"
+  },
+  "home.photo": {
+    "zh": "添加照片",
+    "en": "Add photo"
+  },
+  "home.text": {
+    "zh": "写点什么",
+    "en": "Write a little"
+  },
+  "home.mood": {
+    "zh": "今日心情",
+    "en": "My mood"
+  },
+  "home.check": {
+    "zh": "成长打卡",
+    "en": "Check in"
+  },
+  "home.growth": {
+    "zh": "今天的小小成长",
+    "en": "Little growth today"
+  },
+  "home.completed": {
+    "zh": "{done}/{total} 已完成",
+    "en": "{done}/{total} done"
+  },
+  "home.books": {
+    "zh": "我的手帐本",
+    "en": "My little books"
+  },
+  "home.allBooks": {
+    "zh": "查看全部 ›",
+    "en": "View all ›"
+  },
+  "home.studio": {
+    "zh": "把今天，拼贴成喜欢的样子 ↗",
+    "en": "Make today a page you love ↗"
+  },
+  "photo.placeholder": {
+    "zh": "留下今天的一瞬",
+    "en": "Keep a little moment"
+  },
+  "photo.alt": {
+    "zh": "手帐照片",
+    "en": "Journal photo"
+  },
+  "photo.add": {
+    "zh": "添加一张喜欢的照片",
+    "en": "Add a photo you love"
+  },
+  "calendar.title": {
+    "zh": "日历",
+    "en": "Calendar"
+  },
+  "calendar.subtitle": {
+    "zh": "每个日子，都值得被记住。",
+    "en": "Every day has a little story."
+  },
+  "calendar.today": {
+    "zh": "回到今天",
+    "en": "Back to today"
+  },
+  "calendar.memory": {
+    "zh": "Memory · 生活记忆",
+    "en": "Memory · little moments"
+  },
+  "calendar.growth": {
+    "zh": "Growth · 成长轨迹",
+    "en": "Growth · little steps"
+  },
+  "calendar.prev": {
+    "zh": "上个月",
+    "en": "Previous month"
+  },
+  "calendar.next": {
+    "zh": "下个月",
+    "en": "Next month"
+  },
+  "calendar.dayTitle": {
+    "zh": "{date} 的小日子",
+    "en": "Memories · {date}"
+  },
+  "calendar.growthTitle": {
+    "zh": "{date} 的小成长",
+    "en": "Growth · {date}"
+  },
+  "calendar.edit": {
+    "zh": "编辑记录",
+    "en": "Edit entry"
+  },
+  "calendar.backfill": {
+    "zh": "补记这一天",
+    "en": "Write this day"
+  },
+  "calendar.empty": {
+    "zh": "这一天的故事，还在等你写下。",
+    "en": "This day is waiting for its little story."
+  },
+  "calendar.add": {
+    "zh": "记录这一天",
+    "en": "Keep this day"
+  },
+  "calendar.linked": {
+    "zh": "已完成 {count} 项习惯，与当天手帐共用日期。",
+    "en": "{count} habits completed, linked to this journal date."
+  },
+  "calendar.hasEntry": {
+    "zh": "有手帐",
+    "en": "Has a journal"
+  },
+  "entry.untitled": {
+    "zh": "未命名的小日子",
+    "en": "An untitled little day"
+  },
+  "entry.continue": {
+    "zh": "点击继续记录",
+    "en": "Tap to keep writing"
+  },
+  "entry.sample": {
+    "zh": "示例",
+    "en": "Sample"
+  },
+  "entry.saved": {
+    "zh": "已保存",
+    "en": "Saved"
+  },
+  "entry.count": {
+    "zh": "{count} 篇",
+    "en": "{count} pages"
+  },
+  "growth.title": {
+    "zh": "慢慢长大。",
+    "en": "Grow gently."
+  },
+  "growth.subtitle": {
+    "zh": "一点一点，成为更喜欢的自己。",
+    "en": "Little by little, a little more you."
+  },
+  "growth.add": {
+    "zh": "添加习惯",
+    "en": "Add a habit"
+  },
+  "growth.headline": {
+    "zh": "不赶路，慢慢长大。🌱",
+    "en": "No rush. Just a little growth. 🌱"
+  },
+  "growth.description": {
+    "zh": "每一次小小的坚持，都在悄悄发光。",
+    "en": "Every little effort is quietly shining."
+  },
+  "growth.week": {
+    "zh": "本周的小目标",
+    "en": "This week’s little goals"
+  },
+  "growth.count": {
+    "zh": "{count} / {target} 次",
+    "en": "{count} / {target} times"
+  },
+  "growth.weekCount": {
+    "zh": "每周 {target} 次 · 已完成 {count} 次",
+    "en": "{count} of {target} weekly check-ins"
+  },
+  "growth.new": {
+    "zh": "＋ 创建我的小习惯",
+    "en": "＋ Plant a little habit"
+  },
+  "growth.flower": {
+    "zh": "第一朵小花，已经盛开",
+    "en": "Your first little flower has bloomed"
+  },
+  "growth.seed": {
+    "zh": "每次坚持，都是一颗种子",
+    "en": "Every effort plants a little seed"
+  },
+  "growth.milestone": {
+    "zh": "累计 {count} 次成长记录",
+    "en": "{count} little steps so far"
+  },
+  "growth.remaining": {
+    "zh": "再记录 {count} 次，点亮第一朵花",
+    "en": "{count} more steps to your first flower"
+  },
+  "growth.linked": {
+    "zh": "打卡会自动出现在对应日期的成长日历里。",
+    "en": "Check-ins appear on the same date in your growth calendar."
+  },
+  "growth.calendar": {
+    "zh": "查看成长日历",
+    "en": "View growth calendar"
+  },
+  "growth.encourage": {
+    "zh": "一点点，也算进步",
+    "en": "A little counts, too"
+  },
+  "habit.complete": {
+    "zh": "完成",
+    "en": "Complete"
+  },
+  "habit.cancel": {
+    "zh": "取消",
+    "en": "Undo"
+  },
+  "books.title": {
+    "zh": "我的手帐本",
+    "en": "My Books"
+  },
+  "books.subtitle": {
+    "zh": "给每一种热爱，一本小小的收藏。",
+    "en": "A home for every little love."
+  },
+  "books.new": {
+    "zh": "创建手帐本",
+    "en": "Create a new book"
+  },
+  "books.create": {
+    "zh": "＋ 创建一本新手帐",
+    "en": "＋ Create a new book"
+  },
+  "books.all": {
+    "zh": "全部手帐本",
+    "en": "All books"
+  },
+  "books.addPage": {
+    "zh": "记录新的一页",
+    "en": "Write a new page"
+  },
+  "books.memories": {
+    "zh": "收藏在这里的小日子",
+    "en": "Little days kept here"
+  },
+  "books.empty": {
+    "zh": "手帐本的第一页，等你来写。",
+    "en": "The first page is waiting for you."
+  },
+  "books.edit": {
+    "zh": "编辑封面与主题",
+    "en": "Edit cover & theme"
+  },
+  "books.dialogNew": {
+    "zh": "新的一本，小小期待。",
+    "en": "A new little book"
+  },
+  "books.dialogEdit": {
+    "zh": "换一个喜欢的封面。",
+    "en": "Make this book yours"
+  },
+  "books.dialogDescription": {
+    "zh": "任何主题，都值得拥有专属手帐。",
+    "en": "Any theme can have a book of its own."
+  },
+  "books.name": {
+    "zh": "手帐本名称",
+    "en": "Book name"
+  },
+  "books.namePlaceholder": {
+    "zh": "例如：我的植物养护手帐",
+    "en": "e.g. My little plant journal"
+  },
+  "books.description": {
+    "zh": "手帐本描述",
+    "en": "Description"
+  },
+  "books.category": {
+    "zh": "主题类别（可自由输入）",
+    "en": "Theme category (anything you like)"
+  },
+  "books.cover": {
+    "zh": "封面模板",
+    "en": "Cover template"
+  },
+  "books.color": {
+    "zh": "封面颜色",
+    "en": "Cover color"
+  },
+  "books.font": {
+    "zh": "封面字体",
+    "en": "Title font"
+  },
+  "books.decoration": {
+    "zh": "封面装饰",
+    "en": "Cover decoration"
+  },
+  "books.coverPhoto": {
+    "zh": "上传封面照片",
+    "en": "Upload cover photo"
+  },
+  "books.removePhoto": {
+    "zh": "移除封面照片",
+    "en": "Remove cover photo"
+  },
+  "books.permission": {
+    "zh": "可见范围",
+    "en": "Visibility"
+  },
+  "books.privateNotice": {
+    "zh": "本阶段仅本机私人记录。公开发布与协作将在后续阶段启用。",
+    "en": "This phase is private and local. Publishing and collaboration come later."
+  },
+  "books.blank": {
+    "zh": "空白手帐",
+    "en": "Blank book"
+  },
+  "books.preset": {
+    "zh": "记录字段模板",
+    "en": "Record field template"
+  },
+  "books.fields": {
+    "zh": "自定义记录字段",
+    "en": "Custom record fields"
+  },
+  "books.fieldAdd": {
+    "zh": "＋ 添加字段",
+    "en": "＋ Add a field"
+  },
+  "books.fieldName": {
+    "zh": "字段名称",
+    "en": "Field label"
+  },
+  "books.fieldOptions": {
+    "zh": "选项，用逗号分隔",
+    "en": "Options, separated by commas"
+  },
+  "books.none": {
+    "zh": "无装饰",
+    "en": "No decoration"
+  },
+  "books.records": {
+    "zh": "主题记录",
+    "en": "Theme details"
+  },
+  "field.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "field.number": {
+    "zh": "数字",
+    "en": "Number"
+  },
+  "field.date": {
+    "zh": "日期",
+    "en": "Date"
+  },
+  "field.select": {
+    "zh": "单选",
+    "en": "Select"
+  },
+  "field.checkbox": {
+    "zh": "复选框",
+    "en": "Checkbox"
+  },
+  "field.duration": {
+    "zh": "时长（分钟）",
+    "en": "Duration (minutes)"
+  },
+  "field.image": {
+    "zh": "图片",
+    "en": "Image"
+  },
+  "field.upload": {
+    "zh": "选择图片",
+    "en": "Choose image"
+  },
+  "field.remove": {
+    "zh": "移除字段",
+    "en": "Remove field"
+  },
+  "studio.title": {
+    "zh": "手帐工作室",
+    "en": "Journal Studio"
+  },
+  "studio.subtitle": {
+    "zh": "让今天，成为一张喜欢的手帐。",
+    "en": "Make today a page you love."
+  },
+  "studio.linked": {
+    "zh": "{count} 项成长已关联",
+    "en": "{count} check-ins linked"
+  },
+  "studio.quick": {
+    "zh": "✧ 快速创作",
+    "en": "✧ Quick Create"
+  },
+  "studio.creative": {
+    "zh": "✿ 自由创作",
+    "en": "✿ Creative Mode"
+  },
+  "studio.draftRestored": {
+    "zh": "已恢复本机草稿",
+    "en": "Local draft restored"
+  },
+  "studio.draftHint": {
+    "zh": "改动将自动保存为草稿",
+    "en": "Changes save automatically as a draft"
+  },
+  "studio.replacePhoto": {
+    "zh": "替换照片",
+    "en": "Replace photo"
+  },
+  "studio.addPhoto": {
+    "zh": "添加照片",
+    "en": "Add photo"
+  },
+  "studio.collagePhoto": {
+    "zh": "拼贴照片",
+    "en": "Collage photo"
+  },
+  "studio.undo": {
+    "zh": "撤销",
+    "en": "Undo"
+  },
+  "studio.redo": {
+    "zh": "重做",
+    "en": "Redo"
+  },
+  "studio.titleLabel": {
+    "zh": "给今天取个名字",
+    "en": "A name for today"
+  },
+  "studio.titlePlaceholder": {
+    "zh": "今天的小美好",
+    "en": "Today’s little lovely"
+  },
+  "studio.bodyLabel": {
+    "zh": "写点什么",
+    "en": "A little note"
+  },
+  "studio.bodyPlaceholder": {
+    "zh": "收集一个小小的瞬间…",
+    "en": "Keep one little moment…"
+  },
+  "studio.book": {
+    "zh": "放进手帐本",
+    "en": "Keep in a book"
+  },
+  "studio.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "studio.mood": {
+    "zh": "今天的心情",
+    "en": "Today’s mood"
+  },
+  "studio.moodLabel": {
+    "zh": "心情 {mood}",
+    "en": "Mood {mood}"
+  },
+  "studio.paper": {
+    "zh": "纸张与模板",
+    "en": "Paper & template"
+  },
+  "studio.materials": {
+    "zh": "小小素材铺",
+    "en": "The little material shop"
+  },
+  "studio.quickHelp": {
+    "zh": "选一张照片，写一句心情，即可自动排版。",
+    "en": "Pick a photo, add a note. Your page comes together."
+  },
+  "studio.saveDraft": {
+    "zh": "保存草稿",
+    "en": "Save draft"
+  },
+  "studio.export": {
+    "zh": "导出图片",
+    "en": "Export image"
+  },
+  "studio.help": {
+    "zh": "媒体保存在此浏览器的 IndexedDB，尚未同步到 iPhone。图片导出不包含可播放的视频或音频。",
+    "en": "Media stays in IndexedDB in this browser, without iPhone sync. Image exports do not include playable video or audio."
+  },
+  "studio.textBox": {
+    "zh": "添加文字框",
+    "en": "Add a text box"
+  },
+  "studio.fontPreview": {
+    "zh": "字体实时预览",
+    "en": "Live font preview"
+  },
+  "studio.size": {
+    "zh": "字号",
+    "en": "Size"
+  },
+  "studio.textColor": {
+    "zh": "文字颜色",
+    "en": "Text color"
+  },
+  "studio.weight": {
+    "zh": "字重",
+    "en": "Weight"
+  },
+  "studio.spacing": {
+    "zh": "字间距",
+    "en": "Letter spacing"
+  },
+  "layer.selected": {
+    "zh": "已选择元素 · 拖动或调整参数",
+    "en": "Element selected · drag or adjust below"
+  },
+  "layer.x": {
+    "zh": "横向位置",
+    "en": "Horizontal position"
+  },
+  "layer.y": {
+    "zh": "纵向位置",
+    "en": "Vertical position"
+  },
+  "layer.size": {
+    "zh": "大小",
+    "en": "Scale"
+  },
+  "layer.rotation": {
+    "zh": "旋转",
+    "en": "Rotation"
+  },
+  "layer.back": {
+    "zh": "移到下层",
+    "en": "Send backward"
+  },
+  "layer.front": {
+    "zh": "移到上层",
+    "en": "Bring forward"
+  },
+  "layer.delete": {
+    "zh": "删除元素",
+    "en": "Delete element"
+  },
+  "layer.content": {
+    "zh": "文字内容",
+    "en": "Text content"
+  },
+  "layer.align": {
+    "zh": "对齐方式",
+    "en": "Alignment"
+  },
+  "layer.left": {
+    "zh": "左对齐",
+    "en": "Left"
+  },
+  "layer.center": {
+    "zh": "居中",
+    "en": "Center"
+  },
+  "layer.right": {
+    "zh": "右对齐",
+    "en": "Right"
+  },
+  "layer.newText": {
+    "zh": "写一句小心情",
+    "en": "A little feeling"
+  },
+  "media.title": {
+    "zh": "声音与影像",
+    "en": "Sounds & moving moments"
+  },
+  "media.video": {
+    "zh": "添加视频",
+    "en": "Add video"
+  },
+  "media.audio": {
+    "zh": "上传音频",
+    "en": "Upload audio"
+  },
+  "media.record": {
+    "zh": "录制声音日记",
+    "en": "Record a voice diary"
+  },
+  "media.stop": {
+    "zh": "停止录音并保存",
+    "en": "Stop & save recording"
+  },
+  "media.recording": {
+    "zh": "正在录音 {seconds} 秒",
+    "en": "Recording · {seconds}s"
+  },
+  "media.empty": {
+    "zh": "让声音和影像，也住进手帐里。",
+    "en": "A home for voices and moving moments, too."
+  },
+  "media.saved": {
+    "zh": "媒体已保存在本机",
+    "en": "Media saved on this device"
+  },
+  "media.missing": {
+    "zh": "媒体文件暂不可用，请恢复备份或重新上传。",
+    "en": "Media is unavailable. Restore a backup or upload it again."
+  },
+  "media.poster": {
+    "zh": "设置视频封面",
+    "en": "Set video cover"
+  },
+  "media.remove": {
+    "zh": "移除媒体",
+    "en": "Remove media"
+  },
+  "media.recordUnsupported": {
+    "zh": "此浏览器不支持录音，仍可上传音频。",
+    "en": "Recording is not supported here. You can still upload audio."
+  },
+  "media.denied": {
+    "zh": "未获得麦克风权限，请在浏览器设置中允许，或上传音频文件。",
+    "en": "Microphone access was denied. Allow it in browser settings or upload an audio file."
+  },
+  "media.limit": {
+    "zh": "视频限 50 MB，音频限 20 MB；文件需为浏览器支持的格式。",
+    "en": "Videos: up to 50 MB. Audio: up to 20 MB. Use a browser-supported format."
+  },
+  "media.busy": {
+    "zh": "媒体正在保存或录音，请完成后再切换页面。",
+    "en": "Finish saving media or stop recording before leaving."
+  },
+  "media.imageLimit": {
+    "zh": "请选择小于 20 MB 的图片。",
+    "en": "Choose an image smaller than 20 MB."
+  },
+  "media.failed": {
+    "zh": "媒体未保存，请检查格式、存储空间后重试。",
+    "en": "Media was not saved. Check its format and available storage."
+  },
+  "media.savedPhoto": {
+    "zh": "照片已加入，也已保存到草稿。",
+    "en": "Photo added and saved to your draft."
+  },
+  "media.loaded": {
+    "zh": "旧照片已迁移到媒体库，原有记录保留。",
+    "en": "Older photos were moved to the media library. Your entries are preserved."
+  },
+  "media.migrationFailed": {
+    "zh": "旧照片仍保留原格式。媒体迁移未完成，请先备份并检查存储空间。",
+    "en": "Older photos remain in their original format. Back up your data and check storage before retrying migration."
+  },
+  "settings.title": {
+    "zh": "设置",
+    "en": "Settings"
+  },
+  "settings.subtitle": {
+    "zh": "让小日子，更像你。",
+    "en": "Make Little Days feel a little more you."
+  },
+  "settings.contentNote": {
+    "zh": "语言切换只影响界面，不会翻译或删除你的记录。",
+    "en": "Language changes the interface, never your own words or media."
+  },
+  "settings.storage": {
+    "zh": "本机媒体与备份",
+    "en": "Local media & backup"
+  },
+  "settings.storageNote": {
+    "zh": "文字与引用保存在 LocalStorage；照片、视频和音频保存在 IndexedDB。更换浏览器或端口不会自动同步。",
+    "en": "Text and references use LocalStorage; photos, video and audio use IndexedDB. Browsers and ports do not sync automatically."
+  },
+  "settings.backup": {
+    "zh": "导出完整本机备份",
+    "en": "Export full local backup"
+  },
+  "settings.backupNote": {
+    "zh": "备份含私人文字和媒体，导出媒体上限 100 MB、导入文件上限 150 MB。请妥善保存，不要提交到公开仓库。",
+    "en": "Backups include private words and media. Export: up to 100 MB of media; import: 150 MB per file. Keep them safe and off public repositories."
+  },
+  "settings.private": {
+    "zh": "默认私人 · 无联网社交",
+    "en": "Private by default · no online social features"
+  },
+  "settings.privateNote": {
+    "zh": "当前没有账号、公开社区、私信或多人协作。选择封面和主题不会公开你的内容。",
+    "en": "There are no accounts, public community, DMs or collaboration in this phase. Editing a cover or theme does not publish anything."
+  },
+  "settings.licenses": {
+    "zh": "字体与素材许可证",
+    "en": "Font & artwork licenses"
+  },
+  "settings.licensesNote": {
+    "zh": "字体使用 SIL OFL；贴纸为本项目原创。可点击查看随仓库保留的许可证。",
+    "en": "Fonts use SIL OFL; stickers are original project artwork. License notices are included locally."
+  },
+  "settings.backupDone": {
+    "zh": "本机备份已导出",
+    "en": "Local backup exported"
+  },
+  "category.animals": {
+    "zh": "可爱动物",
+    "en": "Cute Animals"
+  },
+  "category.nature": {
+    "zh": "花草自然",
+    "en": "Flowers & Nature"
+  },
+  "category.food": {
+    "zh": "美食饮品",
+    "en": "Food & Drinks"
+  },
+  "category.travel": {
+    "zh": "旅行记录",
+    "en": "Travel"
+  },
+  "category.fitness": {
+    "zh": "运动健身",
+    "en": "Fitness"
+  },
+  "category.beauty": {
+    "zh": "美妆护理",
+    "en": "Beauty & Skincare"
+  },
+  "category.study": {
+    "zh": "学习阅读",
+    "en": "Study & Reading"
+  },
+  "category.washi": {
+    "zh": "和纸胶带",
+    "en": "Washi Tapes"
+  },
+  "category.frames": {
+    "zh": "相框标签",
+    "en": "Frames & Labels"
+  },
+  "category.seasonal": {
+    "zh": "四季收藏",
+    "en": "Seasonal Collections"
+  },
+  "dialog.habitTitle": {
+    "zh": "种一颗小习惯",
+    "en": "Plant a little habit"
+  },
+  "dialog.habitDescription": {
+    "zh": "为喜欢的自己，种下一颗小种子。主题可以自定义。",
+    "en": "Plant a seed for the person you want to be. Choose any theme."
+  },
+  "dialog.habitName": {
+    "zh": "习惯名称",
+    "en": "Habit name"
+  },
+  "dialog.habitPlaceholder": {
+    "zh": "例如：练习十分钟法语",
+    "en": "e.g. Ten minutes of French"
+  },
+  "dialog.theme": {
+    "zh": "成长主题",
+    "en": "Growth theme"
+  },
+  "dialog.kind": {
+    "zh": "记录类型",
+    "en": "Record type"
+  },
+  "dialog.completion": {
+    "zh": "完成型",
+    "en": "Completion"
+  },
+  "dialog.duration": {
+    "zh": "时长型",
+    "en": "Duration"
+  },
+  "dialog.target": {
+    "zh": "每周目标（次）",
+    "en": "Weekly target"
+  },
+  "dialog.minutes": {
+    "zh": "默认时长（分钟，时长型适用）",
+    "en": "Default minutes (duration habits)"
+  },
+  "dialog.durationTitle": {
+    "zh": "留一点时间给自己",
+    "en": "A moment for you"
+  },
+  "dialog.durationLabel": {
+    "zh": "今天投入了多少分钟？",
+    "en": "How many minutes today?"
+  },
+  "dialog.record": {
+    "zh": "记录这次成长",
+    "en": "Keep this little step"
+  },
+  "font.serif": {
+    "zh": "温柔宋体（系统）",
+    "en": "System Serif"
+  },
+  "font.rounded": {
+    "zh": "可爱圆体（系统）",
+    "en": "System Rounded"
+  },
+  "font.system": {
+    "zh": "简约黑体（系统）",
+    "en": "System Sans"
+  },
+  "font.Elegant Serif": {
+    "zh": "优雅衬线",
+    "en": "Elegant Serif"
+  },
+  "font.Handwritten": {
+    "zh": "自然手写",
+    "en": "Handwritten"
+  },
+  "font.Cute Rounded": {
+    "zh": "可爱圆体",
+    "en": "Cute Rounded"
+  },
+  "font.Vintage": {
+    "zh": "复古衬线",
+    "en": "Vintage"
+  },
+  "font.Minimal Sans": {
+    "zh": "极简无衬线",
+    "en": "Minimal Sans"
+  },
+  "font.Decorative": {
+    "zh": "艺术装饰",
+    "en": "Decorative"
+  },
+  "font.Chinese Fonts": {
+    "zh": "中文手写",
+    "en": "Chinese Fonts"
+  },
+  "cover.minimal-linen": {
+    "zh": "极简亚麻",
+    "en": "Minimal Linen"
+  },
+  "cover.vintage-leather": {
+    "zh": "复古皮革",
+    "en": "Vintage Leather"
+  },
+  "cover.floral-notebook": {
+    "zh": "花园手记",
+    "en": "Floral Notebook"
+  },
+  "cover.pastel-cute": {
+    "zh": "柔彩可爱",
+    "en": "Pastel Cute"
+  },
+  "cover.travel-album": {
+    "zh": "旅行相册",
+    "en": "Travel Album"
+  },
+  "cover.scrapbook-collage": {
+    "zh": "拼贴收藏",
+    "en": "Scrapbook Collage"
+  },
+  "error.generic": {
+    "zh": "操作未保存，请检查浏览器存储空间后重试。",
+    "en": "Changes were not saved. Check available browser storage and retry."
+  },
+  "error.start": {
+    "zh": "文具店暂时没能打开",
+    "en": "The stationery shop could not open"
+  },
+  "error.startHelp": {
+    "zh": "请通过 localhost 启动，并允许浏览器本地存储。已有记录不会自动清除。",
+    "en": "Start through localhost and allow local storage. Existing records will not be cleared."
+  },
+  "error.config": {
+    "zh": "共享配置加载失败",
+    "en": "Shared configuration could not load"
+  },
+  "草稿已保存在本机": {
+    "zh": "草稿已保存在本机",
+    "en": "Draft saved on this device"
+  },
+  "正在保存草稿…": {
+    "zh": "正在保存草稿…",
+    "en": "Saving draft…"
+  },
+  "保存失败：浏览器空间不足，请先导出图片或备份记录。": {
+    "zh": "保存失败：浏览器空间不足，请先导出图片或备份记录。",
+    "en": "Save failed: browser storage is full. Export a backup before continuing."
+  },
+  "草稿未保存，请勿关闭页面": {
+    "zh": "草稿未保存，请勿关闭页面",
+    "en": "Draft not saved. Keep this page open."
+  },
+  "这次打卡已取消": {
+    "zh": "这次打卡已取消",
+    "en": "Check-in undone"
+  },
+  "收集到一份小小的成长 🌱": {
+    "zh": "收集到一份小小的成长 🌱",
+    "en": "One little step collected 🌱"
+  },
+  "草稿已保存，下次从 Studio 继续。": {
+    "zh": "草稿已保存，下次从 Studio 继续。",
+    "en": "Draft saved. Continue in Studio next time."
+  },
+  "先留下一张照片，或者写点什么吧。": {
+    "zh": "先留下一张照片，或者写点什么吧。",
+    "en": "Add a photo, a note, or a media moment first."
+  },
+  "这一天，已经好好收藏。🌷": {
+    "zh": "这一天，已经好好收藏。🌷",
+    "en": "This day is safely kept. 🌷"
+  },
+  "手帐图片已导出（基础排版版本）。": {
+    "zh": "手帐图片已导出（基础排版版本）。",
+    "en": "Journal image exported (basic layout)."
+  },
+  "操作未保存，请检查浏览器存储空间后重试。": {
+    "zh": "操作未保存，请检查浏览器存储空间后重试。",
+    "en": "Changes were not saved. Check browser storage and retry."
+  },
+  "编辑失败，请重试。": {
+    "zh": "编辑失败，请重试。",
+    "en": "Could not edit. Please retry."
+  },
+  "旧草稿未保存，暂不能切换日期。": {
+    "zh": "旧草稿未保存，暂不能切换日期。",
+    "en": "The previous draft could not save. Please stay on this date."
+  },
+  "成长已记录，也已关联当天日期 🌱": {
+    "zh": "成长已记录，也已关联当天日期 🌱",
+    "en": "Growth saved and linked to this date 🌱"
+  },
+  "新的小期待，已准备好。": {
+    "zh": "新的小期待，已准备好。",
+    "en": "A little new beginning is ready."
+  },
+  "保存失败，请检查本机存储空间。": {
+    "zh": "保存失败，请检查本机存储空间。",
+    "en": "Could not save. Check available storage."
+  },
+  "studio.bodyFont": {
+    "zh": "正文字体",
+    "en": "Body font"
+  },
+  "color.blush": {
+    "zh": "柔雾粉",
+    "en": "Blush Pink"
+  },
+  "color.sage": {
+    "zh": "鼠尾草绿",
+    "en": "Sage Green"
+  },
+  "color.butter": {
+    "zh": "奶油黄",
+    "en": "Butter Yellow"
+  },
+  "color.blue": {
+    "zh": "粉雾蓝",
+    "en": "Powder Blue"
+  },
+  "color.cream": {
+    "zh": "奶油白",
+    "en": "Cream White"
+  },
+  "template.cute": {
+    "zh": "可爱",
+    "en": "Cute"
+  },
+  "template.minimal": {
+    "zh": "极简",
+    "en": "Minimal"
+  },
+  "template.vintage": {
+    "zh": "复古",
+    "en": "Vintage"
+  },
+  "native.attention": {
+    "zh": "记录需要你的注意",
+    "en": "Your journal needs attention"
+  },
+  "native.ok": {
+    "zh": "知道了",
+    "en": "OK"
+  },
+  "native.readError": {
+    "zh": "本机记录无法读取。为保护原文件，已暂停保存，请先备份 state.json。",
+    "en": "Local records could not be read. Saving is paused to protect the original file. Back up state.json first."
+  },
+  "native.backupFirst": {
+    "zh": "请先恢复或备份已有记录。",
+    "en": "Restore or back up your existing records first."
+  },
+  "native.saveFailed": {
+    "zh": "本机保存失败，请检查可用空间后重试。",
+    "en": "Local save failed. Check available space and retry."
+  },
+  "native.draftSaved": {
+    "zh": "草稿已保存",
+    "en": "Draft saved"
+  },
+  "native.saved": {
+    "zh": "手帐已保存 🌷",
+    "en": "Journal saved 🌷"
+  },
+  "native.editorScope": {
+    "zh": "原生编辑器目前支持文字、心情、模板、授权字体与本机保存。视频/音频、封面编辑和自由贴纸等将继续与 Web 对齐。",
+    "en": "The native editor supports text, mood, templates, licensed fonts and local saves. Video/audio, cover editing and free stickers will be aligned with the Web preview in a later step."
+  },
+  "error.bookRequired": {
+    "zh": "请填写手帐本名称和主题。",
+    "en": "Enter a book name and theme."
+  },
+  "error.fieldsLimit": {
+    "zh": "一本手帐本最多支持 20 个自定义字段。",
+    "en": "A book supports up to 20 custom fields."
+  },
+  "error.invalidField": {
+    "zh": "请填写有效的字段名称和类型。",
+    "en": "Enter valid field labels and types."
+  },
+  "error.selectOptions": {
+    "zh": "单选字段需要 1–20 个选项，以逗号分隔。",
+    "en": "Select fields need 1–20 comma-separated options."
+  },
+  "error.conflict": {
+    "zh": "另一窗口已更新记录，当前改动没有覆盖它。请保留此页，先复制文字或导出当前图片，再刷新。",
+    "en": "Another tab updated your records. Your changes did not overwrite them. Keep this tab open, copy your text or export the current image, then reload."
+  },
+  "settings.restore": {
+    "zh": "从备份恢复",
+    "en": "Restore a backup"
+  },
+  "settings.restoreConfirm": {
+    "zh": "恢复将替换此浏览器的当前记录。请先导出当前备份。确认恢复所选文件吗？",
+    "en": "Restoring replaces the records in this browser. Export your current backup first. Restore the selected file?"
+  },
+  "settings.restoreDone": {
+    "zh": "记录和媒体已恢复，所有手帐保持私人。",
+    "en": "Records and media restored. All journals remain private."
+  },
+  "settings.restoreFailed": {
+    "zh": "备份未恢复，当前记录保留。请使用完整的 Little Days 备份文件。",
+    "en": "Backup was not restored. Current records are preserved. Choose a complete Little Days backup file."
+  },
+  "error.invalidData": {
+    "zh": "记录或备份格式不兼容，现有资料不会自动清除。",
+    "en": "Records or backup format is incompatible. Existing data will not be cleared."
+  },
+  "error.backupSize": {
+    "zh": "当前完整备份最多包含 100 MB 媒体。记录已保留，请保留大文件原件；分卷备份将在后续完善。",
+    "en": "Full backups currently support up to 100 MB of media. Your records are preserved. Keep original large files; split backups will come later."
+  },
+  "nav.label": {
+    "zh": "主要导航",
+    "en": "Main navigation"
+  },
+  "本地记录格式不兼容，请先备份浏览器数据。": {
+    "zh": "本地记录格式不兼容，请先备份浏览器数据。",
+    "en": "Local records are incompatible. Back up your browser data before continuing."
+  }
+}

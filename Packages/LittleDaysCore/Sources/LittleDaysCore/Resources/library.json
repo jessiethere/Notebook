@@ -1,0 +1,591 @@
+{
+  "schemaVersion": 1,
+  "fonts": [
+    {
+      "id": "elegant",
+      "name": "Cormorant Garamond",
+      "family": "LD-elegant",
+      "postScriptName": "CormorantGaramond-Light",
+      "category": "Elegant Serif",
+      "file": "LD-elegant.ttf",
+      "license": "LD-elegant-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf",
+      "supportsChinese": false,
+      "weightMin": 300,
+      "weightMax": 700,
+      "sha256": "b20b7d9626dd956b2c5e558692ad328b1f19e3275e2782db4fa07670d83f35e0"
+    },
+    {
+      "id": "handwritten",
+      "name": "Caveat",
+      "family": "LD-handwritten",
+      "postScriptName": "Caveat-Regular",
+      "category": "Handwritten",
+      "file": "LD-handwritten.ttf",
+      "license": "LD-handwritten-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/caveat/Caveat%5Bwght%5D.ttf",
+      "supportsChinese": false,
+      "weightMin": 400,
+      "weightMax": 700,
+      "sha256": "0bdb6b660482d31531b3945849fba5916b3ef8695da7024a9e6b9ee3c4157988"
+    },
+    {
+      "id": "rounded-cute",
+      "name": "Quicksand",
+      "family": "LD-rounded-cute",
+      "postScriptName": "Quicksand-Light",
+      "category": "Cute Rounded",
+      "file": "LD-rounded-cute.ttf",
+      "license": "LD-rounded-cute-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/quicksand/Quicksand%5Bwght%5D.ttf",
+      "supportsChinese": false,
+      "weightMin": 300,
+      "weightMax": 700,
+      "sha256": "39c9b64223561f56aaff6062a6f04063c4fc86809ad6768722c06614d977e1cc"
+    },
+    {
+      "id": "vintage-serif",
+      "name": "Libre Baskerville",
+      "family": "LD-vintage-serif",
+      "postScriptName": "LibreBaskerville-Regular",
+      "category": "Vintage",
+      "file": "LD-vintage-serif.ttf",
+      "license": "LD-vintage-serif-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/librebaskerville/LibreBaskerville%5Bwght%5D.ttf",
+      "supportsChinese": false,
+      "weightMin": 400,
+      "weightMax": 700,
+      "sha256": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d"
+    },
+    {
+      "id": "minimal-sans",
+      "name": "DM Sans",
+      "family": "LD-minimal-sans",
+      "postScriptName": "DMSans-9ptRegular",
+      "category": "Minimal Sans",
+      "file": "LD-minimal-sans.ttf",
+      "license": "LD-minimal-sans-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf",
+      "supportsChinese": false,
+      "weightMin": 100,
+      "weightMax": 1000,
+      "sha256": "8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d"
+    },
+    {
+      "id": "decorative",
+      "name": "Pacifico",
+      "family": "LD-decorative",
+      "postScriptName": "Pacifico-Regular",
+      "category": "Decorative",
+      "file": "LD-decorative.ttf",
+      "license": "LD-decorative-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/pacifico/Pacifico-Regular.ttf",
+      "supportsChinese": false,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "5b6c0d5334a7bf77dea52b975c5a0c408878c0f7115ed5b6fb151f634b7bf701"
+    },
+    {
+      "id": "chinese",
+      "name": "Ma Shan Zheng",
+      "family": "LD-chinese",
+      "postScriptName": "MaShanZheng-Regular",
+      "category": "Chinese Fonts",
+      "file": "LD-chinese.ttf",
+      "license": "LD-chinese-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+      "supportsChinese": true,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb"
+    }
+  ],
+  "stickers": [
+    {
+      "id": "bear",
+      "category": "animals",
+      "nameZh": "小熊来信",
+      "nameEn": "Little bear",
+      "file": "LD-sticker-bear.svg",
+      "nativeFile": "LD-sticker-bear.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "bunny",
+      "category": "animals",
+      "nameZh": "软软兔子",
+      "nameEn": "Soft bunny",
+      "file": "LD-sticker-bunny.svg",
+      "nativeFile": "LD-sticker-bunny.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "cat",
+      "category": "animals",
+      "nameZh": "午后小猫",
+      "nameEn": "Afternoon cat",
+      "file": "LD-sticker-cat.svg",
+      "nativeFile": "LD-sticker-cat.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "tulip",
+      "category": "nature",
+      "nameZh": "一枝郁金香",
+      "nameEn": "Paper tulip",
+      "file": "LD-sticker-tulip.svg",
+      "nativeFile": "LD-sticker-tulip.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "daisy",
+      "category": "nature",
+      "nameZh": "小小雏菊",
+      "nameEn": "Little daisy",
+      "file": "LD-sticker-daisy.svg",
+      "nativeFile": "LD-sticker-daisy.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "leaf",
+      "category": "nature",
+      "nameZh": "慢慢长大",
+      "nameEn": "Growing leaf",
+      "file": "LD-sticker-leaf.svg",
+      "nativeFile": "LD-sticker-leaf.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "coffee",
+      "category": "food",
+      "nameZh": "一杯咖啡",
+      "nameEn": "Warm coffee",
+      "file": "LD-sticker-coffee.svg",
+      "nativeFile": "LD-sticker-coffee.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "croissant",
+      "category": "food",
+      "nameZh": "可颂小确幸",
+      "nameEn": "Butter croissant",
+      "file": "LD-sticker-croissant.svg",
+      "nativeFile": "LD-sticker-croissant.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "berry",
+      "category": "food",
+      "nameZh": "草莓日记",
+      "nameEn": "Strawberry days",
+      "file": "LD-sticker-berry.svg",
+      "nativeFile": "LD-sticker-berry.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "postcard",
+      "category": "travel",
+      "nameZh": "远方来信",
+      "nameEn": "A postcard",
+      "file": "LD-sticker-postcard.svg",
+      "nativeFile": "LD-sticker-postcard.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "ticket",
+      "category": "travel",
+      "nameZh": "去旅行吧",
+      "nameEn": "A little ticket",
+      "file": "LD-sticker-ticket.svg",
+      "nativeFile": "LD-sticker-ticket.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "dumbbell",
+      "category": "fitness",
+      "nameZh": "今天也动一动",
+      "nameEn": "Little strength",
+      "file": "LD-sticker-dumbbell.svg",
+      "nativeFile": "LD-sticker-dumbbell.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "yoga",
+      "category": "fitness",
+      "nameZh": "伸个懒腰",
+      "nameEn": "A gentle stretch",
+      "file": "LD-sticker-yoga.svg",
+      "nativeFile": "LD-sticker-yoga.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "bottle",
+      "category": "beauty",
+      "nameZh": "温柔护理",
+      "nameEn": "A little care",
+      "file": "LD-sticker-bottle.svg",
+      "nativeFile": "LD-sticker-bottle.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "mirror",
+      "category": "beauty",
+      "nameZh": "喜欢自己",
+      "nameEn": "Be kind to you",
+      "file": "LD-sticker-mirror.svg",
+      "nativeFile": "LD-sticker-mirror.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "book",
+      "category": "study",
+      "nameZh": "再读一页",
+      "nameEn": "One more page",
+      "file": "LD-sticker-book.svg",
+      "nativeFile": "LD-sticker-book.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "pencil",
+      "category": "study",
+      "nameZh": "灵感的一笔",
+      "nameEn": "A spark of an idea",
+      "file": "LD-sticker-pencil.svg",
+      "nativeFile": "LD-sticker-pencil.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "pink-tape",
+      "category": "washi",
+      "nameZh": "条纹胶带",
+      "nameEn": "Blush washi",
+      "file": "LD-sticker-pink-tape.svg",
+      "nativeFile": "LD-sticker-pink-tape.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "gingham-tape",
+      "category": "washi",
+      "nameZh": "格纹胶带",
+      "nameEn": "Sage gingham",
+      "file": "LD-sticker-gingham-tape.svg",
+      "nativeFile": "LD-sticker-gingham-tape.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "label",
+      "category": "frames",
+      "nameZh": "小小标签",
+      "nameEn": "A little label",
+      "file": "LD-sticker-label.svg",
+      "nativeFile": "LD-sticker-label.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "frame",
+      "category": "frames",
+      "nameZh": "回忆相框",
+      "nameEn": "Memory frame",
+      "file": "LD-sticker-frame.svg",
+      "nativeFile": "LD-sticker-frame.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "snowflake",
+      "category": "seasonal",
+      "nameZh": "冬日来信",
+      "nameEn": "Winter wishes",
+      "file": "LD-sticker-snowflake.svg",
+      "nativeFile": "LD-sticker-snowflake.png",
+      "license": "LittleDays-Original-Assets.txt"
+    },
+    {
+      "id": "autumn",
+      "category": "seasonal",
+      "nameZh": "秋日慢慢",
+      "nameEn": "Slow autumn",
+      "file": "LD-sticker-autumn.svg",
+      "nativeFile": "LD-sticker-autumn.png",
+      "license": "LittleDays-Original-Assets.txt"
+    }
+  ],
+  "coverTemplates": [
+    {
+      "id": "minimal-linen",
+      "title": "Minimal Linen"
+    },
+    {
+      "id": "vintage-leather",
+      "title": "Vintage Leather"
+    },
+    {
+      "id": "floral-notebook",
+      "title": "Floral Notebook"
+    },
+    {
+      "id": "pastel-cute",
+      "title": "Pastel Cute"
+    },
+    {
+      "id": "travel-album",
+      "title": "Travel Album"
+    },
+    {
+      "id": "scrapbook-collage",
+      "title": "Scrapbook Collage"
+    }
+  ],
+  "fieldTypes": [
+    "text",
+    "number",
+    "date",
+    "select",
+    "checkbox",
+    "duration",
+    "image"
+  ],
+  "recordTemplates": [
+    {
+      "id": "fitness",
+      "nameZh": "Fitness · 运动记录",
+      "nameEn": "Fitness Journal",
+      "fields": [
+        {
+          "id": "exercise",
+          "label": "训练动作",
+          "labelZh": "训练动作",
+          "labelEn": "Exercise",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "sets",
+          "label": "组数",
+          "labelZh": "组数",
+          "labelEn": "Sets",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "reps",
+          "label": "次数",
+          "labelZh": "次数",
+          "labelEn": "Repetitions",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "weight",
+          "label": "重量（kg）",
+          "labelZh": "重量（kg）",
+          "labelEn": "Weight (kg)",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "duration",
+          "label": "训练时长",
+          "labelZh": "训练时长",
+          "labelEn": "Training duration",
+          "type": "duration",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "recipe",
+      "nameZh": "Recipe · 食谱手帐",
+      "nameEn": "Recipe Book",
+      "fields": [
+        {
+          "id": "ingredients",
+          "label": "食材与用量",
+          "labelZh": "食材与用量",
+          "labelEn": "Ingredients & quantities",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "steps",
+          "label": "制作步骤",
+          "labelZh": "制作步骤",
+          "labelEn": "Steps",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "成品照片",
+          "labelZh": "成品照片",
+          "labelEn": "Finished dish",
+          "type": "image",
+          "options": []
+        },
+        {
+          "id": "notes",
+          "label": "心得",
+          "labelZh": "心得",
+          "labelEn": "Notes",
+          "type": "text",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "learning",
+      "nameZh": "Learning · 学习记录",
+      "nameEn": "Learning Journal",
+      "fields": [
+        {
+          "id": "topic",
+          "label": "学习主题",
+          "labelZh": "学习主题",
+          "labelEn": "Learning topic",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "duration",
+          "label": "学习时长",
+          "labelZh": "学习时长",
+          "labelEn": "Study duration",
+          "type": "duration",
+          "options": []
+        },
+        {
+          "id": "notes",
+          "label": "知识笔记",
+          "labelZh": "知识笔记",
+          "labelEn": "Learning notes",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "review",
+          "label": "待复习",
+          "labelZh": "待复习",
+          "labelEn": "Review needed",
+          "type": "checkbox",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "money",
+      "nameZh": "Money · 私人财务记录",
+      "nameEn": "Money Journal (private)",
+      "fields": [
+        {
+          "id": "type",
+          "label": "收支类型",
+          "labelZh": "收支类型",
+          "labelEn": "Income / expense",
+          "type": "select",
+          "options": ["Income", "Expense"]
+        },
+        {
+          "id": "amount",
+          "label": "金额",
+          "labelZh": "金额",
+          "labelEn": "Amount",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "category",
+          "label": "分类",
+          "labelZh": "分类",
+          "labelEn": "Category",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "budget",
+          "label": "月度预算",
+          "labelZh": "月度预算",
+          "labelEn": "Monthly budget",
+          "type": "number",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "skincare",
+      "nameZh": "Skincare · 护肤日记",
+      "nameEn": "Skincare Diary",
+      "fields": [
+        {
+          "id": "routine",
+          "label": "护肤流程",
+          "labelZh": "护肤流程",
+          "labelEn": "Routine",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "product",
+          "label": "使用产品",
+          "labelZh": "使用产品",
+          "labelEn": "Products",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "变化照片",
+          "labelZh": "变化照片",
+          "labelEn": "Progress photo",
+          "type": "image",
+          "options": []
+        },
+        {
+          "id": "notes",
+          "label": "使用感受",
+          "labelZh": "使用感受",
+          "labelEn": "How it felt",
+          "type": "text",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "plant",
+      "nameZh": "Plant · 植物养护",
+      "nameEn": "Plant Journal",
+      "fields": [
+        {
+          "id": "name",
+          "label": "植物名称",
+          "labelZh": "植物名称",
+          "labelEn": "Plant name",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "water",
+          "label": "浇水日期",
+          "labelZh": "浇水日期",
+          "labelEn": "Watering date",
+          "type": "date",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "生长照片",
+          "labelZh": "生长照片",
+          "labelEn": "Growth photo",
+          "type": "image",
+          "options": []
+        },
+        {
+          "id": "notes",
+          "label": "备注",
+          "labelZh": "备注",
+          "labelEn": "Notes",
+          "type": "text",
+          "options": []
+        }
+      ]
+    }
+  ]
+}

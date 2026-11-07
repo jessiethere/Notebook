@@ -1,98 +1,108 @@
 # Little Days · 手帐文具店
 
 **记录生活的美好，也收藏一点点变好的自己。**
+**Collect moments, grow gently.**
 
-iPhone 数字手帐 App，原生方向为 **Swift + SwiftUI**；当前提供可交互的 iPhone 尺寸 **HTML Web 预览**，方便 Windows 开发与验收。Web 预览不是实际运行的 SwiftUI，没有改为 React。
+本轮完成 V3 Phase 1 的个人手帐增强。在现有项目上继续采用 **Swift + SwiftUI（最终 iPhone）+ HTML/CSS/JavaScript（Windows 交互预览）**，保留 Vapor 与共享 Core；没有切换 React。Web 页面不是实际运行的 SwiftUI。
 
-## 在 Windows 打开最新版
+## Windows 打开最新版（无需 Git）
 
-安装 [Python 3.10+](https://www.python.org/downloads/windows/)（建议 3.11+）与 Git；安装 Python 时启用 Python Launcher。无需安装 Swift、Xcode 或 Node.js 即可预览。
+你已经有 Python 3.10+ 时，不需要安装 Git、Swift、Node 或 Xcode 来预览。
 
-首次下载，在 PowerShell 或命令提示符运行：
+1. [下载最新版 Notebook-main.zip](https://github.com/jessiethere/Notebook/archive/refs/heads/main.zip)。
+2. 右键 **全部解压缩**，进入同时含 `Start-Windows.cmd`、`Public`、`tools`、`Packages` 的那层目录。
+3. 双击 **Start-Windows.cmd**，脚本会检测 Python 并自动打开浏览器。
+4. 访问 **http://localhost:8080**，保持终端开启，Ctrl+C 停止。
 
-```powershell
-git clone https://github.com/jessiethere/Notebook.git
-cd Notebook
-py -3 tools/preview.py
+手动启动：在上述目录的资源管理器地址栏输入 `cmd`，回车后运行：
+
+```cmd
+py -3 tools\preview.py --open
 ```
 
-已有仓库，在仓库目录运行：
+没有 `py` 可用 `python tools\preview.py --open`。文件名是 `preview.py`，不是 `preview\.py`。端口占用可明确使用 `--port 8081`，但更换地址/端口会切换浏览器存储 origin。完整图解步骤和报错说明见 [Windows 启动指南](docs/WINDOWS_PREVIEW.md)。
 
-```powershell
-git pull
-py -3 tools/preview.py
-```
+更新时先停止旧服务，再下载/解压新 ZIP；继续使用同一浏览器、`localhost:8080`，并先在 Settings 导出本机备份。已有 Git 环境可在仓库目录 `git pull`。macOS/Linux 可运行 `python3 tools/preview.py --open`；现有 Swift/Vapor 仍为 `bash start.sh`（Swift 6.0+）。
 
-打开 **http://localhost:8080**。也可双击 **Start-Windows.cmd**。如果没有 `py` 命令，改用 `python tools/preview.py`；端口被占用时运行 `py -3 tools/preview.py --port 8081`，打开 http://localhost:8081 。保持终端开启，按 Ctrl+C 停止；修改界面后刷新浏览器。
+## 当前真正可用的 Web 功能
 
-服务器只监听本机 127.0.0.1。localhost 是运行命令的这台电脑。macOS/Linux 同样可运行 `python3 tools/preview.py`；已有 Swift 服务入口仍可用 `bash start.sh`（Swift 6.0+，首次编译需联网）。
+- **原有五页**：Home、Calendar、Growth、Studio、My Books；日期补记、每日习惯/时长、周目标、手帐归类、草稿与撤销/重做继续可用。
+- **自由主题书本**：名称、描述、任意类别；创建后可继续编辑。六种封面有书脊/质感/边框、颜色、字体、原创装饰与上传照片。
+- **通用记录字段**：文字、数字、日期、单选、复选框、时长、图片；Fitness/Recipe/Learning/Money/Skincare/Plant 预设，不为每个主题另写编辑器。
+- **真实字体**：七款本地 OFL 字体，覆盖七种分类，含中文；实时预览、标题样式、独立正文字体、多文字框独立字体/大小/颜色/对齐/位置。保留旧系统字体和旧 Emoji 图层。
+- **原创素材**：十类 23 个 SVG + 480px 透明 PNG；可拖动、缩放、旋转、复制、删除、排序。可额外加入自由变换的照片拼贴层。
+- **视频与音频**：视频上传/设置封面/内嵌播放；音频上传/播放；麦克风授权后录音并保存。浏览器原生控制支持暂停、进度、时长、静音，刷新后可重开。
+- **简体中文 / English**：Home 右上角 Settings 切换并保存偏好；界面、表单、状态双语，用户的书名、正文、文件名和媒体不翻译。
+- **数据保护**：新媒体放进 IndexedDB，LocalStorage 存元数据和引用；旧主照片安全迁移。Settings 可导出/确认恢复完整本机备份；旧标签页更新会提示冲突。
+- **始终私人**：新旧书本默认 Private，Public / Shared 暂禁用。本轮没有联网社区、好友、私信、协作或音乐，不假装已经有服务端权限控制。
 
-## 当前可以使用
+![Little Days V3 Web 手帐本界面，非 SwiftUI 截图](docs/images/little-days-v3-books.png)
 
-- **Home**：当天日期、照片与手帐、快速记录入口、今日习惯、最近编辑手帐本和 Studio。
-- **Calendar**：切换月份、查看/补记/编辑任意日期；Memory 照片标记与 Growth 打卡视图。
-- **Growth**：自定义主题和习惯、完成/时长两种记录、周目标进度、历史日历、基础成长里程碑；按日期关联手帐。
-- **Journal Studio**：Quick Create / Creative Mode；文字、心情、照片上传/替换、系统字体和三个模板；贴纸拖动/缩放/旋转/排序/删除；撤销/重做、自动草稿、保存与基础 PNG 导出。
-- **My Books**：自定义手帐本名称、主题、封面颜色/图案，内容归类、查看和编辑。
-- **本机保存**：刷新可恢复记录和草稿；初始示例明确标注，保存后成为自己的内容。
+## 原生 SwiftUI 与共享资源
 
-![Little Days Web 预览首页，非 SwiftUI 截图](docs/images/little-days-home.png)
+`Native/LittleDays.xcodeproj` / `Native/Package.swift` 提供 iOS 17+ 原生基础。共享 Core 已扩展 V3 媒体、字段、字体和素材类型；SwiftUI 基础页面增加双语 Settings、CoreText 字体注册/选择与原创 PNG 封面。
 
-## 原生 SwiftUI 项目
+原生端尚未对齐 Web 的视频/录音导入、完整封面/字段编辑和自由画布，浏览器数据也未同步到 iPhone。当前仅验证 SwiftUI 语法与 Swift 模型/资源，**尚未运行 iOS SDK 构建或真机**；需在 macOS + Xcode 16+ 进一步验证。
 
-`Native/LittleDays.xcodeproj` 是 iOS 17+ App 入口，依赖 `Native/` UI Package 与独立的 `Packages/LittleDaysCore/`。原生已建立五页导航、共享资源、文字/心情/模板、日期记录、默认打卡/周进度和本机文件保存的代码基础。
+## 项目文档
 
-原生照片/贴纸编辑、自定义习惯和手帐本等能力尚未与 Web 对齐；当前 Linux 环境只检查 SwiftUI 语法、Package 清单、工程 plist 结构，**未进行 iOS SDK 编译或真机验证**。未来在 Mac 的 Xcode 16+ 打开工程，选择 iPhone Simulator 验证；这不影响 Windows 日常浏览器预览。
-
-## 文档与目录
-
-| 位置 | 内容 |
+| 文档/目录 | 用途 |
 | --- | --- |
-| [AGENTS.md](AGENTS.md) | 长期协作与强制日志规则 |
-| [agent.md](agent.md) | 当前进度、详细日志、测试和下一步交接 |
-| [docs/PRODUCT_SPEC.md](docs/PRODUCT_SPEC.md) | 全量需求、第一阶段范围、未完成事项 |
-| [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | 配色、字体、组件与创作风格 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 可行性评估、架构、共享契约和取舍 |
-| [docs/ASSETS.md](docs/ASSETS.md) | 照片与素材来源 |
-| `Public/` | 无构建步骤的 HTML/CSS/JavaScript 界面 |
-| `Packages/LittleDaysCore/` | Swift 模型、规则、共享 JSON 与照片 |
-| `Native/` | SwiftUI UI Package 与 iOS App 工程 |
-| `tools/` / `tests/` | Windows 预览服务、颜色生成、测试 |
+| [AGENTS.md](AGENTS.md) / [agent.md](agent.md) | 长期规则、详细交接与保留的历史日志 |
+| [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) | 完整 V3 需求、实际范围与限制 |
+| [DESIGN_SYSTEM](docs/DESIGN_SYSTEM.md) | 配色、精致封面、字体、素材和双语规范 |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | 当前架构/兼容策略，以及未部署的社交后端和权限设计 |
+| [ROADMAP](docs/ROADMAP.md) | Phase 1–5 的详细任务与验收清单 |
+| [ASSETS](docs/ASSETS.md) | 素材来源、SIL OFL 和原创许可 |
+| [Windows 指南](docs/WINDOWS_PREVIEW.md) | 无 Git 下载、启动、更新与故障排查 |
+| `Public/js/` | 元数据、IndexedDB、通用 UI、素材、双语与图片导出模块 |
+| `Packages/LittleDaysCore/` | 共享 Swift 模型/规则/JSON/字体/素材 |
+| `Native/` | 原生 UI Package 和 iOS App 工程 |
 
-## 运行测试
+## 本轮测试
 
-Windows 的 HTTP 测试（仅需 Python）：
+当前在 Linux 验证：**22 项 Node、9 项 Python、5 项 Core Swift、2 项 Vapor，共 38 项自动化测试**；浏览器原流程与 V3 流程另行验证，详情见 agent.md。尚未在 Windows 实机执行 CMD/Python Launcher，也没有 iOS SDK 构建结果。
 
-```powershell
+Python HTTP/启动测试：
+
+```cmd
 py -3 -m unittest discover -s tests -p "test_*.py"
 ```
 
-可选 Web 自动化测试需要 Node.js 22+；开发预览本身不需要 Node。先保持预览服务运行，再开一个终端：
+可选浏览器测试需要 Node.js 22+，预览本身不需要。先启动 localhost，再开另一终端：
 
-```powershell
+```cmd
 npm ci
 npm test
 npx playwright install chromium
 npm run test:browser
+npm run test:browser:v3
 ```
 
-默认浏览器测试连接 http://127.0.0.1:8080 。PowerShell 可用 `$env:PREVIEW_URL="http://127.0.0.1:8081"` 改测试地址。测试使用独立浏览器上下文，不改你日常浏览器的记录。
+测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
 
-Swift 环境：根目录 `swift test --jobs 4` 验证 Vapor；`swift test --package-path Packages/LittleDaysCore --jobs 4` 独立验证共享 Core。修改颜色后运行 `python tools/sync_tokens.py` 并一同提交生成的 CSS。
+## 限制与下一步
 
-## 已知限制与下一步
-
-- 当前 Web 数据保存在本浏览器 LocalStorage，原生数据保存在本机 App 文件，两端尚未同步。清理站点数据、换浏览器或换端口不会保留同一份记录。
-- 照片较多可能达到浏览器存储上限；失败会显示提示。建议导出重要创作，下一阶段引入更可靠的图片存储与备份。
-- 尚未实现照片自由裁切/拖动/缩放/旋转、多照片、自由文本框、独立胶带/相框素材库；导出是基础版式，长文和字体可能与预览有差异。
-- 还没有完整字体/原创素材商店、跨端同步、提醒、复杂成长统计及 App Store 发布能力。
-- 测试环境为 Linux；Windows 实机、iOS SDK 编译与真机仍待验证。优先推进原生编译验证、照片裁切和自由编辑、媒体备份。
+- 视频单文件 50 MB，音频 20 MB，录音单次最多 5 分钟；格式兼容性取决于浏览器，当前验证 Chromium。浏览器原生媒体/日期控件的语言跟随浏览器设置。
+- 新媒体在 IndexedDB，仍属本机站点数据，清理浏览器数据可能删除。完整备份媒体导出上限 100 MB，导入文件上限 150 MB；尚无分卷、加密或云备份。
+- 静态 PNG 不包含可播放的音视频；导出与 DOM 排版存在差异。主照片自由裁切、滤镜、完整相框和高级信息卡片仍未实现。
+- 没有真实用户账号、社区/好友/私信服务、协作角色与原子版本控制、背景音乐或流媒体接入。旧标签页提示不等于多人协作。
+- 优先做 Windows/iOS 平台实测与原生个人能力对齐；再按 Phase 2 做清楚标注的社交原型，Phase 3 服务端，Phase 4 协作，Phase 5 高级创作/授权音乐。
 
 ## 协作与会话接续
 
-每次开始先读 AGENTS.md、agent.md、README.md，再检查最新代码、分支和提交；每次改动必须同步维护 **agent.md 和 README.md 的更新日志，并与代码一起提交**。保留旧日志。新聊天提供仓库链接并要求先读这三份文档即可接续。
+开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — V3 Phase 1：自定义书本、素材、多媒体与双语
+
+- 在原架构上增强任意主题书本、六种封面、七种字段及主题预设；Private 默认，公开/协作暂禁用。
+- 新增七款附 OFL 许可证的实际字体、十类 23 款原创 SVG/PNG、独立文字框和照片拼贴层。
+- 新增视频、音频、录音与 IndexedDB；旧照片安全迁移、完整本机备份/确认恢复、旧标签页检测。
+- 新增 Web 全界面双语、原生基础双语/字体/封面，以及无需 Git 的 Windows ZIP/双击启动说明。
+- 整理完整 V3 需求、五阶段清单与未来 Vapor 后端/权限设计；未实现的社交、协作、音乐明确标注。
+- 验证：38 项自动化测试全部通过，原有与 V3 两套浏览器 E2E 通过；覆盖媒体刷新播放/虚拟录音/备份恢复/双语/旧数据/手机布局。Windows 实机与 iOS SDK 构建未验证，详情见 agent.md。
 
 ### 2026-11-07 — Little Days 第一阶段：SwiftUI 基础与 Windows 交互预览
 

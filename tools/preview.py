@@ -5,6 +5,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import sys
+import threading
+import webbrowser
 
 ROOT = Path(__file__).resolve().parents[1]
 SHARED = ROOT / 'Packages/LittleDaysCore/Sources/LittleDaysCore/Resources'
@@ -28,9 +30,31 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-Length', str(len(data)))
             self.end_headers()
             self.wfile.write(data)
+        elif path.startswith('/library/'):
+            parts = path.split('/')
+            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers'}:
+                self.send_error(404)
+                return
+            category, name = parts[2:]
+            catalog = json.loads((SHARED / 'library.json').read_text(encoding='utf-8'))
+            allowed = {item[key] for item in catalog[category] for key in ('file', 'nativeFile', 'license') if key in item}
+            if name not in allowed:
+                self.send_error(404)
+                return
+            location = SHARED / category.title() / name
+            if not location.is_file():
+                self.send_error(404)
+                return
+            data = location.read_bytes()
+            content_type = {'.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8'}.get(location.suffix, 'application/octet-stream')
+            self.send_response(200)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
         elif path.startswith('/shared/'):
             name = path.removeprefix('/shared/')
-            if name not in {'design-tokens.json', 'features.json', 'seed.json'}:
+            if name not in {'design-tokens.json', 'features.json', 'seed.json', 'library.json', 'i18n.json'}:
                 self.send_error(404)
                 return
             data = (SHARED / name).read_bytes()
@@ -46,20 +70,36 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache')
         super().end_headers()
 
-def main():
+def open_browser(url):
+    try:
+        opened = webbrowser.open(url, new=2)
+    except (OSError, webbrowser.Error):
+        opened = False
+    if not opened:
+        print(f'Open this address in your browser: {url}', flush=True)
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=8080)
-    args = parser.parse_args()
+    parser.add_argument('--open', action='store_true', help='Open the localhost preview in your browser')
+    args = parser.parse_args(argv)
     if not 1 <= args.port <= 65535:
         parser.error('--port must be between 1 and 65535')
+    required = [ROOT / 'Public/index.html', ROOT / 'Public/app.js', SHARED / 'seed.json', SHARED / 'library.json', SHARED / 'i18n.json']
+    if not all(path.is_file() for path in required):
+        print('Incomplete project. Extract the entire Notebook ZIP, then run Start-Windows.cmd from the extracted folder.', file=sys.stderr)
+        return 1
     handler = partial(PreviewHandler, directory=str(ROOT / 'Public'))
     try:
         server = ThreadingHTTPServer(('127.0.0.1', args.port), handler)
     except OSError as error:
-        print(f'Cannot start localhost:{args.port}: {error}. Try --port 8081.', file=sys.stderr)
+        alternative = args.port + 1 if args.port < 65535 else 8080
+        print(f'Cannot start localhost:{args.port}: {error}. Try --port {alternative}.', file=sys.stderr)
         return 1
     print(f'Little Days Web preview: http://localhost:{args.port}', flush=True)
     print('HTML interactive preview; not a running SwiftUI app. Ctrl+C to stop.', flush=True)
+    if args.open:
+        threading.Thread(target=open_browser, args=(f'http://localhost:{args.port}',), daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

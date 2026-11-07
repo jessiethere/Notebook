@@ -29,7 +29,7 @@ final class NotebookAppTests: XCTestCase {
                 XCTAssertTrue(response.body.string.contains("Little Days"))
                 XCTAssertTrue(response.headers.contentType?.description.contains("text/html") == true)
             }
-            for path in ["/styles.css", "/app.js", "/js/model.mjs", "/shared/design-tokens.json", "/shared/features.json", "/shared/seed.json", "/assets/coffee.jpg"] {
+            for path in ["/styles.css", "/app.js", "/js/model.mjs", "/js/media.mjs", "/shared/design-tokens.json", "/shared/features.json", "/shared/seed.json", "/shared/library.json", "/shared/i18n.json", "/assets/coffee.jpg", "/library/stickers/LD-sticker-bear.svg", "/library/fonts/LD-handwritten.ttf"] {
                 try await app.test(.GET, path) { response async throws in
                     XCTAssertEqual(response.status, .ok)
                     XCTAssertGreaterThan(response.body.readableBytes, 0)

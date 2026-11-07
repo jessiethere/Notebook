@@ -44,7 +44,51 @@ public struct Seed: Decodable {
     public let journals: [JournalSeed]
 }
 
+public struct FontAsset: Decodable, Identifiable {
+    public let id: String
+    public let name: String
+    public let family: String
+    public let postScriptName: String
+    public let category: String
+    public let file: String
+    public let license: String
+    public let source: String
+    public let supportsChinese: Bool
+}
+
+public struct StickerAsset: Decodable, Identifiable {
+    public let id: String
+    public let category: String
+    public let nameZh: String
+    public let nameEn: String
+    public let file: String
+    public let nativeFile: String
+    public let license: String
+}
+
+public struct AssetCatalog: Decodable {
+    public let schemaVersion: Int
+    public let fonts: [FontAsset]
+    public let stickers: [StickerAsset]
+    public let coverTemplates: [MaterialTemplate]
+    public let fieldTypes: [String]
+}
+
 public enum SharedResources {
+    public static func libraryData(category: String, filename: String) throws -> Data {
+        let catalog = try decode(AssetCatalog.self, named: "library")
+        let allowed: Set<String>
+        switch category {
+        case "fonts": allowed = Set(catalog.fonts.flatMap { [$0.file, $0.license] })
+        case "stickers": allowed = Set(catalog.stickers.flatMap { [$0.file, $0.nativeFile, $0.license] })
+        default: throw CocoaError(.fileNoSuchFile)
+        }
+        guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }
+        let path = filename as NSString
+        guard let url = Bundle.module.url(forResource: path.deletingPathExtension, withExtension: path.pathExtension) else { throw CocoaError(.fileNoSuchFile) }
+        return try Data(contentsOf: url)
+    }
+
     public static func mediaData(named name: String) throws -> Data {
         guard ["coffee", "lake"].contains(name),
               let url = Bundle.module.url(forResource: name, withExtension: "jpg") else {
@@ -54,7 +98,7 @@ public enum SharedResources {
     }
 
     public static func data(named name: String) throws -> Data {
-        guard ["design-tokens", "features", "seed"].contains(name),
+        guard ["design-tokens", "features", "seed", "library", "i18n"].contains(name),
               let url = Bundle.module.url(forResource: name, withExtension: "json") else {
             throw CocoaError(.fileNoSuchFile)
         }

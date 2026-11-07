@@ -18,7 +18,7 @@ export function weeklyCount(state, habitId, key) {
   ).length;
 }
 export function createInitialState(seed, today = dateKey()) {
-  return {
+  return normalizeState({
     schemaVersion: 1,
     habits: structuredClone(seed.habits),
     books: structuredClone(seed.books),
@@ -31,7 +31,45 @@ export function createInitialState(seed, today = dateKey()) {
       isDemo: true,
       updatedAt: new Date().toISOString(),
     })),
-  };
+  });
+}
+export function normalizeState(value) {
+  const result = structuredClone(value);
+  for (const book of result.books) {
+    book.visibility ||= "private";
+    book.description ??= "";
+    book.coverTemplate ||=
+      book.category === "Travel"
+        ? "travel-album"
+        : book.category === "Food"
+          ? "scrapbook-collage"
+          : book.category === "Daily Life"
+            ? "floral-notebook"
+            : "minimal-linen";
+    book.coverDecoration ||=
+      book.category === "Travel"
+        ? "postcard"
+        : book.category === "Food"
+          ? "croissant"
+          : "tulip";
+    book.coverFont ||= "elegant";
+    book.fields ||= [];
+  }
+  for (const entry of [...result.entries, ...Object.values(result.drafts)]) {
+    entry.media ||= [];
+    entry.fieldValues ||= {};
+    entry.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };
+    entry.visibility ||= "private";
+  }
+  return result;
+}
+export function saveBook(state, book) {
+  if (!book.title.trim() || !book.category.trim())
+    throw new Error("error.bookRequired");
+  const index = state.books.findIndex((item) => item.id === book.id);
+  const saved = { ...structuredClone(book), visibility: "private" };
+  if (index < 0) state.books.push(saved);
+  else state.books[index] = saved;
 }
 export function toggleCheck(state, habitId, date, minutes = 0) {
   if (!state.habits.some((h) => h.id === habitId))
@@ -53,6 +91,7 @@ export function saveEntry(state, entry) {
   const saved = {
     ...structuredClone(entry),
     isDemo: false,
+    visibility: "private",
     updatedAt: new Date().toISOString(),
   };
   const index = state.entries.findIndex((e) => e.date === saved.date);
@@ -60,10 +99,108 @@ export function saveEntry(state, entry) {
   else state.entries.push(saved);
   delete state.drafts[saved.date];
 }
+export function validateStateSnapshot(value) {
+  const object = (item) =>
+    item !== null && typeof item === "object" && !Array.isArray(item);
+  const text = (item) => typeof item === "string";
+  if (
+    !object(value) ||
+    value.schemaVersion !== 1 ||
+    !["books", "entries", "habits", "checks"].every((key) =>
+      Array.isArray(value[key]),
+    ) ||
+    !object(value.drafts)
+  )
+    throw new Error("error.invalidData");
+  for (const book of value.books) {
+    if (
+      !object(book) ||
+      ![book.id, book.title, book.category].every(text) ||
+      (book.fields != null && !Array.isArray(book.fields))
+    )
+      throw new Error("error.invalidData");
+  }
+  for (const book of value.books)
+    for (const field of book.fields || []) {
+      if (
+        !object(field) ||
+        ![field.id, field.label, field.type].every(text) ||
+        ![
+          "text",
+          "number",
+          "date",
+          "select",
+          "checkbox",
+          "duration",
+          "image",
+        ].includes(field.type) ||
+        (field.options != null &&
+          (!Array.isArray(field.options) || !field.options.every(text)))
+      )
+        throw new Error("error.invalidData");
+    }
+  for (const entry of [...value.entries, ...Object.values(value.drafts)]) {
+    if (
+      !object(entry) ||
+      ![entry.id, entry.date, entry.title, entry.body].every(text) ||
+      (entry.layers != null && !Array.isArray(entry.layers)) ||
+      (entry.media != null && !Array.isArray(entry.media)) ||
+      (entry.fieldValues != null && !object(entry.fieldValues)) ||
+      (entry.updatedAt != null && !text(entry.updatedAt))
+    )
+      throw new Error("error.invalidData");
+    for (const clip of entry.media || [])
+      if (
+        !object(clip) ||
+        ![clip.id, clip.kind, clip.source, clip.name, clip.mime].every(text) ||
+        !["audio", "video"].includes(clip.kind)
+      )
+        throw new Error("error.invalidData");
+    for (const layer of entry.layers || []) {
+      if (
+        !object(layer) ||
+        ![layer.id, layer.text].every(text) ||
+        ![layer.x, layer.y, layer.scale, layer.rotation].every(Number.isFinite)
+      )
+        throw new Error("error.invalidData");
+    }
+  }
+  for (const habit of value.habits) {
+    if (
+      !object(habit) ||
+      ![habit.id, habit.title, habit.theme, habit.kind].every(text) ||
+      !["completion", "duration"].includes(habit.kind) ||
+      !Number.isInteger(habit.target) ||
+      habit.target < 1 ||
+      habit.target > 7 ||
+      !Number.isFinite(habit.minutes)
+    )
+      throw new Error("error.invalidData");
+  }
+  for (const check of value.checks) {
+    if (
+      !object(check) ||
+      ![check.habitId, check.date].every(text) ||
+      !Number.isFinite(check.minutes)
+    )
+      throw new Error("error.invalidData");
+  }
+  const checkKeys = (item) => {
+    if (!item || typeof item !== "object") return;
+    for (const [key, child] of Object.entries(item)) {
+      if (["__proto__", "prototype", "constructor"].includes(key))
+        throw new Error("error.invalidData");
+      checkKeys(child);
+    }
+  };
+  checkKeys(value);
+  return value;
+}
 export class Store {
   constructor(storage, seed, today = dateKey()) {
     this.storage = storage;
     const raw = storage.getItem("little-days.v1");
+    this.baselineRaw = raw;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (
@@ -72,17 +209,26 @@ export class Store {
           Array.isArray(parsed[key]),
         ) ||
         !parsed.drafts ||
+        Array.isArray(parsed.drafts) ||
         typeof parsed.drafts !== "object"
       )
         throw new Error("本地记录格式不兼容，请先备份浏览器数据。");
-      this.state = parsed;
+      this.state = normalizeState(validateStateSnapshot(parsed));
     } else this.state = createInitialState(seed, today);
   }
   update(change) {
+    if (this.storage.getItem("little-days.v1") !== this.baselineRaw) {
+      const error = new Error("error.conflict");
+      error.code = "stale-state";
+      throw error;
+    }
     const next = structuredClone(this.state);
     change(next);
+    validateStateSnapshot(next);
     // Write first: a storage failure must not be reported as a successful save.
-    this.storage.setItem("little-days.v1", JSON.stringify(next));
+    const encoded = JSON.stringify(next);
+    this.storage.setItem("little-days.v1", encoded);
+    this.baselineRaw = encoded;
     this.state = next;
   }
 }
