@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "habits": [
+    {
+      "id": "reading",
+      "title": "读几页喜欢的书",
+      "theme": "Learning",
+      "kind": "duration",
+      "target": 4,
+      "minutes": 20
+    },
+    {
+      "id": "move",
+      "title": "让身体动起来",
+      "theme": "Fitness",
+      "kind": "completion",
+      "target": 3,
+      "minutes": 0
+    },
+    {
+      "id": "pause",
+      "title": "给自己五分钟",
+      "theme": "Wellness",
+      "kind": "duration",
+      "target": 5,
+      "minutes": 5
+    }
+  ],
+  "books": [
+    {
+      "id": "daily",
+      "title": "平凡日子里的小确幸",
+      "category": "Daily Life",
+      "color": "blush",
+      "cover": "🌷"
+    },
+    {
+      "id": "travel",
+      "title": "去看更大的世界",
+      "category": "Travel",
+      "color": "sage",
+      "cover": "🏔️"
+    },
+    {
+      "id": "food",
+      "title": "好好吃饭，好好生活",
+      "category": "Food",
+      "color": "butter",
+      "cover": "🥐"
+    }
+  ],
+  "journals": [
+    {
+      "id": "sample-today",
+      "dayOffset": 0,
+      "title": "把日子过成喜欢的样子",
+      "body": "一杯热咖啡，一点慢下来的时间。\n今天，也收集到了生活的小小美好。",
+      "mood": "☀️",
+      "bookId": "daily",
+      "photo": "/assets/coffee.jpg",
+      "template": "cute",
+      "font": "serif"
+    },
+    {
+      "id": "sample-walk",
+      "dayOffset": -2,
+      "title": "山与湖，和自由的风",
+      "body": "走出去，才发现生活还有好多种颜色。",
+      "mood": "🌷",
+      "bookId": "travel",
+      "photo": "/assets/lake.jpg",
+      "template": "vintage",
+      "font": "serif"
+    }
+  ]
+}

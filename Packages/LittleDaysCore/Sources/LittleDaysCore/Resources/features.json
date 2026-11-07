@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "tabs": [
+    { "id": "home", "title": "Home", "subtitle": "首页", "symbol": "house" },
+    {
+      "id": "calendar",
+      "title": "Calendar",
+      "subtitle": "日历",
+      "symbol": "calendar"
+    },
+    { "id": "studio", "title": "Studio", "subtitle": "创作", "symbol": "plus" },
+    { "id": "growth", "title": "Growth", "subtitle": "成长", "symbol": "leaf" },
+    {
+      "id": "books",
+      "title": "My Books",
+      "subtitle": "手帐本",
+      "symbol": "book"
+    }
+  ],
+  "templates": [
+    { "id": "minimal", "title": "Minimal" },
+    { "id": "cute", "title": "Cute" },
+    { "id": "vintage", "title": "Vintage" }
+  ],
+  "moods": ["☀️", "🌷", "☁️", "🌧️", "✨"],
+  "stickers": {
+    "cute": ["🌷", "🍓", "🎀", "🐰", "🌼", "🧸"],
+    "minimal": ["♡", "✦", "☀", "☾", "✿", "〰"],
+    "vintage": ["🗝️", "✉️", "🕯️", "🦋", "🍂", "📜"]
+  }
+}

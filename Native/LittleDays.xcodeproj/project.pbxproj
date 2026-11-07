@@ -1,0 +1,75 @@
+// !$*UTF8*$!
+{
+    archiveVersion = 1;
+    classes = {};
+    objectVersion = 56;
+    objects = {
+        A00000000000000000000001 = {isa = PBXBuildFile; fileRef = A00000000000000000000002; };
+        A00000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LittleDaysApp.swift; sourceTree = "<group>"; };
+        A00000000000000000000003 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LittleDays.app; sourceTree = BUILT_PRODUCTS_DIR; };
+        A00000000000000000000004 = {isa = PBXBuildFile; productRef = A00000000000000000000014; };
+        A00000000000000000000005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000004,); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000006 = {isa = PBXGroup; children = (A00000000000000000000007,A00000000000000000000008,); sourceTree = "<group>"; };
+        A00000000000000000000007 = {isa = PBXGroup; children = (A00000000000000000000002,); path = App; sourceTree = "<group>"; };
+        A00000000000000000000008 = {isa = PBXGroup; children = (A00000000000000000000003,); name = Products; sourceTree = "<group>"; };
+        A00000000000000000000009 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = A00000000000000000000012;
+            buildPhases = (A0000000000000000000000A,A00000000000000000000005,A0000000000000000000000B,);
+            buildRules = (); dependencies = ();
+            name = LittleDays;
+            packageProductDependencies = (A00000000000000000000014,);
+            productName = LittleDays; productReference = A00000000000000000000003; productType = "com.apple.product-type.application";
+        };
+        A0000000000000000000000A = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000001,); runOnlyForDeploymentPostprocessing = 0; };
+        A0000000000000000000000B = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A0000000000000000000000C = {
+            isa = PBXProject;
+            attributes = {BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; TargetAttributes = {A00000000000000000000009 = {CreatedOnToolsVersion = 16.0; }; }; };
+            buildConfigurationList = A00000000000000000000011;
+            compatibilityVersion = "Xcode 14.0";
+            developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base,"zh-Hans",);
+            mainGroup = A00000000000000000000006;
+            packageReferences = (A00000000000000000000013,);
+            productRefGroup = A00000000000000000000008;
+            projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000009,);
+        };
+        A0000000000000000000000D = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; }; name = Debug; };
+        A0000000000000000000000E = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; }; name = Release; };
+        A0000000000000000000000F = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES;
+                CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0;
+                INFOPLIST_KEY_CFBundleDisplayName = "Little Days";
+                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+                INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+                INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+                PRODUCT_BUNDLE_IDENTIFIER = com.jessiethere.littledays; PRODUCT_NAME = "$(TARGET_NAME)";
+                SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1;
+                SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+            };
+            name = Debug;
+        };
+        A00000000000000000000010 = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = YES;
+                CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0;
+                INFOPLIST_KEY_CFBundleDisplayName = "Little Days";
+                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+                INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+                INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+                PRODUCT_BUNDLE_IDENTIFIER = com.jessiethere.littledays; PRODUCT_NAME = "$(TARGET_NAME)";
+                SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1;
+                SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_OPTIMIZATION_LEVEL = "-O";
+            };
+            name = Release;
+        };
+        A00000000000000000000011 = {isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000D,A0000000000000000000000E,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        A00000000000000000000012 = {isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000F,A00000000000000000000010,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        A00000000000000000000013 = {isa = XCLocalSwiftPackageReference; relativePath = .; };
+        A00000000000000000000014 = {isa = XCSwiftPackageProductDependency; package = A00000000000000000000013; productName = LittleDaysUI; };
+    };
+    rootObject = A0000000000000000000000C;
+}

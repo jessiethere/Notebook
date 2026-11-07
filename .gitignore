@@ -2,5 +2,11 @@
 .swiftpm/
 .DS_Store
 .env
-*.xcodeproj/
+# The native Xcode project is source; only user/build files are ignored.
+**/xcuserdata/
+**/DerivedData/
+**/__pycache__/
+*.pyc
+node_modules/
+test-results/
 *.xcworkspace/

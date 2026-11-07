@@ -6,10 +6,14 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [.executable(name: "NotebookServer", targets: ["NotebookServer"])],
     dependencies: [
+        .package(path: "Packages/LittleDaysCore"),
         .package(url: "https://github.com/vapor/vapor.git", exact: "4.110.1")
     ],
     targets: [
-        .target(name: "NotebookApp", dependencies: [.product(name: "Vapor", package: "vapor")]),
+        .target(name: "NotebookApp", dependencies: [
+            .product(name: "Vapor", package: "vapor"),
+            .product(name: "LittleDaysCore", package: "LittleDaysCore")
+        ]),
         .executableTarget(name: "NotebookServer", dependencies: [
             "NotebookApp", .product(name: "Vapor", package: "vapor")
         ]),

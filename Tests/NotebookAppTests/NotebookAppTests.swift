@@ -9,7 +9,7 @@ final class NotebookAppTests: XCTestCase {
             try await app.test(.GET, "/api/health") { response async throws in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(try response.content.decode([String: String].self), [
-                    "status": "ok", "app": "Notebook", "framework": "Vapor"
+                    "status": "ok", "app": "Little Days", "framework": "Vapor"
                 ])
             }
         } catch {
@@ -26,10 +26,10 @@ final class NotebookAppTests: XCTestCase {
             XCTAssertEqual(app.http.server.configuration.hostname, "127.0.0.1")
             try await app.test(.GET, "/") { response async throws in
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertTrue(response.body.string.contains("你的工作台已准备好"))
+                XCTAssertTrue(response.body.string.contains("Little Days"))
                 XCTAssertTrue(response.headers.contentType?.description.contains("text/html") == true)
             }
-            for path in ["/styles.css", "/app.js"] {
+            for path in ["/styles.css", "/app.js", "/js/model.mjs", "/shared/design-tokens.json", "/shared/features.json", "/shared/seed.json", "/assets/coffee.jpg"] {
                 try await app.test(.GET, path) { response async throws in
                     XCTAssertEqual(response.status, .ok)
                     XCTAssertGreaterThan(response.body.readableBytes, 0)
