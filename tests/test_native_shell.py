@@ -20,8 +20,8 @@ class NativeShellTests(unittest.TestCase):
             self.assertIn(route, swift)
         app = (ROOT / 'Public/app.js').read_text(encoding='utf-8')
         # Every absolute fetch in the Web app must be one of the routes above.
-        for path in re.findall(r'fetch\(`(/[^`$]*)', app):
-            self.assertTrue(path.startswith(('/shared/', '/library/', '/assets/')), path)
+        for path in re.findall(r'fetch\(`([^`$]*)', app):
+            self.assertTrue(path.lstrip('/').startswith(('shared/', 'library/', 'assets/')), path)
 
     def test_app_entry_uses_the_web_shell_and_declares_device_permissions(self):
         entry = (ROOT / 'Native/App/LittleDaysApp.swift').read_text(encoding='utf-8')

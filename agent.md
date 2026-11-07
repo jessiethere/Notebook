@@ -48,6 +48,30 @@
 
 ## 更新日志
 
+### 2026-11-07 — V3.2：创作桌面、成长轨迹、按日封面、更多纸张/主题/中文字体
+
+- 需求（用户反馈）：纸张只有三种；添加内容要拖到很下面、排版与照片分离、看不到改动效果，希望概括菜单点开看细节；选中小故事后如何看/播放音视频；宠物、亲子主题；像看书一样看习惯成长和每日心得；小确幸按日子有封面、日子里看具体事件；手帐本选择日期；中文字体更多样。另附 V3 全量需求（社区/好友/私信/协作/后端），按 ROADMAP Phase 2–4 处理。
+- 修改/新增：`Public/app.js`（Studio 桌面：小故事标签条、固定预览与放大、概括菜单与摘要实时更新、选中图层/加照片/选中有媒体的小故事自动展开对应行；成长轨迹页面、翻页/滑动/方向键；手帐本按日封面与筛选）；新增 `Public/js/journey-view.mjs`；`Public/js/day.mjs`（`habitJourney`、`bookDays`、`bookMonths`）；`canvas.mjs`/`export.mjs`（9 种纸张）；`styles.css`；共享 `features.json`（纸张）、`library.json`（4 款中文字体、6 套新预设）、`i18n.json`（约 60 条）；4 个 TTF + OFL；`tools/merge_font_slices.py`；测试 `tests/v32-browser.cjs`、`v31.test.mjs`（+2）、`library.test.mjs`（字体数量）及三套旧 E2E（改为先展开菜单行）；文档 ROADMAP、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、ASSETS；iOS 外壳副本已同步。
+- 决策：一次只展开一个菜单行，避免页面变长；摘要用 `refreshToolSummaries` 局部更新，不打断输入；中文字体来自包管理器可访问的 OFL npm 包（GitHub/Google Fonts 下载被网络策略阻止），合并工具去重后体积 1.5–7 MB/款。
+- 运行与测试：Node 35、Python 12 通过；`browser.cjs`、`v3-browser.cjs`、`v31-browser.cjs`、新 `v32-browser.cjs`（菜单一次一行、9 种纸张切换、预览固定可放大、心情/排版/标题摘要同步、选中小故事直接播放、6 套新预设与 5 款中文字体加载、成长轨迹统计/按钮/方向键/滑动/目录/写今日心得、按日封面与月份/日期筛选、375/390/430 无横向溢出）全部通过。未验证：Windows 实机、iOS 构建。
+- 已知问题：合并后的中文字体不含竖排/复杂替换特性；社区等社交功能未开始。
+- 下一步：用户确认 Phase 2 社交原型范围；在线链接已按规则重新发布。
+
+### 2026-11-07 — 桌面 App 可点击的 Dev servers
+
+- 需求：在 environment 里有一个随时可点的服务器。
+- 调查：官方文档仅说明 Claude 桌面 App 本地会话通过 `.claude/launch.json` 提供 Browser 面板的 Dev servers；网页/云端会话侧栏没有文档化的服务器列表（无法在当前云端会话中实现）。
+- 改动：新增 `.claude/launch.json`（Little Days (Windows) = `py -3 tools/preview.py --port 8080`；macOS/Linux = `python3`；`autoPort:false`）；README、AGENTS.md 说明。
+- 验证：JSON（含注释）结构按文档字段编写；未在用户的 Windows 桌面 App 中实测。
+
+### 2026-11-07 — 在线链接（claude.ai Artifact）
+
+- 需求：用户的会话面板没有 servers 区，看不到 localhost；希望有一个点开就能看的链接。
+- 改动：Web 资源路径全部改为相对路径（index/CSS/fonts.css 生成器/`shared/` fetch/`library/` 贴纸与许可证/示例照片 `/assets/…` 在显示时转为相对路径，保存的数据不变）；四处 `confirm()` 改为页面内确认框 `askConfirm`（在线链接会拒绝浏览器弹窗；localhost 与 iOS 外壳同样适用）；`body` 明确背景色；新增 `tools/build_link.py` 生成 `dist/link/`（不提交）；发布为私有 Artifact：https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A ；README 顶部改为该链接，AGENTS.md 写明每次更新发布到同一链接；测试改为点击页面内确认框；iOS 外壳副本已同步。
+- 验证：Node 33、Python 12、三套浏览器 E2E 全部通过；本地模拟子路径 + 外框加载在线版：0 个失败请求、0 个脚本错误，照片与贴纸正常显示。
+- 已知限制：在线链接里麦克风录音被拒绝（会提示）、下载（备份/PNG）无效、数据只在该浏览器；未在用户设备上确认打开效果。
+- 下一步：用户点开链接确认；以后每次改动重新构建并发布到同一链接。
+
 ### 2026-11-07 — 修复会话 servers 面板看不到 localhost
 
 - 需求：合并 V3.1 + 外壳到 main（PR #1 已合并，`f926f1d`）；用户在 environment 旁的 servers 里看不到 localhost。

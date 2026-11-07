@@ -1,4 +1,5 @@
-export const LIBRARY_BASE = "/library/";
+// Relative so the same files work on localhost, in the iOS shell and as a hosted link.
+export const LIBRARY_BASE = "library/";
 export function fontFamily(fontId, catalog) {
   const font = catalog.fonts.find((f) => f.id === fontId);
   return font

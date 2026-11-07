@@ -49,6 +49,9 @@ flowchart TD
 | `Public/js/day.mjs` | V3.1 纯函数：Moments 增删改序与单独保存、日期摘要、手帐本归类、打卡感想/周月回顾、自动版式与照片图层 |
 | `Public/js/canvas.mjs` | V3.1 共享画布与媒体卡片渲染：Studio 编辑模式与 Day Detail 只读模式使用同一套标记 |
 | `Public/js/day-view.mjs` | V3.1 Calendar Day Detail 只读回忆页 |
+| `Public/js/journey-view.mjs` | V3.2 习惯成长轨迹（书页式阅读） |
+| `tools/merge_font_slices.py` | V3.2 把 OFL 网页字体子集合并回单个 TTF（来源记录） |
+| `tools/build_link.py` | 生成在线链接（claude.ai Artifact）用的文件夹 `dist/link/` |
 | `tools/preview.py` | 127.0.0.1 HTTP、共享资源白名单、`--open`、完整解压检查 |
 | `Start-Windows.cmd` | 自动进入项目目录，检测 Python 3.10+，启动并打开浏览器；无需 Git |
 | `tools/sync_tokens.py` / `sync_library.py` | 从共享 JSON 生成颜色回退和字体 CSS，非运行时构建 |

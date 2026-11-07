@@ -22,3 +22,14 @@ OFL 允许遵守许可的商业使用、嵌入及再分发；字体文件中的�
 Stickers 目录包含本项目原创的 23 个 SVG 与对应透明 480px PNG，覆盖十类素材。原创许可见 LittleDays-Original-Assets.txt，允许随项目/衍生应用商业使用与修改，并保留声明；不含第三方贴纸包。
 
 测试中的视频、波形音频和虚拟麦克风由测试程序合成，不是用户媒体，不用作背景音乐资源。真实用户媒体和导出的本机备份不得提交到仓库。真实 Web 截图使用公开示例或明确的合成测试内容，不是 SwiftUI 截图。
+
+## V3.2 新增中文字体
+
+| 字体 | 风格 | 来源与生成 |
+| --- | --- | --- |
+| 站酷快乐体 ZCOOL KuaiLe | 可爱圆润 | npm `@fontsource/zcool-kuaile@5.3.0`（Google Fonts ofl/zcoolkuaile） |
+| 站酷小薇 ZCOOL XiaoWei | 雅致宋 | npm `@fontsource/zcool-xiaowei@5.3.0`（Google Fonts ofl/zcoolxiaowei） |
+| 龙藏体 Long Cang | 手写行书 | npm `@fontsource/long-cang@5.3.0`（Google Fonts ofl/longcang） |
+| 霞鹜文楷 LXGW WenKai | 楷体，适合正文与心得 | npm `lxgw-wenkai-webfont@1.7.0`（字体 v1.250，github.com/lxgw/LxgwWenKai） |
+
+npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.py` 把同一字体的子集合并回一个 TTF：字形轮廓、字体名称、版权与 OFL 均不改变，每个字形只保留一份；只删除引用子集内部字形编号的排版/竖排表（GSUB/GPOS/GDEF、vhea/vmtx、morx 等），因此复杂排版特性（如竖排替换）不可用。四款字体的 OFL 均未声明 Reserved Font Name；许可证文本随文件放在 `Fonts/LD-zh-*-OFL.txt`，SHA-256 记录在 library.json。

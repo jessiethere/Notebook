@@ -11,5 +11,5 @@ for font in catalog['fonts']:
         if not (resources / 'Fonts' / name).is_file():
             raise FileNotFoundError(name)
     weights = f"{font['weightMin']} {font['weightMax']}" if font['weightMin'] != font['weightMax'] else str(font['weightMin'])
-    css += f'@font-face {{ font-family: "{font["family"]}"; src: url("/library/fonts/{font["file"]}") format("truetype"); font-weight: {weights}; font-style: normal; font-display: swap; }}\n'
+    css += f'@font-face {{ font-family: "{font["family"]}"; src: url("library/fonts/{font["file"]}") format("truetype"); font-weight: {weights}; font-style: normal; font-display: swap; }}\n'
 (root / 'Public/fonts.css').write_text(css, encoding='utf-8')

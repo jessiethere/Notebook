@@ -98,6 +98,62 @@
       "weightMin": 400,
       "weightMax": 400,
       "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb"
+    },
+    {
+      "id": "zh-kuaile",
+      "name": "站酷快乐体 ZCOOL KuaiLe",
+      "family": "LD-zh-kuaile",
+      "postScriptName": "ZCOOLKuaiLe-Regular",
+      "category": "Chinese Fonts",
+      "file": "LD-zh-kuaile.ttf",
+      "license": "LD-zh-kuaile-OFL.txt",
+      "source": "npm:@fontsource/zcool-kuaile@5.3.0 (Google Fonts ofl/zcoolkuaile), slices rebuilt with tools/merge_font_slices.py",
+      "supportsChinese": true,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "357d109aa2dc16e6ed0316f1399b697092da8d20903a54256948b611a4724e8f"
+    },
+    {
+      "id": "zh-xiaowei",
+      "name": "站酷小薇 ZCOOL XiaoWei",
+      "family": "LD-zh-xiaowei",
+      "postScriptName": "ZCOOLXiaoWei-Regular",
+      "category": "Chinese Fonts",
+      "file": "LD-zh-xiaowei.ttf",
+      "license": "LD-zh-xiaowei-OFL.txt",
+      "source": "npm:@fontsource/zcool-xiaowei@5.3.0 (Google Fonts ofl/zcoolxiaowei), slices rebuilt with tools/merge_font_slices.py",
+      "supportsChinese": true,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "f66a88970712386c683f4cd32e3641c9e2462cc4188205a9491a89f78cdcd857"
+    },
+    {
+      "id": "zh-longcang",
+      "name": "龙藏体 Long Cang",
+      "family": "LD-zh-longcang",
+      "postScriptName": "LongCang-Regular",
+      "category": "Chinese Fonts",
+      "file": "LD-zh-longcang.ttf",
+      "license": "LD-zh-longcang-OFL.txt",
+      "source": "npm:@fontsource/long-cang@5.3.0 (Google Fonts ofl/longcang), slices rebuilt with tools/merge_font_slices.py",
+      "supportsChinese": true,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "c8f795df44da7f57e456d42a18379e89598ae1cbd61f951c0b099a1e9e288b08"
+    },
+    {
+      "id": "zh-wenkai",
+      "name": "霞鹜文楷 LXGW WenKai",
+      "family": "LD-zh-wenkai",
+      "postScriptName": "LXGWWenKai-Regular",
+      "category": "Chinese Fonts",
+      "file": "LD-zh-wenkai.ttf",
+      "license": "LD-zh-wenkai-OFL.txt",
+      "source": "npm:lxgw-wenkai-webfont@1.7.0 (https://github.com/lxgw/LxgwWenKai v1.250), slices rebuilt with tools/merge_font_slices.py",
+      "supportsChinese": true,
+      "weightMin": 400,
+      "weightMax": 400,
+      "sha256": "e8eaf6b52e063147610239c43a22012b69955f2ecd261f7815d3da9283931df7"
     }
   ],
   "stickers": [
@@ -481,7 +537,10 @@
           "labelZh": "收支类型",
           "labelEn": "Income / expense",
           "type": "select",
-          "options": ["Income", "Expense"]
+          "options": [
+            "Income",
+            "Expense"
+          ]
         },
         {
           "id": "amount",
@@ -583,6 +642,379 @@
           "labelZh": "备注",
           "labelEn": "Notes",
           "type": "text",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "pet",
+      "nameZh": "Pet · 宠物日记",
+      "nameEn": "Pet Journal",
+      "fields": [
+        {
+          "id": "pet-name",
+          "label": "宠物名字",
+          "labelZh": "宠物名字",
+          "labelEn": "Pet name",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "activity",
+          "label": "今天做了什么",
+          "labelZh": "今天做了什么",
+          "labelEn": "What we did",
+          "type": "select",
+          "options": [
+            "散步 Walk",
+            "玩耍 Play",
+            "洗澡 Bath",
+            "看医生 Vet",
+            "训练 Training"
+          ]
+        },
+        {
+          "id": "food",
+          "label": "吃了什么",
+          "labelZh": "吃了什么",
+          "labelEn": "Food & treats",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "weight",
+          "label": "体重（kg）",
+          "labelZh": "体重（kg）",
+          "labelEn": "Weight (kg)",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "walk",
+          "label": "散步时长",
+          "labelZh": "散步时长",
+          "labelEn": "Walk time",
+          "type": "duration",
+          "options": []
+        },
+        {
+          "id": "health",
+          "label": "健康状况良好",
+          "labelZh": "健康状况良好",
+          "labelEn": "Healthy today",
+          "type": "checkbox",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "今日萌照",
+          "labelZh": "今日萌照",
+          "labelEn": "Photo of the day",
+          "type": "image",
+          "options": []
+        },
+        {
+          "id": "note",
+          "label": "小备注",
+          "labelZh": "小备注",
+          "labelEn": "Notes",
+          "type": "text",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "parenting",
+      "nameZh": "Parenting · 亲子成长",
+      "nameEn": "Family & Kids Journal",
+      "fields": [
+        {
+          "id": "child",
+          "label": "宝贝名字",
+          "labelZh": "宝贝名字",
+          "labelEn": "Child's name",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "milestone",
+          "label": "今天的新本领",
+          "labelZh": "今天的新本领",
+          "labelEn": "New milestone",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "activity",
+          "label": "一起做的事",
+          "labelZh": "一起做的事",
+          "labelEn": "What we did together",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "height",
+          "label": "身高（cm）",
+          "labelZh": "身高（cm）",
+          "labelEn": "Height (cm)",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "weight",
+          "label": "体重（kg）",
+          "labelZh": "体重（kg）",
+          "labelEn": "Weight (kg)",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "quote",
+          "label": "今天说的一句话",
+          "labelZh": "今天说的一句话",
+          "labelEn": "Words of the day",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "亲子照片",
+          "labelZh": "亲子照片",
+          "labelEn": "Family photo",
+          "type": "image",
+          "options": []
+        },
+        {
+          "id": "feeling",
+          "label": "我的感受",
+          "labelZh": "我的感受",
+          "labelEn": "How I felt",
+          "type": "text",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "travel",
+      "nameZh": "Travel · 旅行手帐",
+      "nameEn": "Travel Journal",
+      "fields": [
+        {
+          "id": "place",
+          "label": "地点",
+          "labelZh": "地点",
+          "labelEn": "Place",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "date",
+          "label": "日期",
+          "labelZh": "日期",
+          "labelEn": "Date",
+          "type": "date",
+          "options": []
+        },
+        {
+          "id": "transport",
+          "label": "交通",
+          "labelZh": "交通",
+          "labelEn": "Transport",
+          "type": "select",
+          "options": [
+            "飞机 Flight",
+            "火车 Train",
+            "自驾 Car",
+            "步行 Walk",
+            "骑行 Bike"
+          ]
+        },
+        {
+          "id": "budget",
+          "label": "花费",
+          "labelZh": "花费",
+          "labelEn": "Spending",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "highlight",
+          "label": "最难忘的瞬间",
+          "labelZh": "最难忘的瞬间",
+          "labelEn": "Highlight",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "风景照片",
+          "labelZh": "风景照片",
+          "labelEn": "Scenery photo",
+          "type": "image",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "relationship",
+      "nameZh": "Relationship · 我们的日常",
+      "nameEn": "Relationship Journal",
+      "fields": [
+        {
+          "id": "together",
+          "label": "一起做的事",
+          "labelZh": "一起做的事",
+          "labelEn": "What we did together",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "place",
+          "label": "去的地方",
+          "labelZh": "去的地方",
+          "labelEn": "Where we went",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "grateful",
+          "label": "今天想谢谢你",
+          "labelZh": "今天想谢谢你",
+          "labelEn": "Thank you for",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "anniversary",
+          "label": "纪念日",
+          "labelZh": "纪念日",
+          "labelEn": "Anniversary",
+          "type": "checkbox",
+          "options": []
+        },
+        {
+          "id": "photo",
+          "label": "合照",
+          "labelZh": "合照",
+          "labelEn": "Photo together",
+          "type": "image",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "wedding",
+      "nameZh": "Wedding · 婚礼筹备",
+      "nameEn": "Wedding Journal",
+      "fields": [
+        {
+          "id": "task",
+          "label": "筹备事项",
+          "labelZh": "筹备事项",
+          "labelEn": "Task",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "deadline",
+          "label": "截止日期",
+          "labelZh": "截止日期",
+          "labelEn": "Deadline",
+          "type": "date",
+          "options": []
+        },
+        {
+          "id": "vendor",
+          "label": "商家",
+          "labelZh": "商家",
+          "labelEn": "Vendor",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "budget",
+          "label": "预算",
+          "labelZh": "预算",
+          "labelEn": "Budget",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "done",
+          "label": "已完成",
+          "labelZh": "已完成",
+          "labelEn": "Done",
+          "type": "checkbox",
+          "options": []
+        },
+        {
+          "id": "inspiration",
+          "label": "灵感图",
+          "labelZh": "灵感图",
+          "labelEn": "Inspiration",
+          "type": "image",
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "movie",
+      "nameZh": "Movie · 观影记录",
+      "nameEn": "Movie Journal",
+      "fields": [
+        {
+          "id": "title",
+          "label": "片名",
+          "labelZh": "片名",
+          "labelEn": "Title",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "genre",
+          "label": "类型",
+          "labelZh": "类型",
+          "labelEn": "Genre",
+          "type": "select",
+          "options": [
+            "剧情 Drama",
+            "喜剧 Comedy",
+            "动画 Animation",
+            "纪录片 Documentary",
+            "科幻 Sci-fi",
+            "爱情 Romance"
+          ]
+        },
+        {
+          "id": "rating",
+          "label": "评分（1–5）",
+          "labelZh": "评分（1–5）",
+          "labelEn": "Rating (1–5)",
+          "type": "number",
+          "options": []
+        },
+        {
+          "id": "watched",
+          "label": "观看日期",
+          "labelZh": "观看日期",
+          "labelEn": "Watched on",
+          "type": "date",
+          "options": []
+        },
+        {
+          "id": "quote",
+          "label": "喜欢的台词",
+          "labelZh": "喜欢的台词",
+          "labelEn": "Favourite line",
+          "type": "text",
+          "options": []
+        },
+        {
+          "id": "poster",
+          "label": "海报",
+          "labelZh": "海报",
+          "labelEn": "Poster",
+          "type": "image",
           "options": []
         }
       ]

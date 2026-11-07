@@ -268,3 +268,46 @@ test("backup restore keeps moments, layouts, notes and reflections and remaps th
   assert.equal(await (await media.get(moment.media[0].source.slice(6))).blob.size, 3);
   media.close();
 });
+
+test("habit journey orders check-ins like book pages and counts streaks and minutes", async () => {
+  const { habitJourney } = await import("../Public/js/day.mjs");
+  const state = createInitialState(seed, today);
+  for (const [date, minutes, note] of [
+    ["2026-11-01", 30, "第一天"],
+    ["2026-11-02", 45, ""],
+    ["2026-11-03", 20, "腿酸"],
+    ["2026-11-05", 60, "状态很好"],
+    ["2026-11-06", 40, ""],
+  ])
+    saveCheckReflection(state, "move", date, { minutes, note });
+  const journey = habitJourney(state, "move", "2026-11-07");
+  assert.deepEqual(journey.checks.map((c) => c.date), ["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-05", "2026-11-06"]);
+  assert.equal(journey.total, 5);
+  assert.equal(journey.minutes, 195);
+  assert.equal(journey.notes, 3);
+  assert.equal(journey.longestStreak, 3);
+  assert.equal(journey.currentStreak, 2, "today not done yet: counts back from yesterday");
+  assert.equal(journey.since, "2026-11-01");
+  saveCheckReflection(state, "move", "2026-11-07", { note: "today" });
+  assert.equal(habitJourney(state, "move", "2026-11-07").currentStreak, 3);
+  assert.equal(habitJourney(state, "reading", "2026-11-07").total, 0);
+});
+
+test("book days give one cover per date and filter by month or exact date", async () => {
+  const { bookDays, bookMonths } = await import("../Public/js/day.mjs");
+  const state = createInitialState(seed, today);
+  const sample = state.entries.find((e) => e.date === today);
+  sample.moments.push(
+    createMoment(sample, { title: "Coffee", bookId: "daily", layers: [photoLayer(ref(5), "c")] }),
+    createMoment(sample, { title: "Recipe", bookId: "food" }),
+  );
+  state.entries.push({ id: "oct", date: "2026-10-12", title: "October", body: "x", bookId: "daily", photo: "", layers: [], media: [], moments: [] });
+  const days = bookDays(state, "daily");
+  assert.deepEqual(days.map((d) => d.date), [today, "2026-10-12"]);
+  assert.equal(days[0].moments.length, 1, "only Moments filed in this book");
+  assert.equal(days[0].photos.length, 2, "day photo + moment photo");
+  assert.deepEqual(bookMonths(state, "daily"), ["2026-11", "2026-10"]);
+  assert.deepEqual(bookDays(state, "daily", { month: "2026-10" }).map((d) => d.date), ["2026-10-12"]);
+  assert.deepEqual(bookDays(state, "daily", { date: today }).map((d) => d.date), [today]);
+  assert.deepEqual(bookDays(state, "food").map((d) => d.moments[0].title), ["Recipe"]);
+});

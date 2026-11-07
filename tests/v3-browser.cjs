@@ -60,6 +60,12 @@ async function streamBytes(download) {
     await page.waitForSelector(".hero");
     const nav = (tab) =>
       page.locator(`#navigation [data-page="${tab}"]`).click();
+    // Studio settings live in a summary menu; open one row (if closed).
+    const toolOn = async (target, id) => {
+      const head = target.locator(`[data-action="tool"][data-tool="${id}"]`);
+      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+    };
+    const tool = (id) => toolOn(page, id);
     const read = () =>
       page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const saved = () =>
@@ -138,10 +144,12 @@ async function streamBytes(download) {
     assert.equal(book.coverTemplate, "floral-notebook");
     assert.ok(book.coverImage.startsWith("media:"));
     await page.locator('[data-action="book-new-entry"]').click();
+    await tool("text");
     await page.locator("#entry-title").fill("我的第一片新叶 · My little leaf");
     await page
       .locator("#entry-body")
       .fill("这些是用户自己的文字，不应随语言切换改变。");
+    await tool("book");
     await page
       .locator('[data-custom-field="plant-name"]')
       .fill("Monstera / 龟背竹");
@@ -164,6 +172,7 @@ async function streamBytes(download) {
       .click();
     await page.locator("#attachment-image-input").setInputFiles(image);
     await page.waitForSelector(".field-image img");
+    await tool("font");
     await page
       .locator('[data-editor-field="font"]')
       .selectOption("handwritten");
@@ -188,18 +197,22 @@ async function streamBytes(download) {
       await page.evaluate(() => document.fonts.check('24px "LD-handwritten"')),
       true,
     );
-    await page
-      .locator('[data-action="editor-mode"][data-mode="creative"]')
-      .click();
+    await tool("stickers");
     await page.locator('[data-action="asset-sticker"]').first().click();
+    await tool("layer");
     await page.locator('[data-action="layer-copy"]').click();
     assert.equal(await page.locator(".layer img").count(), 2);
+    await tool("stickers");
     await page.locator('[data-action="add-text-layer"]').click();
+    await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("Grow gently");
     await page.locator('[data-layer-text="fontId"]').selectOption("decorative");
+    await tool("stickers");
     await page.locator('[data-action="add-text-layer"]').click();
+    await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("慢慢长大");
     await page.locator('[data-layer-text="fontId"]').selectOption("chinese");
+    await tool("stickers");
     await page.locator('[data-action="collage-photo"]').click();
     await page.locator("#attachment-image-input").setInputFiles(image);
     await page.waitForSelector('.art-layer img[src^="blob:"]');
@@ -231,6 +244,7 @@ async function streamBytes(download) {
         ),
       ];
     });
+    await tool("media");
     await page.locator("#video-input").setInputFiles({
       name: "A little moving moment.webm",
       mimeType: "video/webm",
@@ -270,6 +284,19 @@ async function streamBytes(download) {
     await page.reload();
     await page.waitForSelector(".hero");
     await nav("studio");
+    await tool("text");
+    assert.equal(
+      await page.locator("#entry-title").inputValue(),
+      "我的第一片新叶 · My little leaf",
+    );
+    await tool("font");
+    assert.equal(
+      await page.locator('[data-editor-field="font"]').inputValue(),
+      "handwritten",
+    );
+    await tool("book");
+    assert.equal(await page.locator(".field-image img").count(), 1);
+    await tool("media");
     // V3.1 loads audio/video Blobs for the open view only, after IndexedDB reads.
     await page.waitForFunction(
       () =>
@@ -278,15 +305,6 @@ async function streamBytes(download) {
     );
     assert.equal(await page.locator(".media-card video").count(), 1);
     assert.equal(await page.locator(".media-card audio").count(), 2);
-    assert.equal(
-      await page.locator("#entry-title").inputValue(),
-      "我的第一片新叶 · My little leaf",
-    );
-    assert.equal(
-      await page.locator('[data-editor-field="font"]').inputValue(),
-      "handwritten",
-    );
-    assert.equal(await page.locator(".field-image img").count(), 1);
     await page.locator(".media-card video").evaluate(async (video) => {
       video.muted = true;
       await video.play();
@@ -365,20 +383,20 @@ async function streamBytes(download) {
     assert.ok(backup.media.length >= 6);
     assert.equal(backup.state.books.at(-1).title, book.title);
     const stable = JSON.stringify(await read());
-    page.once("dialog", (dialog) => dialog.dismiss());
     await page.locator("#backup-input").setInputFiles({
       name: "backup.json",
       mimeType: "application/json",
       buffer: backupBytes,
     });
+    await page.locator("#confirm-dialog[open] #confirm-cancel").click();
     await page.waitForTimeout(150);
     assert.equal(JSON.stringify(await read()), stable);
-    page.once("dialog", (dialog) => dialog.accept());
     await page.locator("#backup-input").setInputFiles({
       name: "backup.json",
       mimeType: "application/json",
       buffer: backupBytes,
     });
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.waitForFunction(() =>
       document
         .querySelector("#toast")
@@ -388,6 +406,7 @@ async function streamBytes(download) {
       (await read()).books.every((book) => book.visibility === "private"),
     );
     await nav("studio");
+    await tool("media");
     // V3.1 loads audio/video Blobs for the open view only, after IndexedDB reads.
     await page.waitForFunction(
       () =>
@@ -412,6 +431,7 @@ async function streamBytes(download) {
     await nav("home");
     await page.locator('[data-action="check"][data-habit="move"]').click();
     const newer = JSON.stringify(await read());
+    await toolOn(second, "text");
     await second.locator("#entry-body").fill("Unsaved work in the older tab");
     await second.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("Another tab"),
@@ -484,6 +504,7 @@ async function streamBytes(download) {
     await denied.goto(base);
     await denied.waitForSelector(".hero");
     await denied.locator('#navigation [data-page="studio"]').click();
+    await toolOn(denied, "media");
     await denied.locator('[data-action="record-audio"]').click();
     await denied.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("麦克风"),

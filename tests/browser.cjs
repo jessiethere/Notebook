@@ -21,6 +21,12 @@ const path = require("node:path");
     await page.waitForSelector(".hero");
     const nav = (target) =>
       page.locator(`#navigation [data-page="${target}"]`).click();
+
+    // Studio settings live in a summary menu; open one row (if closed).
+    const tool = async (id) => {
+      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
+      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+    };
     const savedState = () =>
       page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const waitSaved = () =>
@@ -75,17 +81,20 @@ const path = require("node:path");
       .locator('.date-summary [data-action="edit-date"]')
       .first()
       .click();
+    await tool("text");
     await page.locator("#entry-title").fill("一朵花的练习");
     await page.locator("#entry-body").fill("记住今天，也记住慢慢变好的自己。");
+    await tool("book");
     await page.locator('[data-editor-field="bookId"]').selectOption(bookId);
+    await tool("font");
     await page.locator('[data-editor-field="font"]').selectOption("rounded");
+    await tool("mood");
     await page.locator('[data-action="mood"][data-mood="🌷"]').click();
+    await tool("paper");
     await page
       .locator('[data-action="template"][data-template="vintage"]')
       .click();
-    await page
-      .locator('[data-action="editor-mode"][data-mode="creative"]')
-      .click();
+    await tool("stickers");
     await page.locator('[data-action="asset-sticker"]').first().click();
     const layer = page.locator(".layer").first();
     await layer.scrollIntoViewIfNeeded();
@@ -98,6 +107,7 @@ const path = require("node:path");
       { steps: 8 },
     );
     await page.mouse.up();
+    await tool("layer");
     for (const [field, value] of [
       ["scale", "1.5"],
       ["rotation", "20"],
@@ -170,11 +180,13 @@ const path = require("node:path");
 
     // Draft restore and text undo also work without formally saving a journal.
     await nav("studio");
+    await tool("text");
     await page.locator("#entry-title").fill("尚未收藏的草稿");
     await waitSaved();
     await page.reload();
     await page.waitForSelector(".hero");
     await nav("studio");
+    await tool("text");
     assert.equal(
       await page.locator("#entry-title").inputValue(),
       "尚未收藏的草稿",

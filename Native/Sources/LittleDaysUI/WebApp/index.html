@@ -16,9 +16,9 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F8F5EF'/%3E%3Ctext x='8' y='48' font-size='45'%3E🌷%3C/text%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="/styles.css" />
-    <link rel="stylesheet" href="/fonts.css" />
-    <script type="module" src="/app.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="fonts.css" />
+    <script type="module" src="app.js"></script>
   </head>
   <body>
     <div class="preview-label">
@@ -49,6 +49,15 @@
     </div>
     <div class="preview-footnote">数据保存在当前浏览器 · 示例内容可编辑</div>
     <dialog id="form-dialog"><form id="dialog-form"></form></dialog>
+    <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-message">
+      <form method="dialog">
+        <p id="confirm-message"></p>
+        <div class="dialog-actions">
+          <button id="confirm-cancel" class="secondary" value="cancel">取消</button>
+          <button id="confirm-ok" class="primary" value="ok">确定</button>
+        </div>
+      </form>
+    </dialog>
     <dialog id="lightbox" class="lightbox">
       <button type="button" class="lightbox-close" data-action="close-lightbox" aria-label="Close">×</button>
       <img id="lightbox-image" alt="" />

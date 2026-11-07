@@ -91,6 +91,11 @@ const helpers = (page) => {
     read,
     day,
     nav: (tab) => page.locator(`#navigation [data-page="${tab}"]`).click(),
+    // Studio settings live in a summary menu; open one row (if closed).
+    tool: async (id) => {
+      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
+      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+    },
     // Waits until the stored draft/entry for a date satisfies a predicate.
     waitDay: (date, predicate, arg) =>
       page.waitForFunction(
@@ -145,7 +150,7 @@ async function noOverflow(page, label) {
   const passed = [];
   try {
     const { context, page, errors } = await setup(browser);
-    const { read, day, nav, waitDay } = helpers(page);
+    const { read, day, nav, waitDay, tool } = helpers(page);
     await page.goto(base);
     await page.waitForSelector(".hero");
 
@@ -247,10 +252,11 @@ async function noOverflow(page, label) {
     assert.equal(entry.layoutEdited, true);
     passed.push("2 move/scale/pinch/rotate/resize/crop/layer order for 5 photos");
 
-    // Switching template after manual edits asks first (dialog auto-accepted here, undoable).
-    let asked = false;
-    page.once("dialog", (d) => (asked = d.message().length > 0));
+    // Switching template after manual edits asks first (in-page dialog, undoable).
+    await tool("layout");
     await page.locator('[data-action="apply-layout"][data-template="grid"]').click();
+    const asked = (await page.locator("#confirm-dialog[open] #confirm-message").innerText()).length > 0;
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await waitDay(D1, (e) => e.layoutTemplate === "grid" && !e.layoutEdited);
     assert.ok(asked, "template switch confirms before overriding manual layout");
     await page.locator('[data-action="undo"]').click();
@@ -278,7 +284,8 @@ async function noOverflow(page, label) {
 
     // 4/5. Three Moments on the same day, edited independently and reordered.
     const addMoment = async (title, time) => {
-      await page.locator('[data-action="add-moment"]').click();
+      await page.locator('[data-action="add-moment"]').first().click();
+      await tool("text");
       await page.locator('[data-moment-field="title"]').fill(title);
       await page.locator('[data-moment-field="time"]').fill(time);
     };
@@ -289,9 +296,11 @@ async function noOverflow(page, label) {
     await page.waitForFunction(() => document.querySelectorAll('.moment-canvas .photo-layer img[src^="blob:"]').length === 3);
     await addMoment("Coffee Time", "14:30");
     await page.locator('[data-moment-field="body"]').fill("一杯燕麦拿铁。");
+    await tool("mood");
     await page.locator('[data-action="moment-mood"][data-mood="☁️"]').click();
     await addMoment("Home Cooking", "19:00");
     await page.locator('[data-moment-field="body"]').fill("番茄牛腩食谱");
+    await tool("media");
     await page.locator("#video-input").setInputFiles({ name: "cooking.webm", mimeType: "video/webm", buffer: await syntheticVideo(page) });
     await page.waitForSelector('.media-card video[src^="blob:"]');
     await page.locator("#audio-input").setInputFiles({ name: "kitchen-sounds.wav", mimeType: "audio/wav", buffer: wav() });
@@ -308,20 +317,23 @@ async function noOverflow(page, label) {
     assert.equal(entry.moments[0].layers.length, 3);
     assert.equal(entry.layers.filter((l) => l.kind === "photo").length, 5, "day page photos untouched");
     // Edit only Coffee Time.
-    await page.locator(`[data-action="select-moment"][data-moment="${coffeeId}"]`).click();
+    await page.locator(`[data-action="select-moment"][data-moment="${coffeeId}"]`).first().click();
+    await tool("text");
     await page.locator('[data-moment-field="title"]').fill("Afternoon Coffee Time");
     await waitDay(D1, (e, id) => e.moments.find((m) => m.id === id).title === "Afternoon Coffee Time", coffeeId);
     entry = await day(D1);
     assert.equal(entry.moments.find((m) => m.id === gymId).title, "Gym Session");
     assert.equal(entry.moments.find((m) => m.id === cookingId).body, "番茄牛腩食谱");
     // Reorder: Home Cooking moves above Coffee; collapse Gym.
+    await tool("chapters");
     await page.locator(`[data-action="moment-up"][data-moment="${cookingId}"]`).click();
     await page.locator(`[data-action="moment-collapse"][data-moment="${gymId}"]`).click();
     await waitDay(D1, (e, a) => e.moments.map((m) => m.id).join() === a.order && e.moments[0].collapsed, {
       order: [gymId, cookingId, coffeeId].join(),
     });
     // Save one Moment on its own: the saved day gains it before the full save.
-    await page.locator(`[data-action="select-moment"][data-moment="${cookingId}"]`).click();
+    await page.locator(`[data-action="select-moment"][data-moment="${cookingId}"]`).first().click();
+    await tool("chapters");
     await page.locator('[data-action="save-moment"]').click();
     await page.waitForFunction((id) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
@@ -375,7 +387,7 @@ async function noOverflow(page, label) {
     await page.waitForFunction(() => document.querySelector(".day-detail video").currentTime > 0.05);
     await page.locator(".day-detail video").evaluate((video) => video.pause());
     // Photo zoom.
-    await page.locator('.day-detail .photo-layer[data-action="zoom-photo"]').first().click();
+    await page.locator('.day-detail .photo-layer[data-action="zoom-photo"]').last().click();
     await page.waitForFunction(() => document.querySelector("#lightbox").open && document.querySelector("#lightbox-image").src.startsWith("blob:"));
     await page.locator('#lightbox [data-action="close-lightbox"]').click();
     // Leaving the view revokes its temporary audio/video object URLs.
@@ -432,15 +444,20 @@ async function noOverflow(page, label) {
 
     // Insert the note into today's journal as a card; deleting a Moment keeps the check-in.
     await nav("studio");
+    await tool("growth");
     await page.locator('[data-action="insert-growth"][data-habit="move"]').click();
     await page.waitForSelector(".growth-layer");
     assert.match(await page.locator(".growth-layer").innerText(), /深蹲更稳/);
     assert.equal(await page.locator('[data-action="insert-growth"][data-habit="move"]').isDisabled(), true, "no duplicate card");
-    await page.locator('[data-action="add-moment"]').click();
+    await page.locator('[data-action="add-moment"]').first().click();
+    await tool("text");
     await page.locator('[data-moment-field="title"]').fill("Temporary");
+    await tool("growth");
     await page.locator('[data-action="insert-growth"][data-habit="reading"]').click();
     await page.waitForSelector(".growth-layer");
+    await tool("chapters");
     await page.locator('[data-action="moment-delete"]').click();
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.locator('[data-action="save-entry"]').click();
     await page.waitForSelector(".hero");
     s = await read();
@@ -506,6 +523,7 @@ async function noOverflow(page, label) {
     await r.nav("home");
     await restore.page.locator('[data-page="settings"]').click();
     await restore.page.locator("#backup-input").setInputFiles({ name: "backup.json", mimeType: "application/json", buffer: backupBuffer });
+    await restore.page.locator("#confirm-dialog[open] #confirm-ok").click();
     await restore.page.waitForFunction(() => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
       return s?.entries.some((e) => e.date === "2026-11-03" && e.moments?.length === 3);
@@ -538,7 +556,7 @@ async function noOverflow(page, label) {
       await noOverflow(page, `day detail ${width}`);
       await page.locator('[data-action="day-back"]').click();
       await openStudioDate(page, nav, D1);
-      await page.locator(`[data-action="select-moment"][data-moment="${gymId}"]`).click();
+      await page.locator(`[data-action="select-moment"][data-moment="${gymId}"]`).first().click();
       await noOverflow(page, `studio moment ${width}`);
       await nav("growth");
       await noOverflow(page, `growth ${width}`);
@@ -638,6 +656,7 @@ async function noOverflow(page, label) {
     assert.ok((await legacy.page.locator(".day-detail .canvas-photo img").getAttribute("src")).startsWith("blob:"));
     assert.match(await legacy.page.locator(".day-detail").innerText(), /让身体动起来/);
     await legacy.page.locator('.day-detail-top [data-action="edit-date"]').click();
+    await l.tool("text");
     assert.equal(await legacy.page.locator("#entry-title").inputValue(), "很久以前的一天");
     await legacy.page.waitForSelector('.canvas-photo img[src^="blob:"]');
     await l.nav("books");

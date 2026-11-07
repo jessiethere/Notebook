@@ -3,9 +3,14 @@
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-## 👉 [点这里打开 Little Days：http://localhost:8080](http://localhost:8080)
+## 👉 [点这里直接打开 Little Days（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
 
-> 链接打开的是你电脑上运行的预览。如果打不开，先双击项目文件夹里的 **Start-Windows.cmd**（它会自动更新到最新版并启动），再点上面的链接。
+> 不用安装、不用运行任何东西，点开就是最新版；只有你自己能打开（登录 claude.ai）。每次更新都会发布到这同一个链接。
+> 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
+
+本机预览：[http://localhost:8080](http://localhost:8080)（先双击项目文件夹里的 **Start-Windows.cmd**，它会自动更新到最新版并启动）。
+
+**在 Claude 桌面 App 里随时点击**：用 Claude 桌面 App 新建一个**本地**会话并选择 `Notebook` 文件夹，在 Browser 面板的 **Dev servers** 菜单里点 **Little Days (Windows)** 即可启动并打开（配置在 `.claude/launch.json`）。网页版/云端会话的侧栏目前没有这个服务器列表。
 
 最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
@@ -126,6 +131,23 @@ npm run test:browser:v31
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — V3.2：创作桌面、成长轨迹、按日封面
+
+- Studio：预览固定在上方（可放大），设置变成一行一个的概括菜单，点开看细节；小故事标签条，选中有音视频的小故事直接播放。
+- 纸张 9 种；主题预设新增宠物、亲子、旅行、恋爱、婚礼、电影；中文字体 5 款。
+- 成长轨迹：每个习惯像一本小书，翻页看每天的打卡和心得。
+- 手帐本：每天一张封面，可按月份或日期筛选。
+- 测试：Node 35、Python 12、四套浏览器 E2E 全部通过。
+
+### 2026-11-07 — 桌面 App Dev servers
+
+- 新增 `.claude/launch.json`：在 Claude 桌面 App 本地会话的 Dev servers 菜单里一键启动 Little Days。
+
+### 2026-11-07 — 在线链接
+
+- README 顶部新增可直接点开的在线链接（claude.ai，私有），每次更新发布到同一链接；本机 localhost 链接保留。
+- 网页改用相对路径与页面内确认框，在线链接、localhost、iOS 外壳都可用；在线链接中录音和下载不可用。
 
 ### 2026-11-07 — localhost 预览可在会话 servers 中打开
 

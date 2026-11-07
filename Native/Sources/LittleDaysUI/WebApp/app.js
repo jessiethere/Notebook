@@ -30,6 +30,7 @@ import {
   growthCardInner,
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
+import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import {
   createMoment,
   findMoment,
@@ -43,6 +44,8 @@ import {
   clipsOf,
   daySummary,
   bookPages,
+  bookDays,
+  bookMonths,
   bookEntryCount,
   saveCheckReflection,
   saveReflection,
@@ -132,6 +135,11 @@ let media = new MediaStore(),
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
+  bookFilter = { month: "", date: "" },
+  journeyHabit = null,
+  journeyPage = 0,
+  studioTool = null,
+  previewLarge = false,
   cropMode = false,
   scopedPage = null;
 const safePhoto = (photo) => media.resolve(photo);
@@ -261,12 +269,36 @@ function openStudio(date = dateKey()) {
   loadScope("studio", editorClips());
 }
 function navigation() {
+  // Sub-pages highlight the tab they belong to.
+  const current = { journey: "growth", day: "calendar" }[page] || page;
   $("#navigation").innerHTML = features.tabs
     .map(
       (tab) =>
-        `<button class="nav-item ${tab.id === page ? "active" : ""} ${tab.id}" data-action="nav" data-page="${tab.id}" aria-label="${t("nav." + tab.id)}" ${tab.id === page ? 'aria-current="page"' : ""}>${icon(tab.symbol)}<span>${t("nav." + tab.id)}</span></button>`,
+        `<button class="nav-item ${tab.id === current ? "active" : ""} ${tab.id}" data-action="nav" data-page="${tab.id}" aria-label="${t("nav." + tab.id)}" ${tab.id === current ? 'aria-current="page"' : ""}>${icon(tab.symbol)}<span>${t("nav." + tab.id)}</span></button>`,
     )
     .join("");
+}
+function journeyHelpers() {
+  return {
+    icon,
+    today: dateKey(),
+    addDays,
+    shortDate,
+    weekday: (key) =>
+      new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { weekday: "long" }),
+    monthLabel: (key) =>
+      new Date(`${key}-01T12:00:00`).toLocaleDateString(locale(), {
+        year: "numeric",
+        month: "long",
+      }),
+  };
+}
+function openJourney(habitId, pageIndex = 0) {
+  journeyHabit = habitId;
+  const total = journeyPageCount(state(), habitId, dateKey());
+  journeyPage = Math.max(0, Math.min(total - 1, pageIndex));
+  page = "journey";
+  render();
 }
 function habitRow(habit, date) {
   const done = state().checks.find(
@@ -275,6 +307,28 @@ function habitRow(habit, date) {
   return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(habit.theme)} · ${habit.kind === "duration" ? `${done?.minutes || habit.minutes} min` : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div>${done ? `<button class="note-button" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">✎</button>` : ""}<button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
+// One cover per day in a book: photos, date, mood and that day's Moments.
+function dayCoverHTML(day) {
+  const { entry, moments, photos, clips } = day;
+  const date = new Date(`${day.date}T12:00:00`);
+  const titles = [
+    day.dayPage && entry.title ? entry.title : "",
+    ...moments.map((m) => `${m.time ? m.time + " · " : ""}${m.title || t("moment.untitled")}`),
+  ].filter(Boolean);
+  const shots = photos
+    .map((ref) => safePhoto(ref))
+    .filter(Boolean)
+    .slice(0, 3);
+  const extras = [
+    moments.length ? t("day.statMoments", { count: moments.length }) : "",
+    clips.some((c) => c.kind === "video") ? "◈" : "",
+    clips.some((c) => c.kind === "audio") ? "♫" : "",
+  ].filter(Boolean);
+  return `<button class="day-cover" data-action="open-day" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
+    .slice(1, 4)
+    .map((title) => `<li>${esc(title)}</li>`)
+    .join("")}</ul>` : ""}${extras.length ? `<small>${esc(extras.join(" · "))}</small>` : ""}</span></button>`;
+}
 function bookCard(book) {
   const count = bookEntryCount(state(), book.id);
   return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(book.category)} · ${t("entry.count", { count })}</small></button>`;
@@ -434,7 +488,7 @@ function growthPage() {
           .habits.filter((h) => h.theme === theme)
           .map(
             (h) =>
-              `<section class="growth-habit">${habitRow(h, today)}<p class="subtext">${t("growth.weekCount", { target: h.target, count: weeklyCount(state(), h.id, today) })}</p><div class="week-dots">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div></section>`,
+              `<section class="growth-habit">${habitRow(h, today)}<p class="subtext">${t("growth.weekCount", { target: h.target, count: weeklyCount(state(), h.id, today) })}</p><div class="week-dots">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><button class="journey-link" data-action="habit-journey" data-habit="${esc(h.id)}">📖 ${t("journey.open")} <span>${t("journey.openHint", { count: state().checks.filter((c) => c.habitId === h.id).length })}</span> ›</button></section>`,
           )
           .join("")}`,
     )
@@ -490,8 +544,15 @@ function checkHistoryHTML() {
 function booksPage() {
   if (selectedBook) {
     const book = state().books.find((b) => b.id === selectedBook),
-      entries = bookPages(state(), selectedBook);
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div><button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><p class="journal-list-caption">${t("books.memories")}</p>${entries.length ? entries.map(({ entry, moment }) => `<div class="book-entry">${memoryCard(entry, moment)}</div>`).join("") : `<div class="empty">${t("books.empty")}</div>`}`;
+      entries = bookPages(state(), selectedBook),
+      days = bookDays(state(), selectedBook, bookFilter),
+      months = bookMonths(state(), selectedBook);
+    const filtered = bookFilter.month || bookFilter.date;
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div><button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+      days.length
+        ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
+        : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
+    }`;
   }
   return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></header><div class="book-grid books-full">${state().books.map(bookCard).join("")}</div><button class="secondary full-width" data-action="new-book">${t("books.create")}</button><p class="home-quote">A home for every little story.</p>`;
 }
@@ -570,7 +631,32 @@ function layerControls() {
   return `<div class="layer-controls"><span>${t(layer.kind === "photo" ? "layer.photo" : layer.kind === "growth" ? "layer.growth" : "layer.selected")}</span><p class="gesture-help">${t("layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}${textTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
 }
 
-function chaptersHTML() {
+// ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
+// One-line summary per tool; tapping a row opens its details (one at a time)
+// while the page preview stays pinned above, so every change is visible.
+function pageCounts(page) {
+  const photos = page.layers.filter((layer) => layer.kind === "photo").length,
+    videos = page.media.filter((clip) => clip.kind === "video").length,
+    audios = page.media.filter((clip) => clip.kind === "audio").length;
+  return { photos, videos, audios };
+}
+function chapterChipsHTML() {
+  const moments = editor.moments || [];
+  const badges = (page) => {
+    const c = pageCounts(page);
+    return [c.photos ? `📷${c.photos}` : "", c.videos ? `◈${c.videos}` : "", c.audios ? `♫${c.audios}` : ""]
+      .filter(Boolean)
+      .map((b) => `<i>${b}</i>`)
+      .join("");
+  };
+  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>✿ ${t("day.cover")}</b>${badges(editor)}</button>${moments
+    .map(
+      (moment, index) =>
+        `<button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><b><span>${String(index + 1).padStart(2, "0")}</span> <span data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</span></b>${badges(moment)}</button>`,
+    )
+    .join("")}<button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button></nav>`;
+}
+function chaptersOutlineHTML() {
   const moments = editor.moments || [];
   const thumbs = (page) =>
     page.layers
@@ -578,114 +664,201 @@ function chaptersHTML() {
       .slice(0, 4)
       .map((layer) => `<img src="${esc(safePhoto(layer.mediaRef))}" alt="">`)
       .join("");
-  const counts = (page) =>
-    [
-      page.layers.filter((layer) => layer.kind === "photo").length
-        ? `📷 ${page.layers.filter((layer) => layer.kind === "photo").length}`
-        : "",
-      page.media.filter((clip) => clip.kind === "video").length
-        ? `◈ ${page.media.filter((clip) => clip.kind === "video").length}`
-        : "",
-      page.media.filter((clip) => clip.kind === "audio").length
-        ? `♫ ${page.media.filter((clip) => clip.kind === "audio").length}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" · ");
-  return `<section class="chapter-strip" aria-label="${t("moment.title")}"><div class="section-heading"><div><h2>${t("moment.title")}</h2><p class="section-caption">${t("moment.caption")}</p></div><span class="badge">${t("day.statMoments", { count: moments.length })}</span></div><div class="chapter-list"><div class="chapter-item day-item ${activeMomentId ? "" : "active"}"><button class="chapter-select" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><span class="chapter-index">✿</span><span class="chapter-copy"><b>${t("day.cover")}</b><small>${esc(editor.title || t("moment.dayHint"))}</small></span></button></div>${moments
+  const counts = (page) => {
+    const c = pageCounts(page);
+    return [c.photos ? `📷 ${c.photos}` : "", c.videos ? `◈ ${c.videos}` : "", c.audios ? `♫ ${c.audios}` : ""].filter(Boolean).join(" · ");
+  };
+  const active = findMoment(editor, activeMomentId);
+  return `${
+    active
+      ? `<div class="moment-actions"><button class="primary" data-action="save-moment">${icon("check")} ${t("moment.save")}</button><button class="secondary" data-action="moment-duplicate">${t("copy")}</button><button class="secondary danger" data-action="moment-delete">${t("delete")}</button></div>${active.savedAt ? `<p class="moment-saved">${t("moment.savedAt", { time: new Date(active.savedAt).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) })}</p>` : ""}`
+      : ""
+  }<div class="chapter-list">${moments
     .map(
       (moment, index) =>
-        `<div class="chapter-item ${moment.id === activeMomentId ? "active" : ""} ${moment.collapsed ? "collapsed" : ""}" data-chapter="${esc(moment.id)}"><button class="chapter-select" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><span class="chapter-index">${String(index + 1).padStart(2, "0")}</span><span class="chapter-copy"><b data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</b><small>${esc(counts(moment) || moment.body?.slice(0, 30) || t("moment.empty"))}</small></span></button><span class="chapter-tools"><button data-action="moment-up" data-moment="${esc(moment.id)}" aria-label="${t("moment.up")}" ${index ? "" : "disabled"}>↑</button><button data-action="moment-down" data-moment="${esc(moment.id)}" aria-label="${t("moment.down")}" ${index < moments.length - 1 ? "" : "disabled"}>↓</button><button data-action="moment-collapse" data-moment="${esc(moment.id)}" aria-expanded="${!moment.collapsed}" aria-label="${t(moment.collapsed ? "moment.expand" : "moment.collapse")}">${moment.collapsed ? "▸" : "▾"}</button></span>${moment.collapsed ? "" : `<div class="chapter-preview">${thumbs(moment)}${moment.body ? `<p>${esc(moment.body.slice(0, 80))}</p>` : ""}</div>`}</div>`,
+        `<div class="chapter-item ${moment.id === activeMomentId ? "active" : ""} ${moment.collapsed ? "collapsed" : ""}" data-chapter="${esc(moment.id)}"><button class="chapter-select" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><span class="chapter-index">${String(index + 1).padStart(2, "0")}</span><span class="chapter-copy"><b>${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</b><small>${esc(counts(moment) || moment.body?.slice(0, 30) || t("moment.empty"))}</small></span></button><span class="chapter-tools"><button data-action="moment-up" data-moment="${esc(moment.id)}" aria-label="${t("moment.up")}" ${index ? "" : "disabled"}>↑</button><button data-action="moment-down" data-moment="${esc(moment.id)}" aria-label="${t("moment.down")}" ${index < moments.length - 1 ? "" : "disabled"}>↓</button><button data-action="moment-collapse" data-moment="${esc(moment.id)}" aria-expanded="${!moment.collapsed}" aria-label="${t(moment.collapsed ? "moment.expand" : "moment.collapse")}">${moment.collapsed ? "▸" : "▾"}</button></span>${moment.collapsed ? "" : `<div class="chapter-preview">${thumbs(moment)}${moment.body ? `<p>${esc(moment.body.slice(0, 80))}</p>` : ""}</div>`}</div>`,
     )
-    .join(
-      "",
-    )}</div><button class="add-moment" data-action="add-moment">＋ ${t("moment.add")}</button></section>`;
+    .join("") || `<p class="subtext">${t("moment.none")}</p>`}</div><button class="add-moment" data-action="add-moment">＋ ${t("moment.add")}</button>`;
 }
-
-function momentFormHTML(moment) {
-  const index = editor.moments.indexOf(moment);
-  return `<section class="moment-editor"><div class="moment-editor-head"><span class="chapter-no">${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</span><span class="moment-saved">${moment.savedAt ? t("moment.savedAt", { time: new Date(moment.savedAt).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) }) : ""}</span></div><div class="field-row"><label class="field moment-title-field">${t("moment.titleLabel")}<input data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(moment.title)}"></label><label class="field">${t("moment.time")}<input type="time" data-moment-field="time" value="${esc(moment.time)}"></label></div><label class="field">${t("moment.bodyLabel")}<textarea data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}">${esc(moment.body)}</textarea></label><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${features.moods.map((m) => `<button data-action="moment-mood" data-mood="${m}" class="${moment.mood === m ? "selected" : ""}" aria-pressed="${moment.mood === m}" aria-label="${t("studio.moodLabel", { mood: m })}">${m}</button>`).join("")}</div></div><label class="field">${t("moment.tags")}<input data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(moment.tags.join(", "))}"></label><div class="field-row"><label class="field">${t("studio.book")}<select data-moment-field="bookId">${state()
-    .books.map(
-      (b) =>
-        `<option value="${esc(b.id)}" ${b.id === moment.bookId ? "selected" : ""}>${esc(b.title)}</option>`,
-    )
-    .join(
-      "",
-    )}</select></label><label class="field">${t("studio.font")}<select data-moment-field="font">${fontOptions(moment.font)}</select></label></div><div><span class="small-label">${t("studio.paper")}</span><div class="segmented">${features.templates.map((template) => `<button data-action="moment-template" data-template="${template.id}" class="${moment.template === template.id ? "selected" : ""}">${t("template." + template.id)}</button>`).join("")}</div></div><div class="moment-actions"><button class="primary" data-action="save-moment">${icon("check")} ${t("moment.save")}</button><button class="secondary" data-action="moment-duplicate">${t("copy")}</button><button class="secondary danger" data-action="moment-delete">${t("delete")}</button></div></section>`;
+function fontName(id) {
+  const font = catalog.fonts.find((item) => item.id === id);
+  return font ? font.name : t("font." + (id || "serif"));
 }
-
-function photoToolbarHTML() {
-  const page = activePage();
-  const photos =
-    page.layers.filter((layer) => layer.kind === "photo").length +
-    (isDayPage() && editor.photo ? 1 : 0);
-  return `<div class="photo-toolbar"><button class="primary" data-action="add-photos">${icon("photo")} ${t("photo.addMany")}</button><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")} ${t("studio.undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")} ${t("studio.redo")}</button></div>${
-    isDayPage() && editor.photo
-      ? `<div class="editor-actions"><button data-action="upload">${t("studio.replacePhoto")}</button><button data-action="free-main-photo">${t("photo.freeMain")}</button></div>`
-      : ""
-  }${
-    photos
-      ? `<div class="layout-picker"><span class="small-label">${t("layout.title")} · ${t(page.layoutEdited ? "layout.free" : "layout.auto")}</span><div class="layout-options">${LAYOUT_TEMPLATES.map((template) => `<button data-action="apply-layout" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`).join("")}</div></div>`
-      : ""
-  }`;
+function studioTools() {
+  const page = activePage(),
+    dayPage = isDayPage(),
+    style = editor.textStyle || {},
+    counts = pageCounts(page),
+    book = state().books.find((b) => b.id === (dayPage ? editor.bookId : page.bookId)),
+    checks = state().checks.filter((check) => check.date === editor.date),
+    categories = [...new Set(catalog.stickers.map((s) => s.category))],
+    moodAction = dayPage ? "mood" : "moment-mood",
+    paperAction = dayPage ? "template" : "moment-template",
+    photoTotal = counts.photos + (dayPage && editor.photo ? 1 : 0);
+  const tools = [];
+  if (selectedLayerOf())
+    tools.push({
+      id: "layer",
+      icon: "◎",
+      label: "tool.layer",
+      value: t(selectedLayerOf().kind === "photo" ? "layer.photo" : selectedLayerOf().kind === "growth" ? "layer.growth" : "layer.selected"),
+      body: () => layerControls(),
+    });
+  tools.push(
+    {
+      id: "photos",
+      icon: "▣",
+      label: "tool.photos",
+      value: photoTotal ? t("photo.count", { count: photoTotal }) : t("tool.none"),
+      body: () =>
+        `<button class="primary full-width" data-action="add-photos">${icon("photo")} ${t("photo.addMany")}</button>${
+          dayPage && editor.photo
+            ? `<div class="editor-actions"><button data-action="upload">${t("studio.replacePhoto")}</button><button data-action="free-main-photo">${t("photo.freeMain")}</button></div>`
+            : dayPage && !photoTotal
+              ? `<div class="editor-actions"><button data-action="upload">${t("studio.addPhoto")}</button></div>`
+              : ""
+        }<p class="save-help">${t("photo.toolHelp")}</p>`,
+    },
+    {
+      id: "layout",
+      icon: "⊞",
+      label: "tool.layout",
+      value: page.layoutTemplate ? `${t("layout." + page.layoutTemplate)} · ${t(page.layoutEdited ? "layout.free" : "layout.auto")}` : t(page.layoutEdited ? "layout.free" : "tool.none"),
+      body: () =>
+        photoTotal
+          ? `<div class="layout-options">${LAYOUT_TEMPLATES.map((template) => `<button data-action="apply-layout" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`).join("")}</div><p class="save-help">${t("layout.help")}</p>`
+          : `<p class="save-help">${t("layout.needPhotos")}</p>`,
+    },
+    {
+      id: "text",
+      icon: "T",
+      label: "tool.text",
+      value: (dayPage ? editor.title : page.title) || t("tool.empty"),
+      body: () =>
+        dayPage
+          ? `<label class="field">${t("studio.titleLabel")}<input id="entry-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}"></label><label class="field">${t("studio.bodyLabel")}<textarea id="entry-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}">${esc(editor.body)}</textarea></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div><button class="secondary full-width" data-action="add-text-layer">${t("studio.textBox")}</button>`
+          : `<div class="field-row"><label class="field moment-title-field">${t("moment.titleLabel")}<input data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}"></label><label class="field">${t("moment.time")}<input type="time" data-moment-field="time" value="${esc(page.time)}"></label></div><label class="field">${t("moment.bodyLabel")}<textarea data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}">${esc(page.body)}</textarea></label><label class="field">${t("moment.tags")}<input data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}"></label><button class="secondary full-width" data-action="add-text-layer">${t("studio.textBox")}</button>`,
+    },
+    {
+      id: "font",
+      icon: "Aa",
+      label: "tool.font",
+      value: fontName(page.font),
+      body: () =>
+        dayPage
+          ? `<label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label>`
+          : `<label class="field">${t("studio.font")}<select data-moment-field="font">${fontOptions(page.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(page.font, catalog))}">Little moments, 美好小日子。</div>`,
+    },
+    {
+      id: "paper",
+      icon: "▤",
+      label: "tool.paper",
+      value: t("template." + (page.template || "minimal")),
+      body: () =>
+        `<div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+    },
+    {
+      id: "mood",
+      icon: "☺",
+      label: "tool.mood",
+      value: page.mood || t("tool.none"),
+      body: () =>
+        `<div class="mood-list">${features.moods.map((m) => `<button data-action="${moodAction}" data-mood="${m}" class="${page.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${page.mood === m}">${m}</button>`).join("")}</div>`,
+    },
+    {
+      id: "stickers",
+      icon: "✿",
+      label: "tool.stickers",
+      value: t("tool.layers", { count: page.layers.filter((layer) => layer.kind !== "photo").length }),
+      body: () =>
+        `<div class="material-categories">${categories.map((category) => `<button data-action="material-category" data-category="${category}" class="${materialCategory === category ? "selected" : ""}">${t("category." + category)}</button>`).join("")}</div><div class="art-sticker-grid">${catalog.stickers
+          .filter((s) => s.category === materialCategory)
+          .map((s) => `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`)
+          .join("")}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div>`,
+    },
+    {
+      id: "media",
+      icon: "♫",
+      label: "tool.media",
+      value: counts.videos || counts.audios ? [counts.videos ? t("day.statVideos", { count: counts.videos }) : "", counts.audios ? t("day.statAudios", { count: counts.audios }) : ""].filter(Boolean).join(" · ") : t("tool.none"),
+      body: () => mediaPanelHTML(page, ctx(), Boolean(recorder)),
+    },
+  );
+  if (checks.length)
+    tools.push({
+      id: "growth",
+      icon: "🌱",
+      label: "tool.growth",
+      value: t("day.statGrowth", { count: checks.length }),
+      body: () => growthPanelHTML(),
+    });
+  tools.push({
+    id: "book",
+    icon: "📔",
+    label: "tool.book",
+    value: book?.title || "—",
+    body: () =>
+      dayPage
+        ? `<label class="field">${t("studio.book")}<select data-editor-field="bookId" aria-label="${t("studio.book")}">${state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === editor.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select></label>${customFieldsHTML(book, editor, ctx())}`
+        : `<label class="field">${t("studio.book")}<select data-moment-field="bookId">${state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === page.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select></label>`,
+  });
+  tools.push({
+    id: "chapters",
+    icon: "☰",
+    label: "tool.chapters",
+    value: t("day.statMoments", { count: editor.moments.length }),
+    body: () => chaptersOutlineHTML(),
+  });
+  return tools;
 }
-
+function toolMenuHTML() {
+  const tools = studioTools();
+  if (studioTool && !tools.some((tool) => tool.id === studioTool)) studioTool = null;
+  return tools
+    .map((tool) => {
+      const open = tool.id === studioTool;
+      return `<section class="tool-row ${open ? "open" : ""}" data-tool-row="${tool.id}"><button class="tool-head" data-action="tool" data-tool="${tool.id}" aria-expanded="${open}"><span class="tool-icon" aria-hidden="true">${tool.icon}</span><span class="tool-label">${t(tool.label)}</span><span class="tool-value" data-tool-value="${tool.id}">${esc(tool.value)}</span><span class="tool-chevron" aria-hidden="true">›</span></button>${open ? `<div class="tool-body">${tool.body()}</div>` : ""}</section>`;
+    })
+    .join("");
+}
+// Updates the one-line summaries without re-rendering open inputs.
+function refreshToolSummaries() {
+  for (const tool of studioTools()) {
+    const element = document.querySelector(`[data-tool-value="${tool.id}"]`);
+    if (element && element.textContent !== tool.value) element.textContent = tool.value;
+  }
+}
+function refreshToolMenu() {
+  if ($("#tool-menu")) $("#tool-menu").innerHTML = toolMenuHTML();
+}
 function growthPanelHTML() {
   const checks = state().checks.filter((check) => check.date === editor.date);
   if (!checks.length) return "";
-  return `<section class="growth-insert"><h3>🌱 ${t("growth.todayCards")}</h3><p class="save-help">${t("growth.insertHelp")}</p>${checks
+  return `<p class="save-help">${t("growth.insertHelp")}</p>${checks
     .map((check) => {
       const habit = state().habits.find((h) => h.id === check.habitId);
       const inserted = activePage().layers.some(
-        (layer) =>
-          layer.kind === "growth" &&
-          layer.habitId === check.habitId &&
-          layer.checkDate === check.date,
+        (layer) => layer.kind === "growth" && layer.habitId === check.habitId && layer.checkDate === check.date,
       );
       return `<div class="growth-insert-row">${growthCardInner(check, habit, ctx())}<button class="secondary" data-action="insert-growth" data-habit="${esc(check.habitId)}" ${inserted ? "disabled" : ""}>${t(inserted ? "growth.inserted" : "growth.insert")}</button></div>`;
     })
-    .join("")}</section>`;
+    .join("")}`;
 }
 
 function studioPage() {
-  const page = activePage(),
-    dayPage = isDayPage(),
-    book = state().books.find((b) => b.id === editor.bookId),
-    style = editor.textStyle || {},
-    categories = [...new Set(catalog.stickers.map((s) => s.category))];
-  const dayForm = `<div class="editor-form"><label class="field">${t("studio.titleLabel")}<input id="entry-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}"></label><label class="field">${t("studio.bodyLabel")}<textarea id="entry-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}">${esc(editor.body)}</textarea></label><label class="field">${t("studio.book")}<select data-editor-field="bookId" aria-label="${t("studio.book")}">${state()
-    .books.map(
-      (b) =>
-        `<option value="${esc(b.id)}" ${b.id === editor.bookId ? "selected" : ""}>${esc(b.title)}</option>`,
-    )
-    .join(
-      "",
-    )}</select></label><label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${features.moods.map((m) => `<button data-action="mood" data-mood="${m}" class="${editor.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${editor.mood === m}">${m}</button>`).join("")}</div></div><div><span class="small-label">${t("studio.paper")}</span><div class="segmented">${features.templates.map((template) => `<button data-action="template" data-template="${template.id}" class="${editor.template === template.id ? "selected" : ""}">${t("template." + template.id)}</button>`).join("")}</div></div></div>${customFieldsHTML(book, editor, ctx())}`;
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="section-heading"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="segmented"><button data-action="editor-mode" data-mode="quick" class="${editorMode === "quick" ? "selected" : ""}">${t("studio.quick")}</button><button data-action="editor-mode" data-mode="creative" class="${editorMode === "creative" ? "selected" : ""}">${t("studio.creative")}</button></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chaptersHTML()}${dayPage ? "" : momentFormHTML(page)}<div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${photoToolbarHTML()}<div id="layer-controls-slot">${layerControls()}</div>
- ${dayPage ? dayForm : ""}
- ${
-   editorMode === "creative"
-     ? `<section class="material-panel"><h3>${t("studio.materials")}</h3><div class="material-categories">${categories.map((category) => `<button data-action="material-category" data-category="${category}" class="${materialCategory === category ? "selected" : ""}">${t("category." + category)}</button>`).join("")}</div><div class="art-sticker-grid">${catalog.stickers
-         .filter((s) => s.category === materialCategory)
-         .map(
-           (s) =>
-             `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="/library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`,
-         )
-         .join(
-           "",
-         )}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div></section>`
-     : `<p class="save-help">${t("studio.quickHelp")}</p>`
- }${growthPanelHTML()}${mediaPanelHTML(page, ctx(), Boolean(recorder))}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
+  const dayPage = isDayPage();
+  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
 }
 
 function updateCanvas() {
   if ($("#canvas-wrap")) $("#canvas-wrap").innerHTML = canvasHTML();
   if ($(".font-preview"))
-    $(".font-preview").style.fontFamily = fontFamily(editor.font, catalog);
+    $(".font-preview").style.fontFamily = fontFamily(activePage().font, catalog);
   const undo = document.querySelector('[data-action="undo"]');
   const redo = document.querySelector('[data-action="redo"]');
   if (undo) undo.disabled = history.length === 0;
   if (redo) redo.disabled = future.length === 0;
+  refreshToolSummaries();
 }
 
 function fontOptions(selected) {
@@ -743,6 +916,8 @@ function render() {
     books: booksPage,
     studio: studioPage,
     day: () => dayDetailHTML(selectedDate, ctx(), { icon, friendlyDate }),
+    journey: () =>
+      habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     settings: () => settingsHTML(ctx()),
   }[page]();
   navigation();
@@ -821,7 +996,23 @@ function openReflectionDialog(period, key) {
     `<h2>${t(period === "week" ? "reflection.weekTitle" : "reflection.monthTitle")}</h2><p class="dialog-description">${esc(period === "week" ? t("reflection.weekOf", { date: shortDate(key) }) : new Date(`${key}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))} · ${t("reflection.optional")}</p><div class="dialog-fields note-paper">${["wentWell", "challenges", "learned", "nextFocus"].map((field) => `<label class="field">${t("reflection." + field)}<textarea name="${field}" maxlength="2000">${esc(reflection[field] || "")}</textarea></label>`).join("")}</div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t("save")}</button></div>`;
   $("#form-dialog").showModal();
 }
-function handleCheck(habitId, date) {
+// In-page confirmation: works the same on localhost, in the iOS shell and on a
+// hosted link (where browser confirm() dialogs are unavailable).
+function askConfirm(message) {
+  const dialog = $("#confirm-dialog");
+  $("#confirm-message").textContent = message;
+  $("#confirm-cancel").textContent = t("cancel");
+  $("#confirm-ok").textContent = t("confirm.ok");
+  dialog.returnValue = "";
+  dialog.showModal();
+  $("#confirm-cancel").focus();
+  return new Promise((resolve) =>
+    dialog.addEventListener("close", () => resolve(dialog.returnValue === "ok"), {
+      once: true,
+    }),
+  );
+}
+async function handleCheck(habitId, date) {
   const habit = state().habits.find((h) => h.id === habitId);
   const existingCheck = state().checks.find(
     (c) => c.habitId === habitId && c.date === date,
@@ -834,7 +1025,7 @@ function handleCheck(habitId, date) {
   if (
     existingCheck &&
     (existingCheck.note || existingCheck.detail || existingCheck.photo) &&
-    !confirm(t("growth.cancelConfirm"))
+    !(await askConfirm(t("growth.cancelConfirm")))
   )
     return;
 
@@ -871,20 +1062,23 @@ async function action(target) {
   if (actionName === "nav") navigate(target.dataset.page);
   if (actionName === "edit-today") openStudio(dateKey());
   if (actionName === "quick-photo") {
+    studioTool = "photos";
     openStudio(dateKey());
-    $("#photo-input").click();
+    $("#photos-input").click();
   }
   if (actionName === "quick-text") {
+    studioTool = "text";
     openStudio(dateKey());
     $("#entry-title").focus();
   }
   if (actionName === "quick-mood") {
+    studioTool = "mood";
     openStudio(dateKey());
     $(".mood-list").scrollIntoView({ block: "center", behavior: "smooth" });
   }
   if (actionName === "quick-growth") navigate("growth");
   if (actionName === "check")
-    handleCheck(target.dataset.habit, target.dataset.date);
+    await handleCheck(target.dataset.habit, target.dataset.date);
   if (actionName === "new-habit") openDialog("habit");
   if (actionName === "new-book") openDialog("book");
   if (actionName === "close-dialog") $("#form-dialog").close();
@@ -932,6 +1126,7 @@ async function action(target) {
   if (actionName === "book") {
     flushDraft();
     selectedBook = target.dataset.book;
+    bookFilter = { month: "", date: "" };
     page = "books";
     render();
     $("#app-scroll").scrollTop = 0;
@@ -1360,6 +1555,7 @@ $("#app").addEventListener("pointerdown", (event) => {
     if (selectedLayer && pointers.size === 1) {
       selectedLayer = null;
       cropMode = false;
+      if (studioTool === "layer") studioTool = null;
       render();
     }
     return;
@@ -1371,7 +1567,8 @@ $("#app").addEventListener("pointerdown", (event) => {
     selectedLayer = layer.id;
     // Re-render so handles and controls appear, then keep dragging.
     $("#canvas-wrap").innerHTML = canvasHTML();
-    $("#layer-controls-slot").innerHTML = layerControls();
+    studioTool = "layer";
+    refreshToolMenu();
   }
   const handle = event.target.closest("[data-handle]")?.dataset.handle;
   beginGesture(
@@ -1553,6 +1750,7 @@ $("#app").addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     selectedLayer = element.dataset.layer;
+    studioTool = "layer";
     render();
     $(".layer-controls")?.scrollIntoView({ block: "nearest" });
     return;
@@ -1606,7 +1804,7 @@ $("#backup-input").addEventListener("change", async (event) => {
       backup.state?.schemaVersion !== 1
     )
       throw new Error("Invalid backup");
-    if (!confirm(t("settings.restoreConfirm"))) return;
+    if (!(await askConfirm(t("settings.restoreConfirm")))) return;
     busyMedia = true;
     const restored = normalizeState(await media.restore(backup));
     store.update((next) => {
@@ -1716,13 +1914,47 @@ function selectMoment(momentId) {
   activeMomentId = momentId || null;
   selectedLayer = null;
   cropMode = false;
+  if (studioTool === "layer") studioTool = null;
+  // A Moment with audio/video opens its players straight away.
+  const page = activePage();
+  if (!studioTool && page.media?.length) studioTool = "media";
   render();
-  $(".moment-editor, #canvas-wrap")?.scrollIntoView({ block: "start" });
+  $(".chapter-chips")?.scrollIntoView({ block: "start" });
+}
+function openTool(tool) {
+  studioTool = studioTool === tool ? null : tool;
+  render();
+  if (studioTool)
+    document
+      .querySelector(`[data-tool-row="${studioTool}"]`)
+      ?.scrollIntoView({ block: "nearest" });
 }
 async function v31Action(target) {
   const name = target.dataset.action;
   const momentId = target.dataset.moment;
   switch (name) {
+    case "tool":
+      openTool(target.dataset.tool);
+      return true;
+    case "book-filter-clear":
+      bookFilter = { month: "", date: "" };
+      render();
+      return true;
+    case "habit-journey":
+      openJourney(target.dataset.habit, 0);
+      $("#app-scroll").scrollTop = 0;
+      return true;
+    case "journey-page":
+      openJourney(journeyHabit, Number(target.dataset.page));
+      return true;
+    case "journey-back":
+      page = "growth";
+      render();
+      return true;
+    case "preview-size":
+      previewLarge = !previewLarge;
+      render();
+      return true;
     case "select-moment":
       selectMoment(momentId);
       return true;
@@ -1738,6 +1970,7 @@ async function v31Action(target) {
         });
         entry.moments.push(created);
       }, false);
+      studioTool = "text";
       selectMoment(created.id);
       $('[data-moment-field="title"]')?.focus();
       toast(t("moment.added"));
@@ -1767,7 +2000,10 @@ async function v31Action(target) {
     case "moment-delete": {
       const moment = findMoment(editor, activeMomentId);
       if (!moment) return true;
-      if (hasMomentContent(moment) && !confirm(t("moment.deleteConfirm")))
+      if (
+        hasMomentContent(moment) &&
+        !(await askConfirm(t("moment.deleteConfirm")))
+      )
         return true;
       changeEditor((entry) => removeMoment(entry, moment.id), false);
       selectMoment(null);
@@ -1804,7 +2040,8 @@ async function v31Action(target) {
       return true;
     case "apply-layout": {
       const page = activePage();
-      if (page.layoutEdited && !confirm(t("layout.confirm"))) return true;
+      if (page.layoutEdited && !(await askConfirm(t("layout.confirm"))))
+        return true;
       changeTarget((entry) => {
         if (entry === editor) freeMainPhoto(entry);
         applyLayout(entry, target.dataset.template, photoRegion());
@@ -2110,6 +2347,14 @@ function handleV3Input(event) {
 }
 function handleV3Change(event) {
   const target = event.target;
+  if (target.dataset.bookFilter) {
+    bookFilter =
+      target.dataset.bookFilter === "date"
+        ? { month: "", date: target.value }
+        : { month: target.value, date: "" };
+    render();
+    return true;
+  }
   if (target.id === "editor-date" && (busyMedia || recorder)) {
     toast(t("media.busy"));
     render();
@@ -2256,6 +2501,8 @@ async function handleImageUpload(event, target) {
 // auto layout, all photos are re-flowed; after manual edits, new photos are
 // cascaded on top so the user's arrangement is preserved.
 function addPhotoLayers(saved) {
+  // Open Layout with the new photos so arranging them is one tap away.
+  studioTool = "layout";
   if (editorMode !== "creative") editorMode = "creative";
   changeTarget((page) => {
     if (page === editor) freeMainPhoto(page);
@@ -2557,7 +2804,7 @@ async function start() {
   const names = ["design-tokens", "features", "seed", "library", "i18n"];
   const responses = await Promise.all(
     names.map(async (name) => {
-      const response = await fetch(`/shared/${name}.json`);
+      const response = await fetch(`shared/${name}.json`);
       if (!response.ok) throw new Error("Shared configuration could not load");
       return response.json();
     }),
@@ -2588,4 +2835,24 @@ async function start() {
 start().catch((error) => {
   $("#app").innerHTML =
     `<div class="error-panel"><h1>${t("error.start")}</h1><p>${esc(t(error.message))}</p><p>${t("error.startHelp")}</p></div>`;
+});
+// Turn journey pages with a swipe (touch or mouse) or the arrow keys.
+let journeySwipe = null;
+$("#app").addEventListener("pointerdown", (event) => {
+  if (page === "journey" && event.target.closest(".journey-page"))
+    journeySwipe = { x: event.clientX, y: event.clientY };
+});
+$("#app").addEventListener("pointerup", (event) => {
+  if (!journeySwipe || page !== "journey") return;
+  const dx = event.clientX - journeySwipe.x,
+    dy = event.clientY - journeySwipe.y;
+  journeySwipe = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5)
+    openJourney(journeyHabit, journeyPage + (dx < 0 ? 1 : -1));
+});
+document.addEventListener("keydown", (event) => {
+  if (page !== "journey" || event.target.closest("input,textarea,select,dialog"))
+    return;
+  if (event.key === "ArrowRight") openJourney(journeyHabit, journeyPage + 1);
+  if (event.key === "ArrowLeft") openJourney(journeyHabit, journeyPage - 1);
 });

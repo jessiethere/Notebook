@@ -1,0 +1,22 @@
+{
+  // Little Days preview servers for the Claude desktop app (local sessions):
+  // Browser pane → Dev servers → pick one to start it and open the app.
+  // Same Web app as the iOS Swift shell. No secrets in this file (it is committed).
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Little Days (Windows)",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-3", "tools/preview.py", "--port", "8080"],
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "Little Days (macOS / Linux)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["tools/preview.py", "--port", "8080"],
+      "port": 8080,
+      "autoPort": false
+    }
+  ]
+}

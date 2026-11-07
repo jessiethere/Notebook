@@ -1678,5 +1678,241 @@
   "settings.usageUnknown": {
     "zh": "暂时无法统计本机媒体大小。",
     "en": "Media usage could not be measured right now."
+  },
+  "confirm.ok": {
+    "zh": "确定",
+    "en": "OK"
+  },
+  "template.grid": {
+    "zh": "方格",
+    "en": "Grid"
+  },
+  "template.lined": {
+    "zh": "横线",
+    "en": "Lined"
+  },
+  "template.kraft": {
+    "zh": "牛皮纸",
+    "en": "Kraft"
+  },
+  "template.gingham": {
+    "zh": "格纹",
+    "en": "Gingham"
+  },
+  "template.berry": {
+    "zh": "莓果圆点",
+    "en": "Berry dots"
+  },
+  "template.watercolor": {
+    "zh": "水彩",
+    "en": "Watercolor"
+  },
+  "tool.layer": {
+    "zh": "选中的图层",
+    "en": "Selected layer"
+  },
+  "tool.photos": {
+    "zh": "照片",
+    "en": "Photos"
+  },
+  "tool.layout": {
+    "zh": "排版",
+    "en": "Layout"
+  },
+  "tool.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "tool.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "tool.paper": {
+    "zh": "纸张",
+    "en": "Paper"
+  },
+  "tool.mood": {
+    "zh": "心情",
+    "en": "Mood"
+  },
+  "tool.stickers": {
+    "zh": "贴纸与文字框",
+    "en": "Stickers & text boxes"
+  },
+  "tool.media": {
+    "zh": "声音与影像",
+    "en": "Audio & video"
+  },
+  "tool.growth": {
+    "zh": "当天的成长",
+    "en": "Growth this day"
+  },
+  "tool.book": {
+    "zh": "手帐本与记录",
+    "en": "Book & records"
+  },
+  "tool.chapters": {
+    "zh": "小故事目录",
+    "en": "Moments"
+  },
+  "tool.none": {
+    "zh": "还没有",
+    "en": "None yet"
+  },
+  "tool.empty": {
+    "zh": "未填写",
+    "en": "Not written yet"
+  },
+  "tool.layers": {
+    "zh": "{count} 个装饰",
+    "en": "{count} items"
+  },
+  "photo.count": {
+    "zh": "{count} 张",
+    "en": "{count} photos"
+  },
+  "photo.toolHelp": {
+    "zh": "可一次选多张；添加后在「排版」里一键套用版式，或在上方预览里直接拖动。",
+    "en": "Pick several at once, then choose a layout under Layout or drag them in the preview above."
+  },
+  "photo.addShort": {
+    "zh": "加照片",
+    "en": "Photos"
+  },
+  "layout.help": {
+    "zh": "点一个版式，上方预览会立刻变化；之后仍可拖动每张照片。",
+    "en": "Tap a layout and the preview above updates right away; you can still drag each photo."
+  },
+  "layout.needPhotos": {
+    "zh": "先添加照片，就能在这里选择版式。",
+    "en": "Add photos first to choose a layout here."
+  },
+  "moment.addShort": {
+    "zh": "小故事",
+    "en": "Moment"
+  },
+  "moment.none": {
+    "zh": "还没有小故事。",
+    "en": "No moments yet."
+  },
+  "studio.previewSmall": {
+    "zh": "缩小预览",
+    "en": "Smaller preview"
+  },
+  "studio.previewLarge": {
+    "zh": "放大预览",
+    "en": "Larger preview"
+  },
+  "journey.title": {
+    "zh": "成长轨迹",
+    "en": "Growth journey"
+  },
+  "journey.open": {
+    "zh": "成长轨迹",
+    "en": "Growth journey"
+  },
+  "journey.openHint": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "journey.since": {
+    "zh": "从 {date} 开始",
+    "en": "Since {date}"
+  },
+  "journey.empty": {
+    "zh": "还没有打卡。打卡后，每一天都会成为这本小书的一页。",
+    "en": "No check-ins yet. Each check-in becomes a page of this little book."
+  },
+  "journey.total": {
+    "zh": "次打卡",
+    "en": "check-ins"
+  },
+  "journey.minutes": {
+    "zh": "累计分钟",
+    "en": "minutes"
+  },
+  "journey.current": {
+    "zh": "当前连续",
+    "en": "day streak"
+  },
+  "journey.longest": {
+    "zh": "最长连续",
+    "en": "best streak"
+  },
+  "journey.notes": {
+    "zh": "篇心得",
+    "en": "notes"
+  },
+  "journey.recent": {
+    "zh": "最近四周",
+    "en": "Last 4 weeks"
+  },
+  "journey.hint": {
+    "zh": "左右滑动或点 ‹ › 翻页，也可以在下方目录直接打开某一天。",
+    "en": "Swipe or tap ‹ › to turn pages, or open a day from the contents below."
+  },
+  "journey.done": {
+    "zh": "完成打卡",
+    "en": "Checked in"
+  },
+  "journey.noNote": {
+    "zh": "这一天没有写心得。",
+    "en": "No note for this day."
+  },
+  "journey.openDay": {
+    "zh": "看当天手帐",
+    "en": "Open journal day"
+  },
+  "journey.writeToday": {
+    "zh": "写今天的心得",
+    "en": "Write today's note"
+  },
+  "journey.editToday": {
+    "zh": "编辑今天的心得",
+    "en": "Edit today's note"
+  },
+  "journey.pages": {
+    "zh": "翻页",
+    "en": "Pages"
+  },
+  "journey.prev": {
+    "zh": "上一页",
+    "en": "Previous page"
+  },
+  "journey.next": {
+    "zh": "下一页",
+    "en": "Next page"
+  },
+  "journey.pageOf": {
+    "zh": "第 {page} / {total} 页",
+    "en": "Page {page} of {total}"
+  },
+  "journey.contents": {
+    "zh": "目录",
+    "en": "Contents"
+  },
+  "journey.missing": {
+    "zh": "找不到这个习惯。",
+    "en": "This habit could not be found."
+  },
+  "books.month": {
+    "zh": "按月份查看",
+    "en": "Filter by month"
+  },
+  "books.allMonths": {
+    "zh": "全部月份",
+    "en": "All months"
+  },
+  "books.pickDate": {
+    "zh": "选择日期",
+    "en": "Pick a date"
+  },
+  "books.clearFilter": {
+    "zh": "显示全部",
+    "en": "Show all"
+  },
+  "books.noMatch": {
+    "zh": "这个日期还没有记录。",
+    "en": "Nothing recorded for this date."
   }
 }
