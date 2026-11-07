@@ -30,7 +30,10 @@ flowchart TD
 | `Public/js/personal-ui.mjs` | 书本封面/通用字段、媒体卡片、Settings 视图 |
 | `Public/js/library.mjs` | 字体/素材查找、封面参数、字段验证 |
 | `Public/js/i18n.mjs` | 共享翻译与界面语言偏好，不翻译用户内容 |
-| `Public/js/export.mjs` | 基础 Canvas 静态 PNG，支持原图、原创贴纸与独立文字层 |
+| `Public/js/export.mjs` | 基础 Canvas 静态 PNG，支持原图、原创贴纸、独立文字层，V3.1 照片图层尺寸/裁切/相框与成长卡片 |
+| `Public/js/day.mjs` | V3.1 纯函数：Moments 增删改序与单独保存、日期摘要、手帐本归类、打卡感想/周月回顾、自动版式与照片图层 |
+| `Public/js/canvas.mjs` | V3.1 共享画布与媒体卡片渲染：Studio 编辑模式与 Day Detail 只读模式使用同一套标记 |
+| `Public/js/day-view.mjs` | V3.1 Calendar Day Detail 只读回忆页 |
 | `tools/preview.py` | 127.0.0.1 HTTP、共享资源白名单、`--open`、完整解压检查 |
 | `Start-Windows.cmd` | 自动进入项目目录，检测 Python 3.10+，启动并打开浏览器；无需 Git |
 | `tools/sync_tokens.py` / `sync_library.py` | 从共享 JSON 生成颜色回退和字体 CSS，非运行时构建 |
@@ -60,9 +63,40 @@ Book {id,title,category,color,cover, description?,coverTemplate?,coverFont?,
       coverDecoration?,coverImage?,visibility?,fields?}
 BookField {id,label,type,options?,labelZh?,labelEn?}
 Entry {原有字段, media?,fieldValues?,textStyle?,bodyFont?,visibility?}
-MediaCard {id,kind:"video"|"audio",name,mime,size,duration,source,poster?}
+MediaCard {id,kind:"video"|"audio",name,mime,size,duration,source,poster?,origin?:"recording"}
 Layer {原有字段, assetId?,mediaRef?,fontId?,fontSize?,color?,weight?,spacing?,align?}
 ```
+
+### V3.1 增量（仍是 schemaVersion 1，全部可选）
+
+```text
+Entry      += moments?: Moment[], layoutTemplate?, layoutEdited?
+Moment     {id, title, time, body, mood, tags[], bookId, template, font,
+            layers: Layer[], media: MediaCard[], collapsed, layoutTemplate?,
+            layoutEdited?, visibility:"private", updatedAt, savedAt?}
+Layer      += w?, h?            // % 画布宽 / % 画布高；x/y 仍是中心点 %
+              crop?: {x,y,zoom} // object-position % 与 1–4 倍缩放
+              frame?: polaroid|border|rounded|bare, tape?: bool
+              kind:"growth" + habitId, checkDate   // 引用打卡，不复制
+HabitCheck += detail?, note?, mood?, photo?(media:), shareNote?:false, updatedAt?
+DayState   += reflections?: [{id, period:"week"|"month", key, wentWell,
+                              challenges, learned, nextFocus, updatedAt}]
+```
+
+决策：**Day 仍是 Entry（日期容器）**，一天一条 Entry，内部是有序 Moments，避免把一天拆成多条互不相关的 Entry 而打乱 Calendar / My Books / Growth 关联。“页”= 当日主页（保留旧标题/正文/主照片固定版式，旧记录无需迁移）+ 每个 Moment。所有画布坐标为相对画布的百分比，画布固定 4:5，因此不同手机/桌面尺寸恢复一致。
+
+成长卡片是对 `(habitId, date)` 打卡的引用：修改感想处处更新；删除手帐页/Moment 不影响打卡；打卡仍唯一，计数不变。感想默认私人，`shareNote` 为未来分享时的明确授权位，目前没有任何分享出口。
+
+### V3.1 媒体加载与对象 URL 生命周期
+
+`MediaStore` 以 scope 引用计数对象 URL：`app`（照片、封面、海报、成长照片，用于缩略图）在启动时载入；音视频 Blob 只由打开它们的视图（`studio` 或 `day`）通过 `acquire()` 从 IndexedDB 读取，离开视图 `release()` 暂停播放并撤销仅属于该视图的 URL。Day Detail 不再依赖 Studio 临时状态，刷新或重选日期都会重新从 IndexedDB 生成可播放 URL。恢复备份写入 Blob 时不创建 URL。
+
+### V3.1 容量检查
+
+- 图片导入仍压缩为最长边 1200px 的 JPEG（通常 0.1–0.5 MB/张），单次多选上限 20 张；LocalStorage 只增加每张约 0.3 KB 的坐标元数据。
+- 备份媒体上限保持 **100 MB**、导入文件 **150 MB**（Base64 约 +33%，100 MB 媒体 ≈ 134 MB JSON，仍低于导入上限），未放宽。
+- 备份媒体**文件数**上限由 500 调整为 **2000**：多照片后 500 个文件可能早于 100 MB 被触发（每天 2 张约 8 个月），总字节上限不变，因此内存风险不变。
+- Settings 显示当前引用媒体的数量和大小，超过 80 MB 变色提醒；超过 100 MB 时导出明确失败提示，不会生成不完整备份。分卷备份仍未实现。
 
 `photo`、`coverImage`、卡片 source/poster、图片字段或照片层使用 `media:<UUID>`；真实 Blob 存在 `little-days-media` IndexedDB 的 `media` object store，数据库版本 1。对象 URL 只在当前页面内存使用，刷新时由 Blob 重建，不能把临时 blob URL 持久化当作媒体本体。
 
@@ -75,7 +109,7 @@ Layer {原有字段, assetId?,mediaRef?,fontId?,fontSize?,color?,weight?,spacing
 
 旧 data URI 主照片：先把所有对应 Blob 写成功，再替换元数据。失败时原字符串和记录保留；已经写入但未引用的 Blob 暂时保留，不能以清理为名删除原媒体。
 
-同一天一篇 Journal；HabitCheck 使用 `(habitId,date)` 唯一关联。主题字段使用通用 schema，fieldValues 保留原始值；界面语言变更只翻译标签，不重写用户值。
+同一天一篇 Journal（V3.1 起其中包含有序 Moments）；HabitCheck 使用 `(habitId,date)` 唯一关联，感想写在同一条打卡上。主题字段使用通用 schema，fieldValues 保留原始值；界面语言变更只翻译标签，不重写用户值。
 
 ### 本机备份和恢复
 

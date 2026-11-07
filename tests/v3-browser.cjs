@@ -40,6 +40,7 @@ async function streamBytes(download) {
 (async () => {
   const browser = await chromium.launch({
     headless: true,
+    executablePath: process.env.CHROMIUM_PATH || undefined,
     args: [
       "--use-fake-device-for-media-stream",
       "--use-fake-ui-for-media-stream",
@@ -246,7 +247,7 @@ async function streamBytes(download) {
       mimeType: "audio/wav",
       buffer: wav(),
     });
-    await page.waitForSelector(".media-card audio");
+    await page.waitForSelector(".media-card audio", { state: "attached" });
     await page.locator('[data-action="record-audio"]').click();
     await page.waitForSelector('[data-action="stop-recording"]');
     await page.waitForTimeout(650);
@@ -269,6 +270,12 @@ async function streamBytes(download) {
     await page.reload();
     await page.waitForSelector(".hero");
     await nav("studio");
+    // V3.1 loads audio/video Blobs for the open view only, after IndexedDB reads.
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll('.media-card audio[src^="blob:"]').length === 2 &&
+        document.querySelector('.media-card video[src^="blob:"]'),
+    );
     assert.equal(await page.locator(".media-card video").count(), 1);
     assert.equal(await page.locator(".media-card audio").count(), 2);
     assert.equal(
@@ -381,6 +388,12 @@ async function streamBytes(download) {
       (await read()).books.every((book) => book.visibility === "private"),
     );
     await nav("studio");
+    // V3.1 loads audio/video Blobs for the open view only, after IndexedDB reads.
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll('.media-card audio[src^="blob:"]').length === 2 &&
+        document.querySelector('.media-card video[src^="blob:"]'),
+    );
     assert.equal(await page.locator(".media-card video").count(), 1);
     await page
       .locator(".media-card audio")

@@ -32,12 +32,21 @@ test("IndexedDB stores real media bytes and reopens them after object URLs are d
   first.close();
   const second = new MediaStore(factory);
   assert.equal(await (await second.get(id)).blob.text(), "test-audio-bytes");
-  await second.hydrate({
+  const snapshot = {
     books: [],
     entries: [{ media: [{ source: "media:" + id }] }],
     drafts: {},
-  });
+  };
+  // V3.1: app-wide hydrate only keeps images; audio/video load per view scope.
+  await second.hydrate(snapshot);
+  assert.equal(second.resolve("media:" + id), "");
+  await second.acquire([id], "day");
+  await second.acquire([id], "studio");
   assert.ok(second.resolve("media:" + id).startsWith("blob:"));
+  assert.equal(second.release("day"), 0);
+  assert.ok(second.resolve("media:" + id).startsWith("blob:"));
+  assert.equal(second.release("studio"), 1);
+  assert.equal(second.resolve("media:" + id), "");
   second.close();
 });
 test("legacy data URI photos migrate only after Blob writes complete, preserving text and old fields", async () => {

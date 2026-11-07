@@ -54,6 +54,30 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
     }
+    func testV31MomentsFreeLayoutAndGrowthNotesRoundTrip() throws {
+        let seed = try SharedResources.decode(Seed.self, named: "seed")
+        var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(DayState(seed: seed, today: "2026-11-07"))) as! [String: Any]
+        var entries = object["entries"] as! [[String: Any]]
+        let photo: [String: Any] = ["id": "p1", "kind": "photo", "text": "a.jpg", "mediaRef": "media:p1", "x": 33, "y": 44, "w": 50, "h": 40, "scale": 1, "rotation": 7, "frame": "polaroid", "tape": true, "crop": ["x": 20, "y": 70, "zoom": 1.5]]
+        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "layers": [photo], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
+        entries[0]["layers"] = [["id": "g", "kind": "growth", "text": "Move", "habitId": "move", "checkDate": "2026-11-07", "x": 50, "y": 50, "w": 62, "scale": 1, "rotation": -2]]
+        object["entries"] = entries
+        object["checks"] = [["habitId": "move", "date": "2026-11-07", "minutes": 60, "detail": "Lower Body", "note": "左腿发力更好", "shareNote": false]]
+        object["reflections"] = [["id": "r", "period": "week", "key": "2026-11-02", "wentWell": "3 次训练"]]
+        let decoded = try JSONDecoder().decode(DayState.self, from: JSONSerialization.data(withJSONObject: object))
+        let reloaded = try JSONDecoder().decode(DayState.self, from: JSONEncoder().encode(decoded))
+        let moment = try XCTUnwrap(reloaded.entries[0].moments?.first)
+        XCTAssertEqual(moment.title, "Gym Session")
+        XCTAssertEqual(moment.layers?.first?.w, 50)
+        XCTAssertEqual(moment.layers?.first?.crop?.zoom, 1.5)
+        XCTAssertEqual(moment.media?.first?.origin, "recording")
+        XCTAssertEqual(reloaded.entries[0].layers.first?.habitId, "move")
+        XCTAssertEqual(reloaded.checks.first?.note, "左腿发力更好")
+        XCTAssertEqual(reloaded.reflections?.first?.wentWell, "3 次训练")
+        // Editing a note keeps one check per habit/date, so weekly counts stay the same.
+        XCTAssertEqual(reloaded.weeklyCount(habitId: "move", date: "2026-11-07"), 1)
+    }
+
     func testSharedResourcesAndDates() throws {
         let tokens = try SharedResources.decode(DesignTokens.self, named: "design-tokens")
         XCTAssertEqual(tokens.colors["cream"], "#F8F5EF")

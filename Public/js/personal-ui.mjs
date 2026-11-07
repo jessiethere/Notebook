@@ -1,4 +1,5 @@
 import { fontFamily, coverColor, stickerURL } from "./library.mjs";
+import { mediaCardHTML } from "./canvas.mjs";
 export const escapeHTML = (value = "") =>
   String(value).replace(
     /[&<>"']/g,
@@ -8,10 +9,6 @@ export const escapeHTML = (value = "") =>
       ],
   );
 const esc = escapeHTML;
-const duration = (value) =>
-  Number.isFinite(Number(value)) && Number(value) > 0
-    ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}`
-    : "—";
 export function fieldLabel(field, language) {
   return language === "en"
     ? field.labelEn || field.label
@@ -72,20 +69,16 @@ export function customFieldsHTML(book, entry, ctx) {
     .join("")}</section>`;
 }
 export function mediaPanelHTML(entry, ctx, recording) {
-  const { media, t } = ctx;
+  const { t } = ctx;
   return `<section class="media-section"><div class="section-heading"><h2>${t("media.title")}</h2><span class="badge">IndexedDB</span></div><div class="media-add-actions"><button class="secondary" data-action="upload-video">${t("media.video")}</button><button class="secondary" data-action="upload-audio">${t("media.audio")}</button><button class="secondary ${recording ? "is-recording" : ""}" data-action="${recording ? "stop-recording" : "record-audio"}">${t(recording ? "media.stop" : "media.record")}</button></div><p id="record-status" class="record-status" role="status">${recording ? t("media.recording", { seconds: 0 }) : ""}</p><p class="save-help">${t("media.limit")}</p>${
     entry.media?.length
       ? entry.media
-          .map((clip) => {
-            const src = media.resolve(clip.source);
-            const poster = media.resolve(clip.poster || "");
-            return `<article class="media-card" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : "♫"}</span><strong>${esc(clip.name)}</strong><button data-action="remove-media" data-clip="${esc(clip.id)}" aria-label="${t("media.remove")}">×</button></div>${src ? (clip.kind === "video" ? `<video controls playsinline preload="metadata" src="${esc(src)}" ${poster ? `poster="${esc(poster)}"` : ""}></video>` : `<audio controls preload="metadata" src="${esc(src)}"></audio>`) : `<p class="subtext">${t("media.missing")}</p>`}<div class="media-card-foot"><small>${t("media.saved")} · <span class="media-duration">${duration(clip.duration)}</span> · ${Number(clip.size || 0) > 0 ? new Intl.NumberFormat(ctx.locale, { maximumFractionDigits: 1 }).format(clip.size / 1024 / 1024) + " MB" : ""}</small>${clip.kind === "video" ? `<button data-action="video-poster" data-clip="${esc(clip.id)}">${t("media.poster")}</button>` : ""}</div></article>`;
-          })
+          .map((clip) => mediaCardHTML(clip, ctx, { editable: true }))
           .join("")
       : `<p class="empty">${t("media.empty")}</p>`
   }</section>`;
 }
 export function settingsHTML(ctx) {
   const { t, catalog, language } = ctx;
-  return `<header class="page-top"><div><h1 class="page-title">${t("settings.title")}</h1><p class="page-subtitle">${t("settings.subtitle")}</p></div></header><section class="settings-card"><h2>${t("language")}</h2><div class="segmented"><button data-action="language" data-language="zh-CN" class="${language === "zh-CN" ? "selected" : ""}">简体中文</button><button data-action="language" data-language="en" class="${language === "en" ? "selected" : ""}">English</button></div><p>${t("settings.contentNote")}</p></section><section class="settings-card"><h2>${t("settings.storage")}</h2><p>${t("settings.storageNote")}</p><button class="primary" data-action="backup">${t("settings.backup")}</button><button class="secondary" data-action="restore-backup">${t("settings.restore")}</button><p>${t("settings.backupNote")}</p></section><section class="settings-card"><h2>${t("settings.private")}</h2><p>${t("settings.privateNote")}</p></section><section class="settings-card"><h2>${t("settings.licenses")}</h2><p>${t("settings.licensesNote")}</p>${catalog.fonts.map((font) => `<a href="/library/fonts/${font.license}" target="_blank" rel="noopener">${font.name} · SIL OFL 1.1 ↗</a>`).join("")}<a href="/library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></section>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("settings.title")}</h1><p class="page-subtitle">${t("settings.subtitle")}</p></div></header><section class="settings-card"><h2>${t("language")}</h2><div class="segmented"><button data-action="language" data-language="zh-CN" class="${language === "zh-CN" ? "selected" : ""}">简体中文</button><button data-action="language" data-language="en" class="${language === "en" ? "selected" : ""}">English</button></div><p>${t("settings.contentNote")}</p></section><section class="settings-card"><h2>${t("settings.storage")}</h2><p>${t("settings.storageNote")}</p><button class="primary" data-action="backup">${t("settings.backup")}</button><button class="secondary" data-action="restore-backup">${t("settings.restore")}</button><p>${t("settings.backupNote")}</p><p id="media-usage" role="status"></p></section><section class="settings-card"><h2>${t("settings.private")}</h2><p>${t("settings.privateNote")}</p></section><section class="settings-card"><h2>${t("settings.licenses")}</h2><p>${t("settings.licensesNote")}</p>${catalog.fonts.map((font) => `<a href="/library/fonts/${font.license}" target="_blank" rel="noopener">${font.name} · SIL OFL 1.1 ↗</a>`).join("")}<a href="/library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></section>`;
 }

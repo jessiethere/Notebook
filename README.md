@@ -3,7 +3,7 @@
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-本轮完成 V3 Phase 1 的个人手帐增强。在现有项目上继续采用 **Swift + SwiftUI（最终 iPhone）+ HTML/CSS/JavaScript（Windows 交互预览）**，保留 Vapor 与共享 Core；没有切换 React。Web 页面不是实际运行的 SwiftUI。
+最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**（Web 交互预览）。在现有项目上继续采用 **Swift + SwiftUI（最终 iPhone）+ HTML/CSS/JavaScript（Windows 交互预览）**，保留 Vapor 与共享 Core；没有切换 React。Web 页面不是实际运行的 SwiftUI。
 
 ## Windows 打开最新版（无需 Git）
 
@@ -23,6 +23,16 @@ py -3 tools\preview.py --open
 没有 `py` 可用 `python tools\preview.py --open`。文件名是 `preview.py`，不是 `preview\.py`。端口占用可明确使用 `--port 8081`，但更换地址/端口会切换浏览器存储 origin。完整图解步骤和报错说明见 [Windows 启动指南](docs/WINDOWS_PREVIEW.md)。
 
 更新时先停止旧服务，再下载/解压新 ZIP；继续使用同一浏览器、`localhost:8080`，并先在 Settings 导出本机备份。已有 Git 环境可在仓库目录 `git pull`。macOS/Linux 可运行 `python3 tools/preview.py --open`；现有 Swift/Vapor 仍为 `bash start.sh`（Swift 6.0+）。
+
+## V3.1 新增（Web）
+
+- **Calendar 回忆阅读（Day Detail）**：点有内容的日期，直接阅读当天全部 Moments、照片排版、文字/贴纸、心情、视频（直接播放）、音频与录音（设计感播放器：播放/暂停/拖动进度/时长）、成长打卡与感想；照片可放大；点 Edit 才进入 Studio。刷新或重选日期后从 IndexedDB 重新载入，离开页面释放临时 URL。日历格子用小圆点标记照片/视频/声音/成长，多个小故事显示数字。
+- **多照片自由排版**：「添加照片」一次多选（单次最多 20 张），继续添加不会覆盖；每张照片可拖动、双指缩放旋转、鼠标拖右下角改宽高、拖顶部圆点旋转、滚轮缩放（Shift 旋转）、方向键微调；裁切、相框（拍立得/白边/圆角/无边框）、胶带、替换、复制、删除、前后/逐层顺序，全部可撤销重做，可与贴纸、文字框、成长卡片混排。
+- **Auto / Free Layout**：双照片、三照片、四宫格、拍立得、拼贴；按照片数量自动建议；手动调整后再套模板会先提醒。
+- **一天多个小故事（Moments）**：Studio「添加一个小故事」，每个有小标题、时间、正文、心情、标签、手帐本、照片/视频/录音和独立画布；可排序、复制、删除、折叠、单独保存。
+- **Growth 感想**：打卡后点 ✎ 写内容/时长/感想/心情/照片，可随时回看修改；每周/每月回顾（全部可选）；感想可作为卡片插入手帐，修改感想会同步更新，不会重复计数；删除手帐页不会删除打卡。感想默认私人。
+
+![V3.1 Day Detail（Web 预览截图，合成示例数据）](docs/images/little-days-v31-day-detail.png)
 
 ## 当前真正可用的 Web 功能
 
@@ -61,7 +71,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-当前在 Linux 验证：**22 项 Node、9 项 Python、5 项 Core Swift、2 项 Vapor，共 38 项自动化测试**；浏览器原流程与 V3 流程另行验证，详情见 agent.md。尚未在 Windows 实机执行 CMD/Python Launcher，也没有 iOS SDK 构建结果。
+V3.1 本轮在 Linux 容器验证：**33 项 Node、9 项 Python 全部通过**；原有两套浏览器 E2E 与新的 V3.1 浏览器验收（14 项要求）全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -77,6 +87,7 @@ npm test
 npx playwright install chromium
 npm run test:browser
 npm run test:browser:v3
+npm run test:browser:v31
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -94,6 +105,15 @@ npm run test:browser:v3
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — V3.1：自由排版、多事件日记、完整回忆浏览与成长感想
+
+- P0：Calendar 只读 Day Detail，上传音频/录音/视频直接播放，刷新后仍可播放；日历多媒体标记；按视图释放对象 URL。
+- P1：多照片一次上传、独立图层、拖动/双指/鼠标把手/滚轮/键盘操作、裁切/相框/胶带/图层顺序、五种 Auto Layout 与切换确认。
+- P2：同一天多个 Moments，章节式编辑与阅读，排序/复制/删除/折叠/单独保存，My Books 按章节归类。
+- P3：打卡感想、周/月回顾、成长卡片引用插入，不重复计数，默认私人。
+- 数据：仍为 schemaVersion 1 可选字段；备份/恢复含全部新增数据；备份文件数上限 500 → 2000（100 MB/150 MB 不变）；Settings 显示媒体用量。
+- 验证：33 项 Node、9 项 Python、三套浏览器 E2E 通过；Swift/Vapor 未运行（环境无 Swift），Windows/iOS 实机未验证。
 
 ### 2026-11-07 — V3 Phase 1：自定义书本、素材、多媒体与双语
 

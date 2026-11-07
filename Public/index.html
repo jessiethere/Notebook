@@ -49,8 +49,13 @@
     </div>
     <div class="preview-footnote">数据保存在当前浏览器 · 示例内容可编辑</div>
     <dialog id="form-dialog"><form id="dialog-form"></form></dialog>
+    <dialog id="lightbox" class="lightbox">
+      <button type="button" class="lightbox-close" data-action="close-lightbox" aria-label="Close">×</button>
+      <img id="lightbox-image" alt="" />
+    </dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <input id="photo-input" type="file" accept="image/*" hidden />
+    <input id="photos-input" type="file" accept="image/*" multiple hidden />
     <input id="attachment-image-input" type="file" accept="image/*" hidden />
     <input
       id="video-input"
