@@ -48,6 +48,13 @@
 
 ## 更新日志
 
+### 2026-11-07 — 桌面 App 可点击的 Dev servers
+
+- 需求：在 environment 里有一个随时可点的服务器。
+- 调查：官方文档仅说明 Claude 桌面 App 本地会话通过 `.claude/launch.json` 提供 Browser 面板的 Dev servers；网页/云端会话侧栏没有文档化的服务器列表（无法在当前云端会话中实现）。
+- 改动：新增 `.claude/launch.json`（Little Days (Windows) = `py -3 tools/preview.py --port 8080`；macOS/Linux = `python3`；`autoPort:false`）；README、AGENTS.md 说明。
+- 验证：JSON（含注释）结构按文档字段编写；未在用户的 Windows 桌面 App 中实测。
+
 ### 2026-11-07 — 在线链接（claude.ai Artifact）
 
 - 需求：用户的会话面板没有 servers 区，看不到 localhost；希望有一个点开就能看的链接。

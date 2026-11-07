@@ -10,6 +10,8 @@
 
 本机预览：[http://localhost:8080](http://localhost:8080)（先双击项目文件夹里的 **Start-Windows.cmd**，它会自动更新到最新版并启动）。
 
+**在 Claude 桌面 App 里随时点击**：用 Claude 桌面 App 新建一个**本地**会话并选择 `Notebook` 文件夹，在 Browser 面板的 **Dev servers** 菜单里点 **Little Days (Windows)** 即可启动并打开（配置在 `.claude/launch.json`）。网页版/云端会话的侧栏目前没有这个服务器列表。
+
 最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
 **架构：最终发布 iOS App；iOS App 是 Swift 外壳（SwiftUI + WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。** 所以你在 localhost 链接里看到的，就是 iPhone 上会看到的同一个界面——在 Windows 浏览器就能检查每次更新、告诉我哪里要改，不需要每次用 Mac/Xcode。保留 Vapor 与共享 Swift Core；没有使用 React。
@@ -129,6 +131,10 @@ npm run test:browser:v31
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — 桌面 App Dev servers
+
+- 新增 `.claude/launch.json`：在 Claude 桌面 App 本地会话的 Dev servers 菜单里一键启动 Little Days。
 
 ### 2026-11-07 — 在线链接
 
