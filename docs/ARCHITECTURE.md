@@ -6,6 +6,21 @@
 
 最终 iPhone 是 Swift + SwiftUI。Windows localhost 是独立交互 HTML 预览，不是 Apple SwiftUI。Apple iOS SDK 无法直接在 Windows 浏览器运行；SwiftWasm/Tokamak 等兼容层的照片/手势/媒体兼容性尚未在本项目验证，因此不引入。保留现有 Vapor，Windows 的日常预览继续使用 Python 标准库，不要求安装 Swift 或 Node。
 
+## 2026-11-07 架构确认：iOS = Swift 外壳 + 同一份 Web 界面
+
+用户确认：最终发布 iOS App，App 是 **SwiftUI + WKWebView 外壳**，运行与 localhost 预览完全相同的 `Public/` HTML/CSS/JavaScript；用户在 Windows 浏览器打开 http://localhost:8080 检查每次更新，不需要 Mac/Xcode。
+
+| 部分 | 说明 |
+| --- | --- |
+| `Native/App/LittleDaysApp.swift` | 入口改为 `LittleDaysWebShellView()` |
+| `Native/Sources/LittleDaysUI/WebShell/` | `LittleDaysSchemeHandler`：`littledays://app/` 自定义协议，路由与 `tools/preview.py` 一致（`/shared`、`/library`、`/assets` 来自 Core 白名单资源，其余来自 `WebApp/`，禁止 `..`/隐藏文件）；`LittleDaysWebCoordinator`：JS `alert/confirm`、麦克风权限、备份/PNG 下载到 Documents 并弹出分享面板、外部链接交给 Safari |
+| `Native/Sources/LittleDaysUI/WebApp/` | `Public/` 的副本，由 `tools/sync_native_web.py` 生成；`tests/test_native_shell.py` 检查一致、路由覆盖、入口与权限键 |
+| `Native/Package.swift` | `resources: [.copy("WebApp")]` |
+| Xcode 工程 | 新增麦克风、相机说明，文件共享（导出的备份可在「文件」中看到） |
+| `Public/styles.css` | 外壳注入 `data-shell="ios"`，隐藏“Web 预览”外框，使用真实安全区 |
+
+固定自定义 origin 保证 LocalStorage/IndexedDB 在 App 重启后保留。浏览器（localhost）与 iPhone App 的数据彼此独立，通过备份/恢复迁移。Debug 版可用启动参数 `-LittleDaysDevServer <url>` 改为加载开发服务器（Release 永远加载打包文件）。WKWebView 对自定义协议下 IndexedDB、MediaRecorder 的支持需在 Xcode/真机确认，本轮环境无法验证。
+
 ## 当前已经落地
 
 ```mermaid

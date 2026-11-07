@@ -3,26 +3,47 @@
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**（Web 交互预览）。在现有项目上继续采用 **Swift + SwiftUI（最终 iPhone）+ HTML/CSS/JavaScript（Windows 交互预览）**，保留 Vapor 与共享 Core；没有切换 React。Web 页面不是实际运行的 SwiftUI。
+## 👉 [点这里打开 Little Days：http://localhost:8080](http://localhost:8080)
 
-## Windows 打开最新版（无需 Git）
+> 链接打开的是你电脑上运行的预览。如果打不开，先双击项目文件夹里的 **Start-Windows.cmd**（它会自动更新到最新版并启动），再点上面的链接。
 
-你已经有 Python 3.10+ 时，不需要安装 Git、Swift、Node 或 Xcode 来预览。
+最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
-1. [下载最新版 Notebook-main.zip](https://github.com/jessiethere/Notebook/archive/refs/heads/main.zip)。
-2. 右键 **全部解压缩**，进入同时含 `Start-Windows.cmd`、`Public`、`tools`、`Packages` 的那层目录。
-3. 双击 **Start-Windows.cmd**，脚本会检测 Python 并自动打开浏览器。
-4. 访问 **http://localhost:8080**，保持终端开启，Ctrl+C 停止。
+**架构：最终发布 iOS App；iOS App 是 Swift 外壳（SwiftUI + WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。** 所以你在 localhost 链接里看到的，就是 iPhone 上会看到的同一个界面——在 Windows 浏览器就能检查每次更新、告诉我哪里要改，不需要每次用 Mac/Xcode。保留 Vapor 与共享 Swift Core；没有使用 React。
 
-手动启动：在上述目录的资源管理器地址栏输入 `cmd`，回车后运行：
+## 查看最新版：点 localhost 链接
+
+**在 Claude 会话里**：每次开始工作时，预览服务会在后台启动并登记为预览链接。直接点开会话里的 **localhost:8080** 预览即可看到最新代码，不需要下载任何东西。
+
+**在你自己的 Windows 电脑上**（第一次设置一次，以后只需双击）：
+
+1. 第一次：安装 [Git for Windows](https://git-scm.com/download/win) 和 Python 3.10+，在想放项目的文件夹里运行：
+
+```cmd
+git clone https://github.com/jessiethere/Notebook.git
+```
+
+2. 以后每次：双击 `Notebook` 文件夹里的 **Start-Windows.cmd**。它会先自动 `git pull` 拿到最新代码，再打开 **http://localhost:8080**。保持窗口开启，Ctrl+C 停止。
+
+手动方式（在项目目录运行）：
+
+```cmd
+git pull
+```
 
 ```cmd
 py -3 tools\preview.py --open
 ```
 
-没有 `py` 可用 `python tools\preview.py --open`。文件名是 `preview.py`，不是 `preview\.py`。端口占用可明确使用 `--port 8081`，但更换地址/端口会切换浏览器存储 origin。完整图解步骤和报错说明见 [Windows 启动指南](docs/WINDOWS_PREVIEW.md)。
+没有 `py` 可用 `python tools\preview.py --open`。端口占用可用 `--port 8081`，但更换地址/端口会切换浏览器存储（先在 Settings 导出备份）。报错说明见 [Windows 指南](docs/WINDOWS_PREVIEW.md)。macOS/Linux：`python3 tools/preview.py --open`；Vapor 仍为 `bash start.sh`（Swift 6.0+）。
 
-更新时先停止旧服务，再下载/解压新 ZIP；继续使用同一浏览器、`localhost:8080`，并先在 Settings 导出本机备份。已有 Git 环境可在仓库目录 `git pull`。macOS/Linux 可运行 `python3 tools/preview.py --open`；现有 Swift/Vapor 仍为 `bash start.sh`（Swift 6.0+）。
+## iOS App（Swift 外壳）
+
+- 入口 `Native/App/LittleDaysApp.swift` → `LittleDaysWebShellView`（`Native/Sources/LittleDaysUI/WebShell/`）。外壳通过 `littledays://app/` 加载打包进 App 的 Web 文件，并像 `tools/preview.py` 一样从共享 Core 提供 `/shared`、`/library`、`/assets`；数据保存在 App 自己的 WebKit 存储（LocalStorage + IndexedDB）。
+- 外壳负责原生能力：`confirm/alert` 对话框、麦克风录音权限、相机/相册选择、备份与 PNG 导出保存到「文件」并弹出分享面板。
+- 改完 `Public/` 运行 `python3 tools/sync_native_web.py` 把同样的文件同步到 `Native/Sources/LittleDaysUI/WebApp/`；`tests/test_native_shell.py` 会检查是否一致。
+- 发布 iOS 时再用 Xcode 打开 `Native/LittleDays.xcodeproj` 构建；日常检查更新只需要上面的 localhost 链接。
+- 早期的 SwiftUI 原型界面（`LittleDaysRootView` 等）保留在代码中，但 App 不再使用它们。**Swift 外壳尚未在 Xcode 构建或真机上验证**（当前环境没有 macOS/iOS SDK）。
 
 ## V3.1 新增（Web）
 
@@ -50,9 +71,9 @@ py -3 tools\preview.py --open
 
 ## 原生 SwiftUI 与共享资源
 
-`Native/LittleDays.xcodeproj` / `Native/Package.swift` 提供 iOS 17+ 原生基础。共享 Core 已扩展 V3 媒体、字段、字体和素材类型；SwiftUI 基础页面增加双语 Settings、CoreText 字体注册/选择与原创 PNG 封面。
+`Native/LittleDays.xcodeproj` / `Native/Package.swift` 是 iOS 17+ 工程。App 入口现在是 Swift 外壳，所有功能与 localhost 版本一致；共享 Core（`Packages/LittleDaysCore`）的 Swift 数据模型同步了 V3.1 字段（Moments、照片布局、成长感想、周/月回顾），早期 SwiftUI 原型界面保留但不再作为入口。
 
-原生端尚未对齐 Web 的视频/录音导入、完整封面/字段编辑和自由画布，浏览器数据也未同步到 iPhone。当前仅验证 SwiftUI 语法与 Swift 模型/资源，**尚未运行 iOS SDK 构建或真机**；需在 macOS + Xcode 16+ 进一步验证。
+浏览器里的数据（localhost）和 iPhone App 里的数据各自独立，不会自动同步，可用 Settings 的备份/恢复迁移。当前环境没有 macOS/iOS SDK，**Swift 外壳尚未进行 Xcode 构建、模拟器或真机验证**。
 
 ## 项目文档
 
@@ -105,6 +126,12 @@ npm run test:browser:v31
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — iOS Swift 外壳 + localhost 链接
+
+- README 顶部新增可直接点击的 http://localhost:8080 链接；不再需要下载 ZIP，Start-Windows.cmd 会自动 `git pull` 更新。
+- iOS App 改为 Swift 外壳（SwiftUI + WKWebView），运行与 localhost 完全相同的界面；`tools/sync_native_web.py` + 测试保证 App 内文件与 `Public/` 一致；早期 SwiftUI 原型代码保留。
+- 未验证：Xcode 构建/真机（当前环境无 macOS）。
 
 ### 2026-11-07 — V3.1：自由排版、多事件日记、完整回忆浏览与成长感想
 

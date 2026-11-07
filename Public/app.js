@@ -68,6 +68,9 @@ import {
   normalizeState,
 } from "./js/model.mjs";
 
+// The iOS Swift shell opens index.html?shell=ios (and also injects this marker).
+if (new URLSearchParams(location.search).get("shell") === "ios")
+  document.documentElement.dataset.shell = "ios";
 const $ = (selector) => document.querySelector(selector);
 const esc = (value = "") =>
   String(value).replace(

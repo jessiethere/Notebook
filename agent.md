@@ -11,6 +11,7 @@
 
 ## 当前状态
 
+- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 README 顶部的 http://localhost:8080 链接 / 会话 servers 预览查看每次更新，不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
 - **V3.1（Web）已实现**：Calendar 只读 Day Detail（全部 Moments、照片排版、统一音频播放器/录音/视频直接播放、照片放大、成长感想）；多照片自由排版（多选、独立图层、拖动/双指缩放旋转/鼠标把手/滚轮/方向键、裁切、相框/胶带、图层顺序、五种 Auto Layout、撤销重做）；一天多个 Moments（章节、排序、复制、删除、折叠、单独保存）；Growth 打卡感想、周/月回顾、成长卡片引用插入。全部仍为 schemaVersion 1 的可选字段，旧记录不迁移即可打开。
 - 媒体对象 URL 改为按视图 scope 引用计数：图片 app 级常驻，音视频仅 Studio / Day Detail 打开时从 IndexedDB 载入，离开即撤销。
 - 本轮环境（Ubuntu 24.04 容器）没有 Swift 工具链，且 download.swift.org 被网络策略拒绝（403），因此 Swift Core/Vapor 测试本轮**未运行**；Swift 模型只做了可选字段扩展与新增测试源码。
@@ -46,6 +47,16 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-07 — iOS Swift 外壳 + localhost 链接查看
+
+- 本次需求：README/AGENTS 不再让用户下载 ZIP，改为点 localhost 链接查看；保留 Swift 代码并与 HTML 保持一致——用户说明即“Swift 套壳”，最终发布 iOS，日常在 Windows 用 localhost 看更新、提出修改。
+- 修改/新增文件：新增 `Native/Sources/LittleDaysUI/WebShell/LittleDaysWebShellView.swift`、`LittleDaysWebResources.swift`，`Native/Sources/LittleDaysUI/WebApp/`（`Public/` 副本），`tools/sync_native_web.py`，`tests/test_native_shell.py`；修改 `Native/App/LittleDaysApp.swift`（入口改为外壳）、`Native/Package.swift`（资源）、`Native/LittleDays.xcodeproj/project.pbxproj`（麦克风/相机说明、文件共享）、`Public/styles.css`（`data-shell="ios"` 全屏样式）、`Start-Windows.cmd`（Git 克隆时自动 `git pull --ff-only`）、AGENTS.md、README.md、docs/WINDOWS_PREVIEW.md、docs/ARCHITECTURE.md。
+- 实现功能：iOS App 加载打包的同一份 Web 界面；路由与 Python 预览一致；JS 对话框、麦克风、下载/分享、外部链接由原生处理；Web 外框在 App 中隐藏；README 顶部可点击 localhost 链接；Windows 双击即更新并启动。
+- 技术决策及原因：只维护一份界面（`Public/`），避免原生界面落后于 Web；同步工具 + 测试防止 App 打包旧文件；固定 `littledays://app` origin 保留本地数据；早期 SwiftUI 原型与 Core 模型保留不删。
+- 运行与测试结果：见本条之后的提交说明——Python 12 项（含 3 项外壳检查）、Node 33 项、三套浏览器 E2E 均已重新运行。**未验证**：Swift 外壳的 Xcode 构建、模拟器与真机（本环境无 macOS/iOS SDK，也无法下载 Swift 工具链）；WKWebView 自定义协议下 IndexedDB/录音需真机确认；Windows 上 `git pull` 自动更新未实机运行。
+- 已知问题：localhost 与 iPhone App 数据彼此独立；Swift 代码未编译。
+- 下一步建议：在 Mac 上用 Xcode 构建一次外壳并真机测试录音、照片、备份；之后日常只看 localhost 链接。
 
 ### 2026-11-07 — V3.1：自由排版、多事件日记、完整回忆浏览与成长感想
 

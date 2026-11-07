@@ -45,6 +45,10 @@
                 INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
                 INFOPLIST_KEY_UILaunchScreen_Generation = YES;
                 INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+                INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Days 需要麦克风来录制你的语音日记。Little Days uses the microphone to record voice notes.";
+                INFOPLIST_KEY_NSCameraUsageDescription = "Little Days 可以用相机拍摄放进手帐的照片。Little Days can use the camera to take photos for your journal.";
+                INFOPLIST_KEY_UIFileSharingEnabled = YES;
+                INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
                 PRODUCT_BUNDLE_IDENTIFIER = com.jessiethere.littledays; PRODUCT_NAME = "$(TARGET_NAME)";
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1;
                 SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -60,6 +64,10 @@
                 INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
                 INFOPLIST_KEY_UILaunchScreen_Generation = YES;
                 INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+                INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Days 需要麦克风来录制你的语音日记。Little Days uses the microphone to record voice notes.";
+                INFOPLIST_KEY_NSCameraUsageDescription = "Little Days 可以用相机拍摄放进手帐的照片。Little Days can use the camera to take photos for your journal.";
+                INFOPLIST_KEY_UIFileSharingEnabled = YES;
+                INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
                 PRODUCT_BUNDLE_IDENTIFIER = com.jessiethere.littledays; PRODUCT_NAME = "$(TARGET_NAME)";
                 SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1;
                 SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_OPTIMIZATION_LEVEL = "-O";
