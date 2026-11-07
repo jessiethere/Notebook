@@ -13,6 +13,25 @@ public struct HabitCheck: Codable, Equatable {
     public var habitId: String
     public var date: String
     public var minutes: Int
+    // V3.1 check-in reflection. Still unique per (habitId, date); private unless shareNote is true.
+    public var detail: String?
+    public var note: String?
+    public var mood: String?
+    public var photo: String?
+    public var shareNote: Bool?
+    public var updatedAt: String?
+}
+
+/// V3.1 optional weekly ("week", key = Monday yyyy-MM-dd) or monthly ("month", key = yyyy-MM) reflection.
+public struct GrowthReflection: Codable, Identifiable, Equatable {
+    public var id: String
+    public var period: String
+    public var key: String
+    public var wentWell: String?
+    public var challenges: String?
+    public var learned: String?
+    public var nextFocus: String?
+    public var updatedAt: String?
 }
 
 public struct JournalBook: Codable, Identifiable, Equatable {
@@ -48,6 +67,8 @@ public struct JournalMedia: Codable, Identifiable, Equatable {
     public var size: Int?
     public var duration: Double?
     public var poster: String?
+    /// "recording" for microphone voice notes.
+    public var origin: String?
 }
 
 public struct JournalTextStyle: Codable, Equatable {
@@ -97,6 +118,15 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var weight: Int?
     public var spacing: Double?
     public var align: String?
+    // V3.1 free layout. x/y are the centre in % of the canvas, w is % of canvas width, h % of canvas height.
+    public var w: Double?
+    public var h: Double?
+    public var crop: LayerCrop?
+    public var frame: String?
+    public var tape: Bool?
+    // kind == "growth": a live card that references a HabitCheck instead of copying it.
+    public var habitId: String?
+    public var checkDate: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -107,6 +137,33 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
         self.scale = 1
         self.rotation = -12
     }
+}
+
+public struct LayerCrop: Codable, Equatable {
+    public var x: Double
+    public var y: Double
+    public var zoom: Double
+}
+
+/// V3.1: an ordered chapter inside one day (JournalEntry stays the date container).
+public struct JournalMoment: Codable, Identifiable, Equatable {
+    public var id: String
+    public var title: String?
+    public var time: String?
+    public var body: String?
+    public var mood: String?
+    public var tags: [String]?
+    public var bookId: String?
+    public var template: String?
+    public var font: String?
+    public var layers: [StickerLayer]?
+    public var media: [JournalMedia]?
+    public var collapsed: Bool?
+    public var layoutTemplate: String?
+    public var layoutEdited: Bool?
+    public var visibility: String?
+    public var updatedAt: String?
+    public var savedAt: String?
 }
 
 public struct JournalEntry: Codable, Identifiable, Equatable {
@@ -127,6 +184,9 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var textStyle: JournalTextStyle?
     public var bodyFont: String?
     public var visibility: String?
+    public var moments: [JournalMoment]?
+    public var layoutTemplate: String?
+    public var layoutEdited: Bool?
 
     public init(id: String = UUID().uuidString, date: String, title: String = "", body: String = "", mood: String = "☀️", bookId: String = "daily", photo: String = "", template: String = "cute", font: String = "serif", isDemo: Bool = false) {
         self.id = id
@@ -154,6 +214,7 @@ public struct DayState: Codable {
     public var entries: [JournalEntry]
     public var checks: [HabitCheck]
     public var drafts: [String: JournalEntry]
+    public var reflections: [GrowthReflection]?
 
     public init(seed: Seed, today: String = DayKey.string()) {
         habits = seed.habits

@@ -26,8 +26,59 @@ function wrapText(ctx, text, x, y, width, lineHeight, maxLines) {
   }
   if (row < maxLines) ctx.fillText(line, x, y + row * lineHeight);
 }
+// Draws a photo layer with its relative size, crop (object-position + zoom)
+// and frame, matching the DOM canvas closely.
+function drawPhotoLayer(ctx, image, layer) {
+  const w = ((Number(layer.w) || 42) / 100) * 1080,
+    h = ((Number(layer.h) || 34) / 100) * 1350;
+  const frame = layer.frame || "border";
+  const pad =
+    frame === "bare" || frame === "rounded"
+      ? 0
+      : frame === "polaroid"
+        ? 18
+        : 10;
+  const bottom = frame === "polaroid" ? 54 : pad;
+  if (pad) {
+    ctx.fillStyle = "#FFFDF8";
+    ctx.shadowColor = "rgba(93,73,60,.18)";
+    ctx.shadowBlur = 10;
+    ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.shadowBlur = 0;
+  }
+  const iw = w - pad * 2,
+    ih = h - pad - bottom,
+    crop = layer.crop || {},
+    zoom = Math.max(1, Number(crop.zoom) || 1),
+    px = (Number(crop.x ?? 50) || 0) / 100,
+    py = (Number(crop.y ?? 50) || 0) / 100;
+  const cover = Math.max(iw / image.width, ih / image.height) * zoom;
+  const dw = image.width * cover,
+    dh = image.height * cover;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(-w / 2 + pad, -h / 2 + pad, iw, ih);
+  ctx.clip();
+  ctx.drawImage(
+    image,
+    -w / 2 + pad + (iw - dw) * px,
+    -h / 2 + pad + (ih - dh) * py,
+    dw,
+    dh,
+  );
+  ctx.restore();
+  if (layer.tape) {
+    ctx.fillStyle = "rgba(225,185,178,.75)";
+    ctx.save();
+    ctx.translate(0, -h / 2);
+    ctx.rotate((-5 * Math.PI) / 180);
+    ctx.fillRect(-w * 0.18, -16, w * 0.36, 32);
+    ctx.restore();
+  }
+}
 export async function exportJournalImage(editor, options = {}) {
   const resolvePhoto = options.resolvePhoto || safePhoto;
+  const dayPage = options.dayPage !== false;
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1350;
@@ -57,12 +108,12 @@ export async function exportJournalImage(editor, options = {}) {
       ctx.stroke();
     }
   }
-  ctx.save();
-  ctx.translate(540, 430);
-  ctx.rotate((-4 * Math.PI) / 180);
-  ctx.fillStyle = "#FFFDFB";
-  ctx.fillRect(-400, -310, 800, 635);
-  if (resolvePhoto(editor.photo)) {
+  if (dayPage && resolvePhoto(editor.photo)) {
+    ctx.save();
+    ctx.translate(540, 430);
+    ctx.rotate((-4 * Math.PI) / 180);
+    ctx.fillStyle = "#FFFDFB";
+    ctx.fillRect(-400, -310, 800, 635);
     const image = await loadImage(resolvePhoto(editor.photo));
     const ratio = Math.max(760 / image.width, 560 / image.height);
     ctx.save();
@@ -77,10 +128,10 @@ export async function exportJournalImage(editor, options = {}) {
       image.height * ratio,
     );
     ctx.restore();
+    ctx.restore();
+    ctx.fillStyle = editor.template === "cute" ? "#DDBBB3BB" : "#C5CEB1BB";
+    ctx.fillRect(405, 90, 270, 65);
   }
-  ctx.restore();
-  ctx.fillStyle = editor.template === "cute" ? "#DDBBB3BB" : "#C5CEB1BB";
-  ctx.fillRect(405, 90, 270, 65);
   const font = options.fontFamily
     ? options.fontFamily(editor.font, options.catalog)
     : editor.font === "serif"
@@ -89,17 +140,19 @@ export async function exportJournalImage(editor, options = {}) {
         ? '"Trebuchet MS", "Microsoft YaHei", sans-serif'
         : "sans-serif";
   await document.fonts.ready;
-  ctx.fillStyle = editor.textStyle?.color || "#2F2A26";
-  ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
-  wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
-  ctx.fillStyle = "#998C7A";
-  const bodyFont = options.fontFamily
-    ? options.fontFamily(editor.bodyFont || editor.font, options.catalog)
-    : font;
-  ctx.font = `34px ${bodyFont}`;
-  wrapText(ctx, editor.body || "", 129, 1110, 820, 58, 3);
-  ctx.font = "125px sans-serif";
-  ctx.fillText(editor.mood, 875, 820);
+  if (dayPage) {
+    ctx.fillStyle = editor.textStyle?.color || "#2F2A26";
+    ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
+    wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
+    ctx.fillStyle = "#998C7A";
+    const bodyFont = options.fontFamily
+      ? options.fontFamily(editor.bodyFont || editor.font, options.catalog)
+      : font;
+    ctx.font = `34px ${bodyFont}`;
+    wrapText(ctx, editor.body || "", 129, 1110, 820, 58, 3);
+    ctx.font = "125px sans-serif";
+    ctx.fillText(editor.mood || "", 875, 820);
+  }
   for (const layer of editor.layers) {
     ctx.save();
     ctx.translate((layer.x / 100) * 1080, (layer.y / 100) * 1350);
@@ -113,6 +166,39 @@ export async function exportJournalImage(editor, options = {}) {
       : layer.kind === "photo"
         ? resolvePhoto(layer.mediaRef)
         : "";
+    if (source && layer.kind === "photo" && layer.w != null) {
+      drawPhotoLayer(ctx, await loadImage(source), layer);
+      ctx.restore();
+      continue;
+    }
+    if (layer.kind === "growth") {
+      const card = options.growthCard?.(layer);
+      const width = ((Number(layer.w) || 62) / 100) * 1080;
+      ctx.fillStyle = "#FBF8EE";
+      ctx.strokeStyle = "#C9D7C1";
+      ctx.lineWidth = 3;
+      ctx.fillRect(-width / 2, -110, width, 220);
+      ctx.strokeRect(-width / 2, -110, width, 220);
+      ctx.fillStyle = "#4F5A43";
+      ctx.textBaseline = "top";
+      ctx.font = `600 40px ${font}`;
+      wrapText(
+        ctx,
+        card?.title || layer.text || "",
+        -width / 2 + 30,
+        -85,
+        width - 60,
+        50,
+        1,
+      );
+      ctx.fillStyle = "#8D857B";
+      ctx.font = `30px ${font}`;
+      wrapText(ctx, card?.facts || "", -width / 2 + 30, -25, width - 60, 40, 1);
+      ctx.fillStyle = "#2F2A26";
+      wrapText(ctx, card?.note || "", -width / 2 + 30, 20, width - 60, 40, 2);
+      ctx.restore();
+      continue;
+    }
     if (source) {
       const image = await loadImage(source);
       const size = layer.kind === "photo" ? 450 : 184;
@@ -154,7 +240,7 @@ export async function exportJournalImage(editor, options = {}) {
     ctx.restore();
   }
   const link = document.createElement("a");
-  link.download = `Little-Days-${editor.date}.png`;
+  link.download = `Little-Days-${editor.date || options.date || "page"}${options.suffix ? "-" + options.suffix : ""}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
 }

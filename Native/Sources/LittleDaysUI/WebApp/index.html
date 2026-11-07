@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#F8F5EF" />
+    <meta
+      name="description"
+      content="Little Days 手帐文具店，记录生活的美好，也收藏一点点变好的自己。"
+    />
+    <title>Little Days · 手帐文具店</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F8F5EF'/%3E%3Ctext x='8' y='48' font-size='45'%3E🌷%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/fonts.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="preview-label">
+      <span><i></i> LITTLE DAYS · WEB PREVIEW</span
+      ><span>HTML 交互预览 · 非 SwiftUI 运行画面</span>
+    </div>
+    <div class="desktop-note" aria-hidden="true">
+      <div class="drawn-flower">✿</div>
+      <p class="note-eyebrow">YOUR LITTLE STATIONERY SHOP</p>
+      <h1>Little Days<span>小日子，慢慢记。</span></h1>
+      <p>记录生活的美好，<br />也收藏一点点变好的自己。</p>
+      <div class="color-swatches"><i></i><i></i><i></i><i></i></div>
+      <span class="handwritten">a little more you, every day.</span>
+    </div>
+    <div class="phone" id="phone">
+      <div class="phone-status">
+        <span id="clock">9:41</span
+        ><span style="font-size: 8px; letter-spacing: 1px; color: #9b9384"
+          >WEB PREVIEW</span
+        >
+      </div>
+      <div class="app-scroll" id="app-scroll">
+        <main id="app">
+          <div class="loading"><span>✿</span>正在打开你的文具店…</div>
+        </main>
+      </div>
+      <nav class="bottom-nav" id="navigation" aria-label="主要导航"></nav>
+    </div>
+    <div class="preview-footnote">数据保存在当前浏览器 · 示例内容可编辑</div>
+    <dialog id="form-dialog"><form id="dialog-form"></form></dialog>
+    <dialog id="lightbox" class="lightbox">
+      <button type="button" class="lightbox-close" data-action="close-lightbox" aria-label="Close">×</button>
+      <img id="lightbox-image" alt="" />
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <input id="photo-input" type="file" accept="image/*" hidden />
+    <input id="photos-input" type="file" accept="image/*" multiple hidden />
+    <input id="attachment-image-input" type="file" accept="image/*" hidden />
+    <input
+      id="video-input"
+      type="file"
+      accept="video/mp4,video/webm,video/ogg"
+      hidden
+    />
+    <input id="audio-input" type="file" accept="audio/*" hidden />
+    <input
+      id="backup-input"
+      type="file"
+      accept="application/json,.json"
+      hidden
+    />
+    <noscript>请启用 JavaScript，以使用 Little Days 交互预览。</noscript>
+  </body>
+</html>

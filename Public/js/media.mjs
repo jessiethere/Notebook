@@ -4,6 +4,9 @@ export class MediaStore {
   constructor(indexedDBFactory = globalThis.indexedDB) {
     this.factory = indexedDBFactory;
     this.urls = new Map();
+    // Object URLs are reference-counted by view scope ("app", "studio",
+    // "day"). Leaving a view releases its scope and revokes unused URLs.
+    this.holders = new Map();
   }
   async open() {
     if (this.db) return this;
@@ -25,7 +28,7 @@ export class MediaStore {
     };
     return this;
   }
-  async put(blob, metadata = {}) {
+  async put(blob, metadata = {}, scope = "app") {
     await this.open();
     const record = {
       ...metadata,
@@ -42,8 +45,57 @@ export class MediaStore {
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error || new Error("Media save aborted"));
     });
-    this.urls.set(record.id, URL.createObjectURL(blob));
+    if (scope) {
+      this.urls.set(record.id, URL.createObjectURL(blob));
+      this.hold(record.id, scope);
+    }
     return record.id;
+  }
+  hold(id, scope) {
+    if (!this.holders.has(id)) this.holders.set(id, new Set());
+    this.holders.get(id).add(scope);
+  }
+  has(id) {
+    return this.urls.has(id);
+  }
+  async acquire(ids, scope) {
+    for (const id of ids) {
+      if (!this.urls.has(id)) {
+        const record = await this.get(id);
+        if (!record?.blob) continue;
+        if (!this.urls.has(id))
+          this.urls.set(id, URL.createObjectURL(record.blob));
+      }
+      this.hold(id, scope);
+    }
+    return this;
+  }
+  release(scope) {
+    let revoked = 0;
+    for (const [id, scopes] of this.holders) {
+      scopes.delete(scope);
+      if (scopes.size) continue;
+      this.holders.delete(id);
+      const url = this.urls.get(id);
+      if (url) URL.revokeObjectURL(url);
+      this.urls.delete(id);
+      revoked++;
+    }
+    return revoked;
+  }
+  async usage(state) {
+    let bytes = 0,
+      count = 0,
+      missing = 0;
+    for (const id of mediaReferences(state)) {
+      const record = await this.get(id);
+      if (!record) missing++;
+      else {
+        count++;
+        bytes += record.blob?.size || 0;
+      }
+    }
+    return { bytes, count, missing };
   }
   async get(id) {
     await this.open();
@@ -54,13 +106,9 @@ export class MediaStore {
       r.onerror = () => reject(r.error);
     });
   }
-  async url(id) {
-    if (this.urls.has(id)) return this.urls.get(id);
-    const record = await this.get(id);
-    if (!record) return "";
-    const url = URL.createObjectURL(record.blob);
-    this.urls.set(id, url);
-    return url;
+  async url(id, scope = "app") {
+    await this.acquire([id], scope);
+    return this.urls.get(id) || "";
   }
   resolve(reference) {
     if (typeof reference !== "string") return "";
@@ -73,8 +121,10 @@ export class MediaStore {
       return reference;
     return "";
   }
+  // Images (photos, covers, posters, growth photos) stay available app-wide
+  // for thumbnails; audio/video Blobs are loaded only by the view that plays them.
   async hydrate(state) {
-    await Promise.all([...mediaReferences(state)].map((id) => this.url(id)));
+    await this.acquire(mediaReferences(state, "image"), "app");
     return this;
   }
   async backup(state) {
@@ -84,7 +134,7 @@ export class MediaStore {
       const record = await this.get(id);
       if (!record) throw new Error("A referenced media file is missing.");
       totalSize += record.blob.size;
-      if (totalSize > 100 * 1024 * 1024) {
+      if (totalSize > MAX_BACKUP_MEDIA_BYTES) {
         const error = new Error("error.backupSize");
         error.code = "backup-size";
         throw error;
@@ -121,7 +171,8 @@ export class MediaStore {
     validateStateSnapshot(backup.state);
     const references = mediaReferences(backup.state),
       mapping = new Map();
-    if (backup.media.length > 500) throw new Error("Too many media files");
+    if (backup.media.length > MAX_BACKUP_FILES)
+      throw new Error("Too many media files");
     for (const record of backup.media) {
       if (!references.has(record.id)) continue;
       if (
@@ -136,11 +187,15 @@ export class MediaStore {
       if (blob.size > 50 * 1024 * 1024) throw new Error("Media too large");
       mapping.set(
         record.id,
-        await this.put(blob, {
-          kind: record.kind,
-          name: record.name || "Restored media",
-          duration: record.duration || 0,
-        }),
+        await this.put(
+          blob,
+          {
+            kind: record.kind,
+            name: record.name || "Restored media",
+            duration: record.duration || 0,
+          },
+          null,
+        ),
       );
     }
     if ([...references].some((id) => !mapping.has(id)))
@@ -154,13 +209,16 @@ export class MediaStore {
     for (const entry of [
       ...restored.entries,
       ...Object.values(restored.drafts),
-    ])
+    ]) {
       entry.visibility = "private";
+      for (const moment of entry.moments || []) moment.visibility = "private";
+    }
     return restored;
   }
   close() {
     for (const url of this.urls.values()) URL.revokeObjectURL(url);
     this.urls.clear();
+    this.holders.clear();
     this.db?.close();
     this.db = null;
   }
@@ -199,22 +257,30 @@ export async function migrateLegacyPhotos(store, media) {
   return changes.length;
 }
 
+export const MAX_BACKUP_MEDIA_BYTES = 100 * 1024 * 1024;
+export const MAX_BACKUP_FILES = 2000;
+// visit(reference, type): type is "image" or "clip" (audio/video bytes).
 export function visitMediaReferences(state, visit) {
-  const reference = (object, key) => {
+  const reference = (object, key, type = "image") => {
     if (typeof object?.[key] === "string" && object[key].startsWith("media:"))
-      object[key] = visit(object[key]);
+      object[key] = visit(object[key], type);
+  };
+  const page = (item) => {
+    for (const clip of item.media || []) {
+      reference(clip, "source", "clip");
+      reference(clip, "poster");
+    }
+    for (const layer of item.layers || []) reference(layer, "mediaRef");
   };
   for (const book of state.books || []) reference(book, "coverImage");
+  for (const check of state.checks || []) reference(check, "photo");
   for (const entry of [
     ...(state.entries || []),
     ...Object.values(state.drafts || {}),
   ]) {
     reference(entry, "photo");
-    for (const clip of entry.media || []) {
-      reference(clip, "source");
-      reference(clip, "poster");
-    }
-    for (const layer of entry.layers || []) reference(layer, "mediaRef");
+    page(entry);
+    for (const moment of entry.moments || []) page(moment);
     const book = state.books.find((book) => book.id === entry.bookId);
     for (const [key, value] of Object.entries(entry.fieldValues || {})) {
       const field = book?.fields?.find((field) => field.id === key);
@@ -226,10 +292,10 @@ export function visitMediaReferences(state, visit) {
     }
   }
 }
-export function mediaReferences(state) {
+export function mediaReferences(state, type = null) {
   const ids = new Set();
-  visitMediaReferences(structuredClone(state), (reference) => {
-    ids.add(reference.slice(6));
+  visitMediaReferences(structuredClone(state), (reference, kind) => {
+    if (!type || kind === type) ids.add(reference.slice(6));
     return reference;
   });
   return ids;

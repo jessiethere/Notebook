@@ -11,6 +11,10 @@
 
 ## 当前状态
 
+- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 README 顶部的 http://localhost:8080 链接 / 会话 servers 预览查看每次更新，不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
+- **V3.1（Web）已实现**：Calendar 只读 Day Detail（全部 Moments、照片排版、统一音频播放器/录音/视频直接播放、照片放大、成长感想）；多照片自由排版（多选、独立图层、拖动/双指缩放旋转/鼠标把手/滚轮/方向键、裁切、相框/胶带、图层顺序、五种 Auto Layout、撤销重做）；一天多个 Moments（章节、排序、复制、删除、折叠、单独保存）；Growth 打卡感想、周/月回顾、成长卡片引用插入。全部仍为 schemaVersion 1 的可选字段，旧记录不迁移即可打开。
+- 媒体对象 URL 改为按视图 scope 引用计数：图片 app 级常驻，音视频仅 Studio / Day Detail 打开时从 IndexedDB 载入，离开即撤销。
+- 本轮环境（Ubuntu 24.04 容器）没有 Swift 工具链，且 download.swift.org 被网络策略拒绝（403），因此 Swift Core/Vapor 测试本轮**未运行**；Swift 模型只做了可选字段扩展与新增测试源码。
 - V3 Phase 1 个人增强已实现于 Web：原五页保留，新增自定义封面/主题/通用字段、真实字体/原创贴纸、多文字/照片层、视频/音频/录音、双语 Settings、IndexedDB 与备份/恢复。
 - Windows 默认无需 Git：下载 ZIP，全部解压，双击 Start-Windows.cmd；手动 `py -3 tools\preview.py --open` → http://localhost:8080。之前用户的错误来自没有 Git、终端在用户目录和将 preview.py 写成 preview\.py。
 - schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
@@ -20,6 +24,11 @@
 
 ## 关键决策
 
+- V3.1：一天仍是一条 Entry（日期容器），其中是有序 `moments`；不拆成多条 Entry，以保持 Calendar / My Books / Growth 的日期关联。“页”= 当日主页（旧标题/正文/主照片固定版式原样保留）+ 每个 Moment。
+- 画布坐标全部相对画布（x/y 中心 %、w % 宽、h % 高、crop 百分比），画布固定 4:5，跨设备恢复一致。
+- 成长卡片引用 `(habitId,date)` 打卡而不复制；感想写在原打卡上，打卡仍唯一，不重复计数；删除手帐页/Moment 不删除打卡；`shareNote` 默认 false，当前无任何分享出口。
+- Studio 与 Day Detail 共用 `canvas.mjs` 的画布/媒体卡片渲染（edit / read-only 两种模式），避免功能不一致。
+- 备份媒体总量 100 MB、导入 150 MB 不变；文件数上限 500 → 2000（多照片下 500 个文件会先于字节上限触发，字节上限不变所以内存风险不变）。
 - 保留 Vapor，Windows 预览使用 Python 标准库；不引入前端构建框架或未经验证的 SwiftUI Web 兼容层。
 - 共享 library.json / i18n.json、TTF+完整 OFL、原创 SVG+透明 PNG；CSS 从共享目录生成；Native 与 Web 使用同名数据类型/资源 ID。
 - generic BookField schema 统一渲染七种字段，系统预设标签可双语，用户的名称/正文/字段值不自动翻译。
@@ -29,6 +38,7 @@
 
 ## 已知问题与下一步
 
+- V3.1：原生 SwiftUI 尚未实现 Day Detail、Moments、自由照片图层与感想 UI（共享模型可解码）；Swift 测试本轮未能运行；单个 Moment 内不能再分多页；PNG 导出为基础版式；滚轮/把手旋转对旋转后的照片按未旋转坐标近似计算宽高。
 - Windows CMD/Python Launcher/默认浏览器仍未实机验证；Linux 已验证 ZIP 布局、空格路径、跨目录与 HTTP。
 - SwiftUI 只有语法/共享模型检查，未进行 iOS SDK 类型检查、模拟器或真机验证；优先原生构建与个人能力对齐。
 - Web 新媒体只在当前浏览器 origin；换 localhost/127.0.0.1/端口不会自动同步。需导出备份，暂无云同步、备份加密或分卷。
@@ -37,6 +47,27 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-07 — iOS Swift 外壳 + localhost 链接查看
+
+- 本次需求：README/AGENTS 不再让用户下载 ZIP，改为点 localhost 链接查看；保留 Swift 代码并与 HTML 保持一致——用户说明即“Swift 套壳”，最终发布 iOS，日常在 Windows 用 localhost 看更新、提出修改。
+- 修改/新增文件：新增 `Native/Sources/LittleDaysUI/WebShell/LittleDaysWebShellView.swift`、`LittleDaysWebResources.swift`，`Native/Sources/LittleDaysUI/WebApp/`（`Public/` 副本），`tools/sync_native_web.py`，`tests/test_native_shell.py`；修改 `Native/App/LittleDaysApp.swift`（入口改为外壳）、`Native/Package.swift`（资源）、`Native/LittleDays.xcodeproj/project.pbxproj`（麦克风/相机说明、文件共享）、`Public/styles.css`（`data-shell="ios"` 全屏样式）、`Start-Windows.cmd`（Git 克隆时自动 `git pull --ff-only`）、AGENTS.md、README.md、docs/WINDOWS_PREVIEW.md、docs/ARCHITECTURE.md。
+- 实现功能：iOS App 加载打包的同一份 Web 界面；路由与 Python 预览一致；JS 对话框、麦克风、下载/分享、外部链接由原生处理；Web 外框在 App 中隐藏；README 顶部可点击 localhost 链接；Windows 双击即更新并启动。
+- 技术决策及原因：只维护一份界面（`Public/`），避免原生界面落后于 Web；同步工具 + 测试防止 App 打包旧文件；固定 `littledays://app` origin 保留本地数据；早期 SwiftUI 原型与 Core 模型保留不删。
+- 运行与测试结果：见本条之后的提交说明——Python 12 项（含 3 项外壳检查）、Node 33 项、三套浏览器 E2E 均已重新运行。**未验证**：Swift 外壳的 Xcode 构建、模拟器与真机（本环境无 macOS/iOS SDK，也无法下载 Swift 工具链）；WKWebView 自定义协议下 IndexedDB/录音需真机确认；Windows 上 `git pull` 自动更新未实机运行。
+- 已知问题：localhost 与 iPhone App 数据彼此独立；Swift 代码未编译。
+- 下一步建议：在 Mac 上用 Xcode 构建一次外壳并真机测试录音、照片、备份；之后日常只看 localhost 链接。
+
+### 2026-11-07 — V3.1：自由排版、多事件日记、完整回忆浏览与成长感想
+
+- 本次需求：在 V3 基础上按 P0→P3 实现 Calendar 完整回忆浏览（音视频只读播放）、多照片自由排版、一天多个 Moments、Growth 感想与周/月回顾；保留已有功能、存储与备份规则；新增自动化/浏览器测试并更新文档。
+- 修改/新增文件：`Public/app.js`（Studio 目标页抽象、章节/版式/图层控制、手势、Day Detail 路由、媒体 scope、感想/回顾对话框、Growth 区块）；新增 `Public/js/day.mjs`、`canvas.mjs`、`day-view.mjs`；修改 `model.mjs`（moments/感想/回顾的补全与校验）、`media.mjs`（scope 引用计数、usage、moments/打卡照片引用、备份文件数上限）、`export.mjs`、`personal-ui.mjs`、`index.html`（多选输入、灯箱）、`styles.css`；共享 `i18n.json` 新增约 130 条中英词条；Swift `Models.swift` 可选字段与 `CoreTests.swift` 新测试；新增 `tests/v31.test.mjs`、`tests/v31-browser.cjs`，更新 `tests/browser.cjs`、`tests/v3-browser.cjs`、`tests/media.test.mjs`、`package.json`；文档 README、PRODUCT_SPEC、ARCHITECTURE、ROADMAP、DESIGN_SYSTEM 与 3 张 V3.1 截图（合成数据）。
+- 实现功能：见 README「V3.1 新增」与 ROADMAP V3.1 清单。P0 Day Detail + 统一播放器 + 日历标记；P1 多照片图层与 Auto/Free Layout；P2 Moments；P3 打卡感想、周/月回顾、成长卡片。
+- 技术决策及原因：见上方「关键决策」V3.1 条目。测试中有三处旧断言按新行为调整：有内容的日期现在打开 Day Detail（`browser.cjs`）；音频元素被设计播放器隐藏、音视频改为视图加载后才有 src（`v3-browser.cjs` 等待 `attached`/`blob:`）；启动 hydrate 不再载入音频（`media.test.mjs` 改为验证 acquire/release）。另在两个浏览器测试中加入可选 `CHROMIUM_PATH` 以使用环境预装 Chromium。
+- 运行与测试结果：Ubuntu 24.04 容器，Node 22.23.4 / Python 3.13.18 / Playwright 1.62.1（配合预装 Chromium）。Node **33 项全部通过**（原 22 + 新 11：旧数据兼容、Moments 排序/复制/单独保存、书本归类、非法结构拒绝、感想不重复计数、周月回顾、5 模板 × 1–9 张版式边界、布局只移动照片、媒体引用含 Moments/打卡照片、备份恢复保留 Moments/坐标/裁切/感想/回顾）；Python **9 项通过**；原有 `browser.cjs`、`v3-browser.cjs` **通过**；新 `v31-browser.cjs` **通过全部 14 项验收**：一次 5 张、5 张逐一拖动/滚轮缩放/置顶、把手调整宽高与旋转、裁切/相框、CDP 真实双指捏合旋转、置底/上移一层、模板切换前确认、保存刷新后数据与 DOM 布局完全一致；3 个 Moment 独立编辑/排序/折叠/单独保存；Calendar 显示 3 章、上传音频与录音在 Day Detail 播放（互斥、拖动进度）、视频播放、照片灯箱、离开后对象 URL 已撤销、刷新后仍可播放；感想保存/重开/编辑、时长习惯打卡附感想、周回顾；成长卡片插入且不重复、删除 Moment 后打卡保留、修改感想同步到 Calendar；中英切换内容不变；备份→新浏览器恢复（坐标、Moments、感想、回顾、录音可播放）；375/390/430 无横向溢出、1280 桌面纯鼠标拖动/把手/滚轮/Shift 旋转/方向键；旧版 data URI 主照片 + Emoji 图层 + 旧书本正常打开；无页面脚本异常。**未运行**：Swift Core 6 项（含新增 1 项）与 Vapor 2 项（无 Swift 工具链，下载被拒），Windows 实机，iOS SDK/模拟器/真机，Safari/Firefox。
+- 已知问题：见「已知问题与下一步」V3.1 条目；另外 GitHub 推送需要仓库授权（本会话的 Claude GitHub App 未获该仓库写权限时只能本地提交）。
+- 尚未完成：原生对齐、Moment 内分页、滤镜、高级导出、分卷备份与媒体清理。
+- 下一步建议：在 macOS 运行 `swift test` 与 iOS 构建；Windows 实机按 README 验收 V3.1；然后原生实现 Day Detail 与 Moments 阅读，再做 Moment 内分页与媒体引用清理。
 
 ### 2026-11-07 — V3 Phase 1：自定义书本、素材、多媒体与双语
 

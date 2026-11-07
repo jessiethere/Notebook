@@ -22,6 +22,41 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage } from "./js/export.mjs";
 import {
+  canvasHTML as sharedCanvasHTML,
+  layerGeometry,
+  cropStyle,
+  cropOf,
+  formatDuration,
+  growthCardInner,
+} from "./js/canvas.mjs";
+import { dayDetailHTML } from "./js/day-view.mjs";
+import {
+  createMoment,
+  findMoment,
+  moveMoment,
+  duplicateMoment,
+  removeMoment,
+  saveMoment,
+  hasDayPageContent,
+  hasMomentContent,
+  coverPhoto,
+  clipsOf,
+  daySummary,
+  bookPages,
+  bookEntryCount,
+  saveCheckReflection,
+  saveReflection,
+  findReflection,
+  periodKey,
+  LAYOUT_TEMPLATES,
+  PHOTO_FRAMES,
+  suggestLayout,
+  applyLayout,
+  photoLayer,
+  freeMainPhoto,
+  moveLayer,
+} from "./js/day.mjs";
+import {
   Store,
   dateKey,
   addDays,
@@ -33,6 +68,9 @@ import {
   normalizeState,
 } from "./js/model.mjs";
 
+// The iOS Swift shell opens index.html?shell=ios (and also injects this marker).
+if (new URLSearchParams(location.search).get("shell") === "ios")
+  document.documentElement.dataset.shell = "ios";
 const $ = (selector) => document.querySelector(selector);
 const esc = (value = "") =>
   String(value).replace(
@@ -89,15 +127,23 @@ let media = new MediaStore(),
   recordingTimer = null,
   recordingTimeout = null,
   recordingStarted = 0,
-  attachmentTarget = null;
+  attachmentTarget = null,
+  recordingTargetId = null;
+// Object URL scopes that finished loading; a view shows "loading" until then.
+const readyScopes = new Set();
+let activeMomentId = null,
+  cropMode = false,
+  scopedPage = null;
 const safePhoto = (photo) => media.resolve(photo);
 const ctx = () => ({
   catalog,
   tokens,
   media,
   t,
+  state: state(),
   language: languageCode(),
   locale: locale(),
+  mediaReady: () => readyScopes.has(page),
 });
 let store, features, tokens;
 let page = "home",
@@ -200,13 +246,19 @@ function openStudio(date = dateKey()) {
   editor.media ||= [];
   editor.fieldValues ||= {};
   editor.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };
+  editor.moments ||= [];
   history = [];
   future = [];
   selectedLayer = null;
+  activeMomentId = null;
+  cropMode = false;
   draftDirty = false;
+  if (page === "studio") media.release("studio");
+  readyScopes.delete("studio");
   page = "studio";
   render();
   $("#app-scroll").scrollTop = 0;
+  loadScope("studio", editorClips());
 }
 function navigation() {
   $("#navigation").innerHTML = features.tabs
@@ -220,13 +272,11 @@ function habitRow(habit, date) {
   const done = state().checks.find(
     (check) => check.habitId === habit.id && check.date === date,
   );
-  return `<div class="habit-row"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(habit.theme)} · ${habit.kind === "duration" ? `${done?.minutes || habit.minutes} min` : t("growth.encourage")}</small></div><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
+  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(habit.theme)} · ${habit.kind === "duration" ? `${done?.minutes || habit.minutes} min` : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div>${done ? `<button class="note-button" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">✎</button>` : ""}<button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
 function bookCard(book) {
-  const count = state().entries.filter(
-    (entry) => entry.bookId === book.id,
-  ).length;
+  const count = bookEntryCount(state(), book.id);
   return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(book.category)} · ${t("entry.count", { count })}</small></button>`;
 }
 
@@ -241,7 +291,7 @@ function home() {
     day: "numeric",
   });
   return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
- <section class="hero"><div class="hero-top"><span>✧ &nbsp; TODAY'S LITTLE MOMENT</span><button data-action="edit-today">${t(entry ? "home.continue" : "home.begin")} ↗</button></div><div class="hero-content"><div class="polaroid">${safePhoto(entry?.photo) ? `<img src="${esc(safePhoto(entry.photo))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.placeholder")}</span></div>`}</div><div class="hero-copy"><span class="scribble">slow down, feel more.</span><h3>${esc(entry?.title || t("home.blankTitle"))}</h3><p>${esc(entry?.body?.slice(0, 48) || t("home.blankBody"))}</p></div></div><span class="hero-flower">🌼</span>${entry?.isDemo ? `<span class="tiny-demo">${t("home.sample")}</span>` : ""}</section>
+ <section class="hero"><div class="hero-top"><span>✧ &nbsp; TODAY'S LITTLE MOMENT</span><button data-action="edit-today">${t(entry ? "home.continue" : "home.begin")} ↗</button></div><div class="hero-content"><div class="polaroid">${safePhoto(coverPhoto(entry)) ? `<img src="${esc(safePhoto(coverPhoto(entry)))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.placeholder")}</span></div>`}</div><div class="hero-copy"><span class="scribble">slow down, feel more.</span><h3>${esc(entry?.title || t("home.blankTitle"))}</h3><p>${esc(entry?.body?.slice(0, 48) || t("home.blankBody"))}</p></div></div><span class="hero-flower">🌼</span>${entry?.isDemo ? `<span class="tiny-demo">${t("home.sample")}</span>` : ""}</section>
  <div class="quick-actions">${[
    ["photo", "home.photo", "quick-photo"],
    ["text", "home.text", "quick-text"],
@@ -272,14 +322,58 @@ function home() {
 function latestBook(bookId) {
   return (
     state()
-      .entries.filter((e) => e.bookId === bookId)
+      .entries.filter(
+        (e) =>
+          e.bookId === bookId ||
+          (e.moments || []).some((moment) => moment.bookId === bookId),
+      )
       .map((e) => e.updatedAt || "")
       .sort()
       .at(-1) || ""
   );
 }
-function memoryCard(entry) {
-  return `<button class="memory-card" data-action="edit-date" data-date="${entry.date}">${safePhoto(entry.photo) ? `<img src="${esc(safePhoto(entry.photo))}" alt="${t("photo.alt")}">` : '<span class="empty-photo">✿</span>'}<div><strong>${esc(entry.title || t("entry.untitled"))} ${esc(entry.mood)}</strong><p>${esc(entry.body?.slice(0, 45) || t("entry.continue"))}<br>${shortDate(entry.date)} · ${t(entry.isDemo ? "entry.sample" : "entry.saved")}${entry.media?.length ? " · ♫ " + entry.media.length : ""}</p></div></button>`;
+function memoryCard(entry, moment = null) {
+  const page = moment || entry;
+  const photo = safePhoto(
+    moment ? coverPhoto({ layers: moment.layers }) : coverPhoto(entry),
+  );
+  const clips = moment ? moment.media || [] : clipsOf(entry);
+  const momentCount = moment ? 0 : entry.moments?.length || 0;
+  const title = moment
+    ? `${moment.time ? moment.time + " · " : ""}${moment.title || t("moment.untitled")}`
+    : entry.title || entry.moments?.[0]?.title || t("entry.untitled");
+  const extras = [
+    momentCount ? `✦ ${t("day.statMoments", { count: momentCount })}` : "",
+    clips.some((clip) => clip.kind === "video") ? "◈" : "",
+    clips.some((clip) => clip.kind === "audio")
+      ? `♫ ${clips.filter((clip) => clip.kind === "audio").length}`
+      : "",
+  ].filter(Boolean);
+  return `<button class="memory-card" data-action="open-day" data-date="${entry.date}" ${moment ? `data-moment="${esc(moment.id)}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : '<span class="empty-photo">✿</span>'}<div><strong>${esc(title)} ${esc(page.mood || "")}</strong><p>${esc(page.body?.slice(0, 45) || t("entry.read"))}<br>${shortDate(entry.date)} · ${t(entry.isDemo ? "entry.sample" : "entry.saved")}${extras.length ? " · " + extras.join(" · ") : ""}</p></div></button>`;
+}
+function dayMarks(key) {
+  const summary = daySummary(state(), key);
+  const marks = [
+    ["photo", summary.photos, "calendar.markPhoto"],
+    ["video", summary.videos, "calendar.markVideo"],
+    ["audio", summary.audios, "calendar.markAudio"],
+    ["growth", summary.growth, "calendar.markGrowth"],
+  ].filter(([, count]) => count);
+  return {
+    html:
+      marks.length || summary.moments > 1
+        ? `<span class="day-dots" aria-hidden="true">${marks.map(([kind]) => `<i class="dot-${kind}"></i>`).join("")}${summary.moments > 1 ? `<b>${summary.moments}</b>` : ""}</span>`
+        : "",
+    label: [
+      ...marks.map(([, , key]) => t(key)),
+      summary.moments > 1
+        ? t("day.statMoments", { count: summary.moments })
+        : "",
+    ]
+      .filter(Boolean)
+      .join(", "),
+    hasContent: Boolean(summary.entry || summary.growth || state().drafts[key]),
+  };
 }
 
 function calendarPage() {
@@ -296,18 +390,20 @@ function calendarPage() {
   const cells = Array.from({ length: count }, (_, i) => {
     const key = dateKey(new Date(year, monthIndex, i + 1)),
       recorded = state().entries.find((e) => e.date === key),
-      total = state().checks.filter((c) => c.date === key).length;
+      total = state().checks.filter((c) => c.date === key).length,
+      marks = dayMarks(key),
+      thumb = safePhoto(coverPhoto(recorded));
     const mark =
       calendarMode === "memory"
-        ? safePhoto(recorded?.photo)
-          ? `<img src="${esc(safePhoto(recorded.photo))}" alt="${t("calendar.hasEntry")}">`
+        ? thumb
+          ? `<img src="${esc(thumb)}" alt="${t("calendar.hasEntry")}">`
           : esc(recorded?.mood || "")
         : total
           ? `${total} ✦`
           : "";
-    return `<button class="day-cell ${key === selectedDate ? "selected" : ""} ${key === dateKey() ? "today" : ""} ${key > dateKey() ? "future" : ""}" data-action="select-date" data-date="${key}" aria-label="${key}${recorded ? " " + t("calendar.hasEntry") : ""}" aria-pressed="${key === selectedDate}"><span>${new Intl.NumberFormat(locale()).format(i + 1)}</span><span class="day-mark">${mark}</span></button>`;
+    return `<button class="day-cell ${key === selectedDate ? "selected" : ""} ${key === dateKey() ? "today" : ""} ${key > dateKey() ? "future" : ""}" data-action="select-date" data-date="${key}" data-has-content="${marks.hasContent}" aria-label="${key}${recorded ? " " + t("calendar.hasEntry") : ""}${marks.label ? " · " + marks.label : ""}" aria-pressed="${key === selectedDate}"><span>${new Intl.NumberFormat(locale()).format(i + 1)}</span><span class="day-mark">${mark}</span>${calendarMode === "memory" ? marks.html : ""}</button>`;
   }).join("");
-  return `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header><div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div><section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")} ↗</button></div>${
+  return `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header><div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")} ↗</button></span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -344,56 +440,229 @@ function growthPage() {
     )
     .join(
       "",
-    )}<button class="secondary full-width" data-action="new-habit">${t("growth.new")}</button><section class="milestone"><span>${state().checks.length >= 3 ? "🌼" : "🌱"}</span><h3>${t(state().checks.length >= 3 ? "growth.flower" : "growth.seed")}</h3><p>${t("growth.milestone", { count: state().checks.length })}${state().checks.length < 3 ? " · " + t("growth.remaining", { count: 3 - state().checks.length }) : ""}<br>${t("growth.linked")}</p><button class="secondary" data-action="growth-calendar">${t("growth.calendar")}</button></section>`;
+    )}<button class="secondary full-width" data-action="new-habit">${t("growth.new")}</button>${reflectionsHTML(today)}${checkHistoryHTML()}<section class="milestone"><span>${state().checks.length >= 3 ? "🌼" : "🌱"}</span><h3>${t(state().checks.length >= 3 ? "growth.flower" : "growth.seed")}</h3><p>${t("growth.milestone", { count: state().checks.length })}${state().checks.length < 3 ? " · " + t("growth.remaining", { count: 3 - state().checks.length }) : ""}<br>${t("growth.linked")}</p><button class="secondary" data-action="growth-calendar">${t("growth.calendar")}</button></section>`;
 }
 
+function reflectionsHTML(today) {
+  const card = (period) => {
+    const key = periodKey(period, today),
+      reflection = findReflection(state(), period, key);
+    const filled =
+      reflection &&
+      ["wentWell", "challenges", "learned", "nextFocus"].some(
+        (field) => reflection[field],
+      );
+    return `<article class="reflection-note ${filled ? "" : "blank"}"><header><b>${t(period === "week" ? "reflection.thisWeek" : "reflection.thisMonth")}</b><button class="text-button" data-action="reflection-edit" data-period="${period}" data-key="${key}">${t(filled ? "edit" : "reflection.write")}</button></header>${
+      filled
+        ? ["wentWell", "challenges", "learned", "nextFocus"]
+            .map((field) =>
+              reflection[field]
+                ? `<p><span>${t("reflection." + field)}</span>${esc(reflection[field])}</p>`
+                : "",
+            )
+            .join("")
+        : `<p class="subtext">${t("reflection.prompt")}</p>`
+    }</article>`;
+  };
+  const past = (state().reflections || [])
+    .filter((item) => item.key !== periodKey(item.period, today))
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .slice(0, 6);
+  return `<section class="reflections"><div class="section-heading"><div><h2>${t("reflection.title")}</h2><p class="section-caption">${t("reflection.caption")}</p></div></div><div class="reflection-grid">${card("week")}${card("month")}</div>${past.length ? `<details class="past-reflections"><summary>${t("reflection.past", { count: past.length })}</summary>${past.map((item) => `<button class="past-reflection" data-action="reflection-edit" data-period="${item.period}" data-key="${item.key}">${esc(item.period === "week" ? t("reflection.weekOf", { date: shortDate(item.key) }) : item.key)} · ${esc((item.wentWell || item.learned || "").slice(0, 40))}</button>`).join("")}</details>` : ""}</section>`;
+}
+function checkHistoryHTML() {
+  const notes = state()
+    .checks.filter((check) => check.note || check.detail || check.photo)
+    .sort((a, b) =>
+      (b.date + (b.updatedAt || "")).localeCompare(
+        a.date + (a.updatedAt || ""),
+      ),
+    )
+    .slice(0, 12);
+  if (!notes.length) return "";
+  return `<section class="check-history"><div class="section-heading"><h2>${t("growth.history")}</h2><span class="badge">${t("private")}</span></div>${notes
+    .map((check) => {
+      const habit = state().habits.find((h) => h.id === check.habitId);
+      return `<article class="history-note"><time>${esc(shortDate(check.date))}</time>${growthCardInner(check, habit, ctx())}<div class="history-actions"><button class="text-button" data-action="check-note" data-habit="${esc(check.habitId)}" data-date="${check.date}">${t("edit")}</button><button class="text-button" data-action="open-day" data-date="${check.date}">${t("growth.openDay")}</button></div></article>`;
+    })
+    .join("")}</section>`;
+}
 function booksPage() {
   if (selectedBook) {
     const book = state().books.find((b) => b.id === selectedBook),
-      entries = state()
-        .entries.filter((e) => e.bookId === selectedBook)
-        .sort((a, b) => b.date.localeCompare(a.date));
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div><button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><p class="journal-list-caption">${t("books.memories")}</p>${entries.length ? entries.map((e) => `<div class="book-entry">${memoryCard(e)}</div>`).join("") : `<div class="empty">${t("books.empty")}</div>`}`;
+      entries = bookPages(state(), selectedBook);
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div><button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><p class="journal-list-caption">${t("books.memories")}</p>${entries.length ? entries.map(({ entry, moment }) => `<div class="book-entry">${memoryCard(entry, moment)}</div>`).join("") : `<div class="empty">${t("books.empty")}</div>`}`;
   }
   return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></header><div class="book-grid books-full">${state().books.map(bookCard).join("")}</div><button class="secondary full-width" data-action="new-book">${t("books.create")}</button><p class="home-quote">A home for every little story.</p>`;
 }
 
+// The Studio edits either the day page (the Entry itself) or one Moment.
+function activePage(entry = editor) {
+  return (activeMomentId && findMoment(entry, activeMomentId)) || entry;
+}
+function isDayPage() {
+  return activePage() === editor;
+}
+function changeTarget(change, redraw = true) {
+  changeEditor((entry) => change(activePage(entry), entry), redraw);
+}
+function selectedLayerOf(page = activePage()) {
+  return page.layers.find((layer) => layer.id === selectedLayer);
+}
 function canvasHTML() {
-  const textStyle = editor.textStyle || {};
-  return `<div class="journal-canvas ${esc(editor.template)}" id="journal-canvas" style="font-family:${esc(fontFamily(editor.font, catalog))}"><div class="canvas-photo">${safePhoto(editor.photo) ? `<img src="${esc(safePhoto(editor.photo))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.add")}</span></div>`}</div><div class="canvas-tape"></div><div class="canvas-title" style="${esc(textCSS(textStyle, editor.font, 20))}">${esc(editor.title || t("studio.titlePlaceholder"))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(editor.bodyFont || editor.font, catalog))}">${esc(editor.body || t("studio.bodyPlaceholder"))}</div><span class="canvas-mood">${esc(editor.mood)}</span>${editor.layers.map((layer) => layerHTML(layer)).join("")}</div>`;
+  return sharedCanvasHTML(activePage(), ctx(), {
+    selectedId: selectedLayer,
+    cropMode,
+    dayPage: isDayPage(),
+  });
+}
+function photoRegion() {
+  return isDayPage() ? { top: 4, bottom: 60 } : { top: 4, bottom: 96 };
 }
 
 function layerControls() {
-  const layer = editor.layers.find((l) => l.id === selectedLayer);
+  const layer = selectedLayerOf();
   if (!layer) return "";
-  return `<div class="layer-controls"><span>${t("layer.selected")}</span>${[
-    ["x", 5, 95, 1, "layer.x"],
-    ["y", 5, 95, 1, "layer.y"],
-    ["scale", 0.5, 2, 0.05, "layer.size"],
+  const slider = ([field, min, max, step, label, value]) =>
+    `<label>${t(label)}<input type="range" data-layer-field="${field}" aria-label="${t(label)}" min="${min}" max="${max}" step="${step}" value="${value ?? layer[field]}"></label>`;
+  const base = [
+    ["x", 0, 100, 1, "layer.x"],
+    ["y", 0, 100, 1, "layer.y"],
+    ["scale", 0.3, 3, 0.05, "layer.size"],
     ["rotation", -180, 180, 1, "layer.rotation"],
-  ]
+  ];
+  if (layer.kind === "photo")
+    base.push(
+      ["w", 8, 100, 1, "layer.width", layer.w ?? 42],
+      ["h", 8, 100, 1, "layer.height", layer.h ?? 34],
+    );
+  if (layer.kind === "growth" || layer.kind === "text")
+    base.push([
+      "w",
+      20,
+      100,
+      1,
+      "layer.width",
+      layer.w ?? (layer.kind === "text" ? 65 : 62),
+    ]);
+  const crop = cropOf(layer);
+  const photoTools =
+    layer.kind === "photo"
+      ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
+          cropMode
+            ? `<p class="save-help">${t("photo.cropHelp")}</p><div class="crop-sliders">${[
+                ["zoom", 1, 4, 0.05, "photo.cropZoom"],
+                ["x", 0, 100, 1, "photo.cropX"],
+                ["y", 0, 100, 1, "photo.cropY"],
+              ]
+                .map(
+                  ([field, min, max, step, label]) =>
+                    `<label>${t(label)}<input type="range" data-crop-field="${field}" min="${min}" max="${max}" step="${step}" value="${crop[field]}" aria-label="${t(label)}"></label>`,
+                )
+                .join("")}</div>`
+            : ""
+        }`
+      : "";
+  const textTools =
+    layer.kind === "text"
+      ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
+      : "";
+  return `<div class="layer-controls"><span>${t(layer.kind === "photo" ? "layer.photo" : layer.kind === "growth" ? "layer.growth" : "layer.selected")}</span><p class="gesture-help">${t("layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}${textTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
+}
+
+function chaptersHTML() {
+  const moments = editor.moments || [];
+  const thumbs = (page) =>
+    page.layers
+      .filter((layer) => layer.kind === "photo" && safePhoto(layer.mediaRef))
+      .slice(0, 4)
+      .map((layer) => `<img src="${esc(safePhoto(layer.mediaRef))}" alt="">`)
+      .join("");
+  const counts = (page) =>
+    [
+      page.layers.filter((layer) => layer.kind === "photo").length
+        ? `📷 ${page.layers.filter((layer) => layer.kind === "photo").length}`
+        : "",
+      page.media.filter((clip) => clip.kind === "video").length
+        ? `◈ ${page.media.filter((clip) => clip.kind === "video").length}`
+        : "",
+      page.media.filter((clip) => clip.kind === "audio").length
+        ? `♫ ${page.media.filter((clip) => clip.kind === "audio").length}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  return `<section class="chapter-strip" aria-label="${t("moment.title")}"><div class="section-heading"><div><h2>${t("moment.title")}</h2><p class="section-caption">${t("moment.caption")}</p></div><span class="badge">${t("day.statMoments", { count: moments.length })}</span></div><div class="chapter-list"><div class="chapter-item day-item ${activeMomentId ? "" : "active"}"><button class="chapter-select" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><span class="chapter-index">✿</span><span class="chapter-copy"><b>${t("day.cover")}</b><small>${esc(editor.title || t("moment.dayHint"))}</small></span></button></div>${moments
     .map(
-      ([field, min, max, step, label]) =>
-        `<label>${t(label)}<input type="range" data-layer-field="${field}" aria-label="${t(label)}" min="${min}" max="${max}" step="${step}" value="${layer[field]}"></label>`,
+      (moment, index) =>
+        `<div class="chapter-item ${moment.id === activeMomentId ? "active" : ""} ${moment.collapsed ? "collapsed" : ""}" data-chapter="${esc(moment.id)}"><button class="chapter-select" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><span class="chapter-index">${String(index + 1).padStart(2, "0")}</span><span class="chapter-copy"><b data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</b><small>${esc(counts(moment) || moment.body?.slice(0, 30) || t("moment.empty"))}</small></span></button><span class="chapter-tools"><button data-action="moment-up" data-moment="${esc(moment.id)}" aria-label="${t("moment.up")}" ${index ? "" : "disabled"}>↑</button><button data-action="moment-down" data-moment="${esc(moment.id)}" aria-label="${t("moment.down")}" ${index < moments.length - 1 ? "" : "disabled"}>↓</button><button data-action="moment-collapse" data-moment="${esc(moment.id)}" aria-expanded="${!moment.collapsed}" aria-label="${t(moment.collapsed ? "moment.expand" : "moment.collapse")}">${moment.collapsed ? "▸" : "▾"}</button></span>${moment.collapsed ? "" : `<div class="chapter-preview">${thumbs(moment)}${moment.body ? `<p>${esc(moment.body.slice(0, 80))}</p>` : ""}</div>`}</div>`,
     )
     .join(
       "",
-    )}${layer.kind === "text" ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || editor.font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>` : ""}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
+    )}</div><button class="add-moment" data-action="add-moment">＋ ${t("moment.add")}</button></section>`;
+}
+
+function momentFormHTML(moment) {
+  const index = editor.moments.indexOf(moment);
+  return `<section class="moment-editor"><div class="moment-editor-head"><span class="chapter-no">${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</span><span class="moment-saved">${moment.savedAt ? t("moment.savedAt", { time: new Date(moment.savedAt).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" }) }) : ""}</span></div><div class="field-row"><label class="field moment-title-field">${t("moment.titleLabel")}<input data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(moment.title)}"></label><label class="field">${t("moment.time")}<input type="time" data-moment-field="time" value="${esc(moment.time)}"></label></div><label class="field">${t("moment.bodyLabel")}<textarea data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}">${esc(moment.body)}</textarea></label><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${features.moods.map((m) => `<button data-action="moment-mood" data-mood="${m}" class="${moment.mood === m ? "selected" : ""}" aria-pressed="${moment.mood === m}" aria-label="${t("studio.moodLabel", { mood: m })}">${m}</button>`).join("")}</div></div><label class="field">${t("moment.tags")}<input data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(moment.tags.join(", "))}"></label><div class="field-row"><label class="field">${t("studio.book")}<select data-moment-field="bookId">${state()
+    .books.map(
+      (b) =>
+        `<option value="${esc(b.id)}" ${b.id === moment.bookId ? "selected" : ""}>${esc(b.title)}</option>`,
+    )
+    .join(
+      "",
+    )}</select></label><label class="field">${t("studio.font")}<select data-moment-field="font">${fontOptions(moment.font)}</select></label></div><div><span class="small-label">${t("studio.paper")}</span><div class="segmented">${features.templates.map((template) => `<button data-action="moment-template" data-template="${template.id}" class="${moment.template === template.id ? "selected" : ""}">${t("template." + template.id)}</button>`).join("")}</div></div><div class="moment-actions"><button class="primary" data-action="save-moment">${icon("check")} ${t("moment.save")}</button><button class="secondary" data-action="moment-duplicate">${t("copy")}</button><button class="secondary danger" data-action="moment-delete">${t("delete")}</button></div></section>`;
+}
+
+function photoToolbarHTML() {
+  const page = activePage();
+  const photos =
+    page.layers.filter((layer) => layer.kind === "photo").length +
+    (isDayPage() && editor.photo ? 1 : 0);
+  return `<div class="photo-toolbar"><button class="primary" data-action="add-photos">${icon("photo")} ${t("photo.addMany")}</button><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")} ${t("studio.undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")} ${t("studio.redo")}</button></div>${
+    isDayPage() && editor.photo
+      ? `<div class="editor-actions"><button data-action="upload">${t("studio.replacePhoto")}</button><button data-action="free-main-photo">${t("photo.freeMain")}</button></div>`
+      : ""
+  }${
+    photos
+      ? `<div class="layout-picker"><span class="small-label">${t("layout.title")} · ${t(page.layoutEdited ? "layout.free" : "layout.auto")}</span><div class="layout-options">${LAYOUT_TEMPLATES.map((template) => `<button data-action="apply-layout" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`).join("")}</div></div>`
+      : ""
+  }`;
+}
+
+function growthPanelHTML() {
+  const checks = state().checks.filter((check) => check.date === editor.date);
+  if (!checks.length) return "";
+  return `<section class="growth-insert"><h3>🌱 ${t("growth.todayCards")}</h3><p class="save-help">${t("growth.insertHelp")}</p>${checks
+    .map((check) => {
+      const habit = state().habits.find((h) => h.id === check.habitId);
+      const inserted = activePage().layers.some(
+        (layer) =>
+          layer.kind === "growth" &&
+          layer.habitId === check.habitId &&
+          layer.checkDate === check.date,
+      );
+      return `<div class="growth-insert-row">${growthCardInner(check, habit, ctx())}<button class="secondary" data-action="insert-growth" data-habit="${esc(check.habitId)}" ${inserted ? "disabled" : ""}>${t(inserted ? "growth.inserted" : "growth.insert")}</button></div>`;
+    })
+    .join("")}</section>`;
 }
 
 function studioPage() {
-  const book = state().books.find((b) => b.id === editor.bookId),
+  const page = activePage(),
+    dayPage = isDayPage(),
+    book = state().books.find((b) => b.id === editor.bookId),
     style = editor.textStyle || {},
     categories = [...new Set(catalog.stickers.map((s) => s.category))];
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="section-heading"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="segmented"><button data-action="editor-mode" data-mode="quick" class="${editorMode === "quick" ? "selected" : ""}">${t("studio.quick")}</button><button data-action="editor-mode" data-mode="creative" class="${editorMode === "creative" ? "selected" : ""}">${t("studio.creative")}</button></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div><div class="canvas-wrap" id="canvas-wrap">${canvasHTML()}</div><div class="editor-actions"><button data-action="upload">${icon("photo")} ${t(editor.photo ? "studio.replacePhoto" : "studio.addPhoto")}</button><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")} ${t("studio.undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")} ${t("studio.redo")}</button></div>
- <div class="editor-form"><label class="field">${t("studio.titleLabel")}<input id="entry-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}"></label><label class="field">${t("studio.bodyLabel")}<textarea id="entry-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}">${esc(editor.body)}</textarea></label><label class="field">${t("studio.book")}<select data-editor-field="bookId" aria-label="${t("studio.book")}">${state()
-   .books.map(
-     (b) =>
-       `<option value="${esc(b.id)}" ${b.id === editor.bookId ? "selected" : ""}>${esc(b.title)}</option>`,
-   )
-   .join(
-     "",
-   )}</select></label><label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${features.moods.map((m) => `<button data-action="mood" data-mood="${m}" class="${editor.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${editor.mood === m}">${m}</button>`).join("")}</div></div><div><span class="small-label">${t("studio.paper")}</span><div class="segmented">${features.templates.map((template) => `<button data-action="template" data-template="${template.id}" class="${editor.template === template.id ? "selected" : ""}">${t("template." + template.id)}</button>`).join("")}</div></div></div>${customFieldsHTML(book, editor, ctx())}
+  const dayForm = `<div class="editor-form"><label class="field">${t("studio.titleLabel")}<input id="entry-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}"></label><label class="field">${t("studio.bodyLabel")}<textarea id="entry-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}">${esc(editor.body)}</textarea></label><label class="field">${t("studio.book")}<select data-editor-field="bookId" aria-label="${t("studio.book")}">${state()
+    .books.map(
+      (b) =>
+        `<option value="${esc(b.id)}" ${b.id === editor.bookId ? "selected" : ""}>${esc(b.title)}</option>`,
+    )
+    .join(
+      "",
+    )}</select></label><label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${features.moods.map((m) => `<button data-action="mood" data-mood="${m}" class="${editor.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${editor.mood === m}">${m}</button>`).join("")}</div></div><div><span class="small-label">${t("studio.paper")}</span><div class="segmented">${features.templates.map((template) => `<button data-action="template" data-template="${template.id}" class="${editor.template === template.id ? "selected" : ""}">${t("template." + template.id)}</button>`).join("")}</div></div></div>${customFieldsHTML(book, editor, ctx())}`;
+  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="section-heading"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="segmented"><button data-action="editor-mode" data-mode="quick" class="${editorMode === "quick" ? "selected" : ""}">${t("studio.quick")}</button><button data-action="editor-mode" data-mode="creative" class="${editorMode === "creative" ? "selected" : ""}">${t("studio.creative")}</button></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chaptersHTML()}${dayPage ? "" : momentFormHTML(page)}<div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${photoToolbarHTML()}<div id="layer-controls-slot">${layerControls()}</div>
+ ${dayPage ? dayForm : ""}
  ${
    editorMode === "creative"
      ? `<section class="material-panel"><h3>${t("studio.materials")}</h3><div class="material-categories">${categories.map((category) => `<button data-action="material-category" data-category="${category}" class="${materialCategory === category ? "selected" : ""}">${t("category." + category)}</button>`).join("")}</div><div class="art-sticker-grid">${catalog.stickers
@@ -404,9 +673,9 @@ function studioPage() {
          )
          .join(
            "",
-         )}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div>${layerControls()}</section>`
+         )}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div></section>`
      : `<p class="save-help">${t("studio.quickHelp")}</p>`
- }${mediaPanelHTML(editor, ctx(), Boolean(recorder))}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
+ }${growthPanelHTML()}${mediaPanelHTML(page, ctx(), Boolean(recorder))}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
 }
 
 function updateCanvas() {
@@ -417,23 +686,6 @@ function updateCanvas() {
   const redo = document.querySelector('[data-action="redo"]');
   if (undo) undo.disabled = history.length === 0;
   if (redo) redo.disabled = future.length === 0;
-}
-function layerHTML(layer) {
-  const image =
-    layer.kind === "photo"
-      ? safePhoto(layer.mediaRef)
-      : layer.assetId
-        ? stickerURL(layer.assetId, catalog)
-        : "";
-  return `<span class="layer ${image ? "art-layer" : ""} ${layer.kind === "text" ? "text-layer" : ""} ${selectedLayer === layer.id ? "active" : ""}" data-layer="${esc(layer.id)}" style="left:${Number(layer.x)}%;top:${Number(layer.y)}%;transform:translate(-50%,-50%) scale(${Number(layer.scale)}) rotate(${Number(layer.rotation)}deg);${layer.kind === "text" ? esc(textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || editor.font, 16)) + `;text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}` : ""}" role="button" tabindex="0" aria-label="${esc(layer.text || t("layer.selected"))}">${image ? `<img src="${esc(image)}" alt="">` : esc(layer.text)}</span>`;
-}
-
-function textCSS(style, fontId, defaultSize) {
-  const size = Math.max(10, Math.min(60, Number(style.size) || defaultSize)),
-    color = /^#[0-9a-f]{6}$/i.test(style.color || "") ? style.color : "#2F2A26",
-    weight = Math.max(100, Math.min(900, Number(style.weight) || 400)),
-    spacing = Math.max(-2, Math.min(8, Number(style.spacing) || 0));
-  return `font-family:${fontFamily(fontId, catalog)};font-size:${size / 3.2}cqw;color:${color};font-weight:${weight};letter-spacing:${spacing}px`;
 }
 
 function fontOptions(selected) {
@@ -453,19 +705,83 @@ function fontOptions(selected) {
     .join("");
 }
 
+function releaseLeftScope() {
+  if (scopedPage && scopedPage !== page) {
+    // Revoke audio/video object URLs held only by the view we just left.
+    document
+      .querySelectorAll("#app audio, #app video")
+      .forEach((element) => element.pause());
+    media.release(scopedPage);
+    readyScopes.delete(scopedPage);
+  }
+  scopedPage = ["studio", "day"].includes(page) ? page : null;
+}
+async function loadScope(scope, clips) {
+  readyScopes.delete(scope);
+  const ids = clips
+    .flatMap((clip) => [clip.source, clip.poster])
+    .filter((ref) => typeof ref === "string" && ref.startsWith("media:"))
+    .map((ref) => ref.slice(6));
+  try {
+    await media.acquire(ids, scope);
+  } catch (error) {
+    console.warn("Media could not load", error?.name);
+  }
+  readyScopes.add(scope);
+  if (page === scope && !drag) render();
+}
+function editorClips() {
+  return editor ? clipsOf(editor) : [];
+}
 function render() {
   const scrollTop = $("#app-scroll").scrollTop;
+  releaseLeftScope();
   $("#app").innerHTML = {
     home,
     calendar: calendarPage,
     growth: growthPage,
     books: booksPage,
     studio: studioPage,
+    day: () => dayDetailHTML(selectedDate, ctx(), { icon, friendlyDate }),
     settings: () => settingsHTML(ctx()),
   }[page]();
   navigation();
   applyShellLanguage();
   $("#app-scroll").scrollTop = scrollTop;
+  if (page === "settings") showMediaUsage();
+}
+function openDay(date, momentId = null) {
+  flushDraft();
+  selectedDate = date;
+  month = new Date(`${date}T12:00:00`);
+  page = "day";
+  readyScopes.delete("day");
+  render();
+  $("#app-scroll").scrollTop = 0;
+  const entry =
+    state().entries.find((item) => item.date === date) || state().drafts[date];
+  loadScope("day", clipsOf(entry)).then(() => {
+    if (momentId)
+      document
+        .getElementById(`moment-${momentId}`)
+        ?.scrollIntoView({ block: "start" });
+  });
+}
+async function showMediaUsage() {
+  const target = $("#media-usage");
+  if (!target) return;
+  try {
+    const usage = await media.usage(state());
+    target.textContent = t("settings.usage", {
+      count: usage.count,
+      size: new Intl.NumberFormat(locale(), {
+        maximumFractionDigits: 1,
+      }).format(usage.bytes / 1024 / 1024),
+    });
+    target.classList.toggle("warning", usage.bytes > 80 * 1024 * 1024);
+  } catch {
+    target.textContent = t("settings.usageUnknown");
+  }
 }
 function openDialog(kind, payload = null) {
   dialogKind = kind;
@@ -484,15 +800,44 @@ function openDialog(kind, payload = null) {
     `<h2>${title}</h2><p class="dialog-description">${esc(description)}</p><div class="dialog-fields">${fields}</div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(kind === "duration" ? "dialog.record" : "create")}</button></div>`;
   $("#form-dialog").showModal();
 }
-function handleCheck(habitId, date) {
+function openCheckDialog(habitId, date) {
   const habit = state().habits.find((h) => h.id === habitId);
-  const existing = state().checks.some(
+  if (!habit) return;
+  const check = state().checks.find(
     (c) => c.habitId === habitId && c.date === date,
   );
+  dialogKind = "check-note";
+  dialogPayload = { habit, date, photo: check?.photo || "", isNew: !check };
+  const photo = safePhoto(check?.photo || "");
+  $("#dialog-form").innerHTML =
+    `<h2>${t(check ? "growth.noteTitle" : "dialog.durationTitle")}</h2><p class="dialog-description">${esc(habit.title)} · ${esc(shortDate(date))}</p><div class="dialog-fields note-paper"><label class="field">${t("growth.detail")}<input name="detail" maxlength="80" placeholder="${t("growth.detailPlaceholder")}" value="${esc(check?.detail || "")}"></label><label class="field">${t(habit.kind === "duration" ? "dialog.durationLabel" : "growth.minutesOptional")}<input name="minutes" type="number" min="${habit.kind === "duration" ? 1 : 0}" max="1440" ${habit.kind === "duration" ? "required" : ""} value="${check ? check.minutes || "" : habit.kind === "duration" ? habit.minutes || 20 : ""}"></label><label class="field">${t("growth.note")}<textarea name="note" maxlength="2000" placeholder="${t("growth.notePlaceholder")}">${esc(check?.note || "")}</textarea></label><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${["", ...features.moods].map((m) => `<label class="mood-radio"><input type="radio" name="mood" value="${m}" ${(check?.mood || "") === m ? "checked" : ""}><span>${m || "—"}</span></label>`).join("")}</div></div><div class="check-photo"><span id="check-photo-preview">${photo ? `<img src="${esc(photo)}" alt="">` : ""}</span><button type="button" class="secondary" data-action="check-photo">${t("growth.photo")}</button><button type="button" class="text-button" data-action="check-photo-remove">${t("books.removePhoto")}</button></div><label class="check-label"><input type="checkbox" name="shareNote" ${check?.shareNote ? "checked" : ""}> ${t("growth.shareNote")}</label><p class="save-help">${t("growth.privateNote")}</p></div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(check ? "save" : "dialog.record")}</button></div>`;
+  $("#form-dialog").showModal();
+}
+function openReflectionDialog(period, key) {
+  const reflection = findReflection(state(), period, key) || {};
+  dialogKind = "reflection";
+  dialogPayload = { period, key };
+  $("#dialog-form").innerHTML =
+    `<h2>${t(period === "week" ? "reflection.weekTitle" : "reflection.monthTitle")}</h2><p class="dialog-description">${esc(period === "week" ? t("reflection.weekOf", { date: shortDate(key) }) : new Date(`${key}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))} · ${t("reflection.optional")}</p><div class="dialog-fields note-paper">${["wentWell", "challenges", "learned", "nextFocus"].map((field) => `<label class="field">${t("reflection." + field)}<textarea name="${field}" maxlength="2000">${esc(reflection[field] || "")}</textarea></label>`).join("")}</div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t("save")}</button></div>`;
+  $("#form-dialog").showModal();
+}
+function handleCheck(habitId, date) {
+  const habit = state().habits.find((h) => h.id === habitId);
+  const existingCheck = state().checks.find(
+    (c) => c.habitId === habitId && c.date === date,
+  );
+  const existing = Boolean(existingCheck);
   if (!existing && habit.kind === "duration") {
-    openDialog("duration", { habit, date });
+    openCheckDialog(habitId, date);
     return;
   }
+  if (
+    existingCheck &&
+    (existingCheck.note || existingCheck.detail || existingCheck.photo) &&
+    !confirm(t("growth.cancelConfirm"))
+  )
+    return;
+
   store.update((s) => toggleCheck(s, habitId, date));
   render();
   toast(existing ? t("这次打卡已取消") : t("收集到一份小小的成长 🌱"));
@@ -513,6 +858,10 @@ async function action(target) {
       "quick-growth",
       "close-dialog",
       "save-entry",
+      "open-day",
+      "day-back",
+      "save-moment",
+      "moment-delete",
     ].includes(actionName)
   ) {
     toast(t("media.busy"));
@@ -545,8 +894,22 @@ async function action(target) {
   }
   if (actionName === "select-date") {
     selectedDate = target.dataset.date;
+    if (calendarMode === "memory" && target.dataset.hasContent === "true")
+      openDay(selectedDate);
+    else render();
+  }
+  if (actionName === "open-day")
+    openDay(target.dataset.date, target.dataset.moment);
+  if (actionName === "day-back") {
+    page = "calendar";
     render();
   }
+  if (actionName === "jump-moment")
+    document
+      .getElementById(`moment-${target.dataset.moment}`)
+      ?.scrollIntoView({ block: "start", behavior: "smooth" });
+  if (actionName === "zoom-photo") openLightbox(target.dataset.src);
+  if (actionName === "player-toggle") togglePlayer(target);
   if (actionName === "calendar-today") {
     selectedDate = dateKey();
     month = new Date(`${selectedDate}T12:00:00`);
@@ -602,7 +965,7 @@ async function action(target) {
     render();
   }
   if (actionName === "sticker")
-    changeEditor((e) => {
+    changeTarget((e) => {
       const layer = {
         id: id(),
         kind: "sticker",
@@ -616,32 +979,35 @@ async function action(target) {
       selectedLayer = layer.id;
     });
   if (actionName === "layer-delete")
-    changeEditor((e) => {
+    changeTarget((e) => {
       e.layers = e.layers.filter((l) => l.id !== selectedLayer);
       selectedLayer = null;
+      cropMode = false;
     });
   if (actionName === "layer-front" || actionName === "layer-back")
-    changeEditor((e) => {
+    changeTarget((e) => {
       const layer = e.layers.find((l) => l.id === selectedLayer);
+      if (!layer) return;
       e.layers = e.layers.filter((l) => l.id !== selectedLayer);
       if (actionName === "layer-front") e.layers.push(layer);
       else e.layers.unshift(layer);
     });
+  if (actionName === "layer-forward" || actionName === "layer-backward")
+    changeTarget((e) =>
+      moveLayer(e, selectedLayer, actionName === "layer-forward" ? 1 : -1),
+    );
   if (actionName === "undo" && history.length) {
     future.push(structuredClone(editor));
     editor = history.pop();
-    selectedLayer = null;
-    scheduleDraft();
-    render();
+    afterHistoryStep();
   }
   if (actionName === "redo" && future.length) {
     history.push(structuredClone(editor));
     editor = future.pop();
-    selectedLayer = null;
-    scheduleDraft();
-    render();
+    afterHistoryStep();
   }
   if (actionName === "upload") $("#photo-input").click();
+  if (actionName === "add-photos") $("#photos-input").click();
   if (actionName === "save-draft") {
     draftDirty = true;
     flushDraft();
@@ -653,7 +1019,8 @@ async function action(target) {
       !editor.body.trim() &&
       !editor.photo &&
       !editor.media.length &&
-      !editor.layers.length
+      !editor.layers.length &&
+      !editor.moments.length
     ) {
       toast(t("先留下一张照片，或者写点什么吧。"));
       return;
@@ -665,10 +1032,28 @@ async function action(target) {
     navigate("home");
   }
   if (actionName === "export") {
-    await exportJournalImage(editor, {
+    const page = activePage();
+    await exportJournalImage(page, {
       resolvePhoto: safePhoto,
       catalog,
       fontFamily,
+      dayPage: isDayPage(),
+      date: editor.date,
+      suffix: isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`,
+      growthCard: (layer) => {
+        const check = state().checks.find(
+          (item) =>
+            item.habitId === layer.habitId && item.date === layer.checkDate,
+        );
+        const habit = state().habits.find((item) => item.id === layer.habitId);
+        return {
+          title: habit?.title || layer.text,
+          facts: [check?.detail, check?.minutes ? `${check.minutes} min` : ""]
+            .filter(Boolean)
+            .join(" · "),
+          note: check?.note || "",
+        };
+      },
     });
     toast(t("手帐图片已导出（基础排版版本）。"));
   }
@@ -690,6 +1075,14 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("input", (event) => {
   const target = event.target;
+  if (target.dataset.playerSeek != null) {
+    const player = target.closest("[data-player]"),
+      audio = player.querySelector("audio"),
+      duration = playerDuration(audio, player);
+    if (duration) audio.currentTime = (Number(target.value) / 1000) * duration;
+    player.style.setProperty("--progress", `${Number(target.value) / 10}%`);
+    return;
+  }
   handleV3Input(event);
   if (target.dataset.editorField) {
     try {
@@ -701,13 +1094,45 @@ document.addEventListener("input", (event) => {
     }
   }
   if (target.dataset.layerField) {
-    const layer = editor.layers.find((l) => l.id === selectedLayer);
-    if (layer)
-      changeEditor((e) => {
-        e.layers.find((l) => l.id === selectedLayer)[
-          target.dataset.layerField
-        ] = Number(target.value);
+    if (selectedLayerOf())
+      changeTarget((e) => {
+        const layer = e.layers.find((l) => l.id === selectedLayer);
+        layer[target.dataset.layerField] = Number(target.value);
+        if (layer.kind === "photo") e.layoutEdited = true;
       }, false);
+  }
+  if (target.dataset.cropField) {
+    if (selectedLayerOf()?.kind === "photo")
+      changeTarget((e) => {
+        const layer = e.layers.find((l) => l.id === selectedLayer);
+        layer.crop = {
+          ...cropOf(layer),
+          [target.dataset.cropField]: Number(target.value),
+        };
+      }, false);
+  }
+  if (target.dataset.momentField) {
+    const key = target.dataset.momentField;
+    changeTarget((moment) => {
+      if (moment === editor) return;
+      moment[key] =
+        key === "tags"
+          ? target.value
+              .split(/[,，#]/)
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+              .slice(0, 12)
+          : target.value;
+      moment.updatedAt = new Date().toISOString();
+    }, false);
+    const moment = activePage();
+    const label = document.querySelector(
+      `[data-chapter-label="${CSS.escape(moment.id)}"]`,
+    );
+    if (label)
+      label.textContent =
+        (moment.time ? moment.time + " · " : "") +
+        (moment.title || t("moment.untitled"));
   }
 });
 document.addEventListener("change", (event) => {
@@ -721,6 +1146,49 @@ document.addEventListener("change", (event) => {
   }
 });
 $("#dialog-form").addEventListener("submit", (event) => {
+  if (dialogKind === "check-note" || dialogKind === "reflection") {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.target));
+    try {
+      if (dialogKind === "check-note")
+        store.update((next) =>
+          saveCheckReflection(
+            next,
+            dialogPayload.habit.id,
+            dialogPayload.date,
+            {
+              ...values,
+              photo: dialogPayload.photo || "",
+              shareNote: values.shareNote === "on",
+            },
+          ),
+        );
+      else
+        store.update((next) =>
+          saveReflection(next, dialogPayload.period, dialogPayload.key, values),
+        );
+      $("#form-dialog").close();
+      render();
+      toast(
+        t(
+          dialogKind === "reflection"
+            ? "reflection.saved"
+            : dialogPayload.isNew
+              ? "成长已记录，也已关联当天日期 🌱"
+              : "growth.noteSaved",
+        ),
+      );
+    } catch (error) {
+      toast(
+        t(
+          error.code === "stale-state"
+            ? "error.conflict"
+            : "保存失败，请检查本机存储空间。",
+        ),
+      );
+    }
+    return;
+  }
   if (dialogKind === "book" || dialogKind === "edit-book") {
     event.preventDefault();
     try {
@@ -787,6 +1255,9 @@ $("#dialog-form").addEventListener("submit", (event) => {
 $("#photo-input").addEventListener("change", (event) =>
   handleImageUpload(event, "primary"),
 );
+$("#photos-input").addEventListener("change", (event) =>
+  handleImageUpload(event, { kind: "photos" }),
+);
 $("#attachment-image-input").addEventListener("change", (event) =>
   handleImageUpload(event, attachmentTarget),
 );
@@ -796,59 +1267,322 @@ $("#video-input").addEventListener("change", (event) =>
 $("#audio-input").addEventListener("change", (event) =>
   handleMediaUpload(event, "audio"),
 );
-// Pointer capture keeps dragging reliable on both touch screens and a mouse.
-let drag;
-$("#app").addEventListener("pointerdown", (event) => {
-  const target = event.target.closest("[data-layer]");
-  if (!target || editorMode !== "creative") return;
-  const layer = editor.layers.find((l) => l.id === target.dataset.layer);
-  selectedLayer = layer.id;
-  const rect = $("#journal-canvas").getBoundingClientRect();
+// Free canvas gestures. Pointer Events cover mouse (Windows), pen and touch:
+// one pointer drags, two pointers pinch-scale and rotate, corner handles
+// resize/rotate with a mouse, the wheel scales (Shift+wheel rotates) and arrow
+// keys nudge. In crop mode the same gestures pan/zoom inside the photo frame.
+let drag = null;
+const pointers = new Map();
+function canvasRect() {
+  return $("#journal-canvas")?.getBoundingClientRect();
+}
+function layerElement(layerId) {
+  return document.querySelector(
+    `#journal-canvas [data-layer="${CSS.escape(layerId)}"]`,
+  );
+}
+function paintLayer(layer) {
+  const element = layerElement(layer.id);
+  if (!element) return;
+  element.style.left = `${layer.x}%`;
+  element.style.top = `${layer.y}%`;
+  if (layer.kind === "photo" || layer.w != null)
+    element.style.width = `${layer.w}%`;
+  if (layer.kind === "photo") element.style.height = `${layer.h}%`;
+  element.style.transform = layerGeometry(layer).match(/transform:(.*)$/)[1];
+  const image = element.querySelector(".photo-crop img");
+  if (image) image.setAttribute("style", cropStyle(layer));
+}
+function gestureSnapshot(layer) {
+  return {
+    x: layer.x,
+    y: layer.y,
+    w:
+      layer.w ??
+      (layer.kind === "photo" ? 42 : layer.kind === "text" ? 65 : 62),
+    h: layer.h ?? 34,
+    scale: layer.scale,
+    rotation: layer.rotation,
+    crop: cropOf(layer),
+  };
+}
+function twoPointerMetrics() {
+  const [a, b] = [...pointers.values()];
+  return {
+    distance: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+    angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI,
+  };
+}
+function beginGesture(layer, mode, event) {
+  const rect = canvasRect();
   drag = {
-    target,
     layer,
+    mode,
     rect,
     startX: event.clientX,
     startY: event.clientY,
-    x: layer.x,
-    y: layer.y,
+    start: gestureSnapshot(layer),
     before: structuredClone(editor),
     moved: false,
   };
-  target.classList.add("active");
-  target.setPointerCapture(event.pointerId);
+  if (mode === "rotate") {
+    const element = layerElement(layer.id).getBoundingClientRect();
+    drag.center = {
+      x: element.left + element.width / 2,
+      y: element.top + element.height / 2,
+    };
+    drag.startAngle =
+      (Math.atan2(
+        event.clientY - drag.center.y,
+        event.clientX - drag.center.x,
+      ) *
+        180) /
+      Math.PI;
+  }
+  if (mode === "pinch") Object.assign(drag, twoPointerMetrics());
+}
+$("#app").addEventListener("pointerdown", (event) => {
+  if (page !== "studio") return;
+  const canvas = event.target.closest("#journal-canvas");
+  if (!canvas) return;
+  const element = event.target.closest("[data-layer]");
+  pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  // A second finger anywhere on the canvas pinches the selected layer.
+  if (pointers.size === 2 && drag?.layer) {
+    beginGesture(drag.layer, "pinch", event);
+    try {
+      canvas.setPointerCapture(event.pointerId);
+    } catch {}
+    event.preventDefault();
+    return;
+  }
+  if (!element) {
+    if (selectedLayer && pointers.size === 1) {
+      selectedLayer = null;
+      cropMode = false;
+      render();
+    }
+    return;
+  }
+  const layer = activePage().layers.find((l) => l.id === element.dataset.layer);
+  if (!layer) return;
+  if (selectedLayer !== layer.id) {
+    if (cropMode) cropMode = false;
+    selectedLayer = layer.id;
+    // Re-render so handles and controls appear, then keep dragging.
+    $("#canvas-wrap").innerHTML = canvasHTML();
+    $("#layer-controls-slot").innerHTML = layerControls();
+  }
+  const handle = event.target.closest("[data-handle]")?.dataset.handle;
+  beginGesture(
+    layer,
+    cropMode && layer.kind === "photo" ? "crop" : handle || "move",
+    event,
+  );
+  try {
+    $("#journal-canvas").setPointerCapture(event.pointerId);
+  } catch {}
   event.preventDefault();
 });
 $("#app").addEventListener("pointermove", (event) => {
+  if (!pointers.has(event.pointerId)) return;
+  pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (!drag) return;
-  const dx = ((event.clientX - drag.startX) / drag.rect.width) * 100,
-    dy = ((event.clientY - drag.startY) / drag.rect.height) * 100;
-  drag.layer.x = Math.max(5, Math.min(95, drag.x + dx));
-  drag.layer.y = Math.max(5, Math.min(95, drag.y + dy));
-  drag.target.style.left = `${drag.layer.x}%`;
-  drag.target.style.top = `${drag.layer.y}%`;
-  drag.moved ||= Math.abs(dx) + Math.abs(dy) > 1;
+  const { layer, start, rect } = drag;
+  const dx = ((event.clientX - drag.startX) / rect.width) * 100,
+    dy = ((event.clientY - drag.startY) / rect.height) * 100;
+  if (drag.mode === "move") {
+    layer.x = Math.max(0, Math.min(100, start.x + dx));
+    layer.y = Math.max(0, Math.min(100, start.y + dy));
+  } else if (drag.mode === "resize") {
+    const factor = 2 / (start.scale || 1);
+    layer.w =
+      Math.round(Math.max(8, Math.min(100, start.w + dx * factor)) * 10) / 10;
+    if (layer.kind === "photo")
+      layer.h =
+        Math.round(Math.max(8, Math.min(100, start.h + dy * factor)) * 10) / 10;
+  } else if (drag.mode === "rotate") {
+    const angle =
+      (Math.atan2(
+        event.clientY - drag.center.y,
+        event.clientX - drag.center.x,
+      ) *
+        180) /
+      Math.PI;
+    layer.rotation = Math.round(
+      ((start.rotation + angle - drag.startAngle + 540) % 360) - 180,
+    );
+  } else if (drag.mode === "pinch" && pointers.size >= 2) {
+    const metrics = twoPointerMetrics();
+    if (cropMode && layer.kind === "photo")
+      layer.crop = {
+        ...start.crop,
+        zoom: Math.max(
+          1,
+          Math.min(4, start.crop.zoom * (metrics.distance / drag.distance)),
+        ),
+      };
+    else {
+      layer.scale =
+        Math.round(
+          Math.max(
+            0.3,
+            Math.min(3, start.scale * (metrics.distance / drag.distance)),
+          ) * 100,
+        ) / 100;
+      layer.rotation = Math.round(
+        ((start.rotation + metrics.angle - drag.angle + 540) % 360) - 180,
+      );
+    }
+  } else if (drag.mode === "crop") {
+    const zoom = start.crop.zoom;
+    layer.crop = {
+      ...start.crop,
+      x: Math.max(
+        0,
+        Math.min(100, start.crop.x - (dx * 100) / ((start.w || 42) * zoom)),
+      ),
+      y: Math.max(
+        0,
+        Math.min(100, start.crop.y - (dy * 100) / ((start.h || 34) * zoom)),
+      ),
+    };
+  }
+  drag.moved ||=
+    Math.abs(event.clientX - drag.startX) +
+      Math.abs(event.clientY - drag.startY) >
+      2 || drag.mode === "pinch";
+  paintLayer(layer);
 });
-function endDrag() {
+function commitGesture() {
   if (!drag) return;
-  if (drag.moved) {
-    history.push(drag.before);
+  const { moved, before, layer } = drag;
+  drag = null;
+  if (moved) {
+    history.push(before);
     if (history.length > 30) history.shift();
     future = [];
+    if (layer.kind === "photo") activePage().layoutEdited = true;
     scheduleDraft();
   }
-  drag = null;
   render();
 }
-$("#app").addEventListener("pointerup", endDrag);
-$("#app").addEventListener("pointercancel", endDrag);
-$("#app").addEventListener("keydown", (event) => {
-  const layer = event.target.closest("[data-layer]");
-  if (layer && (event.key === "Enter" || event.key === " ")) {
+function endPointer(event) {
+  if (!pointers.has(event.pointerId)) return;
+  pointers.delete(event.pointerId);
+  if (!drag) return;
+  if (drag.mode === "pinch" && pointers.size === 1) {
+    // Lifting one finger finishes the pinch; the other may keep dragging.
+    const [pointer] = pointers.values();
+    const layer = drag.layer,
+      wasMoved = drag.moved,
+      before = drag.before;
+    beginGesture(layer, cropMode && layer.kind === "photo" ? "crop" : "move", {
+      clientX: pointer.x,
+      clientY: pointer.y,
+    });
+    drag.before = before;
+    drag.moved = wasMoved;
+    return;
+  }
+  if (!pointers.size) commitGesture();
+}
+$("#app").addEventListener("pointerup", endPointer);
+$("#app").addEventListener("pointercancel", endPointer);
+let wheelCommit;
+$("#app").addEventListener(
+  "wheel",
+  (event) => {
+    if (page !== "studio" || !selectedLayer) return;
+    const element = event.target.closest("[data-layer]");
+    if (!element || element.dataset.layer !== selectedLayer) return;
+    const layer = selectedLayerOf();
+    if (!layer) return;
     event.preventDefault();
-    selectedLayer = layer.dataset.layer;
+    if (!wheelCommit) {
+      history.push(structuredClone(editor));
+      if (history.length > 30) history.shift();
+      future = [];
+    }
+    if (cropMode && layer.kind === "photo") {
+      const crop = cropOf(layer);
+      layer.crop = {
+        ...crop,
+        zoom: Math.max(
+          1,
+          Math.min(4, crop.zoom * (event.deltaY < 0 ? 1.06 : 0.94)),
+        ),
+      };
+    } else if (event.shiftKey)
+      layer.rotation = Math.round(
+        ((layer.rotation + (event.deltaY < 0 ? 3 : -3) + 540) % 360) - 180,
+      );
+    else
+      layer.scale =
+        Math.round(
+          Math.max(
+            0.3,
+            Math.min(3, layer.scale * (event.deltaY < 0 ? 1.05 : 0.95)),
+          ) * 100,
+        ) / 100;
+    if (layer.kind === "photo") activePage().layoutEdited = true;
+    paintLayer(layer);
+    clearTimeout(wheelCommit);
+    wheelCommit = setTimeout(() => {
+      wheelCommit = null;
+      scheduleDraft();
+      render();
+    }, 350);
+  },
+  { passive: false },
+);
+$("#app").addEventListener("keydown", (event) => {
+  const element = event.target.closest("[data-layer]");
+  if (!element) {
+    if (
+      event.target.closest('[data-action="zoom-photo"]') &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
+      event.preventDefault();
+      openLightbox(
+        event.target.closest('[data-action="zoom-photo"]').dataset.src,
+      );
+    }
+    return;
+  }
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    selectedLayer = element.dataset.layer;
     render();
     $(".layer-controls")?.scrollIntoView({ block: "nearest" });
+    return;
+  }
+  const delta = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1],
+  }[event.key];
+  if (delta && element.dataset.layer === selectedLayer) {
+    event.preventDefault();
+    const step = event.shiftKey ? 5 : 1;
+    changeTarget((page) => {
+      const layer = page.layers.find((item) => item.id === selectedLayer);
+      layer.x = Math.max(0, Math.min(100, layer.x + delta[0] * step));
+      layer.y = Math.max(0, Math.min(100, layer.y + delta[1] * step));
+      if (layer.kind === "photo") page.layoutEdited = true;
+    }, false);
+    layerElement(selectedLayer)?.focus();
+  }
+  if (
+    (event.key === "Delete" || event.key === "Backspace") &&
+    element.dataset.layer === selectedLayer
+  ) {
+    event.preventDefault();
+    changeTarget((page) => {
+      page.layers = page.layers.filter((layer) => layer.id !== selectedLayer);
+      selectedLayer = null;
+    });
   }
 });
 window.addEventListener("beforeunload", (event) => {
@@ -970,12 +1704,193 @@ function chooseAttachment(target) {
   $("#attachment-image-input").multiple = target.kind === "collage";
   $("#attachment-image-input").click();
 }
+function afterHistoryStep() {
+  if (activeMomentId && !findMoment(editor, activeMomentId))
+    activeMomentId = null;
+  if (!selectedLayerOf()) selectedLayer = null;
+  cropMode = false;
+  scheduleDraft();
+  render();
+}
+function selectMoment(momentId) {
+  activeMomentId = momentId || null;
+  selectedLayer = null;
+  cropMode = false;
+  render();
+  $(".moment-editor, #canvas-wrap")?.scrollIntoView({ block: "start" });
+}
+async function v31Action(target) {
+  const name = target.dataset.action;
+  const momentId = target.dataset.moment;
+  switch (name) {
+    case "select-moment":
+      selectMoment(momentId);
+      return true;
+    case "add-moment": {
+      let created;
+      changeEditor((entry) => {
+        const now = new Date();
+        created = createMoment(entry, {
+          time:
+            entry.date === dateKey()
+              ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+              : "",
+        });
+        entry.moments.push(created);
+      }, false);
+      selectMoment(created.id);
+      $('[data-moment-field="title"]')?.focus();
+      toast(t("moment.added"));
+      return true;
+    }
+    case "moment-up":
+    case "moment-down":
+      changeEditor((entry) =>
+        moveMoment(entry, momentId, name === "moment-up" ? -1 : 1),
+      );
+      return true;
+    case "moment-collapse":
+      changeEditor((entry) => {
+        const moment = findMoment(entry, momentId);
+        if (moment) moment.collapsed = !moment.collapsed;
+      });
+      return true;
+    case "moment-duplicate": {
+      let copy;
+      changeEditor(
+        (entry) => (copy = duplicateMoment(entry, activeMomentId)),
+        false,
+      );
+      if (copy) selectMoment(copy.id);
+      return true;
+    }
+    case "moment-delete": {
+      const moment = findMoment(editor, activeMomentId);
+      if (!moment) return true;
+      if (hasMomentContent(moment) && !confirm(t("moment.deleteConfirm")))
+        return true;
+      changeEditor((entry) => removeMoment(entry, moment.id), false);
+      selectMoment(null);
+      toast(t("moment.deleted"));
+      return true;
+    }
+    case "save-moment": {
+      if (!activeMomentId) return true;
+      clearTimeout(draftTimer);
+      const savedAt = new Date().toISOString();
+      const snapshot = structuredClone(editor);
+      findMoment(snapshot, activeMomentId).savedAt = savedAt;
+      store.update((next) => {
+        saveMoment(next, snapshot, activeMomentId);
+        next.drafts[editor.date] = structuredClone(snapshot);
+      });
+      editor = snapshot;
+      draftDirty = false;
+      render();
+      toast(t("moment.savedToast"));
+      return true;
+    }
+    case "moment-mood":
+      changeTarget((moment) => {
+        if (moment !== editor)
+          moment.mood =
+            moment.mood === target.dataset.mood ? "" : target.dataset.mood;
+      });
+      return true;
+    case "moment-template":
+      changeTarget((moment) => {
+        if (moment !== editor) moment.template = target.dataset.template;
+      });
+      return true;
+    case "apply-layout": {
+      const page = activePage();
+      if (page.layoutEdited && !confirm(t("layout.confirm"))) return true;
+      changeTarget((entry) => {
+        if (entry === editor) freeMainPhoto(entry);
+        applyLayout(entry, target.dataset.template, photoRegion());
+      });
+      toast(
+        t("layout.applied", { name: t("layout." + target.dataset.template) }),
+      );
+      return true;
+    }
+    case "free-main-photo":
+      changeEditor((entry) => {
+        const layer = freeMainPhoto(entry);
+        if (layer) selectedLayer = layer.id;
+        entry.layoutEdited = true;
+      });
+      editorMode = "creative";
+      render();
+      return true;
+    case "crop-mode":
+      cropMode = !cropMode;
+      render();
+      return true;
+    case "replace-photo":
+      if (selectedLayerOf()?.kind === "photo")
+        chooseAttachment({ kind: "replace", layer: selectedLayer });
+      return true;
+    case "insert-growth": {
+      const check = state().checks.find(
+        (item) =>
+          item.habitId === target.dataset.habit && item.date === editor.date,
+      );
+      const habit = state().habits.find(
+        (item) => item.id === target.dataset.habit,
+      );
+      if (!check || !habit) return true;
+      changeTarget((page) => {
+        if (
+          page.layers.some(
+            (layer) =>
+              layer.kind === "growth" &&
+              layer.habitId === check.habitId &&
+              layer.checkDate === check.date,
+          )
+        )
+          return;
+        const layer = {
+          id: id(),
+          kind: "growth",
+          text: habit.title,
+          habitId: check.habitId,
+          checkDate: check.date,
+          x: 50,
+          y: 50,
+          w: 62,
+          scale: 1,
+          rotation: -2,
+        };
+        page.layers.push(layer);
+        selectedLayer = layer.id;
+      });
+      toast(t("growth.insertedToast"));
+      return true;
+    }
+    case "check-note":
+      openCheckDialog(target.dataset.habit, target.dataset.date);
+      return true;
+    case "check-photo":
+      chooseAttachment({ kind: "check-photo" });
+      return true;
+    case "check-photo-remove":
+      if (dialogPayload) dialogPayload.photo = "";
+      if ($("#check-photo-preview")) $("#check-photo-preview").innerHTML = "";
+      return true;
+    case "reflection-edit":
+      openReflectionDialog(target.dataset.period, target.dataset.key);
+      return true;
+  }
+  return false;
+}
 async function v3Action(target) {
   const name = target.dataset.action;
   if (busyMedia) {
     toast(t("media.busy"));
     return true;
   }
+  if (await v31Action(target)) return true;
   if (name === "new-book") {
     openBookDialog();
     return true;
@@ -1043,7 +1958,7 @@ async function v3Action(target) {
   }
   if (name === "asset-sticker") {
     const asset = catalog.stickers.find((s) => s.id === target.dataset.sticker);
-    changeEditor((entry) => {
+    changeTarget((entry) => {
       const layer = {
         id: id(),
         kind: "sticker",
@@ -1060,7 +1975,7 @@ async function v3Action(target) {
     return true;
   }
   if (name === "layer-copy") {
-    changeEditor((entry) => {
+    changeTarget((entry) => {
       const original = entry.layers.find((layer) => layer.id === selectedLayer);
       if (!original) return;
       const copy = {
@@ -1075,7 +1990,7 @@ async function v3Action(target) {
     return true;
   }
   if (name === "add-text-layer") {
-    changeEditor((entry) => {
+    changeTarget((entry) => {
       const layer = {
         id: id(),
         kind: "text",
@@ -1113,7 +2028,7 @@ async function v3Action(target) {
     return true;
   }
   if (name === "remove-media") {
-    changeEditor((entry) => {
+    changeTarget((entry) => {
       entry.media = entry.media.filter(
         (clip) => clip.id !== target.dataset.clip,
       );
@@ -1177,12 +2092,19 @@ function handleV3Input(event) {
   }
   if (target.dataset.layerText) {
     const key = target.dataset.layerText;
-    changeEditor((entry) => {
+    changeTarget((entry) => {
       const layer = entry.layers.find((item) => item.id === selectedLayer);
       if (layer)
         layer[key] = ["fontSize", "weight", "spacing"].includes(key)
           ? Number(target.value)
           : target.value;
+    }, key === "frame");
+  }
+  if (target.dataset.layerFlag) {
+    const key = target.dataset.layerFlag;
+    changeTarget((entry) => {
+      const layer = entry.layers.find((item) => item.id === selectedLayer);
+      if (layer) layer[key] = target.checked;
     }, false);
   }
 }
@@ -1246,6 +2168,7 @@ async function imageBlob(file) {
     ),
   );
 }
+const MAX_PHOTOS_PER_PICK = 20;
 async function handleImageUpload(event, target) {
   const files = [...event.target.files];
   if (!files.length) return;
@@ -1255,50 +2178,69 @@ async function handleImageUpload(event, target) {
     return;
   }
   busyMedia = true;
+  const multiple = ["photos", "collage"].includes(target?.kind);
+  let failed = 0;
   try {
-    for (const file of files.slice(0, target?.kind === "collage" ? 8 : 1)) {
-      const blob = await imageBlob(file),
-        mediaId = await media.put(blob, { kind: "photo", name: file.name }),
-        reference = `media:${mediaId}`;
-      if (target?.kind === "cover") {
-        bookDraft = readBookForm();
-        bookDraft.coverImage = reference;
-        refreshBookPreview();
-      } else if (target?.kind === "field") {
-        changeEditor((entry) => {
-          entry.fieldValues[target.field] = reference;
-        });
-        flushDraft();
-      } else if (target?.kind === "poster") {
-        changeEditor((entry) => {
-          const clip = entry.media.find((item) => item.id === target.clip);
-          if (clip) clip.poster = reference;
-        });
-        flushDraft();
-      } else if (target?.kind === "collage") {
-        changeEditor((entry) => {
-          const layer = {
-            id: id(),
-            kind: "photo",
-            text: file.name,
-            mediaRef: reference,
-            x: 50,
-            y: 40,
-            scale: 1,
-            rotation: 5,
-          };
-          entry.layers.push(layer);
-          selectedLayer = layer.id;
-        });
-        flushDraft();
-      } else {
-        changeEditor((entry) => {
-          entry.photo = reference;
-        });
-        flushDraft();
+    const saved = [];
+    // Every Blob is written to IndexedDB before any metadata references it.
+    for (const file of files.slice(0, multiple ? MAX_PHOTOS_PER_PICK : 1)) {
+      try {
+        const blob = await imageBlob(file),
+          mediaId = await media.put(blob, { kind: "photo", name: file.name });
+        saved.push({ reference: `media:${mediaId}`, name: file.name });
+      } catch (error) {
+        if (!multiple) throw error;
+        failed++;
       }
     }
-    toast(t(target?.kind === "cover" ? "media.saved" : "media.savedPhoto"));
+    if (!saved.length) throw new Error(t("media.failed"));
+    const [{ reference }] = saved;
+    if (target?.kind === "cover") {
+      bookDraft = readBookForm();
+      bookDraft.coverImage = reference;
+      refreshBookPreview();
+    } else if (target?.kind === "check-photo") {
+      dialogPayload.photo = reference;
+      const preview = $("#check-photo-preview");
+      if (preview)
+        preview.innerHTML = `<img src="${esc(safePhoto(reference))}" alt="">`;
+    } else if (target?.kind === "field") {
+      changeEditor((entry) => {
+        entry.fieldValues[target.field] = reference;
+      });
+      flushDraft();
+    } else if (target?.kind === "poster") {
+      changeTarget((entry) => {
+        const clip = entry.media.find((item) => item.id === target.clip);
+        if (clip) clip.poster = reference;
+      });
+      flushDraft();
+    } else if (target?.kind === "replace") {
+      changeTarget((entry) => {
+        const layer = entry.layers.find((item) => item.id === target.layer);
+        if (layer) {
+          layer.mediaRef = reference;
+          layer.text = saved[0].name;
+          layer.crop = { x: 50, y: 50, zoom: 1 };
+        }
+      });
+      flushDraft();
+    } else if (multiple) {
+      addPhotoLayers(saved);
+      flushDraft();
+    } else {
+      changeEditor((entry) => {
+        entry.photo = reference;
+      });
+      flushDraft();
+    }
+    toast(
+      failed
+        ? t("photo.partial", { saved: saved.length, failed })
+        : multiple && saved.length > 1
+          ? t("photo.addedMany", { count: saved.length })
+          : t(target?.kind === "cover" ? "media.saved" : "media.savedPhoto"),
+    );
   } catch (error) {
     toast(
       error.message === t("media.imageLimit")
@@ -1309,6 +2251,31 @@ async function handleImageUpload(event, target) {
     busyMedia = false;
     event.target.value = "";
   }
+}
+// New photos never overwrite existing ones. While the page still follows an
+// auto layout, all photos are re-flowed; after manual edits, new photos are
+// cascaded on top so the user's arrangement is preserved.
+function addPhotoLayers(saved) {
+  if (editorMode !== "creative") editorMode = "creative";
+  changeTarget((page) => {
+    if (page === editor) freeMainPhoto(page);
+    const existing = page.layers.filter(
+      (layer) => layer.kind === "photo",
+    ).length;
+    const added = saved.map(({ reference, name }, index) =>
+      photoLayer(reference, name, {
+        x: Math.min(85, 30 + ((existing + index) % 6) * 8),
+        y: Math.min(80, 22 + ((existing + index) % 6) * 6),
+        rotation: [-4, 3, -2, 5, -3, 2][(existing + index) % 6],
+      }),
+    );
+    page.layers.push(...added);
+    if (!page.layoutEdited) {
+      const total = existing + added.length;
+      applyLayout(page, suggestLayout(total), photoRegion());
+    }
+    selectedLayer = added.at(-1).id;
+  });
 }
 async function mediaMetadata(file, kind) {
   return new Promise((resolve, reject) => {
@@ -1343,10 +2310,12 @@ async function mediaMetadata(file, kind) {
     element.src = url;
   });
 }
-async function attachClip(blob, kind, name, duration = 0) {
-  const mediaId = await media.put(blob, { kind, name, duration });
+async function attachClip(blob, kind, name, duration = 0, options = {}) {
+  const mediaId = await media.put(blob, { kind, name, duration }, "studio");
+  const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
-    entry.media.push({
+    const page = (targetId && findMoment(entry, targetId)) || entry;
+    page.media.push({
       id: id(),
       kind,
       name,
@@ -1355,6 +2324,7 @@ async function attachClip(blob, kind, name, duration = 0) {
       duration,
       source: `media:${mediaId}`,
       poster: "",
+      ...(options.origin ? { origin: options.origin } : {}),
     });
   });
   flushDraft();
@@ -1398,6 +2368,7 @@ async function startRecording() {
     );
     const current = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
     recorder = current;
+    recordingTargetId = activeMomentId;
     recordingStarted = Date.now();
     const chunks = [];
     let bytes = 0,
@@ -1422,8 +2393,9 @@ async function startRecording() {
         await attachClip(
           blob,
           "audio",
-          `${t("media.record")} · ${shortDate(editor.date)}`,
+          `${t("media.voiceName")} · ${shortDate(editor.date)}`,
           Math.round((Date.now() - recordingStarted) / 1000),
+          { targetId: recordingTargetId, origin: "recording" },
         );
         toast(t("media.saved"));
       } catch {
@@ -1489,6 +2461,76 @@ document.addEventListener(
   },
   true,
 );
+function openLightbox(src) {
+  if (!src) return;
+  $("#lightbox-image").src = src;
+  $("#lightbox .lightbox-close").setAttribute("aria-label", t("close"));
+  $("#lightbox").showModal();
+}
+$("#lightbox").addEventListener("click", (event) => {
+  if (
+    event.target.id === "lightbox" ||
+    event.target.dataset.action === "close-lightbox"
+  )
+    $("#lightbox").close();
+});
+$("#lightbox").addEventListener("close", () =>
+  $("#lightbox-image").removeAttribute("src"),
+);
+function togglePlayer(button) {
+  const audio = button.closest("[data-player]")?.querySelector("audio");
+  if (!audio) return;
+  if (audio.paused) audio.play().catch(() => toast(t("media.missing")));
+  else audio.pause();
+}
+function playerDuration(audio, player) {
+  return Number.isFinite(audio.duration) && audio.duration > 0
+    ? audio.duration
+    : Number(player.dataset.duration) || 0;
+}
+function updatePlayer(audio) {
+  const player = audio.closest?.("[data-player]");
+  if (!player) return;
+  const duration = playerDuration(audio, player);
+  const seek = player.querySelector("[data-player-seek]");
+  if (seek && !player.classList.contains("seeking"))
+    seek.value = duration
+      ? Math.round(Math.min(1, audio.currentTime / duration) * 1000)
+      : 0;
+  player.querySelector(".ld-current").textContent = formatDuration(
+    audio.currentTime,
+  );
+  player.style.setProperty("--progress", `${(Number(seek?.value) || 0) / 10}%`);
+  if (duration)
+    player
+      .closest(".media-card")
+      ?.querySelectorAll(".media-duration")
+      .forEach((label) => (label.textContent = formatDuration(duration)));
+  const playing = !audio.paused && !audio.ended;
+  player.classList.toggle("playing", playing);
+  const button = player.querySelector(".ld-play");
+  button.setAttribute(
+    "aria-label",
+    playing ? button.dataset.labelPause : button.dataset.labelPlay,
+  );
+  button.setAttribute("aria-pressed", String(playing));
+}
+for (const type of [
+  "play",
+  "pause",
+  "ended",
+  "timeupdate",
+  "loadedmetadata",
+  "seeked",
+])
+  document.addEventListener(
+    type,
+    (event) => {
+      if (event.target.matches?.("[data-player] audio"))
+        updatePlayer(event.target);
+    },
+    true,
+  );
 document.addEventListener(
   "play",
   (event) => {

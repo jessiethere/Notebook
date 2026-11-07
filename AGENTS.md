@@ -2,9 +2,11 @@
 
 本说明适用于整个仓库。
 
-- 产品为 Little Days（手帐文具店）。最终 iPhone App 使用 Swift / SwiftUI，未经用户确认不得整体改为 React。
-- Windows 日常使用 `py -3 tools/preview.py` 提供 HTML/CSS/JavaScript 交互预览；这是独立 Web 层，不是实际运行的 SwiftUI。保留现有 Vapor 服务入口。
-- Windows 用户可能没有 Git；优先给 ZIP 全部解压 + Start-Windows.cmd 的方法，或在正确项目目录运行 `py -3 tools\preview.py --open`。
+- 产品为 Little Days（手帐文具店），最终发布 **iOS App**。2026-11-07 用户确认架构：iOS App 是 **Swift 外壳（SwiftUI + WKWebView，`Native/Sources/LittleDaysUI/WebShell/`）**，加载与 localhost 预览完全相同的 HTML/CSS/JavaScript（`Public/`）。界面只维护 `Public/` 一份；不得改为 React，不另写一套会落后的原生界面。原 SwiftUI 原型视图（`LittleDaysRootView` 等）与共享 Core 保留、不删除。
+- **用户通过 localhost 链接查看每次更新**（http://localhost:8080 ，`tools/preview.py`），在 Windows 浏览器看到的就是 iOS 外壳里的同一个界面，不需要 Mac/Xcode。保留现有 Vapor 服务入口。
+- **云端会话**：开始工作时就在后台运行 `python3 tools/preview.py --port 8080`（已在运行则复用），并把 8080 报告为预览端口，让用户点链接即可查看；交付前确认它仍在运行、显示的是最新代码。
+- **不要让用户下载 ZIP。** 用户本机：只需第一次 `git clone`，之后每次双击 `Start-Windows.cmd`（会自动 `git pull --ff-only` 再打开 localhost:8080）；手动方式是在项目目录运行 `git pull` 和 `py -3 tools\preview.py --open`。
+- **每次修改 `Public/` 后运行 `python3 tools/sync_native_web.py`**，把同样的文件同步进 iOS 外壳（`Native/Sources/LittleDaysUI/WebApp/`）；`tests/test_native_shell.py` 会检查两者一致。数据模型新增字段同时更新 `Packages/LittleDaysCore` 的 `Models.swift`（可选字段）与 Core 测试，保持 Swift 与 HTML 数据一致。
 - 开始或接续任何任务前，先阅读 [agent.md](agent.md) 和 [README.md](README.md)，了解最新进度、约定和待办。
 - 随后检查仓库最新代码、分支与提交记录；同时阅读相关的 docs/PRODUCT_SPEC.md、DESIGN_SYSTEM.md、ARCHITECTURE.md，基于已完成工作继续，不从零重复创建。
 - **每次更新都必须同步更新 agent.md 和 README.md 中的更新日志**，包括代码、配置和文档修改；日志应随对应改动一起提交。
@@ -18,5 +20,5 @@
 - 语言切换只改界面与格式，不翻译或重写用户的名称、正文、字段值和媒体。
 - 禁止把真实用户数据、录音/视频、备份或密钥提交到公开仓库；测试使用合成或公开示例数据。
 - agent 日志必须含日期/任务、需求、文件、功能、决策与原因、运行/测试、已知问题、未完成和下一步；README 必须含摘要、可运行功能、最新启动方法、未完成事项。
-- 真实记录环境限制；语法解析不能写成 iOS 编译通过，Linux 上运行 Python 不能写成 Windows 实机通过。
-- 完成任务用中文按六项回复：完成内容、可用功能、Windows 最新启动方式、未完成内容、运行的测试及结果、下一步建议。
+- 真实记录环境限制；语法解析不能写成 iOS 编译通过，Linux 上运行 Python 不能写成 Windows 实机通过；外壳同步测试通过不等于 Xcode 构建或真机通过。
+- 完成任务用中文按六项回复：完成内容、可用功能、localhost 预览链接与本机查看方式、未完成内容、运行的测试及结果、下一步建议。

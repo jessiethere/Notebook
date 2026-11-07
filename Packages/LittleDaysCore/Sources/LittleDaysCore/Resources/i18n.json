@@ -1158,5 +1158,525 @@
   "本地记录格式不兼容，请先备份浏览器数据。": {
     "zh": "本地记录格式不兼容，请先备份浏览器数据。",
     "en": "Local records are incompatible. Back up your browser data before continuing."
+  },
+  "entry.read": {
+    "zh": "翻开这一天",
+    "en": "Open this day"
+  },
+  "calendar.read": {
+    "zh": "阅读",
+    "en": "Read"
+  },
+  "calendar.markPhoto": {
+    "zh": "照片",
+    "en": "Photos"
+  },
+  "calendar.markVideo": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "calendar.markAudio": {
+    "zh": "声音",
+    "en": "Audio"
+  },
+  "calendar.markGrowth": {
+    "zh": "成长",
+    "en": "Growth"
+  },
+  "calendar.markMoments": {
+    "zh": "个小故事",
+    "en": "Moments"
+  },
+  "day.reading": {
+    "zh": "回忆阅读",
+    "en": "MEMORY READING"
+  },
+  "day.edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "day.cover": {
+    "zh": "当日主页",
+    "en": "Day page"
+  },
+  "day.growth": {
+    "zh": "当天的成长",
+    "en": "Growth that day"
+  },
+  "day.contents": {
+    "zh": "今日目录",
+    "en": "Contents"
+  },
+  "day.zoomPhoto": {
+    "zh": "放大查看照片",
+    "en": "View photo larger"
+  },
+  "day.statMoments": {
+    "zh": "{count} 个小故事",
+    "en": "{count} moments"
+  },
+  "day.statPhotos": {
+    "zh": "{count} 张照片",
+    "en": "{count} photos"
+  },
+  "day.statVideos": {
+    "zh": "{count} 段视频",
+    "en": "{count} videos"
+  },
+  "day.statAudios": {
+    "zh": "{count} 段声音",
+    "en": "{count} audio clips"
+  },
+  "day.statGrowth": {
+    "zh": "{count} 次成长打卡",
+    "en": "{count} check-ins"
+  },
+  "day.draftPending": {
+    "zh": "这一天还有尚未正式保存的草稿。",
+    "en": "This day also has an unsaved draft."
+  },
+  "day.continueDraft": {
+    "zh": "继续编辑",
+    "en": "Continue editing"
+  },
+  "day.draftOnly": {
+    "zh": "以下是尚未正式保存的草稿内容。",
+    "en": "This is an unsaved draft."
+  },
+  "moment.title": {
+    "zh": "今日小故事",
+    "en": "Moments of the day"
+  },
+  "moment.caption": {
+    "zh": "一天里的每个片段，都可以是一章。",
+    "en": "Every part of the day can be its own chapter."
+  },
+  "moment.add": {
+    "zh": "添加一个小故事 · Add a Moment",
+    "en": "Add a Moment"
+  },
+  "moment.added": {
+    "zh": "新的小故事已经翻开 ✿",
+    "en": "A new moment is ready ✿"
+  },
+  "moment.untitled": {
+    "zh": "未命名的小故事",
+    "en": "Untitled moment"
+  },
+  "moment.empty": {
+    "zh": "还没有内容",
+    "en": "Nothing here yet"
+  },
+  "moment.dayHint": {
+    "zh": "当天的标题、主照片与正文",
+    "en": "Title, main photo and notes for the day"
+  },
+  "moment.chapter": {
+    "zh": "第 {number} 章",
+    "en": "Chapter {number}"
+  },
+  "moment.up": {
+    "zh": "上移",
+    "en": "Move up"
+  },
+  "moment.down": {
+    "zh": "下移",
+    "en": "Move down"
+  },
+  "moment.expand": {
+    "zh": "展开",
+    "en": "Expand"
+  },
+  "moment.collapse": {
+    "zh": "折叠",
+    "en": "Collapse"
+  },
+  "moment.titleLabel": {
+    "zh": "小标题",
+    "en": "Title"
+  },
+  "moment.titlePlaceholder": {
+    "zh": "例如：清晨的健身房",
+    "en": "e.g. Morning gym session"
+  },
+  "moment.time": {
+    "zh": "时间（可选）",
+    "en": "Time (optional)"
+  },
+  "moment.bodyLabel": {
+    "zh": "这一段的故事",
+    "en": "The story"
+  },
+  "moment.bodyPlaceholder": {
+    "zh": "写下这一刻发生了什么…",
+    "en": "What happened in this moment…"
+  },
+  "moment.tags": {
+    "zh": "标签",
+    "en": "Tags"
+  },
+  "moment.tagsPlaceholder": {
+    "zh": "用逗号分隔，例如：健身, 早晨",
+    "en": "Comma separated, e.g. gym, morning"
+  },
+  "moment.save": {
+    "zh": "保存这个小故事",
+    "en": "Save this moment"
+  },
+  "moment.savedToast": {
+    "zh": "这个小故事已经单独保存 🌷",
+    "en": "This moment is saved on its own 🌷"
+  },
+  "moment.savedAt": {
+    "zh": "已保存 {time}",
+    "en": "Saved {time}"
+  },
+  "moment.deleteConfirm": {
+    "zh": "删除这个小故事？照片和录音文件仍保留在本机，可撤销。",
+    "en": "Delete this moment? Its media files stay on this device and you can undo."
+  },
+  "moment.deleted": {
+    "zh": "小故事已删除，可以撤销。",
+    "en": "Moment deleted. You can undo."
+  },
+  "moment.canvasHint": {
+    "zh": "添加照片、贴纸或文字，自由排版这个小故事。",
+    "en": "Add photos, stickers or text and arrange this moment freely."
+  },
+  "photo.addMany": {
+    "zh": "添加照片（可多选）",
+    "en": "Add photos"
+  },
+  "photo.addedMany": {
+    "zh": "已加入 {count} 张照片",
+    "en": "Added {count} photos"
+  },
+  "photo.partial": {
+    "zh": "已加入 {saved} 张，{failed} 张无法读取",
+    "en": "Added {saved}; {failed} could not be read"
+  },
+  "photo.freeMain": {
+    "zh": "让主照片自由排版",
+    "en": "Free the main photo"
+  },
+  "photo.mainOptional": {
+    "zh": "主照片（可选）",
+    "en": "Main photo (optional)"
+  },
+  "photo.frame": {
+    "zh": "相框",
+    "en": "Frame"
+  },
+  "photo.tape": {
+    "zh": "胶带",
+    "en": "Washi tape"
+  },
+  "photo.replace": {
+    "zh": "替换照片",
+    "en": "Replace photo"
+  },
+  "photo.crop": {
+    "zh": "裁切",
+    "en": "Crop"
+  },
+  "photo.cropDone": {
+    "zh": "完成裁切",
+    "en": "Done cropping"
+  },
+  "photo.cropHelp": {
+    "zh": "裁切中：拖动照片移动画面，双指或滚轮缩放。",
+    "en": "Cropping: drag to pan inside the frame; pinch or scroll to zoom."
+  },
+  "photo.cropZoom": {
+    "zh": "裁切缩放",
+    "en": "Crop zoom"
+  },
+  "photo.cropX": {
+    "zh": "左右位置",
+    "en": "Horizontal"
+  },
+  "photo.cropY": {
+    "zh": "上下位置",
+    "en": "Vertical"
+  },
+  "frame.polaroid": {
+    "zh": "拍立得",
+    "en": "Polaroid"
+  },
+  "frame.border": {
+    "zh": "白边",
+    "en": "White border"
+  },
+  "frame.rounded": {
+    "zh": "圆角",
+    "en": "Rounded"
+  },
+  "frame.bare": {
+    "zh": "无边框",
+    "en": "No frame"
+  },
+  "layer.photo": {
+    "zh": "已选中照片",
+    "en": "Photo selected"
+  },
+  "layer.growth": {
+    "zh": "已选中成长卡片",
+    "en": "Growth card selected"
+  },
+  "layer.width": {
+    "zh": "宽度",
+    "en": "Width"
+  },
+  "layer.height": {
+    "zh": "高度",
+    "en": "Height"
+  },
+  "layer.forward": {
+    "zh": "上移一层",
+    "en": "Forward"
+  },
+  "layer.backward": {
+    "zh": "下移一层",
+    "en": "Backward"
+  },
+  "layer.gestureHelp": {
+    "zh": "拖动移动；双指缩放与旋转；鼠标可拖右下角调整大小、拖顶部圆点旋转，滚轮缩放（Shift 旋转），方向键微调。",
+    "en": "Drag to move; pinch to scale and rotate. With a mouse, drag the corner to resize, the top dot to rotate, scroll to scale (Shift rotates), arrow keys nudge."
+  },
+  "layout.title": {
+    "zh": "排版",
+    "en": "Layout"
+  },
+  "layout.auto": {
+    "zh": "自动排版",
+    "en": "Auto Layout"
+  },
+  "layout.free": {
+    "zh": "自由排版",
+    "en": "Free Layout"
+  },
+  "layout.duo": {
+    "zh": "双照片",
+    "en": "Duo"
+  },
+  "layout.trio": {
+    "zh": "三照片",
+    "en": "Trio"
+  },
+  "layout.grid": {
+    "zh": "四宫格",
+    "en": "Grid"
+  },
+  "layout.polaroid": {
+    "zh": "拍立得",
+    "en": "Polaroid"
+  },
+  "layout.collage": {
+    "zh": "拼贴",
+    "en": "Collage"
+  },
+  "layout.confirm": {
+    "zh": "你已经手动调整过照片位置。套用模板会重新排列所有照片（可撤销），继续吗？",
+    "en": "You have arranged photos by hand. Applying a template rearranges every photo (you can undo). Continue?"
+  },
+  "layout.applied": {
+    "zh": "已套用「{name}」版式",
+    "en": "Applied the {name} layout"
+  },
+  "media.kindVideo": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "media.kindAudio": {
+    "zh": "音频",
+    "en": "Audio"
+  },
+  "media.kindVoice": {
+    "zh": "语音日记",
+    "en": "Voice note"
+  },
+  "media.voiceName": {
+    "zh": "语音日记",
+    "en": "Voice note"
+  },
+  "media.play": {
+    "zh": "播放",
+    "en": "Play"
+  },
+  "media.pause": {
+    "zh": "暂停",
+    "en": "Pause"
+  },
+  "media.progress": {
+    "zh": "播放进度",
+    "en": "Playback progress"
+  },
+  "media.loading": {
+    "zh": "正在从本机载入…",
+    "en": "Loading from this device…"
+  },
+  "growth.minutes": {
+    "zh": "{count} 分钟",
+    "en": "{count} min"
+  },
+  "growth.addNote": {
+    "zh": "写感想",
+    "en": "Add a note"
+  },
+  "growth.editNote": {
+    "zh": "编辑感想",
+    "en": "Edit note"
+  },
+  "growth.noteTitle": {
+    "zh": "这次打卡的小便签",
+    "en": "A note for this check-in"
+  },
+  "growth.detail": {
+    "zh": "内容",
+    "en": "What you did"
+  },
+  "growth.detailPlaceholder": {
+    "zh": "例如：Lower Body / Spanish",
+    "en": "e.g. Lower Body / Spanish"
+  },
+  "growth.minutesOptional": {
+    "zh": "时长（分钟，可选）",
+    "en": "Minutes (optional)"
+  },
+  "growth.note": {
+    "zh": "感想",
+    "en": "Reflection"
+  },
+  "growth.notePlaceholder": {
+    "zh": "今天有什么感受或小进步？",
+    "en": "How did it feel? Any small progress?"
+  },
+  "growth.photo": {
+    "zh": "添加照片",
+    "en": "Add photo"
+  },
+  "growth.shareNote": {
+    "zh": "将来分享手帐时，允许显示这条感想",
+    "en": "Allow this note in journals I share later"
+  },
+  "growth.privateNote": {
+    "zh": "感想默认私人。目前没有公开分享功能；即使将来分享相关手帐，也只有勾选的感想才可能显示。",
+    "en": "Notes are private by default. Sharing is not available yet; even later, only notes you tick here could be shown."
+  },
+  "growth.noteSaved": {
+    "zh": "感想已保存，打卡次数不变 🌱",
+    "en": "Note saved; your check-in count is unchanged 🌱"
+  },
+  "growth.cancelConfirm": {
+    "zh": "这次打卡有感想或照片。取消打卡会一起删除它们，确定吗？",
+    "en": "This check-in has a note or photo. Cancelling it removes them too. Continue?"
+  },
+  "growth.history": {
+    "zh": "成长小便签",
+    "en": "Check-in notes"
+  },
+  "growth.openDay": {
+    "zh": "查看当天",
+    "en": "Open day"
+  },
+  "growth.todayCards": {
+    "zh": "当天的成长",
+    "en": "Growth this day"
+  },
+  "growth.insertHelp": {
+    "zh": "插入后会显示原始打卡与感想；修改感想会同步更新，删除手帐页不会删除打卡。",
+    "en": "Cards show the original check-in; editing the note updates the card, and deleting a page never deletes the check-in."
+  },
+  "growth.insert": {
+    "zh": "插入卡片",
+    "en": "Insert card"
+  },
+  "growth.inserted": {
+    "zh": "已在页面中",
+    "en": "On this page"
+  },
+  "growth.insertedToast": {
+    "zh": "成长卡片已放进手帐",
+    "en": "Growth card added to the page"
+  },
+  "growth.cardMissingTitle": {
+    "zh": "成长打卡",
+    "en": "Growth check-in"
+  },
+  "growth.cardMissing": {
+    "zh": "这次打卡已取消",
+    "en": "This check-in was cancelled"
+  },
+  "reflection.title": {
+    "zh": "阶段回顾",
+    "en": "Reflections"
+  },
+  "reflection.caption": {
+    "zh": "写给自己的小便签，不需要每次都填写。",
+    "en": "Little notes to yourself — always optional."
+  },
+  "reflection.thisWeek": {
+    "zh": "本周回顾",
+    "en": "This week"
+  },
+  "reflection.thisMonth": {
+    "zh": "本月回顾",
+    "en": "This month"
+  },
+  "reflection.weekTitle": {
+    "zh": "每周回顾",
+    "en": "Weekly reflection"
+  },
+  "reflection.monthTitle": {
+    "zh": "每月回顾",
+    "en": "Monthly reflection"
+  },
+  "reflection.weekOf": {
+    "zh": "{date} 这一周",
+    "en": "Week of {date}"
+  },
+  "reflection.write": {
+    "zh": "写一写",
+    "en": "Write"
+  },
+  "reflection.prompt": {
+    "zh": "做得好的事、遇到的困难、学到的东西、下次想改进的地方。",
+    "en": "What went well, what was hard, what you learned, what to try next."
+  },
+  "reflection.optional": {
+    "zh": "全部可选",
+    "en": "All optional"
+  },
+  "reflection.wentWell": {
+    "zh": "做得好的事情",
+    "en": "What went well"
+  },
+  "reflection.challenges": {
+    "zh": "遇到的困难",
+    "en": "Challenges"
+  },
+  "reflection.learned": {
+    "zh": "学到了什么",
+    "en": "What I learned"
+  },
+  "reflection.nextFocus": {
+    "zh": "下次希望改进",
+    "en": "Next, I'd like to"
+  },
+  "reflection.saved": {
+    "zh": "回顾已保存 ✿",
+    "en": "Reflection saved ✿"
+  },
+  "reflection.past": {
+    "zh": "过去的回顾（{count}）",
+    "en": "Past reflections ({count})"
+  },
+  "settings.usage": {
+    "zh": "当前引用的本机媒体：{count} 个，约 {size} MB（完整备份的媒体上限 100 MB）。",
+    "en": "Media referenced on this device: {count} files, about {size} MB (full backups include up to 100 MB of media)."
+  },
+  "settings.usageUnknown": {
+    "zh": "暂时无法统计本机媒体大小。",
+    "en": "Media usage could not be measured right now."
   }
 }

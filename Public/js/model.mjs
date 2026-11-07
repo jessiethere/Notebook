@@ -60,8 +60,32 @@ export function normalizeState(value) {
     entry.fieldValues ||= {};
     entry.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };
     entry.visibility ||= "private";
+    entry.layers ||= [];
+    // V3.1: a saved day is the date container for ordered Moments.
+    entry.moments ||= [];
+    for (const moment of entry.moments) normalizeMoment(moment, entry);
+  }
+  result.reflections ||= [];
+  for (const check of result.checks) {
+    // Growth notes are private unless the user explicitly opts in later.
+    if (check.note != null || check.detail != null) check.shareNote ??= false;
   }
   return result;
+}
+export function normalizeMoment(moment, entry = {}) {
+  moment.title ??= "";
+  moment.time ??= "";
+  moment.body ??= "";
+  moment.mood ??= "";
+  moment.tags ||= [];
+  moment.bookId ||= entry.bookId || "daily";
+  moment.template ||= entry.template || "minimal";
+  moment.font ||= entry.font || "serif";
+  moment.layers ||= [];
+  moment.media ||= [];
+  moment.collapsed ??= false;
+  moment.visibility = "private";
+  return moment;
 }
 export function saveBook(state, book) {
   if (!book.title.trim() || !book.category.trim())
@@ -94,6 +118,7 @@ export function saveEntry(state, entry) {
     visibility: "private",
     updatedAt: new Date().toISOString(),
   };
+  for (const moment of saved.moments || []) moment.visibility = "private";
   const index = state.entries.findIndex((e) => e.date === saved.date);
   if (index >= 0) state.entries[index] = saved;
   else state.entries.push(saved);
@@ -139,16 +164,39 @@ export function validateStateSnapshot(value) {
       )
         throw new Error("error.invalidData");
     }
+  const pages = [];
   for (const entry of [...value.entries, ...Object.values(value.drafts)]) {
     if (
       !object(entry) ||
       ![entry.id, entry.date, entry.title, entry.body].every(text) ||
       (entry.layers != null && !Array.isArray(entry.layers)) ||
       (entry.media != null && !Array.isArray(entry.media)) ||
+      (entry.moments != null && !Array.isArray(entry.moments)) ||
       (entry.fieldValues != null && !object(entry.fieldValues)) ||
       (entry.updatedAt != null && !text(entry.updatedAt))
     )
       throw new Error("error.invalidData");
+    pages.push(entry);
+    const momentIds = new Set();
+    for (const moment of entry.moments || []) {
+      if (
+        !object(moment) ||
+        !text(moment.id) ||
+        momentIds.has(moment.id) ||
+        ![moment.title ?? "", moment.body ?? "", moment.time ?? ""].every(
+          text,
+        ) ||
+        (moment.tags != null &&
+          (!Array.isArray(moment.tags) || !moment.tags.every(text))) ||
+        (moment.layers != null && !Array.isArray(moment.layers)) ||
+        (moment.media != null && !Array.isArray(moment.media))
+      )
+        throw new Error("error.invalidData");
+      momentIds.add(moment.id);
+      pages.push(moment);
+    }
+  }
+  for (const entry of pages) {
     for (const clip of entry.media || [])
       if (
         !object(clip) ||
@@ -160,7 +208,17 @@ export function validateStateSnapshot(value) {
       if (
         !object(layer) ||
         ![layer.id, layer.text].every(text) ||
-        ![layer.x, layer.y, layer.scale, layer.rotation].every(Number.isFinite)
+        ![layer.x, layer.y, layer.scale, layer.rotation].every(
+          Number.isFinite,
+        ) ||
+        ["w", "h"].some(
+          (key) => layer[key] != null && !Number.isFinite(layer[key]),
+        ) ||
+        (layer.crop != null &&
+          (!object(layer.crop) ||
+            ![layer.crop.x, layer.crop.y, layer.crop.zoom].every(
+              Number.isFinite,
+            )))
       )
         throw new Error("error.invalidData");
     }
@@ -181,9 +239,25 @@ export function validateStateSnapshot(value) {
     if (
       !object(check) ||
       ![check.habitId, check.date].every(text) ||
-      !Number.isFinite(check.minutes)
+      !Number.isFinite(check.minutes) ||
+      ["note", "detail", "mood", "photo"].some(
+        (key) => check[key] != null && !text(check[key]),
+      )
     )
       throw new Error("error.invalidData");
+  }
+  if (value.reflections != null) {
+    if (!Array.isArray(value.reflections)) throw new Error("error.invalidData");
+    for (const reflection of value.reflections)
+      if (
+        !object(reflection) ||
+        ![reflection.id, reflection.period, reflection.key].every(text) ||
+        !["week", "month"].includes(reflection.period) ||
+        ["wentWell", "challenges", "learned", "nextFocus"].some(
+          (key) => reflection[key] != null && !text(reflection[key]),
+        )
+      )
+        throw new Error("error.invalidData");
   }
   const checkKeys = (item) => {
     if (!item || typeof item !== "object") return;

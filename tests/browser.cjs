@@ -4,7 +4,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+  });
   try {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -147,6 +150,10 @@ const path = require("node:path");
     await page
       .locator(`[data-action="select-date"][data-date="${historical}"]`)
       .click();
+    // V3.1: a date with saved content opens the read-only Day Detail.
+    await page.waitForSelector(".day-detail");
+    assert.match(await page.locator(".day-detail").innerText(), /一朵花的练习/);
+    await page.locator('[data-action="day-back"]').click();
     assert.match(
       await page.locator(".date-summary").innerText(),
       /一朵花的练习/,
