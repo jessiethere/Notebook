@@ -82,22 +82,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--open', action='store_true', help='Open the localhost preview in your browser')
+    # Default stays local-only for personal computers. Cloud sessions use
+    # --host 0.0.0.0 so the session's servers/preview panel can reach it.
+    parser.add_argument('--host', default='127.0.0.1', choices=['127.0.0.1', '0.0.0.0'], help='Interface to listen on (default: this computer only)')
     args = parser.parse_args(argv)
     if not 1 <= args.port <= 65535:
         parser.error('--port must be between 1 and 65535')
     required = [ROOT / 'Public/index.html', ROOT / 'Public/app.js', SHARED / 'seed.json', SHARED / 'library.json', SHARED / 'i18n.json']
     if not all(path.is_file() for path in required):
-        print('Incomplete project. Extract the entire Notebook ZIP, then run Start-Windows.cmd from the extracted folder.', file=sys.stderr)
+        print('Incomplete project. Run Start-Windows.cmd from the complete Notebook folder (git clone).', file=sys.stderr)
         return 1
     handler = partial(PreviewHandler, directory=str(ROOT / 'Public'))
     try:
-        server = ThreadingHTTPServer(('127.0.0.1', args.port), handler)
+        server = ThreadingHTTPServer((args.host, args.port), handler)
     except OSError as error:
         alternative = args.port + 1 if args.port < 65535 else 8080
         print(f'Cannot start localhost:{args.port}: {error}. Try --port {alternative}.', file=sys.stderr)
         return 1
     print(f'Little Days Web preview: http://localhost:{args.port}', flush=True)
-    print('HTML interactive preview; not a running SwiftUI app. Ctrl+C to stop.', flush=True)
+    print('Same Web app as the iOS Swift shell. Ctrl+C to stop.', flush=True)
     if args.open:
         threading.Thread(target=open_browser, args=(f'http://localhost:{args.port}',), daemon=True).start()
     try:

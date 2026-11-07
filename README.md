@@ -127,6 +127,11 @@ npm run test:browser:v31
 
 ## 更新日志
 
+### 2026-11-07 — localhost 预览可在会话 servers 中打开
+
+- `tools/preview.py` 新增 `--host`：个人电脑默认仍只对本机开放；云端会话使用 `--host 0.0.0.0`，会话右侧 servers 面板才能连上。
+- V3.1 与 iOS Swift 外壳已合并到 main（PR #1）。
+
 ### 2026-11-07 — iOS Swift 外壳 + localhost 链接
 
 - README 顶部新增可直接点击的 http://localhost:8080 链接；不再需要下载 ZIP，Start-Windows.cmd 会自动 `git pull` 更新。
