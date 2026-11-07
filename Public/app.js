@@ -31,6 +31,8 @@ import {
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
+import { communityHTML } from "./js/community-view.mjs";
+import * as Community from "./js/community.mjs";
 import {
   createMoment,
   findMoment,
@@ -55,6 +57,9 @@ import {
   PHOTO_FRAMES,
   suggestLayout,
   applyLayout,
+  applyPageTemplate,
+  fillEmptySlots,
+  TEMPLATES_BY_COUNT,
   photoLayer,
   freeMainPhoto,
   moveLayer,
@@ -102,6 +107,8 @@ const paths = {
   download: "M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4",
   spark: "m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z",
   clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM12 7v5l3 2",
+  users:
+    "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6",
 };
 const icon = (name) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.spark}"/></svg>`;
@@ -135,10 +142,24 @@ let media = new MediaStore(),
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
+  demoSocial = null,
+  communityView = {
+    tab: "discover",
+    workId: null,
+    chatUser: null,
+    period: "week",
+    category: null,
+    query: "",
+    publish: null,
+    saveMenu: false,
+    reportMenu: false,
+    replyTo: null,
+  },
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   journeyPage = 0,
   studioTool = null,
+  templateCount = null,
   previewLarge = false,
   cropMode = false,
   scopedPage = null;
@@ -255,6 +276,7 @@ function openStudio(date = dateKey()) {
   editor.fieldValues ||= {};
   editor.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };
   editor.moments ||= [];
+  templateCount = null;
   history = [];
   future = [];
   selectedLayer = null;
@@ -270,7 +292,7 @@ function openStudio(date = dateKey()) {
 }
 function navigation() {
   // Sub-pages highlight the tab they belong to.
-  const current = { journey: "growth", day: "calendar" }[page] || page;
+  const current = { journey: "growth", day: "calendar", community: "home" }[page] || page;
   $("#navigation").innerHTML = features.tabs
     .map(
       (tab) =>
@@ -344,9 +366,9 @@ function home() {
     month: "short",
     day: "numeric",
   });
-  return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
+  return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="community-tab" data-tab="discover" aria-label="${t("community.title")}">${icon("users")}</button><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
  <section class="hero"><div class="hero-top"><span>✧ &nbsp; TODAY'S LITTLE MOMENT</span><button data-action="edit-today">${t(entry ? "home.continue" : "home.begin")} ↗</button></div><div class="hero-content"><div class="polaroid">${safePhoto(coverPhoto(entry)) ? `<img src="${esc(safePhoto(coverPhoto(entry)))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.placeholder")}</span></div>`}</div><div class="hero-copy"><span class="scribble">slow down, feel more.</span><h3>${esc(entry?.title || t("home.blankTitle"))}</h3><p>${esc(entry?.body?.slice(0, 48) || t("home.blankBody"))}</p></div></div><span class="hero-flower">🌼</span>${entry?.isDemo ? `<span class="tiny-demo">${t("home.sample")}</span>` : ""}</section>
- <div class="quick-actions">${[
+ <button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button><div class="quick-actions">${[
    ["photo", "home.photo", "quick-photo"],
    ["text", "home.text", "quick-text"],
    ["smile", "home.mood", "quick-mood"],
@@ -370,7 +392,7 @@ function home() {
    .map(bookCard)
    .join(
      "",
-   )}</div></section><button class="studio-banner" data-action="edit-today"><div><h3>Journal Studio</h3><p>${t("home.studio")}</p></div><span class="sparkles">✧</span></button><p class="home-quote">Collect moments, grow gently.</p>`;
+   )}</div></section><button class="community-banner" data-action="community-tab" data-tab="discover"><span>${icon("users")}</span><span><b>${t("community.title")}</b><small>${t("community.homeHint")}</small></span><i>${t("community.demoShort")}</i></button><button class="studio-banner" data-action="edit-today"><div><h3>Journal Studio</h3><p>${t("home.studio")}</p></div><span class="sparkles">✧</span></button><p class="home-quote">Collect moments, grow gently.</p>`;
 }
 
 function latestBook(bookId) {
@@ -649,12 +671,12 @@ function chapterChipsHTML() {
       .map((b) => `<i>${b}</i>`)
       .join("");
   };
-  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>✿ ${t("day.cover")}</b>${badges(editor)}</button>${moments
+  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button><button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>✿ ${t("day.cover")}</b>${badges(editor)}</button>${moments
     .map(
       (moment, index) =>
         `<button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><b><span>${String(index + 1).padStart(2, "0")}</span> <span data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</span></b>${badges(moment)}</button>`,
     )
-    .join("")}<button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button></nav>`;
+    .join("")}</nav>`;
 }
 function chaptersOutlineHTML() {
   const moments = editor.moments || [];
@@ -683,6 +705,36 @@ function chaptersOutlineHTML() {
 function fontName(id) {
   const font = catalog.fonts.find((item) => item.id === id);
   return font ? font.name : t("font." + (id || "serif"));
+}
+// Template picker: first how many photos (or words only), then a layout.
+function templatePickerHTML(page) {
+  const filled = page.layers.filter((layer) => layer.kind === "photo" && layer.mediaRef).length +
+    (isDayPage() && editor.photo ? 1 : 0);
+  const slots = page.layers.filter((layer) => layer.kind === "photo").length;
+  const current = page.layoutTemplate === "text" ? 0 : Math.min(5, slots || filled);
+  const count = templateCount ?? current;
+  const counts = [0, 1, 2, 3, 4, 5]
+    .map((n) => {
+      const disabled = n < Math.min(5, filled);
+      return `<button data-action="template-count" data-count="${n}" class="count-option ${n === count ? "selected" : ""}" aria-pressed="${n === count}" ${disabled ? `disabled title="${t("layout.hasPhotos", { count: filled })}"` : ""}>${n === 0 ? t("layout.textOnly") : n === 5 ? "5+" : n}</button>`;
+    })
+    .join("");
+  const options = (TEMPLATES_BY_COUNT[count] || [])
+    .map(
+      (template) =>
+        `<button data-action="apply-layout" data-count="${count}" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`,
+    )
+    .join("");
+  return `<span class="small-label">${t("layout.step1")}</span><div class="count-options">${counts}</div><span class="small-label">${t("layout.step2")}</span><div class="layout-options">${options}</div><p class="save-help">${t(count === 0 ? "layout.textHelp" : "layout.slotHelp")}</p>`;
+}
+// Writing comes first: the words of this page are always open under the
+// preview; styling lives in the menu below ("装饰这一页").
+function writeCardHTML() {
+  const page = activePage();
+  if (isDayPage())
+    return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b><button class="text-button" data-action="add-text-layer">＋ ${t("studio.textBox")}</button></div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
+  const index = editor.moments.indexOf(page);
+  return `<section class="write-card moment" aria-label="${t("write.title")}"><div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"><button class="text-button" data-action="add-text-layer">＋ ${t("studio.textBox")}</button></div><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}"></section>`;
 }
 function studioTools() {
   const page = activePage(),
@@ -723,21 +775,11 @@ function studioTools() {
       id: "layout",
       icon: "⊞",
       label: "tool.layout",
-      value: page.layoutTemplate ? `${t("layout." + page.layoutTemplate)} · ${t(page.layoutEdited ? "layout.free" : "layout.auto")}` : t(page.layoutEdited ? "layout.free" : "tool.none"),
-      body: () =>
-        photoTotal
-          ? `<div class="layout-options">${LAYOUT_TEMPLATES.map((template) => `<button data-action="apply-layout" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`).join("")}</div><p class="save-help">${t("layout.help")}</p>`
-          : `<p class="save-help">${t("layout.needPhotos")}</p>`,
-    },
-    {
-      id: "text",
-      icon: "T",
-      label: "tool.text",
-      value: (dayPage ? editor.title : page.title) || t("tool.empty"),
-      body: () =>
-        dayPage
-          ? `<label class="field">${t("studio.titleLabel")}<input id="entry-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}"></label><label class="field">${t("studio.bodyLabel")}<textarea id="entry-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}">${esc(editor.body)}</textarea></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div><button class="secondary full-width" data-action="add-text-layer">${t("studio.textBox")}</button>`
-          : `<div class="field-row"><label class="field moment-title-field">${t("moment.titleLabel")}<input data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}"></label><label class="field">${t("moment.time")}<input type="time" data-moment-field="time" value="${esc(page.time)}"></label></div><label class="field">${t("moment.bodyLabel")}<textarea data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}">${esc(page.body)}</textarea></label><label class="field">${t("moment.tags")}<input data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}"></label><button class="secondary full-width" data-action="add-text-layer">${t("studio.textBox")}</button>`,
+      value:
+        page.layoutTemplate
+          ? `${t("layout." + page.layoutTemplate)} · ${t(page.layoutEdited ? "layout.free" : "layout.auto")}`
+          : t(page.layoutEdited ? "layout.free" : "tool.none"),
+      body: () => templatePickerHTML(page),
     },
     {
       id: "font",
@@ -746,7 +788,7 @@ function studioTools() {
       value: fontName(page.font),
       body: () =>
         dayPage
-          ? `<label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label>`
+          ? `<label class="field">${t("studio.font")}<select data-editor-field="font" aria-label="${t("studio.font")}">${fontOptions(editor.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(editor.font, catalog))}">Little moments, 美好小日子。<small>${t("studio.fontPreview")}</small></div><label class="field">${t("studio.bodyFont")}<select data-editor-field="bodyFont">${fontOptions(editor.bodyFont || editor.font)}</select></label><div class="text-tools"><label>${t("studio.size")}<input data-text-style="size" type="range" min="12" max="40" value="${style.size || 20}"></label><label>${t("studio.textColor")}<input data-text-style="color" type="color" value="${style.color || "#2F2A26"}"></label><label>${t("studio.weight")}<input data-text-style="weight" type="range" min="100" max="900" step="100" value="${style.weight || 400}"></label><label>${t("studio.spacing")}<input data-text-style="spacing" type="range" min="0" max="5" step=".5" value="${style.spacing || 0}"></label></div>`
           : `<label class="field">${t("studio.font")}<select data-moment-field="font">${fontOptions(page.font)}</select></label><div class="font-preview" style="font-family:${esc(fontFamily(page.font, catalog))}">Little moments, 美好小日子。</div>`,
     },
     {
@@ -847,7 +889,7 @@ function growthPanelHTML() {
 
 function studioPage() {
   const dayPage = isDayPage();
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
+  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div>${writeCardHTML()}<h3 class="style-heading">${t("write.decorate")}<small>${t("write.decorateHint")}</small></h3><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
 }
 
 function updateCanvas() {
@@ -906,7 +948,16 @@ async function loadScope(scope, clips) {
 function editorClips() {
   return editor ? clipsOf(editor) : [];
 }
+// Re-rendering keeps the field you are typing in focused (e.g. after media loads).
+function focusKey(element) {
+  if (!element || !$("#app").contains(element)) return null;
+  for (const attr of ["id", "data-moment-field", "data-editor-field", "data-publish", "data-community-search"])
+    if (element.hasAttribute(attr)) return `[${attr}="${CSS.escape(element.getAttribute(attr))}"]`;
+  return null;
+}
 function render() {
+  const focused = focusKey(document.activeElement);
+  const caret = focused ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
   const scrollTop = $("#app-scroll").scrollTop;
   releaseLeftScope();
   $("#app").innerHTML = {
@@ -918,11 +969,22 @@ function render() {
     day: () => dayDetailHTML(selectedDate, ctx(), { icon, friendlyDate }),
     journey: () =>
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
+    community: () =>
+      communityHTML(social(), communityView, state(), ctx(), { icon }),
     settings: () => settingsHTML(ctx()),
   }[page]();
   navigation();
   applyShellLanguage();
   $("#app-scroll").scrollTop = scrollTop;
+  if (focused) {
+    const again = $(`#app ${focused}`);
+    if (again) {
+      again.focus({ preventScroll: true });
+      try {
+        if (caret[0] != null) again.setSelectionRange(caret[0], caret[1]);
+      } catch {}
+    }
+  }
   if (page === "settings") showMediaUsage();
 }
 function openDay(date, momentId = null) {
@@ -1067,7 +1129,7 @@ async function action(target) {
     $("#photos-input").click();
   }
   if (actionName === "quick-text") {
-    studioTool = "text";
+    studioTool = null;
     openStudio(dateKey());
     $("#entry-title").focus();
   }
@@ -1278,6 +1340,7 @@ document.addEventListener("input", (event) => {
     player.style.setProperty("--progress", `${Number(target.value) / 10}%`);
     return;
   }
+  if (handleCommunityInput(target)) return;
   handleV3Input(event);
   if (target.dataset.editorField) {
     try {
@@ -1912,6 +1975,7 @@ function afterHistoryStep() {
 }
 function selectMoment(momentId) {
   activeMomentId = momentId || null;
+  templateCount = null;
   selectedLayer = null;
   cropMode = false;
   if (studioTool === "layer") studioTool = null;
@@ -1920,6 +1984,276 @@ function selectMoment(momentId) {
   if (!studioTool && page.media?.length) studioTool = "media";
   render();
   $(".chapter-chips")?.scrollIntoView({ block: "start" });
+}
+function addMomentNow() {
+  let created;
+  changeEditor((entry) => {
+    const now = new Date();
+    created = createMoment(entry, {
+      time:
+        entry.date === dateKey()
+          ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+          : "",
+    });
+    entry.moments.push(created);
+  }, false);
+  studioTool = null;
+  selectMoment(created.id);
+  $('[data-moment-field="title"]')?.focus();
+  toast(t("moment.added"));
+}
+// ---------- Community (local demo, separate storage) ----------
+function social() {
+  demoSocial ||= Community.loadDemo(localStorage);
+  return demoSocial;
+}
+function persistSocial() {
+  try {
+    Community.saveDemo(localStorage, social());
+  } catch {
+    toast(t("community.saveFailed"));
+  }
+}
+function openCommunity(changes = {}) {
+  communityView = { ...communityView, saveMenu: false, reportMenu: false, ...changes };
+  page = "community";
+  render();
+}
+const SIMULATED_REPLIES = ["community.sim1", "community.sim2", "community.sim3"];
+async function communityAction(target) {
+  const name = target.dataset.action;
+  if (!name?.startsWith("community-")) return false;
+  const demo = social();
+  const work = communityView.workId;
+  const user = target.dataset.user;
+  try {
+    switch (name) {
+      case "community-tab":
+        openCommunity({ tab: target.dataset.tab, workId: null, chatUser: null, publish: null });
+        $("#app-scroll").scrollTop = 0;
+        break;
+      case "community-open-work":
+        openCommunity({ workId: target.dataset.work, replyTo: null });
+        $("#app-scroll").scrollTop = 0;
+        break;
+      case "community-back":
+        openCommunity({ workId: null });
+        break;
+      case "community-like":
+        Community.toggleLike(demo, work);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-save-menu":
+        communityView.saveMenu = !communityView.saveMenu;
+        render();
+        break;
+      case "community-save":
+        Community.saveAs(demo, work, target.dataset.type || null);
+        persistSocial();
+        toast(t(target.dataset.type ? "community.saved" : "community.unsaved"));
+        openCommunity();
+        break;
+      case "community-share": {
+        const item = demo.works.find((w) => w.id === work);
+        const text = t("community.shareText", { title: item.title });
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(t("community.shareCopied"));
+        } catch {
+          toast(text);
+        }
+        break;
+      }
+      case "community-report-menu":
+        communityView.reportMenu = !communityView.reportMenu;
+        render();
+        break;
+      case "community-report":
+        Community.report(demo, "work", work, target.dataset.reason);
+        persistSocial();
+        toast(t("community.reported"));
+        openCommunity({ workId: null });
+        break;
+      case "community-report-user":
+        Community.report(demo, "user", user, "other");
+        persistSocial();
+        toast(t("community.reported"));
+        break;
+      case "community-reply":
+        communityView.replyTo = target.dataset.comment || null;
+        render();
+        $("#community-comment")?.focus();
+        break;
+      case "community-comment":
+        Community.addComment(demo, work, $("#community-comment").value, communityView.replyTo);
+        persistSocial();
+        openCommunity({ replyTo: null });
+        break;
+      case "community-toggle-comments":
+        Community.setCommentsOpen(demo, work, target.checked);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-unpublish":
+        if (!(await askConfirm(t("community.unpublishConfirm")))) break;
+        Community.unpublish(demo, work);
+        persistSocial();
+        toast(t("community.unpublished"));
+        openCommunity({ workId: null, tab: "mine" });
+        break;
+      case "community-follow":
+        Community.toggleFollow(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-friend-request":
+        Community.requestFriend(demo, user);
+        persistSocial();
+        toast(t("community.requestSent"));
+        openCommunity();
+        break;
+      case "community-friend-accept":
+      case "community-simulate-accept":
+        Community.acceptFriend(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-friend-decline":
+        Community.declineFriend(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-friend-cancel":
+        Community.cancelRequest(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-friend-remove":
+        if (!(await askConfirm(t("community.removeConfirm")))) break;
+        Community.removeFriend(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-block":
+        if (!(await askConfirm(t("community.blockConfirm")))) break;
+        Community.block(demo, user);
+        persistSocial();
+        toast(t("community.blockedToast"));
+        openCommunity({ chatUser: null, workId: null });
+        break;
+      case "community-unblock":
+        Community.unblock(demo, user);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-period":
+        openCommunity({ period: target.dataset.period });
+        break;
+      case "community-category":
+        openCommunity({ category: target.dataset.category });
+        break;
+      case "community-open-chat":
+        Community.markRead(demo, user);
+        persistSocial();
+        openCommunity({ tab: "messages", chatUser: user, workId: null });
+        break;
+      case "community-chat-back":
+        openCommunity({ chatUser: null });
+        break;
+      case "community-sticker":
+      case "community-send": {
+        const text = name === "community-send" ? $("#chat-text").value : "";
+        const workId = name === "community-send" ? $("#chat-share-work")?.value : "";
+        Community.sendMessage(demo, communityView.chatUser, {
+          text,
+          sticker: name === "community-sticker" ? target.dataset.sticker : null,
+          workId: workId || null,
+        });
+        persistSocial();
+        openCommunity();
+        const chatUser = communityView.chatUser;
+        setTimeout(() => {
+          if (!Community.canMessage(social(), chatUser)) return;
+          const key = SIMULATED_REPLIES[Math.floor(Math.random() * SIMULATED_REPLIES.length)];
+          Community.simulateReply(social(), chatUser, t(key));
+          if (page === "community" && communityView.chatUser === chatUser) Community.markRead(social(), chatUser);
+          persistSocial();
+          if (page === "community") render();
+        }, 1200);
+        break;
+      }
+      case "community-delete-message":
+        Community.deleteMessage(demo, communityView.chatUser, target.dataset.message);
+        persistSocial();
+        openCommunity();
+        break;
+      case "community-delete-chat":
+        if (!(await askConfirm(t("community.deleteChatConfirm")))) break;
+        Community.deleteConversation(demo, user);
+        persistSocial();
+        openCommunity({ chatUser: null });
+        break;
+      case "community-publish-start":
+        openCommunity({ publish: { date: "", pages: [], media: [], title: "", category: "Daily Life", commentsOpen: true, confirmed: false } });
+        break;
+      case "community-publish-cancel":
+        openCommunity({ publish: null });
+        break;
+      case "community-publish-submit": {
+        const created = Community.publishDay(demo, state(), communityView.publish.date, communityView.publish);
+        persistSocial();
+        toast(t("community.published"));
+        openCommunity({ publish: null, workId: created.id });
+        break;
+      }
+      case "community-reset":
+        if (!(await askConfirm(t("community.resetConfirm")))) break;
+        demoSocial = Community.createDemoState();
+        persistSocial();
+        openCommunity({ tab: "discover", workId: null, chatUser: null, publish: null });
+        break;
+      default:
+        return false;
+    }
+  } catch (error) {
+    toast(t(error.message?.startsWith("community.") ? error.message : "error.generic"));
+  }
+  return true;
+}
+function handleCommunityInput(target) {
+  if (target.dataset.communitySearch != null) {
+    communityView.query = target.value;
+    const caret = target.selectionStart;
+    render();
+    const input = $("#community-search");
+    input?.focus();
+    input?.setSelectionRange(caret, caret);
+    return true;
+  }
+  const field = target.dataset.publish;
+  if (field === "title" || field === "category") {
+    communityView.publish[field] = target.value;
+    return true;
+  }
+  return false;
+}
+function handleCommunityChange(target) {
+  const p = communityView.publish;
+  if (!p) return false;
+  if (target.dataset.publish === "date") {
+    communityView.publish = { ...p, date: target.value, pages: [], media: [], confirmed: false };
+  } else if (target.dataset.publish === "commentsOpen" || target.dataset.publish === "confirmed") {
+    p[target.dataset.publish] = target.checked;
+  } else if (target.dataset.publishPage) {
+    const id = target.dataset.publishPage;
+    p.pages = target.checked ? [...p.pages, id] : p.pages.filter((x) => x !== id);
+  } else if (target.dataset.publishMedia) {
+    const id = target.dataset.publishMedia;
+    p.media = target.checked ? [...p.media, id] : p.media.filter((x) => x !== id);
+  } else return false;
+  render();
+  return true;
 }
 function openTool(tool) {
   studioTool = studioTool === tool ? null : tool;
@@ -1958,24 +2292,14 @@ async function v31Action(target) {
     case "select-moment":
       selectMoment(momentId);
       return true;
-    case "add-moment": {
-      let created;
-      changeEditor((entry) => {
-        const now = new Date();
-        created = createMoment(entry, {
-          time:
-            entry.date === dateKey()
-              ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
-              : "",
-        });
-        entry.moments.push(created);
-      }, false);
-      studioTool = "text";
-      selectMoment(created.id);
-      $('[data-moment-field="title"]')?.focus();
-      toast(t("moment.added"));
+    case "add-moment":
+      addMomentNow();
       return true;
-    }
+    case "quick-moment":
+      // Home / Calendar / Day Detail: one tap to start writing a Moment.
+      openStudio(target.dataset.date || dateKey());
+      addMomentNow();
+      return true;
     case "moment-up":
     case "moment-down":
       changeEditor((entry) =>
@@ -2038,14 +2362,26 @@ async function v31Action(target) {
         if (moment !== editor) moment.template = target.dataset.template;
       });
       return true;
+    case "template-count":
+      templateCount = Number(target.dataset.count);
+      render();
+      return true;
     case "apply-layout": {
       const page = activePage();
       if (page.layoutEdited && !(await askConfirm(t("layout.confirm"))))
         return true;
-      changeTarget((entry) => {
-        if (entry === editor) freeMainPhoto(entry);
-        applyLayout(entry, target.dataset.template, photoRegion());
-      });
+      const count = Number(target.dataset.count ?? -1);
+      try {
+        changeTarget((entry) => {
+          if (entry === editor) freeMainPhoto(entry);
+          if (count >= 0)
+            applyPageTemplate(entry, count, target.dataset.template, photoRegion());
+          else applyLayout(entry, target.dataset.template, photoRegion());
+        });
+      } catch (error) {
+        toast(t(error.message));
+        return true;
+      }
       toast(
         t("layout.applied", { name: t("layout." + target.dataset.template) }),
       );
@@ -2128,6 +2464,7 @@ async function v3Action(target) {
     return true;
   }
   if (await v31Action(target)) return true;
+  if (await communityAction(target)) return true;
   if (name === "new-book") {
     openBookDialog();
     return true;
@@ -2347,6 +2684,7 @@ function handleV3Input(event) {
 }
 function handleV3Change(event) {
   const target = event.target;
+  if (handleCommunityChange(target)) return true;
   if (target.dataset.bookFilter) {
     bookFilter =
       target.dataset.bookFilter === "date"
@@ -2506,6 +2844,15 @@ function addPhotoLayers(saved) {
   if (editorMode !== "creative") editorMode = "creative";
   changeTarget((page) => {
     if (page === editor) freeMainPhoto(page);
+    // Empty frames from a chosen template are filled first, in order.
+    const hadSlots = page.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
+    const remaining = fillEmptySlots(page, saved);
+    if (page.layoutTemplate === "text" && saved.length) page.layoutTemplate = null;
+    if (hadSlots && !remaining.length) {
+      selectedLayer = null;
+      return;
+    }
+    saved = remaining;
     const existing = page.layers.filter(
       (layer) => layer.kind === "photo",
     ).length;

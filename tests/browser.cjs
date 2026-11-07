@@ -24,6 +24,7 @@ const path = require("node:path");
 
     // Studio settings live in a summary menu; open one row (if closed).
     const tool = async (id) => {
+      if (id === "text") return; // writing is always open (write card)
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
     };

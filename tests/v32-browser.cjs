@@ -75,6 +75,7 @@ const shift = (key, days) => {
     await page.waitForSelector(".hero");
     const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
     const tool = async (id) => {
+      if (id === "text") return; // writing is always open (write card)
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
     };
@@ -84,7 +85,8 @@ const shift = (key, days) => {
     await nav("studio");
     await page.waitForSelector("#journal-canvas");
     const rows = await page.$$eval("[data-tool-row]", (els) => els.map((el) => el.dataset.toolRow));
-    for (const id of ["photos", "layout", "text", "font", "paper", "mood", "stickers", "media", "book", "chapters"])
+    assert.equal(await page.locator(".write-card #entry-title").count(), 1, "writing is always open");
+    for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "media", "book", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
     assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
     await tool("paper");
@@ -125,7 +127,6 @@ const shift = (key, days) => {
     // Typing the title updates the page preview and the summary row.
     await tool("text");
     await page.locator("#entry-title").fill("十一月的小日子");
-    await page.waitForFunction(() => document.querySelector('[data-tool-value="text"]').textContent === "十一月的小日子");
     assert.match(await page.locator("#journal-canvas .canvas-title").innerText(), /十一月的小日子/);
     passed.push("studio desk: summary menu, one row open, pinned/enlargeable preview, 9 papers");
 

@@ -1788,8 +1788,8 @@
     "en": "Add photos first to choose a layout here."
   },
   "moment.addShort": {
-    "zh": "小故事",
-    "en": "Moment"
+    "zh": "写小故事",
+    "en": "New moment"
   },
   "moment.none": {
     "zh": "还没有小故事。",
@@ -1914,5 +1914,557 @@
   "books.noMatch": {
     "zh": "这个日期还没有记录。",
     "en": "Nothing recorded for this date."
+  },
+  "write.title": {
+    "zh": "写下这一页",
+    "en": "Write this page"
+  },
+  "write.dayTitle": {
+    "zh": "今天的标题和文字",
+    "en": "Today's title and words"
+  },
+  "write.decorate": {
+    "zh": "装饰这一页",
+    "en": "Decorate this page"
+  },
+  "write.decorateHint": {
+    "zh": "版式、照片、字体、纸张…点开一项就能看到变化",
+    "en": "Layout, photos, font, paper… open one and watch the page change"
+  },
+  "layout.step1": {
+    "zh": "① 放几张照片？",
+    "en": "① How many photos?"
+  },
+  "layout.step2": {
+    "zh": "② 选一个版式",
+    "en": "② Pick a layout"
+  },
+  "layout.textOnly": {
+    "zh": "只有文字",
+    "en": "Words only"
+  },
+  "layout.hasPhotos": {
+    "zh": "这一页已经有 {count} 张照片",
+    "en": "This page already has {count} photos"
+  },
+  "layout.textHelp": {
+    "zh": "不放照片，标题和文字会直接排在纸上。",
+    "en": "No photos: the title and words are set on the paper."
+  },
+  "layout.slotHelp": {
+    "zh": "预览里会出现空相框，点「加照片」就会按顺序放进去；之后仍可拖动。",
+    "en": "Empty frames appear in the preview; tap Photos to fill them in order. You can still drag them later."
+  },
+  "layout.textHasPhotos": {
+    "zh": "这一页已经有照片，不能改成只有文字。",
+    "en": "This page has photos, so it can't be words only."
+  },
+  "layout.text": {
+    "zh": "纯文字",
+    "en": "Words only"
+  },
+  "layout.full": {
+    "zh": "整页大图",
+    "en": "Full photo"
+  },
+  "layout.corner": {
+    "zh": "角落小图",
+    "en": "Corner photo"
+  },
+  "layout.stack": {
+    "zh": "叠放",
+    "en": "Stacked"
+  },
+  "photo.slot": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "moment.cta": {
+    "zh": "写一个小故事",
+    "en": "Write a moment"
+  },
+  "moment.ctaDay": {
+    "zh": "给这一天再写一个小故事",
+    "en": "Add a moment to this day"
+  },
+  "moment.ctaHint": {
+    "zh": "早晨的健身、午后的咖啡、晚上的一顿饭…",
+    "en": "A morning workout, an afternoon coffee, tonight's dinner…"
+  },
+  "community.title": {
+    "zh": "社区",
+    "en": "Community"
+  },
+  "community.subtitle": {
+    "zh": "看看别人的小日子，也分享你愿意分享的那一页。",
+    "en": "See other little days, and share only what you choose."
+  },
+  "community.demoLabel": {
+    "zh": "演示 · 本机模拟 · 未联网　",
+    "en": "Demo · simulated on this device · offline  "
+  },
+  "community.demoNote": {
+    "zh": "这里的用户、作品、好友和消息都是虚拟的演示数据，只保存在这个浏览器里；不会上传你的手帐，也不会真的公开任何内容。",
+    "en": "Users, works, friends and messages here are virtual demo data kept in this browser only. Nothing is uploaded and nothing becomes public."
+  },
+  "community.demoShort": {
+    "zh": "演示",
+    "en": "Demo"
+  },
+  "community.homeHint": {
+    "zh": "发现、关注、好友与私信（本机演示，未联网）",
+    "en": "Discover, follow, friends and messages (offline demo)"
+  },
+  "community.me": {
+    "zh": "我",
+    "en": "Me"
+  },
+  "community.reset": {
+    "zh": "重置演示数据",
+    "en": "Reset demo data"
+  },
+  "community.resetConfirm": {
+    "zh": "把社区演示数据恢复成初始状态？你的手帐不受影响。",
+    "en": "Reset the community demo? Your journal is not affected."
+  },
+  "community.saveFailed": {
+    "zh": "演示数据保存失败，请检查浏览器存储空间。",
+    "en": "Demo data could not be saved. Check browser storage."
+  },
+  "community.tab.discover": {
+    "zh": "发现",
+    "en": "Discover"
+  },
+  "community.tab.following": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.tab.popular": {
+    "zh": "热门",
+    "en": "Popular"
+  },
+  "community.tab.categories": {
+    "zh": "分类",
+    "en": "Categories"
+  },
+  "community.tab.search": {
+    "zh": "搜索",
+    "en": "Search"
+  },
+  "community.tab.friends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.tab.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "community.tab.mine": {
+    "zh": "我的发布",
+    "en": "My posts"
+  },
+  "community.followingEmpty": {
+    "zh": "关注作者后，他们的新作品会出现在这里。",
+    "en": "Follow creators to see their new work here."
+  },
+  "community.week": {
+    "zh": "本周",
+    "en": "This week"
+  },
+  "community.month": {
+    "zh": "本月",
+    "en": "This month"
+  },
+  "community.popularHow": {
+    "zh": "按点赞、评论、收藏和发布时间综合排序。",
+    "en": "Ranked by likes, comments, saves and how recent it is."
+  },
+  "community.nothing": {
+    "zh": "这里还没有内容。",
+    "en": "Nothing here yet."
+  },
+  "community.searchPlaceholder": {
+    "zh": "搜索作品、主题或创作者",
+    "en": "Search works, topics or creators"
+  },
+  "community.creators": {
+    "zh": "创作者",
+    "en": "Creators"
+  },
+  "community.works": {
+    "zh": "作品",
+    "en": "Works"
+  },
+  "community.missing": {
+    "zh": "这个作品已不在社区中。",
+    "en": "This work is no longer in the community."
+  },
+  "community.follow": {
+    "zh": "关注",
+    "en": "Follow"
+  },
+  "community.following": {
+    "zh": "已关注",
+    "en": "Following"
+  },
+  "community.addFriend": {
+    "zh": "加好友",
+    "en": "Add friend"
+  },
+  "community.requested": {
+    "zh": "已发送申请",
+    "en": "Requested"
+  },
+  "community.accept": {
+    "zh": "接受",
+    "en": "Accept"
+  },
+  "community.decline": {
+    "zh": "拒绝",
+    "en": "Decline"
+  },
+  "community.message": {
+    "zh": "私信",
+    "en": "Message"
+  },
+  "community.mediaCount": {
+    "zh": "包含 {count} 段音频/视频（演示中只显示数量）",
+    "en": "Includes {count} audio/video clips (demo shows the count only)"
+  },
+  "community.share": {
+    "zh": "分享",
+    "en": "Share"
+  },
+  "community.shareText": {
+    "zh": "Little Days 演示作品：{title}（本机演示，没有真实链接）",
+    "en": "Little Days demo work: {title} (offline demo, no real link)"
+  },
+  "community.shareCopied": {
+    "zh": "已复制分享文字（演示）",
+    "en": "Share text copied (demo)"
+  },
+  "community.report": {
+    "zh": "举报",
+    "en": "Report"
+  },
+  "community.reportWhy": {
+    "zh": "举报原因",
+    "en": "Why are you reporting this?"
+  },
+  "community.reason.spam": {
+    "zh": "垃圾内容",
+    "en": "Spam"
+  },
+  "community.reason.harassment": {
+    "zh": "骚扰或不友善",
+    "en": "Harassment"
+  },
+  "community.reason.privacy": {
+    "zh": "泄露隐私",
+    "en": "Privacy"
+  },
+  "community.reason.copyright": {
+    "zh": "侵犯版权",
+    "en": "Copyright"
+  },
+  "community.reason.other": {
+    "zh": "其他",
+    "en": "Other"
+  },
+  "community.reported": {
+    "zh": "已记录举报（演示，不会发送）",
+    "en": "Report recorded (demo, not sent)"
+  },
+  "community.save.work": {
+    "zh": "收藏作品",
+    "en": "Save work"
+  },
+  "community.save.template": {
+    "zh": "收藏为模板",
+    "en": "Save as template"
+  },
+  "community.save.recipe": {
+    "zh": "收藏为食谱",
+    "en": "Save as recipe"
+  },
+  "community.save.cover": {
+    "zh": "收藏封面灵感",
+    "en": "Save cover idea"
+  },
+  "community.save.pack": {
+    "zh": "收藏素材包",
+    "en": "Save sticker pack"
+  },
+  "community.unsave": {
+    "zh": "取消收藏",
+    "en": "Remove from saved"
+  },
+  "community.saved": {
+    "zh": "已收藏（只是收藏引用，不会复制作品）",
+    "en": "Saved (a bookmark, not a copy)"
+  },
+  "community.unsaved": {
+    "zh": "已取消收藏",
+    "en": "Removed from saved"
+  },
+  "community.saveNote": {
+    "zh": "收藏只是记下这份作品；复制编辑他人作品需要作者授权并保留来源（演示中不提供复制）。",
+    "en": "Saving only bookmarks the work. Copying someone's work needs their permission and credit (not offered in the demo)."
+  },
+  "community.commentsOpen": {
+    "zh": "允许评论",
+    "en": "Allow comments"
+  },
+  "community.unpublish": {
+    "zh": "撤回为私人",
+    "en": "Make private again"
+  },
+  "community.unpublishConfirm": {
+    "zh": "把这篇撤回为私人？社区里将不再显示。",
+    "en": "Make this private again? It will leave the community."
+  },
+  "community.unpublished": {
+    "zh": "已撤回，只有你自己能看到。",
+    "en": "Made private again."
+  },
+  "community.comments": {
+    "zh": "评论",
+    "en": "Comments"
+  },
+  "community.moreComments": {
+    "zh": "还有 {count} 条较早的评论",
+    "en": "{count} earlier comments"
+  },
+  "community.reply": {
+    "zh": "回复",
+    "en": "Reply"
+  },
+  "community.replyingTo": {
+    "zh": "回复",
+    "en": "Replying to"
+  },
+  "community.commentPlaceholder": {
+    "zh": "写下友善的评论…",
+    "en": "Write a kind comment…"
+  },
+  "community.send": {
+    "zh": "发送",
+    "en": "Send"
+  },
+  "community.commentsClosed": {
+    "zh": "作者关闭了评论。",
+    "en": "The author turned comments off."
+  },
+  "community.followVsFriends": {
+    "zh": "关注和好友不一样",
+    "en": "Following isn't friendship"
+  },
+  "community.followVsFriendsText": {
+    "zh": "关注是单向的，只看对方公开的作品；好友需要双方确认，可以互发私信。成为好友也不会看到对方的私人手帐。",
+    "en": "Following is one-way and shows public work only. Friends confirm each other and can message. Being friends never opens private journals."
+  },
+  "community.incoming": {
+    "zh": "收到的好友申请",
+    "en": "Friend requests"
+  },
+  "community.friends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.noFriends": {
+    "zh": "还没有好友。",
+    "en": "No friends yet."
+  },
+  "community.removeFriend": {
+    "zh": "删除好友",
+    "en": "Remove"
+  },
+  "community.removeConfirm": {
+    "zh": "删除这位好友？之后不能再互发私信。",
+    "en": "Remove this friend? You won't be able to message each other."
+  },
+  "community.block": {
+    "zh": "屏蔽",
+    "en": "Block"
+  },
+  "community.blockConfirm": {
+    "zh": "屏蔽后将不再看到对方的作品，也不能互发消息或好友申请。",
+    "en": "Blocking hides their work and stops messages and friend requests."
+  },
+  "community.blockedToast": {
+    "zh": "已屏蔽",
+    "en": "Blocked"
+  },
+  "community.blocked": {
+    "zh": "已屏蔽",
+    "en": "Blocked"
+  },
+  "community.unblock": {
+    "zh": "取消屏蔽",
+    "en": "Unblock"
+  },
+  "community.outgoing": {
+    "zh": "我发出的申请",
+    "en": "Sent requests"
+  },
+  "community.simulateAccept": {
+    "zh": "模拟对方接受",
+    "en": "Simulate accept"
+  },
+  "community.cancelRequest": {
+    "zh": "撤回申请",
+    "en": "Cancel"
+  },
+  "community.people": {
+    "zh": "发现更多创作者",
+    "en": "More creators"
+  },
+  "community.requestSent": {
+    "zh": "好友申请已发送（演示）",
+    "en": "Friend request sent (demo)"
+  },
+  "community.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "community.deleteChat": {
+    "zh": "删除会话",
+    "en": "Delete chat"
+  },
+  "community.deleteChatConfirm": {
+    "zh": "删除这个会话？只会删除你这边的记录。",
+    "en": "Delete this chat? Only your copy is removed."
+  },
+  "community.chatEmpty": {
+    "zh": "还没有消息",
+    "en": "No messages yet"
+  },
+  "community.simulated": {
+    "zh": "模拟回复",
+    "en": "simulated"
+  },
+  "community.shareWork": {
+    "zh": "分享一篇公开作品…",
+    "en": "Share a public work…"
+  },
+  "community.messagePlaceholder": {
+    "zh": "写点什么…",
+    "en": "Say something…"
+  },
+  "community.chatNote": {
+    "zh": "对方的回复是本机模拟的演示消息。",
+    "en": "Replies are simulated on this device."
+  },
+  "community.friendsOnly": {
+    "zh": "只有互相确认的好友才能私信。",
+    "en": "Only confirmed friends can message each other."
+  },
+  "community.stickerMsg": {
+    "zh": "[贴纸]",
+    "en": "[sticker]"
+  },
+  "community.workMsg": {
+    "zh": "[作品]",
+    "en": "[work]"
+  },
+  "community.noChats": {
+    "zh": "还没有会话。",
+    "en": "No conversations yet."
+  },
+  "community.sim1": {
+    "zh": "哇，好喜欢！（模拟回复）",
+    "en": "Oh I love this! (simulated reply)"
+  },
+  "community.sim2": {
+    "zh": "收到啦～周末一起去？（模拟回复）",
+    "en": "Got it — this weekend? (simulated reply)"
+  },
+  "community.sim3": {
+    "zh": "哈哈哈太可爱了（模拟回复）",
+    "en": "Haha so cute (simulated reply)"
+  },
+  "community.publishStart": {
+    "zh": "选择一天发布到社区（演示）",
+    "en": "Publish a day to the community (demo)"
+  },
+  "community.privateDefault": {
+    "zh": "你的手帐默认私人。只有你在下面逐项勾选并确认的页面和媒体才会出现在社区演示里。",
+    "en": "Your journal stays private. Only pages and media you tick and confirm appear in the demo community."
+  },
+  "community.noWorks": {
+    "zh": "你还没有发布任何作品。",
+    "en": "You haven't published anything yet."
+  },
+  "community.publishTitle": {
+    "zh": "发布前确认要分享的内容",
+    "en": "Choose exactly what to share"
+  },
+  "community.publishHelp": {
+    "zh": "默认什么都不勾选。照片、录音和视频需要逐个勾选；记账类内容不能公开；成长感想只有你单独允许过才可能出现。",
+    "en": "Nothing is selected by default. Tick each photo, recording or video; money records can't be shared; growth notes appear only if you allowed them."
+  },
+  "community.pickDay": {
+    "zh": "选择一天",
+    "en": "Pick a day"
+  },
+  "community.nothingToShare": {
+    "zh": "这一天没有可以分享的页面。",
+    "en": "Nothing on this day can be shared."
+  },
+  "community.moneyLocked": {
+    "zh": "记账/金额类内容默认私人，不能公开",
+    "en": "Money records stay private"
+  },
+  "community.workTitle": {
+    "zh": "作品标题",
+    "en": "Title"
+  },
+  "community.allowComments": {
+    "zh": "允许评论",
+    "en": "Allow comments"
+  },
+  "community.confirmPublish": {
+    "zh": "我已检查以上页面和媒体，确认可以公开（演示）",
+    "en": "I've checked these pages and media and want to share them (demo)"
+  },
+  "community.publish": {
+    "zh": "发布",
+    "en": "Publish"
+  },
+  "community.published": {
+    "zh": "已发布到社区演示（没有上传，只在本机）",
+    "en": "Published to the demo community (offline, this device only)"
+  },
+  "community.confirmRequired": {
+    "zh": "请先勾选确认。",
+    "en": "Please confirm first."
+  },
+  "community.noPages": {
+    "zh": "请至少勾选一页。",
+    "en": "Tick at least one page."
+  },
+  "community.notOwner": {
+    "zh": "只能修改自己的内容。",
+    "en": "You can only change your own content."
+  },
+  "community.emptyComment": {
+    "zh": "评论不能为空。",
+    "en": "Write something first."
+  },
+  "community.emptyMessage": {
+    "zh": "消息不能为空。",
+    "en": "Write something first."
+  },
+  "community.saveType": {
+    "zh": "无法识别的收藏类型。",
+    "en": "Unknown save type."
+  },
+  "community.reason": {
+    "zh": "请选择举报原因。",
+    "en": "Choose a reason."
+  },
+  "community.blockedUser": {
+    "zh": "已屏蔽该用户。",
+    "en": "This user is blocked."
   }
 }

@@ -50,6 +50,7 @@ flowchart TD
 | `Public/js/canvas.mjs` | V3.1 共享画布与媒体卡片渲染：Studio 编辑模式与 Day Detail 只读模式使用同一套标记 |
 | `Public/js/day-view.mjs` | V3.1 Calendar Day Detail 只读回忆页 |
 | `Public/js/journey-view.mjs` | V3.2 习惯成长轨迹（书页式阅读） |
+| `Public/js/community.mjs` / `community-view.mjs` | V3.3 社区/好友/私信**本机演示**：纯函数与视图；数据存 `little-days.demo-social`，不进入手帐数据、备份或任何网络请求 |
 | `tools/merge_font_slices.py` | V3.2 把 OFL 网页字体子集合并回单个 TTF（来源记录） |
 | `tools/build_link.py` | 生成在线链接（claude.ai Artifact）用的文件夹 `dist/link/` |
 | `tools/preview.py` | 127.0.0.1 HTTP、共享资源白名单、`--open`、完整解压检查 |

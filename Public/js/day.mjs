@@ -240,7 +240,17 @@ export function saveReflection(state, period, key, values) {
 
 /* ---------- Photo layout ---------- */
 
-export const LAYOUT_TEMPLATES = ["duo", "trio", "grid", "polaroid", "collage"];
+export const LAYOUT_TEMPLATES = ["duo", "trio", "grid", "polaroid", "collage", "full", "corner", "stack"];
+// Step 1 picks how many photos (0 = text only, 5 = five or more); step 2
+// offers the layouts that suit that number.
+export const TEMPLATES_BY_COUNT = {
+  0: ["text"],
+  1: ["full", "polaroid", "corner"],
+  2: ["duo", "stack", "polaroid"],
+  3: ["trio", "collage", "polaroid"],
+  4: ["grid", "collage", "polaroid"],
+  5: ["collage", "grid", "stack"],
+};
 export const PHOTO_FRAMES = ["polaroid", "border", "rounded", "bare"];
 
 export function suggestLayout(count) {
@@ -278,7 +288,23 @@ export function autoLayout(count, template, region = { top: 4, bottom: 60 }) {
       });
     }
   };
-  if (template === "duo") {
+  if (template === "full" && count === 1) {
+    slots.push({ x: 50, y: top + height / 2, w: 92, h: height * 0.96, rotation: 0, frame: "bare" });
+  } else if (template === "corner" && count === 1) {
+    slots.push({ x: 30, y: top + height * 0.34, w: 46, h: height * 0.6, rotation: -4, frame: "polaroid", tape: true });
+  } else if (template === "stack") {
+    // Overlapping prints, as if dropped on the desk.
+    for (let i = 0; i < count; i++)
+      slots.push({
+        x: 50 + [-10, 9, -4, 12, -12, 5][i % 6],
+        y: top + height * 0.5 + [-6, 4, 8, -3, 2, -8][i % 6],
+        w: 58,
+        h: height * 0.62,
+        rotation: [-8, 6, -3, 9, -6, 3][i % 6],
+        frame: "polaroid",
+        tape: i === count - 1,
+      });
+  } else if (template === "duo") {
     const rows = Math.max(1, Math.ceil(count / 2));
     grid(count, rows, 2, top, height, "border");
     slots.forEach((slot, i) => (slot.rotation = i % 2 ? 2 : -2));
@@ -378,6 +404,40 @@ export function photoLayer(reference, name, values = {}) {
 
 // Applies a template to photo layers in their current order (main photo
 // first). Text, stickers and growth cards keep their positions.
+// Applies a template for a chosen number of photos. Missing photos become
+// empty frames (filled by the next photo pick); "text" keeps the page to the
+// title and words. Existing photos are never removed.
+export function applyPageTemplate(page, count, template, region) {
+  const filled = page.layers.filter((layer) => layer.kind === "photo" && layer.mediaRef);
+  if (template === "text") {
+    if (filled.length) throw new Error("layout.textHasPhotos");
+    page.layers = page.layers.filter((layer) => !(layer.kind === "photo" && !layer.mediaRef));
+    page.layoutTemplate = "text";
+    page.layoutEdited = false;
+    return 0;
+  }
+  const target = Math.max(count, filled.length);
+  let empty = page.layers.filter((layer) => layer.kind === "photo" && !layer.mediaRef);
+  // Drop surplus empty frames, add missing ones.
+  const surplus = new Set(empty.slice(Math.max(0, target - filled.length)).map((layer) => layer.id));
+  page.layers = page.layers.filter((layer) => !surplus.has(layer.id));
+  for (let i = filled.length + empty.length - surplus.size; i < target; i++)
+    page.layers.push(photoLayer("", "slot"));
+  return applyLayout(page, template, region);
+}
+
+// Fills empty frames in order; returns references that did not fit.
+export function fillEmptySlots(page, references) {
+  const queue = [...references];
+  for (const layer of page.layers)
+    if (layer.kind === "photo" && !layer.mediaRef && queue.length) {
+      const next = queue.shift();
+      layer.mediaRef = next.reference;
+      layer.text = next.name || "photo";
+    }
+  return queue;
+}
+
 export function applyLayout(page, template, region) {
   const photos = page.layers.filter((layer) => layer.kind === "photo");
   const slots = autoLayout(photos.length, template, region);

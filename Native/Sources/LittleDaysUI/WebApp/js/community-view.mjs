@@ -1,0 +1,184 @@
+// Community demo views. Every screen carries the "demo / not online" label.
+import { escapeHTML as esc } from "./personal-ui.mjs";
+import { stickerURL } from "./library.mjs";
+import * as C from "./community.mjs";
+
+const TABS = ["discover", "following", "popular", "categories", "search", "friends", "messages", "mine"];
+
+function avatar(user, size = "") {
+  return `<span class="c-avatar ${size}" aria-hidden="true">${esc(user?.avatar || "✿")}</span>`;
+}
+function author(demo, id, ctx) {
+  return id === "me" ? { name: ctx.t("community.me"), handle: "@me", avatar: "🌷" } : C.userById(demo, id);
+}
+
+export function workCoverHTML(work, ctx, large = false) {
+  const photo = (work.media || []).find((item) => item.kind === "photo");
+  const src = photo ? ctx.media.resolve(photo.ref) : "";
+  const sticker = stickerURL(work.sticker, ctx.catalog);
+  return `<div class="work-cover journal-canvas ${esc(work.paper || "cute")} ${large ? "large" : ""}">${src ? `<img class="work-photo" src="${esc(src)}" alt="">` : sticker ? `<img class="work-sticker" src="${esc(sticker)}" alt="">` : ""}<b>${esc(work.title)}</b></div>`;
+}
+
+function workCardHTML(demo, work, ctx, rank = 0) {
+  const user = author(demo, work.authorId, ctx);
+  return `<button class="work-card" data-action="community-open-work" data-work="${esc(work.id)}">${rank ? `<span class="work-rank">${rank}</span>` : ""}${workCoverHTML(work, ctx)}<span class="work-meta"><strong>${esc(work.title)}</strong><small>${avatar(user, "xs")} ${esc(user?.name || "")}</small><small>♡ ${work.likes} · 💬 ${C.commentCount(work)} · ☆ ${work.saves}</small></span></button>`;
+}
+const grid = (demo, works, ctx, ranked = false) =>
+  works.length
+    ? `<div class="work-grid">${works.map((work, i) => workCardHTML(demo, work, ctx, ranked ? i + 1 : 0)).join("")}</div>`
+    : "";
+
+function commentHTML(demo, workItem, comment, ctx, isReply = false) {
+  const { t } = ctx;
+  const user = author(demo, comment.authorId, ctx);
+  return `<li class="comment ${isReply ? "reply" : ""}">${avatar(user, "xs")}<div><b>${esc(user?.name || "")}</b><p>${esc(comment.text)}</p>${!isReply && workItem.commentsOpen ? `<button class="text-button" data-action="community-reply" data-comment="${esc(comment.id)}">${t("community.reply")}</button>` : ""}${comment.replies?.length ? `<ul>${comment.replies.map((r) => commentHTML(demo, workItem, r, ctx, true)).join("")}</ul>` : ""}</div></li>`;
+}
+
+function relationButtons(demo, userId, ctx) {
+  const { t } = ctx;
+  if (userId === "me") return "";
+  const following = demo.following.includes(userId);
+  const friend = demo.friends.includes(userId);
+  const pending = demo.requests.outgoing.includes(userId);
+  const incoming = demo.requests.incoming.includes(userId);
+  return `<span class="c-relations"><button class="${following ? "secondary" : "primary"} small" data-action="community-follow" data-user="${esc(userId)}">${t(following ? "community.following" : "community.follow")}</button>${
+    friend
+      ? `<button class="secondary small" data-action="community-open-chat" data-user="${esc(userId)}">${t("community.message")}</button>`
+      : incoming
+        ? `<button class="secondary small" data-action="community-friend-accept" data-user="${esc(userId)}">${t("community.accept")}</button>`
+        : `<button class="secondary small" data-action="community-friend-request" data-user="${esc(userId)}" ${pending ? "disabled" : ""}>${t(pending ? "community.requested" : "community.addFriend")}</button>`
+  }</span>`;
+}
+
+function workDetailHTML(demo, view, ctx, helpers) {
+  const { t } = ctx;
+  const work = demo.works.find((item) => item.id === view.workId);
+  if (!work) return `<div class="empty">${t("community.missing")}</div>`;
+  const user = author(demo, work.authorId, ctx);
+  const mine = work.authorId === "me";
+  const photos = (work.media || []).filter((item) => item.kind === "photo").map((item) => ctx.media.resolve(item.ref)).filter(Boolean);
+  const clips = (work.media || []).filter((item) => item.kind !== "photo");
+  const saveMenu = view.saveMenu
+    ? `<div class="c-choices">${C.SAVE_TYPES.map((type) => `<button class="${work.savedAs === type ? "selected" : ""}" data-action="community-save" data-type="${type}">${t("community.save." + type)}</button>`).join("")}${work.savedAs ? `<button data-action="community-save" data-type="">${t("community.unsave")}</button>` : ""}<p class="save-help">${t("community.saveNote")}</p></div>`
+    : "";
+  const reportMenu = view.reportMenu
+    ? `<div class="c-choices"><span class="small-label">${t("community.reportWhy")}</span>${C.REPORT_REASONS.map((reason) => `<button data-action="community-report" data-reason="${reason}">${t("community.reason." + reason)}</button>`).join("")}</div>`
+    : "";
+  const replyTo = view.replyTo && work.comments.find((c) => c.id === view.replyTo);
+  return `<article class="work-detail"><button class="back-button" data-action="community-back">${helpers.icon("back")} ${t("community.title")}</button>${workCoverHTML(work, ctx, true)}${photos.length > 1 ? `<div class="work-photos">${photos.slice(1).map((src) => `<img src="${esc(src)}" alt="" data-action="zoom-photo" data-src="${esc(src)}">`).join("")}</div>` : ""}<h2 class="work-title">${esc(work.title)}</h2><div class="work-author">${avatar(user)}<span><b>${esc(user?.name || "")}</b><small>${esc(user?.handle || "")} · ${esc(work.category)}</small></span>${relationButtons(demo, work.authorId, ctx)}</div>${(work.pages || [{ title: "", body: work.excerpt }]).map((page) => `<section class="work-page">${page.title ? `<h3>${esc(page.title)}</h3>` : ""}<p>${esc(page.body)}</p></section>`).join("")}${clips.length ? `<p class="save-help">${t("community.mediaCount", { count: clips.length })}</p>` : ""}<div class="work-actions"><button class="${work.likedByMe ? "selected" : ""}" data-action="community-like" aria-pressed="${work.likedByMe}">${work.likedByMe ? "♥" : "♡"} ${work.likes}</button><button data-action="community-save-menu" class="${work.savedAs ? "selected" : ""}">☆ ${work.saves}</button><button data-action="community-share">↗ ${t("community.share")}</button>${mine ? "" : `<button data-action="community-report-menu">⚑ ${t("community.report")}</button>`}</div>${saveMenu}${reportMenu}${
+    mine
+      ? `<div class="c-owner"><label class="check-label"><input type="checkbox" data-action="community-toggle-comments" ${work.commentsOpen ? "checked" : ""}> ${t("community.commentsOpen")}</label><button class="secondary danger small" data-action="community-unpublish">${t("community.unpublish")}</button></div>`
+      : ""
+  }<section class="c-comments"><h3>💬 ${t("community.comments")} · ${C.commentCount(work)}</h3><ul>${work.comments.map((c) => commentHTML(demo, work, c, ctx)).join("")}</ul>${work.extraComments ? `<p class="save-help">${t("community.moreComments", { count: work.extraComments })}</p>` : ""}${
+    work.commentsOpen
+      ? `<div class="c-compose">${replyTo ? `<span class="c-replying">${t("community.replyingTo")} “${esc(replyTo.text.slice(0, 20))}” <button class="text-button" data-action="community-reply" data-comment="">×</button></span>` : ""}<textarea id="community-comment" maxlength="500" placeholder="${t("community.commentPlaceholder")}"></textarea><button class="primary small" data-action="community-comment">${t("community.send")}</button></div>`
+      : `<p class="save-help">${t("community.commentsClosed")}</p>`
+  }</section></article>`;
+}
+
+function friendsHTML(demo, ctx) {
+  const { t } = ctx;
+  const row = (userId, buttons) => {
+    const user = C.userById(demo, userId);
+    return user ? `<li class="c-user">${avatar(user)}<span><b>${esc(user.name)}</b><small>${esc(user.handle)}</small></span><span class="c-relations">${buttons}</span></li>` : "";
+  };
+  const btn = (action, userId, label, cls = "secondary") => `<button class="${cls} small" data-action="${action}" data-user="${esc(userId)}">${t(label)}</button>`;
+  const pending = [...demo.requests.incoming, ...demo.requests.outgoing];
+  const others = demo.users.filter((u) => !demo.friends.includes(u.id) && !demo.blocked.includes(u.id) && !pending.includes(u.id));
+  return `<div class="c-explain"><b>${t("community.followVsFriends")}</b><p>${t("community.followVsFriendsText")}</p></div>${
+    demo.requests.incoming.length
+      ? `<h3 class="c-h">${t("community.incoming")}</h3><ul class="c-list">${demo.requests.incoming.map((id) => row(id, btn("community-friend-accept", id, "community.accept", "primary") + btn("community-friend-decline", id, "community.decline"))).join("")}</ul>`
+      : ""
+  }<h3 class="c-h">${t("community.friends")} · ${demo.friends.length}</h3><ul class="c-list">${demo.friends.map((id) => row(id, btn("community-open-chat", id, "community.message", "primary") + btn("community-friend-remove", id, "community.removeFriend") + btn("community-block", id, "community.block"))).join("") || `<li class="save-help">${t("community.noFriends")}</li>`}</ul>${
+    demo.requests.outgoing.length
+      ? `<h3 class="c-h">${t("community.outgoing")}</h3><ul class="c-list">${demo.requests.outgoing.map((id) => row(id, btn("community-simulate-accept", id, "community.simulateAccept") + btn("community-friend-cancel", id, "community.cancelRequest"))).join("")}</ul>`
+      : ""
+  }<h3 class="c-h">${t("community.people")}</h3><ul class="c-list">${others.map((u) => row(u.id, relationButtons(demo, u.id, ctx) + btn("community-block", u.id, "community.block") + btn("community-report-user", u.id, "community.report"))).join("")}</ul>${
+    demo.blocked.length
+      ? `<h3 class="c-h">${t("community.blocked")}</h3><ul class="c-list">${demo.blocked.map((id) => row(id, btn("community-unblock", id, "community.unblock"))).join("")}</ul>`
+      : ""
+  }`;
+}
+
+function messagesHTML(demo, view, ctx, helpers) {
+  const { t } = ctx;
+  if (view.chatUser) {
+    const user = C.userById(demo, view.chatUser);
+    const conversation = C.conversationWith(demo, view.chatUser);
+    const allowed = C.canMessage(demo, view.chatUser);
+    const stickers = ["tulip", "coffee", "cat", "daisy", "berry", "leaf"];
+    return `<div class="chat"><div class="chat-top"><button class="back-button" data-action="community-chat-back">${helpers.icon("back")} ${t("community.messages")}</button><span>${avatar(user, "xs")} ${esc(user?.name || "")}</span><button class="text-button" data-action="community-delete-chat" data-user="${esc(view.chatUser)}">${t("community.deleteChat")}</button></div><ul class="chat-messages">${conversation.messages
+      .map((m) => {
+        const shared = m.workId && demo.works.find((w) => w.id === m.workId);
+        return `<li class="bubble ${m.from === "me" ? "mine" : ""}">${m.text ? `<p>${esc(m.text)}</p>` : ""}${m.sticker ? `<img class="bubble-sticker" src="${esc(stickerURL(m.sticker, ctx.catalog))}" alt="">` : ""}${shared ? `<button class="bubble-work" data-action="community-open-work" data-work="${esc(shared.id)}">📔 ${esc(shared.title)}</button>` : ""}<small>${esc(new Date(m.at).toLocaleTimeString(ctx.locale, { hour: "2-digit", minute: "2-digit" }))}${m.simulated ? ` · ${t("community.simulated")}` : ""}${m.from === "me" ? ` <button class="text-button" data-action="community-delete-message" data-message="${esc(m.id)}" aria-label="${t("delete")}">×</button>` : ""}</small></li>`;
+      })
+      .join("") || `<li class="save-help">${t("community.chatEmpty")}</li>`}</ul>${
+      allowed
+        ? `<div class="chat-compose"><div class="chat-stickers">${stickers.map((s) => `<button data-action="community-sticker" data-sticker="${s}" aria-label="${s}"><img src="${esc(stickerURL(s, ctx.catalog))}" alt=""></button>`).join("")}<select id="chat-share-work" aria-label="${t("community.shareWork")}"><option value="">${t("community.shareWork")}</option>${C.discover(demo).slice(0, 12).map((w) => `<option value="${esc(w.id)}">${esc(w.title)}</option>`).join("")}</select></div><div class="chat-input"><input id="chat-text" maxlength="1000" placeholder="${t("community.messagePlaceholder")}"><button class="primary small" data-action="community-send">${t("community.send")}</button></div><p class="save-help">${t("community.chatNote")}</p></div>`
+        : `<p class="save-help">${t("community.friendsOnly")}</p>`
+    }<div class="c-relations end"><button class="secondary small" data-action="community-block" data-user="${esc(view.chatUser)}">${t("community.block")}</button><button class="secondary small" data-action="community-report-user" data-user="${esc(view.chatUser)}">${t("community.report")}</button></div></div>`;
+  }
+  const list = demo.conversations
+    .filter((c) => !demo.blocked.includes(c.userId))
+    .map((c) => {
+      const user = C.userById(demo, c.userId);
+      const last = c.messages.at(-1);
+      const unread = C.unreadCount(demo, c);
+      return `<li><button class="c-thread" data-action="community-open-chat" data-user="${esc(c.userId)}">${avatar(user)}<span><b>${esc(user?.name || "")}</b><small>${esc(last ? last.text || (last.sticker ? t("community.stickerMsg") : t("community.workMsg")) : t("community.chatEmpty"))}</small></span>${unread ? `<i class="c-badge">${unread}</i>` : ""}</button></li>`;
+    })
+    .join("");
+  return `<ul class="c-threads">${list || `<li class="save-help">${t("community.noChats")}</li>`}</ul><p class="save-help">${t("community.friendsOnly")}</p>`;
+}
+
+function publishHTML(demo, view, journal, ctx) {
+  const { t } = ctx;
+  const p = view.publish;
+  const dates = journal.entries.map((e) => e.date).sort().reverse();
+  const candidates = p.date ? C.publishCandidates(journal, p.date) : null;
+  const pages = candidates
+    ? candidates.pages
+        .map((page) => {
+          const checked = p.pages.includes(page.id);
+          const media = page.media
+            .map((item) => {
+              const src = item.kind === "photo" ? ctx.media.resolve(item.ref) : "";
+              return `<label class="pub-media"><input type="checkbox" data-publish-media="${esc(item.id)}" ${p.media.includes(item.id) ? "checked" : ""} ${checked ? "" : "disabled"}>${src ? `<img src="${esc(src)}" alt="">` : `<span>${item.kind === "video" ? "◈" : "♫"}</span>`}</label>`;
+            })
+            .join("");
+          return `<li class="pub-page ${page.private ? "locked" : ""}"><label class="check-label"><input type="checkbox" data-publish-page="${esc(page.id)}" ${checked ? "checked" : ""} ${page.private ? "disabled" : ""}> <b>${esc(page.id === "day" ? t("day.cover") : page.title || t("moment.untitled"))}</b></label>${page.private ? `<small>🔒 ${t("community.moneyLocked")}</small>` : `<small>${esc(page.body.slice(0, 60))}</small>`}${media ? `<div class="pub-media-row">${media}</div>` : ""}</li>`;
+        })
+        .join("")
+    : "";
+  const ready = p.confirmed && p.pages.length;
+  return `<section class="publish-sheet"><h3>${t("community.publishTitle")}</h3><p class="save-help">${t("community.publishHelp")}</p><label class="field">${t("community.pickDay")}<select data-publish="date"><option value="">—</option>${dates.map((d) => `<option value="${d}" ${p.date === d ? "selected" : ""}>${d}</option>`).join("")}</select></label>${candidates ? `<ul class="pub-pages">${pages || `<li class="save-help">${t("community.nothingToShare")}</li>`}</ul><label class="field">${t("community.workTitle")}<input data-publish="title" maxlength="60" value="${esc(p.title || "")}"></label><label class="field">${t("books.category")}<input data-publish="category" maxlength="30" value="${esc(p.category || "Daily Life")}"></label><label class="check-label"><input type="checkbox" data-publish="commentsOpen" ${p.commentsOpen !== false ? "checked" : ""}> ${t("community.allowComments")}</label><label class="check-label confirm"><input type="checkbox" data-publish="confirmed" ${p.confirmed ? "checked" : ""}> ${t("community.confirmPublish")}</label>` : ""}<div class="dialog-actions"><button class="secondary" data-action="community-publish-cancel">${t("cancel")}</button><button class="primary" data-action="community-publish-submit" ${ready ? "" : "disabled"}>${t("community.publish")}</button></div></section>`;
+}
+
+export function communityHTML(demo, view, journal, ctx, helpers) {
+  const { t } = ctx;
+  const unread = C.unreadCount(demo);
+  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="icon-button" data-action="community-reset" aria-label="${t("community.reset")}">↺</button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
+  if (view.workId) return header + workDetailHTML(demo, view, ctx, helpers);
+  const tabs = `<nav class="community-tabs" aria-label="${t("community.title")}">${TABS.map((tab) => `<button data-action="community-tab" data-tab="${tab}" class="${view.tab === tab ? "selected" : ""}" aria-pressed="${view.tab === tab}">${t("community.tab." + tab)}${tab === "messages" && unread ? ` <i class="c-badge">${unread}</i>` : ""}${tab === "friends" && demo.requests.incoming.length ? ` <i class="c-badge">${demo.requests.incoming.length}</i>` : ""}</button>`).join("")}</nav>`;
+  let body = "";
+  if (view.tab === "discover") body = grid(demo, C.discover(demo), ctx);
+  else if (view.tab === "following")
+    body = grid(demo, C.followingFeed(demo), ctx) || `<div class="empty">${t("community.followingEmpty")}</div>`;
+  else if (view.tab === "popular")
+    body = `<div class="segmented"><button data-action="community-period" data-period="week" class="${view.period === "week" ? "selected" : ""}">${t("community.week")}</button><button data-action="community-period" data-period="month" class="${view.period === "month" ? "selected" : ""}">${t("community.month")}</button></div><p class="save-help">${t("community.popularHow")}</p>${grid(demo, C.popular(demo, view.period), ctx, true) || `<div class="empty">${t("community.nothing")}</div>`}`;
+  else if (view.tab === "categories") {
+    const list = C.categories(demo);
+    const current = view.category || list[0];
+    body = `<div class="material-categories">${list.map((c) => `<button data-action="community-category" data-category="${esc(c)}" class="${c === current ? "selected" : ""}">${esc(c)}</button>`).join("")}</div>${grid(demo, C.discover(demo).filter((w) => w.category === current), ctx)}`;
+  } else if (view.tab === "search") {
+    const results = C.search(demo, view.query || "");
+    body = `<input class="c-search" id="community-search" data-community-search value="${esc(view.query || "")}" placeholder="${t("community.searchPlaceholder")}" aria-label="${t("community.tab.search")}">${results.users.length ? `<h3 class="c-h">${t("community.creators")}</h3><ul class="c-list">${results.users.map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.handle)} · ${esc(u.bio)}</small></span>${relationButtons(demo, u.id, ctx)}</li>`).join("")}</ul>` : ""}${results.works.length ? `<h3 class="c-h">${t("community.works")}</h3>${grid(demo, results.works, ctx)}` : view.query ? `<div class="empty">${t("community.nothing")}</div>` : ""}`;
+  } else if (view.tab === "friends") body = friendsHTML(demo, ctx);
+  else if (view.tab === "messages") body = messagesHTML(demo, view, ctx, helpers);
+  else if (view.tab === "mine") {
+    const mine = demo.works.filter((w) => w.authorId === "me");
+    body = view.publish
+      ? publishHTML(demo, view, journal, ctx)
+      : `<button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p>${grid(demo, mine, ctx) || `<div class="empty">${t("community.noWorks")}</div>`}`;
+  }
+  return header + tabs + `<div class="community-body">${body}</div>`;
+}

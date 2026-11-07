@@ -1,0 +1,203 @@
+// Write-first Studio, templates by photo count, easy "write a moment" entry
+// points, and the offline Community / Friends / Messages demo.
+const { chromium } = require("playwright");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
+const media = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Media");
+const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, mimeType: "image/jpeg", buffer: fs.readFileSync(path.join(media, i % 2 ? "lake.jpg" : "coffee.jpg")) }));
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
+  const passed = [];
+  try {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York" });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(base);
+    await page.waitForSelector(".hero");
+    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const tool = async (id) => {
+      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
+      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+    };
+    const read = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
+    const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
+
+    // 1. One tap from Home starts a Moment; writing is the first thing on screen.
+    await page.locator('.moment-cta[data-action="quick-moment"]').click();
+    await page.waitForSelector(".write-card.moment .write-title");
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("write-title")), true, "title is focused");
+    await page.locator(".write-card .write-title").fill("Gym Session");
+    await page.locator(".write-card .write-body").fill("深蹲 4 组，状态很好。");
+    // Writing sits above the decoration menu, not as one of its rows.
+    const order = await page.evaluate(() => {
+      const write = document.querySelector(".write-card").getBoundingClientRect().top;
+      const menu = document.querySelector("#tool-menu").getBoundingClientRect().top;
+      return write < menu;
+    });
+    assert.ok(order);
+    assert.equal(await page.locator('[data-tool-row="text"]').count(), 0);
+    assert.match(await page.locator(".style-heading").innerText(), /装饰这一页/);
+    passed.push("home → write a moment in one tap; writing first, decoration second");
+
+    // 2. Templates: pick the number of photos first, then a layout.
+    await tool("layout");
+    await page.locator('[data-action="template-count"][data-count="3"]').click();
+    const layouts = await page.$$eval('[data-action="apply-layout"]', (els) => els.map((el) => el.dataset.template));
+    assert.deepEqual(layouts, ["trio", "collage", "polaroid"]);
+    await page.locator('[data-action="apply-layout"][data-template="trio"]').click();
+    await page.waitForFunction(() => document.querySelectorAll("#journal-canvas .photo-layer.empty-slot").length === 3);
+    await page.locator("#photos-input").setInputFiles(photos(2));
+    await page.waitForFunction(() => document.querySelectorAll('#journal-canvas .photo-layer img[src^="blob:"]').length === 2 && document.querySelectorAll("#journal-canvas .empty-slot").length === 1);
+    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.at(-1)?.layers.filter((l) => l.mediaRef).length === 2, today);
+    let draft = (await read()).drafts[today];
+    let moment = draft.moments.at(-1);
+    assert.equal(moment.layoutTemplate, "trio");
+    assert.deepEqual(moment.layers.filter((l) => l.kind === "photo").map((l) => Boolean(l.mediaRef)), [true, true, false]);
+    // Fewer photos than already placed is not offered; text-only is disabled.
+    assert.equal(await page.locator('[data-action="template-count"][data-count="1"]').isDisabled(), true);
+    assert.equal(await page.locator('[data-action="template-count"][data-count="0"]').isDisabled(), true);
+    // A words-only Moment sets its title on the paper.
+    await page.locator('.chapter-chip.add').click();
+    await page.locator(".write-card .write-title").fill("只有文字的一刻");
+    await page.locator(".write-card .write-body").fill("今天没有拍照。");
+    await tool("layout");
+    await page.locator('[data-action="template-count"][data-count="0"]').click();
+    await page.locator('[data-action="apply-layout"][data-template="text"]').click();
+    await page.waitForSelector("#journal-canvas.text-only .canvas-title");
+    assert.match(await page.locator("#journal-canvas .canvas-title").innerText(), /只有文字的一刻/);
+    await page.locator('[data-action="save-entry"]').click();
+    await page.waitForSelector(".hero");
+    await nav("calendar");
+    await page.locator(`[data-action="select-date"][data-date="${today}"]`).click();
+    await page.waitForSelector(".day-detail");
+    assert.equal(await page.locator(".day-detail .empty-slot").count(), 0, "empty frames are hidden when reading");
+    assert.equal(await page.locator(".day-detail .moment-canvas.text-only").count(), 1);
+    // Day Detail offers "add a moment to this day".
+    await page.locator('.day-detail [data-action="quick-moment"]').click();
+    await page.waitForSelector(".write-card.moment");
+    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.length === 3, today);
+    passed.push("templates by photo count with empty frames, text-only page, add-moment from Day Detail");
+
+    // 3. Community demo: clearly labelled, separate storage.
+    const journalBefore = JSON.stringify((await read()).entries);
+    await nav("home");
+    await page.locator(".community-banner").click();
+    await page.waitForSelector(".demo-banner");
+    assert.match(await page.locator(".demo-banner").innerText(), /演示/);
+    assert.ok((await page.locator(".work-card").count()) >= 8);
+    for (const tab of ["following", "popular", "categories", "search"]) {
+      await page.locator(`[data-action="community-tab"][data-tab="${tab}"]`).click();
+      await page.waitForSelector(`[data-tab="${tab}"].selected`);
+    }
+    await page.locator("#community-search").fill("kyoto");
+    await page.waitForSelector(".work-card");
+    await page.locator(".work-card").first().click();
+    await page.waitForSelector(".work-detail");
+    const likes = Number((await page.locator('[data-action="community-like"]').innerText()).replace(/\D/g, ""));
+    await page.locator('[data-action="community-like"]').click();
+    assert.equal(Number((await page.locator('[data-action="community-like"]').innerText()).replace(/\D/g, "")), likes + 1);
+    await page.locator('[data-action="community-save-menu"]').click();
+    await page.locator('[data-action="community-save"][data-type="cover"]').click();
+    await page.locator("#community-comment").fill("好喜欢这个配色");
+    await page.locator('[data-action="community-comment"]').click();
+    await page.locator('[data-action="community-reply"]').last().click();
+    await page.locator("#community-comment").fill("谢谢！");
+    await page.locator('[data-action="community-comment"]').click();
+    assert.match(await page.locator(".c-comments").innerText(), /好喜欢这个配色[\s\S]*谢谢！/);
+    await page.locator('[data-action="community-follow"]').click();
+    await page.locator('[data-action="community-friend-request"]').click();
+    let demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
+    assert.ok(demo.following.includes("u-river") && demo.requests.outgoing.includes("u-river"));
+    assert.equal(demo.works.find((w) => w.id === "w2").savedAs, "cover");
+    assert.equal(JSON.stringify((await read()).entries), journalBefore, "community never touches journal data");
+    passed.push("discover/following/popular/categories/search; like, save as cover, comment + reply, follow, friend request");
+
+    // Friends: accept incoming, simulate the other side accepting, block.
+    await page.locator('[data-action="community-back"]').click();
+    await page.locator('[data-action="community-tab"][data-tab="friends"]').click();
+    await page.locator('[data-action="community-friend-accept"][data-user="u-mumu"]').click();
+    await page.locator('[data-action="community-simulate-accept"][data-user="u-river"]').click();
+    demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
+    assert.ok(["u-mumu", "u-river", "u-xiaoman"].every((id) => demo.friends.includes(id)));
+    await page.locator('.c-user:has-text("June") [data-action="community-block"]').click();
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.demo-social")).blocked.includes("u-june"));
+    await page.locator('[data-action="community-tab"][data-tab="discover"]').click();
+    assert.equal(await page.locator(".work-card", { hasText: "Weekend scones" }).count(), 0, "blocked creator hidden");
+
+    // Messages: unread badge, send text + sticker + shared work, simulated reply, delete own message.
+    await page.locator('[data-action="community-tab"][data-tab="messages"]').click();
+    assert.match(await page.locator(".c-thread").first().innerText(), /1/);
+    await page.locator('.c-thread').first().click();
+    await page.locator("#chat-text").fill("周末一起去看花吗？");
+    await page.locator('[data-action="community-send"]').click();
+    await page.locator('[data-action="community-sticker"][data-sticker="tulip"]').click();
+    await page.locator("#chat-share-work").selectOption("w1");
+    await page.locator('[data-action="community-send"]').click();
+    await page.waitForSelector(".bubble small:has-text('模拟回复')");
+    assert.equal(await page.locator(".bubble.mine").count(), 3);
+    await page.locator('.bubble.mine [data-action="community-delete-message"]').first().click();
+    assert.equal(await page.locator(".bubble.mine").count(), 2);
+    await page.locator(".bubble-work").click();
+    await page.waitForSelector(".work-detail");
+    passed.push("friends accept/simulate/block; messages with sticker, shared work, simulated reply, delete");
+
+    // Publishing: nothing selected by default; explicit pages + media + confirmation.
+    await page.locator('[data-action="community-back"]').click();
+    await page.locator('[data-action="community-tab"][data-tab="mine"]').click();
+    await page.locator('[data-action="community-publish-start"]').click();
+    await page.locator('[data-publish="date"]').selectOption(today);
+    await page.waitForSelector("[data-publish-page]");
+    assert.equal(await page.locator("[data-publish-page]:checked").count(), 0, "nothing pre-selected");
+    assert.equal(await page.locator('[data-action="community-publish-submit"]').isDisabled(), true);
+    const firstMoment = (await read()).entries.find((e) => e.date === today).moments[0];
+    await page.locator(`[data-publish-page="${firstMoment.id}"]`).check();
+    const mediaBoxes = page.locator(`.pub-page:has([data-publish-page="${firstMoment.id}"]) [data-publish-media]`);
+    assert.equal(await mediaBoxes.count(), 2);
+    await mediaBoxes.first().check();
+    await page.locator('[data-publish="title"]').fill("我的健身日");
+    await page.locator('[data-publish="confirmed"]').check();
+    await page.locator('[data-action="community-publish-submit"]').click();
+    await page.waitForSelector(".work-detail");
+    demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
+    const mine = demo.works.find((w) => w.authorId === "me");
+    assert.equal(mine.title, "我的健身日");
+    assert.equal(mine.media.length, 1, "only the ticked photo");
+    assert.deepEqual(mine.pages.map((p) => p.title), ["Gym Session"]);
+    await page.locator('[data-action="community-toggle-comments"]').uncheck();
+    assert.match(await page.locator(".c-comments").innerText(), /关闭了评论/);
+    await page.locator('[data-action="community-unpublish"]').click();
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
+    await page.waitForFunction(() => !JSON.parse(localStorage.getItem("little-days.demo-social")).works.some((w) => w.authorId === "me"));
+    const journal = await read();
+    assert.ok(journal.entries.every((e) => e.visibility === "private"));
+    assert.ok(!("little-days.demo-social" in JSON.parse(JSON.stringify(journal))));
+    passed.push("publish needs explicit page/media + confirmation; comments toggle; unpublish; journal stays private");
+
+    // English labels and narrow widths.
+    await nav("home");
+    await page.locator('[data-page="settings"]').click();
+    await page.locator('[data-language="en"]').click();
+    await nav("home");
+    await page.locator(".community-banner").click();
+    assert.match(await page.locator(".demo-banner").innerText(), /Demo/);
+    for (const width of [375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const tab of ["discover", "friends", "messages", "mine"]) {
+        await page.locator(`[data-action="community-tab"][data-tab="${tab}"]`).click();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${tab} ${width}`);
+      }
+    }
+    assert.deepEqual(errors, []);
+    console.log(`V3.3 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
+  } finally {
+    await browser.close();
+  }
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

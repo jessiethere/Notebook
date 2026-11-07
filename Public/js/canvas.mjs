@@ -79,8 +79,11 @@ export function layerHTML(layer, ctx, options = {}) {
     )
       ? layer.frame
       : "border";
-    classes += ` art-layer photo-layer frame-${frame}${options.cropMode && selected ? " cropping" : ""}`;
-    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
+    // An empty frame from a template: shown while editing, hidden when reading.
+    if (!layer.mediaRef && readOnly) return "";
+    const empty = !layer.mediaRef;
+    classes += ` art-layer photo-layer frame-${frame}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
+    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
   } else if (layer.kind === "growth") {
@@ -125,14 +128,18 @@ export function canvasHTML(page, ctx, options = {}) {
   let fixed = "";
   if (dayPage) {
     const photo = media.resolve(page.photo);
-    const showPhoto = photo || !readOnly;
+    const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
     fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}<div class="canvas-title" style="${esc(textCSS(textStyle, font, 20, catalog))}">${esc(page.title || (readOnly ? "" : t("studio.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || (readOnly ? "" : t("studio.bodyPlaceholder")))}</div><span class="canvas-mood">${esc(page.mood || "")}</span>`;
-  } else if (!readOnly && !page.layers?.length)
+  } else if (page.layoutTemplate === "text")
+    // Text-only Moment: the title and words are set on the paper itself.
+    fixed = `<div class="canvas-title" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || (readOnly ? "" : t("moment.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || (readOnly ? "" : t("moment.bodyPlaceholder")))}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+  else if (!readOnly && !page.layers?.length)
     fixed = `<div class="canvas-empty-hint"><span>✿</span>${t("moment.canvasHint")}</div>`;
   const classes = [
     "journal-canvas",
     template,
     dayPage ? "day-canvas" : "moment-canvas",
+    page.layoutTemplate === "text" ? "text-only" : "",
     readOnly ? "read-only" : "",
     !readOnly && options.selectedId ? "has-selection" : "",
   ]

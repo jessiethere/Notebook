@@ -62,6 +62,7 @@ async function streamBytes(download) {
       page.locator(`#navigation [data-page="${tab}"]`).click();
     // Studio settings live in a summary menu; open one row (if closed).
     const toolOn = async (target, id) => {
+      if (id === "text") return; // writing is always open (write card)
       const head = target.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
     };
@@ -203,12 +204,12 @@ async function streamBytes(download) {
     await page.locator('[data-action="layer-copy"]').click();
     assert.equal(await page.locator(".layer img").count(), 2);
     await tool("stickers");
-    await page.locator('[data-action="add-text-layer"]').click();
+    await page.locator('[data-action="add-text-layer"]').first().click();
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("Grow gently");
     await page.locator('[data-layer-text="fontId"]').selectOption("decorative");
     await tool("stickers");
-    await page.locator('[data-action="add-text-layer"]').click();
+    await page.locator('[data-action="add-text-layer"]').first().click();
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("慢慢长大");
     await page.locator('[data-layer-text="fontId"]').selectOption("chinese");

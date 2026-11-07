@@ -205,7 +205,7 @@ export async function exportJournalImage(editor, options = {}) {
         ? '"Trebuchet MS", "Microsoft YaHei", sans-serif'
         : "sans-serif";
   await document.fonts.ready;
-  if (dayPage) {
+  if (dayPage || editor.layoutTemplate === "text") {
     ctx.fillStyle = editor.textStyle?.color || "#2F2A26";
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
     wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
@@ -219,6 +219,7 @@ export async function exportJournalImage(editor, options = {}) {
     ctx.fillText(editor.mood || "", 875, 820);
   }
   for (const layer of editor.layers) {
+    if (layer.kind === "photo" && !layer.mediaRef) continue; // empty template frame
     ctx.save();
     ctx.translate((layer.x / 100) * 1080, (layer.y / 100) * 1350);
     ctx.rotate((layer.rotation * Math.PI) / 180);
