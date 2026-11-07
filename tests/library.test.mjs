@@ -15,9 +15,10 @@ const base = new URL(
 const catalog = JSON.parse(readFileSync(new URL("library.json", base)));
 const dictionary = JSON.parse(readFileSync(new URL("i18n.json", base)));
 
-test("all seven font families ship their original OFL notices and commercial redistribution terms", () => {
-  assert.equal(catalog.fonts.length, 7);
+test("all font families (7 categories, 5 Chinese) ship their original OFL notices and commercial redistribution terms", () => {
+  assert.equal(catalog.fonts.length, 11);
   assert.equal(new Set(catalog.fonts.map((f) => f.category)).size, 7);
+  assert.ok(catalog.fonts.filter((f) => f.supportsChinese).length >= 5);
   for (const font of catalog.fonts) {
     const license = readFileSync(
       new URL("Fonts/" + font.license, base),
@@ -25,7 +26,11 @@ test("all seven font families ship their original OFL notices and commercial red
     );
     assert.match(license, /SIL OPEN FONT LICENSE/i);
     assert.ok(existsSync(new URL("Fonts/" + font.file, base)));
-    assert.match(font.source, /githubusercontent\.com\/google\/fonts/);
+    // Original Google Fonts TTFs, or OFL npm slices rebuilt by our merge tool.
+    assert.match(
+      font.source,
+      /githubusercontent\.com\/google\/fonts|^npm:.*tools\/merge_font_slices\.py$/,
+    );
   }
 });
 test("original art has transparent scalable SVG and a native PNG for every catalog asset", () => {

@@ -5,7 +5,8 @@
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.cjs",
     "test:browser:v3": "node tests/v3-browser.cjs",
-    "test:browser:v31": "node tests/v31-browser.cjs"
+    "test:browser:v31": "node tests/v31-browser.cjs",
+    "test:browser:v32": "node tests/v32-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

@@ -78,6 +78,63 @@ function drawPhotoLayer(ctx, image, layer) {
     ctx.restore();
   }
 }
+// Paper patterns for the V3.1+ paper styles (matches styles.css).
+function drawPaper(ctx, template) {
+  const lines = (color, step, vertical) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for (let p = step; p < (vertical ? 1080 : 1350); p += step) {
+      ctx.beginPath();
+      if (vertical) {
+        ctx.moveTo(p, 0);
+        ctx.lineTo(p, 1350);
+      } else {
+        ctx.moveTo(0, p);
+        ctx.lineTo(1080, p);
+      }
+      ctx.stroke();
+    }
+  };
+  if (template === "grid") {
+    lines("#E7E1D3", 54, false);
+    lines("#E7E1D3", 54, true);
+  } else if (template === "lined") {
+    lines("#DCE3EC", 68, false);
+    ctx.strokeStyle = "#EBC4BE";
+    ctx.beginPath();
+    ctx.moveTo(110, 0);
+    ctx.lineTo(110, 1350);
+    ctx.stroke();
+  } else if (template === "kraft") {
+    ctx.fillStyle = "rgba(120,90,50,.08)";
+    for (let i = 0; i < 2600; i++)
+      ctx.fillRect((i * 397) % 1080, (i * 613) % 1350, 3, 2);
+  } else if (template === "gingham") {
+    ctx.fillStyle = "rgba(232,180,170,.22)";
+    for (let p = 0; p < 1350; p += 90) ctx.fillRect(0, p, 1080, 45);
+    for (let p = 0; p < 1080; p += 90) ctx.fillRect(p, 0, 45, 1350);
+  } else if (template === "berry") {
+    ctx.fillStyle = "#F0C9C9";
+    for (let x = 30; x < 1080; x += 90)
+      for (let y = 30; y < 1350; y += 90) {
+        ctx.beginPath();
+        ctx.arc(x + ((y / 90) % 2) * 45, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+  } else if (template === "watercolor") {
+    for (const [x, y, r, c] of [
+      [180, 200, 420, "rgba(232,207,207,.45)"],
+      [920, 1150, 480, "rgba(201,215,193,.45)"],
+      [900, 260, 300, "rgba(216,227,238,.5)"],
+    ]) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, c);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1080, 1350);
+    }
+  }
+}
 export async function exportJournalImage(editor, options = {}) {
   const resolvePhoto = options.resolvePhoto || safePhoto;
   const dayPage = options.dayPage !== false;
@@ -86,11 +143,16 @@ export async function exportJournalImage(editor, options = {}) {
   canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle =
-    editor.template === "vintage"
-      ? "#EEE6D5"
-      : editor.template === "cute"
-        ? "#FFFAF2"
-        : "#FFFDFA";
+    {
+      vintage: "#EEE6D5",
+      cute: "#FFFAF2",
+      grid: "#FFFEFA",
+      lined: "#FFFDF8",
+      kraft: "#D9C3A1",
+      gingham: "#FFF9F6",
+      berry: "#FFF7F5",
+      watercolor: "#FBF8F4",
+    }[editor.template] || "#FFFDFA";
   ctx.fillRect(0, 0, 1080, 1350);
   if (editor.template === "cute") {
     ctx.fillStyle = "#E4D5BB";
@@ -110,6 +172,7 @@ export async function exportJournalImage(editor, options = {}) {
       ctx.stroke();
     }
   }
+  drawPaper(ctx, editor.template);
   if (dayPage && resolvePhoto(editor.photo)) {
     ctx.save();
     ctx.translate(540, 430);

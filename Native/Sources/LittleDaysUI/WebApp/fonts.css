@@ -6,3 +6,7 @@
 @font-face { font-family: "LD-minimal-sans"; src: url("library/fonts/LD-minimal-sans.ttf") format("truetype"); font-weight: 100 1000; font-style: normal; font-display: swap; }
 @font-face { font-family: "LD-decorative"; src: url("library/fonts/LD-decorative.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "LD-chinese"; src: url("library/fonts/LD-chinese.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "LD-zh-kuaile"; src: url("library/fonts/LD-zh-kuaile.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "LD-zh-xiaowei"; src: url("library/fonts/LD-zh-xiaowei.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "LD-zh-longcang"; src: url("library/fonts/LD-zh-longcang.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "LD-zh-wenkai"; src: url("library/fonts/LD-zh-wenkai.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }

@@ -413,3 +413,77 @@ export function moveLayer(page, layerId, delta) {
   page.layers.splice(next, 0, layer);
   return true;
 }
+
+/* ---------- Habit journey (read like a book) ---------- */
+
+const nextDay = (key) => {
+  const date = new Date(`${key}T12:00:00`);
+  date.setDate(date.getDate() + 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+
+// All check-ins of one habit in date order, with streaks and totals.
+export function habitJourney(state, habitId, today) {
+  const checks = state.checks
+    .filter((check) => check.habitId === habitId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let longest = 0,
+    run = 0,
+    previous = null;
+  for (const check of checks) {
+    run = previous && nextDay(previous) === check.date ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    previous = check.date;
+  }
+  // Current streak counts back from today (or yesterday, if today is not done yet).
+  const dates = new Set(checks.map((check) => check.date));
+  let current = 0;
+  let cursor = dates.has(today) ? today : null;
+  if (!cursor) {
+    const yesterday = new Date(`${today}T12:00:00`);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const key = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+    cursor = dates.has(key) ? key : null;
+  }
+  while (cursor && dates.has(cursor)) {
+    current++;
+    const back = new Date(`${cursor}T12:00:00`);
+    back.setDate(back.getDate() - 1);
+    cursor = `${back.getFullYear()}-${String(back.getMonth() + 1).padStart(2, "0")}-${String(back.getDate()).padStart(2, "0")}`;
+  }
+  return {
+    checks,
+    total: checks.length,
+    minutes: checks.reduce((sum, check) => sum + (Number(check.minutes) || 0), 0),
+    notes: checks.filter((check) => check.note?.trim()).length,
+    longestStreak: longest,
+    currentStreak: current,
+    since: checks[0]?.date || null,
+  };
+}
+
+/* ---------- Book shelves: one cover card per day ---------- */
+
+// Days that have content in a book, newest first. Each day lists the day
+// page (if it belongs to the book) and the Moments filed in that book.
+export function bookDays(state, bookId, filter = {}) {
+  const days = [];
+  for (const entry of state.entries) {
+    const dayPage = entry.bookId === bookId && hasDayPageContent(entry);
+    const moments = (entry.moments || []).filter((moment) => moment.bookId === bookId);
+    if (!dayPage && !moments.length) continue;
+    if (filter.date && entry.date !== filter.date) continue;
+    if (!filter.date && filter.month && !entry.date.startsWith(filter.month)) continue;
+    const photos = [
+      ...(dayPage ? photoRefs({ photo: entry.photo, layers: entry.layers }) : []),
+      ...moments.flatMap((moment) => photoRefs({ layers: moment.layers })),
+    ];
+    const clips = [...(dayPage ? entry.media || [] : []), ...moments.flatMap((moment) => moment.media || [])];
+    days.push({ date: entry.date, entry, dayPage, moments, photos, clips });
+  }
+  return days.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function bookMonths(state, bookId) {
+  return [...new Set(bookDays(state, bookId).map((day) => day.date.slice(0, 7)))];
+}

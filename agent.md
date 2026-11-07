@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-07 — V3.2：创作桌面、成长轨迹、按日封面、更多纸张/主题/中文字体
+
+- 需求（用户反馈）：纸张只有三种；添加内容要拖到很下面、排版与照片分离、看不到改动效果，希望概括菜单点开看细节；选中小故事后如何看/播放音视频；宠物、亲子主题；像看书一样看习惯成长和每日心得；小确幸按日子有封面、日子里看具体事件；手帐本选择日期；中文字体更多样。另附 V3 全量需求（社区/好友/私信/协作/后端），按 ROADMAP Phase 2–4 处理。
+- 修改/新增：`Public/app.js`（Studio 桌面：小故事标签条、固定预览与放大、概括菜单与摘要实时更新、选中图层/加照片/选中有媒体的小故事自动展开对应行；成长轨迹页面、翻页/滑动/方向键；手帐本按日封面与筛选）；新增 `Public/js/journey-view.mjs`；`Public/js/day.mjs`（`habitJourney`、`bookDays`、`bookMonths`）；`canvas.mjs`/`export.mjs`（9 种纸张）；`styles.css`；共享 `features.json`（纸张）、`library.json`（4 款中文字体、6 套新预设）、`i18n.json`（约 60 条）；4 个 TTF + OFL；`tools/merge_font_slices.py`；测试 `tests/v32-browser.cjs`、`v31.test.mjs`（+2）、`library.test.mjs`（字体数量）及三套旧 E2E（改为先展开菜单行）；文档 ROADMAP、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、ASSETS；iOS 外壳副本已同步。
+- 决策：一次只展开一个菜单行，避免页面变长；摘要用 `refreshToolSummaries` 局部更新，不打断输入；中文字体来自包管理器可访问的 OFL npm 包（GitHub/Google Fonts 下载被网络策略阻止），合并工具去重后体积 1.5–7 MB/款。
+- 运行与测试：Node 35、Python 12 通过；`browser.cjs`、`v3-browser.cjs`、`v31-browser.cjs`、新 `v32-browser.cjs`（菜单一次一行、9 种纸张切换、预览固定可放大、心情/排版/标题摘要同步、选中小故事直接播放、6 套新预设与 5 款中文字体加载、成长轨迹统计/按钮/方向键/滑动/目录/写今日心得、按日封面与月份/日期筛选、375/390/430 无横向溢出）全部通过。未验证：Windows 实机、iOS 构建。
+- 已知问题：合并后的中文字体不含竖排/复杂替换特性；社区等社交功能未开始。
+- 下一步：用户确认 Phase 2 社交原型范围；在线链接已按规则重新发布。
+
 ### 2026-11-07 — 桌面 App 可点击的 Dev servers
 
 - 需求：在 environment 里有一个随时可点的服务器。

@@ -6,6 +6,8 @@ import { escapeHTML as esc } from "./personal-ui.mjs";
 const num = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+// Paper styles (ids come from shared features.json templates).
+export const PAPERS = ["minimal", "cute", "vintage", "grid", "lined", "kraft", "gingham", "berry", "watercolor"];
 export const formatDuration = (value) =>
   Number.isFinite(Number(value)) && Number(value) > 0
     ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}`
@@ -117,7 +119,7 @@ export function canvasHTML(page, ctx, options = {}) {
     dayPage = options.dayPage !== false,
     font = page.font || "serif",
     textStyle = page.textStyle || {};
-  const template = ["minimal", "cute", "vintage"].includes(page.template)
+  const template = PAPERS.includes(page.template)
     ? page.template
     : "minimal";
   let fixed = "";

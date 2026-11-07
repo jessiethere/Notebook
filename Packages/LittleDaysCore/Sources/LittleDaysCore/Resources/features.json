@@ -20,7 +20,13 @@
   "templates": [
     { "id": "minimal", "title": "Minimal" },
     { "id": "cute", "title": "Cute" },
-    { "id": "vintage", "title": "Vintage" }
+    { "id": "vintage", "title": "Vintage" },
+    { "id": "grid", "title": "Grid" },
+    { "id": "lined", "title": "Lined" },
+    { "id": "kraft", "title": "Kraft" },
+    { "id": "gingham", "title": "Gingham" },
+    { "id": "berry", "title": "Berry Dots" },
+    { "id": "watercolor", "title": "Watercolor" }
   ],
   "moods": ["☀️", "🌷", "☁️", "🌧️", "✨"],
   "stickers": {
