@@ -48,6 +48,14 @@
 
 ## 更新日志
 
+### 2026-11-07 — 修复会话 servers 面板看不到 localhost
+
+- 需求：合并 V3.1 + 外壳到 main（PR #1 已合并，`f926f1d`）；用户在 environment 旁的 servers 里看不到 localhost。
+- 原因：① 会话容器重启后预览服务停止；② `tools/preview.py` 固定只监听 127.0.0.1，会话预览面板从容器外连接时连不上。
+- 改动：`tools/preview.py` 新增 `--host`（默认 127.0.0.1，个人电脑仍只对本机开放；云端会话用 `0.0.0.0`），更新过时的 ZIP/“非 SwiftUI”提示文字；AGENTS.md 写明云端启动命令与容器重启后需重新启动；README 日志。
+- 验证：服务以 `--host 0.0.0.0` 启动后，通过容器网卡地址访问 `/api/health` 与首页成功，已重新登记 8080；Python 测试见提交。用户侧面板是否出现需用户确认。
+- 下一步：用户确认 servers 中可见；若仍不可见，检查会话预览功能设置。
+
 ### 2026-11-07 — iOS Swift 外壳 + localhost 链接查看
 
 - 本次需求：README/AGENTS 不再让用户下载 ZIP，改为点 localhost 链接查看；保留 Swift 代码并与 HTML 保持一致——用户说明即“Swift 套壳”，最终发布 iOS，日常在 Windows 用 localhost 看更新、提出修改。
