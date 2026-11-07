@@ -2,6 +2,7 @@
 
 本说明适用于整个仓库。
 
+- 使用 Swift + Vapor 后端与 HTML/CSS/JavaScript 界面，通过本地 localhost 浏览器预览；保留无需打开 Xcode 的命令行启动方式。
 - 开始或接续任何任务前，先阅读 [agent.md](agent.md) 和 [README.md](README.md)，了解最新进度、约定和待办。
 - **每次更新都必须同步更新 agent.md 和 README.md 中的更新日志**，包括代码、配置和文档修改；日志应随对应改动一起提交。
 - 在 agent.md 中维护当前状态、关键决定、验证结果、未完成事项和下一步；README.md 保留面向使用者的更新摘要，确保两处记录一致。
