@@ -48,6 +48,14 @@
 
 ## 更新日志
 
+### 2026-11-07 — 在线链接（claude.ai Artifact）
+
+- 需求：用户的会话面板没有 servers 区，看不到 localhost；希望有一个点开就能看的链接。
+- 改动：Web 资源路径全部改为相对路径（index/CSS/fonts.css 生成器/`shared/` fetch/`library/` 贴纸与许可证/示例照片 `/assets/…` 在显示时转为相对路径，保存的数据不变）；四处 `confirm()` 改为页面内确认框 `askConfirm`（在线链接会拒绝浏览器弹窗；localhost 与 iOS 外壳同样适用）；`body` 明确背景色；新增 `tools/build_link.py` 生成 `dist/link/`（不提交）；发布为私有 Artifact：https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A ；README 顶部改为该链接，AGENTS.md 写明每次更新发布到同一链接；测试改为点击页面内确认框；iOS 外壳副本已同步。
+- 验证：Node 33、Python 12、三套浏览器 E2E 全部通过；本地模拟子路径 + 外框加载在线版：0 个失败请求、0 个脚本错误，照片与贴纸正常显示。
+- 已知限制：在线链接里麦克风录音被拒绝（会提示）、下载（备份/PNG）无效、数据只在该浏览器；未在用户设备上确认打开效果。
+- 下一步：用户点开链接确认；以后每次改动重新构建并发布到同一链接。
+
 ### 2026-11-07 — 修复会话 servers 面板看不到 localhost
 
 - 需求：合并 V3.1 + 外壳到 main（PR #1 已合并，`f926f1d`）；用户在 environment 旁的 servers 里看不到 localhost。

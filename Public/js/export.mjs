@@ -1,9 +1,11 @@
 const safePhoto = (photo) =>
-  typeof photo === "string" &&
-  (photo.startsWith("/assets/") ||
-    /^data:image\/(jpeg|png|webp);base64,/.test(photo))
-    ? photo
-    : "";
+  typeof photo !== "string"
+    ? ""
+    : /^\/assets\/[a-z0-9-]+\.jpg$/i.test(photo)
+      ? photo.slice(1)
+      : /^data:image\/(jpeg|png|webp);base64,/.test(photo)
+        ? photo
+        : "";
 export function loadImage(source) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -162,7 +164,7 @@ export async function exportJournalImage(editor, options = {}) {
       layer.assetId &&
       options.catalog?.stickers.find((item) => item.id === layer.assetId);
     const source = asset
-      ? `/library/stickers/${asset.file}`
+      ? `library/stickers/${asset.file}`
       : layer.kind === "photo"
         ? resolvePhoto(layer.mediaRef)
         : "";

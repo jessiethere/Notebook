@@ -3,9 +3,12 @@
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-## 👉 [点这里打开 Little Days：http://localhost:8080](http://localhost:8080)
+## 👉 [点这里直接打开 Little Days（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
 
-> 链接打开的是你电脑上运行的预览。如果打不开，先双击项目文件夹里的 **Start-Windows.cmd**（它会自动更新到最新版并启动），再点上面的链接。
+> 不用安装、不用运行任何东西，点开就是最新版；只有你自己能打开（登录 claude.ai）。每次更新都会发布到这同一个链接。
+> 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
+
+本机预览：[http://localhost:8080](http://localhost:8080)（先双击项目文件夹里的 **Start-Windows.cmd**，它会自动更新到最新版并启动）。
 
 最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
@@ -126,6 +129,11 @@ npm run test:browser:v31
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-07 — 在线链接
+
+- README 顶部新增可直接点开的在线链接（claude.ai，私有），每次更新发布到同一链接；本机 localhost 链接保留。
+- 网页改用相对路径与页面内确认框，在线链接、localhost、iOS 外壳都可用；在线链接中录音和下载不可用。
 
 ### 2026-11-07 — localhost 预览可在会话 servers 中打开
 

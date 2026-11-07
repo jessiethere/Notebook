@@ -248,9 +248,9 @@ async function noOverflow(page, label) {
     passed.push("2 move/scale/pinch/rotate/resize/crop/layer order for 5 photos");
 
     // Switching template after manual edits asks first (dialog auto-accepted here, undoable).
-    let asked = false;
-    page.once("dialog", (d) => (asked = d.message().length > 0));
     await page.locator('[data-action="apply-layout"][data-template="grid"]').click();
+    const asked = (await page.locator("#confirm-dialog[open] #confirm-message").innerText()).length > 0;
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await waitDay(D1, (e) => e.layoutTemplate === "grid" && !e.layoutEdited);
     assert.ok(asked, "template switch confirms before overriding manual layout");
     await page.locator('[data-action="undo"]').click();
@@ -441,6 +441,7 @@ async function noOverflow(page, label) {
     await page.locator('[data-action="insert-growth"][data-habit="reading"]').click();
     await page.waitForSelector(".growth-layer");
     await page.locator('[data-action="moment-delete"]').click();
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.locator('[data-action="save-entry"]').click();
     await page.waitForSelector(".hero");
     s = await read();
@@ -506,6 +507,7 @@ async function noOverflow(page, label) {
     await r.nav("home");
     await restore.page.locator('[data-page="settings"]').click();
     await restore.page.locator("#backup-input").setInputFiles({ name: "backup.json", mimeType: "application/json", buffer: backupBuffer });
+    await restore.page.locator("#confirm-dialog[open] #confirm-ok").click();
     await restore.page.waitForFunction(() => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
       return s?.entries.some((e) => e.date === "2026-11-03" && e.moments?.length === 3);

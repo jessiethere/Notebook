@@ -1678,5 +1678,9 @@
   "settings.usageUnknown": {
     "zh": "暂时无法统计本机媒体大小。",
     "en": "Media usage could not be measured right now."
+  },
+  "confirm.ok": {
+    "zh": "确定",
+    "en": "OK"
   }
 }

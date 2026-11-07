@@ -1,4 +1,4 @@
-@import url("/tokens.css");
+@import url("tokens.css");
 :root {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
@@ -1553,8 +1553,8 @@ dialog .dialog-description {
 }
 .cover-floral-notebook {
   background-image:
-    url("/library/stickers/LD-sticker-tulip.svg"),
-    url("/library/stickers/LD-sticker-leaf.svg");
+    url("library/stickers/LD-sticker-tulip.svg"),
+    url("library/stickers/LD-sticker-leaf.svg");
   background-size: 55%, 40%;
   background-position:
     -15% 100%,
@@ -3132,4 +3132,24 @@ html[data-shell="ios"] .bottom-nav {
 }
 html[data-shell="ios"] .toast {
   bottom: calc(90px + env(safe-area-inset-bottom));
+}
+
+/* In-page confirmation (replaces browser confirm()). */
+.confirm-dialog {
+  max-width: min(340px, calc(100vw - 32px));
+}
+.confirm-dialog p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+/* Explicit page ground so hosted copies never show the host's background. */
+body {
+  background: #ebe9e2;
+}
+@media (max-width: 520px) {
+  body {
+    background: var(--cream);
+  }
 }

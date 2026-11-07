@@ -114,11 +114,10 @@ export class MediaStore {
     if (typeof reference !== "string") return "";
     if (reference.startsWith("media:"))
       return this.urls.get(reference.slice(6)) || "";
-    if (
-      reference.startsWith("/assets/") ||
-      /^data:image\/(jpeg|png|webp);base64,/.test(reference)
-    )
-      return reference;
+    // Stored sample photos keep their original "/assets/…" value; they are
+    // displayed through a relative URL so hosted copies of the app work too.
+    if (/^\/assets\/[a-z0-9-]+\.jpg$/i.test(reference)) return reference.slice(1);
+    if (/^data:image\/(jpeg|png|webp);base64,/.test(reference)) return reference;
     return "";
   }
   // Images (photos, covers, posters, growth photos) stay available app-wide

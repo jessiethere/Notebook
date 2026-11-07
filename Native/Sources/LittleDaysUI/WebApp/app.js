@@ -669,7 +669,7 @@ function studioPage() {
          .filter((s) => s.category === materialCategory)
          .map(
            (s) =>
-             `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="/library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`,
+             `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`,
          )
          .join(
            "",
@@ -821,7 +821,23 @@ function openReflectionDialog(period, key) {
     `<h2>${t(period === "week" ? "reflection.weekTitle" : "reflection.monthTitle")}</h2><p class="dialog-description">${esc(period === "week" ? t("reflection.weekOf", { date: shortDate(key) }) : new Date(`${key}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))} · ${t("reflection.optional")}</p><div class="dialog-fields note-paper">${["wentWell", "challenges", "learned", "nextFocus"].map((field) => `<label class="field">${t("reflection." + field)}<textarea name="${field}" maxlength="2000">${esc(reflection[field] || "")}</textarea></label>`).join("")}</div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t("save")}</button></div>`;
   $("#form-dialog").showModal();
 }
-function handleCheck(habitId, date) {
+// In-page confirmation: works the same on localhost, in the iOS shell and on a
+// hosted link (where browser confirm() dialogs are unavailable).
+function askConfirm(message) {
+  const dialog = $("#confirm-dialog");
+  $("#confirm-message").textContent = message;
+  $("#confirm-cancel").textContent = t("cancel");
+  $("#confirm-ok").textContent = t("confirm.ok");
+  dialog.returnValue = "";
+  dialog.showModal();
+  $("#confirm-cancel").focus();
+  return new Promise((resolve) =>
+    dialog.addEventListener("close", () => resolve(dialog.returnValue === "ok"), {
+      once: true,
+    }),
+  );
+}
+async function handleCheck(habitId, date) {
   const habit = state().habits.find((h) => h.id === habitId);
   const existingCheck = state().checks.find(
     (c) => c.habitId === habitId && c.date === date,
@@ -834,7 +850,7 @@ function handleCheck(habitId, date) {
   if (
     existingCheck &&
     (existingCheck.note || existingCheck.detail || existingCheck.photo) &&
-    !confirm(t("growth.cancelConfirm"))
+    !(await askConfirm(t("growth.cancelConfirm")))
   )
     return;
 
@@ -884,7 +900,7 @@ async function action(target) {
   }
   if (actionName === "quick-growth") navigate("growth");
   if (actionName === "check")
-    handleCheck(target.dataset.habit, target.dataset.date);
+    await handleCheck(target.dataset.habit, target.dataset.date);
   if (actionName === "new-habit") openDialog("habit");
   if (actionName === "new-book") openDialog("book");
   if (actionName === "close-dialog") $("#form-dialog").close();
@@ -1606,7 +1622,7 @@ $("#backup-input").addEventListener("change", async (event) => {
       backup.state?.schemaVersion !== 1
     )
       throw new Error("Invalid backup");
-    if (!confirm(t("settings.restoreConfirm"))) return;
+    if (!(await askConfirm(t("settings.restoreConfirm")))) return;
     busyMedia = true;
     const restored = normalizeState(await media.restore(backup));
     store.update((next) => {
@@ -1767,7 +1783,10 @@ async function v31Action(target) {
     case "moment-delete": {
       const moment = findMoment(editor, activeMomentId);
       if (!moment) return true;
-      if (hasMomentContent(moment) && !confirm(t("moment.deleteConfirm")))
+      if (
+        hasMomentContent(moment) &&
+        !(await askConfirm(t("moment.deleteConfirm")))
+      )
         return true;
       changeEditor((entry) => removeMoment(entry, moment.id), false);
       selectMoment(null);
@@ -1804,7 +1823,8 @@ async function v31Action(target) {
       return true;
     case "apply-layout": {
       const page = activePage();
-      if (page.layoutEdited && !confirm(t("layout.confirm"))) return true;
+      if (page.layoutEdited && !(await askConfirm(t("layout.confirm"))))
+        return true;
       changeTarget((entry) => {
         if (entry === editor) freeMainPhoto(entry);
         applyLayout(entry, target.dataset.template, photoRegion());
@@ -2557,7 +2577,7 @@ async function start() {
   const names = ["design-tokens", "features", "seed", "library", "i18n"];
   const responses = await Promise.all(
     names.map(async (name) => {
-      const response = await fetch(`/shared/${name}.json`);
+      const response = await fetch(`shared/${name}.json`);
       if (!response.ok) throw new Error("Shared configuration could not load");
       return response.json();
     }),

@@ -365,20 +365,20 @@ async function streamBytes(download) {
     assert.ok(backup.media.length >= 6);
     assert.equal(backup.state.books.at(-1).title, book.title);
     const stable = JSON.stringify(await read());
-    page.once("dialog", (dialog) => dialog.dismiss());
     await page.locator("#backup-input").setInputFiles({
       name: "backup.json",
       mimeType: "application/json",
       buffer: backupBytes,
     });
+    await page.locator("#confirm-dialog[open] #confirm-cancel").click();
     await page.waitForTimeout(150);
     assert.equal(JSON.stringify(await read()), stable);
-    page.once("dialog", (dialog) => dialog.accept());
     await page.locator("#backup-input").setInputFiles({
       name: "backup.json",
       mimeType: "application/json",
       buffer: backupBytes,
     });
+    await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.waitForFunction(() =>
       document
         .querySelector("#toast")
