@@ -127,6 +127,8 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // kind == "growth": a live card that references a HabitCheck instead of copying it.
     public var habitId: String?
     public var checkDate: String?
+    // kind == "video" / "audio": a clip from the page's media placed on the paper.
+    public var clipId: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString

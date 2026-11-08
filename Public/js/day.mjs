@@ -407,10 +407,13 @@ export function photoLayer(reference, name, values = {}) {
 // Applies a template for a chosen number of photos. Missing photos become
 // empty frames (filled by the next photo pick); "text" keeps the page to the
 // title and words. Existing photos are never removed.
-export function applyPageTemplate(page, count, template, region) {
+export function applyPageTemplate(page, count, template, region, options = {}) {
   const filled = page.layers.filter((layer) => layer.kind === "photo" && layer.mediaRef);
   if (template === "text") {
-    if (filled.length) throw new Error("layout.textHasPhotos");
+    if ((filled.length || page.photo) && !options.force) throw new Error("layout.textHasPhotos");
+    // Words only: photos leave the page (their files stay on the device; undoable).
+    page.layers = page.layers.filter((layer) => layer.kind !== "photo");
+    if (page.photo) page.photo = "";
     page.layers = page.layers.filter((layer) => !(layer.kind === "photo" && !layer.mediaRef));
     page.layoutTemplate = "text";
     page.layoutEdited = false;
@@ -465,6 +468,27 @@ export function freeMainPhoto(entry) {
   return layer;
 }
 
+// Video / audio placed on the paper. The clip stays in page.media; the layer
+// only references it, so removing it from the paper never deletes the file.
+export function mediaLayer(clip, values = {}) {
+  const video = clip.kind === "video";
+  return {
+    id: newId(),
+    kind: video ? "video" : "audio",
+    clipId: clip.id,
+    text: clip.name || (video ? "video" : "audio"),
+    x: 50,
+    y: video ? 62 : 80,
+    w: video ? 58 : 64,
+    ...(video ? { h: 30 } : {}),
+    scale: 1,
+    rotation: video ? -2 : 2,
+    ...values,
+  };
+}
+export function isOnPage(page, clipId) {
+  return page.layers.some((layer) => layer.clipId === clipId);
+}
 export function moveLayer(page, layerId, delta) {
   const index = page.layers.findIndex((layer) => layer.id === layerId);
   const next = Math.max(0, Math.min(page.layers.length - 1, index + delta));

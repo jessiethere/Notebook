@@ -311,13 +311,13 @@ async function streamBytes(download) {
       await video.play();
     });
     await page.waitForFunction(
-      () => document.querySelector("video").currentTime > 0.05,
+      () => document.querySelector(".media-card video").currentTime > 0.05,
     );
     await page
       .locator(".media-card audio")
       .first()
       .evaluate((audio) => audio.play());
-    await page.waitForFunction(() => document.querySelector("video").paused);
+    await page.waitForFunction(() => document.querySelector(".media-card video").paused);
     await page
       .locator(".media-card audio")
       .first()
@@ -330,7 +330,7 @@ async function streamBytes(download) {
       .last()
       .evaluate((audio) => audio.play());
     await page.waitForFunction(
-      () => document.querySelectorAll("audio")[1].currentTime > 0.05,
+      () => document.querySelectorAll(".media-card audio")[1].currentTime > 0.05,
     );
     await page
       .locator(".media-card audio")
@@ -419,7 +419,7 @@ async function streamBytes(download) {
       .locator(".media-card audio")
       .first()
       .evaluate((audio) => audio.play());
-    await page.waitForFunction(() => !document.querySelector("audio").paused);
+    await page.waitForFunction(() => !document.querySelector(".media-card audio").paused);
     await page
       .locator(".media-card audio")
       .first()

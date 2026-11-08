@@ -72,9 +72,7 @@ export function mediaPanelHTML(entry, ctx, recording) {
   const { t } = ctx;
   return `<section class="media-section"><div class="section-heading"><h2>${t("media.title")}</h2><span class="badge">IndexedDB</span></div><div class="media-add-actions"><button class="secondary" data-action="upload-video">${t("media.video")}</button><button class="secondary" data-action="upload-audio">${t("media.audio")}</button><button class="secondary ${recording ? "is-recording" : ""}" data-action="${recording ? "stop-recording" : "record-audio"}">${t(recording ? "media.stop" : "media.record")}</button></div><p id="record-status" class="record-status" role="status">${recording ? t("media.recording", { seconds: 0 }) : ""}</p><p class="save-help">${t("media.limit")}</p>${
     entry.media?.length
-      ? entry.media
-          .map((clip) => mediaCardHTML(clip, ctx, { editable: true }))
-          .join("")
+      ? entry.media.map((clip) => mediaCardHTML(clip, ctx, { editable: true, onPage: (entry.layers || []).some((layer) => layer.clipId === clip.id) })).join("")
       : `<p class="empty">${t("media.empty")}</p>`
   }</section>`;
 }

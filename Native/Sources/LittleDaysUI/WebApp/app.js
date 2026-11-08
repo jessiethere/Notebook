@@ -20,7 +20,7 @@ import {
   settingsHTML,
   fieldLabel,
 } from "./js/personal-ui.mjs";
-import { loadImage, exportJournalImage } from "./js/export.mjs";
+import { loadImage, exportJournalImage, exportJournalVideo } from "./js/export.mjs";
 import {
   canvasHTML as sharedCanvasHTML,
   layerGeometry,
@@ -61,6 +61,8 @@ import {
   fillEmptySlots,
   TEMPLATES_BY_COUNT,
   photoLayer,
+  mediaLayer,
+  isOnPage,
   freeMainPhoto,
   moveLayer,
 } from "./js/day.mjs";
@@ -603,12 +605,12 @@ function layerControls() {
     ["scale", 0.3, 3, 0.05, "layer.size"],
     ["rotation", -180, 180, 1, "layer.rotation"],
   ];
-  if (layer.kind === "photo")
+  if (layer.kind === "photo" || layer.kind === "video")
     base.push(
       ["w", 8, 100, 1, "layer.width", layer.w ?? 42],
       ["h", 8, 100, 1, "layer.height", layer.h ?? 34],
     );
-  if (layer.kind === "growth" || layer.kind === "text")
+  if (layer.kind === "growth" || layer.kind === "text" || layer.kind === "audio")
     base.push([
       "w",
       20,
@@ -704,7 +706,8 @@ function templatePickerHTML(page) {
   const count = templateCount ?? current;
   const counts = [0, 1, 2, 3, 4, 5]
     .map((n) => {
-      const disabled = n < Math.min(5, filled);
+      // Words only is always possible (photos leave the page after a confirm).
+      const disabled = n > 0 && n < Math.min(5, filled);
       return `<button data-action="template-count" data-count="${n}" class="count-option ${n === count ? "selected" : ""}" aria-pressed="${n === count}" ${disabled ? `disabled title="${t("layout.hasPhotos", { count: filled })}"` : ""}>${n === 0 ? t("layout.textOnly") : n === 5 ? "5+" : n}</button>`;
     })
     .join("");
@@ -878,7 +881,7 @@ function growthPanelHTML() {
 
 function studioPage() {
   const dayPage = isDayPage();
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div>${writeCardHTML()}<h3 class="style-heading">${t("write.decorate")}<small>${t("write.decorateHint")}</small></h3><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><button class="primary" data-action="export">${icon("download")} ${t("studio.export")}</button></div><p class="save-help">${t("studio.help")}</p>`;
+  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div>${writeCardHTML()}<h3 class="style-heading">${t("write.decorate")}<small>${t("write.decorateHint")}</small></h3><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p>`;
 }
 
 function updateCanvas() {
@@ -1278,30 +1281,8 @@ async function action(target) {
     navigate("home");
   }
   if (actionName === "export") {
-    const page = activePage();
-    await exportJournalImage(page, {
-      resolvePhoto: safePhoto,
-      catalog,
-      fontFamily,
-      dayPage: isDayPage(),
-      date: editor.date,
-      suffix: isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`,
-      growthCard: (layer) => {
-        const check = state().checks.find(
-          (item) =>
-            item.habitId === layer.habitId && item.date === layer.checkDate,
-        );
-        const habit = state().habits.find((item) => item.id === layer.habitId);
-        return {
-          title: habit?.title || layer.text,
-          facts: [check?.detail, check?.minutes ? `${check.minutes} min` : ""]
-            .filter(Boolean)
-            .join(" · "),
-          note: check?.note || "",
-        };
-      },
-    });
-    toast(t("手帐图片已导出（基础排版版本）。"));
+    await exportJournalImage(activePage(), exportOptions());
+    toast(t("export.photoDone"));
   }
 }
 
@@ -1535,7 +1516,8 @@ function paintLayer(layer) {
   element.style.top = `${layer.y}%`;
   if (layer.kind === "photo" || layer.w != null)
     element.style.width = `${layer.w}%`;
-  if (layer.kind === "photo") element.style.height = `${layer.h}%`;
+  if (layer.kind === "photo" || layer.kind === "video")
+    element.style.height = `${layer.h}%`;
   element.style.transform = layerGeometry(layer).match(/transform:(.*)$/)[1];
   const image = element.querySelector(".photo-crop img");
   if (image) image.setAttribute("style", cropStyle(layer));
@@ -1592,6 +1574,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
+  if (event.target.closest(".layer-play")) return;
   const element = event.target.closest("[data-layer]");
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   // A second finger anywhere on the canvas pinches the selected layer.
@@ -1647,7 +1630,7 @@ $("#app").addEventListener("pointermove", (event) => {
     const factor = 2 / (start.scale || 1);
     layer.w =
       Math.round(Math.max(8, Math.min(100, start.w + dx * factor)) * 10) / 10;
-    if (layer.kind === "photo")
+    if (layer.kind === "photo" || layer.kind === "video")
       layer.h =
         Math.round(Math.max(8, Math.min(100, start.h + dy * factor)) * 10) / 10;
   } else if (drag.mode === "rotate") {
@@ -2288,6 +2271,64 @@ function handleCommunityChange(target) {
   render();
   return true;
 }
+// Where a new clip lands: on a day page it avoids the fixed title and words.
+function clipSpot(page, entry, clip) {
+  // Clips of this kind already on the page (the new clip may already be listed).
+  const n = page.media.filter((item) => item.kind === clip.kind && item.id !== clip.id).length;
+  if (page !== entry) return { y: clip.kind === "video" ? 58 : Math.min(92, 82 + (n % 2) * 8) };
+  return clip.kind === "video"
+    ? { x: 70, y: 44, w: 40, h: 21, rotation: 4 }
+    : { x: 50, y: n % 2 ? 84 : 93, w: 56 };
+}
+function exportOptions() {
+  const page = activePage();
+  return {
+    resolvePhoto: safePhoto,
+    catalog,
+    fontFamily,
+    dayPage: isDayPage(),
+    date: editor.date,
+    suffix: isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`,
+    growthCard: (layer) => {
+      const check = state().checks.find(
+        (item) => item.habitId === layer.habitId && item.date === layer.checkDate,
+      );
+      const habit = state().habits.find((item) => item.id === layer.habitId);
+      return {
+        title: habit?.title || layer.text,
+        facts: [check?.detail, check?.minutes ? `${check.minutes} min` : ""].filter(Boolean).join(" · "),
+        note: check?.note || "",
+      };
+    },
+  };
+}
+// Records the page (moving video + mixed sound) and downloads it.
+async function exportPageVideo() {
+  if (!globalThis.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+    toast(t("export.videoUnsupported"));
+    return;
+  }
+  busyMedia = true;
+  let shown = -1;
+  try {
+    document.querySelectorAll("#app audio, #app video").forEach((element) => element.pause());
+    await exportJournalVideo(activePage(), {
+      ...exportOptions(),
+      onProgress: (seconds, total) => {
+        const whole = Math.floor(seconds);
+        if (whole === shown) return;
+        shown = whole;
+        toast(t("export.recording", { now: formatDuration(seconds), total: formatDuration(total) }));
+      },
+    });
+    toast(t("export.videoDone"));
+  } catch (error) {
+    console.warn("Video export failed", error?.name);
+    toast(t("export.videoFailed"));
+  } finally {
+    busyMedia = false;
+  }
+}
 function openTool(tool) {
   studioTool = studioTool === tool ? null : tool;
   render();
@@ -2303,6 +2344,13 @@ async function v31Action(target) {
     case "tool":
       openTool(target.dataset.tool);
       return true;
+    case "layer-play": {
+      const element = target.closest(".media-layer")?.querySelector("video,audio");
+      if (!element) return true;
+      if (element.paused) element.play().catch(() => toast(t("media.missing")));
+      else element.pause();
+      return true;
+    }
     case "book-filter-clear":
       bookFilter = { month: "", date: "" };
       render();
@@ -2404,11 +2452,18 @@ async function v31Action(target) {
       if (page.layoutEdited && !(await askConfirm(t("layout.confirm"))))
         return true;
       const count = Number(target.dataset.count ?? -1);
+      const hasPhotos =
+        Boolean(page.photo) || page.layers.some((layer) => layer.kind === "photo" && layer.mediaRef);
+      let force = false;
+      if (target.dataset.template === "text" && hasPhotos) {
+        if (!(await askConfirm(t("layout.textConfirm")))) return true;
+        force = true;
+      }
       try {
         changeTarget((entry) => {
-          if (entry === editor) freeMainPhoto(entry);
+          if (entry === editor && !force) freeMainPhoto(entry);
           if (count >= 0)
-            applyPageTemplate(entry, count, target.dataset.template, photoRegion());
+            applyPageTemplate(entry, count, target.dataset.template, photoRegion(), { force });
           else applyLayout(entry, target.dataset.template, photoRegion());
         });
       } catch (error) {
@@ -2639,7 +2694,26 @@ async function v3Action(target) {
       entry.media = entry.media.filter(
         (clip) => clip.id !== target.dataset.clip,
       );
+      entry.layers = entry.layers.filter((layer) => layer.clipId !== target.dataset.clip);
     });
+    return true;
+  }
+  if (name === "clip-on-page") {
+    // Put a clip on the paper, or take it off (the file stays in the list).
+    changeTarget((entry) => {
+      const clip = entry.media.find((item) => item.id === target.dataset.clip);
+      if (!clip) return;
+      if (isOnPage(entry, clip.id)) entry.layers = entry.layers.filter((layer) => layer.clipId !== clip.id);
+      else {
+        const layer = mediaLayer(clip, clipSpot(entry, editor, clip));
+        entry.layers.push(layer);
+        selectedLayer = layer.id;
+      }
+    });
+    return true;
+  }
+  if (name === "export-video") {
+    await exportPageVideo();
     return true;
   }
   if (name === "record-audio") {
@@ -2942,7 +3016,7 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
   const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
     const page = (targetId && findMoment(entry, targetId)) || entry;
-    page.media.push({
+    const clip = {
       id: id(),
       kind,
       name,
@@ -2952,7 +3026,10 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
       source: `media:${mediaId}`,
       poster: "",
       ...(options.origin ? { origin: options.origin } : {}),
-    });
+    };
+    page.media.push(clip);
+    // New clips go straight onto the paper, like photos.
+    page.layers.push(mediaLayer(clip, clipSpot(page, entry, clip)));
   });
   flushDraft();
 }
@@ -3236,3 +3313,13 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") openJourney(journeyHabit, journeyPage + 1);
   if (event.key === "ArrowLeft") openJourney(journeyHabit, journeyPage - 1);
 });
+// Clips on the paper show their own playing state.
+for (const type of ["play", "pause", "ended"])
+  document.addEventListener(
+    type,
+    (event) => {
+      const layer = event.target.closest?.(".media-layer");
+      if (layer) layer.classList.toggle("playing", type === "play");
+    },
+    true,
+  );

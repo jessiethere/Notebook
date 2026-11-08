@@ -42,9 +42,13 @@ function pageBodyHTML(page, ctx) {
     : "";
 }
 
+// Clips already placed on the paper play there; the list shows the rest.
 function mediaListHTML(page, ctx) {
-  return page.media?.length
-    ? `<div class="day-media">${page.media.map((clip) => mediaCardHTML(clip, ctx, { editable: false })).join("")}</div>`
+  const rest = (page.media || []).filter(
+    (clip) => !(page.layers || []).some((layer) => layer.clipId === clip.id),
+  );
+  return rest.length
+    ? `<div class="day-media">${rest.map((clip) => mediaCardHTML(clip, ctx, { editable: false })).join("")}</div>`
     : "";
 }
 

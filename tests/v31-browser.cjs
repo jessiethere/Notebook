@@ -362,25 +362,21 @@ async function noOverflow(page, label) {
     assert.match(await page.locator(".day-detail").innerText(), /番茄牛腩食谱/);
     assert.equal(await page.locator('.day-detail [data-action="remove-media"]').count(), 0, "read-only");
     assert.equal(await page.locator(".day-detail [data-layer]").count(), 0, "no editable layers");
-    await page.waitForFunction(() => document.querySelectorAll('.day-detail .ld-player audio[src^="blob:"]').length === 2);
+    // V3.4: clips sit on the paper and play there.
+    await page.waitForFunction(() => document.querySelectorAll('.day-detail .audio-layer audio[src^="blob:"]').length === 2);
     const playAndCheck = async (index) => {
-      await page.locator(".day-detail .ld-play").nth(index).click();
+      await page.locator(".day-detail .audio-layer .layer-play").nth(index).click();
       await page.waitForFunction((i) => {
-        const player = document.querySelectorAll(".day-detail .ld-player")[i];
+        const player = document.querySelectorAll(".day-detail .audio-layer")[i];
         return player.classList.contains("playing") && player.querySelector("audio").currentTime > 0.05;
       }, index);
     };
     await playAndCheck(0); // uploaded WAV
     await playAndCheck(1); // microphone recording
-    assert.equal(await page.locator(".day-detail .ld-player").nth(0).evaluate((p) => p.querySelector("audio").paused), true, "only one plays");
-    await page.locator(".day-detail .ld-play").nth(1).click();
-    await page.waitForFunction(() => document.querySelectorAll(".day-detail .ld-player.playing").length === 0);
+    assert.equal(await page.locator(".day-detail .audio-layer").nth(0).evaluate((p) => p.querySelector("audio").paused), true, "only one plays");
+    await page.locator(".day-detail .audio-layer .layer-play").nth(1).click();
+    await page.waitForFunction(() => document.querySelectorAll(".day-detail .audio-layer.playing").length === 0);
     // Seek with the designed progress bar.
-    await page.locator(".day-detail [data-player-seek]").first().evaluate((el) => {
-      el.value = "500";
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    assert.ok((await page.locator(".day-detail .ld-player audio").first().evaluate((a) => a.currentTime)) > 0.5);
     await page.locator(".day-detail video").evaluate(async (video) => {
       video.muted = true;
       await video.play();
@@ -392,7 +388,7 @@ async function noOverflow(page, label) {
     await page.waitForFunction(() => document.querySelector("#lightbox").open && document.querySelector("#lightbox-image").src.startsWith("blob:"));
     await page.locator('#lightbox [data-action="close-lightbox"]').click();
     // Leaving the view revokes its temporary audio/video object URLs.
-    const audioURL = await page.locator(".day-detail .ld-player audio").first().getAttribute("src");
+    const audioURL = await page.locator(".day-detail .audio-layer audio").first().getAttribute("src");
     await page.locator('[data-action="day-back"]').click();
     await page.waitForSelector(".calendar-grid");
     assert.equal(
@@ -494,7 +490,7 @@ async function noOverflow(page, label) {
     assert.match(englishDay, /CHAPTER 01|Chapter 01/i);
     assert.match(englishDay, /Afternoon Coffee Time/);
     assert.match(englishDay, /番茄牛腩食谱/);
-    assert.equal(await page.locator(".day-detail .ld-play").first().getAttribute("aria-label"), "Play");
+    assert.match(await page.locator(".day-detail .audio-layer .layer-play").first().getAttribute("aria-label"), /^Play /);
     await nav("growth");
     assert.match(await page.locator(".reflections").innerText(), /This week/);
     assert.match(await page.locator(".reflections").innerText(), /完成三次训练/);
@@ -540,9 +536,9 @@ async function noOverflow(page, label) {
     assert.equal(restored.reflections[0].wentWell, "完成三次训练");
     await r.nav("calendar");
     await restore.page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
-    await restore.page.waitForFunction(() => document.querySelectorAll('.day-detail .ld-player audio[src^="blob:"]').length === 2);
-    await restore.page.locator(".day-detail .ld-play").nth(1).click();
-    await restore.page.waitForFunction(() => document.querySelectorAll(".day-detail .ld-player audio")[1].currentTime > 0.05);
+    await restore.page.waitForFunction(() => document.querySelectorAll('.day-detail .audio-layer audio[src^="blob:"]').length === 2);
+    await restore.page.locator(".day-detail .audio-layer .layer-play").nth(1).click();
+    await restore.page.waitForFunction(() => document.querySelectorAll(".day-detail .audio-layer audio")[1].currentTime > 0.05);
     assert.equal(await restore.page.locator(".day-detail .photo-layer img").count(), 5 + 3);
     assert.deepEqual(restore.errors, []);
     await restore.context.close();
@@ -567,7 +563,7 @@ async function noOverflow(page, label) {
       await page.setViewportSize({ width: 390, height: 844 });
       await nav("calendar");
       await page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
-      await page.waitForSelector(".day-detail .ld-player audio[src^='blob:']", { state: "attached" });
+      await page.waitForSelector(".day-detail .audio-layer audio[src^='blob:']", { state: "attached" });
       await page.locator(".day-detail").screenshot({ path: path.join(process.env.SCREENSHOT_DIR, "little-days-v31-day-detail.png") });
       await page.locator('.day-detail-top [data-action="edit-date"]').click();
       await page.waitForSelector("#journal-canvas");

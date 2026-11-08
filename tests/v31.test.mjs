@@ -336,3 +336,24 @@ test("templates by photo count add empty frames, fill them in order and support 
   assert.equal(words.layers.length, 0, "empty frames removed for a text-only page");
   validateStateSnapshot({ ...createInitialState(seed, today), entries: [{ id: "x", date: today, title: "", body: "", layers: photos }] });
 });
+
+test("words-only can be forced over photos; video/audio go on the paper by reference", async () => {
+  const { applyPageTemplate, mediaLayer, isOnPage } = await import("../Public/js/day.mjs");
+  const page = { photo: ref(7), layers: [photoLayer(ref(8), "p"), { id: "t", kind: "text", text: "hi", x: 1, y: 1, scale: 1, rotation: 0 }], media: [] };
+  assert.throws(() => applyPageTemplate(page, 0, "text"), /layout.textHasPhotos/);
+  applyPageTemplate(page, 0, "text", undefined, { force: true });
+  assert.equal(page.photo, "");
+  assert.deepEqual(page.layers.map((l) => l.id), ["t"], "only photos leave; text stays");
+  const clip = { id: "c1", kind: "video", name: "walk.webm", mime: "video/webm", source: ref(9) };
+  const layer = mediaLayer(clip);
+  page.media.push(clip);
+  page.layers.push(layer);
+  assert.equal(layer.kind, "video");
+  assert.equal(layer.clipId, "c1");
+  assert.ok(layer.w && layer.h);
+  assert.ok(isOnPage(page, "c1"));
+  assert.equal(mediaLayer({ id: "a", kind: "audio", name: "voice" }).h, undefined);
+  validateStateSnapshot({ ...createInitialState(seed, today), entries: [{ id: "x", date: today, title: "", body: "", layers: page.layers, media: page.media }] });
+  const refs = (await import("../Public/js/media.mjs")).mediaReferences({ books: [], entries: [{ ...page }], drafts: {} });
+  assert.ok(refs.has(ref(9).slice(6)), "clip still referenced once for backup");
+});

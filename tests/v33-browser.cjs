@@ -63,9 +63,9 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     let moment = draft.moments.at(-1);
     assert.equal(moment.layoutTemplate, "trio");
     assert.deepEqual(moment.layers.filter((l) => l.kind === "photo").map((l) => Boolean(l.mediaRef)), [true, true, false]);
-    // Fewer photos than already placed is not offered; text-only is disabled.
+    // Fewer photos than already placed is not offered; words-only stays possible (with a confirm).
     assert.equal(await page.locator('[data-action="template-count"][data-count="1"]').isDisabled(), true);
-    assert.equal(await page.locator('[data-action="template-count"][data-count="0"]').isDisabled(), true);
+    assert.equal(await page.locator('[data-action="template-count"][data-count="0"]').isDisabled(), false);
     // A words-only Moment sets its title on the paper.
     await page.locator('.chapter-chip.add').click();
     await page.locator(".write-card .write-title").fill("只有文字的一刻");

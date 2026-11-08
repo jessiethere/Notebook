@@ -135,7 +135,7 @@ function drawPaper(ctx, template) {
     }
   }
 }
-export async function exportJournalImage(editor, options = {}) {
+async function renderJournalCanvas(editor, options = {}) {
   const resolvePhoto = options.resolvePhoto || safePhoto;
   const dayPage = options.dayPage !== false;
   const canvas = document.createElement("canvas");
@@ -224,6 +224,15 @@ export async function exportJournalImage(editor, options = {}) {
     ctx.translate((layer.x / 100) * 1080, (layer.y / 100) * 1350);
     ctx.rotate((layer.rotation * Math.PI) / 180);
     ctx.scale(layer.scale, layer.scale);
+    if (layer.kind === "video" || layer.kind === "audio") {
+      const clip = (editor.media || []).find((item) => item.id === layer.clipId);
+      if (clip && layer.kind === "audio") drawAudioTicket(ctx, layer, clip.name, font);
+      // Video frames are drawn live by the video export.
+      if (clip && layer.kind === "video" && !options.skipVideo)
+        drawVideoLayer(ctx, await videoStill(resolvePhoto(clip.source), resolvePhoto(clip.poster || "")), layer);
+      ctx.restore();
+      continue;
+    }
     const asset =
       layer.assetId &&
       options.catalog?.stickers.find((item) => item.id === layer.assetId);
@@ -305,8 +314,210 @@ export async function exportJournalImage(editor, options = {}) {
     ctx.fillText(layer.text, 0, 0);
     ctx.restore();
   }
+  return canvas;
+}
+const fileName = (editor, options, ext) =>
+  `Little-Days-${editor.date || options.date || "page"}${options.suffix ? "-" + options.suffix : ""}.${ext}`;
+function download(href, name) {
   const link = document.createElement("a");
-  link.download = `Little-Days-${editor.date || options.date || "page"}${options.suffix ? "-" + options.suffix : ""}.png`;
-  link.href = canvas.toDataURL("image/png");
+  link.download = name;
+  link.href = href;
   link.click();
+}
+export async function exportJournalImage(editor, options = {}) {
+  const canvas = await renderJournalCanvas(editor, options);
+  download(canvas.toDataURL("image/png"), fileName(editor, options, "png"));
+  return canvas;
+}
+
+// A still frame for PNG export: the poster, or a frame from the clip itself.
+async function videoStill(src, poster) {
+  if (poster) {
+    try {
+      return await loadImage(poster);
+    } catch {}
+  }
+  if (!src) return null;
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  video.src = src;
+  const ok = await new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), 4000);
+    video.onloadeddata = () => {
+      video.currentTime = Math.min(0.1, (video.duration || 1) / 2);
+    };
+    video.onseeked = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    video.onerror = () => {
+      clearTimeout(timer);
+      resolve(false);
+    };
+  });
+  return ok ? video : null;
+}
+function drawVideoLayer(ctx, source, layer) {
+  const w = ((Number(layer.w) || 58) / 100) * 1080,
+    h = ((Number(layer.h) || 30) / 100) * 1350,
+    pad = 10;
+  ctx.fillStyle = "#FFFDF8";
+  ctx.shadowColor = "rgba(93,73,60,.2)";
+  ctx.shadowBlur = 12;
+  ctx.fillRect(-w / 2, -h / 2, w, h);
+  ctx.shadowBlur = 0;
+  const iw = w - pad * 2,
+    ih = h - pad * 2;
+  ctx.fillStyle = "#3F3A33";
+  ctx.fillRect(-iw / 2, -ih / 2, iw, ih);
+  const sw = source?.videoWidth || source?.width || 0,
+    sh = source?.videoHeight || source?.height || 0;
+  if (sw && sh) {
+    const cover = Math.max(iw / sw, ih / sh);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-iw / 2, -ih / 2, iw, ih);
+    ctx.clip();
+    ctx.drawImage(source, -sw * cover / 2, -sh * cover / 2, sw * cover, sh * cover);
+    ctx.restore();
+  }
+}
+function drawAudioTicket(ctx, layer, name, font) {
+  const w = ((Number(layer.w) || 64) / 100) * 1080,
+    h = 150;
+  ctx.fillStyle = "#F6F1E6";
+  ctx.strokeStyle = "#E6DAC5";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect?.(-w / 2, -h / 2, w, h, 40);
+  if (!ctx.roundRect) ctx.rect(-w / 2, -h / 2, w, h);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#7D8D6D";
+  ctx.beginPath();
+  ctx.arc(-w / 2 + 75, 0, 42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#FFFDF8";
+  ctx.beginPath();
+  ctx.moveTo(-w / 2 + 62, -20);
+  ctx.lineTo(-w / 2 + 96, 0);
+  ctx.lineTo(-w / 2 + 62, 20);
+  ctx.fill();
+  ctx.fillStyle = "#4D463E";
+  ctx.font = `500 34px ${font}`;
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(name).slice(0, 18), -w / 2 + 140, -22);
+  ctx.fillStyle = "#C8B9A3";
+  for (let i = 0; i < 14; i++) {
+    const bar = 10 + ((i * 37) % 30);
+    ctx.fillRect(-w / 2 + 140 + i * 18, 30 - bar / 2, 9, bar);
+  }
+}
+
+// Records the page as a video: the paper as background, video clips playing
+// in their frames, and every clip's sound mixed in. Up to 60 seconds.
+export async function exportJournalVideo(editor, options = {}) {
+  const resolve = options.resolvePhoto || safePhoto;
+  const base = await renderJournalCanvas(editor, { ...options, skipVideo: true });
+  const W = 720,
+    H = 900,
+    scale = W / 1080;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const placed = editor.layers
+    .filter((layer) => layer.kind === "video" || layer.kind === "audio")
+    .map((layer) => ({ layer, clip: (editor.media || []).find((c) => c.id === layer.clipId) }))
+    .filter((item) => item.clip && resolve(item.clip.source));
+  const elements = [];
+  for (const { layer, clip } of placed) {
+    const el = document.createElement(clip.kind === "video" ? "video" : "audio");
+    el.preload = "auto";
+    el.playsInline = true;
+    el.src = resolve(clip.source);
+    await new Promise((done) => {
+      const timer = setTimeout(done, 5000);
+      el.onloadedmetadata = () => {
+        clearTimeout(timer);
+        done();
+      };
+      el.onerror = () => {
+        clearTimeout(timer);
+        done();
+      };
+    });
+    elements.push({ layer, clip, el });
+  }
+  const lengths = elements.map(({ el, clip }) =>
+    Number.isFinite(el.duration) && el.duration > 0 ? el.duration : Number(clip.duration) || 0,
+  );
+  const duration = Math.min(60, Math.max(4, ...lengths));
+  const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
+  let audio = null,
+    mix = null;
+  if (AudioCtx && elements.length) {
+    audio = new AudioCtx();
+    mix = audio.createMediaStreamDestination();
+    for (const { el } of elements) audio.createMediaElementSource(el).connect(mix);
+  }
+  const stream = canvas.captureStream(30);
+  mix?.stream.getAudioTracks().forEach((track) => stream.addTrack(track));
+  const mime =
+    ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(
+      (type) => globalThis.MediaRecorder?.isTypeSupported(type),
+    ) || "";
+  const recorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 3000000 } : {});
+  const chunks = [];
+  recorder.ondataavailable = (event) => event.data.size && chunks.push(event.data);
+  const stopped = new Promise((done) => (recorder.onstop = done));
+  const draw = () => {
+    ctx.drawImage(base, 0, 0, W, H);
+    ctx.save();
+    ctx.scale(scale, scale);
+    for (const { layer, el } of elements) {
+      if (layer.kind !== "video") continue;
+      ctx.save();
+      ctx.translate((layer.x / 100) * 1080, (layer.y / 100) * 1350);
+      ctx.rotate((layer.rotation * Math.PI) / 180);
+      ctx.scale(layer.scale, layer.scale);
+      drawVideoLayer(ctx, el.readyState >= 2 ? el : null, layer);
+      ctx.restore();
+    }
+    ctx.restore();
+  };
+  draw();
+  recorder.start(250);
+  await audio?.resume();
+  await Promise.all(
+    elements.map(({ el }) => {
+      el.currentTime = 0;
+      return el.play().catch(() => {});
+    }),
+  );
+  const started = performance.now();
+  await new Promise((done) => {
+    const tick = () => {
+      draw();
+      const seconds = (performance.now() - started) / 1000;
+      options.onProgress?.(seconds, duration);
+      if (seconds >= duration) done();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  elements.forEach(({ el }) => el.pause());
+  recorder.stop();
+  await stopped;
+  stream.getTracks().forEach((track) => track.stop());
+  await audio?.close();
+  const type = recorder.mimeType || mime || "video/webm";
+  const blob = new Blob(chunks, { type });
+  if (!blob.size) throw new Error("export.videoFailed");
+  const url = URL.createObjectURL(blob);
+  download(url, fileName(editor, options, type.includes("mp4") ? "mp4" : "webm"));
+  setTimeout(() => URL.revokeObjectURL(url), 20000);
+  return blob;
 }

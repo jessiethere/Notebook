@@ -2646,5 +2646,45 @@
   "home.readToday": {
     "zh": "读今天的手帐",
     "en": "Read today's page"
+  },
+  "export.photo": {
+    "zh": "导出图片",
+    "en": "Export photo"
+  },
+  "export.video": {
+    "zh": "导出视频",
+    "en": "Export video"
+  },
+  "export.photoDone": {
+    "zh": "手帐图片已导出",
+    "en": "Page exported as a photo"
+  },
+  "export.recording": {
+    "zh": "正在录制视频 {now} / {total}，请保持页面打开",
+    "en": "Recording video {now} / {total} — keep this page open"
+  },
+  "export.videoDone": {
+    "zh": "视频已导出（纸上的视频在播放，声音已混在一起）",
+    "en": "Video exported (clips play on the paper, sound mixed in)"
+  },
+  "export.videoFailed": {
+    "zh": "视频导出失败，请重试；这个浏览器可能不支持录制。",
+    "en": "Video export failed. Try again; this browser may not support recording."
+  },
+  "export.videoUnsupported": {
+    "zh": "这个浏览器不支持导出视频。",
+    "en": "This browser can't export video."
+  },
+  "media.onPage": {
+    "zh": "放到纸上",
+    "en": "Put on the page"
+  },
+  "media.offPage": {
+    "zh": "从纸上拿下",
+    "en": "Take off the page"
+  },
+  "layout.textConfirm": {
+    "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
+    "en": "Switch to words only? Photos leave this page (the files stay on this device, and you can undo)."
   }
 }

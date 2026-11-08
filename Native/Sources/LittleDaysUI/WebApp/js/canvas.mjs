@@ -37,11 +37,11 @@ export function cropStyle(layer) {
 // Geometry only, so live gestures can update style without a full render.
 export function layerGeometry(layer) {
   let size = "";
-  if (layer.kind === "photo")
+  if (layer.kind === "photo" || layer.kind === "video")
     size = `width:${clamp(num(layer.w, 42), 4, 120)}%;height:${clamp(num(layer.h, 34), 4, 120)}%;`;
   else if (
     layer.w != null &&
-    (layer.kind === "text" || layer.kind === "growth")
+    ["text", "growth", "audio"].includes(layer.kind)
   )
     size = `width:${clamp(num(layer.w, 60), 10, 100)}%;`;
   return `left:${num(layer.x, 50)}%;top:${num(layer.y, 50)}%;${size}transform:translate(-50%,-50%) scale(${num(layer.scale, 1)}) rotate(${num(layer.rotation, 0)}deg)`;
@@ -86,6 +86,23 @@ export function layerHTML(layer, ctx, options = {}) {
     inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
+  } else if (layer.kind === "video" || layer.kind === "audio") {
+    // A clip on the paper: plays right here, in the editor and when reading.
+    const clip = (options.page?.media || []).find((item) => item.id === layer.clipId);
+    if (!clip)
+      return readOnly
+        ? ""
+        : `<span class="layer media-layer missing" data-layer="${esc(layer.id)}" style="${esc(layerGeometry(layer))}">${t("media.missing")}</span>`;
+    const src = media.resolve(clip.source);
+    const poster = media.resolve(clip.poster || "");
+    classes += ` media-layer ${layer.kind}-layer`;
+    const play = src
+      ? `<button type="button" class="layer-play" data-action="layer-play" aria-label="${t("media.play")} ${esc(clip.name)}"><span class="ld-play-icon" aria-hidden="true"></span></button>`
+      : `<span class="layer-loading">${t("media.loading")}</span>`;
+    inner =
+      layer.kind === "video"
+        ? `<span class="video-frame">${src ? `<video src="${esc(src)}" ${poster ? `poster="${esc(poster)}"` : ""} playsinline preload="metadata"></video>` : ""}${play}</span>`
+        : `<span class="audio-ticket">${play}<span class="audio-copy"><b>${esc(clip.name)}</b><span class="audio-wave" aria-hidden="true">${"<i></i>".repeat(12)}</span></span>${src ? `<audio src="${esc(src)}" preload="metadata"></audio>` : ""}</span>`;
   } else if (layer.kind === "growth") {
     classes += " growth-layer";
     const check = state?.checks.find(
@@ -145,7 +162,7 @@ export function canvasHTML(page, ctx, options = {}) {
   ]
     .filter(Boolean)
     .join(" ");
-  return `<div class="${classes}" ${readOnly ? "" : 'id="journal-canvas"'} style="font-family:${esc(fontFamily(font, catalog))}">${fixed}${(page.layers || []).map((layer) => layerHTML(layer, ctx, { ...options, defaultFont: font })).join("")}</div>`;
+  return `<div class="${classes}" ${readOnly ? "" : 'id="journal-canvas"'} style="font-family:${esc(fontFamily(font, catalog))}">${fixed}${(page.layers || []).map((layer) => layerHTML(layer, ctx, { ...options, page, defaultFont: font })).join("")}</div>`;
 }
 
 // One media card for edit and read modes. Audio uses a designed player that
@@ -178,5 +195,5 @@ export function mediaCardHTML(clip, ctx, options = {}) {
           clip.size / 1024 / 1024,
         ) + " MB"
       : "";
-  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em>${editable ? `<button data-action="remove-media" data-clip="${esc(clip.id)}" aria-label="${t("media.remove")}">×</button>` : ""}</div>${body}<div class="media-card-foot"><small>${editable ? t("media.saved") + " · " : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}</small>${editable && clip.kind === "video" ? `<button data-action="video-poster" data-clip="${esc(clip.id)}">${t("media.poster")}</button>` : ""}</div></article>`;
+  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em>${editable ? `<button data-action="remove-media" data-clip="${esc(clip.id)}" aria-label="${t("media.remove")}">×</button>` : ""}</div>${body}<div class="media-card-foot"><small>${editable ? t("media.saved") + " · " : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}</small>${editable && clip.kind === "video" ? `<button data-action="video-poster" data-clip="${esc(clip.id)}">${t("media.poster")}</button>` : ""}${editable ? `<button data-action="clip-on-page" data-clip="${esc(clip.id)}" aria-pressed="${Boolean(options.onPage)}">${t(options.onPage ? "media.offPage" : "media.onPage")}</button>` : ""}</div></article>`;
 }
