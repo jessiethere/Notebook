@@ -437,6 +437,10 @@ export function fillEmptySlots(page, references) {
       const next = queue.shift();
       layer.mediaRef = next.reference;
       layer.text = next.name || "photo";
+      if (next.sourceRef) {
+        layer.sourceRef = next.sourceRef;
+        layer.edit = next.edit;
+      }
     }
   return queue;
 }

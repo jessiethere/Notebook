@@ -35,6 +35,9 @@ import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import { communityHTML, profileHTML } from "./js/community-view.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
+import * as Account from "./js/account.mjs";
+import { openPhotoEditor } from "./js/photo-editor-ui.mjs";
+import { renderEdited, isIdentity } from "./js/photo-edit.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
 import {
   createMoment,
@@ -167,6 +170,11 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  studioStart = false,
+  account = null,
+  loginAvatar = null,
+  tourStep = 0,
+  settingsReturn = "home",
   booksView = "shelf", // "shelf" | "profile"
   pulledBook = null,
   journeyPage = 0,
@@ -253,9 +261,12 @@ function changeEditor(change, redraw = true) {
 function navigate(target) {
   flushDraft();
   if (target === "studio") {
+    // The ＋ in the menu first asks how to start (photos, words, sound…).
+    studioStart = true;
     openStudio(dateKey());
     return;
   }
+  if (target === "settings" && page !== "settings") settingsReturn = page;
   page = target;
   selectedBook = null;
   render();
@@ -659,7 +670,7 @@ function layerControls() {
   const crop = cropOf(layer);
   const photoTools =
     layer.kind === "photo"
-      ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
+      ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="photo-edit" class="pe-open">✨ ${t("pe.open")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
           cropMode
             ? `<p class="save-help">${t("photo.cropHelp")}</p><div class="crop-sliders">${[
                 ["zoom", 1, 4, 0.05, "photo.cropZoom"],
@@ -923,7 +934,76 @@ function growthPanelHTML() {
     .join("")}`;
 }
 
+const START_IDEAS = ["meal", "walk", "happy", "note"];
+function studioStartHTML() {
+  const started = hasDayPageContent(editor) || editor.moments.length > 0;
+  const date = new Date(`${editor.date}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric", weekday: "long" });
+  const card = (id, icon) => `<button class="start-card start-${id}" data-action="start-${id}"><span class="start-icon" aria-hidden="true">${icon}</span><b>${t("start." + id)}</b><small>${t("start." + id + "Hint")}</small></button>`;
+  return `<section class="studio-start"><header class="start-top"><div><span class="date-label">${esc(date)}</span><h1 class="page-title">${t("start.title")}</h1></div><button class="icon-button" data-action="start-close" aria-label="${t("close")}">×</button></header>${
+    started
+      ? `<button class="start-continue" data-action="start-continue"><span aria-hidden="true">📖</span><span><b>${t("start.continue")}</b><small>${esc(editor.title || t("entry.untitled"))}${editor.moments.length ? ` · ${t("day.statMoments", { count: editor.moments.length })}` : ""}</small></span><i>›</i></button><p class="start-note">${t("start.newMoment")}</p>`
+      : ""
+  }<div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div><h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
+}
+// Leaves the start screen; on a day that already has a page, the new thing
+// becomes a new Moment so nothing written earlier is mixed up.
+function beginStudio(tool = null) {
+  studioStart = false;
+  const started = hasDayPageContent(editor) || editor.moments.length > 0;
+  if (started) addMomentNow();
+  studioTool = tool;
+  render();
+}
+async function studioStartAction(target) {
+  const name = target.dataset.action;
+  if (!name?.startsWith("start-")) return false;
+  switch (name) {
+    case "start-close":
+      studioStart = false;
+      navigate("home");
+      break;
+    case "start-continue":
+      studioStart = false;
+      render();
+      break;
+    case "start-photos":
+      beginStudio("photos");
+      $("#photos-input").click();
+      break;
+    case "start-words":
+      beginStudio(null);
+      (isDayPage() ? $("#entry-title") : $('[data-moment-field="title"]'))?.focus();
+      break;
+    case "start-video":
+      beginStudio("media");
+      $("#video-input").click();
+      break;
+    case "start-voice":
+      beginStudio("media");
+      await startRecording();
+      break;
+    case "start-template":
+      beginStudio("layout");
+      break;
+    case "start-growth":
+      beginStudio("growth");
+      break;
+    case "start-idea": {
+      beginStudio(null);
+      const title = t("start.idea." + target.dataset.idea);
+      changeTarget((page) => {
+        if (!page.title) page.title = title;
+      });
+      (isDayPage() ? $("#entry-body") : $('[data-moment-field="body"]'))?.focus();
+      break;
+    }
+    default:
+      return false;
+  }
+  return true;
+}
 function studioPage() {
+  if (studioStart) return studioStartHTML();
   const dayPage = isDayPage();
   // One compact bar (date · draft state · save) leaves the room to the page.
   return `<header class="studio-bar"><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : `<span></span>`}</div></div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
@@ -997,6 +1077,14 @@ function render() {
   const caret = focused ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
   const scrollTop = $("#app-scroll").scrollTop;
   releaseLeftScope();
+  const signedIn = Account.isSignedIn(account);
+  $("#phone").classList.toggle("signed-out", !signedIn);
+  if (!signedIn) {
+    $("#app").innerHTML = loginHTML();
+    $("#navigation").innerHTML = "";
+    renderTour();
+    return;
+  }
   $("#app").innerHTML = {
     home,
     calendar: calendarPage,
@@ -1008,7 +1096,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx()),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account }),
   }[page]();
   navigation();
   applyShellLanguage();
@@ -1024,7 +1112,102 @@ function render() {
   }
   if (page === "settings") showMediaUsage();
   pinStageForSheet();
+  renderTour();
 }
+
+/* ---------- Sign in (this device) and the welcome tour ---------- */
+
+function loginHTML() {
+  const avatar = loginAvatar || account?.avatar || "🌷";
+  const back = account && !account.signedIn;
+  return `<section class="login"><div class="login-art" aria-hidden="true"><span>✿</span><i>📔</i><i>🌷</i><i>📷</i></div><h1 class="login-title">Little Days</h1><p class="login-tag">${t("login.tagline")}</p>${back ? `<p class="login-back">${t("login.welcomeBack", { name: account.name || t("community.me") })}</p>` : ""}<div class="login-form"><span class="small-label">${t("login.avatar")}</span><div class="p-avatars login-avatars">${Account.AVATARS.map((a) => `<button type="button" data-action="login-avatar" data-avatar="${a}" class="${avatar === a ? "selected" : ""}" aria-pressed="${avatar === a}">${a}</button>`).join("")}</div><label class="field">${t("login.name")}<input id="login-name" maxlength="30" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"></label><button class="primary full-width" data-action="login-local">${t(back ? "login.continue" : "login.start")}</button></div><div class="login-divider"><span>${t("login.or")}</span></div><button class="login-provider" disabled> ${t("login.apple")}<small>${t("login.soon")}</small></button><button class="login-provider" disabled>✉︎ ${t("login.email")}<small>${t("login.soon")}</small></button><p class="login-note">🔒 ${t("login.note")}</p><div class="login-language"><button data-action="login-language" data-language="zh-CN" class="${languageCode() === "en" ? "" : "selected"}">中文</button><button data-action="login-language" data-language="en" class="${languageCode() === "en" ? "selected" : ""}">English</button></div></section>`;
+}
+function renderTour() {
+  const box = $("#tour");
+  if (!box) return;
+  const show = Account.isSignedIn(account) && !account.onboarded;
+  box.hidden = !show;
+  if (!show) {
+    box.innerHTML = "";
+    return;
+  }
+  const step = Math.max(0, Math.min(Account.TOUR.length - 1, tourStep));
+  const item = Account.TOUR[step];
+  const last = step === Account.TOUR.length - 1;
+  box.innerHTML = `<div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title"><button class="tour-skip text-button" data-action="tour-skip">${t("tour.skip")}</button><div class="tour-icon tour-${item.id}" aria-hidden="true">${item.icon}</div><span class="tour-count">${step + 1} / ${Account.TOUR.length}</span><h2 id="tour-title">${t(`tour.${item.id}.title`, { name: account.name || t("community.me") })}</h2><p>${t(`tour.${item.id}.body`)}</p><div class="tour-dots" aria-hidden="true">${Account.TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div><div class="tour-actions">${step ? `<button class="secondary" data-action="tour-prev">${t("tour.prev")}</button>` : "<span></span>"}<button class="primary" data-action="tour-next">${t(last ? "tour.done" : "tour.next")}</button></div></div>`;
+  if (!box.contains(document.activeElement)) box.querySelector('[data-action="tour-next"]')?.focus({ preventScroll: true });
+}
+function accountAction(target) {
+  const name = target.dataset.action;
+  switch (name) {
+    case "login-avatar":
+      loginAvatar = target.dataset.avatar;
+      document.querySelectorAll(".login-avatars button").forEach((b) => {
+        b.classList.toggle("selected", b === target);
+        b.setAttribute("aria-pressed", String(b === target));
+      });
+      return true;
+    case "login-language":
+      setLanguage(target.dataset.language);
+      document.documentElement.lang = languageCode();
+      render();
+      return true;
+    case "login-local": {
+      const firstTime = !account;
+      account = Account.signIn(localStorage, { name: $("#login-name")?.value || "", avatar: loginAvatar || account?.avatar });
+      // The demo profile starts with the same name and avatar.
+      const demo = social();
+      if (!demo.profile.name) {
+        Community.updateProfile(demo, { name: account.name, avatar: account.avatar });
+        persistSocial();
+      }
+      tourStep = 0;
+      page = "home";
+      render();
+      $("#app-scroll").scrollTop = 0;
+      if (!firstTime) toast(t("login.welcomeToast", { name: account.name || t("community.me") }));
+      return true;
+    }
+    case "tour-next":
+      if (tourStep >= Account.TOUR.length - 1) {
+        account = Account.finishTour(localStorage);
+        renderTour();
+        toast(t("tour.finished"));
+      } else {
+        tourStep += 1;
+        renderTour();
+      }
+      return true;
+    case "tour-prev":
+      tourStep = Math.max(0, tourStep - 1);
+      renderTour();
+      return true;
+    case "tour-skip":
+      account = Account.finishTour(localStorage);
+      renderTour();
+      return true;
+    case "tour-replay":
+      account = Account.replayTour(localStorage);
+      tourStep = 0;
+      renderTour();
+      return true;
+    case "settings-back":
+      navigate(settingsReturn && settingsReturn !== "settings" ? settingsReturn : "home");
+      return true;
+    case "sign-out":
+      askConfirm(t("login.signOutConfirm")).then((ok) => {
+        if (!ok) return;
+        flushDraft();
+        account = Account.signOut(localStorage);
+        loginAvatar = null;
+        page = "home";
+        render();
+      });
+      return true;
+  }
+  return false;
+}
+
 function openDay(date, momentId = null) {
   flushDraft();
   selectedDate = date;
@@ -1135,6 +1318,7 @@ async function handleCheck(habitId, date) {
 }
 async function action(target) {
   const actionName = target.dataset.action;
+  if (accountAction(target)) return;
   if (
     (busyMedia || recorder) &&
     [
@@ -1233,6 +1417,7 @@ async function action(target) {
     render();
     $("#app-scroll").scrollTop = 0;
   }
+  if (actionName === "photo-edit") await reEditPhotoLayer();
   if (actionName === "pull-book") {
     // Tap a spine to pull the book out; tap the pulled one again to open it.
     if (pulledBook === target.dataset.book) {
@@ -2763,6 +2948,7 @@ async function v3Action(target) {
   if (await v31Action(target)) return true;
   if (await communityAction(target)) return true;
   if (await collabAction(target)) return true;
+  if (await studioStartAction(target)) return true;
   if (name === "new-book") {
     openBookDialog();
     return true;
@@ -3089,6 +3275,59 @@ async function imageBlob(file) {
   );
 }
 const MAX_PHOTOS_PER_PICK = 20;
+// Opens the photo editor for saved originals; returns the pictures to use
+// (edited ones are new Blobs, originals kept as sourceRef) or null if cancelled.
+async function editPhotos(saved, mode) {
+  const items = saved
+    .map((item) => ({ ref: item.sourceRef || item.reference, src: safePhoto(item.sourceRef || item.reference), name: item.name, edit: item.edit }))
+    .filter((item) => item.src);
+  if (!items.length) return null;
+  const result = await openPhotoEditor(items, { t, loadImage, mode });
+  if (!result) return null;
+  const out = [];
+  for (const item of result) {
+    if (isIdentity(item.edit)) {
+      out.push({ reference: item.ref, name: item.name });
+      continue;
+    }
+    const canvas = renderEdited(item.image, item.edit);
+    const blob = await new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Image encoding failed"))), "image/jpeg", 0.88),
+    );
+    const mediaId = await media.put(blob, { kind: "photo", name: item.name, edited: true });
+    out.push({ reference: `media:${mediaId}`, name: item.name, sourceRef: item.ref, edit: item.edit });
+  }
+  return out;
+}
+async function reEditPhotoLayer() {
+  const layer = selectedLayerOf();
+  if (layer?.kind !== "photo" || !layer.mediaRef) return;
+  busyMedia = true;
+  try {
+    const [result] =
+      (await editPhotos([{ reference: layer.mediaRef, sourceRef: layer.sourceRef, edit: layer.edit, name: layer.text }], "edit")) || [];
+    if (!result) return;
+    changeTarget((page) => {
+      const target = page.layers.find((item) => item.id === layer.id);
+      if (!target) return;
+      target.mediaRef = result.reference;
+      if (result.sourceRef) {
+        target.sourceRef = result.sourceRef;
+        target.edit = result.edit;
+      } else {
+        delete target.sourceRef;
+        delete target.edit;
+      }
+    });
+    flushDraft();
+    toast(t("pe.saved"));
+  } catch (error) {
+    console.warn("Photo edit failed", error?.name);
+    toast(t("media.failed"));
+  } finally {
+    busyMedia = false;
+  }
+}
 async function handleImageUpload(event, target) {
   const files = [...event.target.files];
   if (!files.length) return;
@@ -3101,7 +3340,7 @@ async function handleImageUpload(event, target) {
   const multiple = ["photos", "collage"].includes(target?.kind);
   let failed = 0;
   try {
-    const saved = [];
+    let saved = [];
     // Every Blob is written to IndexedDB before any metadata references it.
     for (const file of files.slice(0, multiple ? MAX_PHOTOS_PER_PICK : 1)) {
       try {
@@ -3114,6 +3353,8 @@ async function handleImageUpload(event, target) {
       }
     }
     if (!saved.length) throw new Error(t("media.failed"));
+    // New photos for the page open in the photo editor first (skip = as is).
+    if (["photos", "replace"].includes(target?.kind)) saved = (await editPhotos(saved, "add")) || saved;
     const [{ reference }] = saved;
     if (target?.kind === "cover") {
       bookDraft = readBookForm();
@@ -3142,6 +3383,12 @@ async function handleImageUpload(event, target) {
           layer.mediaRef = reference;
           layer.text = saved[0].name;
           layer.crop = { x: 50, y: 50, zoom: 1 };
+          delete layer.sourceRef;
+          delete layer.edit;
+          if (saved[0].sourceRef) {
+            layer.sourceRef = saved[0].sourceRef;
+            layer.edit = saved[0].edit;
+          }
         }
       });
       flushDraft();
@@ -3193,8 +3440,9 @@ function addPhotoLayers(saved) {
     const existing = page.layers.filter(
       (layer) => layer.kind === "photo",
     ).length;
-    const added = saved.map(({ reference, name }, index) =>
+    const added = saved.map(({ reference, name, sourceRef, edit }, index) =>
       photoLayer(reference, name, {
+        ...(sourceRef ? { sourceRef, edit } : {}),
         x: Math.min(85, 30 + ((existing + index) % 6) * 8),
         y: Math.min(80, 22 + ((existing + index) % 6) * 6),
         rotation: [-4, 3, -2, 5, -3, 2][(existing + index) % 6],
@@ -3503,6 +3751,7 @@ async function start() {
   for (const [name, color] of Object.entries(tokens.colors))
     document.documentElement.style.setProperty(`--${name}`, color);
   store = new Store(localStorage, responses[2]);
+  account = Account.loadAccount(localStorage);
   let warning = "";
   try {
     await media.open();

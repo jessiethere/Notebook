@@ -2,6 +2,8 @@
 // presets, Chinese fonts, Moment media, habit journey and book day covers.
 // Synthetic data only.
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -73,7 +75,7 @@ const shift = (key, days) => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
       if (id === "text") return; // writing is always open (write card)
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
@@ -125,6 +127,7 @@ const shift = (key, days) => {
     assert.equal(await page.locator("#journal-canvas .canvas-mood").innerText(), "✨");
     // Adding photos opens Layout right away; the summary follows the template.
     await page.locator("#photos-input").setInputFiles([0, 1, 2].map((i) => ({ name: `p${i}.jpg`, mimeType: "image/jpeg", buffer: jpeg(i % 2 ? "lake.jpg" : "coffee.jpg") })));
+    await skipPhotoEditor(page);
     await page.waitForSelector('[data-tool-row="layout"].open');
     await page.locator('[data-action="apply-layout"][data-template="polaroid"]').click();
     await page.waitForFunction(() => document.querySelector('[data-tool-value="layout"]').textContent.includes("拍立得"));

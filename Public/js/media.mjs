@@ -269,7 +269,11 @@ export function visitMediaReferences(state, visit) {
       reference(clip, "source", "clip");
       reference(clip, "poster");
     }
-    for (const layer of item.layers || []) reference(layer, "mediaRef");
+    for (const layer of item.layers || []) {
+      reference(layer, "mediaRef");
+      // The untouched original of an edited photo (kept for re-editing).
+      reference(layer, "sourceRef");
+    }
   };
   for (const book of state.books || []) reference(book, "coverImage");
   for (const check of state.checks || []) reference(check, "photo");

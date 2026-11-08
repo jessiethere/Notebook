@@ -1,4 +1,6 @@
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -58,8 +60,7 @@ async function streamBytes(download) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) =>
-      page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     // Studio settings live in a summary menu; open one row (if closed).
     const toolOn = async (target, id) => {
       if (id === "text") return; // writing is always open (write card)
@@ -430,7 +431,7 @@ async function streamBytes(download) {
     const second = await context.newPage();
     await second.goto(base);
     await second.waitForSelector(".hero");
-    await second.locator('#navigation [data-page="studio"]').click();
+    await goTab(second, "studio");
     await nav("home");
     await page.locator('[data-action="check"][data-habit="move"]').click();
     const newer = JSON.stringify(await read());
@@ -506,7 +507,7 @@ async function streamBytes(download) {
     const denied = await deniedContext.newPage();
     await denied.goto(base);
     await denied.waitForSelector(".hero");
-    await denied.locator('#navigation [data-page="studio"]').click();
+    await goTab(denied, "studio");
     await toolOn(denied, "media");
     await denied.locator('[data-action="record-audio"]').click();
     await denied.waitForFunction(() =>

@@ -1,6 +1,8 @@
 // Write-first Studio, templates by photo count, easy "write a moment" entry
 // points, and the offline Community / Friends / Messages demo.
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -18,7 +20,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     // "Me" moved to My Books → 我的主页.
     const openMe = async () => {
       await nav("books");
@@ -63,6 +65,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.locator('[data-action="apply-layout"][data-template="trio"]').click();
     await page.waitForFunction(() => document.querySelectorAll("#journal-canvas .photo-layer.empty-slot").length === 3);
     await page.locator("#photos-input").setInputFiles(photos(2));
+    await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('#journal-canvas .photo-layer img[src^="blob:"]').length === 2 && document.querySelectorAll("#journal-canvas .empty-slot").length === 1);
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.at(-1)?.layers.filter((l) => l.mediaRef).length === 2, today);
     let draft = (await read()).drafts[today];

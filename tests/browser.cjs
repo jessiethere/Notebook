@@ -1,4 +1,6 @@
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -19,8 +21,7 @@ const path = require("node:path");
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(process.env.PREVIEW_URL || "http://127.0.0.1:8080");
     await page.waitForSelector(".hero");
-    const nav = (target) =>
-      page.locator(`#navigation [data-page="${target}"]`).click();
+    const nav = (target) => goTab(page, target);
 
     // Studio settings live in a summary menu; open one row (if closed).
     const tool = async (id) => {

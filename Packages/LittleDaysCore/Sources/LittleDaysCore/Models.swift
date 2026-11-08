@@ -129,6 +129,10 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var checkDate: String?
     // kind == "video" / "audio": a clip from the page's media placed on the paper.
     public var clipId: String?
+    // kind == "photo", V3.6 photo editor: mediaRef is the edited picture,
+    // sourceRef the untouched original, edit the settings to re-edit from it.
+    public var sourceRef: String?
+    public var edit: PhotoEdit?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -139,6 +143,30 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
         self.scale = 1
         self.rotation = -12
     }
+}
+
+/// Photo editor settings (filters, crop ratio, adjustments, title on the picture).
+public struct PhotoEdit: Codable, Equatable {
+    public var filter: String?
+    public var brightness: Double?
+    public var contrast: Double?
+    public var saturation: Double?
+    public var warmth: Double?
+    public var ratio: String?
+    public var zoom: Double?
+    public var x: Double?
+    public var y: Double?
+    public var rotate: Int?
+    public var text: PhotoEditText?
+}
+
+public struct PhotoEditText: Codable, Equatable {
+    public var value: String
+    public var style: String?
+    public var color: String?
+    public var size: Double?
+    public var x: Double?
+    public var y: Double?
 }
 
 public struct LayerCrop: Codable, Equatable {

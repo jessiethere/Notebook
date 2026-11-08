@@ -3146,5 +3146,381 @@
   "who.hiddenToast": {
     "zh": "这本书现在仅自己可见",
     "en": "This book is only visible to you"
+  },
+  "login.tagline": {
+    "zh": "小日子，慢慢记。记录生活的美好，也收藏一点点变好的自己。",
+    "en": "Collect little days, gently — and a little more of you."
+  },
+  "login.welcomeBack": {
+    "zh": "欢迎回来，{name}。你的手帐都还在这台设备上。",
+    "en": "Welcome back, {name}. Your journal is still on this device."
+  },
+  "login.avatar": {
+    "zh": "选一个头像",
+    "en": "Pick an avatar"
+  },
+  "login.name": {
+    "zh": "怎么称呼你",
+    "en": "What should we call you?"
+  },
+  "login.namePlaceholder": {
+    "zh": "比如：小满",
+    "en": "e.g. Mia"
+  },
+  "login.start": {
+    "zh": "在这台设备上开始",
+    "en": "Start on this device"
+  },
+  "login.continue": {
+    "zh": "继续",
+    "en": "Continue"
+  },
+  "login.or": {
+    "zh": "其他登录方式",
+    "en": "Other ways to sign in"
+  },
+  "login.apple": {
+    "zh": "通过 Apple 登录",
+    "en": "Sign in with Apple"
+  },
+  "login.email": {
+    "zh": "邮箱 / 手机号登录",
+    "en": "Email or phone"
+  },
+  "login.soon": {
+    "zh": "即将推出",
+    "en": "Coming soon"
+  },
+  "login.note": {
+    "zh": "现在是本机账号：手帐、照片和录音只保存在这台设备，不会上传。云端账号和同步需要服务端，正在开发。",
+    "en": "For now this is a local account: journals, photos and recordings stay on this device and are never uploaded. Cloud accounts and sync need a server and are in progress."
+  },
+  "login.welcomeToast": {
+    "zh": "欢迎回来，{name} ✿",
+    "en": "Welcome back, {name} ✿"
+  },
+  "login.signOutConfirm": {
+    "zh": "退出登录？会回到登录页，你的手帐、照片和录音仍保存在这台设备上。",
+    "en": "Sign out? You'll return to the sign-in page; your journal, photos and recordings stay on this device."
+  },
+  "tour.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "tour.prev": {
+    "zh": "上一步",
+    "en": "Back"
+  },
+  "tour.next": {
+    "zh": "下一步",
+    "en": "Next"
+  },
+  "tour.done": {
+    "zh": "开始记录",
+    "en": "Start writing"
+  },
+  "tour.finished": {
+    "zh": "可以在 设置 里再看一次功能介绍",
+    "en": "You can replay the tour in Settings"
+  },
+  "tour.welcome.title": {
+    "zh": "你好，{name} ✿",
+    "en": "Hello, {name} ✿"
+  },
+  "tour.welcome.body": {
+    "zh": "Little Days 是一本放在手机里的手帐：每天记一点点，照片、文字、声音都可以。",
+    "en": "Little Days is a journal in your pocket: a little each day — photos, words and sounds."
+  },
+  "tour.write.title": {
+    "zh": "点中间的 ＋ 开始写",
+    "en": "Tap the ＋ to start"
+  },
+  "tour.write.body": {
+    "zh": "可以从照片、一句话、视频或声音、或者一个模板开始。一天可以写好几个小故事。",
+    "en": "Start from photos, a sentence, a video or sound, or a template. A day can hold several little stories."
+  },
+  "tour.photo.title": {
+    "zh": "像修图一样编辑照片",
+    "en": "Edit photos like a pro"
+  },
+  "tour.photo.body": {
+    "zh": "选照片后可以加滤镜、裁剪比例、调亮度和色温，还能在图上加标题文字。原图一直保留，随时重新编辑。",
+    "en": "After picking photos, add filters, crop to a ratio, adjust light and warmth, and put a title on the picture. The original is kept so you can re-edit."
+  },
+  "tour.growth.title": {
+    "zh": "成长，一点点",
+    "en": "Grow, little by little"
+  },
+  "tour.growth.body": {
+    "zh": "打卡小习惯，写下感想；每周、每月回顾；成长轨迹像一本书一样翻看。",
+    "en": "Check in small habits and note how it went; reflect each week and month; flip through your growth like a book."
+  },
+  "tour.shelf.title": {
+    "zh": "书架和我的主页",
+    "en": "Your shelf and profile"
+  },
+  "tour.shelf.body": {
+    "zh": "手帐本放在书架上，轻点书脊就能抽出来看。旁边的“我的主页”决定别人能看到什么。",
+    "en": "Your books stand on a shelf — tap a spine to pull one out. “My profile” next to it decides what others can see."
+  },
+  "tour.private.title": {
+    "zh": "默认只有你能看",
+    "en": "Private by default"
+  },
+  "tour.private.body": {
+    "zh": "所有手帐默认私人。社区、好友和共同创作目前是本机演示；在 设置 里可以备份到文件。",
+    "en": "Every journal is private by default. Community, friends and shared books are a local demo for now; back up to a file in Settings."
+  },
+  "settings.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "settings.account": {
+    "zh": "账号",
+    "en": "Account"
+  },
+  "settings.accountLocal": {
+    "zh": "本机账号 · 数据只在这台设备",
+    "en": "Local account · data stays on this device"
+  },
+  "settings.replayTour": {
+    "zh": "再看一次功能介绍",
+    "en": "Replay the welcome tour"
+  },
+  "settings.signOut": {
+    "zh": "退出登录",
+    "en": "Sign out"
+  },
+  "settings.signOutNote": {
+    "zh": "退出不会删除任何手帐、照片或录音。",
+    "en": "Signing out never deletes your journal, photos or recordings."
+  },
+  "pe.heading": {
+    "zh": "编辑图片",
+    "en": "Edit photo"
+  },
+  "pe.open": {
+    "zh": "编辑图片",
+    "en": "Edit photo"
+  },
+  "pe.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "pe.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "pe.saving": {
+    "zh": "保存中…",
+    "en": "Saving…"
+  },
+  "pe.saved": {
+    "zh": "图片已更新，原图仍保留",
+    "en": "Photo updated — the original is kept"
+  },
+  "pe.tab.filter": {
+    "zh": "滤镜",
+    "en": "Filters"
+  },
+  "pe.tab.crop": {
+    "zh": "裁剪",
+    "en": "Crop"
+  },
+  "pe.tab.adjust": {
+    "zh": "调节",
+    "en": "Adjust"
+  },
+  "pe.tab.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "pe.filter.original": {
+    "zh": "原图",
+    "en": "Original"
+  },
+  "pe.filter.fresh": {
+    "zh": "清新",
+    "en": "Fresh"
+  },
+  "pe.filter.warm": {
+    "zh": "暖阳",
+    "en": "Sunny"
+  },
+  "pe.filter.cream": {
+    "zh": "奶油",
+    "en": "Cream"
+  },
+  "pe.filter.film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "pe.filter.cool": {
+    "zh": "冷调",
+    "en": "Cool"
+  },
+  "pe.filter.vintage": {
+    "zh": "复古",
+    "en": "Vintage"
+  },
+  "pe.filter.mono": {
+    "zh": "黑白",
+    "en": "Mono"
+  },
+  "pe.ratio.original": {
+    "zh": "原比例",
+    "en": "Original"
+  },
+  "pe.zoom": {
+    "zh": "放大",
+    "en": "Zoom"
+  },
+  "pe.rotate": {
+    "zh": "旋转",
+    "en": "Rotate"
+  },
+  "pe.reset": {
+    "zh": "还原",
+    "en": "Reset"
+  },
+  "pe.cropHint": {
+    "zh": "拖动图片，选择要保留的部分",
+    "en": "Drag the photo to choose what stays in the frame"
+  },
+  "pe.adjust.brightness": {
+    "zh": "亮度",
+    "en": "Brightness"
+  },
+  "pe.adjust.contrast": {
+    "zh": "对比度",
+    "en": "Contrast"
+  },
+  "pe.adjust.saturation": {
+    "zh": "饱和度",
+    "en": "Saturation"
+  },
+  "pe.adjust.warmth": {
+    "zh": "色温",
+    "en": "Warmth"
+  },
+  "pe.title": {
+    "zh": "在图上加标题",
+    "en": "Title on the photo"
+  },
+  "pe.titlePlaceholder": {
+    "zh": "比如：周末的咖啡店",
+    "en": "e.g. Weekend café"
+  },
+  "pe.titleDefault": {
+    "zh": "小日子",
+    "en": "Little days"
+  },
+  "pe.textStyle.handwritten": {
+    "zh": "手写",
+    "en": "Handwritten"
+  },
+  "pe.textStyle.label": {
+    "zh": "标签",
+    "en": "Label"
+  },
+  "pe.textStyle.tape": {
+    "zh": "胶带",
+    "en": "Tape"
+  },
+  "pe.textStyle.outline": {
+    "zh": "描边",
+    "en": "Outline"
+  },
+  "pe.textSize": {
+    "zh": "字号",
+    "en": "Size"
+  },
+  "pe.textRemove": {
+    "zh": "删除文字",
+    "en": "Remove text"
+  },
+  "pe.textHint": {
+    "zh": "拖动文字摆放位置",
+    "en": "Drag the text to place it"
+  },
+  "start.title": {
+    "zh": "今天想怎么开始？",
+    "en": "How do you want to start?"
+  },
+  "start.continue": {
+    "zh": "继续编辑今天的手帐",
+    "en": "Keep editing today's page"
+  },
+  "start.newMoment": {
+    "zh": "下面的方式会新建一个小故事，不会改动已经写好的内容。",
+    "en": "The options below start a new little story; nothing you wrote is changed."
+  },
+  "start.photos": {
+    "zh": "从照片开始",
+    "en": "Start with photos"
+  },
+  "start.photosHint": {
+    "zh": "选几张，加滤镜、裁剪、写标题",
+    "en": "Pick a few; filter, crop, add a title"
+  },
+  "start.words": {
+    "zh": "先写几句话",
+    "en": "Write a few words"
+  },
+  "start.wordsHint": {
+    "zh": "一句话也算一页",
+    "en": "One sentence is a page too"
+  },
+  "start.video": {
+    "zh": "放一段视频",
+    "en": "Add a video"
+  },
+  "start.videoHint": {
+    "zh": "视频直接贴在纸上播放",
+    "en": "It plays right on the paper"
+  },
+  "start.voice": {
+    "zh": "录一段声音",
+    "en": "Record a sound"
+  },
+  "start.voiceHint": {
+    "zh": "雨声、笑声、碎碎念",
+    "en": "Rain, laughter, a little note"
+  },
+  "start.template": {
+    "zh": "选一个版式",
+    "en": "Pick a layout"
+  },
+  "start.templateHint": {
+    "zh": "先定几张照片，再排版",
+    "en": "Choose how many photos, then a layout"
+  },
+  "start.growth": {
+    "zh": "记录一次成长",
+    "en": "Note some growth"
+  },
+  "start.growthHint": {
+    "zh": "把今天的打卡贴进手帐",
+    "en": "Put today's check-in on the page"
+  },
+  "start.ideas": {
+    "zh": "没想好写什么？",
+    "en": "Not sure what to write?"
+  },
+  "start.idea.meal": {
+    "zh": "今天的一顿好饭",
+    "en": "A good meal today"
+  },
+  "start.idea.walk": {
+    "zh": "路上的小风景",
+    "en": "Something seen on the way"
+  },
+  "start.idea.happy": {
+    "zh": "让我开心的一件事",
+    "en": "One thing that made me smile"
+  },
+  "start.idea.note": {
+    "zh": "想对自己说",
+    "en": "A note to myself"
   }
 }

@@ -1,6 +1,8 @@
 // Words-only over the main photo, video/audio on the paper (Studio + reading
 // view), PNG export and video export. Synthetic media only.
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 function wav(seconds = 2) {
@@ -32,7 +34,7 @@ async function size(download) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();

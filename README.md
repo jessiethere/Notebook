@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**50 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab`、`v35` 八套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**54 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`collab` 九套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -119,6 +119,7 @@ npm run test:browser:v33
 npm run test:browser:v34
 npm run test:browser:collab
 npm run test:browser:v35
+npm run test:browser:v36
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -136,6 +137,13 @@ npm run test:browser:v35
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-08 — 登录、功能介绍、修图、创作入口
+
+- 打开 App 先看到登录页：选头像、写名字，在这台设备上开始（本机账号，数据不上传；Apple 和邮箱登录标为“即将推出”）。第一次登录后有 6 张功能介绍卡片，可在 设置 里再看一次；退出登录不会删除任何手帐。
+- 选照片后会进入编辑器（像小红书）：8 种滤镜、裁剪比例（1:1、3:4、9:16 等）与拖动、旋转、亮度/对比度/饱和度/色温、在图上加标题（手写/标签/胶带/描边）。原图一直保留，选中照片点“✨ 编辑图片”可以重新修。
+- 点底部 ＋ 会先问“今天想怎么开始？”：继续今天、从照片 / 写字 / 视频 / 录音 / 版式 / 成长开始，或者点一个灵感题目。
+- 设置页顶部有“返回”和“×”。
 
 ### 2026-11-08 — 书架 + 我的主页
 

@@ -2,6 +2,8 @@
 // Growth reflections, legacy data, backup/restore, bilingual, phone/desktop.
 // Uses synthetic media only (repo sample JPEGs, generated WAV/WebM, fake mic).
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -90,7 +92,7 @@ const helpers = (page) => {
   return {
     read,
     day,
-    nav: (tab) => page.locator(`#navigation [data-page="${tab}"]`).click(),
+    nav: (tab) => goTab(page, tab),
     // Studio settings live in a summary menu; open one row (if closed).
     tool: async (id) => {
       if (id === "text") return; // writing is always open (write card)
@@ -158,6 +160,7 @@ async function noOverflow(page, label) {
     // 1. Upload five photos in one pick; every photo is its own layer.
     await openStudioDate(page, nav, D1);
     await page.locator("#photos-input").setInputFiles(photos(5, "pick"));
+    await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('.photo-layer img[src^="blob:"]').length === 5);
     await waitDay(D1, (e) => e.layers.filter((l) => l.kind === "photo").length === 5);
     let entry = await day(D1);
@@ -168,6 +171,7 @@ async function noOverflow(page, label) {
     assert.ok(!JSON.stringify(await read()).includes("base64,"), "no image bytes in LocalStorage");
     // Adding more keeps the existing photos.
     await page.locator("#photos-input").setInputFiles(photos(1, "extra"));
+    await skipPhotoEditor(page);
     await waitDay(D1, (e) => e.layers.filter((l) => l.kind === "photo").length === 6);
     entry = await day(D1);
     assert.deepEqual(entry.layers.filter((l) => l.kind === "photo").slice(0, 5).map((l) => l.id), ids);
@@ -294,6 +298,7 @@ async function noOverflow(page, label) {
     await page.locator('[data-moment-field="body"]').fill("今天的训练计划：深蹲 4 组。");
     await page.locator('[data-moment-field="tags"]').fill("fitness, morning");
     await page.locator("#photos-input").setInputFiles(photos(3, "gym"));
+    await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('.moment-canvas .photo-layer img[src^="blob:"]').length === 3);
     await addMoment("Coffee Time", "14:30");
     await page.locator('[data-moment-field="body"]').fill("一杯燕麦拿铁。");
@@ -582,6 +587,7 @@ async function noOverflow(page, label) {
     await desk.page.waitForSelector(".hero");
     await openStudioDate(desk.page, d.nav, "2026-11-10");
     await desk.page.locator("#photos-input").setInputFiles(photos(2, "desk"));
+    await skipPhotoEditor(desk.page);
     await d.waitDay("2026-11-10", (e) => e.layers.filter((l) => l.kind === "photo").length === 2);
     const deskIds = (await d.day("2026-11-10")).layers.map((l) => l.id);
     await selectLayer(desk.page, deskIds[1]);

@@ -1,6 +1,8 @@
 // My Books as a bookshelf + 我的主页 (profile moved from Community).
 // Synthetic data only.
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
@@ -13,7 +15,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     const journal = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const demo = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social") || "null"));
     // 1. Shelf: one spine per book on wooden planks, plus an add slot.
