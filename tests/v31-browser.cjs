@@ -659,6 +659,7 @@ async function noOverflow(page, label) {
     assert.equal(await legacy.page.locator("#entry-title").inputValue(), "很久以前的一天");
     await legacy.page.waitForSelector('.canvas-photo img[src^="blob:"]');
     await l.nav("books");
+    await legacy.page.locator('[data-action="pull-book"][data-book="daily"]').click();
     await legacy.page.locator('[data-action="book"][data-book="daily"]').click();
     assert.match(await legacy.page.locator("#app").innerText(), /很久以前的一天/);
     assert.deepEqual(legacy.errors, []);

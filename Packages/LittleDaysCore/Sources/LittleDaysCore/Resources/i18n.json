@@ -3026,5 +3026,125 @@
   "collab.noEditor": {
     "zh": "需要一位已加入的可编辑成员，才能模拟同时编辑",
     "en": "Needs a joined editor to simulate a clash"
+  },
+  "shelf.tab": {
+    "zh": "书架",
+    "en": "Shelf"
+  },
+  "me.tab": {
+    "zh": "我的主页",
+    "en": "My profile"
+  },
+  "me.title": {
+    "zh": "我的主页",
+    "en": "My profile"
+  },
+  "me.subtitle": {
+    "zh": "你的小日子都是私人的；想分享时，在这里决定谁能看到什么。",
+    "en": "Your days stay private; when you want to share, decide here who sees what."
+  },
+  "me.demoNote": {
+    "zh": "社交部分是本机演示：头像、展示的封面和发布都只保存在这个浏览器，不会上传，也不会真的公开。",
+    "en": "The social part is a local demo: your avatar, shown covers and posts stay in this browser — nothing is uploaded or made public."
+  },
+  "me.open": {
+    "zh": "打开我的主页",
+    "en": "Open my profile"
+  },
+  "me.short": {
+    "zh": "我的主页",
+    "en": "Me"
+  },
+  "shelf.hint": {
+    "zh": "轻点书脊，把想看的那本书抽出来 ✿",
+    "en": "Tap a spine to pull out the book you want ✿"
+  },
+  "shelf.open": {
+    "zh": "打开这本",
+    "en": "Open"
+  },
+  "shelf.write": {
+    "zh": "写一页",
+    "en": "Write a page"
+  },
+  "shelf.putBack": {
+    "zh": "放回书架",
+    "en": "Put it back"
+  },
+  "who.title": {
+    "zh": "谁能看到",
+    "en": "Who can see what"
+  },
+  "who.help": {
+    "zh": "每本手帐默认只有你自己能看。你可以选择在主页上展示某本书的封面——只展示封面和书名，里面的页面仍然只有你能看。",
+    "en": "Every book is only visible to you by default. You can show a book's cover on your profile — only the cover and title; the pages inside stay yours alone."
+  },
+  "who.label": {
+    "zh": "谁能看到",
+    "en": "Visibility"
+  },
+  "who.private": {
+    "zh": "仅自己",
+    "en": "Only me"
+  },
+  "who.cover": {
+    "zh": "主页展示封面",
+    "en": "Show cover on profile"
+  },
+  "who.onlyMe": {
+    "zh": "仅自己可见",
+    "en": "Only you"
+  },
+  "who.coverShown": {
+    "zh": "主页展示封面",
+    "en": "Cover on profile"
+  },
+  "who.collab": {
+    "zh": "与 {count} 位好友共同创作 · 共同页面仅成员可见",
+    "en": "Shared with {count} friends · shared pages members-only"
+  },
+  "who.factPosts": {
+    "zh": "发布到社区的作品：{count} 篇（只有你逐页勾选确认的内容）",
+    "en": "Posts in the community: {count} (only pages you ticked and confirmed)"
+  },
+  "who.factMessages": {
+    "zh": "私信只在好友之间",
+    "en": "Messages are friends-only"
+  },
+  "who.factFriends": {
+    "zh": "好友不会因此看到你的私人手帐",
+    "en": "Being friends never opens your private journal"
+  },
+  "who.preview": {
+    "zh": "别人看到的我的主页（预览）",
+    "en": "My profile as others see it (preview)"
+  },
+  "who.previewCovers": {
+    "zh": "展示的封面",
+    "en": "Shown covers"
+  },
+  "who.noCovers": {
+    "zh": "没有展示任何封面",
+    "en": "No covers shown"
+  },
+  "who.previewWorks": {
+    "zh": "发布的作品",
+    "en": "Posts"
+  },
+  "who.previewNote": {
+    "zh": "这里没有出现的内容，别人都看不到。",
+    "en": "Anything not shown here stays hidden from others."
+  },
+  "who.confirm": {
+    "zh": "在主页展示这本书的封面和书名？里面的页面不会展示（演示，不会真的公开）。",
+    "en": "Show this book's cover and title on your profile? The pages inside are not shown (demo — nothing is really made public)."
+  },
+  "who.shownToast": {
+    "zh": "封面已展示在主页（演示）",
+    "en": "Cover shown on your profile (demo)"
+  },
+  "who.hiddenToast": {
+    "zh": "这本书现在仅自己可见",
+    "en": "This book is only visible to you"
   }
 }

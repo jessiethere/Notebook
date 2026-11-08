@@ -9,6 +9,7 @@ import {
 import {
   fontFamily,
   stickerURL,
+  coverColor,
   validateFieldDefinitions,
 } from "./js/library.mjs";
 import {
@@ -31,7 +32,7 @@ import {
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
-import { communityHTML } from "./js/community-view.mjs";
+import { communityHTML, profileHTML } from "./js/community-view.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
@@ -166,6 +167,8 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  booksView = "shelf", // "shelf" | "profile"
+  pulledBook = null,
   journeyPage = 0,
   studioTool = null,
   templateCount = null,
@@ -567,7 +570,41 @@ function booksPage() {
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
     }`;
   }
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></header><div class="book-grid books-full">${state().books.map(bookCard).join("")}</div><button class="secondary full-width" data-action="new-book">${t("books.create")}</button><p class="home-quote">A home for every little story.</p>`;
+  const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${booksView === "shelf"}">📚 ${t("shelf.tab")}</button><button role="tab" data-action="books-view" data-view="profile" aria-selected="${booksView === "profile"}">${esc(social().profile?.avatar || "🌷")} ${t("me.tab")}</button></div>`;
+  if (booksView === "profile")
+    return `<header class="page-top"><div><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div></header>${switcher}<div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books)}`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></header>${switcher}${shelfHTML()}<p class="home-quote">A home for every little story.</p>`;
+}
+
+// A bookshelf: spines stand on wooden planks; tap one to pull it out.
+function shelfHTML() {
+  const books = state().books;
+  const pulled = books.find((book) => book.id === pulledBook);
+  const spine = (book, index) => {
+    const count = bookEntryCount(state(), book.id);
+    const sticker = book.coverDecoration && book.coverDecoration !== "none" ? stickerURL(book.coverDecoration, catalog) : "";
+    return `<button class="spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${sticker ? `<img src="${esc(sticker)}" alt="">` : "<i></i>"}<span class="spine-title">${esc(book.title)}</span><small>${count}</small></button>`;
+  };
+  const items = [...books.map(spine), `<button class="spine add" data-action="new-book" aria-label="${t("books.create")}"><span>＋</span></button>`];
+  const rows = [];
+  for (let i = 0; i < items.length; i += 5) rows.push(items.slice(i, i + 5));
+  const stage = pulled
+    ? (() => {
+        const count = bookEntryCount(state(), pulled.id);
+        const shown = Community.isShowcased(social(), pulled.id);
+        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(pulled.category || "")}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button></div></section>`;
+      })()
+    : `<p class="shelf-hint">${t("shelf.hint")}</p>`;
+  return `${stage}<div class="bookshelf">${rows.map((row) => `<div class="shelf-row"><div class="shelf-books">${row.join("")}</div><div class="shelf-plank"></div></div>`).join("")}</div>`;
+}
+function openProfile() {
+  page = "books";
+  booksView = "profile";
+  selectedBook = null;
+  communityView = { ...communityView, publish: null, workId: null };
+  render();
+  $("#app-scroll").scrollTop = 0;
+
 }
 
 // The Studio edits either the day page (the Entry itself) or one Moment.
@@ -1187,6 +1224,8 @@ async function action(target) {
     render();
   }
   if (actionName === "book") {
+    booksView = "shelf";
+    pulledBook = target.dataset.book;
     flushDraft();
     selectedBook = target.dataset.book;
     bookFilter = { month: "", date: "" };
@@ -1194,6 +1233,37 @@ async function action(target) {
     render();
     $("#app-scroll").scrollTop = 0;
   }
+  if (actionName === "pull-book") {
+    // Tap a spine to pull the book out; tap the pulled one again to open it.
+    if (pulledBook === target.dataset.book) {
+      selectedBook = pulledBook;
+      bookFilter = { month: "", date: "" };
+      render();
+      $("#app-scroll").scrollTop = 0;
+    } else {
+      pulledBook = target.dataset.book;
+      render();
+      $("#app-scroll").scrollTop = 0;
+    }
+  }
+  if (actionName === "put-back") {
+    pulledBook = null;
+    render();
+  }
+  if (actionName === "shelf-write") {
+    const book = target.dataset.book;
+    openStudio(dateKey());
+    changeEditor((e) => {
+      e.bookId = book;
+    });
+  }
+  if (actionName === "books-view") {
+    booksView = target.dataset.view === "profile" ? "profile" : "shelf";
+    selectedBook = null;
+    render();
+    $("#app-scroll").scrollTop = 0;
+  }
+  if (actionName === "open-profile") openProfile();
   if (actionName === "all-books") {
     selectedBook = null;
     render();
@@ -2013,7 +2083,11 @@ function persistSocial() {
 }
 function openCommunity(changes = {}) {
   communityView = { ...communityView, saveMenu: false, reportMenu: false, ...changes };
-  page = "community";
+  // Profile actions (edit, settings, saved filter…) re-render in place on
+  // My Books → 我的主页; anything that opens a feed, chat, work or the
+  // publish sheet goes to Community.
+  const onProfile = page === "books" && booksView === "profile";
+  if (!onProfile || ["tab", "workId", "chatUser", "publish"].some((key) => changes[key])) page = "community";
   render();
 }
 // Collaborative Journal demo (inside a book's detail page). Demo storage only.
@@ -2172,7 +2246,8 @@ async function communityAction(target) {
         Community.unpublish(demo, target.dataset.work || work);
         persistSocial();
         toast(t("community.unpublished"));
-        openCommunity({ workId: null, tab: "me" });
+        if (page === "books") render();
+        else openProfile();
         break;
       case "community-follow":
         Community.toggleFollow(demo, user);
@@ -2268,7 +2343,6 @@ async function communityAction(target) {
         break;
       case "community-publish-start":
         openCommunity({
-          tab: "me",
           publish: { date: "", pages: [], media: [], title: "", category: "Daily Life", commentsOpen: demo.profile.defaultCommentsOpen !== false, confirmed: false },
         });
         $("#app-scroll").scrollTop = 0;
@@ -2301,7 +2375,7 @@ async function communityAction(target) {
         openCommunity({ savedType: target.dataset.type || "" });
         break;
       case "community-publish-cancel":
-        openCommunity({ publish: null });
+        openProfile();
         break;
       case "community-publish-submit": {
         const created = Community.publishDay(demo, state(), communityView.publish.date, communityView.publish);
@@ -2314,7 +2388,8 @@ async function communityAction(target) {
         if (!(await askConfirm(t("community.resetConfirm")))) break;
         demoSocial = Community.createDemoState();
         persistSocial();
-        openCommunity({ tab: "discover", workId: null, chatUser: null, publish: null });
+        communityView = { ...communityView, tab: "discover", editProfile: false, savedType: "" };
+        openCommunity({ workId: null, chatUser: null, publish: null });
         break;
       default:
         return false;
@@ -2927,6 +3002,19 @@ function handleV3Input(event) {
 function handleV3Change(event) {
   const target = event.target;
   if (handleCommunityChange(target)) return true;
+  if (target.dataset.showcase) {
+    const bookId = target.dataset.showcase;
+    const on = target.value === "cover";
+    const apply = () => {
+      Community.setShowcase(social(), bookId, on);
+      persistSocial();
+      toast(t(on ? "who.shownToast" : "who.hiddenToast"));
+      render();
+    };
+    if (on) askConfirm(t("who.confirm")).then((ok) => (ok ? apply() : render()));
+    else apply();
+    return true;
+  }
   if (target.dataset.collabRole) {
     Collab.setRole(social(), selectedBook, target.dataset.collabRole, target.value);
     persistSocial();

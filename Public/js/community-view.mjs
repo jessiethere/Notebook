@@ -1,10 +1,12 @@
 // Community demo views. Every screen carries the "demo / not online" label.
 import { escapeHTML as esc } from "./personal-ui.mjs";
-import { stickerURL } from "./library.mjs";
+import { stickerURL, coverColor } from "./library.mjs";
+import { coverHTML } from "./personal-ui.mjs";
 import * as C from "./community.mjs";
 
 // Four main sections; Discover has its own feed filters and search.
-const TABS = ["discover", "friends", "messages", "me"];
+// "Me" lives in My Books → 我的主页 (one place for my books and my presence).
+const TABS = ["discover", "friends", "messages"];
 const FEEDS = ["all", "following", "popular", "categories"];
 
 function avatar(user, size = "") {
@@ -109,7 +111,26 @@ function friendsHTML(demo, view, ctx) {
   }<h3 class="c-h">${t("community.people")}</h3><input class="c-search" id="people-search" data-people-search value="${esc(view.peopleQuery || "")}" placeholder="${t("community.peopleSearch")}" aria-label="${t("community.peopleSearch")}"><ul class="c-list">${others.map((u) => row(u.id, relationButtons(demo, u.id, ctx) + btn("community-block", u.id, "community.block") + btn("community-report-user", u.id, "community.report"))).join("") || `<li class="save-help">${t("community.nothing")}</li>`}</ul><div class="c-explain"><b>${t("community.followVsFriends")}</b><p>${t("community.followVsFriendsText")}</p></div>`;
 }
 
-function profileHTML(demo, view, ctx) {
+// Who can see what: every book is private; a cover can be shown on my
+// profile (demo) — only the cover and title, never the pages.
+function whoCanSeeHTML(demo, books, ctx) {
+  const { t } = ctx;
+  const rows = books
+    .map((book) => {
+      const on = C.isShowcased(demo, book.id);
+      const members = (demo.collab?.[book.id]?.members || []).filter((m) => m.status === "active").length;
+      return `<li class="who-row"><span class="who-spine" style="--spine:${coverColor(book, ctx.tokens)}" aria-hidden="true"></span><span class="who-copy"><b>${esc(book.title)}</b><small>${t(on ? "who.coverShown" : "who.onlyMe")}${members ? ` · ${t("who.collab", { count: members })}` : ""}</small></span><select data-showcase="${esc(book.id)}" aria-label="${t("who.label")} · ${esc(book.title)}"><option value="private" ${on ? "" : "selected"}>🔒 ${t("who.private")}</option><option value="cover" ${on ? "selected" : ""}>🖼 ${t("who.cover")}</option></select></li>`;
+    })
+    .join("");
+  return `<section id="p-visibility" class="p-section who-see"><h3>${t("who.title")}</h3><p class="save-help">${t("who.help")}</p><ul class="who-list">${rows || `<li class="save-help">${t("books.empty")}</li>`}</ul><ul class="who-facts"><li>📝 ${t("who.factPosts", { count: C.myWorks(demo).length })}</li><li>💬 ${t("who.factMessages")}</li><li>👥 ${t("who.factFriends")}</li></ul></section>`;
+}
+function visitorPreviewHTML(demo, books, ctx) {
+  const { t } = ctx;
+  const v = C.visitorView(demo, books);
+  return `<details class="visitor-preview" id="p-preview"><summary>👀 ${t("who.preview")}</summary><div class="visitor-card"><div class="visitor-head">${avatar({ avatar: v.avatar }, "lg")}<div><b>${esc(v.name || t("community.me"))}</b><p>${esc(v.bio || "")}</p></div></div><h4>${t("who.previewCovers")}</h4>${v.covers.length ? `<div class="visitor-covers">${v.covers.map((book) => `<div>${coverHTML({ ...book, coverImage: "" }, ctx)}<small>${esc(book.title)}</small></div>`).join("")}</div>` : `<p class="save-help">${t("who.noCovers")}</p>`}<h4>${t("who.previewWorks")}</h4>${v.works.length ? `<ul class="visitor-works">${v.works.map((w) => `<li>${esc(w.title)}</li>`).join("")}</ul>` : `<p class="save-help">${t("community.noWorks")}</p>`}<p class="save-help">${t("who.previewNote")}</p></div></details>`;
+}
+
+export function profileHTML(demo, view, ctx, books = []) {
   const { t } = ctx;
   const me = author(demo, "me", ctx);
   const stats = C.myStats(demo);
@@ -136,7 +157,7 @@ function profileHTML(demo, view, ctx) {
     .filter(Boolean)
     .map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b></span><span class="c-relations"><button class="secondary small" data-action="community-unblock" data-user="${esc(u.id)}">${t("community.unblock")}</button></span></li>`)
     .join("");
-  return `<section class="p-card">${avatar(me, "lg")}<div class="p-who"><h2>${esc(me.name)}</h2><small>@me · ${t("community.privateJournal")}</small><p>${esc(demo.profile.bio || t("community.bioEmpty"))}</p></div><button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button></section>${edit}<div class="p-stats">${stat(stats.works, "community.statWorks", "p-works")}${stat(stats.likes, "community.statLikes", "p-works")}${stat(stats.following, "community.statFollowing", "p-following")}${stat(stats.friends, "community.statFriends", "friends")}${stat(stats.saved, "community.statSaved", "p-saved")}</div><section id="p-works" class="p-section"><div class="section-heading"><h3>${t("community.myPosts")}</h3></div><button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p><ul class="p-works">${manage || `<li class="save-help">${t("community.noWorks")}</li>`}</ul></section><section id="p-saved" class="p-section"><h3>${t("community.mySaved")}</h3><div class="material-categories"><button data-action="community-saved-type" data-type="" class="${savedType ? "" : "selected"}">${t("all")}</button>${C.SAVE_TYPES.map((type) => `<button data-action="community-saved-type" data-type="${type}" class="${savedType === type ? "selected" : ""}">${t("community.savedType." + type)}</button>`).join("")}</div>${saved.length ? `<div class="work-grid">${saved.map((w) => workCardHTML(demo, w, ctx)).join("")}</div>` : `<p class="save-help">${t("community.noSaved")}</p>`}</section><section id="p-following" class="p-section"><h3>${t("community.myFollowing")} · ${demo.following.length}</h3><ul class="c-list">${following || `<li class="save-help">${t("community.followingEmpty")}</li>`}</ul></section><section class="p-section"><h3>${t("community.settings")}</h3><label class="check-label"><input type="checkbox" data-profile-setting="defaultCommentsOpen" ${demo.profile.defaultCommentsOpen ? "checked" : ""}> ${t("community.defaultComments")}</label><label class="field">${t("community.whoCanRequest")}<select data-profile-setting="friendRequests"><option value="everyone" ${demo.profile.friendRequests === "everyone" ? "selected" : ""}>${t("community.requestsEveryone")}</option><option value="following" ${demo.profile.friendRequests === "following" ? "selected" : ""}>${t("community.requestsFollowing")}</option></select></label><p class="save-help">${t("community.messagesFriendsOnly")}</p></section><section class="p-section"><h3>${t("community.blocked")} · ${demo.blocked.length}</h3><ul class="c-list">${blocked || `<li class="save-help">${t("community.noBlocked")}</li>`}</ul></section><button class="secondary full-width" data-action="community-reset">↺ ${t("community.reset")}</button>`;
+  return `<section class="p-card">${avatar(me, "lg")}<div class="p-who"><h2>${esc(me.name)}</h2><small>@me · ${t("community.privateJournal")}</small><p>${esc(demo.profile.bio || t("community.bioEmpty"))}</p></div><button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button></section>${edit}<div class="p-stats">${stat(stats.works, "community.statWorks", "p-works")}${stat(stats.likes, "community.statLikes", "p-works")}${stat(stats.following, "community.statFollowing", "p-following")}${stat(stats.friends, "community.statFriends", "friends")}${stat(stats.saved, "community.statSaved", "p-saved")}</div>${whoCanSeeHTML(demo, books, ctx)}${visitorPreviewHTML(demo, books, ctx)}<section id="p-works" class="p-section"><div class="section-heading"><h3>${t("community.myPosts")}</h3></div><button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p><ul class="p-works">${manage || `<li class="save-help">${t("community.noWorks")}</li>`}</ul></section><section id="p-saved" class="p-section"><h3>${t("community.mySaved")}</h3><div class="material-categories"><button data-action="community-saved-type" data-type="" class="${savedType ? "" : "selected"}">${t("all")}</button>${C.SAVE_TYPES.map((type) => `<button data-action="community-saved-type" data-type="${type}" class="${savedType === type ? "selected" : ""}">${t("community.savedType." + type)}</button>`).join("")}</div>${saved.length ? `<div class="work-grid">${saved.map((w) => workCardHTML(demo, w, ctx)).join("")}</div>` : `<p class="save-help">${t("community.noSaved")}</p>`}</section><section id="p-following" class="p-section"><h3>${t("community.myFollowing")} · ${demo.following.length}</h3><ul class="c-list">${following || `<li class="save-help">${t("community.followingEmpty")}</li>`}</ul></section><section class="p-section"><h3>${t("community.settings")}</h3><label class="check-label"><input type="checkbox" data-profile-setting="defaultCommentsOpen" ${demo.profile.defaultCommentsOpen ? "checked" : ""}> ${t("community.defaultComments")}</label><label class="field">${t("community.whoCanRequest")}<select data-profile-setting="friendRequests"><option value="everyone" ${demo.profile.friendRequests === "everyone" ? "selected" : ""}>${t("community.requestsEveryone")}</option><option value="following" ${demo.profile.friendRequests === "following" ? "selected" : ""}>${t("community.requestsFollowing")}</option></select></label><p class="save-help">${t("community.messagesFriendsOnly")}</p></section><section class="p-section"><h3>${t("community.blocked")} · ${demo.blocked.length}</h3><ul class="c-list">${blocked || `<li class="save-help">${t("community.noBlocked")}</li>`}</ul></section><button class="secondary full-width" data-action="community-reset">↺ ${t("community.reset")}</button>`;
 }
 
 function messagesHTML(demo, view, ctx, helpers) {
@@ -196,12 +217,14 @@ export function communityHTML(demo, view, journal, ctx, helpers) {
   const { t } = ctx;
   const unread = C.unreadCount(demo);
   const requests = C.visibleIncoming(demo).length;
-  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
+  const me = author(demo, "me", ctx);
+  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="me-chip" data-action="open-profile" aria-label="${t("me.open")}">${avatar(me, "xs")}<span>${t("me.short")}</span></button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
+  if (view.publish) return header + `<div class="community-body">${publishHTML(demo, view, journal, ctx)}</div>`;
   if (view.workId) return header + workDetailHTML(demo, view, ctx, helpers);
   const badge = (n) => (n ? ` <i class="c-badge">${n}</i>` : "");
   const tabs = `<nav class="community-tabs main" aria-label="${t("community.title")}">${TABS.map((tab) => `<button data-action="community-tab" data-tab="${tab}" class="${view.tab === tab ? "selected" : ""}" aria-pressed="${view.tab === tab}">${t("community.tab." + tab)}${tab === "messages" ? badge(unread) : tab === "friends" ? badge(requests) : ""}</button>`).join("")}</nav>`;
   let body = "";
-  if (view.tab === "discover") {
+  if (!TABS.includes(view.tab) || view.tab === "discover") {
     const feed = FEEDS.includes(view.feed) ? view.feed : "all";
     const query = view.query || "";
     const chips = `<div class="feed-chips">${FEEDS.map((f) => `<button data-action="community-feed" data-feed="${f}" class="${feed === f && !query ? "selected" : ""}">${t("community.feed." + f)}</button>`).join("")}</div>`;
@@ -220,6 +243,5 @@ export function communityHTML(demo, view, journal, ctx, helpers) {
     } else body = searchBox + chips + grid(demo, C.discover(demo), ctx);
   } else if (view.tab === "friends") body = friendsHTML(demo, view, ctx);
   else if (view.tab === "messages") body = messagesHTML(demo, view, ctx, helpers);
-  else if (view.tab === "me") body = view.publish ? publishHTML(demo, view, journal, ctx) : profileHTML(demo, view, ctx);
   return header + tabs + `<div class="community-body">${body}</div>`;
 }

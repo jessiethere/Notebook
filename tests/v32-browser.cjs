@@ -214,6 +214,7 @@ const shift = (key, days) => {
 
     // Books: one cover per day, filter by month or date, open the day.
     await nav("books");
+    await page.locator('[data-action="pull-book"][data-book="daily"]').click();
     await page.locator('[data-action="book"][data-book="daily"]').click();
     await page.waitForSelector(".day-cover");
     const covers = await page.locator(".day-cover").count();

@@ -12,6 +12,7 @@ export const DEFAULT_PROFILE = {
   bio: "",
   defaultCommentsOpen: true,
   friendRequests: "everyone", // or "following"
+  showcase: [], // book ids whose COVER (title + cover only) shows on my profile
 };
 const DAY = 24 * 60 * 60 * 1000;
 const newId = () => globalThis.crypto.randomUUID();
@@ -337,6 +338,27 @@ export function updateProfile(state, values) {
   }
   state.profile = next;
   return next;
+}
+// Show a book's cover on my profile (demo). Only the cover and title are
+// shown; the pages inside stay private. Off by default for every book.
+export function setShowcase(state, bookId, on) {
+  const list = (state.profile.showcase || []).filter((id) => id !== bookId);
+  state.profile = { ...state.profile, showcase: on ? [...list, bookId] : list };
+  return state.profile.showcase;
+}
+export function isShowcased(state, bookId) {
+  return (state.profile?.showcase || []).includes(bookId);
+}
+// What a visitor would see on my profile: name, avatar, bio, showcased covers
+// (only books that still exist) and my published works. Never journal pages.
+export function visitorView(state, books) {
+  return {
+    name: state.profile.name,
+    avatar: state.profile.avatar,
+    bio: state.profile.bio,
+    covers: books.filter((book) => isShowcased(state, book.id)),
+    works: myWorks(state),
+  };
 }
 export function myWorks(state) {
   return state.works.filter((work) => work.authorId === "me");

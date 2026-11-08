@@ -28,7 +28,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 2. Open a book; the shared section is folded and labelled as a demo.
     await nav("books");
-    await page.locator('[data-action="book"]').first().click();
+    await page.locator('[data-action="pull-book"]').first().click();
+    await page.locator('.pulled-book [data-action="book"]').click();
     const toggle = page.locator('[data-action="collab-toggle"]');
     assert.match(await toggle.innerText(), /演示 · 未联网/);
     await toggle.click();

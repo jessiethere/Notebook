@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**49 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab` 七套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**50 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab`、`v35` 八套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -118,6 +118,7 @@ npm run test:browser:v32
 npm run test:browser:v33
 npm run test:browser:v34
 npm run test:browser:collab
+npm run test:browser:v35
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -135,6 +136,13 @@ npm run test:browser:collab
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-08 — 书架 + 我的主页
+
+- “手帐本”变成一个书架：每本书是一根书脊立在木板上，轻点就把那本抽出来看封面，可以“打开这本”“写一页”或“放回书架”；再点一次也能打开。
+- 同一页顶部可以切到“我的主页”（原来社区里的“我的”搬到这里）：编辑头像、昵称、简介，管理发布、收藏、关注、屏蔽和设置。
+- 新的“谁能看到”：每本书默认“仅自己”，可以选择在主页展示封面（只有封面和书名，里面的页面仍然只有你能看）；还能预览“别人看到的我的主页”。目前是本机演示，不会真的公开。
+- 社区只剩“发现 / 好友 / 私信”，右上角有“我的主页”入口。
 
 ### 2026-11-08 — 补完：导出进度与取消、成长页精简、共同创作演示
 

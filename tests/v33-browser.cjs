@@ -19,6 +19,12 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.goto(base);
     await page.waitForSelector(".hero");
     const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    // "Me" moved to My Books → 我的主页.
+    const openMe = async () => {
+      await nav("books");
+      await page.locator('[data-action="books-view"][data-view="profile"]').click();
+      await page.waitForSelector(".p-card");
+    };
     const tool = async (id) => {
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
@@ -94,7 +100,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await nav("community");
     await page.waitForSelector(".demo-banner");
     assert.equal(await page.locator("#navigation [data-page='community'].active").count(), 1);
-    assert.deepEqual(await page.$$eval(".community-tabs.main [data-action='community-tab']", (els) => els.map((el) => el.dataset.tab)), ["discover", "friends", "messages", "me"]);
+    assert.deepEqual(await page.$$eval(".community-tabs.main [data-action='community-tab']", (els) => els.map((el) => el.dataset.tab)), ["discover", "friends", "messages"]);
     assert.match(await page.locator(".demo-banner").innerText(), /演示/);
     assert.ok((await page.locator(".work-card").count()) >= 8);
     for (const feed of ["following", "popular", "categories", "all"]) {
@@ -156,7 +162,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
 
     // Publishing: nothing selected by default; explicit pages + media + confirmation.
     await page.locator('[data-action="community-back"]').click();
-    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
+    await openMe();
     await page.locator('[data-action="community-publish-start"]').click();
     await page.locator('[data-publish="date"]').selectOption(today);
     await page.waitForSelector("[data-publish-page]");
@@ -187,7 +193,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     passed.push("publish needs explicit page/media + confirmation; comments toggle; unpublish; journal stays private");
 
     // My profile: manage my community presence.
-    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
+    await openMe();
     await page.locator('[data-action="community-profile-edit"]').click();
     await page.locator('[data-action="community-avatar"][data-avatar="🐰"]').click();
     await page.locator("#profile-name").fill("小日子收藏家");
@@ -223,7 +229,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.match(await page.locator(".work-author").innerText(), /小日子收藏家/);
     assert.match(await page.locator(".c-comments").innerText(), /关闭了评论/);
     await page.locator('[data-action="community-back"]').click();
-    await page.locator('[data-action="community-tab"][data-tab="me"]').click();
+    await openMe();
     assert.equal(await page.locator(".p-work").count(), 1);
     assert.equal(await page.locator('.p-stat b').first().innerText(), "1");
     // Stats jump to the friends list.
@@ -239,10 +245,14 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.match(await page.locator(".demo-banner").innerText(), /Demo/);
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
-      for (const tab of ["discover", "friends", "messages", "me"]) {
+      for (const tab of ["discover", "friends", "messages"]) {
         await page.locator(`[data-action="community-tab"][data-tab="${tab}"]`).click();
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${tab} ${width}`);
       }
+      await page.locator('[data-action="open-profile"]').click();
+      await page.waitForSelector(".p-card");
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `profile ${width}`);
+      await nav("community");
     }
     assert.deepEqual(errors, []);
     console.log(`V3.3 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

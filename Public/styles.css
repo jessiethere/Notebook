@@ -5562,3 +5562,320 @@ details.check-history[open] > summary > span:first-child::after {
   font-size: 10px;
   color: #a3957f;
 }
+
+/* V3.5 · My Books as a bookshelf + 我的主页 switch. */
+.shelf-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin: 14px 0 16px;
+  border-radius: 999px;
+  background: #ece6da;
+}
+.shelf-switch button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  color: #7b7266;
+}
+.shelf-switch button[aria-selected="true"] {
+  background: var(--paper);
+  color: var(--ink, #2f2a26);
+  font-weight: 600;
+  box-shadow: 0 1px 4px #5d493c1f;
+}
+.shelf-hint {
+  text-align: center;
+  font: 13px/1.6 "LD-handwritten", "LD-chinese", serif;
+  color: #9b8f7d;
+  margin: 6px 0 14px;
+}
+.bookshelf {
+  padding: 6px 4px 0;
+}
+.shelf-row {
+  margin-bottom: 18px;
+}
+.shelf-books {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 168px;
+  padding: 0 10px;
+}
+.shelf-plank {
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(#c9a77f, #a8835c);
+  box-shadow:
+    0 6px 8px -4px #5d3d2055,
+    inset 0 1px 0 #e3c8a5;
+}
+.spine {
+  --spine: #e8cfcf;
+  position: relative;
+  flex: 0 0 auto;
+  width: 54px;
+  height: 150px;
+  min-height: 0;
+  padding: 10px 4px 8px;
+  border: 0;
+  border-radius: 4px 4px 2px 2px;
+  background:
+    linear-gradient(90deg, #0000001a 0 3px, transparent 3px calc(100% - 3px), #00000014 calc(100% - 3px)),
+    linear-gradient(transparent 22px, #ffffff59 22px 24px, transparent 24px calc(100% - 30px), #ffffff59 calc(100% - 30px) calc(100% - 28px), transparent 0),
+    var(--spine);
+  box-shadow: 1px 0 0 #00000012, 0 2px 3px #5d493c22;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #3d362f;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+}
+.spine.h1 {
+  height: 162px;
+  width: 50px;
+}
+.spine.h2 {
+  height: 140px;
+  width: 58px;
+}
+.spine.h3 {
+  height: 156px;
+}
+.spine img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.spine i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff8c;
+  margin: 6px 0;
+}
+.spine-title {
+  flex: 1;
+  writing-mode: vertical-rl;
+  font-size: 14px;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-height: 100%;
+}
+.spine small {
+  font: 9px system-ui, sans-serif;
+  color: #6c6559;
+}
+.spine:hover {
+  transform: translateY(-4px);
+}
+.spine.pulled {
+  transform: translateY(-22px) rotate(-2deg);
+  box-shadow: 0 10px 14px #5d493c40;
+  outline: 2px solid #ffffffcc;
+}
+.spine.add {
+  background: transparent;
+  border: 1.5px dashed #c9bda8;
+  box-shadow: none;
+  justify-content: center;
+  color: #a3957f;
+  font-size: 22px;
+  width: 46px;
+  height: 120px;
+}
+.pulled-book {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 16px #5d493c14;
+  animation: pull-out 0.3s ease;
+}
+@keyframes pull-out {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.pulled-book .book-cover {
+  height: 168px;
+  font-size: 26px;
+}
+.pulled-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.pulled-copy small {
+  font-size: 10px;
+  color: #a3957f;
+  letter-spacing: 1px;
+}
+.pulled-copy h2 {
+  font: 600 17px/1.35 "LD-elegant", "LD-chinese", Georgia, serif;
+  margin: 0;
+}
+.pulled-copy p {
+  font-size: 11px;
+  color: #7b7266;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pulled-copy .badge {
+  justify-self: start;
+}
+.pulled-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.pulled-actions button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.pulled-copy .text-button {
+  justify-self: start;
+  min-height: 30px;
+  font-size: 11px;
+}
+.me-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.who-list,
+.who-facts {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.who-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.who-spine {
+  width: 12px;
+  height: 36px;
+  border-radius: 3px;
+  background: var(--spine);
+}
+.who-copy {
+  display: grid;
+  min-width: 0;
+}
+.who-copy b {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.who-copy small {
+  font-size: 9px;
+  color: #a3957f;
+}
+.who-row select {
+  font-size: 11px;
+  min-height: 36px;
+  max-width: 150px;
+}
+.who-facts li {
+  font-size: 11px;
+  color: #6c6559;
+  padding: 4px 0;
+}
+.visitor-preview {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  padding: 0 14px;
+}
+.visitor-preview > summary {
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.visitor-card {
+  padding-bottom: 14px;
+}
+.visitor-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.visitor-head p {
+  font-size: 11px;
+  color: #7b7266;
+  margin: 2px 0 0;
+}
+.visitor-card h4 {
+  font-size: 11px;
+  color: #8a7c66;
+  margin: 14px 0 6px;
+}
+.visitor-covers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.visitor-covers .book-cover {
+  height: 96px;
+  font-size: 16px;
+}
+.visitor-covers small {
+  font-size: 10px;
+}
+.visitor-works {
+  padding-left: 16px;
+  font-size: 12px;
+}
+.shelf-books {
+  min-height: 210px;
+}
+.spine {
+  height: 188px;
+}
+.spine.h1 {
+  height: 200px;
+}
+.spine.h2 {
+  height: 176px;
+}
+.spine.h3 {
+  height: 194px;
+}
+.spine.add {
+  height: 150px;
+}

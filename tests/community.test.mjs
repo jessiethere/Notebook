@@ -142,3 +142,27 @@ test("my profile: edit name/bio/avatar, stats, saved items by type, request filt
   const memory = { value: JSON.stringify({ ...C.createDemoState(NOW), profile: undefined }), getItem: () => memory.value, setItem: (k, v) => (memory.value = v) };
   assert.equal(C.loadDemo(memory).profile.avatar, "🌷");
 });
+
+test("profile showcase: covers only, off by default, survives reload", () => {
+  const memory = { value: null, getItem: () => memory.value, setItem: (k, v) => (memory.value = v) };
+  const demo = C.loadDemo(memory);
+  const books = [{ id: "a", title: "A" }, { id: "b", title: "B" }];
+  assert.deepEqual(demo.profile.showcase, [], "nothing shown by default");
+  assert.deepEqual(C.visitorView(demo, books).covers, []);
+  C.setShowcase(demo, "b", true);
+  C.setShowcase(demo, "b", true);
+  assert.deepEqual(demo.profile.showcase, ["b"], "no duplicates");
+  const view = C.visitorView(demo, books);
+  assert.deepEqual(view.covers.map((b) => b.id), ["b"]);
+  assert.ok(!("pages" in view) && !("entries" in view), "visitors never get journal pages");
+  C.saveDemo(memory, demo);
+  assert.equal(C.isShowcased(C.loadDemo(memory), "b"), true);
+  C.setShowcase(demo, "b", false);
+  assert.equal(C.isShowcased(demo, "b"), false);
+  // A deleted book simply disappears from the visitor view.
+  C.setShowcase(demo, "gone", true);
+  assert.deepEqual(C.visitorView(demo, books).covers, []);
+  // Old demo saves without showcase still load.
+  memory.value = JSON.stringify({ ...C.createDemoState(), profile: { name: "x" } });
+  assert.deepEqual(C.loadDemo(memory).profile.showcase, []);
+});

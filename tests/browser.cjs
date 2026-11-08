@@ -176,6 +176,7 @@ const path = require("node:path");
     await page.locator('[data-action="month"][data-delta="-1"]').click();
     await page.locator('[data-action="month"][data-delta="1"]').click();
     await nav("books");
+    await page.locator(`[data-action="pull-book"][data-book="${bookId}"]`).click();
     await page.locator(`[data-action="book"][data-book="${bookId}"]`).click();
     assert.match(await page.locator("#app").innerText(), /一朵花的练习/);
 

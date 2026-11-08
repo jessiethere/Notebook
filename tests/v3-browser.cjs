@@ -361,7 +361,8 @@ async function streamBytes(download) {
       );
     }
     await nav("books");
-    await page.locator(`[data-book="${book.id}"]`).click();
+    await page.locator(`[data-action="pull-book"][data-book="${book.id}"]`).click();
+    await page.locator(`[data-action="book"][data-book="${book.id}"]`).click();
     assert.match(
       await page.locator(".book-detail-copy").innerText(),
       /小小植物园/,
