@@ -4774,3 +4774,101 @@ button.small {
 .p-section .section-heading {
   margin: 0;
 }
+
+/* ---------- Calm home: one invitation to write ---------- */
+.home-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.home-top .brand-title {
+  font-size: 22px;
+}
+.hero.today-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px 16px 16px;
+  border-radius: 24px;
+  background:
+    radial-gradient(#e7dccb 0.7px, transparent 0.7px) 0 0 / 12px 12px,
+    #fbf7ef;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px #5d493c10;
+  min-height: 0;
+}
+.today-card .date-label {
+  margin: 0;
+  font-size: 11px;
+  color: #a3957f;
+}
+.today-prompt {
+  margin: 0;
+  font: 400 20px/1.4 "LD-zh-xiaowei", "LD-elegant", "LD-chinese", Georgia, serif;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.today-blank {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #8d857b;
+  white-space: pre-line;
+}
+.today-preview {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #fffdf8;
+  border: 1px solid #ece3d2;
+  text-align: left;
+}
+.today-preview img,
+.today-preview-mood {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  background: #f3eee4;
+}
+.today-preview-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.today-preview-copy b {
+  font-size: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.today-preview-copy small {
+  font-size: 10px;
+  color: #8d857b;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.today-preview-copy i {
+  font-style: normal;
+  font-size: 9px;
+  color: #8d7a63;
+}
+.today-preview-go {
+  color: #b2a38f;
+}
+.today-card .moment-cta {
+  margin: 0;
+}
+.home-section {
+  margin-top: 22px;
+}
+.home-section h2 {
+  font-size: 15px;
+}

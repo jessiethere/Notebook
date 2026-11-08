@@ -2638,5 +2638,13 @@
   "community.setting": {
     "zh": "无法识别的设置。",
     "en": "Unknown setting."
+  },
+  "home.prompt": {
+    "zh": "今天想记下什么？",
+    "en": "What would you like to keep from today?"
+  },
+  "home.readToday": {
+    "zh": "读今天的手帐",
+    "en": "Read today's page"
   }
 }

@@ -26,6 +26,12 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     const read = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
 
+    // 0. Calm home: one invitation to write, no duplicate shortcuts.
+    assert.equal(await page.locator(".quick-action, .community-banner, .studio-banner").count(), 0);
+    assert.equal(await page.locator('.hero [data-action="quick-moment"]').count(), 1);
+    await page.locator(".today-preview").click();
+    await page.waitForSelector(".day-detail");
+    await nav("home");
     // 1. One tap from Home starts a Moment; writing is the first thing on screen.
     await page.locator('.moment-cta[data-action="quick-moment"]').click();
     await page.waitForSelector(".write-card.moment .write-title");
@@ -229,8 +235,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await nav("home");
     await page.locator('[data-page="settings"]').click();
     await page.locator('[data-language="en"]').click();
-    await nav("home");
-    await page.locator(".community-banner").click();
+    await nav("community");
     assert.match(await page.locator(".demo-banner").innerText(), /Demo/);
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });

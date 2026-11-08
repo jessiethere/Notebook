@@ -361,44 +361,29 @@ function bookCard(book) {
 }
 
 function home() {
+  // Calm home: one invitation to write; everything else lives in the tab bar.
   const entry = todayEntry(),
-    completed = state().checks.filter(
-      (check) => check.date === dateKey(),
-    ).length;
+    completed = state().checks.filter((check) => check.date === dateKey()).length;
   const date = new Date().toLocaleDateString(locale(), {
     weekday: "long",
-    month: "short",
+    month: "long",
     day: "numeric",
   });
-  return `<header class="brand-row"><div><div class="brand-title"><span class="flower">✿</span>Little Days</div><p class="brand-subtitle">${t("brand.subtitle")}</p></div><div class="header-actions"><button class="icon-button" data-action="nav" data-page="calendar" aria-label="${t("calendar.title")}">${icon("calendar")}</button><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></div></header><div class="date-label">${esc(date)}</div><h1 class="greeting">${t("home.greeting")}<span class="sun">☀</span></h1><p class="subtext">${t("home.subtitle")}</p>
- <section class="hero"><div class="hero-top"><span>✧ &nbsp; TODAY'S LITTLE MOMENT</span><button data-action="edit-today">${t(entry ? "home.continue" : "home.begin")} ↗</button></div><div class="hero-content"><div class="polaroid">${safePhoto(coverPhoto(entry)) ? `<img src="${esc(safePhoto(coverPhoto(entry)))}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder">📷<span>${t("photo.placeholder")}</span></div>`}</div><div class="hero-copy"><span class="scribble">slow down, feel more.</span><h3>${esc(entry?.title || t("home.blankTitle"))}</h3><p>${esc(entry?.body?.slice(0, 48) || t("home.blankBody"))}</p></div></div><span class="hero-flower">🌼</span>${entry?.isDemo ? `<span class="tiny-demo">${t("home.sample")}</span>` : ""}</section>
- <button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button><div class="quick-actions">${[
-   ["photo", "home.photo", "quick-photo"],
-   ["text", "home.text", "quick-text"],
-   ["smile", "home.mood", "quick-mood"],
-   ["leaf", "home.check", "quick-growth"],
- ]
-   .map(
-     ([symbol, key, action]) =>
-       `<button class="quick-action" data-action="${action}"><span class="quick-icon">${icon(symbol)}</span>${t(key)}</button>`,
-   )
-   .join("")}</div>
- <section><div class="section-heading"><div><h2>${icon("leaf")} ${t("home.growth")}</h2><p class="section-caption">a little better, a little happier.</p></div><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
-   .habits.slice(0, 3)
-   .map((habit) => habitRow(habit, dateKey()))
-   .join(
-     "",
-   )}</div></section><section class="section"><div class="section-heading"><h2>${t("home.books")}</h2><button data-action="nav" data-page="books">${t("home.allBooks")}</button></div><div class="book-grid">${[
-   ...state().books,
- ]
+  const photo = safePhoto(coverPhoto(entry));
+  const moments = entry?.moments || [];
+  const preview = entry
+    ? `<button class="today-preview" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<span class="today-preview-mood">${esc(entry.mood || "✿")}</span>`}<span class="today-preview-copy"><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").slice(0, 40))}</small>${moments.length ? `<i>${t("day.statMoments", { count: moments.length })}</i>` : ""}${entry.isDemo ? `<i>${t("home.sample")}</i>` : ""}</span><span class="today-preview-go" aria-hidden="true">›</span></button>`
+    : `<p class="today-blank">${t("home.blankBody")}</p>`;
+  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></header>
+ <section class="hero today-card"><span class="date-label">${esc(date)}</span><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${preview}<button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
+ <section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
+   .habits.map((habit) => habitRow(habit, dateKey()))
+   .join("")}</div></section><section class="home-section"><div class="section-heading"><h2>${t("home.books")}</h2><button data-action="nav" data-page="books">${t("home.allBooks")}</button></div><div class="book-grid">${[...state().books]
    .sort((a, b) => latestBook(b.id).localeCompare(latestBook(a.id)))
    .slice(0, 3)
    .map(bookCard)
-   .join(
-     "",
-   )}</div></section><button class="community-banner" data-action="community-tab" data-tab="discover"><span>${icon("users")}</span><span><b>${t("community.title")}</b><small>${t("community.homeHint")}</small></span><i>${t("community.demoShort")}</i></button><button class="studio-banner" data-action="edit-today"><div><h3>Journal Studio</h3><p>${t("home.studio")}</p></div><span class="sparkles">✧</span></button><p class="home-quote">Collect moments, grow gently.</p>`;
+   .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p>`;
 }
-
 function latestBook(bookId) {
   return (
     state()
