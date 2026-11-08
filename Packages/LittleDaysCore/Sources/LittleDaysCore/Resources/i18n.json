@@ -1800,8 +1800,8 @@
     "en": "Smaller preview"
   },
   "studio.previewLarge": {
-    "zh": "放大预览",
-    "en": "Larger preview"
+    "zh": "收起面板，放大页面",
+    "en": "Close the panel and enlarge the page"
   },
   "journey.title": {
     "zh": "成长轨迹",
@@ -2686,5 +2686,49 @@
   "layout.textConfirm": {
     "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
     "en": "Switch to words only? Photos leave this page (the files stay on this device, and you can undo)."
+  },
+  "dock.layer": {
+    "zh": "图层",
+    "en": "Layer"
+  },
+  "dock.photos": {
+    "zh": "照片",
+    "en": "Photos"
+  },
+  "dock.layout": {
+    "zh": "版式",
+    "en": "Layout"
+  },
+  "dock.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "dock.paper": {
+    "zh": "纸张",
+    "en": "Paper"
+  },
+  "dock.mood": {
+    "zh": "心情",
+    "en": "Mood"
+  },
+  "dock.stickers": {
+    "zh": "贴纸",
+    "en": "Stickers"
+  },
+  "dock.media": {
+    "zh": "声音",
+    "en": "Media"
+  },
+  "dock.growth": {
+    "zh": "成长",
+    "en": "Growth"
+  },
+  "dock.book": {
+    "zh": "手帐本",
+    "en": "Book"
+  },
+  "dock.chapters": {
+    "zh": "目录",
+    "en": "Moments"
   }
 }

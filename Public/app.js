@@ -845,15 +845,22 @@ function studioTools() {
   });
   return tools;
 }
+// Decoration tools live in a small icon dock at the bottom of the screen;
+// tapping one opens a bottom sheet so the page itself keeps the space.
 function toolMenuHTML() {
   const tools = studioTools();
   if (studioTool && !tools.some((tool) => tool.id === studioTool)) studioTool = null;
-  return tools
-    .map((tool) => {
-      const open = tool.id === studioTool;
-      return `<section class="tool-row ${open ? "open" : ""}" data-tool-row="${tool.id}"><button class="tool-head" data-action="tool" data-tool="${tool.id}" aria-expanded="${open}"><span class="tool-icon" aria-hidden="true">${tool.icon}</span><span class="tool-label">${t(tool.label)}</span><span class="tool-value" data-tool-value="${tool.id}">${esc(tool.value)}</span><span class="tool-chevron" aria-hidden="true">›</span></button>${open ? `<div class="tool-body">${tool.body()}</div>` : ""}</section>`;
-    })
-    .join("");
+  const open = tools.find((tool) => tool.id === studioTool);
+  const sheet = open
+    ? `<section class="tool-sheet open" data-tool-row="${open.id}" aria-label="${t(open.label)}"><div class="sheet-head"><span class="tool-icon" aria-hidden="true">${open.icon}</span><b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    : "";
+  const dock = `<nav class="tool-dock" aria-label="${t("write.decorate")}">${tools
+    .map(
+      (tool) =>
+        `<button class="dock-btn ${tool.id === studioTool ? "open" : ""}" data-action="tool" data-tool="${tool.id}" aria-expanded="${tool.id === studioTool}" aria-label="${t(tool.label)}"><span class="dock-icon" aria-hidden="true">${tool.icon}</span><small>${t("dock." + tool.id)}</small></button>`,
+    )
+    .join("")}</nav>`;
+  return sheet + dock;
 }
 // Updates the one-line summaries without re-rendering open inputs.
 function refreshToolSummaries() {
@@ -881,7 +888,7 @@ function growthPanelHTML() {
 
 function studioPage() {
   const dayPage = isDayPage();
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${previewLarge ? "large" : ""}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button><button data-action="preview-size" aria-pressed="${previewLarge}" aria-label="${t(previewLarge ? "studio.previewSmall" : "studio.previewLarge")}">${previewLarge ? "⤡" : "⤢"}</button></div></div>${writeCardHTML()}<h3 class="style-heading">${t("write.decorate")}<small>${t("write.decorateHint")}</small></h3><div class="tool-menu" id="tool-menu">${toolMenuHTML()}</div><div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p>`;
+  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : `<span></span>`}</div></div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -978,6 +985,7 @@ function render() {
     }
   }
   if (page === "settings") showMediaUsage();
+  pinStageForSheet();
 }
 function openDay(date, momentId = null) {
   flushDraft();
@@ -1602,7 +1610,7 @@ $("#app").addEventListener("pointerdown", (event) => {
     selectedLayer = layer.id;
     // Re-render so handles and controls appear, then keep dragging.
     $("#canvas-wrap").innerHTML = canvasHTML();
-    studioTool = "layer";
+    // The 图层 icon appears in the dock; no sheet pops up mid-drag.
     refreshToolMenu();
   }
   const handle = event.target.closest("[data-handle]")?.dataset.handle;
@@ -2332,10 +2340,20 @@ async function exportPageVideo() {
 function openTool(tool) {
   studioTool = studioTool === tool ? null : tool;
   render();
-  if (studioTool)
-    document
-      .querySelector(`[data-tool-row="${studioTool}"]`)
-      ?.scrollIntoView({ block: "nearest" });
+}
+// When a sheet opens, pin the page at the top so it stays visible above it.
+let pinnedSheet = null;
+function pinStageForSheet() {
+  if (page !== "studio" || !studioTool) {
+    pinnedSheet = null;
+    return;
+  }
+  if (studioTool === pinnedSheet) return;
+  pinnedSheet = studioTool;
+  const stage = $(".studio-stage"),
+    scroller = $("#app-scroll");
+  if (stage && scroller)
+    scroller.scrollTop += stage.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
 }
 async function v31Action(target) {
   const name = target.dataset.action;
@@ -2343,6 +2361,9 @@ async function v31Action(target) {
   switch (name) {
     case "tool":
       openTool(target.dataset.tool);
+      return true;
+    case "tool-close":
+      openTool(null);
       return true;
     case "layer-play": {
       const element = target.closest(".media-layer")?.querySelector("video,audio");
@@ -2367,8 +2388,8 @@ async function v31Action(target) {
       render();
       return true;
     case "preview-size":
-      previewLarge = !previewLarge;
-      render();
+      // Bigger page = close the open sheet; the page then fills the width.
+      openTool(null);
       return true;
     case "select-moment":
       selectMoment(momentId);

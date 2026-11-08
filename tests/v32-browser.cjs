@@ -84,11 +84,15 @@ const shift = (key, days) => {
     // Studio desk: summary rows, one open at a time, preview stays visible.
     await nav("studio");
     await page.waitForSelector("#journal-canvas");
-    const rows = await page.$$eval("[data-tool-row]", (els) => els.map((el) => el.dataset.toolRow));
+    // Tools are small icons in a dock at the bottom of the screen.
+    const rows = await page.$$eval(".tool-dock [data-action='tool']", (els) => els.map((el) => el.dataset.tool));
     assert.equal(await page.locator(".write-card #entry-title").count(), 1, "writing is always open");
     for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "media", "book", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
     assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
+    const dock = await page.locator(".tool-dock").boundingBox();
+    const navBox = await page.locator("#navigation").boundingBox();
+    assert.ok(Math.abs(dock.y + dock.height - navBox.y) < 12, "dock sits right above the tab bar");
     await tool("paper");
     await tool("font");
     assert.equal(await page.locator(".tool-body").count(), 1, "only one row open");
@@ -113,7 +117,7 @@ const shift = (key, days) => {
     const small = (await page.locator("#journal-canvas").boundingBox()).width;
     await page.locator('[data-action="preview-size"]').click();
     assert.ok((await page.locator("#journal-canvas").boundingBox()).width > small * 1.3, "preview can be enlarged");
-    await page.locator('[data-action="preview-size"]').click();
+    assert.equal(await page.locator(".tool-sheet").count(), 0, "enlarging closes the sheet");
     // Mood change is visible in the summary and on the page at once.
     await tool("mood");
     await page.locator('[data-action="mood"][data-mood="✨"]').click();
