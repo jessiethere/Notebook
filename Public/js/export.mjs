@@ -498,12 +498,14 @@ export async function exportJournalVideo(editor, options = {}) {
     }),
   );
   const started = performance.now();
+  let cancelled = false;
   await new Promise((done) => {
     const tick = () => {
       draw();
       const seconds = (performance.now() - started) / 1000;
       options.onProgress?.(seconds, duration);
-      if (seconds >= duration) done();
+      cancelled = Boolean(options.isCancelled?.());
+      if (cancelled || seconds >= duration) done();
       else requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -513,6 +515,11 @@ export async function exportJournalVideo(editor, options = {}) {
   await stopped;
   stream.getTracks().forEach((track) => track.stop());
   await audio?.close();
+  if (cancelled) {
+    const error = new Error("export.cancelled");
+    error.code = "cancelled";
+    throw error;
+  }
   const type = recorder.mimeType || mime || "video/webm";
   const blob = new Blob(chunks, { type });
   if (!blob.size) throw new Error("export.videoFailed");

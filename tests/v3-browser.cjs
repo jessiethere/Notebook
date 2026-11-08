@@ -355,7 +355,8 @@ async function streamBytes(download) {
     for (const tab of ["calendar", "growth", "books", "studio"]) {
       await nav(tab);
       assert.ok(
-        !/[\u3400-\u9fff]/.test(await page.locator(".page-title").innerText()),
+        // The Studio keeps its title as a screen-reader heading (compact bar).
+        !/[\u3400-\u9fff]/.test(await page.locator("#app h1").first().textContent()),
         tab,
       );
     }

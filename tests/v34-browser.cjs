@@ -121,8 +121,11 @@ async function size(download) {
     assert.ok((await size(pngFile)) > 20000);
     const vid = page.waitForEvent("download", { timeout: 60000 });
     await page.locator('[data-action="export-video"]').click();
-    await page.waitForFunction(() => document.querySelector("#toast").textContent.includes("正在录制视频"));
+    await page.waitForSelector("#export-dialog[open]");
+    await page.waitForFunction(() => /已录制/.test(document.querySelector("#export-time").textContent));
+    await page.waitForFunction(() => parseFloat(document.querySelector("#export-progress").style.width) > 0);
     const videoFile = await vid;
+    await page.waitForSelector("#export-dialog:not([open])", { state: "attached" });
     assert.match(videoFile.suggestedFilename(), /\.(webm|mp4)$/);
     const bytes = await size(videoFile);
     assert.ok(bytes > 20000, `video size ${bytes}`);
@@ -148,7 +151,19 @@ async function size(download) {
       return peak;
     }, [...exported]);
     assert.ok(loudness > 0.01, `audio peak ${loudness}`);
-    passed.push(`export photo (PNG) and video (${videoFile.suggestedFilename().split(".").pop()}, ${Math.round(duration)}s)`);
+    // Cancel a running export: no file, a clear message, dialog closes.
+    let extra = 0;
+    const onDownload = () => extra++;
+    page.on("download", onDownload);
+    await page.locator('[data-action="export-video"]').click();
+    await page.waitForFunction(() => /已录制/.test(document.querySelector("#export-time").textContent));
+    await page.locator("#export-cancel").click();
+    await page.waitForFunction(() => document.querySelector("#toast").textContent.includes("已取消导出"));
+    await page.waitForSelector("#export-dialog:not([open])", { state: "attached" });
+    await page.waitForTimeout(800);
+    page.off("download", onDownload);
+    assert.equal(extra, 0, "cancelled export makes no file");
+    passed.push(`export photo (PNG) and video (${videoFile.suggestedFilename().split(".").pop()}, ${Math.round(duration)}s) with progress + cancel`);
 
     // 4. Reading view: clips play on the paper, not repeated below.
     await page.locator('[data-action="save-entry"]').click();

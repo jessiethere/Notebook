@@ -430,6 +430,8 @@ async function noOverflow(page, label) {
     assert.deepEqual([move.detail, move.minutes, move.mood, move.shareNote], ["Lower Body", 60, "✨", false]);
     assert.match(move.note, /深蹲更稳/);
     assert.equal(s.checks.find((c) => c.habitId === "reading").minutes, 15);
+    // Check-in notes are folded by default; open them once and they stay open.
+    await page.locator(".check-history > summary").click();
     assert.match(await page.locator(".check-history").innerText(), /深蹲更稳/);
     // Weekly reflection.
     await page.locator('[data-action="reflection-edit"][data-period="week"]').first().click();

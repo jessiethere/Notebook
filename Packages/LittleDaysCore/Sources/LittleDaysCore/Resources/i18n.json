@@ -2660,8 +2660,8 @@
     "en": "Page exported as a photo"
   },
   "export.recording": {
-    "zh": "正在录制视频 {now} / {total}，请保持页面打开",
-    "en": "Recording video {now} / {total} — keep this page open"
+    "zh": "已录制 {now} / {total}，请保持页面打开",
+    "en": "Recorded {now} of {total} — keep this page open"
   },
   "export.videoDone": {
     "zh": "视频已导出（纸上的视频在播放，声音已混在一起）",
@@ -2730,5 +2730,301 @@
   "dock.chapters": {
     "zh": "目录",
     "en": "Moments"
+  },
+  "export.title": {
+    "zh": "正在导出视频",
+    "en": "Exporting video"
+  },
+  "export.preparing": {
+    "zh": "正在准备画面和声音…",
+    "en": "Preparing the page and sound…"
+  },
+  "export.cancelling": {
+    "zh": "正在停止…",
+    "en": "Stopping…"
+  },
+  "export.cancelled": {
+    "zh": "已取消导出，没有生成文件。",
+    "en": "Export cancelled; no file was made."
+  },
+  "growth.calendarShort": {
+    "zh": "成长日历",
+    "en": "Calendar"
+  },
+  "growth.none": {
+    "zh": "还没有小习惯，先种下一颗吧。",
+    "en": "No habits yet — plant your first one."
+  },
+  "collab.title": {
+    "zh": "共同创作",
+    "en": "Write together"
+  },
+  "collab.demoLabel": {
+    "zh": "演示 · 未联网",
+    "en": "Demo · offline"
+  },
+  "collab.demoNote": {
+    "zh": "成员是虚拟好友，邀请、回复和修改都只在这个浏览器里模拟，不会发送给任何人。上面你自己的私人页面不会被共享。",
+    "en": "Members are virtual friends; invites, replies and edits are simulated in this browser only and sent to no one. Your own private pages above are never shared."
+  },
+  "collab.memberCount": {
+    "zh": "{count} 位成员",
+    "en": "{count} members"
+  },
+  "collab.members": {
+    "zh": "成员",
+    "en": "Members"
+  },
+  "collab.inviteWho": {
+    "zh": "邀请哪位好友",
+    "en": "Friend to invite"
+  },
+  "collab.role": {
+    "zh": "权限",
+    "en": "Role"
+  },
+  "collab.role.editor": {
+    "zh": "可编辑",
+    "en": "Editor"
+  },
+  "collab.role.viewer": {
+    "zh": "只能看",
+    "en": "Viewer"
+  },
+  "collab.role.owner": {
+    "zh": "拥有者 · 管理成员",
+    "en": "Owner · manages members"
+  },
+  "collab.invite": {
+    "zh": "邀请",
+    "en": "Invite"
+  },
+  "collab.noFriends": {
+    "zh": "只能邀请好友；好友也不会自动看到你的手帐。",
+    "en": "Only friends can be invited, and friends never see your journal automatically."
+  },
+  "collab.findFriends": {
+    "zh": "去加好友",
+    "en": "Find friends"
+  },
+  "collab.pending": {
+    "zh": "已邀请 · 等待接受",
+    "en": "Invited · waiting"
+  },
+  "collab.active": {
+    "zh": "已加入",
+    "en": "Joined"
+  },
+  "collab.simAccept": {
+    "zh": "模拟对方接受",
+    "en": "Simulate accept"
+  },
+  "collab.cancelInvite": {
+    "zh": "撤回邀请",
+    "en": "Cancel invite"
+  },
+  "collab.remove": {
+    "zh": "移出",
+    "en": "Remove"
+  },
+  "collab.simLeave": {
+    "zh": "模拟 TA 退出",
+    "en": "Simulate leaving"
+  },
+  "collab.removeConfirm": {
+    "zh": "把 {name} 移出这本共同手帐？TA 写过的页面会保留并标注作者。",
+    "en": "Remove {name} from this shared book? Pages they wrote stay, still marked with their name."
+  },
+  "collab.removed": {
+    "zh": "已移出 {name}",
+    "en": "{name} was removed"
+  },
+  "collab.leftToast": {
+    "zh": "{name} 退出了（模拟），TA 写的页面仍保留",
+    "en": "{name} left (simulated); their pages stay"
+  },
+  "collab.invited": {
+    "zh": "已邀请 {name}（模拟）",
+    "en": "Invited {name} (simulated)"
+  },
+  "collab.accepted": {
+    "zh": "{name} 接受了邀请，并写了一页（模拟）",
+    "en": "{name} accepted and wrote a page (simulated)"
+  },
+  "collab.roleSaved": {
+    "zh": "权限已更新",
+    "en": "Role updated"
+  },
+  "collab.sharedPages": {
+    "zh": "共同页面",
+    "en": "Shared pages"
+  },
+  "collab.write": {
+    "zh": "写一页",
+    "en": "Write a page"
+  },
+  "collab.noPages": {
+    "zh": "还没有共同页面。邀请好友，或先写下第一页。",
+    "en": "No shared pages yet. Invite a friend or write the first one."
+  },
+  "collab.wroteBy": {
+    "zh": "由 {name} 写下",
+    "en": "Written by {name}"
+  },
+  "collab.former": {
+    "zh": "已离开",
+    "en": "left"
+  },
+  "collab.editedBy": {
+    "zh": "{name} 修改过",
+    "en": "edited by {name}"
+  },
+  "collab.simConflict": {
+    "zh": "模拟同时编辑",
+    "en": "Simulate a clash"
+  },
+  "collab.conflictTitle": {
+    "zh": "有两个版本",
+    "en": "Two versions"
+  },
+  "collab.conflictBody": {
+    "zh": "你和 {name} 同时改了这一页。两边的文字都保留着，请选择怎么处理。",
+    "en": "You and {name} edited this page at the same time. Both texts are kept — choose what to do."
+  },
+  "collab.mine": {
+    "zh": "我的版本",
+    "en": "Mine"
+  },
+  "collab.keepMine": {
+    "zh": "保留我的",
+    "en": "Keep mine"
+  },
+  "collab.keepTheirs": {
+    "zh": "用 TA 的",
+    "en": "Use theirs"
+  },
+  "collab.keepBoth": {
+    "zh": "两份都留",
+    "en": "Keep both"
+  },
+  "collab.resolved": {
+    "zh": "已处理，记录在版本历史里",
+    "en": "Resolved and saved in version history"
+  },
+  "collab.history": {
+    "zh": "版本历史（{count}）",
+    "en": "Version history ({count})"
+  },
+  "collab.v.added": {
+    "zh": "新增页面",
+    "en": "added a page"
+  },
+  "collab.v.edited": {
+    "zh": "修改页面",
+    "en": "edited a page"
+  },
+  "collab.v.restored": {
+    "zh": "恢复旧版本",
+    "en": "restored a version"
+  },
+  "collab.v.resolved": {
+    "zh": "处理冲突",
+    "en": "resolved a clash"
+  },
+  "collab.pageCount": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "collab.restore": {
+    "zh": "恢复",
+    "en": "Restore"
+  },
+  "collab.current": {
+    "zh": "当前",
+    "en": "current"
+  },
+  "collab.restoreConfirm": {
+    "zh": "恢复到这个版本？现在的内容也会作为一个新版本保留，可以再恢复回来。",
+    "en": "Restore this version? The current pages are kept as a version too, so you can switch back."
+  },
+  "collab.restored": {
+    "zh": "已恢复（现在的内容也留在历史里）",
+    "en": "Restored (the previous pages stay in history)"
+  },
+  "collab.publish": {
+    "zh": "公开这本共同手帐",
+    "en": "Publish this shared book"
+  },
+  "collab.publishNeeds": {
+    "zh": "需要全部 {count} 位成员同意才能公开 · 未开放",
+    "en": "Needs consent from all {count} members · not available yet"
+  },
+  "collab.publishSolo": {
+    "zh": "公开需要服务端权限控制 · 未开放",
+    "en": "Publishing needs server access control · not available yet"
+  },
+  "collab.writeTitle": {
+    "zh": "写一页共同页面",
+    "en": "Write a shared page"
+  },
+  "collab.editTitle": {
+    "zh": "修改共同页面",
+    "en": "Edit shared page"
+  },
+  "collab.dialogNote": {
+    "zh": "只保存在这个浏览器的演示数据里",
+    "en": "Saved only in this browser's demo data"
+  },
+  "collab.pageTitle": {
+    "zh": "标题",
+    "en": "Title"
+  },
+  "collab.pageBody": {
+    "zh": "正文",
+    "en": "Text"
+  },
+  "collab.saved": {
+    "zh": "已保存，并记录了一个版本",
+    "en": "Saved, with a new version"
+  },
+  "collab.friendsOnly": {
+    "zh": "只能邀请好友",
+    "en": "Only friends can be invited"
+  },
+  "collab.already": {
+    "zh": "TA 已经在这本手帐里了",
+    "en": "Already a member"
+  },
+  "collab.badRole": {
+    "zh": "没有这个权限选项",
+    "en": "Unknown role"
+  },
+  "collab.noInvite": {
+    "zh": "没有待接受的邀请",
+    "en": "No pending invite"
+  },
+  "collab.notMember": {
+    "zh": "TA 不是成员",
+    "en": "Not a member"
+  },
+  "collab.viewerOnly": {
+    "zh": "只能看的成员不能编辑",
+    "en": "Viewers can't edit"
+  },
+  "collab.empty": {
+    "zh": "写点什么再保存吧",
+    "en": "Write something first"
+  },
+  "collab.noPage": {
+    "zh": "找不到这一页",
+    "en": "Page not found"
+  },
+  "collab.noVersion": {
+    "zh": "找不到这个版本",
+    "en": "Version not found"
+  },
+  "collab.noEditor": {
+    "zh": "需要一位已加入的可编辑成员，才能模拟同时编辑",
+    "en": "Needs a joined editor to simulate a clash"
   }
 }

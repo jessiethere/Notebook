@@ -33,6 +33,8 @@ import { dayDetailHTML } from "./js/day-view.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import { communityHTML } from "./js/community-view.mjs";
 import * as Community from "./js/community.mjs";
+import * as Collab from "./js/collab.mjs";
+import { collabSectionHTML } from "./js/collab-view.mjs";
 import {
   createMoment,
   findMoment,
@@ -163,6 +165,7 @@ let activeMomentId = null,
   },
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
+  collabOpen = false,
   journeyPage = 0,
   studioTool = null,
   templateCount = null,
@@ -484,59 +487,48 @@ function calendarPage() {
 function growthPage() {
   const today = dateKey(),
     start = weekStart(today),
-    total = state().habits.reduce(
+    habits = state().habits,
+    total = habits.reduce(
       (sum, h) => sum + Math.min(weeklyCount(state(), h.id, today), h.target),
       0,
     ),
-    target = state().habits.reduce((sum, h) => sum + h.target, 0),
-    themes = [...new Set(state().habits.map((h) => h.theme))],
+    target = habits.reduce((sum, h) => sum + h.target, 0),
+    steps = state().checks.length,
     weekdays =
       languageCode() === "en"
         ? ["M", "T", "W", "T", "F", "S", "S"]
         : ["一", "二", "三", "四", "五", "六", "日"];
-  return `<header class="page-top"><div><h1 class="page-title">${t("growth.title")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header><section class="growth-intro"><h2>${t("growth.headline")}</h2><p>${t("growth.description")}</p><div class="progress-track"><span style="width:${target ? Math.min(100, (total / target) * 100) : 0}%"></span></div><div class="progress-caption"><span>${t("growth.week")}</span><span>${t("growth.count", { count: total, target })}</span></div></section>${themes
-    .map(
-      (theme) =>
-        `<div class="theme-header">${esc(theme.toUpperCase())}</div>${state()
-          .habits.filter((h) => h.theme === theme)
-          .map(
-            (h) =>
-              `<section class="growth-habit">${habitRow(h, today)}<p class="subtext">${t("growth.weekCount", { target: h.target, count: weeklyCount(state(), h.id, today) })}</p><div class="week-dots">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><button class="journey-link" data-action="habit-journey" data-habit="${esc(h.id)}">📖 ${t("journey.open")} <span>${t("journey.openHint", { count: state().checks.filter((c) => c.habitId === h.id).length })}</span> ›</button></section>`,
-          )
-          .join("")}`,
-    )
-    .join(
-      "",
-    )}<button class="secondary full-width" data-action="new-habit">${t("growth.new")}</button>${reflectionsHTML(today)}${checkHistoryHTML()}<section class="milestone"><span>${state().checks.length >= 3 ? "🌼" : "🌱"}</span><h3>${t(state().checks.length >= 3 ? "growth.flower" : "growth.seed")}</h3><p>${t("growth.milestone", { count: state().checks.length })}${state().checks.length < 3 ? " · " + t("growth.remaining", { count: 3 - state().checks.length }) : ""}<br>${t("growth.linked")}</p><button class="secondary" data-action="growth-calendar">${t("growth.calendar")}</button></section>`;
+  // One calm strip: this week's progress, all-time steps, the calendar link.
+  const summary = `<section class="growth-summary"><div class="growth-summary-row"><span class="growth-seal" aria-hidden="true">${steps >= 3 ? "🌼" : "🌱"}</span><div><b>${t("growth.week")}</b><small>${t("growth.count", { count: total, target })} · ${t("growth.milestone", { count: steps })}</small></div><button class="text-button" data-action="growth-calendar">${t("growth.calendarShort")} ›</button></div><div class="progress-track"><span style="width:${target ? Math.min(100, (total / target) * 100) : 0}%"></span></div></section>`;
+  const cards = habits
+    .map((h) => {
+      const count = weeklyCount(state(), h.id, today),
+        pages = state().checks.filter((c) => c.habitId === h.id).length;
+      return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">📖 ${pages}</button></div></section>`;
+    })
+    .join("");
+  return `<header class="page-top"><div><h1 class="page-title">${t("growth.title")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header>${summary}${cards || `<div class="empty">${t("growth.none")}<br><button class="primary" data-action="new-habit">${t("growth.new")}</button></div>`}${reflectionsHTML(today)}${checkHistoryHTML()}`;
 }
 
+// Two small notes (week / month); a filled one shows a short preview.
 function reflectionsHTML(today) {
+  const fields = ["wentWell", "challenges", "learned", "nextFocus"];
   const card = (period) => {
     const key = periodKey(period, today),
       reflection = findReflection(state(), period, key);
-    const filled =
-      reflection &&
-      ["wentWell", "challenges", "learned", "nextFocus"].some(
-        (field) => reflection[field],
-      );
-    return `<article class="reflection-note ${filled ? "" : "blank"}"><header><b>${t(period === "week" ? "reflection.thisWeek" : "reflection.thisMonth")}</b><button class="text-button" data-action="reflection-edit" data-period="${period}" data-key="${key}">${t(filled ? "edit" : "reflection.write")}</button></header>${
-      filled
-        ? ["wentWell", "challenges", "learned", "nextFocus"]
-            .map((field) =>
-              reflection[field]
-                ? `<p><span>${t("reflection." + field)}</span>${esc(reflection[field])}</p>`
-                : "",
-            )
-            .join("")
-        : `<p class="subtext">${t("reflection.prompt")}</p>`
-    }</article>`;
+    const preview = reflection
+      ? fields.map((field) => reflection[field]).find(Boolean) || ""
+      : "";
+    return `<button class="reflection-chip ${preview ? "filled" : ""}" data-action="reflection-edit" data-period="${period}" data-key="${key}"><b>${t(period === "week" ? "reflection.thisWeek" : "reflection.thisMonth")}</b><span>${preview ? esc(preview.length > 40 ? preview.slice(0, 40) + "…" : preview) : t("reflection.write")}</span></button>`;
   };
   const past = (state().reflections || [])
     .filter((item) => item.key !== periodKey(item.period, today))
     .sort((a, b) => b.key.localeCompare(a.key))
     .slice(0, 6);
-  return `<section class="reflections"><div class="section-heading"><div><h2>${t("reflection.title")}</h2><p class="section-caption">${t("reflection.caption")}</p></div></div><div class="reflection-grid">${card("week")}${card("month")}</div>${past.length ? `<details class="past-reflections"><summary>${t("reflection.past", { count: past.length })}</summary>${past.map((item) => `<button class="past-reflection" data-action="reflection-edit" data-period="${item.period}" data-key="${item.key}">${esc(item.period === "week" ? t("reflection.weekOf", { date: shortDate(item.key) }) : item.key)} · ${esc((item.wentWell || item.learned || "").slice(0, 40))}</button>`).join("")}</details>` : ""}</section>`;
+  return `<section class="reflections"><h2 class="growth-section-title">${t("reflection.title")}</h2><div class="reflection-row">${card("week")}${card("month")}</div>${past.length ? `<details class="past-reflections"><summary>${t("reflection.past", { count: past.length })}</summary>${past.map((item) => `<button class="past-reflection" data-action="reflection-edit" data-period="${item.period}" data-key="${item.key}">${esc(item.period === "week" ? t("reflection.weekOf", { date: shortDate(item.key) }) : item.key)} · ${esc((item.wentWell || item.learned || "").slice(0, 40))}</button>`).join("")}</details>` : ""}</section>`;
 }
+// Folded by default; stays open across re-renders once opened.
+let historyOpen = false;
 function checkHistoryHTML() {
   const notes = state()
     .checks.filter((check) => check.note || check.detail || check.photo)
@@ -547,13 +539,21 @@ function checkHistoryHTML() {
     )
     .slice(0, 12);
   if (!notes.length) return "";
-  return `<section class="check-history"><div class="section-heading"><h2>${t("growth.history")}</h2><span class="badge">${t("private")}</span></div>${notes
+  return `<details class="check-history" data-remember="history" ${historyOpen ? "open" : ""}><summary><span>${t("growth.history")} · ${notes.length}</span><span class="badge">${t("private")}</span></summary>${notes
     .map((check) => {
       const habit = state().habits.find((h) => h.id === check.habitId);
       return `<article class="history-note"><time>${esc(shortDate(check.date))}</time>${growthCardInner(check, habit, ctx())}<div class="history-actions"><button class="text-button" data-action="check-note" data-habit="${esc(check.habitId)}" data-date="${check.date}">${t("edit")}</button><button class="text-button" data-action="open-day" data-date="${check.date}">${t("growth.openDay")}</button></div></article>`;
     })
-    .join("")}</section>`;
+    .join("")}</details>`;
 }
+document.addEventListener(
+  "toggle",
+  (event) => {
+    if (event.target?.dataset?.remember === "history")
+      historyOpen = event.target.open;
+  },
+  true,
+);
 function booksPage() {
   if (selectedBook) {
     const book = state().books.find((b) => b.id === selectedBook),
@@ -561,7 +561,7 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div><button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${collabSectionHTML(social(), book, ctx(), collabOpen)}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
@@ -888,7 +888,8 @@ function growthPanelHTML() {
 
 function studioPage() {
   const dayPage = isDayPage();
-  return `<header class="page-top studio-heading"><div><h1 class="page-title">${t("studio.title")}</h1><p class="page-subtitle">${t("studio.subtitle")}</p></div><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header><div class="studio-meta"><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="badge">${t("studio.linked", { count: state().checks.filter((c) => c.date === editor.date).length })}</span></div><div class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</div>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : `<span></span>`}</div></div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  // One compact bar (date · draft state · save) leaves the room to the page.
+  return `<header class="studio-bar"><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : `<span></span>`}</div></div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1382,6 +1383,22 @@ document.addEventListener("change", (event) => {
   }
 });
 $("#dialog-form").addEventListener("submit", (event) => {
+  if (dialogKind === "collab-page") {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.target));
+    try {
+      if (dialogPayload?.pageId)
+        Collab.editPage(social(), selectedBook, dialogPayload.pageId, "me", values);
+      else Collab.addPage(social(), selectedBook, "me", values);
+      persistSocial();
+      $("#form-dialog").close();
+      toast(t("collab.saved"));
+      render();
+    } catch (error) {
+      toast(t(error.message?.startsWith("collab.") ? error.message : "community.saveFailed"));
+    }
+    return;
+  }
   if (dialogKind === "check-note" || dialogKind === "reflection") {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.target));
@@ -1999,6 +2016,81 @@ function openCommunity(changes = {}) {
   page = "community";
   render();
 }
+// Collaborative Journal demo (inside a book's detail page). Demo storage only.
+function openCollabPageDialog(item = null) {
+  dialogKind = "collab-page";
+  dialogPayload = { pageId: item?.id || null };
+  $("#dialog-form").innerHTML = `<h2>${t(item ? "collab.editTitle" : "collab.writeTitle")}</h2><p class="dialog-description">${t("collab.demoLabel")} · ${t("collab.dialogNote")}</p><div class="dialog-fields note-paper"><label class="field">${t("collab.pageTitle")}<input name="title" maxlength="80" value="${esc(item?.title || "")}"></label><label class="field">${t("collab.pageBody")}<textarea name="body" maxlength="2000">${esc(item?.body || "")}</textarea></label></div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t("save")}</button></div>`;
+  $("#form-dialog").showModal();
+}
+async function collabAction(target) {
+  const name = target.dataset.action;
+  if (!name?.startsWith("collab-") || !selectedBook) return false;
+  const demo = social();
+  const book = selectedBook;
+  const user = target.dataset.user;
+  const done = (message) => {
+    persistSocial();
+    if (message) toast(message);
+    render();
+  };
+  try {
+    switch (name) {
+      case "collab-toggle":
+        collabOpen = !collabOpen;
+        render();
+        break;
+      case "collab-invite": {
+        const who = $("#collab-invite-user")?.value;
+        if (!who) break;
+        Collab.invite(demo, book, who, $("#collab-invite-role").value);
+        done(t("collab.invited", { name: Community.userById(demo, who)?.name || "" }));
+        break;
+      }
+      case "collab-accept":
+        Collab.simulateAccept(demo, book, user);
+        done(t("collab.accepted", { name: Community.userById(demo, user)?.name || "" }));
+        break;
+      case "collab-cancel-invite":
+        Collab.cancelInvite(demo, book, user);
+        done();
+        break;
+      case "collab-remove":
+      case "collab-leave": {
+        const left = name === "collab-leave";
+        const who = Community.userById(demo, user)?.name || "";
+        if (!left && !(await askConfirm(t("collab.removeConfirm", { name: who })))) break;
+        Collab.removeMember(demo, book, user, { left });
+        done(t(left ? "collab.leftToast" : "collab.removed", { name: who }));
+        break;
+      }
+      case "collab-write":
+        openCollabPageDialog();
+        break;
+      case "collab-edit-page":
+        openCollabPageDialog(Collab.collabFor(demo, book).pages.find((p) => p.id === target.dataset.page));
+        break;
+      case "collab-conflict":
+        Collab.simulateConflict(demo, book, target.dataset.page);
+        done();
+        break;
+      case "collab-resolve":
+        Collab.resolveConflict(demo, book, target.dataset.choice);
+        done(t("collab.resolved"));
+        break;
+      case "collab-restore":
+        if (!(await askConfirm(t("collab.restoreConfirm")))) break;
+        Collab.restoreVersion(demo, book, target.dataset.version);
+        done(t("collab.restored"));
+        break;
+      default:
+        return false;
+    }
+  } catch (error) {
+    toast(t(error.message?.startsWith("collab.") || error.message?.startsWith("community.") ? error.message : "community.saveFailed"));
+  }
+  return true;
+}
 const SIMULATED_REPLIES = ["community.sim1", "community.sim2", "community.sim3"];
 async function communityAction(target) {
   const name = target.dataset.action;
@@ -2317,23 +2409,44 @@ async function exportPageVideo() {
     return;
   }
   busyMedia = true;
-  let shown = -1;
+  let cancelled = false;
+  const dialog = $("#export-dialog");
+  $("#export-title").textContent = t("export.title");
+  $("#export-cancel").textContent = t("cancel");
+  $("#export-progress").style.width = "0%";
+  $("#export-time").textContent = t("export.preparing");
+  $("#export-cancel").onclick = () => {
+    cancelled = true;
+    $("#export-time").textContent = t("export.cancelling");
+  };
+  // Esc behaves like Cancel instead of hiding a running recording.
+  dialog.oncancel = (event) => {
+    event.preventDefault();
+    cancelled = true;
+  };
+  dialog.showModal();
   try {
     document.querySelectorAll("#app audio, #app video").forEach((element) => element.pause());
     await exportJournalVideo(activePage(), {
       ...exportOptions(),
+      isCancelled: () => cancelled,
       onProgress: (seconds, total) => {
-        const whole = Math.floor(seconds);
-        if (whole === shown) return;
-        shown = whole;
-        toast(t("export.recording", { now: formatDuration(seconds), total: formatDuration(total) }));
+        $("#export-progress").style.width = `${Math.min(100, (seconds / total) * 100)}%`;
+        $("#export-time").textContent = t("export.recording", {
+          now: formatDuration(seconds),
+          total: formatDuration(total),
+        });
       },
     });
     toast(t("export.videoDone"));
   } catch (error) {
-    console.warn("Video export failed", error?.name);
-    toast(t("export.videoFailed"));
+    if (error?.code === "cancelled") toast(t("export.cancelled"));
+    else {
+      console.warn("Video export failed", error?.name);
+      toast(t("export.videoFailed"));
+    }
   } finally {
+    dialog.close();
     busyMedia = false;
   }
 }
@@ -2574,6 +2687,7 @@ async function v3Action(target) {
   }
   if (await v31Action(target)) return true;
   if (await communityAction(target)) return true;
+  if (await collabAction(target)) return true;
   if (name === "new-book") {
     openBookDialog();
     return true;
@@ -2813,6 +2927,13 @@ function handleV3Input(event) {
 function handleV3Change(event) {
   const target = event.target;
   if (handleCommunityChange(target)) return true;
+  if (target.dataset.collabRole) {
+    Collab.setRole(social(), selectedBook, target.dataset.collabRole, target.value);
+    persistSocial();
+    toast(t("collab.roleSaved"));
+    render();
+    return true;
+  }
   if (target.dataset.bookFilter) {
     bookFilter =
       target.dataset.bookFilter === "date"

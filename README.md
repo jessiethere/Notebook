@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-V3.1 本轮在 Linux 容器验证：**33 项 Node、9 项 Python 全部通过**；原有两套浏览器 E2E 与新的 V3.1 浏览器验收（14 项要求）全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**49 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab` 七套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -114,6 +114,10 @@ npx playwright install chromium
 npm run test:browser
 npm run test:browser:v3
 npm run test:browser:v31
+npm run test:browser:v32
+npm run test:browser:v33
+npm run test:browser:v34
+npm run test:browser:collab
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -123,7 +127,7 @@ npm run test:browser:v31
 - 视频单文件 50 MB，音频 20 MB，录音单次最多 5 分钟；格式兼容性取决于浏览器，当前验证 Chromium。浏览器原生媒体/日期控件的语言跟随浏览器设置。
 - 新媒体在 IndexedDB，仍属本机站点数据，清理浏览器数据可能删除。完整备份媒体导出上限 100 MB，导入文件上限 150 MB；尚无分卷、加密或云备份。
 - 静态 PNG 不包含可播放的音视频；导出与 DOM 排版存在差异。主照片自由裁切、滤镜、完整相框和高级信息卡片仍未实现。
-- 没有真实用户账号、社区/好友/私信服务、协作角色与原子版本控制、背景音乐或流媒体接入。旧标签页提示不等于多人协作。
+- 没有真实用户账号、社区/好友/私信服务、协作角色与原子版本控制、背景音乐或流媒体接入（社区、好友、私信、共同创作目前是本机演示，标注“演示 · 未联网”）。旧标签页提示不等于多人协作。
 - 优先做 Windows/iOS 平台实测与原生个人能力对齐；再按 Phase 2 做清楚标注的社交原型，Phase 3 服务端，Phase 4 协作，Phase 5 高级创作/授权音乐。
 
 ## 协作与会话接续
@@ -131,6 +135,13 @@ npm run test:browser:v31
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-08 — 补完：导出进度与取消、成长页精简、共同创作演示
+
+- 创作页顶部变成一行（日期 · 保存），整页和“撤销/添加”都在底部图标上方。
+- 导出视频时显示进度条和已录制时间，可以随时“取消”，取消不会生成文件。
+- 成长页更简洁：一条本周进度栏、紧凑的习惯卡（打卡、本周七天、成长轨迹）、两张小回顾便签，感想记录默认收起。
+- 手帐本详情里新增“共同创作 · 演示 · 未联网”：邀请好友（可编辑/只能看）、模拟接受与退出、改权限和移出、带作者标记的共同页面、版本历史与恢复、同时编辑时两份都保留；公开需所有成员同意（未开放）。只保存在本浏览器的演示数据里，不会混进你的私人手帐。
 
 ### 2026-11-08 — Studio 工具变成底部小图标
 

@@ -8,7 +8,8 @@
     "test:browser:v31": "node tests/v31-browser.cjs",
     "test:browser:v32": "node tests/v32-browser.cjs",
     "test:browser:v33": "node tests/v33-browser.cjs",
-    "test:browser:v34": "node tests/v34-browser.cjs"
+    "test:browser:v34": "node tests/v34-browser.cjs",
+    "test:browser:collab": "node tests/collab-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

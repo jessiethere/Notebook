@@ -20,7 +20,7 @@
 - schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
 - 新媒体在 IndexedDB，LocalStorage 只存轻量数据；本机备份是用户主动下载文件，不上传服务器。
 - 原生 Core 支持 V3 Codable；SwiftUI 基础页面增加共享双语、字体注册/选择与 PNG 封面。原生音视频/完整封面字段编辑和画布未对齐 Web。
-- 没有真实账号、社区、好友、私信、协作或背景音乐。未来后端方案仅为文档设计。
+- 没有真实账号、社区、好友、私信、协作或背景音乐。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
 
 ## 关键决策
 
@@ -47,6 +47,18 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-08 — 补完未完成项：Studio 首屏、导出进度/取消、成长页精简、共同创作演示
+
+- 需求：用户要求“之前没做完的也继续做”。
+- Studio 首屏：顶部改为一行紧凑栏（`.studio-bar`：日期、保存状态、保存；页面标题改为读屏用的隐藏 h1）；未打开面板时页面占 90% 宽，整页和“撤销/添加”一行都在底部图标条上方（截图确认）。
+- 导出视频：`index.html` 新增 `#export-dialog`（进度条、已录制时间、取消按钮，Esc 等同取消）；`export.mjs` 的 `exportJournalVideo` 支持 `isCancelled`，取消时停止录制、关闭音频，抛出 `code="cancelled"`，**不下载任何文件**；`app.js` `exportPageVideo`。
+- 成长页精简：去掉大介绍块、主题分组标题、重复的“创建小习惯”按钮和底部里程碑；改为一条进度栏（本周 x/y、累计次数、成长日历入口）+ 紧凑习惯卡（打卡、本周七点、x/目标、📖 成长轨迹页数）+ 两张小回顾便签（已填写时显示第一句）+ 默认收起的“成长小便签”（打开后在重新渲染时保持打开）。
+- 共同创作演示：新 `Public/js/collab.mjs`（模型：invite 仅限好友且不自动授权、pending→simulateAccept、setRole、removeMember/离开保留页面、addPage/editPage 权限、版本快照最多 30、restoreVersion 生成新版本、simulateConflict/resolveConflict mine/theirs/both、publishBlockers）与 `collab-view.mjs`（手帐本详情页中可折叠的“共同创作”区，全程标注“演示 · 未联网”）；`app.js`（`collabAction`、写/改共同页面对话框、权限下拉）；存于 `little-days.demo-social`，私人手帐 `little-days.v1` 不包含任何共同创作数据；`styles.css`、`i18n.json`（collab.* 中英）。
+- 测试：新增 `tests/collab.test.mjs`（5 项）、`tests/collab-browser.cjs`（成长页 + 共同创作 6 组，`npm run test:browser:collab`）；v34 增加导出进度与取消（取消后无下载）；v31 先展开“成长小便签”；v3 的标题语言检查改读 `#app h1`（Studio 标题为隐藏 h1）。
+- 运行与测试（Linux 容器 + Chromium）：Node 49、Python 12 全部通过；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab` 全部通过。v31 第一次运行时出现过一次超时（日志为空），重跑通过，未能复现。
+- 已知问题：共同创作只是本机演示（虚拟好友、模拟接受/冲突），没有账号、服务端权限或真实同步；共同页面是文字页，暂不支持照片/排版；Swift/iOS 未编译、Windows 未实机验证。
+- 下一步：用户确认新成长页与共同创作交互；Phase 3 服务端设计；原生构建验证。
 
 ### 2026-11-08 — Studio 装饰工具改为底部小图标
 
