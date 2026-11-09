@@ -11376,3 +11376,69 @@ dialog h2,
   line-height: 1.6;
   color: var(--t-4a433c, #4a433c);
 }
+
+/* ---------- Share a book with family; suggested books ---------- */
+.book-share {
+  margin-top: 8px;
+}
+.book-share-help {
+  margin: 6px 2px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.suggested-books {
+  margin: 18px 0 8px;
+}
+.suggested-books h3 {
+  margin: 0 0 2px;
+  font-size: 15px;
+}
+.suggested-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+.suggested-book {
+  flex: 0 0 132px;
+  display: grid;
+  gap: 4px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--t-2b2622, #2b2622);
+}
+.suggested-book .book-cover {
+  width: 132px;
+  height: 176px;
+  opacity: 0.92;
+}
+.suggested-book b {
+  font-size: 13px;
+}
+.suggested-book small {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--t-8a8073, #8a8073);
+}
+.contribute-option {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 0;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 14px;
+  background: var(--c-fffdf9, #fffdf9);
+  text-align: left;
+  color: var(--t-2b2622, #2b2622);
+}
+.contribute-option b {
+  font-size: 14px;
+}
+.contribute-option small {
+  font-size: 12px;
+  color: var(--t-8a8073, #8a8073);
+}

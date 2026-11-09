@@ -162,7 +162,7 @@ function drawPaper(ctx, template) {
     }
   }
 }
-async function renderJournalCanvas(editor, options = {}) {
+export async function renderJournalCanvas(editor, options = {}) {
   const resolvePhoto = options.resolvePhoto || safePhoto;
   const dayPage = options.dayPage !== false;
   const canvas = document.createElement("canvas");
@@ -411,6 +411,59 @@ function download(href, name) {
   link.download = name;
   link.href = href;
   link.click();
+}
+// The first page of a shared book: its cover photo, title and dates.
+export async function renderBookTitleCanvas({ title = "", description = "", coverSrc = "", line = "", color = "#7D8E66" } = {}) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1350;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#FBF8F1";
+  ctx.fillRect(0, 0, 1080, 1350);
+  const sans = '"PingFang SC", -apple-system, "Helvetica Neue", "Noto Sans SC", sans-serif';
+  ctx.fillStyle = "#9A8F80";
+  ctx.font = `600 28px ${sans}`;
+  ctx.textAlign = "center";
+  ctx.fillText("L I T T L E   D A Y S", 540, 120);
+  // Cover photo in a soft frame (or the book's colour).
+  const box = { x: 150, y: 190, w: 780, h: 700 };
+  ctx.save();
+  ctx.shadowColor = "rgba(60,45,30,.18)";
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(box.x - 18, box.y - 18, box.w + 36, box.h + 36);
+  ctx.restore();
+  let drawn = false;
+  if (coverSrc) {
+    try {
+      const image = await loadImage(coverSrc);
+      const ratio = Math.max(box.w / image.width, box.h / image.height);
+      const dw = image.width * ratio,
+        dh = image.height * ratio;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(box.x, box.y, box.w, box.h);
+      ctx.clip();
+      ctx.drawImage(image, box.x + (box.w - dw) / 2, box.y + (box.h - dh) / 2, dw, dh);
+      ctx.restore();
+      drawn = true;
+    } catch {}
+  }
+  if (!drawn) {
+    ctx.fillStyle = color;
+    ctx.fillRect(box.x, box.y, box.w, box.h);
+  }
+  ctx.fillStyle = "#2B2622";
+  ctx.font = `600 66px ${sans}`;
+  wrapText(ctx, title, 540, 1010, 900, 80, 2);
+  ctx.fillStyle = "#7A7166";
+  ctx.font = `32px ${sans}`;
+  if (description) wrapText(ctx, description, 540, 1120, 860, 46, 2);
+  ctx.fillStyle = "#9A8F80";
+  ctx.font = `500 30px ${sans}`;
+  ctx.fillText(line, 540, 1260);
+  return canvas;
 }
 // A 9:16 picture for Stories: the page centred on paper, with a small
 // "made with Little Days" line at the bottom.

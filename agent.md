@@ -48,6 +48,22 @@
 
 ## 更新日志
 
+### 2026-11-09 — V5.4 一个人记，家人看：整本书分享成 PDF、推荐「我们俩」「宝宝成长」、加照片意向测试
+
+- 需求：用户喜欢书架用于情侣共同记录和父母记录亲子；讨论后同意「一个人记、其他人看」更可能是真实情况。
+- 改动文件：新增 Public/js/book-share.mjs（bookSharePages 按日期排页、limitPages、dateRange、最小 PDF 写入器 buildPdf，无第三方库）；Public/js/export.mjs（导出 renderJournalCanvas、新增 renderBookTitleCanvas 标题页）；Public/app.js（exportOptionsFor、shareBook 进度 / 系统分享 / 下载回退、suggestedBooksHTML / openSuggestedBook、openContributeQuestion、动作 book-share / book-suggest / contribute-interest）；Public/js/whats-new.mjs（V5.4）；Public/styles.css；i18n.json（bookShare.*、contribute.*、suggest.*、category.Relationship）；tests v53.test.mjs、v53-browser.cjs，package.json；docs ROADMAP、STRATEGY；README。
+- 功能：
+  - 书的页面里有「分享给家人看（PDF）」：生成标题页（封面照片、书名、描述、日期范围和页数），再按日期放入这本书的每一页（当天封面在前，然后各页），用进度条显示「第 n / N 页」，可以取消。支持文件分享时调起系统分享面板，否则下载。示例数据不放入；超过 60 页时只放最近 60 页并提示。
+  - 书架「和家人一起的书」：推荐「我们俩」（Relationship）和「宝宝成长」（Parenting），点开是预填好名字、描述、杂志封面和封面照片的新建书窗口；建好后这个推荐就不再显示。新书仍是私人。
+  - 分享后弹出「想让 TA 也能往这本书里加照片吗？」：只给 TA 看就够了 / 想让 TA 也能加照片 / 还不确定。明确写明还在做、回答只记在本机测试记录（contribute_interest）。
+- 决策与原因：不需要服务端和账号就能让家人看到；PDF 在手机消息里可以直接预览，长辈不用装 App；用意向问题测「投稿」需求，再决定是否做服务端。
+- 运行 / 测试：85 项 Node、12 项 Python、26 套浏览器 E2E 全部通过（v53：推荐书 → 建书 → 空书提示 → 两页 → PDF（3 页：标题页 + 2 页，JPEG，标题元数据）→ 意向问题 → 测试记录）。生成的 PDF 用 poppler（pdfinfo / pdftoppm）读取并渲染检查过。Linux 容器 + Chromium；iOS 系统分享面板、iMessage / WhatsApp 中预览未在真机验证。
+- 已知问题：
+  - 非拉丁字符的下载文件名在部分浏览器会被丢掉，所以下载时用「Little-Days-book-日期.pdf」，书名在 PDF 标题里；系统分享时文件名仍是书名。
+  - 视频在 PDF 里是静帧 / 不显示，音频只显示票根。
+  - PDF 生成在手机上较慢（每页需要渲染）。
+- 下一步：根据意向数据决定是否做投稿链接；F5 数据可靠性；F6 原生最小闭环。
+
 ### 2026-11-09 — V5.3 链接里可以看到更新记录
 
 - 需求：用户截图 claude.ai 聊天里的 Little Days 链接卡片，说「我想把 update 加到这里」，希望打开链接就能看到每次更新了什么。聊天里的卡片只显示标题，无法放更多内容，所以做了两件事：应用内显示更新，链接卡片的描述写上最新更新。

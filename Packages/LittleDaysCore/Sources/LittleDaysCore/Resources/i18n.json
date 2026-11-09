@@ -4814,5 +4814,117 @@
   "news.current": {
     "zh": "当前版本 V{version}。每次更新改了什么，都在这里。",
     "en": "You're on V{version}. Every update's changes are listed here."
+  },
+  "category.Relationship": {
+    "zh": "我们俩",
+    "en": "Couple"
+  },
+  "bookShare.button": {
+    "zh": "分享给家人看（PDF）",
+    "en": "Share with family (PDF)"
+  },
+  "bookShare.help": {
+    "zh": "把整本书做成一个 PDF：封面 + 每一页，按日期排好。对方在微信、iMessage、WhatsApp 里直接就能翻看，不用装 App。",
+    "en": "Turns the whole book into one PDF — a cover, then every page by date. They can flip through it in Messages or WhatsApp, no app needed."
+  },
+  "bookShare.making": {
+    "zh": "正在做成《{name}》",
+    "en": "Making “{name}”"
+  },
+  "bookShare.progress": {
+    "zh": "第 {now} / {total} 页",
+    "en": "Page {now} of {total}"
+  },
+  "bookShare.pages": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "bookShare.empty": {
+    "zh": "这本书还没有页面，先记一页吧",
+    "en": "This book has no pages yet — add one first"
+  },
+  "bookShare.shared": {
+    "zh": "已分享 {count} 页",
+    "en": "Shared {count} pages"
+  },
+  "bookShare.saved": {
+    "zh": "已保存 PDF（{count} 页），可以发给家人",
+    "en": "Saved a PDF ({count} pages) to send to family"
+  },
+  "bookShare.skipped": {
+    "zh": "（太长了，只放了最近的页，前面 {count} 页没放）",
+    "en": "(Long book: only the latest pages; {count} earlier ones left out)"
+  },
+  "bookShare.failed": {
+    "zh": "没能做成 PDF，请再试一次",
+    "en": "Couldn't make the PDF — please try again"
+  },
+  "bookShare.thanks": {
+    "zh": "谢谢，你的选择会帮我们决定先做什么",
+    "en": "Thanks — this helps us decide what to build next"
+  },
+  "contribute.title": {
+    "zh": "想让 TA 也能往这本书里加照片吗？",
+    "en": "Would you like them to add photos to this book too?"
+  },
+  "contribute.note": {
+    "zh": "这个功能还在做，现在只能分享给对方看。你的选择只记在这台设备的测试记录里。",
+    "en": "This isn't built yet — for now they can look. Your answer is kept only in this device's test log."
+  },
+  "contribute.view": {
+    "zh": "只给 TA 看就够了",
+    "en": "Just let them look"
+  },
+  "contribute.viewHint": {
+    "zh": "我来记，家人看",
+    "en": "I keep it, family looks"
+  },
+  "contribute.add": {
+    "zh": "想让 TA 也能加照片",
+    "en": "Let them add photos"
+  },
+  "contribute.addHint": {
+    "zh": "比如另一半、爸妈、爷爷奶奶",
+    "en": "My partner, parents or grandparents"
+  },
+  "contribute.unsure": {
+    "zh": "还不确定",
+    "en": "Not sure yet"
+  },
+  "contribute.unsureHint": {
+    "zh": "先用用看",
+    "en": "I'll see"
+  },
+  "suggest.title": {
+    "zh": "和家人一起的书",
+    "en": "Books for the people you love"
+  },
+  "suggest.help": {
+    "zh": "一个人记，家人随时可以看（分享成 PDF）。",
+    "en": "You keep it; family can look any time (shared as a PDF)."
+  },
+  "suggest.relationship.title": {
+    "zh": "我们俩",
+    "en": "The two of us"
+  },
+  "suggest.relationship.hint": {
+    "zh": "情侣的日常和纪念日",
+    "en": "Everyday moments and anniversaries"
+  },
+  "suggest.relationship.description": {
+    "zh": "我们一起过的小日子。",
+    "en": "The little days we share."
+  },
+  "suggest.parenting.title": {
+    "zh": "宝宝成长",
+    "en": "Growing up"
+  },
+  "suggest.parenting.hint": {
+    "zh": "记录孩子长大，给家人看",
+    "en": "Your child growing up, for the family"
+  },
+  "suggest.parenting.description": {
+    "zh": "一点一点长大的你。",
+    "en": "Watching you grow, little by little."
   }
 }

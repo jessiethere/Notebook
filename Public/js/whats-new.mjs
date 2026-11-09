@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.4",
+    date: "2026-11-09",
+    zh: {
+      title: "一个人记，家人一起看",
+      items: [
+        "书里新增「分享给家人看（PDF）」：整本书做成一个 PDF（封面 + 每一页，按日期排好），对方在微信、iMessage 里直接翻看，不用装 App。",
+        "书架上推荐两本书：「我们俩」（情侣日常和纪念日）和「宝宝成长」。",
+        "分享后会问一句「想让 TA 也能加照片吗？」——这个功能还在做，你的回答帮我们决定先做什么。",
+      ],
+    },
+    en: {
+      title: "You keep the book, family looks",
+      items: [
+        "New in every book: Share with family (PDF) — the whole book in one file (a cover, then every page by date) that opens in Messages or WhatsApp, no app needed.",
+        "Two suggested books on the shelf: The two of us (everyday moments and anniversaries) and Growing up.",
+        "After sharing we ask whether they should be able to add photos too — not built yet; your answer helps us decide.",
+      ],
+    },
+  },
+  {
     version: "5.3",
     date: "2026-11-09",
     zh: { title: "应用里可以看到更新记录", items: ["每次更新后，首页顶部会出现「新版本」卡片，点开就能看这次改了什么。", "设置里有完整的「更新记录」。"] },

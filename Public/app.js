@@ -24,7 +24,8 @@ import {
   settingsHTML,
   fieldLabel,
 } from "./js/personal-ui.mjs";
-import { loadImage, exportJournalImage, exportJournalVideo, shareStory } from "./js/export.mjs";
+import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
+import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
 import {
   backdropOf,
   canvasHTML as sharedCanvasHTML,
@@ -676,7 +677,7 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
@@ -687,7 +688,7 @@ function booksPage() {
   const ours = booksView === "our";
   const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${!ours}">${t("books.mine")}</button><button role="tab" data-action="books-view" data-view="our" aria-selected="${ours}">${t("books.ours")}</button></div>`;
   const list = ours ? state().books.filter(isOurBook) : state().books;
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}<p class="home-quote">A home for every little story.</p>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
@@ -1850,6 +1851,115 @@ function applyTheme(id) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && theme.swatch?.[0]) meta.content = theme.swatch[0];
 }
+// ---------- Sharing a book with family (read-only PDF) ----------
+// One person keeps the book; partners, parents and grandparents look at it.
+// No account or server: the book becomes one PDF for the share sheet.
+const SUGGESTED_BOOKS = [
+  { preset: "relationship", category: "Relationship", coverTemplate: "magazine-west", coverImage: "photo:beach-sunset", color: "blush" },
+  { preset: "parenting", category: "Parenting", coverTemplate: "magazine-jp", coverImage: "photo:balloons", color: "butter" },
+];
+function suggestedBooksHTML() {
+  const missing = SUGGESTED_BOOKS.filter((s) => !state().books.some((b) => b.category === s.category));
+  if (!missing.length) return "";
+  return `<section class="suggested-books"><h3>${t("suggest.title")}</h3><p class="save-help">${t("suggest.help")}</p><div class="suggested-row">${missing
+    .map((s) => {
+      const book = { id: `suggest-${s.preset}`, title: t(`suggest.${s.preset}.title`), category: s.category, coverTemplate: s.coverTemplate, coverImage: s.coverImage, color: s.color };
+      return `<button class="suggested-book" data-action="book-suggest" data-preset="${s.preset}">${coverHTML(book, ctx())}<b>${esc(book.title)}</b><small>${t(`suggest.${s.preset}.hint`)}</small></button>`;
+    })
+    .join("")}</div></section>`;
+}
+function openSuggestedBook(preset) {
+  const s = SUGGESTED_BOOKS.find((item) => item.preset === preset);
+  if (!s) return;
+  openBookDialog();
+  bookDraft = { ...bookDraft, title: t(`suggest.${preset}.title`), description: t(`suggest.${preset}.description`), category: s.category, coverTemplate: s.coverTemplate, coverImage: s.coverImage, color: s.color };
+  $("#dialog-form").innerHTML = bookDialogHTML(bookDraft, ctx());
+}
+async function shareBook(bookId) {
+  const book = state().books.find((b) => b.id === bookId);
+  if (!book || busyMedia) return;
+  const all = bookSharePages(state(), bookId);
+  if (!all.length) {
+    toast(t("bookShare.empty"));
+    return;
+  }
+  const { pages, skipped } = limitPages(all);
+  const range = dateRange(pages);
+  busyMedia = true;
+  let cancelled = false;
+  const dialog = $("#export-dialog");
+  $("#export-title").textContent = t("bookShare.making", { name: book.title });
+  $("#export-cancel").textContent = t("cancel");
+  $("#export-progress").style.width = "0%";
+  $("#export-time").textContent = "";
+  $("#export-cancel").onclick = () => (cancelled = true);
+  dialog.oncancel = (event) => {
+    event.preventDefault();
+    cancelled = true;
+  };
+  dialog.showModal();
+  const jpeg = async (canvas) => {
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), width: canvas.width, height: canvas.height };
+  };
+  try {
+    const when = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "short", day: "numeric" });
+    const line = `${range.from === range.to ? when(range.from) : `${when(range.from)} – ${when(range.to)}`} · ${t("bookShare.pages", { count: pages.length })}`;
+    const images = [await jpeg(await renderBookTitleCanvas({ title: book.title, description: book.description || "", coverSrc: safePhoto(coverPhotoRef(book, catalog)), line }))];
+    for (let i = 0; i < pages.length; i++) {
+      if (cancelled) throw Object.assign(new Error("cancelled"), { code: "cancelled" });
+      const { date, entry, moment } = pages[i];
+      const canvas = await renderJournalCanvas(moment || entry, { ...exportOptionsFor(!moment, date), skipVideo: true });
+      images.push(await jpeg(canvas));
+      $("#export-progress").style.width = `${Math.round(((i + 1) / pages.length) * 100)}%`;
+      $("#export-time").textContent = t("bookShare.progress", { now: i + 1, total: pages.length });
+    }
+    const pdf = buildPdf(images, { title: book.title });
+    const name = `Little-Days-${book.title.replace(/[\\/:*?"<>|]+/g, "").slice(0, 40) || "book"}.pdf`;
+    const file = new File([pdf], name, { type: "application/pdf" });
+    dialog.close();
+    let how = "saved";
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: book.title });
+        how = "shared";
+      } catch (error) {
+        how = error?.name === "AbortError" ? "cancelled" : "saved";
+      }
+    }
+    if (how === "saved") {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(file);
+      // Some browsers drop non-Latin download names; the PDF keeps the title.
+      link.download = /^[\w .()-]+\.pdf$/.test(name) ? name : `Little-Days-book-${dateKey()}.pdf`;
+      link.hidden = true;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 30000);
+    }
+    logEvent("book_share", { pages: pages.length, kind: how });
+    if (how === "cancelled") return;
+    toast(t(how === "shared" ? "bookShare.shared" : "bookShare.saved", { count: pages.length }) + (skipped ? ` ${t("bookShare.skipped", { count: skipped })}` : ""));
+    openContributeQuestion();
+  } catch (error) {
+    if (error?.code === "cancelled") toast(t("export.cancelled"));
+    else {
+      console.warn("Book share failed", error?.name);
+      toast(t("bookShare.failed"));
+    }
+  } finally {
+    if (dialog.open) dialog.close();
+    busyMedia = false;
+  }
+}
+// An honest question (not a feature yet): would family add photos too?
+function openContributeQuestion() {
+  const dialog = $("#choose-dialog");
+  const option = (kind) => `<button class="contribute-option" data-action="contribute-interest" data-kind="${kind}"><b>${t(`contribute.${kind}`)}</b><small>${t(`contribute.${kind}Hint`)}</small></button>`;
+  dialog.innerHTML = `<div class="choose-sheet contribute-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("contribute.title")}</h2><p class="save-help">${t("contribute.note")}</p>${option("view")}${option("add")}${option("unsure")}</div>`;
+  dialog.showModal();
+}
 // ---------- What's new (update notes inside the app) ----------
 function whatsNewCardHTML() {
   const note = noteFor(UPDATES[0], languageCode());
@@ -2337,6 +2447,13 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "book-share") await shareBook(target.dataset.book);
+  if (actionName === "book-suggest") openSuggestedBook(target.dataset.preset);
+  if (actionName === "contribute-interest") {
+    logEvent("contribute_interest", { kind: target.dataset.kind });
+    $("#choose-dialog").close();
+    toast(t("bookShare.thanks"));
+  }
   if (actionName === "whats-new") {
     openWhatsNew();
     if (page === "home") render();
@@ -3753,13 +3870,16 @@ function clipSpot(page, entry, clip) {
 }
 function exportOptions() {
   const page = activePage();
+  return exportOptionsFor(isDayPage(), editor.date, isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`);
+}
+function exportOptionsFor(dayPage, date, suffix = "") {
   return {
     resolvePhoto: safePhoto,
     catalog,
     fontFamily,
-    dayPage: isDayPage(),
-    date: editor.date,
-    suffix: isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`,
+    dayPage,
+    date,
+    suffix,
     growthCard: (layer) => {
       const check = state().checks.find(
         (item) => item.habitId === layer.habitId && item.date === layer.checkDate,
