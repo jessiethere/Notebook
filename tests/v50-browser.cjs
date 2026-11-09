@@ -72,18 +72,19 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 5. Delete a story right from its card; clear the day page ("no day page").
     await menu(page, "home");
-    await page.locator('.home-mag [data-action="quick-moment"]').tap();
+    await page.locator('.home-mag .moment-cta').tap();
+    await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     await page.keyboard.type("不想要的这页");
     await page.evaluate(() => document.activeElement.blur());
     // (The paper is pinned at the top and the tools at the bottom; the card's
     // buttons sit between them on screen, so the click is sent directly.)
-    await page.locator('.write-card [data-action="moment-delete"]').dispatchEvent("click");
+    await page.locator('.page-bar [data-action="moment-delete"]').dispatchEvent("click");
     await page.locator("#confirm-ok").tap();
     await page.waitForFunction(() => !document.querySelector(".chapter-chips")?.innerText.includes("不想要的这页"));
-    await page.locator('.write-card [data-action="day-page-clear"]').dispatchEvent("click");
+    await page.locator('.page-bar [data-action="day-page-clear"]').dispatchEvent("click");
     await page.locator("#confirm-ok").tap();
-    await page.waitForFunction(() => !document.querySelector('.write-card [data-action="day-page-clear"]'));
+    await page.waitForFunction(() => !document.querySelector('.page-bar [data-action="day-page-clear"]'));
     await page.waitForTimeout(1300);
     const draft = (await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")))).drafts[today];
     assert.ok(draft && !draft.title && !draft.body && !draft.photo && !(draft.layers || []).length, "day page cleared");

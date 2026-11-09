@@ -358,7 +358,7 @@ async function streamBytes(download) {
     assert.match(await page.title(), /Stationery Shop/);
     assert.equal(
       await page.locator('#navigation [data-page="books"]').innerText(),
-      "My Books",
+      "Books",
     );
     for (const tab of ["calendar", "growth", "books", "studio"]) {
       await nav(tab);

@@ -19,7 +19,8 @@ const shots = process.env.SHOTS_DIR || "";
     const library = await page.evaluate(async () => (await (await fetch("shared/library.json")).json()).photos);
 
     // 1. Open the food collection from the chooser.
-    await page.locator('.home-mag [data-action="quick-moment"]').tap();
+    await page.locator('.home-mag .moment-cta').tap();
+    await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector("#journal-canvas");
     await page.evaluate(() => document.activeElement?.blur());
     await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();

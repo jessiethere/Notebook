@@ -24,7 +24,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     // "Me" moved to My Books → 我的主页.
     const openMe = async () => {
       await nav("books");
-      await page.locator('[data-action="books-view"][data-view="profile"]').click();
+      if (!(await page.locator(".ig-head").count())) await page.locator('[data-action="books-view"][data-view="profile"]').click();
       await page.waitForSelector(".ig-head");
     };
     const tool = async (id) => {
@@ -36,13 +36,14 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
 
     // 0. Calm home: one invitation to write, no duplicate shortcuts.
     assert.equal(await page.locator(".quick-action, .community-banner, .studio-banner").count(), 0);
-    assert.equal(await page.locator('.hero [data-action="quick-moment"]').count(), 1);
+    assert.equal(await page.locator('.hero [data-action="quick-open"]').count(), 1);
     await page.locator(".today-preview").click();
     await page.waitForSelector(".day-detail");
     await nav("home");
     // 1. One tap from Home starts a Moment; writing is the first thing on screen.
     // It opens as a note: the title on the paper is ready for typing.
-    await page.locator('.moment-cta[data-action="quick-moment"]').click();
+    await page.locator('.moment-cta[data-action="quick-open"]').click();
+    await page.locator('#choose-dialog [data-action="quick-start"]').click();
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title", "title on the paper is focused");
     await page.keyboard.type("Gym Session");
@@ -56,7 +57,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     });
     // Writing sits above the decoration menu, not as one of its rows.
     const order = await page.evaluate(() => {
-      const write = document.querySelector(".write-card").getBoundingClientRect().top;
+      const write = document.querySelector("#journal-canvas").getBoundingClientRect().top;
       const menu = document.querySelector("#tool-menu").getBoundingClientRect().top;
       return write < menu;
     });
@@ -101,7 +102,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.equal(await page.locator(".day-detail .moment-canvas.text-only").count(), 1);
     // Day Detail offers "add a moment to this day".
     await page.locator('.day-detail [data-action="quick-moment"]').click();
-    await page.waitForSelector(".write-card.moment");
+    await page.waitForSelector('.page-bar [data-action="moment-delete"]');
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.length === 3, today);
     passed.push("templates by photo count with empty frames, text-only page, add-moment from Day Detail");
 

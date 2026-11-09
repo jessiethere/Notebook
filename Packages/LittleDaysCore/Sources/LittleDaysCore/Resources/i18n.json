@@ -16,8 +16,8 @@
     "en": "Growth"
   },
   "nav.books": {
-    "zh": "手帐本",
-    "en": "My Books"
+    "zh": "书架",
+    "en": "Books"
   },
   "settings": {
     "zh": "设置",
@@ -152,8 +152,8 @@
     "en": "{done}/{total} done"
   },
   "home.books": {
-    "zh": "我的手帐本",
-    "en": "My little books"
+    "zh": "书架",
+    "en": "Books"
   },
   "home.allBooks": {
     "zh": "查看全部 ›",
@@ -328,8 +328,8 @@
     "en": "Undo"
   },
   "books.title": {
-    "zh": "我的手帐本",
-    "en": "My Books"
+    "zh": "书架",
+    "en": "Books"
   },
   "books.subtitle": {
     "zh": "给每一种热爱，一本小小的收藏。",
@@ -1980,16 +1980,16 @@
     "en": "Photo"
   },
   "moment.cta": {
-    "zh": "写一个小故事",
-    "en": "Write a moment"
+    "zh": "记一页",
+    "en": "Add a page"
   },
   "moment.ctaDay": {
     "zh": "给这一天再写一个小故事",
     "en": "Add a moment to this day"
   },
   "moment.ctaHint": {
-    "zh": "早晨的健身、午后的咖啡、晚上的一顿饭…",
-    "en": "A morning workout, an afternoon coffee, tonight's dinner…"
+    "zh": "选一本书，配不配照片都可以",
+    "en": "Pick a journal, with or without a photo"
   },
   "community.title": {
     "zh": "社区",
@@ -4374,5 +4374,49 @@
   "write.dayCleared": {
     "zh": "当日主页已清空，这一天只保留小故事",
     "en": "Day page cleared; this day keeps its stories"
+  },
+  "books.mine": {
+    "zh": "我的书",
+    "en": "My Books"
+  },
+  "books.ours": {
+    "zh": "共同的书",
+    "en": "Our Books"
+  },
+  "books.oursEmpty": {
+    "zh": "还没有共同的书。打开一本书，在「共同创作」里邀请好友一起写（本机演示）。",
+    "en": "No books with friends yet. Open a book and invite friends under Write together (demo)."
+  },
+  "quick.title": {
+    "zh": "记一页",
+    "en": "Add a page"
+  },
+  "quick.book": {
+    "zh": "记到哪本书",
+    "en": "Which journal"
+  },
+  "quick.photo": {
+    "zh": "配一张照片",
+    "en": "A photo"
+  },
+  "quick.noPhoto": {
+    "zh": "不用",
+    "en": "None"
+  },
+  "quick.today": {
+    "zh": "今日照片",
+    "en": "Today's"
+  },
+  "quick.pick": {
+    "zh": "相册 / 素材",
+    "en": "Album / library"
+  },
+  "quick.start": {
+    "zh": "开始写",
+    "en": "Start writing"
+  },
+  "write.inBook": {
+    "zh": "记到",
+    "en": "In"
   }
 }

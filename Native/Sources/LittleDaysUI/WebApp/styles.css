@@ -10193,3 +10193,177 @@ dialog h2,
   font-size: 12px;
   white-space: nowrap;
 }
+
+/* The page bar: journal, time, delete — one line above the paper. */
+.page-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -2px 0 10px;
+  padding: 6px 8px;
+  border-radius: 14px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 2px 8px var(--c-3c2d1e10, #3c2d1e10);
+}
+.write-book {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.write-book select {
+  min-width: 0;
+  flex: 1;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--c-e6dfd3, #e6dfd3);
+  border-radius: 10px;
+  background: var(--c-fbfaf6, #fbfaf6);
+  color: var(--t-2b2622, #2b2622);
+  font-size: 13px !important;
+}
+.page-bar .write-time {
+  width: auto;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--c-e6dfd3, #e6dfd3);
+  border-radius: 10px;
+  background: var(--c-fbfaf6, #fbfaf6);
+  font-size: 13px !important;
+}
+.chapter-chip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.chip-delete {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--c-ecd3cf, #ecd3cf);
+  border-radius: 50%;
+  background: var(--c-fff7f5, #fff7f5);
+  color: var(--t-b0574b, #b0574b);
+  font-size: 16px;
+  line-height: 1;
+}
+/* 记一页 sheet */
+.quick-books,
+.quick-photos {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scrollbar-width: none;
+}
+.quick-books button {
+  flex: 0 0 78px;
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  text-align: center;
+  font-size: 11px;
+  color: var(--t-4a433c, #4a433c);
+}
+.quick-books button.selected {
+  border-color: var(--c-2b2622, #2b2622);
+  background: var(--c-ffffff, #ffffff);
+}
+.quick-books .book-cover {
+  width: 66px;
+  height: 88px;
+  margin: 0 auto;
+}
+.quick-books span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quick-photos button {
+  flex: 0 0 92px;
+  height: 92px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--c-e6dfd3, #e6dfd3);
+  border-radius: 14px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 12px;
+  color: var(--t-6f675d, #6f675d);
+}
+.quick-photos button.selected {
+  border-color: var(--c-2b2622, #2b2622);
+}
+.quick-photos img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.quick-photos img + span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 4px;
+  background: var(--c-00000066, #00000066);
+  color: var(--t-ffffff, #ffffff);
+}
+.quick-photos .quick-none svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+.quick-start {
+  margin-top: 6px;
+  min-height: 48px;
+}
+.quick-start svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.home-book-tabs,
+.page-top-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.home-book-tabs {
+  margin: -4px 0 10px;
+}
+.home-book-tabs button {
+  min-height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 999px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 12px;
+  color: var(--t-6f675d, #6f675d);
+}
+.home-book-tabs button[aria-selected="true"] {
+  border-color: var(--ink, var(--t-2f2a26, #2f2a26));
+  background: var(--paper);
+  color: var(--ink, var(--t-2f2a26, #2f2a26));
+  font-weight: 600;
+}
+.our-empty {
+  margin: 8px 0 14px;
+  line-height: 1.6;
+}

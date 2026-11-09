@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-09 — 书架（我的书 / 共同的书）；「记一页」先选书；纸下写字卡拿掉；删除这一页放到看得见的地方
+
+- 需求：My Books 改名 Books（书架），书架页和首页都能切换「我的书 / 共同的书」；今日照片点进去不要直接进编辑照片；快捷记录要能选记到哪本书；Write a moment 与 Write with it 重复；随手写模式纸下的小编辑卡拿掉；不知道怎么删掉不喜欢的一页。
+- 改动：Public/app.js（booksView shelf/our/profile、isOurBook、首页书架标签、「记一页」面板 openQuickRecord/renderQuickRecord/startQuickRecord、页面条 pageBarHTML、篇章标签上的 ×、随手写模式不再渲染写字卡）；Public/styles.css（page-bar、chip-delete、quick-sheet、home-book-tabs、page-top-actions、our-empty）；i18n.json（books.mine/ours/oursEmpty、quick.*、write.inBook 等，nav.books/books.title 改为 书架/Books）；测试 browser、v3、v33、v35、v41、v46、v48、v50 更新选择器。
+- 功能：首页「今日照片」和「记一页」都打开同一个小面板：选书（记住上次选择，存 LocalStorage `little-days.quick-book`，仅本机便利）、选照片（不用 / 今日照片 / 从照片库挑），再点「开始写」。当天还没写时进当日主页并放好照片；已经写过时新开一个篇章记到所选的书。写作页纸上方一条细栏：记在哪本书、时间、「删除这一页」（当日主页为「清空这一天」），当前篇章标签带 ×。
+- 决策与原因：两个入口合并成一个面板，避免「Write a moment / Write with it」重复；删除放在纸上方和篇章标签上，用户一眼能看到；首页书架标签选中样式用主题 paper/ink 变量，深色主题对比度足够（v40 检查）。
+- 运行/测试：68 项 Node、12 项 Python（同步外壳后）通过；23 套浏览器 E2E 通过（browser、v3、v31–v50、collab）。Linux 容器 + Chromium；未在 Windows 实机 / iOS 验证，Swift 未编译。
+- 已知问题：共同的书只读取协作演示中已加入好友的书；上传头像仍不在备份里。
+- 未完成 / 下一步：用户同时提出手绘、记录一天的三种方式（照片 + 一句话 / 随手写 / 手绘）、装扮更重要、等级不用植物名，下一条记录处理。
+
 ### 2026-11-09 — 主页改成 Instagram 式（像 QQ 空间可以装扮）；照片头像；杂志书脊和 6 种杂志封面；界面统一黑体；写作卡片上直接删除
 
 - 需求（连续几条）：

@@ -28,7 +28,8 @@ const shots = process.env.SHOTS_DIR || "";
     const settle = () => page.waitForTimeout(1300); // drafts save after a short pause
 
     // 1. 写一个小故事 → a note: type the title and words right on the paper.
-    await page.locator('.home-mag [data-action="quick-moment"]').tap();
+    await page.locator('.home-mag .moment-cta').tap();
+    await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector('[data-action="page-mode"][data-mode="note"][aria-pressed="true"]');
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
     await page.keyboard.type("窗边的下午");
@@ -43,8 +44,7 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(s.body, "读了几页书，\n风很温柔。");
     assert.equal(s.layoutTemplate, "text");
     // Below the paper: no second title/words box, just a tip and tags.
-    assert.equal(await page.locator(".write-card.note-mode .write-title, .write-card.note-mode .write-body").count(), 0);
-    assert.match(await page.locator(".write-card.note-mode .write-tip").innerText(), /纸上/);
+    assert.equal(await page.locator(".write-card.note-mode, .write-card .write-title, .write-card .write-body").count(), 0);
     if (shots) await page.screenshot({ path: `${shots}/v46-note.png` });
     passed.push("随手写: title and words typed on the paper (tap blank paper to type); nothing duplicated below");
 

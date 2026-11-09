@@ -43,11 +43,15 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const sceneId = await page.locator(".today-scene").getAttribute("data-scene");
     assert.ok(sceneId, "a picture of the day");
     await page.locator(".today-scene").tap();
-    // It goes into the page's main picture spot (part of the layout).
+    // 记一页 opens with today's photo chosen; nothing written yet, so it goes
+    // into the day page's main picture spot (part of the layout).
+    await page.waitForSelector('#choose-dialog[open] [data-action="quick-photo"][data-photo="today"][aria-pressed="true"]');
+    await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector(`#journal-canvas .canvas-photo img[src*="LD-photo-${sceneId}"]`);
     passed.push("Home: picture of the day → one tap fills today's main picture spot");
 
     // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
+    await page.evaluate(() => document.activeElement?.blur());
     const dock = page.locator('[data-action="tool"][data-tool="photos"]');
     if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
     await page.waitForSelector(".wall-gallery");

@@ -62,7 +62,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('[data-action="open-profile"]').click();
     await page.waitForSelector(".ig-head");
     assert.equal(await page.locator("#navigation [data-page='books'].active").count(), 1, "profile lives in My Books");
-    assert.equal(await page.locator('[data-action="books-view"][data-view="profile"][aria-selected="true"]').count(), 1);
+    assert.equal(await page.locator('.page-top [data-action="books-view"][data-view="shelf"]').count(), 1, "back to the shelf from my page");
     assert.equal(await page.locator(".who-row").count(), books.length);
     assert.equal(await page.locator('.who-row [data-action="showcase"][data-on="0"][aria-pressed="true"]').count(), books.length, "all private by default");
     // Profile edits re-render in place (stay on My Books).
@@ -104,7 +104,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('[data-page="settings"]').click();
     await page.locator('[data-language="en"]').click();
     await nav("books");
-    assert.match(await page.locator(".shelf-switch").innerText(), /Shelf[\s\S]*My profile/);
+    assert.match(await page.locator(".shelf-switch").innerText(), /My Books[\s\S]*Our Books/);
+    assert.match(await page.locator(".me-chip").innerText(), /My profile/);
     for (const width of [375, 430]) {
       await page.setViewportSize({ width, height: 844 });
       for (const view of ["shelf", "profile"]) {
