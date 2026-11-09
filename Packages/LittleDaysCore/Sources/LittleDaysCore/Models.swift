@@ -196,6 +196,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var collapsed: Bool?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    /// Page background, e.g. "scene:color-peach" (library.json "scenes").
+    public var backdrop: String?
     public var visibility: String?
     public var updatedAt: String?
     public var savedAt: String?
@@ -222,6 +224,8 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var moments: [JournalMoment]?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    /// Page background, e.g. "scene:color-peach" (library.json "scenes").
+    public var backdrop: String?
 
     public init(id: String = UUID().uuidString, date: String, title: String = "", body: String = "", mood: String = "☀️", bookId: String = "daily", photo: String = "", template: String = "cute", font: String = "serif", isDemo: Bool = false) {
         self.id = id

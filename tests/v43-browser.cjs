@@ -58,12 +58,12 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector("#choose-dialog[open]");
     assert.match(await page.locator("#choose-dialog h2").innerText(), /主照片/);
     assert.ok((await page.locator("#choose-dialog .choose-picks button").count()) >= 3, "today's picks");
-    assert.equal(await page.locator("#choose-dialog .choose-collections button").count(), 6, "the library's collections");
+    assert.equal(await page.locator("#choose-dialog .choose-collections button").count(), 13, "the library's collections");
     const pick = await page.locator("#choose-dialog .choose-picks button").nth(1).getAttribute("data-scene");
     await page.locator("#choose-dialog .choose-picks button").nth(1).tap();
-    await page.waitForSelector(`#journal-canvas .canvas-photo img[src*="LD-scene-${pick}"]`);
+    await page.waitForSelector(`#journal-canvas .canvas-photo img[src*="LD-photo-${pick}"]`);
     assert.equal(await page.locator("#journal-canvas .photo-layer").count(), 0, "in the layout, not floating on top");
-    passed.push("main picture spot opens the chooser; a scene fills that spot");
+    passed.push("main picture spot opens the chooser; a library photo fills that spot");
 
     // 3. The ＋照片 button offers album, picks and library (the album still opens the picker).
     await page.locator('.stage-bar [data-action="add-photos"], #journal-canvas [data-action="add-photos"]').first().tap();
@@ -75,7 +75,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await picker.setFiles([]);
     // From the chooser, a collection opens the swipe sheet.
     await page.locator('.stage-bar [data-action="add-photos"], #journal-canvas [data-action="add-photos"]').first().tap();
-    await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="sky"]').tap();
+    await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="coffee"]').tap();
     await page.waitForSelector("#scene-dialog[open] .wall-big");
     assert.equal(await page.locator("#choose-dialog[open]").count(), 0);
     await page.locator('[data-action="scene-close"]').tap();

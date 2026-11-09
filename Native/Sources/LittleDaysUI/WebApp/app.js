@@ -409,7 +409,7 @@ function home() {
     : (() => {
         const scene = todayScene();
         return scene
-          ? `<button class="today-scene" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b><em>${t("scene.useIt")} ›</em></span></button>`
+          ? `<button class="today-scene" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b><em>${t("scene.useIt")} ›</em></span></button>`
           : `<p class="today-blank">${t("home.blankBody")}</p>`;
       })();
   return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
@@ -924,9 +924,9 @@ function studioTools() {
       id: "paper",
       icon: "▤",
       label: "tool.paper",
-      value: t("template." + (page.template || "minimal")),
+      value: page.backdrop ? t("backdrop.on") : t("template." + (page.template || "minimal")),
       body: () =>
-        `<div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("tool.paper")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
     },
     {
       id: "mood",
@@ -1034,7 +1034,7 @@ function studioStartHTML() {
       : ""
   }<button class="start-quicknote" data-action="start-note"><span class="start-note-icon" aria-hidden="true">✎</span><span><b>${t("note.start")}</b><small>${t("note.startHint")}</small></span><i>›</i></button><div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div>${(() => {
     const scene = todayScene();
-    return scene ? `<button class="start-scene" data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b></span><i>${t("scene.useIt")} ›</i></button>` : "";
+    return scene ? `<button class="start-scene" data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b></span><i>${t("scene.useIt")} ›</i></button>` : "";
   })()}<h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
 }
 // Leaves the start screen; on a day that already has a page, the new thing
@@ -1104,27 +1104,58 @@ function myExperience() {
   if (Community.noteLevel(social(), xp.levelIndex, xp.level.id)) persistSocial();
   return xp;
 }
-// Original scene illustrations: one picked for each day, all in a library.
-function scenes() {
-  return catalog.scenes || [];
+// The photo library: real photos grouped by mood and moment (library.json
+// "photos", Unsplash License). One is picked for each day.
+function libraryPhotos() {
+  return catalog.photos || [];
 }
-function sceneName(scene) {
-  return languageCode() === "en" ? scene.nameEn : scene.nameZh;
+function sceneName(item) {
+  return languageCode() === "en" ? item.nameEn : item.nameZh;
 }
 function todayScene() {
-  // Same set as new journals' sample page: the hand-drawn life scenes.
-  const id = sceneOfDay(scenes().filter((scene) => (scene.collection || "life") === "life").map((scene) => scene.id), dateKey());
-  return scenes().find((scene) => scene.id === id);
+  const id = sceneOfDay(libraryPhotos().map((photo) => photo.id), dateKey());
+  return libraryPhotos().find((photo) => photo.id === id);
 }
-// The scene library looks like a wallpaper gallery: one row per collection
+// Collections look like a wallpaper gallery: one row per collection
 // (stacked previews, name, a line about it, "Use"), then a swipeable sheet.
 function sceneCollections() {
-  return (catalog.sceneCollections || []).filter((c) => scenes().some((scene) => (scene.collection || "life") === c.id));
+  return (catalog.photoCollections || []).filter((c) => libraryPhotos().some((photo) => photo.collection === c.id));
 }
 function collectionScenes(id) {
-  const list = scenes().filter((scene) => (scene.collection || "life") === id);
+  const list = libraryPhotos().filter((photo) => photo.collection === id);
   const today = todayScene();
-  return today && id === (today.collection || "life") ? [today, ...list.filter((scene) => scene !== today)] : list;
+  return today && id === today.collection ? [today, ...list.filter((photo) => photo !== today)] : list;
+}
+// Today's picks: today's photo, then one from three other collections (also
+// changing day by day).
+function todayPicks() {
+  const today = todayScene();
+  const others = sceneCollections().filter((c) => c.id !== today?.collection);
+  const day = Math.floor(Date.parse(`${dateKey()}T12:00:00Z`) / 86400000);
+  const picks = [0, 1, 2].map((k) => {
+    const c = others[(day * 3 + k * 4) % Math.max(1, others.length)];
+    const list = c ? collectionScenes(c.id) : [];
+    return list[(day + k) % Math.max(1, list.length)];
+  });
+  return [today, ...picks].filter((item, k, all) => item && all.indexOf(item) === k);
+}
+// Page backgrounds: original gradients, patterns, kaleidoscopes, ribbons, sky.
+function backdrops() {
+  return (catalog.scenes || []).filter((scene) => !scene.retired);
+}
+function backdropHTML(page) {
+  const en = languageCode() === "en";
+  const current = /^scene:/.test(page.backdrop || "") ? page.backdrop.slice(6) : "";
+  const option = (id, inner, label) =>
+    `<button class="backdrop-option ${current === id ? "selected" : ""}" data-action="backdrop" data-backdrop="${esc(id)}" aria-pressed="${current === id}" aria-label="${esc(label)}">${inner}</button>`;
+  return `<section class="backdrop-picker"><div class="scene-head"><b>${t("backdrop.title")}</b><small>${t("backdrop.note")}</small></div><div class="backdrop-row backdrop-row-none">${option("", `<span class="backdrop-none">${t("backdrop.none")}</span>`, t("backdrop.none"))}</div>${(catalog.sceneCollections || [])
+    .map((c) => {
+      const items = backdrops().filter((scene) => scene.collection === c.id);
+      return items.length
+        ? `<h4>${esc(en ? c.nameEn : c.nameZh)}</h4><div class="backdrop-row">${items.map((scene) => option(scene.id, `<img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">`, sceneName(scene))).join("")}</div>`
+        : "";
+    })
+    .join("")}</section>`;
 }
 function sceneLibraryHTML() {
   const en = languageCode() === "en";
@@ -1132,7 +1163,7 @@ function sceneLibraryHTML() {
     .map((c) => {
       const preview = collectionScenes(c.id).slice(0, 3);
       return `<article class="wall-row"><button class="wall-stack" data-action="scene-collection" data-collection="${esc(c.id)}" aria-label="${esc(en ? c.nameEn : c.nameZh)}">${preview
-        .map((scene, k) => `<img class="wall-card w${k}" src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">`)
+        .map((scene, k) => `<img class="wall-card w${k}" src="${esc(safePhoto(`photo:${scene.id}`))}" alt="" loading="lazy">`)
         .reverse()
         .join("")}</button><div class="wall-copy"><h4>${esc(en ? c.nameEn : c.nameZh)}</h4><p>${esc(en ? c.descEn : c.descZh)}</p><button class="wall-get" data-action="scene-collection" data-collection="${esc(c.id)}">${t("scene.get")}</button></div></article>`;
     })
@@ -1147,7 +1178,7 @@ function openSceneCollection(id) {
   dialog.innerHTML = `<div class="wall-sheet"><header><button class="wall-close" data-action="scene-close" aria-label="${t("close")}">×</button><h2>${esc(en ? c.nameEn : c.nameZh)}</h2><span></span></header><p class="wall-desc">${esc(en ? c.descEn : c.descZh)}</p><div class="wall-scroller">${collectionScenes(id)
     .map(
       (scene) =>
-        `<figure class="wall-big"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<figcaption><b>${esc(sceneName(scene))}</b><button class="wall-use" data-action="use-scene" data-scene="${esc(scene.id)}">${t("scene.useThis")}</button></figcaption></figure>`,
+        `<figure class="wall-big"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt="" loading="lazy">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<figcaption><b>${esc(sceneName(scene))}</b><button class="wall-use" data-action="use-scene" data-scene="${esc(scene.id)}">${t("scene.useThis")}</button></figcaption></figure>`,
     )
     .join("")}</div><p class="wall-hint">${t("scene.swipe")}</p></div>`;
   dialog.showModal();
@@ -1188,23 +1219,22 @@ function saveNote() {
 function openPhotoChooser(targetSlot = "layers") {
   photoTarget = targetSlot;
   const en = languageCode() === "en";
-  const today = todayScene();
-  const picks = [today, ...scenes().filter((s) => s !== today && (s.collection || "life") !== "life").slice(0, 3)].filter(Boolean);
+  const picks = todayPicks();
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(targetSlot === "main" ? "choose.mainTitle" : "choose.title")}</h2><button class="choose-album" data-action="choose-album"><span aria-hidden="true">📷</span><span><b>${t("choose.album")}</b><small>${t(targetSlot === "main" ? "choose.albumOne" : "choose.albumMany")}</small></span><i>›</i></button><h3>${t("choose.picks")}</h3><div class="choose-picks">${picks
-    .map((scene) => `<button data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span>${esc(sceneName(scene))}</span></button>`)
+    .map((scene) => `<button data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${esc(sceneName(scene))}</span></button>`)
     .join("")}</div><h3>${t("scene.title")}</h3><div class="choose-collections">${sceneCollections()
     .map((c) => {
       const cover = collectionScenes(c.id)[0];
-      return `<button data-action="scene-collection" data-collection="${esc(c.id)}"><img src="${esc(safePhoto(`scene:${cover.id}`))}" alt=""><span>${esc(en ? c.nameEn : c.nameZh)}</span></button>`;
+      return `<button data-action="scene-collection" data-collection="${esc(c.id)}"><img src="${esc(safePhoto(`photo:${cover.id}`))}" alt="" loading="lazy"><span>${esc(en ? c.nameEn : c.nameZh)}</span></button>`;
     })
-    .join("")}</div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+    .join("")}</div><button class="choose-backdrop" data-action="open-backdrops"><span aria-hidden="true">🎨</span><span><b>${t("backdrop.link")}</b><small>${t("backdrop.linkHint")}</small></span><i>›</i></button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
   dialog.showModal();
 }
 // Put a scene on the page being written (a new story if today already has one
 // when coming from Home).
 function useScene(id, fromHome = false) {
-  const scene = scenes().find((item) => item.id === id);
+  const scene = libraryPhotos().find((item) => item.id === id);
   if (!scene) return;
   if (fromHome || page !== "studio") {
     studioStart = false;
@@ -1212,7 +1242,7 @@ function useScene(id, fromHome = false) {
     if (hasDayPageContent(editor) || editor.moments.length) addMomentNow();
   }
   studioTool = null;
-  const reference = `scene:${scene.id}`;
+  const reference = `photo:${scene.id}`;
   const pageNow = activePage();
   const emptySlot = pageNow.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
   // A day page's main picture spot (or a chosen frame) takes the scene, so it
@@ -1906,6 +1936,19 @@ async function action(target) {
     else $("#photos-input").click();
   }
   if (actionName === "choose-close") $("#choose-dialog").close();
+  if (actionName === "open-backdrops") {
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+    studioTool = "paper";
+    sheetTall = true;
+    render();
+  }
+  if (actionName === "backdrop") {
+    const id = target.dataset.backdrop;
+    changeTarget((p) => {
+      if (id) p.backdrop = `scene:${id}`;
+      else delete p.backdrop;
+    });
+  }
   if (actionName === "sheet-grow") {
     sheetTall = !sheetTall;
     render();

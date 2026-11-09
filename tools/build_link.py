@@ -52,6 +52,9 @@ def main():
     for scene in catalog.get('scenes', []):
         for name in {scene['file'], scene['license']}:
             files.append((SHARED / 'Scenes' / name, Path('library/scenes') / name))
+    for photo in catalog.get('photos', []):
+        for name in {photo['file'], photo['license']}:
+            files.append((SHARED / 'Photos' / name, Path('library/photos') / name))
     for name in ['coffee.jpg', 'lake.jpg']:
         files.append((SHARED / 'Media' / name, Path('assets') / name))
     published = {}

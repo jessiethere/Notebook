@@ -200,6 +200,25 @@ async function renderJournalCanvas(editor, options = {}) {
     }
   }
   drawPaper(ctx, editor.template);
+  const backdropId = /^scene:([a-z0-9-]+)$/.exec(editor.backdrop || "")?.[1];
+  const backdrop = backdropId && (options.catalog?.scenes || []).find((scene) => scene.id === backdropId);
+  if (backdrop) {
+    try {
+      const image = await loadImage(resolvePhoto(`scene:${backdropId}`));
+      const ratio = Math.max(1080 / image.width, 1350 / image.height);
+      ctx.drawImage(image, (1080 - image.width * ratio) / 2, (1350 - image.height * ratio) / 2, image.width * ratio, image.height * ratio);
+    } catch {
+      // Keep the plain paper if the background cannot load.
+    }
+  }
+  const darkBackdrop = backdrop?.tone === "dark";
+  if (backdrop && (dayPage || editor.layoutTemplate === "text")) {
+    ctx.fillStyle = darkBackdrop ? "rgba(18,16,30,.58)" : "rgba(255,255,255,.74)";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(76, 824, 928, 482, 36);
+    else ctx.rect(76, 824, 928, 482);
+    ctx.fill();
+  }
   if (dayPage && resolvePhoto(editor.photo)) {
     ctx.save();
     ctx.translate(540, 430);
@@ -233,10 +252,11 @@ async function renderJournalCanvas(editor, options = {}) {
         : "sans-serif";
   await document.fonts.ready;
   if (dayPage || editor.layoutTemplate === "text") {
-    ctx.fillStyle = editor.textStyle?.color || "#2F2A26";
+    const titleColor = editor.textStyle?.color || "#2F2A26";
+    ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
     wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
-    ctx.fillStyle = "#998C7A";
+    ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#998C7A";
     const bodyFont = options.fontFamily
       ? options.fontFamily(editor.bodyFont || editor.font, options.catalog)
       : font;

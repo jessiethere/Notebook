@@ -16,7 +16,15 @@ final class CoreTests: XCTestCase {
         // Original scene illustrations (photo-like material) and their notice.
         let scenes = try XCTUnwrap(catalog.scenes)
         XCTAssertEqual(scenes.count, 33)
-        XCTAssertEqual(catalog.sceneCollections?.count, 6)
+        XCTAssertEqual(catalog.sceneCollections?.count, 5)
+        XCTAssertEqual(scenes.filter { $0.retired == true }.count, 12)
+        // Real photos for a page's picture (Unsplash License) and their source list.
+        let photos = try XCTUnwrap(catalog.photos)
+        XCTAssertEqual(photos.count, 78)
+        XCTAssertEqual(catalog.photoCollections?.count, 13)
+        let photo = try SharedResources.libraryData(category: "photos", filename: photos[0].file)
+        XCTAssertEqual(Array(photo.prefix(2)), [0xFF, 0xD8])
+        XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "photos", filename: photos[0].license), as: UTF8.self).contains("Unsplash License"))
         let scene = try SharedResources.libraryData(category: "scenes", filename: scenes[0].file)
         XCTAssertTrue(String(decoding: scene, as: UTF8.self).hasPrefix("<svg"))
         XCTAssertNoThrow(try SharedResources.libraryData(category: "scenes", filename: scenes[0].license))
@@ -66,7 +74,9 @@ final class CoreTests: XCTestCase {
         var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(DayState(seed: seed, today: "2026-11-07"))) as! [String: Any]
         var entries = object["entries"] as! [[String: Any]]
         let photo: [String: Any] = ["id": "p1", "kind": "photo", "text": "a.jpg", "mediaRef": "media:p1", "x": 33, "y": 44, "w": 50, "h": 40, "scale": 1, "rotation": 7, "frame": "polaroid", "tape": true, "crop": ["x": 20, "y": 70, "zoom": 1.5], "sourceRef": "media:orig", "shape": "heart", "edit": ["filter": "warm", "brightness": 10, "ratio": "1:1", "rotate": 90, "text": ["value": "周末", "style": "label", "color": "#FFFFFF", "size": 9, "x": 50, "y": 82]]]
-        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "layers": [photo], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
+        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "backdrop": "scene:color-peach", "layers": [photo], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
+        entries[0]["backdrop"] = "scene:sky-moon"
+        entries[0]["photo"] = "photo:latte-art"
         entries[0]["layers"] = [["id": "g", "kind": "growth", "text": "Move", "habitId": "move", "checkDate": "2026-11-07", "x": 50, "y": 50, "w": 62, "scale": 1, "rotation": -2]]
         object["entries"] = entries
         object["checks"] = [["habitId": "move", "date": "2026-11-07", "minutes": 60, "detail": "Lower Body", "note": "左腿发力更好", "shareNote": false]]
@@ -83,6 +93,10 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(moment.layers?.first?.edit?.text?.value, "周末")
         XCTAssertEqual(moment.layers?.first?.shape, "heart")
         XCTAssertEqual(moment.media?.first?.origin, "recording")
+        // Page backgrounds and library photos keep their references.
+        XCTAssertEqual(moment.backdrop, "scene:color-peach")
+        XCTAssertEqual(reloaded.entries[0].backdrop, "scene:sky-moon")
+        XCTAssertEqual(reloaded.entries[0].photo, "photo:latte-art")
         XCTAssertEqual(reloaded.entries[0].layers.first?.habitId, "move")
         XCTAssertEqual(reloaded.checks.first?.note, "左腿发力更好")
         XCTAssertEqual(reloaded.reflections?.first?.wentWell, "3 次训练")

@@ -32,7 +32,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
         elif path.startswith('/library/'):
             parts = path.split('/')
-            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers', 'scenes'}:
+            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers', 'scenes', 'photos'}:
                 self.send_error(404)
                 return
             category, name = parts[2:]
@@ -46,7 +46,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
                 self.send_error(404)
                 return
             data = location.read_bytes()
-            content_type = {'.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8'}.get(location.suffix, 'application/octet-stream')
+            content_type = {'.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.txt': 'text/plain; charset=utf-8'}.get(location.suffix, 'application/octet-stream')
             self.send_response(200)
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(data)))

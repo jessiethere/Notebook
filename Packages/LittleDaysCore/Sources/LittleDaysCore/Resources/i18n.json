@@ -3788,12 +3788,12 @@
     "en": "Noted"
   },
   "scene.title": {
-    "zh": "素材库",
-    "en": "Scene library"
+    "zh": "照片素材",
+    "en": "Photo library"
   },
   "scene.note": {
-    "zh": "原创插画与壁纸，放到纸上后还能用“编辑图片”加滤镜和文字。",
-    "en": "Original illustrations and wallpapers — add them to a page, then “Edit photo” for filters and words."
+    "zh": "按心情和事件分好的真实照片，选一张最能代表今天的。放上去后还能用“编辑图片”加滤镜和文字。",
+    "en": "Real photos sorted by mood and moment — pick the one that sums up today. Then “Edit photo” for filters and words."
   },
   "scene.today": {
     "zh": "今天",
@@ -3804,16 +3804,16 @@
     "en": "Added “{name}”"
   },
   "scene.ofDay": {
-    "zh": "今日素材",
-    "en": "Picture of the day"
+    "zh": "今日照片",
+    "en": "Photo of the day"
   },
   "scene.useIt": {
     "zh": "用它写一页",
     "en": "Write with it"
   },
   "scene.pick": {
-    "zh": "或者从素材库挑一张",
-    "en": "Or pick from the scene library"
+    "zh": "或者从照片素材里挑一张",
+    "en": "Or pick from the photo library"
   },
   "community.accepted": {
     "zh": "已加为好友",
@@ -4094,5 +4094,29 @@
   "note.saved": {
     "zh": "已记下，放进了今天的手帐 ✿",
     "en": "Saved to today's page ✿"
+  },
+  "backdrop.title": {
+    "zh": "页面背景",
+    "en": "Page background"
+  },
+  "backdrop.note": {
+    "zh": "渐变、可爱图案和星空铺满整页，文字会放在一块磨砂卡片上。",
+    "en": "Gradients, cute patterns and sky across the whole page; the words sit on a frosted card."
+  },
+  "backdrop.none": {
+    "zh": "不用背景",
+    "en": "No background"
+  },
+  "backdrop.on": {
+    "zh": "背景图",
+    "en": "Background"
+  },
+  "backdrop.link": {
+    "zh": "换个页面背景",
+    "en": "Change the page background"
+  },
+  "backdrop.linkHint": {
+    "zh": "渐变、可爱图案、星空……",
+    "en": "Gradients, cute patterns, sky …"
   }
 }

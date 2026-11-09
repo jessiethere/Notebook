@@ -8186,3 +8186,115 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
 #app .quick-note .note-body {
   font-size: 17px !important;
 }
+
+/* ---------- Page backgrounds (gradients, patterns, sky) ---------- */
+.journal-canvas.has-backdrop {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+.backdrop-veil {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 61%;
+  bottom: 3%;
+  border-radius: 4cqw;
+  background: rgba(255, 255, 255, 0.74);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: 0 2px 10px rgba(40, 30, 60, 0.12);
+}
+.journal-canvas.text-only .backdrop-veil {
+  top: 16%;
+  bottom: 7%;
+}
+.dark-backdrop .backdrop-veil {
+  background: rgba(18, 16, 30, 0.58);
+}
+.dark-backdrop .canvas-body,
+.dark-backdrop.text-only .canvas-body,
+.dark-backdrop .canvas-title {
+  color: var(--t-eee9f7, #eee9f7);
+}
+.has-backdrop .canvas-tape {
+  opacity: 0.85;
+}
+.backdrop-picker {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.paper-head {
+  margin-bottom: 8px;
+}
+.backdrop-picker h4 {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-6f675d, #6f675d);
+}
+.backdrop-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 6px 8px;
+  scrollbar-width: none;
+}
+.backdrop-option {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 84px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--c-f4efe6, #f4efe6);
+  box-shadow: 0 2px 6px rgba(47, 42, 38, 0.12);
+}
+.backdrop-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.backdrop-option.selected {
+  border-color: var(--c-6c7b56, #6c7b56);
+  box-shadow: 0 0 0 2px var(--c-ffffff, #ffffff), 0 0 0 4px var(--c-6c7b56, #6c7b56);
+}
+.backdrop-row-none .backdrop-option {
+  width: auto;
+  height: 40px;
+  padding: 0 14px;
+}
+.backdrop-none {
+  font-size: 13px;
+  color: var(--t-5d554b, #5d554b);
+}
+.choose-backdrop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--c-ffffff, #ffffff);
+  text-align: left;
+  color: var(--t-2f2a26, #2f2a26);
+}
+.choose-backdrop > span:first-child {
+  font-size: 22px;
+}
+.choose-backdrop > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+}
+.choose-backdrop b {
+  font-size: 15px;
+}
+.choose-backdrop small {
+  font-size: 12px;
+  color: var(--t-8d857b, #8d857b);
+}

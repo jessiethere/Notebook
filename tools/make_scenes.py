@@ -187,15 +187,19 @@ NAMES = {
     'birthday-cake': ('生日蛋糕', 'Birthday cake', 'celebration'),
 }
 
-# Collections shown in the scene library (like a wallpaper gallery).
+# Page backgrounds (library.json "sceneCollections"). Real photos for a page's
+# picture live in tools/fetch_photos.py. The hand-drawn 'life' scenes are kept
+# only so pages that already use them still show them ("retired": not offered).
 COLLECTION_INFO = {
-    'life': ('生活小景', 'Little scenes', '手绘的日常：咖啡、雨天、海边、猫咪……适合当一页的主图。', 'Hand-drawn everyday moments — coffee, rain, the sea, a cat.'),
-    'color': ('渐变色彩', 'Color', '柔和的光与颜色，像一块会发光的玻璃。', 'Soft light and color, like glowing glass.'),
-    'ribbons': ('光影丝带', 'Ribbons', '深色背景上流动的发光彩带。', 'Glowing ribbons flowing across the dark.'),
-    'kaleido': ('万花筒', 'Kaleidoscope', '十二重对称的花纹，每一张都不一样。', 'Twelve-fold mirrored patterns, each one different.'),
-    'pattern': ('可爱图案', 'Patterns', '云朵、小花、星星和爱心，铺满整页。', 'Clouds, flowers, stars and hearts all over.'),
+    'color': ('渐变色彩', 'Color', '柔和的光与颜色，铺满整页。', 'Soft light and color across the page.'),
+    'pattern': ('可爱图案', 'Patterns', '云朵、小花、星星和爱心。', 'Clouds, flowers, stars and hearts.'),
+    'kaleido': ('万花筒', 'Kaleidoscope', '对称的花纹，每一张都不一样。', 'Mirrored patterns, each one different.'),
+    'ribbons': ('光影丝带', 'Ribbons', '深色上流动的发光彩带。', 'Glowing ribbons across the dark.'),
     'sky': ('星空', 'Sky', '星球、月光和星云。', 'Planets, moonlight and nebulae.'),
 }
+# Backgrounds dark enough that words on them are set in white.
+DARK = {'color-midnight', 'kaleido-violet', 'pattern-stars', 'ribbons-aurora', 'ribbons-candy', 'ribbons-ember',
+        'ribbons-sunset', 'sky-blue-planet', 'sky-moon', 'sky-ringed'}
 
 if __name__ == '__main__':
     import json
@@ -214,9 +218,9 @@ if __name__ == '__main__':
     # Shared catalog entries (library.json "scenes" and "sceneCollections").
     library = OUT.parent / 'library.json'
     catalog = json.loads(library.read_text(encoding='utf-8'))
-    entries = [{'id': k, 'collection': 'life', 'category': c, 'nameZh': zh, 'nameEn': en, 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt'} for k, (zh, en, c) in NAMES.items()]
+    entries = [{'id': k, 'collection': 'life', 'category': c, 'nameZh': zh, 'nameEn': en, 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt', 'retired': True} for k, (zh, en, c) in NAMES.items()]
     for collection, keys in wp.COLLECTIONS[1:]:
-        entries += [{'id': k, 'collection': collection, 'category': collection, 'nameZh': wp.NAMES[k][0], 'nameEn': wp.NAMES[k][1], 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt'} for k in keys]
+        entries += [{'id': k, 'collection': collection, 'category': collection, 'nameZh': wp.NAMES[k][0], 'nameEn': wp.NAMES[k][1], 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt', **({'tone': 'dark'} if k in DARK else {})} for k in keys]
     catalog['scenes'] = entries
     catalog['sceneCollections'] = [{'id': k, 'nameZh': v[0], 'nameEn': v[1], 'descZh': v[2], 'descEn': v[3]} for k, v in COLLECTION_INFO.items()]
     library.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

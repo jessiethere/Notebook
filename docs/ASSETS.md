@@ -33,3 +33,9 @@ Stickers 目录包含本项目原创的 23 个 SVG 与对应透明 480px PNG，�
 | 霞鹜文楷 LXGW WenKai | 楷体，适合正文与心得 | npm `lxgw-wenkai-webfont@1.7.0`（字体 v1.250，github.com/lxgw/LxgwWenKai） |
 
 npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.py` 把同一字体的子集合并回一个 TTF：字形轮廓、字体名称、版权与 OFL 均不改变，每个字形只保留一份；只删除引用子集内部字形编号的排版/竖排表（GSUB/GPOS/GDEF、vhea/vmtx、morx 等），因此复杂排版特性（如竖排替换）不可用。四款字体的 OFL 均未声明 Reserved Font Name；许可证文本随文件放在 `Fonts/LD-zh-*-OFL.txt`，SHA-256 记录在 library.json。
+
+## V4.4 照片素材（真实照片）与页面背景
+
+- **照片素材**：78 张来自 Unsplash 的照片，按心情和事件分 13 组，位于 `Resources/Photos/LD-photo-*.jpg`（800×1000 JPEG，约 12 MB）。由 `tools/fetch_photos.py` 一次性下载并随 App 打包，运行时不请求 Unsplash。每个文件的原图地址写在 `Photos/Unsplash-Photos.txt` 和 `library.json` 的 `photos[].source`。
+- 许可：Unsplash License（<https://unsplash.com/license>）允许免费商用、修改，不要求署名，但不允许把照片原样汇编成同类图库或壁纸服务。Little Days 只把它们作为写手帐时可选的配图；正式上架前仍应按上文完成全部资产的来源与授权审核。挑选时尽量避开可辨认的人脸和品牌标志。
+- **页面背景**：`Scenes/` 里的渐变、可爱图案、万花筒、光影丝带、星空（21 张）是项目原创，用作页面背景（`backdrop`）；12 张手绘“生活小景”标记为 `retired`，只为兼容已使用它们的页面而保留。

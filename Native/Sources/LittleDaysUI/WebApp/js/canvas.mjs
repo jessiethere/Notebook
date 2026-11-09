@@ -14,9 +14,9 @@ export const formatDuration = (value) =>
     ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}`
     : "0:00";
 
-export function textCSS(style, fontId, defaultSize, catalog) {
+export function textCSS(style, fontId, defaultSize, catalog, fallbackColor = "#2F2A26") {
   const size = clamp(Number(style.size) || defaultSize, 10, 60),
-    color = /^#[0-9a-f]{6}$/i.test(style.color || "") ? style.color : "#2F2A26",
+    color = /^#[0-9a-f]{6}$/i.test(style.color || "") ? style.color : fallbackColor,
     weight = clamp(Number(style.weight) || 400, 100, 900),
     spacing = clamp(Number(style.spacing) || 0, -2, 8);
   return `font-family:${fontFamily(fontId, catalog)};font-size:${size / 3.2}cqw;color:${color};font-weight:${weight};letter-spacing:${spacing}px`;
@@ -132,6 +132,14 @@ export function layerHTML(layer, ctx, options = {}) {
   return `<span class="${classes}"${interactive} style="${esc(layerGeometry(layer) + extraStyle)}">${inner}</span>`;
 }
 
+// The page's background picture (library.json "scenes"), if it has one.
+export function backdropOf(page, ctx) {
+  const id = /^scene:([a-z0-9-]+)$/.exec(page?.backdrop || "")?.[1];
+  const scene = id && (ctx.catalog?.scenes || []).find((item) => item.id === id);
+  if (!scene) return null;
+  return { id, src: ctx.media.resolve(`scene:${id}`), dark: scene.tone === "dark" };
+}
+
 // page: an Entry (day page) or a Moment. Day pages keep the legacy fixed
 // main photo/title/body; Moments are a free canvas with the text outside.
 export function canvasHTML(page, ctx, options = {}) {
@@ -143,14 +151,18 @@ export function canvasHTML(page, ctx, options = {}) {
   const template = PAPERS.includes(page.template)
     ? page.template
     : "minimal";
+  // A page background (gradient, pattern, sky ...) covers the paper; the words
+  // sit on a frosted card so they stay easy to read.
+  const backdrop = backdropOf(page, ctx);
+  const veil = backdrop && (dayPage || page.layoutTemplate === "text") ? `<div class="backdrop-veil" aria-hidden="true"></div>` : "";
   let fixed = "";
   if (dayPage) {
     const photo = media.resolve(page.photo);
     const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
-    fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}<div class="canvas-title" style="${esc(textCSS(textStyle, font, 20, catalog))}">${esc(page.title || (readOnly ? "" : t("studio.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || (readOnly ? "" : t("studio.bodyPlaceholder")))}</div><span class="canvas-mood">${esc(page.mood || "")}</span>`;
+    fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}${veil}<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || (readOnly ? "" : t("studio.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || (readOnly ? "" : t("studio.bodyPlaceholder")))}</div><span class="canvas-mood">${esc(page.mood || "")}</span>`;
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
-    fixed = `<div class="canvas-title" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || (readOnly ? "" : t("moment.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || (readOnly ? "" : t("moment.bodyPlaceholder")))}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+    fixed = `${veil}<div class="canvas-title" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || (readOnly ? "" : t("moment.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || (readOnly ? "" : t("moment.bodyPlaceholder")))}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
     fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;
@@ -159,12 +171,14 @@ export function canvasHTML(page, ctx, options = {}) {
     template,
     dayPage ? "day-canvas" : "moment-canvas",
     page.layoutTemplate === "text" ? "text-only" : "",
+    backdrop ? "has-backdrop" : "",
+    backdrop?.dark ? "dark-backdrop" : "",
     readOnly ? "read-only" : "",
     !readOnly && options.selectedId ? "has-selection" : "",
   ]
     .filter(Boolean)
     .join(" ");
-  return `<div class="${classes}" ${readOnly ? "" : 'id="journal-canvas"'} style="font-family:${esc(fontFamily(font, catalog))}">${fixed}${(page.layers || []).map((layer) => layerHTML(layer, ctx, { ...options, page, defaultFont: font })).join("")}</div>`;
+  return `<div class="${classes}" ${readOnly ? "" : 'id="journal-canvas"'} style="font-family:${esc(fontFamily(font, catalog))}${backdrop ? `;background-image:url('${esc(backdrop.src)}')` : ""}">${fixed}${(page.layers || []).map((layer) => layerHTML(layer, ctx, { ...options, page, defaultFont: font })).join("")}</div>`;
 }
 
 // One media card for edit and read modes. Audio uses a designed player that

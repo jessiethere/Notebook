@@ -10,8 +10,10 @@ const library = JSON.parse(readFileSync(new URL("library.json", R)));
 
 test("every scene is listed with an original-art notice and its file exists", () => {
   assert.equal(library.scenes.length, 33);
-  // Six collections, each listed with names and a line about it.
-  assert.deepEqual(library.sceneCollections.map((c) => c.id), ["life", "color", "ribbons", "kaleido", "pattern", "sky"]);
+  // Five background collections, each listed with names and a line about it.
+  // The hand-drawn "life" scenes are retired: kept for older pages, not offered.
+  assert.deepEqual(library.sceneCollections.map((c) => c.id), ["color", "pattern", "kaleido", "ribbons", "sky"]);
+  assert.deepEqual(library.scenes.filter((s) => s.retired).map((s) => s.collection), Array(12).fill("life"));
   for (const c of library.sceneCollections) {
     assert.ok(c.nameZh && c.nameEn && c.descZh && c.descEn);
     assert.ok(library.scenes.some((s) => s.collection === c.id), c.id);
@@ -22,7 +24,7 @@ test("every scene is listed with an original-art notice and its file exists", ()
     assert.match(readFileSync(new URL(`Scenes/${scene.file}`, R), "utf8"), /^<svg /);
   }
   assert.match(readFileSync(new URL("Scenes/LittleDays-Original-Scenes.txt", R), "utf8"), /Original artwork/);
-  // The picture of the day comes from the hand-drawn life scenes.
+  // seed.dailyScenes (only for an old "scene:daily" sample) lists the life scenes.
   assert.deepEqual(seed.dailyScenes, library.scenes.filter((s) => s.collection === "life").map((s) => s.id));
 });
 

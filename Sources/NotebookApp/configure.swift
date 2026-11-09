@@ -38,7 +38,7 @@ public func configure(_ app: Application) throws {
         let filename = request.parameters.get("name") ?? ""
         guard let data = try? SharedResources.libraryData(category: category, filename: filename) else { throw Abort(.notFound) }
         let extensionName = (filename as NSString).pathExtension
-        let type = ["ttf": "font/ttf", "svg": "image/svg+xml", "png": "image/png", "txt": "text/plain; charset=utf-8"][extensionName] ?? "application/octet-stream"
+        let type = ["ttf": "font/ttf", "svg": "image/svg+xml", "png": "image/png", "jpg": "image/jpeg", "txt": "text/plain; charset=utf-8"][extensionName] ?? "application/octet-stream"
         return Response(status: .ok, headers: ["Content-Type": type], body: .init(data: data))
     }
 }

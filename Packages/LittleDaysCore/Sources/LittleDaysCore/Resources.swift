@@ -68,7 +68,9 @@ public struct StickerAsset: Decodable, Identifiable {
     public let license: String
 }
 
-/// Original scene illustrations ("photo-like" material for pages).
+/// Original artwork used as page backgrounds (gradients, patterns, sky ...).
+/// The hand-drawn "life" scenes are `retired`: no longer offered, still shown
+/// on pages that already use them.
 public struct SceneAsset: Decodable, Identifiable {
     public let id: String
     /// life / color / ribbons / kaleido / pattern / sky
@@ -77,6 +79,20 @@ public struct SceneAsset: Decodable, Identifiable {
     public let nameZh: String
     public let nameEn: String
     public let file: String
+    public let license: String
+    public let retired: Bool?
+    /// "dark": words on this background are set in white.
+    public let tone: String?
+}
+
+/// Real photos for a page's picture (Unsplash License; `source` is the original).
+public struct PhotoAsset: Decodable, Identifiable {
+    public let id: String
+    public let collection: String
+    public let nameZh: String
+    public let nameEn: String
+    public let file: String
+    public let source: String
     public let license: String
 }
 
@@ -94,6 +110,8 @@ public struct AssetCatalog: Decodable {
     public let stickers: [StickerAsset]
     public let scenes: [SceneAsset]?
     public let sceneCollections: [SceneCollection]?
+    public let photos: [PhotoAsset]?
+    public let photoCollections: [SceneCollection]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }
@@ -106,6 +124,7 @@ public enum SharedResources {
         case "fonts": allowed = Set(catalog.fonts.flatMap { [$0.file, $0.license] })
         case "stickers": allowed = Set(catalog.stickers.flatMap { [$0.file, $0.nativeFile, $0.license] })
         case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
+        case "photos": allowed = Set((catalog.photos ?? []).flatMap { [$0.file, $0.license] })
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

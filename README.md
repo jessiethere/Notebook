@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**60 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`collab` 十六套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**63 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`collab` 十七套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -127,6 +127,7 @@ npm run test:browser:v40
 npm run test:browser:v41
 npm run test:browser:v42
 npm run test:browser:v43
+npm run test:browser:v44
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -144,6 +145,12 @@ npm run test:browser:v43
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 照片素材换成真实照片，渐变和图案变成页面背景
+
+- 照片素材换成 78 张真实照片（13 组）：咖啡时光、好好吃饭、甜甜的、花与绿植、毛孩子、海边晴天、山野日落、夜晚星空、安静的一天、出发旅行、值得庆祝、动一动、四季。挑一张最能代表今天的，放进主照片位。照片来自 Unsplash（Unsplash License），已内置在 App 里，来源见 `Photos/Unsplash-Photos.txt`。
+- 渐变色彩、可爱图案、万花筒、光影丝带、星空改成“页面背景”：在“纸张”面板最上面选，或者在加照片的面板底部点“换个页面背景”。背景会铺满整页，文字放在一块磨砂卡片上；深色背景会自动用白字。
+- 原来的手绘插画（草地野餐等）不再出现在素材里；已经用过的页面不受影响。
 
 ### 2026-11-09 — 随手记、照片选择、日历照片墙
 
