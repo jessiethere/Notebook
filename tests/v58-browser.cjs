@@ -21,8 +21,7 @@ const shots = process.env.SHOTS_DIR || "";
     const key = (n) => page.evaluate((n) => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }, n);
     const [d1, d2] = [await key(40), await key(39)];
     // Make the store real, then add two days of my own pages in the food book.
-    await page.locator('.habit-row [data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('.habit-row [data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.evaluate(([d1, d2]) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
       s.entries = s.entries.filter((e) => ![d1, d2].includes(e.date));

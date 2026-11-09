@@ -440,8 +440,8 @@ async function streamBytes(download) {
     await second.goto(base);
     await second.waitForSelector(".hero");
     await goTab(second, "studio");
-    await nav("home");
-    await page.locator('[data-action="check"][data-habit="move"]').click();
+    await nav("growth");
+    await page.locator('[data-action="check"][data-habit="move"]').first().click();
     const newer = JSON.stringify(await read());
     await toolOn(second, "text");
     await second.locator('#journal-canvas [data-inline="body"]').fill("Unsaved work in the older tab");

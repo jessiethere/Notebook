@@ -413,3 +413,5 @@
 - Apple Journal：[9to5Mac：iOS 18 新功能](https://9to5mac.com/heres-everything-new-in-the-journal-app-for-ios-18/)、[9to5Mac：登陆 iPad 和 Mac](https://9to5mac.com/2025/06/17/apples-journal-app-is-coming-to-ipad-and-mac-with-big-upgrades/)、[MacRumors](https://www.macrumors.com/2025/06/09/journal-app-finally-coming-to-mac-and-ipad/)、[WWDC24 Journaling Suggestions](https://developer.apple.com/videos/play/wwdc2024/10209/)
 - Day One：[Shared Journals 指南](https://dayoneapp.com/guides/shared-journals/shared-journals/)、[AlternativeTo：2025 年所有用户可无限创建和共享日记](https://alternativeto.net/news/2025/5/all-day-one-users-can-now-create-and-share-unlimited-journals-with-name-suggestions)、[模板功能](https://dayoneapp.com/features/journal-templates/)
 - Shuffles：[TechCrunch：公开上线（2022-11）](https://techcrunch.com/2022/11/10/pinterest-launches-its-collage-making-app-shuffles-to-the-general-public/)、[Modern Retail](https://www.modernretail.co/?p=46943)
+
+> 2026-11-09 更新（V6.8，用户决定）：首页「今天」卡片改为「今天要做的事」planner（从实验室拿出、人人可用），习惯不再在首页打卡，只留一行入口到「我的习惯」。

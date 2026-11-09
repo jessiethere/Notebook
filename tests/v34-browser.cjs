@@ -36,8 +36,7 @@ async function size(download) {
     await page.waitForSelector(".hero");
     // Today's sample is only an example (writing starts a fresh page), so
     // this test makes today's page my own first: a cover with the photo.
-    await page.locator('[data-action="check"][data-habit="move"]').first().click();
-    await page.locator('[data-action="check"][data-habit="move"]').first().click();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate(() => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

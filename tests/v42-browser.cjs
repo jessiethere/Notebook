@@ -47,7 +47,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector(".level-card");
     assert.match(await page.locator(".level-card").innerText(), /Lv\.1[\s\S]*第一页[\s\S]*0[\s\S]*经验/);
     // Earn XP: three check-ins with notes and a written page → over 30 XP.
-    await menu(page, "home");
+    await menu(page, "growth");
     for (const habit of ["move", "reading", "pause"]) {
       await page.locator(`[data-action="check"][data-habit="${habit}"]`).first().tap();
       await page.locator(`[data-action="check-note"][data-habit="${habit}"]`).first().tap();

@@ -24,8 +24,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     const draft = () => page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1") || "null")?.drafts?.[d], today);
     // Start from an empty today.
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate((d) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

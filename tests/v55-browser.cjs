@@ -22,8 +22,7 @@ const shots = process.env.SHOTS_DIR || "";
     const today = await key(0);
     // My own pages on the two days before today; nothing yet today; the
     // stamp moment not yet shown today.
-    await page.locator('.habit-row [data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('.habit-row [data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     const [d1, d2] = [await key(1), await key(2)];
     await page.evaluate(([today, d1, d2]) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

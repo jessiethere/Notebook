@@ -74,7 +74,7 @@ const scan = (page) =>
 
     // 2. Habits: ✎ and ✓ side by side; ✓ is one tap (duration habits too).
     await page.locator('[data-action="studio-back"]').tap();
-    await menu(page, "home");
+    await menu(page, "growth");
     const row = page.locator(".habit-row").filter({ has: page.locator('[data-habit="reading"]') }).first();
     assert.equal(await row.locator('[data-action="check-note"]').count(), 1, "✎ before checking in");
     assert.equal(await row.locator('[data-action="check"]').count(), 1);

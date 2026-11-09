@@ -21,8 +21,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 1. The sample page shows the coffee photo; the picture of the day is offered on Home.
     // Storage is written on the first change: tick and untick a habit.
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     let s = await state();
     const sample = s.entries.find((e) => e.isDemo && e.date === today);

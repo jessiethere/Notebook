@@ -74,8 +74,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await menu(page, "home");
     // Today's sample is only an example (writing starts a fresh page), so
     // this test makes today's page my own first: a cover with the photo.
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate(() => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

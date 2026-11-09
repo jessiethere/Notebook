@@ -28,14 +28,17 @@ const shots = process.env.SHOTS_DIR || "";
     const tabs = await page.$$eval("#navigation [data-page]", (els) => els.map((el) => el.dataset.page));
     assert.ok(!tabs.includes("growth"), "no Growth tab");
     assert.deepEqual(tabs.filter((t) => t !== "community"), ["home", "calendar", "studio", "books"]);
-    assert.match(await page.locator(".today-list h2").innerText(), /今天的小习惯/);
-    const habits = await page.locator(".today-list .habit-row").count();
-    assert.ok(habits >= 1);
-    await page.locator('.today-list [data-action="check"][data-habit="move"]').first().tap();
+    // V6.8: Home's today card is the day's planner; habits are one line to "My habits".
+    assert.match(await page.locator(".today-list h2").innerText(), /今天要做的事/);
+    assert.equal(await page.locator(".today-list .habit-row").count(), 0, "no habit rows on Home");
+    assert.match(await page.locator(".today-habits-link").innerText(), /我的习惯[\s\S]*0\/\d+ 已完成/);
+    await page.locator(".today-habits-link").tap();
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).checks.some((c) => c.date === d && c.habitId === "move"), today);
-    assert.match(await page.locator(".today-list .section-heading small").innerText(), /1\/\d+ 已完成/);
+    await menu(page, "home");
+    assert.match(await page.locator(".today-habits-link").innerText(), /1\/\d+ 已完成/);
     if (shots) await page.screenshot({ path: `${shots}/v63-home.png` });
-    passed.push("4 tabs (no Growth tab); habits checked with one tap on Home's today card");
+    passed.push("4 tabs (no Growth tab); Home shows the planner and one line to My habits (with today's count)");
 
     // 2. "My habits": from Home, and as a book on the shelf; back to the shelf.
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').tap();
@@ -49,7 +52,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForFunction(() => /我的习惯/.test(document.querySelector(".page-title")?.textContent || ""));
     passed.push("“My habits” opens from Home and from the shelf, and goes back to the shelf");
 
-    // 3. Labs: things to do today (≤ 5); done ones go on the day's list.
+    // 3. Things to do today (≤ 5, for everyone since V6.8); done ones go on the day's list.
     await menu(page, "home");
     await page.locator("[data-plan-input]").fill("给妈妈打电话");
     await page.locator('[data-action="plan-add"]').tap();
@@ -66,7 +69,7 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(await page.locator("[data-plan-input]").count(), 0, "five at most");
     await page.locator('.today-plans [data-action="plan-remove"]').last().tap();
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d].length === 4, today);
-    passed.push("Labs: up to 5 things to do today — add (button / Enter), check, remove");
+    passed.push("planner: up to 5 things to do today — add (button / Enter), check, remove");
 
     // 4. The day's list: on the day in the calendar.
     await menu(page, "calendar");

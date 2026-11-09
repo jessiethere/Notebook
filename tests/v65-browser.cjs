@@ -29,9 +29,9 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     const photo = (id, day, time) => ({ name: `${id}.jpg`, mimeType: "image/jpeg", buffer: withExifTime(fs.readFileSync(path.join(lib, `LD-photo-${id}.jpg`)), `${day.replace(/-/g, ":")} ${time}:00`) });
 
     // 1. Edit a habit, then delete it (asked first; its check-ins go too).
-    await page.locator('.today-list [data-action="check"][data-habit="move"]').first().tap();
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.v1")).checks.some((c) => c.habitId === "move"));
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').tap();
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.v1")).checks.some((c) => c.habitId === "move"));
     await page.locator('[data-action="edit-habit"][data-habit="move"]').tap();
     await page.waitForSelector("#form-dialog[open]");
     assert.notEqual(await page.locator('#form-dialog input[name="title"]').inputValue(), "", "the habit's name is filled in");

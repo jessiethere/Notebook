@@ -46,6 +46,8 @@ const path = require("node:path");
     );
 
     // Completion check, cancel, and duration input all persist across navigation.
+    // (Since V6.8 check-ins are in "My habits"; Home has the day's planner.)
+    await require("./signed-in.cjs").openHabits(page);
     await page.locator('[data-action="check"][data-habit="move"]').click();
     assert.equal((await savedState()).checks.length, 1);
     await page.locator('[data-action="check"][data-habit="move"]').click();

@@ -33,14 +33,21 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     assert.equal(await first.locator("section.login, #tour:not([hidden])").count(), 0, "no sign-in page or tour");
     assert.deepEqual(await first.$$eval("#navigation [data-page]", (els) => els.map((el) => el.dataset.page)), ["home", "calendar", "studio", "books"], "4 tabs: growth is on Home since V6.6");
     assert.equal(await first.locator(".bell").count(), 0, "no notification bell");
-    // What's new: a card on Home after an update; the full list opens from it.
-    await first.locator(".whats-new-open").tap();
+    // What's new (V6.8): no card on Home, a dot on the gear; Settings has the
+    // update history with the newest notes, and the full list opens from it.
+    assert.equal(await first.locator(".whats-new").count(), 0, "no update card on Home");
+    assert.equal(await first.locator(".settings-gear .news-dot").count(), 1, "a dot on the gear");
+    await first.locator(".settings-gear").tap();
+    await first.waitForSelector(".news-card .news-new");
+    assert.equal(await first.locator(".news-card details.news-latest[open]").count(), 1, "the newest notes, open");
+    await first.locator('.news-card [data-action="whats-new"]').tap();
     await first.waitForSelector("#choose-dialog[open] .news-sheet");
     const latest = await first.locator(".news-entry .news-version").first().innerText();
     assert.match(latest, /^V\d+\.\d+$/);
     await first.locator('#choose-dialog [data-action="choose-close"]').tap();
-    await first.waitForFunction(() => !document.querySelector(".whats-new"));
     assert.equal(await first.evaluate(() => localStorage.getItem("little-days.seen-version")), latest.slice(1), "seen on this device");
+    await first.locator('#navigation [data-page="home"]').tap();
+    assert.equal(await first.locator(".settings-gear .news-dot").count(), 0, "the dot is gone");
     assert.equal(await first.locator(".home-book-tabs").count(), 0, "no shared-books tabs");
     await first.locator('#navigation [data-page="books"]').tap();
     assert.equal(await first.locator(".me-chip, .shelf-switch").count(), 0, "no profile / shared books on the shelf");

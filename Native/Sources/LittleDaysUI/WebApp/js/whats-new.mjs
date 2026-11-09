@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.8",
+    date: "2026-11-09",
+    zh: {
+      title: "首页「今天要做的事」，更新记录搬进设置",
+      items: [
+        "首页的习惯列表换成了空白的「今天要做的事」：写下今天要做的，做完打个勾（最多 5 件，人人可用，不再只在实验室里）。",
+        "习惯还在：首页只留一行「我的习惯 · 今天 x/y 已完成 ›」，打卡、成长之书、每周回顾都在「我的习惯」里（书架上也有）。",
+        "更新记录不再占首页：有新版本时，右上角设置齿轮上出现小红点；设置里的「更新记录」显示这次更新的内容，也能看全部。",
+      ],
+    },
+    en: {
+      title: "“Today's plan” on Home; update notes moved to Settings",
+      items: [
+        "Home's habit list is now a blank “Today's plan”: write what's on today and tick it off (up to 5, for everyone — no longer only in Labs).",
+        "Habits are still here: Home keeps one line, “My habits · x/y done today ›”; check-ins, habit books and weekly reviews are in My habits (also on the shelf).",
+        "Update notes no longer take space on Home: a small dot on the Settings gear when there's a new version; Settings → “Updates” shows what changed and the full list.",
+      ],
+    },
+  },
+  {
     version: "6.7",
     date: "2026-11-09",
     zh: {

@@ -22,8 +22,7 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 1. The chooser and the library show real photos only (no artwork).
     // Storage is written on the first change: tick and untick a habit, then clear today.
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate((d) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

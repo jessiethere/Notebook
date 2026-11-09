@@ -96,3 +96,16 @@ module.exports.homeAfterSave = async (page) => {
   await page.locator('#navigation [data-page="home"]').click();
   await page.waitForSelector(".hero");
 };
+// Since V6.8, Home's today card is a planner; habit check-ins are in "My
+// habits". Suites that ticked a habit on Home only to write storage once add
+// and remove a plan instead; the others open "My habits" first.
+module.exports.touchStore = async (page) => {
+  await page.locator("[data-plan-input]").fill("·");
+  await page.locator('[data-action="plan-add"]').click();
+  await page.locator('[data-action="plan-remove"]').first().click();
+  await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
+};
+module.exports.openHabits = async (page) => {
+  await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
+  await page.waitForSelector(".growth-habit");
+};

@@ -39,8 +39,7 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 4. A fresh day: the photo of the day fills the hero and invites writing.
     // (Storage is written on the first change: tick and untick a habit.)
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
-    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await require("./signed-in.cjs").touchStore(page);
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate((d) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));

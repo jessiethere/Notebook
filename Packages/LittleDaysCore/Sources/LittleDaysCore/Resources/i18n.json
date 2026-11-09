@@ -4811,6 +4811,22 @@
     "zh": "知道了",
     "en": "Got it"
   },
+  "news.new": {
+    "zh": "新",
+    "en": "New"
+  },
+  "news.all": {
+    "zh": "全部更新记录",
+    "en": "All updates"
+  },
+  "news.dotLabel": {
+    "zh": "设置 · 有新版本 V{version}",
+    "en": "Settings · new version V{version}"
+  },
+  "habits.none": {
+    "zh": "还没有习惯 · 想养成时再加",
+    "en": "None yet · add one when you like"
+  },
   "news.current": {
     "zh": "当前版本 V{version}。每次更新改了什么，都在这里。",
     "en": "You're on V{version}. Every update's changes are listed here."
@@ -5476,12 +5492,12 @@
     "en": "Today's list"
   },
   "plan.title": {
-    "zh": "今天想做的事",
-    "en": "Things to do today"
+    "zh": "今天要做的事",
+    "en": "Today's plan"
   },
   "plan.hint": {
-    "zh": "最多 5 件 · 实验室",
-    "en": "Up to 5 · Labs"
+    "zh": "写下今天要做的，做完打个勾 · 最多 5 件",
+    "en": "Write what's on today, tick it off · up to 5"
   },
   "plan.placeholder": {
     "zh": "想做的一件事…",

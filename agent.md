@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.8 首页「今天要做的事」+ 更新记录搬进设置
+
+- 需求（用户截图：首页「今天的小习惯」三行，带小书封面）：「这个其实是不同的书…我觉得没有必要弄习惯，相反这里我们可以是一个空白的框，然后用户可以放planner」；确认后：「更新记录可以作为一个section在setting里而不是占主页的位置，我觉得二可以换planner；我在想要留习惯吗」。
+- 改动文件：Public/app.js（todayListHTML 改为 planner：标题「今天要做的事」、空白输入框、勾选 / 删除 / 搬昨天的，不再受 labsOn 控制，下面一行 `.today-habits-link`「我的习惯 · x/y 已完成 ›」；首页去掉 whatsNewCardHTML，齿轮 `.settings-gear` 有新版本时加 `.news-dot`；新增 newsSectionHTML：设置里「更新记录」section 放在主题之后，最新一版用 details 展开，打开设置即记为已看；删除 whats-new-dismiss）；Public/js/personal-ui.mjs（settingsHTML 接受 extra.news）；styles.css（planner、习惯行、红点、更新记录）；i18n.json（plan.title / plan.hint 改文案，news.new / news.all / news.dotLabel、habits.none）；whats-new.mjs（V6.8）；AGENTS.md（首页不再放更新卡片的规则）；tests/signed-in.cjs（touchStore、openHabits）；9 套测试里「首页打勾两次写入存储」改为 touchStore；browser / v3 / v40 / v42 / v54 / v65 改为在「我的习惯」里打卡；v63 第 1 组、v52 更新记录断言重写；docs（PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、ROADMAP、STRATEGY、README）。
+- 决策与原因：用户问「要留习惯吗」——我的建议是**留，但不放首页**：已有用户的打卡、成长之书、每周回顾都在里面，删掉会丢数据和入口；首页只留一行入口和今天的完成数。planner 沿用任务 G 的边界（最多 5 件、不提醒、不自动顺延），只是从实验室拿出来给所有人。打卡和做完的事仍出现在当天的「今日清单」上。
+- 运行 / 测试：Node 118 项、Python 12 项通过；38 套浏览器 E2E：全量跑 37 套通过，v45 发现首页横向多出 3px（planner 输入框不能收缩），加 `min-width: 0` 后重跑 v45 及 browser / v52 / v63 / v66 / v40 通过。Linux 容器 + Chromium。
+- 已知问题：首页不再能一键打卡（要进「我的习惯」）；习惯是否完全隐藏 / 进实验室待用户决定；未在 iPhone 真机验证。
+- 下一步：看用户是否要把习惯进一步收进实验室；planner 是否放宽 5 件上限。
+
 ### 2026-11-09 — V6.7 拖动互换照片、替换照片、杂志风格加强
 
 - 需求（用户截图：拼贴风格封面里选中照片的工具条）：「还想要可以替换图片；杂志风格继续增强，两个图片可以通过拖动互换位置」。

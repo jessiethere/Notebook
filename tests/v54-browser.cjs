@@ -69,6 +69,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     mobile.on("pageerror", (error) => errors.push(error.message));
     await mobile.goto(base);
     await mobile.waitForSelector(".hero");
+    await require("./signed-in.cjs").openHabits(mobile);
     await mobile.locator('.habit-row [data-action="check"][data-habit="move"]').first().click();
     await mobile.locator('.habit-row [data-action="check-note"][data-habit="move"]').first().click();
     await mobile.locator('#dialog-form [name="note"]').fill("深蹲感觉越来越稳了。");

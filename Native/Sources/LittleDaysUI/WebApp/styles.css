@@ -13227,3 +13227,127 @@ dialog h2,
   width: 18px;
   background: var(--c-5f6b4e, #5f6b4e);
 }
+
+/* V6.8 · Home's today card is a blank planner; habits are one line below. */
+.today-planner .today-plans {
+  margin-top: 10px;
+  padding: 0;
+  border-top: 0;
+}
+.today-planner .today-plans.empty {
+  padding: 8px 12px 12px;
+  border-radius: 16px;
+  background: var(--cream);
+}
+.today-planner .plan-add input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px dashed var(--c-cfc3b1, #cfc3b1);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 15px;
+}
+.today-planner .plan-check {
+  flex: none;
+  min-height: 0;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.today-planner .plan-remove {
+  min-height: 0;
+  flex: none;
+}
+.today-habits-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 0;
+  margin-top: 12px;
+  padding: 12px 2px 2px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+}
+.today-habits-link small {
+  color: var(--t-8d857b, #8D857B);
+  font-size: 12px;
+}
+.today-habits-link i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--t-8d857b, #8D857B);
+}
+/* What's new lives in Settings: a small dot on the gear when there is news. */
+.settings-gear {
+  position: relative;
+}
+.settings-gear .news-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c-c0624f, #c0624f);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.news-card .news-new {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-5f6f52, #5F6F52);
+  color: var(--t-ffffff, #FFFFFF);
+  font-size: 11px;
+  vertical-align: middle;
+}
+.news-latest {
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--cream);
+}
+.news-latest summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  color: var(--t-8d857b, #8D857B);
+}
+.news-latest summary::-webkit-details-marker {
+  display: none;
+}
+.news-latest summary time {
+  justify-self: end;
+}
+.news-latest summary b {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.news-latest summary b::after {
+  content: " ›";
+  color: var(--t-8d857b, #8D857B);
+}
+.news-latest[open] summary b::after {
+  content: "";
+}
+.news-latest ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+}

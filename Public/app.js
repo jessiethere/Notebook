@@ -528,8 +528,8 @@ function home() {
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
- ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+ <section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>
  ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -544,16 +544,18 @@ function todayListHTML() {
   const today = dateKey();
   const habits = state().habits;
   const done = state().checks.filter((check) => check.date === today).length;
-  const rows = habits.map((habit) => habitRow(habit, today)).join("");
-  let plans = "";
-  if (labsOn()) {
-    const items = plansOf(today);
-    const yesterday = plansOf(addDays(today, -1)).filter((p) => !p.done);
-    plans = `<div class="today-plans"><div class="today-sub"><b>${t("plan.title")}</b><small>${t("plan.hint")}</small></div><ul>${items
-      .map((p) => `<li class="${p.done ? "done" : ""}"><button class="plan-check" data-action="plan-toggle" data-plan="${esc(p.id)}" aria-pressed="${p.done}" aria-label="${esc(p.text)}">${p.done ? "✓" : ""}</button><span>${esc(p.text)}</span><button class="plan-remove" data-action="plan-remove" data-plan="${esc(p.id)}" aria-label="${t("plan.remove")}">×</button></li>`)
-      .join("")}</ul>${items.length < MAX_PLANS ? `<div class="plan-add"><input type="text" maxlength="60" data-plan-input placeholder="${t("plan.placeholder")}" aria-label="${t("plan.placeholder")}"><button data-action="plan-add">${t("plan.add")}</button></div>` : ""}${yesterday.length && !items.length ? `<button class="text-button plan-carry" data-action="plan-carry">${t("plan.carry", { count: yesterday.length })}</button>` : ""}</div>`;
-  }
-  return `<section class="today-list" aria-label="${t("today.title")}"><div class="section-heading"><div><h2>${t("today.habits")}</h2><small>${t("home.completed", { done, total: habits.length })}</small></div><button data-action="nav" data-page="growth">${t("habits.book")} ›</button></div><div class="habit-list">${rows}</div>${plans}</section>`;
+  const items = plansOf(today);
+  const yesterday = plansOf(addDays(today, -1)).filter((p) => !p.done);
+  const list = items.length
+    ? `<ul>${items
+        .map((p) => `<li class="${p.done ? "done" : ""}"><button class="plan-check" data-action="plan-toggle" data-plan="${esc(p.id)}" aria-pressed="${p.done}" aria-label="${esc(p.text)}">${p.done ? "✓" : ""}</button><span>${esc(p.text)}</span><button class="plan-remove" data-action="plan-remove" data-plan="${esc(p.id)}" aria-label="${t("plan.remove")}">×</button></li>`)
+        .join("")}</ul>`
+    : "";
+  const add = items.length < MAX_PLANS ? `<div class="plan-add"><input type="text" maxlength="60" data-plan-input placeholder="${t("plan.placeholder")}" aria-label="${t("plan.placeholder")}"><button data-action="plan-add">${t("plan.add")}</button></div>` : "";
+  const carry = yesterday.length && !items.length ? `<button class="text-button plan-carry" data-action="plan-carry">${t("plan.carry", { count: yesterday.length })}</button>` : "";
+  // Habits live in "My habits" on the shelf; Home keeps one line to them.
+  const habitsLink = `<button class="today-habits-link" data-action="nav" data-page="growth"><span>${t("habits.book")}</span><small>${habits.length ? t("home.completed", { done, total: habits.length }) : t("habits.none")}</small><i aria-hidden="true">›</i></button>`;
+  return `<section class="today-list today-planner" aria-label="${t("plan.title")}"><div class="section-heading"><div><h2>${t("plan.title")}</h2><small>${t("plan.hint")}</small></div></div><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${habitsLink}</section>`;
 }
 function savePlans(date, change) {
   store.update((next) => {
@@ -2789,7 +2791,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), labs: labsCardHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
   }[page]();
   navigation();
@@ -3060,9 +3062,14 @@ async function deleteReadPage(date, momentId) {
   toast(t(momentId ? "moment.deleted" : "write.dayCleared"));
 }
 // ---------- What's new (update notes inside the app) ----------
-function whatsNewCardHTML() {
-  const note = noteFor(UPDATES[0], languageCode());
-  return `<div class="whats-new"><button class="whats-new-open" data-action="whats-new"><small>${t("news.badge", { version: LATEST })}</small><b>${esc(note.title)}</b><span>${t("news.see")} ›</span></button><button class="whats-new-close" data-action="whats-new-dismiss" aria-label="${t("close")}">×</button></div>`;
+// Settings: the update history (the newest notes shown, the rest a tap away).
+// Opening Settings counts as seen, so the dot on the gear goes away.
+function newsSectionHTML() {
+  const fresh = hasUnseen();
+  markSeen();
+  const latest = UPDATES[0];
+  const note = noteFor(latest, languageCode());
+  return `<section class="settings-card news-card"><h2>${t("news.title")}${fresh ? ` <span class="news-new">${t("news.new")}</span>` : ""}</h2><p>${t("news.current", { version: LATEST })}</p><details class="news-latest"${fresh ? " open" : ""}><summary><span class="news-version">V${esc(latest.version)}</span><time>${esc(latest.date)}</time><b>${esc(note.title)}</b></summary><ul>${note.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></details><button class="secondary" data-action="whats-new">${t("news.all")}</button></section>`;
 }
 function openWhatsNew() {
   const en = languageCode() === "en";
@@ -3078,7 +3085,7 @@ function labsCardHTML() {
   const on = labsOn();
   const samples = state().entries.filter((e) => e.isDemo).length;
   const samplesCard = samples ? `<section class="settings-card samples-card"><h2>${t("samples.title")}</h2><p>${t("samples.note", { count: samples })}</p><button class="secondary" data-action="samples-remove">${t("samples.remove")}</button></section>` : "";
-  return `${samplesCard}<section class="settings-card news-card"><h2>${t("news.title")}</h2><p>${t("news.current", { version: LATEST })}</p><button class="secondary" data-action="whats-new">${t("news.see")}</button></section><section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
+  return `${samplesCard}<section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
 }
 function themePickerHTML() {
   const current = loadTheme();
@@ -3657,11 +3664,6 @@ async function action(target) {
   }
   if (actionName === "whats-new") {
     openWhatsNew();
-    if (page === "home") render();
-  }
-  if (actionName === "whats-new-dismiss") {
-    markSeen();
-    render();
   }
   if (actionName === "share-story") {
     // Stories size (9:16); the share sheet where supported, else a download.
