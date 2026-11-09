@@ -124,17 +124,45 @@ const shots = process.env.SHOTS_DIR || "";
     assert.ok(seen, "the list shows on that day's first page");
     passed.push("today's list also on the book's page for that day");
 
-    // 5b. Exporting that day's first page draws the list under the page.
-    await menu(page, "studio");
-    await openToday(page);
-    const download = page.waitForEvent("download");
-    await page.locator('[data-action="export"]').click();
-    const png = fs.readFileSync(await (await download).path());
-    if (shots) fs.writeFileSync(`${shots}/v63-export.png`, png);
-    assert.equal(png.readUInt32BE(16), 1080);
-    assert.ok(png.readUInt32BE(20) > 1350, `the list strip under the page (${png.readUInt32BE(20)}px tall)`);
-    await page.locator('[data-action="studio-back"]').click();
-    passed.push("export: the day's first page carries today's list underneath");
+    // 5b. Privacy (V7.2): the day's list stays out of exports unless switched on
+    // in Settings → Privacy; then the day's first page carries it underneath.
+    const exportHeight = async () => {
+      await menu(page, "studio");
+      await openToday(page);
+      const download = page.waitForEvent("download");
+      await page.locator('[data-action="export"]').click();
+      const png = fs.readFileSync(await (await download).path());
+      await page.locator('[data-action="studio-back"]').click();
+      assert.equal(png.readUInt32BE(16), 1080);
+      if (shots) fs.writeFileSync(`${shots}/v63-export.png`, png);
+      return png.readUInt32BE(20);
+    };
+    assert.equal(await exportHeight(), 1350, "private by default: no list in the export");
+    await menu(page, "home");
+    await page.locator(".settings-gear").tap();
+    await page.waitForSelector(".privacy-card");
+    assert.match(await page.locator(".privacy-card").innerText(), /只存在这台设备上[\s\S]*GPS/);
+    await page.locator('[data-action="privacy-toggle"][data-privacy="shareList"]').tap();
+    await page.waitForSelector('[data-privacy="shareList"][aria-checked="true"]');
+    const tall = await exportHeight();
+    assert.ok(tall > 1350, `switched on: the list strip under the page (${tall}px tall)`);
+    passed.push("privacy: today's list stays out of exports by default; switched on, the day's first page carries it");
+
+    // 5c. Privacy: Home can hide today's photos and words.
+    await menu(page, "home");
+    await page.locator(".settings-gear").tap();
+    await page.locator('[data-action="privacy-toggle"][data-privacy="hideToday"]').tap();
+    await page.waitForSelector('[data-privacy="hideToday"][aria-checked="true"]');
+    await page.locator('#navigation [data-page="home"]').tap();
+    await page.waitForSelector(".today-peek-wrap .peek-private");
+    assert.equal(await page.locator(".today-peek-wrap img").count(), 0, "no photos on Home");
+    assert.match(await page.locator(".peek-private").innerText(), /今天记了 \d+ 页[\s\S]*已在首页隐藏/);
+    await page.locator(".peek-private").tap();
+    await page.waitForSelector(".day-detail");
+    await page.locator('#navigation [data-page="home"]').tap();
+    await page.locator(".settings-gear").tap();
+    await page.locator('[data-action="privacy-toggle"][data-privacy="hideToday"]').tap();
+    passed.push("privacy: Home can hide today's photos and words (and still open the day)");
 
     // 6. Yesterday's unfinished things move only when asked.
     await page.evaluate(([t, y]) => {

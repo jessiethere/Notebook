@@ -467,6 +467,9 @@ function bookCard(book) {
 function todayPeekHTML(entry) {
   const pages = [...(hasDayPageContent(entry) ? [entry] : []), ...(entry.moments || [])];
   const date = entry.date || dateKey();
+  // Privacy: Home can keep today's photos and words out of sight.
+  if (privacyOn("hideToday") && pages.length)
+    return `<div class="today-peek-wrap"><button class="today-preview hero-photo peek-slide peek-words peek-private" data-action="open-day" data-date="${esc(date)}" aria-label="${t("home.readToday")}"><span class="peek-paper" aria-hidden="true"></span><span class="today-preview-copy"><b>${t("privacy.hiddenTitle", { count: pages.length })}</b><small>${t("privacy.hiddenHint")}</small></span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button></div>`;
   const isPhoto = (ref) => /^(photo|media):/.test(String(ref || ""));
   const seen = new Set();
   const slides = [];
@@ -933,6 +936,28 @@ function studioMusicHTML() {
 }
 
 const BOOK_VIEW_KEY = "little-days.book-view";
+// Privacy choices on this device (Settings → Privacy). Both start "private":
+// the day's list stays out of exports and shared PDFs; Home may hide today.
+const PRIVACY_KEYS = { shareList: "little-days.share-list", hideToday: "little-days.hide-today" };
+function privacyOn(name) {
+  try {
+    return localStorage.getItem(PRIVACY_KEYS[name]) === "1";
+  } catch {
+    return false;
+  }
+}
+function setPrivacy(name, on) {
+  try {
+    localStorage.setItem(PRIVACY_KEYS[name], on ? "1" : "0");
+  } catch {}
+}
+function privacySectionHTML() {
+  const row = (name) => {
+    const on = privacyOn(name);
+    return `<button class="privacy-row" data-action="privacy-toggle" data-privacy="${name}" role="switch" aria-checked="${on}"><span><b>${t("privacy." + name)}</b><small>${t("privacy." + name + "Hint")}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
+  };
+  return `<section class="settings-card privacy-card"><h2>${t("privacy.title")}</h2><ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>${row("hideToday")}${row("shareList")}</section>`;
+}
 const chosenBookView = () => {
   try {
     return localStorage.getItem(BOOK_VIEW_KEY) === "flip" ? "flip" : "list";
@@ -2811,7 +2836,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), labs: labsCardHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), privacy: privacySectionHTML(), labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
   }[page]();
   navigation();
@@ -3683,6 +3708,14 @@ async function action(target) {
     $("#choose-dialog").close();
     toast(t("bookShare.thanks"));
   }
+  if (actionName === "privacy-toggle") {
+    const name = target.dataset.privacy;
+    if (!PRIVACY_KEYS[name]) return;
+    setPrivacy(name, !privacyOn(name));
+    logEvent("privacy_toggle", { kind: name === "hideToday" ? "hide-today" : "share-list" });
+    render();
+    return;
+  }
   if (actionName === "whats-new") {
     openWhatsNew();
   }
@@ -3949,7 +3982,7 @@ async function action(target) {
     logEvent("export", { size: "feed" });
     // The day's first page carries the day's list underneath (as in the book).
     const first = activePage() === (hasDayPageContent(editor) ? editor : editor.moments[0] || editor);
-    await exportJournalImage(activePage(), { ...exportOptions(), dayList: first ? dayListItems(editor.date) : [] });
+    await exportJournalImage(activePage(), { ...exportOptions(), dayList: first && privacyOn("shareList") ? dayListItems(editor.date) : [] });
     toast(t("export.photoDone"));
   }
 }
@@ -5250,7 +5283,8 @@ function exportOptions() {
 }
 function exportOptionsFor(dayPage, date, suffix = "", withList = false) {
   return {
-    dayList: withList ? dayListItems(date) : [],
+    // The day's list is private: only with "include it" switched on.
+    dayList: withList && privacyOn("shareList") ? dayListItems(date) : [],
     dayListTitle: t("day.checklist"),
     resolvePhoto: safePhoto,
     catalog,

@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-09 — V7.2 隐私：今日清单默认不进导出、首页可隐藏今天、设置里写清楚
+
+- 需求：用户「还需要保护用户隐私」（上一轮刚把标着「私人」的今日清单画进了导出图片和给家人的 PDF）。
+- 隐私检查结果（如实记录）：照片上传时用 canvas 重新编码（imageBlob），EXIF / GPS 不保留，只在重编码前读拍摄时间；Public/ 中没有任何第三方网络请求（只请求同源 shared/*.json、本地 blob）；测试事件日志 events.mjs 只保存白名单字段（数字、布尔、短 id），不含文字、名字或媒体引用。视频文件按原样存进 IndexedDB（可能带拍摄元数据，只在本机 / 用户自己的备份里）。
+- 改动文件：Public/app.js（PRIVACY_KEYS / privacyOn / setPrivacy；`little-days.share-list` 默认关：exportOptionsFor 与导出图片只在打开时带今日清单；`little-days.hide-today`：todayPeekHTML 只显示「今天记了 N 页」的紧凑卡片；privacySectionHTML：隐私事实 + 两个开关，替换原「默认私人」卡；privacy-toggle 动作，日志只记 kind）；Public/js/personal-ui.mjs（settingsHTML 接受 extra.privacy）；styles.css（隐私卡、开关、隐藏卡片）；i18n.json（privacy.*）；whats-new.mjs（V7.2）；tests/v63-browser.cjs（默认导出 1350 高无清单、打开后变高、隐私卡文字、首页隐藏今天并仍可打开当天）；docs。
+- 决策与原因：清单在阅读页标「私人」，导出却默认带上，前后矛盾，改为默认不带、需要时自己打开；首页隐藏是可选的，默认不改变现在的体验。App 锁（Face ID / 密码）需要 iOS 外壳配合，本轮未做，列入下一步。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；截图检查了设置隐私卡与首页隐藏卡片。
+- 已知问题：没有 App 锁；视频元数据未清除；未在 iPhone 真机验证。
+- 下一步：用户确认后在 iOS 外壳加 Face ID / 密码锁（打开 App、切回前台时）；导出视频前清除元数据。
+
 ### 2026-11-09 — V7.1 阅读页「今日清单」移到页面后面、改为简洁列表
 
 - 需求（用户 iPhone 截图：某天阅读页上方的「今日清单」——两张大习惯卡 + 各自「写感想」+ 一行「✓ 健身」）：「今日清单planner checked在上面有点突兀」。

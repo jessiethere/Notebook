@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.2",
+    date: "2026-11-09",
+    zh: {
+      title: "保护隐私：今日清单默认不进导出，首页可以隐藏今天",
+      items: [
+        "今日清单（打卡的习惯、做完的事）是私人的：导出图片和分享给家人的 PDF 默认不再带它；想带的话在设置 →「隐私」里打开。",
+        "设置 →「隐私」可以打开「首页隐藏今天的内容」：首页只显示「今天记了几页」，不显示照片和文字，别人看到你的手机时更安心。",
+        "「隐私」里写清楚了：内容只存在这台设备上；放进来的照片不会留下拍摄地点（GPS）；App 不连接第三方服务、没有广告和追踪；社区等功能目前只是本机演示。",
+      ],
+    },
+    en: {
+      title: "Privacy: today's list stays out of exports; Home can hide today",
+      items: [
+        "Today's list (habits checked, things done) is private: exported pictures and PDFs shared with family no longer include it unless you switch it on in Settings → Privacy.",
+        "Settings → Privacy → “Hide today on Home”: Home shows only how many pages you kept today — no photos or words — for when someone else sees your phone.",
+        "Privacy now spells it out: everything stays on this device; photos you add keep no location (GPS); the app talks to no third-party service, no ads or tracking; community features are a local demo for now.",
+      ],
+    },
+  },
+  {
     version: "7.1",
     date: "2026-11-09",
     zh: {

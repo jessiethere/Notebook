@@ -783,6 +783,50 @@
     "zh": "备份文件里有你的私人文字和照片，请放在安全的地方，不要分享给别人。单次导出最多 100 MB 媒体，导入文件最大 150 MB。",
     "en": "A backup holds your private words and photos — keep it somewhere safe and don't share it. Up to 100 MB of media per export; files up to 150 MB can be restored."
   },
+  "privacy.title": {
+    "zh": "隐私",
+    "en": "Privacy"
+  },
+  "privacy.factDevice": {
+    "zh": "文字、照片、视频和声音只存在这台设备上，没有账号服务器，也不会上传。",
+    "en": "Words, photos, videos and sounds stay on this device: no account server, nothing uploaded."
+  },
+  "privacy.factPhotos": {
+    "zh": "放进来的照片会重新存一份，拍摄地点（GPS）等照片信息不会留下；只读一下拍摄时间，用来排序和补记。",
+    "en": "Photos you add are saved anew without their location (GPS) and other photo details; only the time taken is read, to order them and fill in a day."
+  },
+  "privacy.factNothingSent": {
+    "zh": "App 不连接任何第三方服务，没有广告和统计追踪；测试记录只记次数，不含内容，只有你导出时才离开设备。",
+    "en": "The app talks to no third-party service — no ads, no tracking; the test log counts taps only, with no content, and leaves the device only if you export it."
+  },
+  "privacy.factDemo": {
+    "zh": "社区、好友、私信、共同创作目前是本机演示，不会发出任何内容。",
+    "en": "Community, friends, messages and shared books are a local demo for now and send nothing."
+  },
+  "privacy.hideToday": {
+    "zh": "首页隐藏今天的内容",
+    "en": "Hide today on Home"
+  },
+  "privacy.hideTodayHint": {
+    "zh": "首页「今天」卡片不显示照片和文字，只显示记了几页；别人看到你的手机时更安心。",
+    "en": "Home's “Today” card shows no photos or words, only how many pages; handy when someone else sees your phone."
+  },
+  "privacy.shareList": {
+    "zh": "导出和分享时附上今日清单",
+    "en": "Add today's list to exports"
+  },
+  "privacy.shareListHint": {
+    "zh": "默认不附：打卡的习惯和做完的事是私人的。打开后，导出的图片和分享给家人的 PDF 会在当天第一页下面带上它。",
+    "en": "Off by default: habits and things done are private. Turn on to add it under a day's first page in exported pictures and shared PDFs."
+  },
+  "privacy.hiddenTitle": {
+    "zh": "今天记了 {count} 页",
+    "en": "{count} page(s) kept today"
+  },
+  "privacy.hiddenHint": {
+    "zh": "照片和文字已在首页隐藏 · 点开查看",
+    "en": "Photos and words hidden on Home · tap to open"
+  },
   "settings.private": {
     "zh": "默认私人 · 无联网社交",
     "en": "Private by default · no online social features"

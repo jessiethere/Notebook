@@ -234,3 +234,7 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 ## 2026-11-09 V7.0 todayPeekHTML
 
 - 按页面顺序收集照片引用（backdrop、封面 photo、非 `gen` / 非手绘照片图层），用 Set 去重；每个引用一张卡，无照片但有文字的页面一张卡；`data-moment` 指向所在页。
+
+## 2026-11-09 V7.2 隐私开关
+
+- 本机键：`little-days.share-list`、`little-days.hide-today`（"1" 为开，缺省为关）；`privacyOn(name)` 在导出（`exportOptionsFor`、导出图片）与首页（`todayPeekHTML`）读取。不进入 `little-days.v1`，不需要 Swift 模型字段。
