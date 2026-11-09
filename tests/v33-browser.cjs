@@ -63,7 +63,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     });
     assert.ok(order);
     assert.equal(await page.locator('[data-tool-row="text"]').count(), 0);
-    assert.equal(await page.locator(".tool-dock .dock-btn").count() >= 9, true, "decoration tools are icons in the bottom dock");
+    assert.equal(await page.locator(".tool-dock .dock-btn").count() >= 7, true, "decoration tools are icons in the bottom dock");
     passed.push("home → write a moment in one tap; writing first, decoration second");
 
     // 2. Templates: pick the number of photos first, then a layout.

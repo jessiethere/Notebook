@@ -323,28 +323,35 @@ export async function renderJournalCanvas(editor, options = {}) {
     if (layer.kind === "growth") {
       const card = options.growthCard?.(layer);
       const width = ((Number(layer.w) || 62) / 100) * 1080;
-      ctx.fillStyle = "#FBF8EE";
-      ctx.strokeStyle = "#C9D7C1";
-      ctx.lineWidth = 3;
-      ctx.fillRect(-width / 2, -110, width, 220);
-      ctx.strokeRect(-width / 2, -110, width, 220);
-      ctx.fillStyle = "#4F5A43";
+      const height = card?.note ? 200 : 140;
+      // A soft label with a check (like the page): tint, rounded, no border.
+      ctx.fillStyle = "rgba(232,237,222,.92)";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-width / 2, -height / 2, width, height, 26);
+      else ctx.rect(-width / 2, -height / 2, width, height);
+      ctx.fill();
+      ctx.fillStyle = "rgba(225,185,178,.7)";
+      ctx.fillRect(-width / 2 + 24, -height / 2 - 14, 90, 28);
+      ctx.fillStyle = "#7D8E66";
+      ctx.beginPath();
+      ctx.arc(-width / 2 + 52, -height / 2 + 48, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-width / 2 + 43, -height / 2 + 48);
+      ctx.lineTo(-width / 2 + 50, -height / 2 + 56);
+      ctx.lineTo(-width / 2 + 62, -height / 2 + 40);
+      ctx.stroke();
+      ctx.fillStyle = "#3F4A35";
       ctx.textBaseline = "top";
-      ctx.font = `600 40px ${font}`;
-      wrapText(
-        ctx,
-        card?.title || layer.text || "",
-        -width / 2 + 30,
-        -85,
-        width - 60,
-        50,
-        1,
-      );
-      ctx.fillStyle = "#8D857B";
+      ctx.font = `600 38px ${font}`;
+      wrapText(ctx, card?.title || layer.text || "", -width / 2 + 88, -height / 2 + 26, width - 120, 48, 1);
+      ctx.fillStyle = "#7A7166";
       ctx.font = `30px ${font}`;
-      wrapText(ctx, card?.facts || "", -width / 2 + 30, -25, width - 60, 40, 1);
+      wrapText(ctx, card?.facts || "", -width / 2 + 88, -height / 2 + 78, width - 120, 40, 1);
       ctx.fillStyle = "#2F2A26";
-      wrapText(ctx, card?.note || "", -width / 2 + 30, 20, width - 60, 40, 2);
+      wrapText(ctx, card?.note || "", -width / 2 + 34, -height / 2 + 124, width - 68, 40, 2);
       ctx.restore();
       continue;
     }

@@ -70,7 +70,7 @@ export function growthCardInner(check, habit, ctx, layer = {}) {
     check.detail,
     check.minutes ? t("growth.minutes", { count: check.minutes }) : "",
   ].filter(Boolean);
-  return `<span class="growth-card"><span class="growth-card-top"><span>${themeIcon(habit.theme)}</span><b>${esc(habit.title)}</b>${check.mood ? `<i>${esc(check.mood)}</i>` : ""}</span>${facts.length ? `<small>${esc(facts.join(" · "))}</small>` : ""}${check.note ? `<span class="growth-card-note">${esc(check.note)}</span>` : ""}</span>`;
+  return `<span class="growth-card"><span class="growth-card-top"><span class="growth-check" aria-hidden="true"></span><b>${esc(habit.title)}</b>${check.mood ? `<i>${esc(check.mood)}</i>` : ""}</span>${facts.length ? `<small>${esc(facts.join(" · "))}</small>` : ""}${check.note ? `<span class="growth-card-note">${esc(check.note)}</span>` : ""}</span>`;
 }
 
 export function layerHTML(layer, ctx, options = {}) {

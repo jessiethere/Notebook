@@ -246,12 +246,13 @@ async function streamBytes(download) {
         ),
       ];
     });
-    await tool("media");
+    // Video is added with 视频 under the paper (the dock lists clips once there are some).
     await page.locator("#video-input").setInputFiles({
       name: "A little moving moment.webm",
       mimeType: "video/webm",
       buffer: Buffer.from(video),
     });
+    await tool("media");
     await page.waitForSelector(".media-card video");
     // A cover is grabbed automatically; the picker can replace it with a picture.
     await page.waitForFunction(() => document.querySelector(".media-card video")?.poster.startsWith("blob:"));
@@ -515,8 +516,9 @@ async function streamBytes(download) {
     await denied.goto(base);
     await denied.waitForSelector(".hero");
     await goTab(denied, "studio");
-    await toolOn(denied, "media");
-    await denied.locator('[data-action="record-audio"]').click();
+    // Recording starts from 声音 under the paper.
+    await denied.locator('.stage-bar [data-action="add-sound"]').click();
+    await denied.locator('[data-action="add-record"]').click();
     await denied.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("麦克风"),
     );

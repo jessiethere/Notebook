@@ -72,7 +72,7 @@ async function size(download) {
       recorder.stop(); await done;
       return [...new Uint8Array(await new Blob(chunks, { type: "video/webm" }).arrayBuffer())];
     }));
-    await tool("media");
+    // (Video goes in with 视频 under the paper.)
     await page.locator("#video-input").setInputFiles({ name: "walk.webm", mimeType: "video/webm", buffer: video });
     await page.waitForSelector('#journal-canvas .video-layer video[src^="blob:"]');
     await page.locator("#audio-input").setInputFiles({ name: "birds.wav", mimeType: "audio/wav", buffer: wav(2) });

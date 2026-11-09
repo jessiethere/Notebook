@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.6",
+    date: "2026-11-09",
+    zh: {
+      title: "页面更清爽：选中更轻、没有重复的选项、打卡标签更好看",
+      items: [
+        "选中照片或卡片时，只有一圈细线和两个小圆点（右下角拉大、上方旋转），不再有白色方块。",
+        "记到哪本书只在纸上方选一次，下面工具栏不再重复；视频、声音用纸下面的按钮加，加了之后工具栏才出现「声音」列表。",
+        "插进页面的成长打卡变成一张带小勾和纸胶带的标签，不再是方框；连插几张会错开摆放。",
+      ],
+    },
+    en: {
+      title: "Cleaner pages: lighter selection, no repeated choices, nicer check-in labels",
+      items: [
+        "A selected photo or card shows a thin outline and two small dots (resize at the corner, rotate at the top) — no white square.",
+        "The journal is chosen once, above the paper; the dock no longer repeats it. Video and sound are added under the paper; the dock lists them once there are some.",
+        "A check-in on the page is now a soft label with a check and a strip of tape; several are placed apart.",
+      ],
+    },
+  },
+  {
     version: "5.5",
     date: "2026-11-09",
     zh: {

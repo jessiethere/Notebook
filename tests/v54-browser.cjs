@@ -116,6 +116,19 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.match(await mobile.locator('.stage-bar [data-action="add-text-layer"]').innerText(), /加文字框/, "the Text button says it adds a box");
     await mobile.evaluate(() => document.activeElement.blur());
     await mobile.waitForSelector("#type-bar", { state: "hidden" });
+    // One place for each choice: the journal is in the line above the paper,
+    // video / sound are added under it; the dock does not repeat them.
+    const dockTools = await mobile.$$eval(".tool-dock .dock-btn", (els) => els.map((el) => el.dataset.tool));
+    assert.ok(!dockTools.includes("book") && !dockTools.includes("media"), dockTools.join());
+    // A check-in on the page is a soft label with a check (no emoji, no box).
+    await mobile.locator('.dock-btn[data-tool="growth"]').click();
+    await mobile.locator('[data-action="insert-growth"][data-habit="move"]').click();
+    await mobile.waitForSelector("#journal-canvas .growth-layer .growth-check");
+    assert.doesNotMatch(await mobile.locator("#journal-canvas .growth-layer").innerText(), /\p{Extended_Pictographic}/u);
+    assert.equal(await mobile.locator("#journal-canvas .growth-layer .growth-card").evaluate((el) => getComputedStyle(el).borderTopWidth), "0px");
+    // Selection: two small dots, not a square box.
+    const handle = await mobile.locator("#journal-canvas .growth-layer .handle-resize").evaluate((el) => [el.offsetWidth, getComputedStyle(el).borderRadius]);
+    assert.ok(handle[0] <= 16 && handle[1] === "50%", JSON.stringify(handle));
     passed.push("type bar: tap the title or words → font / size / colour, caret stays, page never moves; 加文字框 is clearly an add");
 
     // 5. Sample days to look through, marked and removable.

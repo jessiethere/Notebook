@@ -308,8 +308,9 @@ async function noOverflow(page, label) {
     await page.locator('[data-action="moment-mood"][data-mood="☁️"]').click();
     await addMoment("Home Cooking", "19:00");
     await page.locator('[data-moment-field="body"]').fill("番茄牛腩食谱");
-    await tool("media");
+    // Video goes in with 视频 under the paper; its list is then in the dock.
     await page.locator("#video-input").setInputFiles({ name: "cooking.webm", mimeType: "video/webm", buffer: await syntheticVideo(page) });
+    await tool("media");
     await page.waitForSelector('.media-card video[src^="blob:"]');
     await page.locator("#audio-input").setInputFiles({ name: "kitchen-sounds.wav", mimeType: "audio/wav", buffer: wav() });
     await page.waitForSelector('.media-card audio[src^="blob:"]', { state: "attached" });

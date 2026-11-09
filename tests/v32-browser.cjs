@@ -89,8 +89,11 @@ const shift = (key, days) => {
     // Tools are small icons in a dock at the bottom of the screen.
     const rows = await page.$$eval(".tool-dock [data-action='tool']", (els) => els.map((el) => el.dataset.tool));
     assert.equal(await page.locator(".write-card #entry-title").count(), 1, "writing is always open");
-    for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "media", "book", "chapters"])
+    for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
+    // No second place to choose the journal or add media: those are the line
+    // above the paper and 视频 / 声音 under it.
+    assert.ok(!rows.includes("media") && !rows.includes("book"), "no duplicate tools");
     assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
     const dock = await page.locator(".tool-dock").boundingBox();
     // Studio is full-screen: the tool row sits at the very bottom (no tab bar).
@@ -142,8 +145,8 @@ const shift = (key, days) => {
     // A Moment with audio: selecting it opens its players directly.
     await page.locator('[data-action="add-moment"]').first().click();
     await page.locator('[data-moment-field="title"]').fill("Evening walk");
-    await tool("media");
     await page.locator("#audio-input").setInputFiles({ name: "walk.wav", mimeType: "audio/wav", buffer: wav() });
+    await tool("media");
     await page.waitForSelector('.media-card audio[src^="blob:"]', { state: "attached" });
     await page.locator('.chapter-chip[data-moment=""]').click();
     await page.locator("[data-tool-row='media'] .tool-head").click(); // close

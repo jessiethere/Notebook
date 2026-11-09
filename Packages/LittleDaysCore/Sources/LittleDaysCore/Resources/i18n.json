@@ -2724,8 +2724,8 @@
     "en": "Growth"
   },
   "dock.book": {
-    "zh": "手帐本",
-    "en": "Book"
+    "zh": "记录项目",
+    "en": "Fields"
   },
   "dock.chapters": {
     "zh": "目录",
@@ -4982,5 +4982,9 @@
   "samples.removed": {
     "zh": "已移除 {count} 天示例",
     "en": "Removed {count} sample days"
+  },
+  "tool.fields": {
+    "zh": "记录项目",
+    "en": "Record fields"
   }
 }

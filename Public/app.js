@@ -1446,14 +1446,17 @@ function studioTools() {
           .map((s) => `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`)
           .join("")}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div>`,
     },
-    {
+  );
+  // Video and sound are added with 视频 / 声音 under the paper; the dock only
+  // lists what this page already has (players, cover, record more).
+  if (counts.videos || counts.audios || recorder || studioTool === "media")
+    tools.push({
       id: "media",
       icon: "♫",
       label: "tool.media",
       value: counts.videos || counts.audios ? [counts.videos ? t("day.statVideos", { count: counts.videos }) : "", counts.audios ? t("day.statAudios", { count: counts.audios }) : ""].filter(Boolean).join(" · ") : t("tool.none"),
       body: () => mediaPanelHTML(page, ctx(), Boolean(recorder)),
-    },
-  );
+    });
   if (checks.length)
     tools.push({
       id: "growth",
@@ -1462,16 +1465,14 @@ function studioTools() {
       value: t("day.statGrowth", { count: checks.length }),
       body: () => growthPanelHTML(),
     });
-  tools.push({
-    id: "book",
-    icon: "📔",
-    label: "tool.book",
-    value: book?.title || "—",
-    body: () =>
-      dayPage
-        ? `<label class="field">${t("studio.book")}<select data-editor-field="bookId" aria-label="${t("studio.book")}">${state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === editor.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select></label>${customFieldsHTML(book, editor, ctx())}`
-        : `<label class="field">${t("studio.book")}<select data-moment-field="bookId">${state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === page.bookId ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select></label>`,
-  });
+  if (dayPage && book?.fields?.length)
+    tools.push({
+      id: "book",
+      icon: "☑",
+      label: "tool.fields",
+      value: book.title,
+      body: () => customFieldsHTML(book, editor, ctx()),
+    });
   tools.push({
     id: "chapters",
     icon: "☰",
@@ -4431,11 +4432,13 @@ async function v31Action(target) {
           text: habit.title,
           habitId: check.habitId,
           checkDate: check.date,
-          x: 50,
-          y: 50,
+          // Each new card sits a little lower and tilts the other way, so
+          // several check-ins never land on top of each other.
+          x: 50 + (page.layers.filter((l) => l.kind === "growth").length % 2 ? 4 : -2),
+          y: Math.min(86, 50 + page.layers.filter((l) => l.kind === "growth").length * 13),
           w: 62,
           scale: 1,
-          rotation: -2,
+          rotation: page.layers.filter((l) => l.kind === "growth").length % 2 ? 2 : -2,
         };
         page.layers.push(layer);
         selectedLayer = layer.id;

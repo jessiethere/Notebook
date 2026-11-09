@@ -89,8 +89,8 @@ const path = require("node:path");
     await tool("text");
     await page.locator("#entry-title").fill("一朵花的练习");
     await page.locator("#entry-body").fill("记住今天，也记住慢慢变好的自己。");
-    await tool("book");
-    await page.locator('[data-editor-field="bookId"]').selectOption(bookId);
+    // The journal is chosen in the line above the paper (not in the dock).
+    await page.locator("[data-day-book]").selectOption(bookId);
     await tool("font");
     await page.locator('[data-editor-field="font"]').selectOption("rounded");
     await tool("mood");
