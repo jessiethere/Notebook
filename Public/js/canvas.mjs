@@ -22,6 +22,15 @@ export function textCSS(style, fontId, defaultSize, catalog, fallbackColor = "#2
   return `font-family:${fontFamily(fontId, catalog)};font-size:${size / 3.2}cqw;color:${color};font-weight:${weight};letter-spacing:${spacing}px`;
 }
 
+// Size / colour chosen in the type bar for a page's title or words (only
+// what was chosen; otherwise the page's own look stays).
+export function styleExtra(style = {}) {
+  let css = "";
+  const size = Number(style?.size);
+  if (size >= 10 && size <= 60) css += `;font-size:${size / 3.2}cqw`;
+  if (/^#[0-9a-f]{6}$/i.test(style?.color || "")) css += `;color:${style.color}`;
+  return css;
+}
 export function cropOf(layer) {
   const crop = layer.crop || {};
   return {
@@ -172,17 +181,17 @@ export function canvasHTML(page, ctx, options = {}) {
     const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
     const titleText = readOnly
       ? `<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || "")}</div>`
-      : `<div class="canvas-title" ${inline("title", t("studio.titlePlaceholder"), 70)} style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" ${inline("body", t("studio.bodyPlaceholder"), 2000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || "")}</div>`;
+      : `<div class="canvas-title" ${inline("title", t("studio.titlePlaceholder"), 70)} style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" ${inline("body", t("studio.bodyPlaceholder"), 2000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}${esc(styleExtra(page.bodyStyle))}">${esc(page.body || "")}</div>`;
     fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}${veil}${titleText}<span class="canvas-mood">${esc(page.mood || "")}</span>`;
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
-    fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+    fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.bodyStyle))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!dayPage && page.layoutTemplate === "smart")
     // Photos in their own shapes, one line underneath (on a frosted label).
-    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)}>${esc(page.title || "")}</div></div>`;
+    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div></div>`;
   else if (!dayPage && page.layoutTemplate === "line")
     // Photo + one line: the photo is the page, one sentence on a frosted strip.
-    fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)}>${esc(page.title || "")}</div>${page.body ? `<div class="line-body">${esc(page.body)}</div>` : ""}</div>`;
+    fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div>${page.body ? `<div class="line-body">${esc(page.body)}</div>` : ""}</div>`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
     fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;

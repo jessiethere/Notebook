@@ -185,7 +185,7 @@ const shift = (key, days) => {
 
     // Habit journey: read check-ins like a book.
     await nav("growth");
-    await page.locator('[data-action="habit-journey"][data-habit="move"]').click();
+    await page.locator('.journey-chip[data-habit="move"]').click();
     await page.waitForSelector(".journey-cover");
     const cover = await page.locator(".journey-cover").innerText();
     assert.match(cover, /4\s*次打卡/);
@@ -229,8 +229,9 @@ const shift = (key, days) => {
     assert.match(await todayCover.innerText(), /Evening walk/);
     assert.ok((await todayCover.locator("img").count()) >= 1);
     await page.locator('[data-book-filter="month"]').selectOption(lastMonth.slice(0, 7));
-    await page.waitForFunction(() => document.querySelectorAll(".day-cover").length === 1);
-    assert.match(await page.locator(".day-cover").innerText(), /上个月的一天/);
+    // (Sample days may also fall in last month; this test's own day is there.)
+    await page.waitForFunction(() => [...document.querySelectorAll(".day-cover")].some((el) => /上个月的一天/.test(el.innerText)));
+    assert.equal(await page.locator(`.day-cover[data-date="${today}"]`).count(), 0, "this month's days are filtered out");
     await page.locator('[data-book-filter="date"]').fill(today);
     await page.waitForFunction((d) => document.querySelectorAll(".day-cover").length === 1 && document.querySelector(".day-cover").dataset.date === d, today);
     await page.locator('[data-book-filter="date"]').fill("2001-01-01");
@@ -249,7 +250,7 @@ const shift = (key, days) => {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${target} ${width}`);
       }
       await nav("growth");
-      await page.locator('[data-action="habit-journey"][data-habit="move"]').click();
+      await page.locator('.journey-chip[data-habit="move"]').click();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `journey ${width}`);
     }
     if (process.env.SCREENSHOT_DIR) {

@@ -1,3 +1,4 @@
+import { smartLayout } from "./smart-layout.mjs";
 export function dateKey(value = new Date()) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
@@ -22,6 +23,72 @@ export function sceneOfDay(ids, day = dateKey()) {
   if (!ids?.length) return "";
   const n = Math.floor(Date.parse(`${day}T12:00:00Z`) / 86400000);
   return ids[((n % ids.length) + ids.length) % ids.length];
+}
+// Sample days (seed.sampleDays): a few pages over the past two weeks, so a
+// new journal shows what the app can make. All marked isDemo — they are
+// never shared, can be removed in Settings, and are added only to empty
+// dates. state.samplesAdded remembers the version so they come back only
+// once (and never after being removed).
+export function addSampleDays(state, seed, today = dateKey()) {
+  const version = Number(seed?.samplesVersion) || 0;
+  if (!seed?.sampleDays?.length || (Number(state.samplesAdded) || 0) >= version) return 0;
+  const taken = new Set([...state.entries.map((e) => e.date), ...Object.keys(state.drafts || {})]);
+  let added = 0;
+  for (const day of seed.sampleDays) {
+    const date = addDays(today, day.dayOffset);
+    if (taken.has(date) || state.entries.some((e) => e.id === day.id)) continue;
+    const moments = day.pages.map((pageSeed, index) => {
+      const moment = {
+        id: `${day.id}-${index + 1}`,
+        title: pageSeed.title || "",
+        body: pageSeed.body || "",
+        time: pageSeed.time || "",
+        mood: "",
+        tags: [],
+        bookId: pageSeed.bookId,
+        template: "minimal",
+        font: "system",
+        layers: [],
+        media: [],
+        layoutTemplate: pageSeed.layout === "smart" ? "smart" : pageSeed.layout === "line" ? "line" : "text",
+        isDemo: true,
+      };
+      if (pageSeed.backdrop) moment.backdrop = pageSeed.backdrop;
+      if (pageSeed.layout === "smart") {
+        const photos = pageSeed.photos || [];
+        moment.layoutVariant = pageSeed.variant || 0;
+        const slots = smartLayout(photos.map(([, aspect]) => aspect), moment.layoutVariant);
+        moment.layers = photos.map(([id, aspect], i) => ({ id: `${moment.id}-p${i + 1}`, kind: "photo", text: id, mediaRef: `photo:${id}`, aspect, scale: 1, crop: { x: 50, y: 50, zoom: 1 }, ...slots[i] }));
+      }
+      return moment;
+    });
+    state.entries.push({
+      id: day.id,
+      date,
+      title: "",
+      body: "",
+      mood: day.mood || "",
+      bookId: day.pages[0]?.bookId || "daily",
+      photo: "",
+      template: "minimal",
+      font: "system",
+      layers: [],
+      media: [],
+      moments,
+      isDemo: true,
+      updatedAt: new Date().toISOString(),
+    });
+    added++;
+  }
+  state.samplesAdded = version;
+  return added;
+}
+// Removes every sample day (and sample drafts); the user's own days stay.
+export function removeSamples(state) {
+  const before = state.entries.length;
+  state.entries = state.entries.filter((entry) => !entry.isDemo);
+  for (const [date, draft] of Object.entries(state.drafts || {})) if (draft.isDemo) delete state.drafts[date];
+  return before - state.entries.length;
 }
 export function createInitialState(seed, today = dateKey()) {
   return normalizeState({
@@ -103,6 +170,26 @@ export function normalizeMoment(moment, entry = {}) {
   moment.collapsed ??= false;
   moment.visibility = "private";
   return moment;
+}
+// The shelf order is the order of state.books (Home shows the same order).
+// Puts a book just before (or after) another one; false if nothing moved.
+export function moveBookTo(state, bookId, targetId, after = false) {
+  const books = state.books || [];
+  const from = books.findIndex((book) => book.id === bookId);
+  if (from < 0 || bookId === targetId || !books.some((book) => book.id === targetId)) return false;
+  const [book] = books.splice(from, 1);
+  const at = books.findIndex((item) => item.id === targetId) + (after ? 1 : 0);
+  books.splice(at, 0, book);
+  return books.indexOf(book) !== from;
+}
+// One step earlier (-1) or later (+1) on the shelf.
+export function stepBook(state, bookId, delta) {
+  const books = state.books || [];
+  const from = books.findIndex((book) => book.id === bookId);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= books.length) return false;
+  [books[from], books[to]] = [books[to], books[from]];
+  return true;
 }
 export function saveBook(state, book) {
   if (!book.title.trim() || !book.category.trim())
@@ -306,6 +393,7 @@ export class Store {
         throw new Error("本地记录格式不兼容，请先备份浏览器数据。");
       this.state = normalizeState(validateStateSnapshot(parsed));
     } else this.state = createInitialState(seed, today);
+    if (addSampleDays(this.state, seed, today)) this.state = normalizeState(this.state);
   }
   update(change) {
     if (this.storage.getItem("little-days.v1") !== this.baselineRaw) {

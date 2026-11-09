@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.5",
+    date: "2026-11-09",
+    zh: {
+      title: "书架可以拖动排序，更多示例",
+      items: [
+        "书架上按住书脊拖到想放的位置（电脑上按住直接拖）；首页的书也按这个顺序。抽出一本书后也能「往前放 / 往后放」。英文书名会横着沿书脊排。",
+        "点纸上的标题或文字，下面马上出现字体、字号、颜色；原来的「文字」按钮改名「加文字框」，它是新加一个文字框。",
+        "成长：写过的打卡点「已写」先看内容，里面再点「编辑」；每个习惯的图标变成一本小书，点它就打开成长书。",
+        "加了 6 天示例（咖啡、做饭、旅行、海边……），标着「示例」，在设置里可以一键移除。",
+      ],
+    },
+    en: {
+      title: "Drag to reorder the shelf, more samples",
+      items: [
+        "Hold a spine and drag it to a new place (with a mouse, just drag); Home follows the same order. A pulled-out book can also move earlier / later. English titles now run along the spine.",
+        "Tap a title or words on the page: font, size and colour appear right below. The old “Text” button is now “Text box” — it adds a new box.",
+        "Growth: a written check-in opens to read first, with Edit inside; each habit's icon is a little book that opens its growth book.",
+        "Six sample days (coffee, cooking, travel, the beach…), marked “Sample”, removable in Settings.",
+      ],
+    },
+  },
+  {
     version: "5.4",
     date: "2026-11-09",
     zh: {

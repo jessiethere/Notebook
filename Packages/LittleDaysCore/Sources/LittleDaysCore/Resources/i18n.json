@@ -3056,8 +3056,8 @@
     "en": "Me"
   },
   "shelf.hint": {
-    "zh": "轻点书脊，把想看的那本抽出来",
-    "en": "Tap a spine to pull out the one you want"
+    "zh": "轻点书脊抽出来看；按住拖动可以换位置",
+    "en": "Tap a spine to pull it out; hold and drag to move it"
   },
   "shelf.open": {
     "zh": "打开这本",
@@ -3528,8 +3528,8 @@
     "en": "Photo"
   },
   "add.text": {
-    "zh": "文字",
-    "en": "Text"
+    "zh": "加文字框",
+    "en": "Text box"
   },
   "add.video": {
     "zh": "视频",
@@ -4926,5 +4926,61 @@
   "suggest.parenting.description": {
     "zh": "一点一点长大的你。",
     "en": "Watching you grow, little by little."
+  },
+  "shelf.moved": {
+    "zh": "书架顺序已更新，首页也一样",
+    "en": "Shelf order updated — Home follows it too"
+  },
+  "shelf.moveLabel": {
+    "zh": "调整位置",
+    "en": "Move"
+  },
+  "shelf.moveEarlier": {
+    "zh": "往前放",
+    "en": "Earlier"
+  },
+  "shelf.moveLater": {
+    "zh": "往后放",
+    "en": "Later"
+  },
+  "journey.chip": {
+    "zh": "成长书 · {count} 页",
+    "en": "Growth book · {count}"
+  },
+  "growth.noNoteYet": {
+    "zh": "这次还没写感想，点「编辑」写几句。",
+    "en": "No reflection yet — tap Edit to add a few words."
+  },
+  "type.label": {
+    "zh": "文字样式",
+    "en": "Text style"
+  },
+  "type.smaller": {
+    "zh": "字小一点",
+    "en": "Smaller"
+  },
+  "type.bigger": {
+    "zh": "字大一点",
+    "en": "Bigger"
+  },
+  "samples.title": {
+    "zh": "示例内容",
+    "en": "Samples"
+  },
+  "samples.note": {
+    "zh": "手帐里有 {count} 天示例（标着「示例」），用来看看能做出什么样的页面。它们不会被分享，也可以全部移除；你自己写的不受影响。",
+    "en": "Your journal has {count} sample days (marked “Sample”) to show what pages can look like. They're never shared and can be removed; your own pages stay."
+  },
+  "samples.remove": {
+    "zh": "移除所有示例",
+    "en": "Remove all samples"
+  },
+  "samples.confirm": {
+    "zh": "移除所有示例天？你自己写的内容都会保留。",
+    "en": "Remove all sample days? Everything you wrote stays."
+  },
+  "samples.removed": {
+    "zh": "已移除 {count} 天示例",
+    "en": "Removed {count} sample days"
   }
 }

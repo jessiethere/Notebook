@@ -90,7 +90,7 @@ const scan = (page) =>
     c = (await checks()).filter((x) => x.habitId === "reading");
     assert.equal(c.length, 1);
     assert.equal(c[0].note, "读了两章");
-    assert.equal(await page.locator('.habit-row [data-action="check-note"][data-habit="reading"].has-note').count() >= 1, true);
+    assert.equal(await page.locator('.habit-row .note-button.has-note[data-action="check-view"][data-habit="reading"]').count() >= 1, true);
     // ✎ on a habit not done yet records it together with the note.
     await page.locator('.habit-row [data-action="check-note"][data-habit="move"]').first().tap();
     await page.locator('#dialog-form [name="note"]').fill("散步二十分钟");

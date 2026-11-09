@@ -11442,3 +11442,208 @@ dialog h2,
   font-size: 12px;
   color: var(--t-8a8073, #8a8073);
 }
+
+/* ---------- Reorder the shelf ---------- */
+.bookshelf .spine[data-book] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+.bookshelf .spine.dragging {
+  position: relative;
+  z-index: 20;
+  transition: none;
+  box-shadow: 0 14px 28px var(--c-3c2d1e4d, #3c2d1e4d);
+  cursor: grabbing;
+}
+.bookshelf.reordering .spine:not(.dragging) {
+  transition: transform 0.15s ease;
+}
+.bookshelf .spine.drop-before {
+  box-shadow: -5px 0 0 -1px var(--c-7d8e66, #7d8e66);
+}
+.bookshelf .spine.drop-after {
+  box-shadow: 5px 0 0 -1px var(--c-7d8e66, #7d8e66);
+}
+/* Latin titles lie sideways along the spine, like a real book. */
+.spine.mag-spine .spine-title.latin {
+  writing-mode: vertical-rl;
+  width: auto;
+  max-height: 64%;
+  white-space: nowrap;
+  word-break: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.shelf-move {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+}
+.shelf-move .text-button:disabled {
+  opacity: 0.35;
+}
+
+/* ---------- Type bar (tap words on the paper) ---------- */
+/* Floats just under the pinned page, over what is below it, so showing or
+   hiding it never moves anything. */
+.type-bar {
+  position: absolute;
+  z-index: 9;
+  left: 23px;
+  right: 23px;
+  top: calc(100% - 6px);
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 2px 10px var(--c-3c2d1e1a, #3c2d1e1a);
+}
+.type-bar[hidden] {
+  display: none;
+}
+.type-fonts {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.type-fonts button {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 999px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 15px;
+  color: var(--t-2b2622, #2b2622);
+}
+.type-fonts button.selected,
+.type-row > button:active {
+  border-color: var(--c-2b2622, #2b2622);
+}
+.type-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.type-row > button {
+  min-width: 44px;
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 10px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t-2b2622, #2b2622);
+}
+.type-colors {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.type-colors button {
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--c-ffffff, #ffffff);
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--c-d9d0c2, #d9d0c2);
+}
+.type-colors button.selected {
+  box-shadow: 0 0 0 2px var(--c-2b2622, #2b2622);
+}
+
+/* ---------- Growth: the habit's little book, a check-in to read ---------- */
+.habit-row .habit-book {
+  position: relative;
+  width: 46px;
+  height: 52px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px 12px 12px 6px;
+  box-shadow: inset 4px 0 0 var(--c-0000001a, #0000001a), 0 2px 6px var(--c-3c2d1e1f, #3c2d1e1f);
+  cursor: pointer;
+}
+.habit-row .habit-book svg {
+  width: 22px;
+  height: 22px;
+}
+.habit-book-count {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-2b2622, #2b2622);
+  color: var(--t-ffffff, #ffffff);
+  font: 600 11px/20px -apple-system, "PingFang SC", sans-serif;
+  font-style: normal;
+  text-align: center;
+}
+.journey-chip {
+  font-size: 12px;
+  font-weight: 600;
+}
+.check-view-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  text-align: left;
+}
+.check-view-head .habit-book {
+  width: 46px;
+  height: 52px;
+}
+.check-view-head small {
+  font-size: 12px;
+  color: var(--t-8a8073, #8a8073);
+}
+.check-view-head h2 {
+  margin: 2px 0;
+  text-align: left;
+}
+.check-view-facts {
+  margin: 0;
+  font-size: 13px;
+  color: var(--t-6f675d, #6f675d);
+}
+.check-view-photo {
+  display: block;
+  width: 100%;
+  max-height: 46dvh;
+  margin: 12px 0 4px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+.check-view-note {
+  margin: 12px 0 8px;
+  font-size: 16px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--t-2b2622, #2b2622);
+}
+.check-view-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.home-mag .habit-row .habit-symbol.habit-book {
+  width: 44px;
+  height: 50px;
+  border-radius: 6px 12px 12px 6px;
+}

@@ -420,6 +420,8 @@ async function noOverflow(page, label) {
     await page.locator('#dialog-form .mood-radio:has(input[value="✨"])').click();
     await page.locator('#dialog-form [type="submit"]').click();
     await page.locator(`.note-button[data-habit="move"][data-date="${today}"]`).first().click();
+    // A written check-in opens to read first; Edit is inside.
+    await page.locator('.check-view [data-action="check-note"]').click();
     assert.equal(await page.locator('#dialog-form [name="detail"]').inputValue(), "Lower Body");
     assert.equal(await page.locator('#dialog-form [name="note"]').inputValue(), "今天左腿的发力感明显比之前好。");
     assert.equal(await page.locator('#dialog-form [name="shareNote"]').isChecked(), false);

@@ -199,6 +199,9 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var bookId: String?
     public var template: String?
     public var font: String?
+    // V5.5: the look of this page's title and words (type bar).
+    public var textStyle: JournalTextStyle?
+    public var bodyStyle: JournalTextStyle?
     public var layers: [StickerLayer]?
     public var media: [JournalMedia]?
     public var collapsed: Bool?
@@ -230,6 +233,8 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var media: [JournalMedia]?
     public var fieldValues: [String: JSONValue]?
     public var textStyle: JournalTextStyle?
+    // V5.5: size / colour chosen for the page's words in the type bar.
+    public var bodyStyle: JournalTextStyle?
     public var bodyFont: String?
     public var visibility: String?
     public var moments: [JournalMoment]?

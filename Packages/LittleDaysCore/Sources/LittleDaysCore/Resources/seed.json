@@ -89,5 +89,184 @@
     "mountain-lake",
     "autumn-leaves",
     "birthday-cake"
-  ]
+  ],
+  "sampleDays": [
+    {
+      "id": "sample-coffee-friends",
+      "dayOffset": -1,
+      "mood": "☀️",
+      "pages": [
+        {
+          "bookId": "daily",
+          "time": "15:20",
+          "title": "周末和朋友喝咖啡",
+          "layout": "smart",
+          "variant": 0,
+          "photos": [
+            [
+              "coffee-cheers",
+              1.499
+            ],
+            [
+              "latte-art",
+              0.667
+            ],
+            [
+              "corner-cafe",
+              1.513
+            ]
+          ]
+        },
+        {
+          "bookId": "daily",
+          "time": "21:40",
+          "title": "睡前读了几页书",
+          "body": "今天读到一句话：慢一点也没关系，重要的是一直在路上。\n明天想早点起床。",
+          "layout": "text"
+        }
+      ]
+    },
+    {
+      "id": "sample-pizza",
+      "dayOffset": -3,
+      "mood": "🍕",
+      "pages": [
+        {
+          "bookId": "food",
+          "time": "19:05",
+          "title": "第一次自己做披萨",
+          "layout": "smart",
+          "variant": 1,
+          "photos": [
+            [
+              "pizza",
+              0.828
+            ],
+            [
+              "home-dinner",
+              1.499
+            ]
+          ]
+        },
+        {
+          "bookId": "food",
+          "time": "20:30",
+          "title": "草莓季到了",
+          "layout": "line",
+          "backdrop": "photo:strawberry-cups"
+        }
+      ]
+    },
+    {
+      "id": "sample-lake",
+      "dayOffset": -5,
+      "mood": "🌿",
+      "pages": [
+        {
+          "bookId": "travel",
+          "time": "07:10",
+          "title": "湖边的清晨，安静得只听见风",
+          "layout": "line",
+          "backdrop": "photo:mirror-lake"
+        },
+        {
+          "bookId": "travel",
+          "time": "16:45",
+          "title": "一路向前",
+          "layout": "smart",
+          "variant": 2,
+          "photos": [
+            [
+              "hot-air-balloons",
+              1.499
+            ],
+            [
+              "open-road",
+              0.667
+            ],
+            [
+              "tent-view",
+              1.499
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-rain",
+      "dayOffset": -7,
+      "mood": "☁️",
+      "pages": [
+        {
+          "bookId": "daily",
+          "time": "14:00",
+          "title": "下雨天",
+          "body": "窗外一直在下雨，泡了一杯热茶。\n什么都不做的下午，也挺好。",
+          "layout": "text"
+        }
+      ]
+    },
+    {
+      "id": "sample-beach",
+      "dayOffset": -9,
+      "mood": "🌊",
+      "pages": [
+        {
+          "bookId": "travel",
+          "time": "18:20",
+          "title": "海边的周末",
+          "layout": "smart",
+          "variant": 0,
+          "photos": [
+            [
+              "beach-sunset",
+              1.504
+            ],
+            [
+              "waves",
+              0.562
+            ],
+            [
+              "beach-day",
+              1.499
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-desk",
+      "dayOffset": -12,
+      "mood": "✨",
+      "pages": [
+        {
+          "bookId": "daily",
+          "time": "10:30",
+          "title": "把书桌收拾干净了",
+          "layout": "smart",
+          "variant": 1,
+          "photos": [
+            [
+              "desk-corner",
+              1.499
+            ]
+          ]
+        },
+        {
+          "bookId": "food",
+          "time": "12:15",
+          "title": "早午餐",
+          "layout": "smart",
+          "variant": 2,
+          "photos": [
+            [
+              "brunch",
+              1.499
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "samplesVersion": 2
 }

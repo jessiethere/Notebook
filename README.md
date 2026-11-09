@@ -100,7 +100,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**85 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`collab` 二十六套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**88 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`collab` 二十七套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -140,6 +140,7 @@ npm run test:browser:v50
 npm run test:browser:v51
 npm run test:browser:v52
 npm run test:browser:v53
+npm run test:browser:v54
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -157,6 +158,13 @@ npm run test:browser:v53
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 书架拖动排序、纸上直接改字体、成长先看后改、更多示例（V5.5）
+
+- 书架：按住书脊拖到想放的位置（电脑上直接拖），首页的书也按这个顺序；抽出一本书后也能「往前放 / 往后放」。英文书名沿书脊横排。
+- 点纸上的标题或文字，下面马上出现字体、字号、颜色；「加文字框」才是新加一个文字框。
+- 成长：写过的打卡先显示内容，里面再点「编辑」；习惯图标是一本小书，点它打开成长书。
+- 新增 6 天示例，标着「示例」，设置里可以一键移除。
 
 ### 2026-11-09 — 一个人记，家人一起看（V5.4）
 

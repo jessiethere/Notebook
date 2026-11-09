@@ -22,7 +22,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await nav("growth");
     await page.waitForSelector(".growth-summary");
     assert.equal(await page.locator(".growth-intro, .milestone, .theme-header").count(), 0, "old blocks gone");
-    assert.equal(await page.locator(".growth-habit.compact").count(), await page.locator('[data-action="habit-journey"]').count());
+    assert.equal(await page.locator(".growth-habit.compact").count(), await page.locator('.journey-chip').count());
     assert.equal(await page.locator('[data-action="new-habit"]').count(), 1, "one add-habit button");
     await page.locator('[data-action="growth-calendar"]').click();
     await page.waitForSelector('[data-action="calendar-mode"][data-mode="growth"][aria-pressed="true"], .calendar');

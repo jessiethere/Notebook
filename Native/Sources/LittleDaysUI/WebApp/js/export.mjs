@@ -265,8 +265,9 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.save();
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillStyle = darkBackdrop ? "#FFFFFF" : "#2F2A26";
-    ctx.font = `500 54px ${font}`;
+    const lineColor = /^#[0-9a-f]{6}$/i.test(editor.textStyle?.color || "") ? editor.textStyle.color : null;
+    ctx.fillStyle = darkBackdrop ? "#FFFFFF" : lineColor || "#2F2A26";
+    ctx.font = `500 ${Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 54}px ${font}`;
     wrapText(ctx, editor.title || "", 540, editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
     if (editor.body) {
       ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#8D857B";
@@ -280,11 +281,13 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
     wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
-    ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#998C7A";
+    const bodyColor = /^#[0-9a-f]{6}$/i.test(editor.bodyStyle?.color || "") ? editor.bodyStyle.color : null;
+    ctx.fillStyle = bodyColor || (darkBackdrop ? "#E9E4F5" : "#998C7A");
     const bodyFont = options.fontFamily
       ? options.fontFamily(editor.bodyFont || editor.font, options.catalog)
       : font;
-    ctx.font = `34px ${bodyFont}`;
+    const bodySize = Number(editor.bodyStyle?.size) >= 10 ? Math.min(60, Number(editor.bodyStyle.size)) * 3.375 : 34;
+    ctx.font = `${bodySize}px ${bodyFont}`;
     wrapText(ctx, editor.body || "", 129, 1110, 820, 58, 3);
     ctx.font = "125px sans-serif";
     ctx.fillText(editor.mood || "", 875, 820);
@@ -397,8 +400,8 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.shadowBlur = 0;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillStyle = "#2F2A26";
-    ctx.font = `500 52px ${font}`;
+    ctx.fillStyle = /^#[0-9a-f]{6}$/i.test(editor.textStyle?.color || "") ? editor.textStyle.color : "#2F2A26";
+    ctx.font = `500 ${Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 52}px ${font}`;
     wrapText(ctx, editor.title, 540, 1196, 860, 64, 1);
     ctx.restore();
   }

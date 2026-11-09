@@ -94,6 +94,9 @@ import {
   toggleCheck,
   saveEntry,
   saveBook,
+  moveBookTo,
+  removeSamples,
+  stepBook,
   normalizeState,
 } from "./js/model.mjs";
 
@@ -396,7 +399,8 @@ function habitRow(habit, date) {
   const done = state().checks.find(
     (check) => check.habitId === habit.id && check.date === date,
   );
-  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div><button class="note-button ${done?.note || done?.photo || done?.detail ? "has-note" : ""}" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done?.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">${icon(done?.photo ? "photo" : "pen")}<span>${t(done?.note || done?.photo || done?.detail ? "growth.noteShort" : "growth.addShort")}</span></button><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
+  const pages = state().checks.filter((check) => check.habitId === habit.id).length;
+  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><button class="habit-symbol habit-book" data-action="habit-journey" data-habit="${esc(habit.id)}" aria-label="${esc(t("journey.open"))} · ${esc(habit.title)}">${themeIcon(habit.theme)}${pages ? `<i class="habit-book-count">${pages}</i>` : ""}</button><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div><button class="note-button ${done?.note || done?.photo || done?.detail ? "has-note" : ""}" data-action="${done?.note || done?.photo || done?.detail ? "check-view" : "check-note"}" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done?.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">${icon(done?.photo ? "photo" : "pen")}<span>${t(done?.note || done?.photo || done?.detail ? "growth.noteShort" : "growth.addShort")}</span></button><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
 // One cover per day in a book: photos, date, mood and that day's Moments.
@@ -620,7 +624,7 @@ function growthPage() {
     .map((h) => {
       const count = weeklyCount(state(), h.id, today),
         pages = state().checks.filter((c) => c.habitId === h.id).length;
-      return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">📖 ${pages}</button></div></section>`;
+      return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">${t("journey.chip", { count: pages })} ›</button></div></section>`;
     })
     .join("");
   return `<header class="page-top"><div><h1 class="page-title">${t("growth.title")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header>${summary}${cards || `<div class="empty">${t("growth.none")}<br><button class="primary" data-action="new-habit">${t("growth.new")}</button></div>`}${reflectionsHTML(today)}${checkHistoryHTML()}`;
@@ -705,7 +709,7 @@ function shelfHTML(books = state().books, canAdd = true) {
     // under a dark veil, the title in bold white, the issue number below.
     if (MAGAZINE_COVERS.includes(book.coverTemplate)) {
       const photo = safePhoto(coverPhotoRef(book, catalog));
-      return `<button class="spine mag-spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)}">${photo ? `<img class="spine-photo" src="${esc(photo)}" alt="" loading="lazy">` : ""}<span class="spine-brand">LD</span><span class="spine-title" style="--n:${Math.max(5, [...String(book.title || "")].length)}">${esc(book.title)}</span><small>NO.${String(count).padStart(2, "0")}</small></button>`;
+      return `<button class="spine mag-spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)}">${photo ? `<img class="spine-photo" src="${esc(photo)}" alt="" loading="lazy">` : ""}<span class="spine-brand">LD</span><span class="spine-title ${/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(book.title || "") ? "" : "latin"}" style="--n:${Math.max(5, [...String(book.title || "")].length)}">${esc(book.title)}</span><small>NO.${String(count).padStart(2, "0")}</small></button>`;
     }
     const sticker = book.coverDecoration && book.coverDecoration !== "none" ? stickerURL(book.coverDecoration, catalog) : "";
     return `<button class="spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${sticker ? `<img src="${esc(sticker)}" alt="">` : "<i></i>"}<span class="spine-title">${esc(book.title)}</span><small>${count}</small></button>`;
@@ -717,11 +721,111 @@ function shelfHTML(books = state().books, canAdd = true) {
     ? (() => {
         const count = bookEntryCount(state(), pulled.id);
         const shown = Community.isShowcased(social(), pulled.id);
-        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button></div></section>`;
+        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><div class="shelf-move" role="group" aria-label="${t("shelf.moveLabel")}"><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="-1" ${state().books[0]?.id === pulled.id ? "disabled" : ""}>‹ ${t("shelf.moveEarlier")}</button><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="1" ${state().books.at(-1)?.id === pulled.id ? "disabled" : ""}>${t("shelf.moveLater")} ›</button></div></div></section>`;
       })()
     : `<p class="shelf-hint">${t("shelf.hint")}</p>`;
   return `${stage}<div class="bookshelf">${rows.map((row) => `<div class="shelf-row"><div class="shelf-books">${row.join("")}</div><div class="shelf-plank"></div></div>`).join("")}</div>`;
 }
+// ---------- Drag a spine to reorder the shelf ----------
+// Mouse / pen: press and move. Touch: hold a moment, then drag (a quick
+// swipe still scrolls the page). Dropping puts the book before or after the
+// spine under the finger; Home lists the books in the same order.
+let shelfDrag = null;
+function spineAt(x, y, except) {
+  let best = null;
+  for (const el of document.querySelectorAll(".bookshelf .spine[data-book]")) {
+    if (el.dataset.book === except) continue;
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2,
+      cy = r.top + r.height / 2;
+    const d = Math.hypot((x - cx) / Math.max(r.width, 1), ((y - cy) / Math.max(r.height, 1)) * 2.2);
+    if (!best || d < best.d) best = { el, d, after: x > cx };
+  }
+  return best;
+}
+function startShelfDrag() {
+  if (!shelfDrag || shelfDrag.active) return;
+  shelfDrag.active = true;
+  shelfDrag.el.classList.add("dragging");
+  document.querySelector(".bookshelf")?.classList.add("reordering");
+}
+function endShelfDrag(drop) {
+  const drag = shelfDrag;
+  shelfDrag = null;
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  document.querySelectorAll(".bookshelf .drop-before, .bookshelf .drop-after").forEach((el) => el.classList.remove("drop-before", "drop-after"));
+  document.querySelector(".bookshelf")?.classList.remove("reordering");
+  drag.el.classList.remove("dragging");
+  drag.el.style.transform = "";
+  if (!drag.active) return;
+  // The click that follows a drag must not pull the book out.
+  suppressShelfUntil = Date.now() + 350;
+  if (drop && drag.target) {
+    let moved = false;
+    store.update((next) => (moved = moveBookTo(next, drag.id, drag.target.id, drag.target.after)));
+    if (moved) {
+      logEvent("book_reorder", { kind: "drag" });
+      toast(t("shelf.moved"));
+    }
+  }
+  render();
+}
+let suppressShelfUntil = 0;
+document.addEventListener(
+  "click",
+  (event) => {
+    if (Date.now() < suppressShelfUntil && event.target.closest?.(".bookshelf")) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressShelfUntil = 0;
+    }
+  },
+  true,
+);
+document.addEventListener("pointerdown", (event) => {
+  // A new press is a new gesture: only the click right after a drop is eaten.
+  suppressShelfUntil = 0;
+  const el = event.target.closest?.(".bookshelf .spine[data-book]");
+  if (!el || page !== "books" || event.button > 0) return;
+  shelfDrag = { id: el.dataset.book, el, x: event.clientX, y: event.clientY, pointerId: event.pointerId, touch: event.pointerType === "touch", active: false, target: null };
+  // Touch: a short hold starts the drag, so swiping the page still scrolls.
+  if (shelfDrag.touch) shelfDrag.timer = setTimeout(startShelfDrag, 280);
+});
+document.addEventListener("pointermove", (event) => {
+  if (!shelfDrag || event.pointerId !== shelfDrag.pointerId) return;
+  const dx = event.clientX - shelfDrag.x,
+    dy = event.clientY - shelfDrag.y;
+  if (!shelfDrag.active) {
+    if (shelfDrag.touch) {
+      // Moved before the hold finished: it is a scroll, not a drag.
+      if (Math.hypot(dx, dy) > 8) endShelfDrag(false);
+      return;
+    }
+    if (Math.hypot(dx, dy) < 6) return;
+    startShelfDrag();
+  }
+  event.preventDefault();
+  shelfDrag.el.style.transform = `translate(${dx}px, ${dy}px) rotate(${Math.max(-8, Math.min(8, dx / 12))}deg) scale(1.06)`;
+  const hit = spineAt(event.clientX, event.clientY, shelfDrag.id);
+  document.querySelectorAll(".bookshelf .drop-before, .bookshelf .drop-after").forEach((el) => el.classList.remove("drop-before", "drop-after"));
+  shelfDrag.target = hit ? { id: hit.el.dataset.book, after: hit.after } : null;
+  if (hit) hit.el.classList.add(hit.after ? "drop-after" : "drop-before");
+});
+document.addEventListener("pointerup", (event) => {
+  if (shelfDrag && event.pointerId === shelfDrag.pointerId) endShelfDrag(true);
+});
+document.addEventListener("pointercancel", (event) => {
+  if (shelfDrag && event.pointerId === shelfDrag.pointerId) endShelfDrag(false);
+});
+// While a spine is held, the page must not scroll under the finger (iOS).
+document.addEventListener(
+  "touchmove",
+  (event) => {
+    if (shelfDrag?.active) event.preventDefault();
+  },
+  { passive: false },
+);
 function openProfile() {
   page = "books";
   booksView = "profile";
@@ -1091,6 +1195,114 @@ function placeCaret(element, offset) {
 // Words typed on the paper are saved without redrawing it (the caret stays);
 // one undo step covers one stretch of typing.
 let inlineTyping = false;
+// ---------- Type bar: tap words on the paper, change their look right there ----------
+// Shown while a title, the words or a text box on the paper is being typed
+// in. Buttons keep the caret where it is (no re-render): the change is made
+// on the page and on the text on screen together, and it can be undone.
+const TYPE_FONTS = [
+  ["system", "黑体", "Sans"],
+  ["serif", "宋体", "Serif"],
+  ["zh-wenkai", "文楷", "WenKai"],
+  ["zh-kuaile", "快乐体", "KuaiLe"],
+  ["zh-xiaowei", "小薇", "XiaoWei"],
+  ["handwritten", "Caveat", "Caveat"],
+];
+const TYPE_COLORS = ["#2B2622", "#6F675D", "#7D8E66", "#B5838D", "#6D8299", "#C08B5C"];
+let typeTarget = null; // { kind: "title" | "body" | "layer", id? }
+function typeBarHTML() {
+  const en = languageCode() === "en";
+  return `<div class="type-bar" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}"><div class="type-fonts">${TYPE_FONTS.map(([id, zh, enName]) => `<button type="button" data-type-font="${id}" style="font-family:${esc(fontFamily(id, catalog))}">${en ? enName : zh}</button>`).join("")}</div><div class="type-row"><button type="button" data-type-size="-2" aria-label="${t("type.smaller")}">A−</button><button type="button" data-type-size="2" aria-label="${t("type.bigger")}">A+</button><span class="type-colors">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-label="${c}"></button>`).join("")}</span></div></div>`;
+}
+function typeTargetOf(el) {
+  if (!el?.closest?.("#journal-canvas")) return null;
+  if (el.dataset.inlineLayer) return { kind: "layer", id: el.dataset.inlineLayer };
+  if (el.dataset.inline === "title" || el.dataset.inline === "body") return { kind: el.dataset.inline };
+  return null;
+}
+function syncTypeBar() {
+  const bar = $("#type-bar");
+  if (!bar || !typeTarget) return;
+  const p = activePage();
+  const layer = typeTarget.kind === "layer" ? p.layers.find((l) => l.id === typeTarget.id) : null;
+  const font = layer ? layer.fontId || p.font : p.font;
+  bar.querySelectorAll("[data-type-font]").forEach((b) => b.classList.toggle("selected", b.dataset.typeFont === (font || "serif")));
+  const style = layer ? { color: layer.color } : typeTarget.kind === "title" ? p.textStyle : p.bodyStyle;
+  bar.querySelectorAll("[data-type-color]").forEach((b) => b.classList.toggle("selected", (style?.color || "").toLowerCase() === b.dataset.typeColor.toLowerCase()));
+}
+document.addEventListener("focusin", (event) => {
+  const target = typeTargetOf(event.target);
+  const bar = $("#type-bar");
+  if (!bar) return;
+  if (target) {
+    typeTarget = target;
+    bar.hidden = false;
+    syncTypeBar();
+  }
+});
+document.addEventListener("focusout", (event) => {
+  if (!typeTargetOf(event.target)) return;
+  // Tapping the bar keeps the caret (see pointerdown below); anything else hides it.
+  setTimeout(() => {
+    if (!typeTargetOf(document.activeElement) && $("#type-bar")) {
+      $("#type-bar").hidden = true;
+      typeTarget = null;
+    }
+  }, 0);
+});
+document.addEventListener("pointerdown", (event) => {
+  if (event.target.closest?.("#type-bar")) event.preventDefault();
+});
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("#type-bar button");
+  if (!button || !typeTarget) return;
+  const focused = document.activeElement;
+  const p = activePage();
+  const canvas = $("#journal-canvas");
+  const width = canvas?.getBoundingClientRect().width || 1;
+  const currentSize = (el) => (parseFloat(getComputedStyle(el).fontSize) / width) * 100 * 3.2;
+  const layerEl = typeTarget.kind === "layer" ? canvas?.querySelector(`[data-layer="${CSS.escape(typeTarget.id)}"]`) : null;
+  const textEl = typeTarget.kind === "layer" ? layerEl : canvas?.querySelector(`[data-inline="${typeTarget.kind}"]`);
+  if (!textEl) return;
+  if (button.dataset.typeFont) {
+    const id = button.dataset.typeFont;
+    inlineChange(() => {
+      const page = activePage();
+      if (typeTarget.kind === "layer") {
+        const layer = page.layers.find((l) => l.id === typeTarget.id);
+        if (layer) layer.fontId = id;
+      } else page.font = id;
+    });
+    if (typeTarget.kind === "layer") textEl.style.fontFamily = fontFamily(id, catalog);
+    else canvas.querySelectorAll("[data-inline]").forEach((el) => (el.style.fontFamily = fontFamily(id, catalog)));
+  }
+  if (button.dataset.typeSize) {
+    const next = Math.round(Math.min(60, Math.max(10, currentSize(textEl) + Number(button.dataset.typeSize))));
+    inlineChange(() => {
+      const page = activePage();
+      if (typeTarget.kind === "layer") {
+        const layer = page.layers.find((l) => l.id === typeTarget.id);
+        if (layer) layer.fontSize = next;
+      } else if (typeTarget.kind === "title") page.textStyle = { ...(page.textStyle || {}), size: next };
+      else page.bodyStyle = { ...(page.bodyStyle || {}), size: next };
+    });
+    textEl.style.fontSize = `${next / 3.2}cqw`;
+  }
+  if (button.dataset.typeColor) {
+    const color = button.dataset.typeColor;
+    inlineChange(() => {
+      const page = activePage();
+      if (typeTarget.kind === "layer") {
+        const layer = page.layers.find((l) => l.id === typeTarget.id);
+        if (layer) layer.color = color;
+      } else if (typeTarget.kind === "title") page.textStyle = { ...(page.textStyle || {}), color };
+      else page.bodyStyle = { ...(page.bodyStyle || {}), color };
+    });
+    textEl.style.color = color;
+  }
+  inlineTyping = false; // each tap on the bar is its own undo step
+  syncTypeBar();
+  if (focused && focused !== document.activeElement) focused.focus({ preventScroll: true });
+});
 function inlineChange(change) {
   if (!inlineTyping) {
     history.push(structuredClone(editor));
@@ -1711,7 +1923,7 @@ function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1977,7 +2189,9 @@ function openWhatsNew() {
 }
 function labsCardHTML() {
   const on = labsOn();
-  return `<section class="settings-card news-card"><h2>${t("news.title")}</h2><p>${t("news.current", { version: LATEST })}</p><button class="secondary" data-action="whats-new">${t("news.see")}</button></section><section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
+  const samples = state().entries.filter((e) => e.isDemo).length;
+  const samplesCard = samples ? `<section class="settings-card samples-card"><h2>${t("samples.title")}</h2><p>${t("samples.note", { count: samples })}</p><button class="secondary" data-action="samples-remove">${t("samples.remove")}</button></section>` : "";
+  return `${samplesCard}<section class="settings-card news-card"><h2>${t("news.title")}</h2><p>${t("news.current", { version: LATEST })}</p><button class="secondary" data-action="whats-new">${t("news.see")}</button></section><section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
 }
 function themePickerHTML() {
   const current = loadTheme();
@@ -2193,6 +2407,18 @@ function openDialog(kind, payload = null) {
   $("#dialog-form").innerHTML =
     `<h2>${title}</h2><p class="dialog-description">${esc(description)}</p><div class="dialog-fields">${fields}</div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(kind === "duration" ? "dialog.record" : "create")}</button></div>`;
   $("#form-dialog").showModal();
+}
+// A written check-in opens as a little page to read first; Edit is inside.
+function openCheckView(habitId, date) {
+  const habit = state().habits.find((h) => h.id === habitId);
+  const check = state().checks.find((c) => c.habitId === habitId && c.date === date);
+  if (!habit || !check) return openCheckDialog(habitId, date);
+  const photo = safePhoto(check.photo || "");
+  const facts = [check.detail, check.minutes ? t("growth.minutes", { count: check.minutes }) : ""].filter(Boolean);
+  const total = state().checks.filter((c) => c.habitId === habitId).length;
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet check-view"><div class="choose-grabber" aria-hidden="true"></div><header class="check-view-head"><span class="habit-symbol habit-book" aria-hidden="true">${themeIcon(habit.theme)}</span><div><small>${esc(shortDate(date))}${check.mood ? ` · ${esc(check.mood)}` : ""}</small><h2>${esc(habit.title)}</h2>${facts.length ? `<p class="check-view-facts">${esc(facts.join(" · "))}</p>` : ""}</div></header>${photo ? `<img class="check-view-photo" src="${esc(photo)}" alt="">` : ""}${check.note ? `<p class="check-view-note">${esc(check.note)}</p>` : `<p class="save-help">${t("growth.noNoteYet")}</p>`}<p class="save-help">${t("growth.privateNote")}</p><div class="check-view-actions"><button class="secondary" data-action="check-note" data-habit="${esc(habitId)}" data-date="${esc(date)}">✎ ${t("edit")}</button><button class="primary" data-action="habit-journey" data-habit="${esc(habitId)}">${t("journey.chip", { count: total })} ›</button></div></div>`;
+  dialog.showModal();
 }
 function openCheckDialog(habitId, date) {
   const habit = state().habits.find((h) => h.id === habitId);
@@ -2447,6 +2673,18 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "samples-remove") {
+    if (!(await askConfirm(t("samples.confirm")))) return;
+    let removed = 0;
+    store.update((next) => (removed = removeSamples(next)));
+    render();
+    toast(t("samples.removed", { count: removed }));
+  }
+  if (actionName === "book-step") {
+    store.update((next) => stepBook(next, target.dataset.book, Number(target.dataset.dir) || 0));
+    logEvent("book_reorder", { kind: "step" });
+    render();
+  }
   if (actionName === "book-share") await shareBook(target.dataset.book);
   if (actionName === "book-suggest") openSuggestedBook(target.dataset.preset);
   if (actionName === "contribute-interest") {
@@ -3987,6 +4225,7 @@ async function v31Action(target) {
       render();
       return true;
     case "habit-journey":
+      if ($("#choose-dialog").open) $("#choose-dialog").close();
       openJourney(target.dataset.habit, 0);
       $("#app-scroll").scrollTop = 0;
       return true;
@@ -4205,7 +4444,11 @@ async function v31Action(target) {
       return true;
     }
     case "check-note":
+      if ($("#choose-dialog").open) $("#choose-dialog").close();
       openCheckDialog(target.dataset.habit, target.dataset.date);
+      return true;
+    case "check-view":
+      openCheckView(target.dataset.habit, target.dataset.date);
       return true;
     case "check-photo":
       chooseAttachment({ kind: "check-photo" });
