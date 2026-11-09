@@ -92,6 +92,9 @@ public struct PhotoAsset: Decodable, Identifiable {
     public let nameZh: String
     public let nameEn: String
     public let file: String
+    /// Pixel size of the bundled file (its own shape: landscape or portrait).
+    public let w: Int?
+    public let h: Int?
     public let source: String
     public let license: String
     /// Also offered as a whole-page background ("照片氛围").

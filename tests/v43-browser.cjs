@@ -76,7 +76,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     // From the chooser, a collection opens the swipe sheet.
     await page.locator('.stage-bar [data-action="add-photos"], #journal-canvas [data-action="add-photos"]').first().tap();
     await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="coffee"]').tap();
-    await page.waitForSelector("#scene-dialog[open] .wall-big");
+    await page.waitForSelector("#scene-dialog[open] .pb-tile");
     assert.equal(await page.locator("#choose-dialog[open]").count(), 0);
     await page.locator('[data-action="scene-close"]').tap();
     passed.push("＋照片 → album (multi) / today's picks / library collections");

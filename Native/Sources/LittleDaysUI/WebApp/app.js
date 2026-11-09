@@ -1350,19 +1350,45 @@ function sceneLibraryHTML() {
     })
     .join("")}</section>`;
 }
-function openSceneCollection(id) {
-  const c = sceneCollections().find((item) => item.id === id);
-  if (!c) return;
+// Photo browser (like a poster app): the chosen photo large in its own shape
+// on top, the collections as tabs, and a two-column waterfall of photos that
+// keep their own shape (landscape / portrait is visible at a glance).
+let browse = { collection: "", pick: "" };
+function photoShape(photo) {
+  if (!photo?.w || !photo?.h) return "";
+  return t(photo.w > photo.h * 1.05 ? "photo.landscape" : photo.h > photo.w * 1.05 ? "photo.portrait" : "photo.square");
+}
+function photoBrowserHTML() {
   const en = languageCode() === "en";
+  const collection = sceneCollections().find((c) => c.id === browse.collection) || sceneCollections()[0];
+  const list = collectionScenes(collection.id);
+  const pick = list.find((p) => p.id === browse.pick) || list[0];
   const today = todayScene();
+  const ratio = (p) => (p?.w && p?.h ? `${p.w} / ${p.h}` : "4 / 5");
+  return `<div class="pb-sheet"><header class="pb-top"><button class="pb-close" data-action="scene-close" aria-label="${t("close")}">×</button><h2>${esc(en ? collection.nameEn : collection.nameZh)}</h2><button class="pb-use wall-use" data-action="use-scene" data-scene="${esc(pick.id)}">${t("scene.useThis")}</button></header><figure class="pb-preview"><img src="${esc(safePhoto(`photo:${pick.id}`))}" alt="${esc(sceneName(pick))}" style="aspect-ratio:${ratio(pick)}"><figcaption><b>${esc(sceneName(pick))}</b><span>${esc(photoShape(pick))}${pick === today ? ` · ${t("scene.today")}` : ""}</span></figcaption></figure><section class="pb-panel"><nav class="pb-tabs" aria-label="${t("scene.title")}">${sceneCollections()
+    .map((c) => `<button data-action="photo-browse" data-collection="${esc(c.id)}" class="${c.id === collection.id ? "selected" : ""}" aria-pressed="${c.id === collection.id}">${esc(en ? c.nameEn : c.nameZh)}</button>`)
+    .join("")}</nav><p class="pb-desc">${esc(en ? collection.descEn : collection.descZh)}</p><div class="pb-grid">${list
+    .map((p) => `<button class="pb-tile ${p.id === pick.id ? "selected" : ""}" data-action="photo-pick" data-photo="${esc(p.id)}" aria-pressed="${p.id === pick.id}" aria-label="${esc(sceneName(p))} · ${esc(photoShape(p))}"><img src="${esc(safePhoto(`photo:${p.id}`))}" alt="" loading="lazy" style="aspect-ratio:${ratio(p)}"><span>${esc(sceneName(p))}</span></button>`)
+    .join("")}</div></section></div>`;
+}
+function renderPhotoBrowser({ keepScroll = true } = {}) {
   const dialog = $("#scene-dialog");
-  dialog.innerHTML = `<div class="wall-sheet"><header><button class="wall-close" data-action="scene-close" aria-label="${t("close")}">×</button><h2>${esc(en ? c.nameEn : c.nameZh)}</h2><span></span></header><p class="wall-desc">${esc(en ? c.descEn : c.descZh)}</p><div class="wall-scroller">${collectionScenes(id)
-    .map(
-      (scene) =>
-        `<figure class="wall-big"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt="" loading="lazy">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<figcaption><b>${esc(sceneName(scene))}</b><button class="wall-use" data-action="use-scene" data-scene="${esc(scene.id)}">${t("scene.useThis")}</button></figcaption></figure>`,
-    )
-    .join("")}</div><p class="wall-hint">${t("scene.swipe")}</p></div>`;
+  const panel = dialog.querySelector(".pb-panel");
+  const top = keepScroll && panel ? panel.scrollTop : 0;
+  const tabs = dialog.querySelector(".pb-tabs")?.scrollLeft || 0;
+  dialog.innerHTML = photoBrowserHTML();
+  dialog.querySelector(".pb-panel").scrollTop = top;
+  const nav = dialog.querySelector(".pb-tabs");
+  nav.scrollLeft = tabs;
+  nav.querySelector(".selected")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function openSceneCollection(id) {
+  if (!sceneCollections().some((item) => item.id === id)) return;
+  browse = { collection: id, pick: "" };
+  const dialog = $("#scene-dialog");
+  dialog.innerHTML = photoBrowserHTML();
   dialog.showModal();
+  renderPhotoBrowser({ keepScroll: false });
 }
 // Quick note, like the Notes app: a title line and the words, nothing else.
 function openNote() {
@@ -1989,6 +2015,14 @@ async function action(target) {
     openSceneCollection(target.dataset.collection);
   }
   if (actionName === "scene-close") $("#scene-dialog").close();
+  if (actionName === "photo-browse") {
+    browse = { collection: target.dataset.collection, pick: "" };
+    renderPhotoBrowser({ keepScroll: false });
+  }
+  if (actionName === "photo-pick") {
+    browse.pick = target.dataset.photo;
+    renderPhotoBrowser();
+  }
   if (actionName === "layer-shape") {
     const shape = target.dataset.shape;
     changeTarget((page) => {

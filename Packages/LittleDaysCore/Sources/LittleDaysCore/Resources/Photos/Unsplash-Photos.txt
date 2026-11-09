@@ -1,7 +1,8 @@
 Little Days photo library (LD-photo-*.jpg)
 
 Photos from Unsplash, used under the Unsplash License: https://unsplash.com/license
-Downloaded once by tools/fetch_photos.py and bundled with the app (800x1000 JPEG crops);
+Downloaded once by tools/fetch_photos.py and bundled with the app (JPEG, original shape,
+long side 1000px);
 the app never loads them from Unsplash at run time. Source of each file:
 
 LD-photo-coffee-cheers.jpg  https://images.unsplash.com/photo-1495474472287-4d71bcdd2085

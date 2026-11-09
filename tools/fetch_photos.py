@@ -8,6 +8,7 @@ Resources/Photos/Unsplash-Photos.txt and to library.json ("photos").
 
     python3 tools/fetch_photos.py            # download missing files + update library.json
     python3 tools/fetch_photos.py --catalog  # only rewrite library.json / the source list
+    python3 tools/fetch_photos.py --refresh  # download every photo again
 
 Gradients, patterns and other artwork are page backgrounds (library.json
 "scenes"), not photos.
@@ -20,7 +21,8 @@ from pathlib import Path
 RES = Path(__file__).resolve().parents[1] / 'Packages/LittleDaysCore/Sources/LittleDaysCore/Resources'
 OUT = RES / 'Photos'
 LICENSE = 'Unsplash-Photos.txt'
-SIZE = 'w=800&h=1000&fit=crop&crop=entropy&q=74&fm=jpg'
+# The photo's own shape (landscape stays landscape), the long side at most 1000px.
+SIZE = 'w=1000&h=1000&fit=max&q=74&fm=jpg'
 
 # collection id: (zh, en, description zh, description en)
 COLLECTIONS = {
@@ -138,6 +140,12 @@ def tone(path):
     return 'dark' if mean < 120 else 'light'
 
 
+def size(path):
+    from PIL import Image
+    with Image.open(path) as image:
+        return image.size
+
+
 def source(unsplash_id):
     return f'https://images.unsplash.com/photo-{unsplash_id}'
 
@@ -147,20 +155,22 @@ def main():
     if '--catalog' not in sys.argv:
         for key, (_, uid, _, _) in PHOTOS.items():
             target = OUT / f'LD-photo-{key}.jpg'
-            if target.exists():
+            if target.exists() and '--refresh' not in sys.argv:
                 continue
             with urllib.request.urlopen(f'{source(uid)}?{SIZE}', timeout=60) as response:
                 target.write_bytes(response.read())
             print('saved', target.name)
     lines = ['Little Days photo library (LD-photo-*.jpg)', '',
              'Photos from Unsplash, used under the Unsplash License: https://unsplash.com/license',
-             'Downloaded once by tools/fetch_photos.py and bundled with the app (800x1000 JPEG crops);',
+             'Downloaded once by tools/fetch_photos.py and bundled with the app (JPEG, original shape,',
+             'long side 1000px);',
              'the app never loads them from Unsplash at run time. Source of each file:', '']
     lines += [f'LD-photo-{key}.jpg  {source(uid)}' for key, (_, uid, _, _) in PHOTOS.items()]
     (OUT / LICENSE).write_text('\n'.join(lines) + '\n', encoding='utf-8')
     library = RES / 'library.json'
     catalog = json.loads(library.read_text(encoding='utf-8'))
     catalog['photos'] = [{'id': key, 'collection': c, 'nameZh': zh, 'nameEn': en, 'file': f'LD-photo-{key}.jpg',
+                          **dict(zip(('w', 'h'), size(OUT / f'LD-photo-{key}.jpg'))),
                           'source': source(uid), 'license': LICENSE,
                           **({'backdrop': True, 'tone': tone(OUT / f'LD-photo-{key}.jpg')} if key in BACKDROPS else {})}
                          for key, (c, uid, zh, en) in PHOTOS.items()]

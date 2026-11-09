@@ -4214,5 +4214,17 @@
   "calendar.bookEmpty": {
     "zh": "这一天「{name}」里还没有记录。",
     "en": "Nothing in “{name}” on this day."
+  },
+  "photo.landscape": {
+    "zh": "横图",
+    "en": "Landscape"
+  },
+  "photo.portrait": {
+    "zh": "竖图",
+    "en": "Portrait"
+  },
+  "photo.square": {
+    "zh": "方图",
+    "en": "Square"
   }
 }

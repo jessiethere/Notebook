@@ -83,12 +83,15 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator("#journal-canvas .photo-placeholder").tap();
     await page.waitForSelector("#choose-dialog[open]");
     await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="coffee"]').tap();
-    await page.waitForSelector("#scene-dialog[open] .wall-big img");
-    await page.waitForFunction(() => { const img = document.querySelector("#scene-dialog .wall-big img"); return img.complete && img.naturalWidth > 0; });
+    await page.waitForSelector("#scene-dialog[open] .pb-tile img");
+    await page.waitForFunction(() => { const img = document.querySelector("#scene-dialog .pb-preview img"); return img.complete && img.naturalWidth > 0; });
     await shot("v44-collection");
-    const latte = page.locator('#scene-dialog .wall-use[data-scene="latte-art"]');
+    // Pick a photo in the waterfall; the big preview and 用这张 follow it.
+    const latte = page.locator('#scene-dialog .pb-tile[data-photo="latte-art"]');
     await latte.scrollIntoViewIfNeeded();
     await latte.tap();
+    await page.waitForSelector('#scene-dialog .pb-use[data-scene="latte-art"]');
+    await page.locator("#scene-dialog .pb-use").tap();
     await page.waitForSelector('#journal-canvas .canvas-photo img[src*="LD-photo-latte-art"]');
     await page.waitForFunction(() => { const img = document.querySelector("#journal-canvas .canvas-photo img"); return img.complete && img.naturalWidth > 0; });
     await shot("v44-photo-on-dark");
