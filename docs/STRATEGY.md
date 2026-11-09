@@ -31,6 +31,7 @@
 | **Shuffles（Pinterest）** | 2022 年邀请制爆红，同年 11 月公开；TechCrunch 报道其后**热度下降** | 说明「做一张好看的拼贴」本身**留不住人**。我们必须让作品**累积**（书 / 回顾），而不是一次性拼贴。 |
 | **Apple / Google 相册「回忆」** **[事实]** | 系统自动把照片做成回忆幻灯片 | 「零操作的漂亮回顾」也有免费替代。我们的区别只能是：**用户自己的文字 + 可收藏的版面 + 按主题成书**。 |
 | **CapCut / Instagram 模板、Canva** **[假设]** | 「不会设计但想要好看」的人，现在大概率在用这些做「photo dump」 | 对「不擅长设计的普通用户」来说，真正的竞品可能是它们，而不是 Zinnia。 |
+| **My Diary – Journal with Lock**（BetterApp Tech，2026-11-09 用户补充） | 以文字为主的日记：一篇 = 标题 + 正文，下面附照片 / 视频 / 录音；日历时间线；贴纸、主题、字体特效、心情记录与分析；密码锁。免费 + 内购（美区列表见年订阅 $19.99、月 VIP $2.99，各来源价格不一致）。第三方统计约 420 万安装、8.3 万评分、4.7 分；截图上的「50 Million+ Users' Choice」**[未核实]**，没找到单个 App 有这个量级的公开数据，可能是开发者多款 App 合计的营销说法 | **它证明了「可爱的日记 + 照片/视频/录音 + 日历」有大量用户**，但这一层已经是标配（我们的 Moments、日历、录音、贴纸它都有）。它**没有**：照片自动排成好看的页、把日子做成一本可以翻的书、整本书 PDF 给家人看、背景音乐。所以不要在「日记功能」上和它比全，而是把「照片 → 好看的页 → 一本书」放到第一屏。它有而我们缺的基本功：**锁（Face ID）**、心情统计、云备份、真正上架的原生 App——锁和备份应并入 F5 / F6。 |
 
 ---
 
@@ -405,6 +406,8 @@
 - [ ] 同意 G3 的边界：只做「今天想做的事」（最多 5 条，不提醒、不顺延），和习惯放在一起，先放实验室？
 
 ## 来源
+
+- My Diary – Journal with Lock：[App Store](https://apps.apple.com/us/app/id1579321589)、[AppGoblin 统计](https://appgoblin.info/apps/1579321589)
 
 - Zinnia：[App Store 页面](https://apps.apple.com/us/app/-/id1485310935)、[Pixite 官网](https://pixiteapps.com/apps/zinnia/)
 - Apple Journal：[9to5Mac：iOS 18 新功能](https://9to5mac.com/heres-everything-new-in-the-journal-app-for-ios-18/)、[9to5Mac：登陆 iPad 和 Mac](https://9to5mac.com/2025/06/17/apples-journal-app-is-coming-to-ipad-and-mac-with-big-upgrades/)、[MacRumors](https://www.macrumors.com/2025/06/09/journal-app-finally-coming-to-mac-and-ipad/)、[WWDC24 Journaling Suggestions](https://developer.apple.com/videos/play/wwdc2024/10209/)
