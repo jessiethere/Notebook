@@ -869,12 +869,166 @@ function templatePickerHTML(page) {
 }
 // Writing comes first: the words of this page are always open under the
 // preview; styling lives in the menu below ("装饰这一页").
+// ---------- Typing right on the paper ----------
+// Two ways to make a story page: 随手写 (a note: the title and words are on the
+// paper, tap and type) and 自由排版 (photos, text boxes and stickers placed
+// freely; the boxes below the paper are its name and a caption).
+function pageModeHTML() {
+  if (isDayPage()) return "";
+  const note = activePage().layoutTemplate === "text";
+  const b = (mode, glyph, on) =>
+    `<button data-action="page-mode" data-mode="${mode}" class="${on ? "selected" : ""}" aria-pressed="${on}">${icon(glyph)}<span>${t("mode." + mode)}</span></button>`;
+  return `<div class="page-mode" role="group" aria-label="${t("mode.label")}">${b("note", "pen", note)}${b("layout", "photo", !note)}</div>`;
+}
+// A note page becomes a free layout: what was written on the paper stays on
+// it as text boxes (the title also stays the page's name in the contents).
+function noteToLayout(page) {
+  page.layoutTemplate = null;
+  const title = (page.title || "").trim();
+  const words = (page.body || "").trim();
+  const box = (text, y, fontSize, color) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize, color, weight: 400, spacing: 0, align: "left" });
+  // Where the note had them, so nothing jumps.
+  if (title) page.layers.push(box(title, 27, 24, "#2F2A26"));
+  if (words) page.layers.push(box(words, title ? 52 : 40, 15, "#5D554B"));
+  page.body = "";
+}
+function setPageMode(mode, { quiet = false } = {}) {
+  if (isDayPage()) return;
+  const note = mode === "note";
+  if ((activePage().layoutTemplate === "text") === note) {
+    if (note) focusInline(activePage().title ? "body" : "title");
+    return;
+  }
+  changeTarget((p) => {
+    if (p === editor) return;
+    if (note) p.layoutTemplate = "text";
+    else noteToLayout(p);
+  });
+  if (!quiet) toast(t(note ? "mode.noteOn" : "mode.layoutOn"));
+  if (note) focusInline(activePage().title ? "body" : "title");
+}
+function focusInline(field) {
+  const el = $(`#journal-canvas [data-inline="${field}"]`);
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+// Tap a text box twice (or add one) and type into it on the paper.
+function editTextLayer(layerId, selectAll = false) {
+  const el = document.querySelector(`#journal-canvas [data-inline-layer="${CSS.escape(layerId || "")}"]`);
+  if (!el) return;
+  try {
+    el.contentEditable = "plaintext-only";
+  } catch {
+    el.contentEditable = "true";
+  }
+  el.closest("[data-layer]")?.classList.add("editing");
+  el.focus({ preventScroll: true });
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  if (!selectAll) range.collapse(false);
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+// Where the caret is inside words on the paper (as a character count), so a
+// redraw can put it back.
+function caretOffset(element) {
+  const selection = getSelection();
+  if (!selection.rangeCount || !element.contains(selection.anchorNode)) return null;
+  const range = selection.getRangeAt(0).cloneRange();
+  range.selectNodeContents(element);
+  range.setEnd(selection.getRangeAt(0).endContainer, selection.getRangeAt(0).endOffset);
+  return range.toString().length;
+}
+function placeCaret(element, offset) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let left = offset;
+  let node = walker.nextNode();
+  const range = document.createRange();
+  while (node && left > node.length) {
+    left -= node.length;
+    node = walker.nextNode();
+  }
+  if (node) range.setStart(node, Math.min(left, node.length));
+  else {
+    range.selectNodeContents(element);
+    range.collapse(false);
+  }
+  range.collapse(true);
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+// Words typed on the paper are saved without redrawing it (the caret stays);
+// one undo step covers one stretch of typing.
+let inlineTyping = false;
+function inlineChange(change) {
+  if (!inlineTyping) {
+    history.push(structuredClone(editor));
+    if (history.length > 30) history.shift();
+    future = [];
+    inlineTyping = true;
+  }
+  change(editor);
+  scheduleDraft();
+}
+function inlineInput(target) {
+  const text = target.innerText.replace(/\n$/, "");
+  if (target.dataset.inlineLayer) {
+    const layerId = target.dataset.inlineLayer;
+    inlineChange(() => {
+      const layer = activePage().layers.find((l) => l.id === layerId);
+      if (layer) layer.text = text.slice(0, 500);
+    });
+    const box = $('[data-layer-text="text"]');
+    if (box && document.activeElement !== box) box.value = text;
+    return;
+  }
+  const field = target.dataset.inline;
+  const value = text.slice(0, Number(target.dataset.max) || 4000);
+  inlineChange(() => {
+    const page = activePage();
+    page[field] = value;
+    if (page !== editor) page.updatedAt = new Date().toISOString();
+  });
+  if (isDayPage()) {
+    const mirror = $(field === "title" ? "#entry-title" : "#entry-body");
+    if (mirror) mirror.value = value;
+  } else {
+    const moment = activePage();
+    const label = document.querySelector(`[data-chapter-label="${CSS.escape(moment.id)}"]`);
+    if (label) label.textContent = (moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled"));
+  }
+}
+document.addEventListener("focusout", (event) => {
+  const el = event.target;
+  if (!el?.dataset || !(el.dataset.inline || el.dataset.inlineLayer)) return;
+  inlineTyping = false;
+  if (el.dataset.inlineLayer) {
+    el.contentEditable = "false";
+    el.closest("[data-layer]")?.classList.remove("editing");
+  }
+  const undo = document.querySelector('[data-action="undo"]');
+  if (undo) undo.disabled = history.length === 0;
+});
 function writeCardHTML() {
   const page = activePage();
   if (isDayPage())
     return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b></div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
   const index = editor.moments.indexOf(page);
-  return `<section class="write-card moment" aria-label="${t("write.title")}"><div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"></div><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}"></section>`;
+  const head = `<div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"></div>`;
+  const tags = `<input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}">`;
+  // A note page: the title and words are on the paper itself.
+  if (page.layoutTemplate === "text")
+    return `<section class="write-card moment note-mode" aria-label="${t("write.title")}">${head}<p class="write-tip">${icon("pen")} ${t("write.noteTip")}</p>${tags}</section>`;
+  // A free layout: the page is the picture; these words go under it.
+  return `<section class="write-card moment" aria-label="${t("write.title")}">${head}<label class="write-label">${t("write.pageName")}</label><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><label class="write-label">${t("write.caption")}</label><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><p class="write-tip">${icon("text")} ${t("write.layoutTip")}</p>${tags}</section>`;
 }
 function studioTools() {
   const page = activePage(),
@@ -1079,7 +1233,8 @@ async function studioStartAction(target) {
       break;
     case "start-words":
       beginStudio(null);
-      (isDayPage() ? $("#entry-title") : $('[data-moment-field="title"]'))?.focus();
+      if (isDayPage()) $("#entry-title")?.focus();
+      else setPageMode("note", { quiet: true });
       break;
     case "start-video":
       beginStudio("media");
@@ -1285,7 +1440,7 @@ function studioPage() {
   if (studioStart) return studioStartHTML();
   const dayPage = isDayPage();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1348,13 +1503,14 @@ function editorClips() {
 // Re-rendering keeps the field you are typing in focused (e.g. after media loads).
 function focusKey(element) {
   if (!element || !$("#app").contains(element)) return null;
-  for (const attr of ["id", "data-moment-field", "data-editor-field", "data-publish", "data-community-search", "data-people-search"])
+  for (const attr of ["id", "data-moment-field", "data-editor-field", "data-inline", "data-inline-layer", "data-publish", "data-community-search", "data-people-search"])
     if (element.hasAttribute(attr)) return `[${attr}="${CSS.escape(element.getAttribute(attr))}"]`;
   return null;
 }
 function render() {
   const focused = focusKey(document.activeElement);
   const caret = focused ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+  const textCaret = focused && document.activeElement.isContentEditable ? caretOffset(document.activeElement) : null;
   const scrollTop = $("#app-scroll").scrollTop;
   releaseLeftScope();
   const signedIn = Account.isSignedIn(account);
@@ -1388,8 +1544,10 @@ function render() {
   $("#app-scroll").scrollTop = scrollTop;
   if (focused) {
     const again = $(`#app ${focused}`);
-    if (again) {
-      again.focus({ preventScroll: true });
+    if (again?.dataset.inlineLayer) editTextLayer(again.dataset.inlineLayer);
+    else if (again) again.focus({ preventScroll: true });
+    if (again && textCaret != null) placeCaret(again, textCaret);
+    else if (again) {
       try {
         if (caret[0] != null) again.setSelectionRange(caret[0], caret[1]);
       } catch {}
@@ -2034,6 +2192,10 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("input", (event) => {
   const target = event.target;
+  if (target.dataset?.inline || target.dataset?.inlineLayer) {
+    inlineInput(target);
+    return;
+  }
   if (target.dataset.playerSeek != null) {
     const player = target.closest("[data-player]"),
       audio = player.querySelector("audio"),
@@ -2324,6 +2486,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
   if (event.target.closest(".layer-play, .canvas-add-row, .canvas-scene-link, .layer-bar, .photo-placeholder")) return;
+  if (event.target.closest('[data-inline], .layer-text[contenteditable="plaintext-only"], .layer-text[contenteditable="true"]')) return;
   // Touching the paper puts the keyboard away so the tools come back.
   if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
   const element = event.target.closest("[data-layer]");
@@ -2343,11 +2506,17 @@ $("#app").addEventListener("pointerdown", (event) => {
       cropMode = false;
       if (studioTool === "layer") studioTool = null;
       render();
+    } else if (!isDayPage() && activePage().layoutTemplate === "text" && pointers.size === 1) {
+      // A note page: tapping anywhere on the paper starts typing.
+      pointers.delete(event.pointerId);
+      event.preventDefault();
+      focusInline("body");
     }
     return;
   }
   const layer = activePage().layers.find((l) => l.id === element.dataset.layer);
   if (!layer) return;
+  const wasSelected = selectedLayer === layer.id;
   if (selectedLayer !== layer.id) {
     if (cropMode) cropMode = false;
     selectedLayer = layer.id;
@@ -2362,6 +2531,9 @@ $("#app").addEventListener("pointerdown", (event) => {
     cropMode && layer.kind === "photo" ? "crop" : handle || "move",
     event,
   );
+  // A second tap on a selected text box types into it, right on the paper.
+  // (The rotate knob sits over short boxes; a tap there without turning also types.)
+  if (drag) drag.tapToEdit = wasSelected && layer.kind === "text" && handle !== "resize" && !cropMode;
   try {
     $("#journal-canvas").setPointerCapture(event.pointerId);
   } catch {}
@@ -2439,7 +2611,7 @@ $("#app").addEventListener("pointermove", (event) => {
 });
 function commitGesture() {
   if (!drag) return;
-  const { moved, before, layer } = drag;
+  const { moved, before, layer, tapToEdit } = drag;
   drag = null;
   if (moved) {
     history.push(before);
@@ -2449,6 +2621,7 @@ function commitGesture() {
     scheduleDraft();
   }
   render();
+  if (!moved && tapToEdit) editTextLayer(layer.id);
 }
 function endPointer(event) {
   if (!pointers.has(event.pointerId)) return;
@@ -3260,9 +3433,14 @@ async function v31Action(target) {
       openPhotoChooser("layers");
       return true;
     case "quick-moment":
-      // Home / Calendar / Day Detail: one tap to start writing a Moment.
+      // Home / Calendar / Day Detail: one tap to start writing a Moment —
+      // a note page, so the words are typed straight onto the paper.
       openStudio(target.dataset.date || dateKey());
       addMomentNow();
+      setPageMode("note", { quiet: true });
+      return true;
+    case "page-mode":
+      setPageMode(target.dataset.mode);
       return true;
     case "moment-up":
     case "moment-down":
@@ -3538,15 +3716,17 @@ async function v3Action(target) {
   }
   if (name === "add-text-layer") {
     soundMenu = false;
-    // Open the text panel straight away so the words can be typed.
-    studioTool = "layer";
+    // The new box is typed into right on the paper (font and colour stay one
+    // tap away under 编辑 in the bar above it).
+    studioTool = null;
     changeTarget((entry) => {
       const layer = {
         id: id(),
         kind: "text",
         text: t("layer.newText"),
         x: 50,
-        y: 60,
+        // In a free spot, not on top of the words already on the paper.
+        y: [60, 78, 40, 18].find((y) => !entry.layers.some((l) => l.kind === "text" && Math.abs((l.y ?? 50) - y) < 12)) ?? 60,
         scale: 1,
         rotation: 0,
         fontId: "handwritten",
@@ -3559,9 +3739,7 @@ async function v3Action(target) {
       entry.layers.push(layer);
       selectedLayer = layer.id;
     });
-    const box = $('[data-layer-text="text"]');
-    box?.focus({ preventScroll: true });
-    box?.select();
+    editTextLayer(selectedLayer, true);
     return true;
   }
   if (name === "collage-photo") {
@@ -3935,7 +4113,7 @@ function addPhotoLayers(saved) {
     // Empty frames from a chosen template are filled first, in order.
     const hadSlots = page.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
     const remaining = fillEmptySlots(page, saved);
-    if (page.layoutTemplate === "text" && saved.length) page.layoutTemplate = null;
+    if (page.layoutTemplate === "text" && saved.length) noteToLayout(page);
     if (hadSlots && !remaining.length) {
       selectedLayer = null;
       return;
@@ -4354,7 +4532,7 @@ for (const type of ["play", "pause", "ended"])
 // While a text field has focus on a touch screen, the menu and tool icons step
 // aside and an open panel sits right above the keyboard (its height comes from
 // visualViewport where the browser reports it; otherwise the upper half).
-const TYPING_FIELD = 'textarea, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]):not([type="date"]):not([type="time"])';
+const TYPING_FIELD = 'textarea, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]):not([type="date"]):not([type="time"]), [contenteditable="plaintext-only"], [contenteditable="true"]';
 let typingTimer;
 function updateVisibleArea() {
   const vv = window.visualViewport;
@@ -4370,6 +4548,8 @@ function keepFieldInView() {
   if (!field?.matches?.(TYPING_FIELD)) return;
   updateVisibleArea();
   requestAnimationFrame(() => {
+    // Words on the paper: the paper is already pinned in view.
+    if (field.closest(".studio-stage")) return;
     // Inside a panel only the panel scrolls; the page behind stays put.
     const sheet = field.closest(".tool-sheet");
     if (!sheet) return field.scrollIntoView({ block: "center" });

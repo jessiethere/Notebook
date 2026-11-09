@@ -8670,3 +8670,107 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   margin-top: 30px;
   font-size: 13px;
 }
+
+/* ---------- Typing right on the paper ---------- */
+.journal-canvas [data-inline] {
+  outline: none;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+.journal-canvas [data-inline]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--t-b8ad9c, #b8ad9c);
+  pointer-events: none;
+}
+.journal-canvas.dark-backdrop [data-inline]:empty::before {
+  color: var(--t-ffffffa6, #ffffffa6);
+}
+.journal-canvas [data-inline]:focus {
+  background: var(--c-ffffff59, #ffffff59);
+  box-shadow: 0 0 0 2px var(--c-8a9b7740, #8a9b7740);
+  overflow: auto;
+}
+.journal-canvas.dark-backdrop [data-inline]:focus {
+  background: var(--c-ffffff14, #ffffff14);
+}
+.journal-canvas .layer-text {
+  outline: none;
+  white-space: pre-wrap;
+}
+.journal-canvas .text-layer.editing {
+  cursor: text;
+}
+.journal-canvas .text-layer.editing .layer-text {
+  -webkit-user-select: text;
+  user-select: text;
+  display: inline-block;
+  min-width: 1em;
+  border-radius: 4px;
+  background: var(--c-ffffff8c, #ffffff8c);
+  box-shadow: 0 0 0 1.5px var(--c-8a9b77, #8a9b77);
+}
+.page-mode {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  width: max-content;
+  margin: 0 auto 10px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--c-ece6da, #ece6da);
+}
+.page-mode button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: 13px;
+  color: var(--t-7a7166, #7a7166);
+}
+.page-mode button.selected {
+  background: var(--c-fffdf9, #fffdf9);
+  color: var(--t-2b2622, #2b2622);
+  font-weight: 600;
+  box-shadow: 0 1px 4px var(--c-3c2d1e1f, #3c2d1e1f);
+}
+.page-mode svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.write-label {
+  display: block;
+  margin: 10px 0 2px;
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.write-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--t-7a7166, #7a7166);
+}
+.write-tip svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

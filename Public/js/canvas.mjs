@@ -119,7 +119,7 @@ export function layerHTML(layer, ctx, options = {}) {
     } else if (layer.kind === "text") {
       classes += " text-layer";
       extraStyle = `;${textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || defaultFont, 16, catalog)};text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}`;
-      inner = esc(layer.text);
+      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}">${esc(layer.text)}</span>`;
     } else inner = esc(layer.text);
   }
   if (selected) {
@@ -158,14 +158,20 @@ export function canvasHTML(page, ctx, options = {}) {
   // sit on a frosted card so they stay easy to read.
   const backdrop = backdropOf(page, ctx);
   const veil = backdrop && (dayPage || page.layoutTemplate === "text") ? `<div class="backdrop-veil" aria-hidden="true"></div>` : "";
+  // Editable words on the paper: tap and type, like a note.
+  const inline = (field, placeholder, max) =>
+    `contenteditable="plaintext-only" spellcheck="false" role="textbox" aria-multiline="${field === "body"}" data-inline="${field}" data-max="${max}" data-placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}"`;
   let fixed = "";
   if (dayPage) {
     const photo = media.resolve(page.photo);
     const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
-    fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}${veil}<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || (readOnly ? "" : t("studio.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || (readOnly ? "" : t("studio.bodyPlaceholder")))}</div><span class="canvas-mood">${esc(page.mood || "")}</span>`;
+    const titleText = readOnly
+      ? `<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || "")}</div>`
+      : `<div class="canvas-title" ${inline("title", t("studio.titlePlaceholder"), 70)} style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" ${inline("body", t("studio.bodyPlaceholder"), 2000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || "")}</div>`;
+    fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}${veil}${titleText}<span class="canvas-mood">${esc(page.mood || "")}</span>`;
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
-    fixed = `${veil}<div class="canvas-title" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || (readOnly ? "" : t("moment.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || (readOnly ? "" : t("moment.bodyPlaceholder")))}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+    fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
     fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;

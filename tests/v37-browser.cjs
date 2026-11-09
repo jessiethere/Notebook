@@ -32,9 +32,14 @@ function wav(seconds = 1) {
         return JSON.parse(localStorage.getItem("little-days.v1") || "null")?.drafts?.[key];
       });
 
-    // 1. A new, empty story: the paper itself offers the four choices.
+    // 1. "Start with words" opens a note page (type on the paper); switching
+    // to 自由排版 gives an empty paper that offers the four choices.
     await menu(page, "studio");
     await page.locator('[data-action="start-words"]').tap();
+    await page.waitForSelector('[data-action="page-mode"][data-mode="note"][aria-pressed="true"]');
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
     await page.waitForSelector("#journal-canvas .canvas-add-row");
     const onPaper = await page.$$eval("#journal-canvas .canvas-add-row button", (els) => els.map((el) => el.dataset.action));
     assert.deepEqual(onPaper, ["add-photos", "add-text-layer", "add-video", "add-sound"]);
@@ -45,7 +50,7 @@ function wav(seconds = 1) {
     // 2. Text: one tap adds words to the paper with the typing box ready.
     await page.locator('#journal-canvas [data-action="add-text-layer"]').tap();
     await page.waitForSelector("#journal-canvas .text-layer, #journal-canvas [data-layer]");
-    assert.equal(await page.evaluate(() => document.activeElement?.dataset.layerText), "text", "typing box focused");
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("layer-text")), true, "typing right in the box on the paper");
     await page.keyboard.type("今天的风很温柔");
     await page.waitForFunction(() => document.querySelector("#journal-canvas").innerText.includes("今天的风很温柔"));
     assert.equal(await page.locator("#journal-canvas .canvas-add-row").count(), 0, "hint goes once the paper has something");
@@ -97,7 +102,12 @@ function wav(seconds = 1) {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     // Start screen titles use a medium system weight, not heavy bold.
     await menu(page, "studio");
-    const weight = await page.locator(".start-card b").first().evaluate((el) => getComputedStyle(el).fontWeight);
+    await page.waitForSelector(".start-card b");
+    // Read from whatever is on screen now (a media-ready redraw can replace the node).
+    const weight = await page.waitForFunction(() => {
+      const el = document.querySelector(".start-card b");
+      return el && el.isConnected && getComputedStyle(el).fontWeight;
+    }).then((handle) => handle.jsonValue());
     assert.equal(weight, "600");
     passed.push("iPhone: 16px typing fields, 14px menus/dates, no auto-zoom, no sideways scroll, calm start-screen type");
 

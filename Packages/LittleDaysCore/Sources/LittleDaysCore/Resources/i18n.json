@@ -4138,5 +4138,41 @@
   "backdrop.photos": {
     "zh": "照片氛围",
     "en": "Photo mood"
+  },
+  "mode.label": {
+    "zh": "这一页怎么写",
+    "en": "How to make this page"
+  },
+  "mode.note": {
+    "zh": "随手写",
+    "en": "Just write"
+  },
+  "mode.layout": {
+    "zh": "自由排版",
+    "en": "Free layout"
+  },
+  "mode.noteOn": {
+    "zh": "随手写：点纸就能打字",
+    "en": "Just write: tap the paper and type"
+  },
+  "mode.layoutOn": {
+    "zh": "自由排版：文字变成了可以拖动的文字框",
+    "en": "Free layout: your words are now a box you can move"
+  },
+  "write.noteTip": {
+    "zh": "标题和内容直接写在上面的纸上，点一下就能打字。",
+    "en": "The title and words are on the paper above — tap it and type."
+  },
+  "write.pageName": {
+    "zh": "这一页的名字 · 显示在目录和日历里",
+    "en": "Page name · shown in the contents and calendar"
+  },
+  "write.caption": {
+    "zh": "页面下方的说明 · 可选，不会写到纸上",
+    "en": "Caption under the page · optional, not on the paper"
+  },
+  "write.layoutTip": {
+    "zh": "想在纸上写字：点「文字」加一个文字框，再点一下就能直接打字。",
+    "en": "To write on the paper: tap Text to add a box, then tap it again to type."
   }
 }

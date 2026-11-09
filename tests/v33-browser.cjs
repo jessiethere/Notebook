@@ -41,11 +41,19 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.waitForSelector(".day-detail");
     await nav("home");
     // 1. One tap from Home starts a Moment; writing is the first thing on screen.
+    // It opens as a note: the title on the paper is ready for typing.
     await page.locator('.moment-cta[data-action="quick-moment"]').click();
-    await page.waitForSelector(".write-card.moment .write-title");
-    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("write-title")), true, "title is focused");
-    await page.locator(".write-card .write-title").fill("Gym Session");
-    await page.locator(".write-card .write-body").fill("深蹲 4 组，状态很好。");
+    await page.waitForSelector('#journal-canvas [data-inline="title"]');
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title", "title on the paper is focused");
+    await page.keyboard.type("Gym Session");
+    await page.locator('#journal-canvas [data-inline="body"]').click();
+    await page.keyboard.type("深蹲 4 组，状态很好。");
+    await page.waitForFunction(() => {
+      const d = new Date();
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const m = JSON.parse(localStorage.getItem("little-days.v1"))?.drafts?.[key]?.moments?.at(-1);
+      return m?.title === "Gym Session" && m.body === "深蹲 4 组，状态很好。" && m.layoutTemplate === "text";
+    });
     // Writing sits above the decoration menu, not as one of its rows.
     const order = await page.evaluate(() => {
       const write = document.querySelector(".write-card").getBoundingClientRect().top;

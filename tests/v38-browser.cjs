@@ -94,13 +94,19 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     assert.deepEqual(s.layers.map((l) => l.shape).filter(Boolean).sort(), ["film", "heart", "portrait"]);
     // The exported picture is drawn with the shapes (no errors, real PNG).
     await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
+    // The paper stays pinned at the top; scroll the buttons under it into view.
+    await page.locator(".studio-footer").evaluate((el) => el.scrollIntoView({ block: "end" }));
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
     passed.push("shapes: video 7 / photo 7 (with free); circle is round; heart mask; export works");
 
-    // 3. Typing in a panel: menu and icons step aside; panel above the keyboard.
+    // 3. A new text box is typed into right on the paper (menu and icons step
+    // aside); its font/colour panel is one tap away under 编辑, above the keyboard.
     await page.locator('.stage-bar [data-action="add-text-layer"]').tap();
+    await page.waitForFunction(() => document.activeElement?.classList.contains("layer-text") && document.body.classList.contains("typing"));
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator('.layer-bar [data-action="layer-edit-text"]').tap();
     await page.waitForFunction(() => document.body.classList.contains("typing-sheet"));
     const layout = await page.evaluate(() => {
       const sheet = document.querySelector(".tool-sheet").getBoundingClientRect();
