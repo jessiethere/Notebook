@@ -6533,3 +6533,141 @@ details.check-history[open] > summary > span:first-child::after {
   font: 13px "LD-handwritten", "LD-chinese", serif;
   color: #5d554b;
 }
+
+/* V3.7 · Photo / text / video / sound as equal choices. */
+.stage-bar {
+  grid-template-columns: 36px 36px repeat(4, minmax(0, 1fr));
+}
+.stage-bar.with-size {
+  grid-template-columns: 36px 36px repeat(4, minmax(0, 1fr)) 36px;
+}
+.stage-bar .stage-add {
+  flex-direction: column;
+  gap: 1px;
+  min-height: 44px;
+  padding: 3px 2px;
+  background: #fdfbf5;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.stage-bar .stage-add span {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--accent);
+  font-weight: 600;
+}
+.stage-bar .stage-add b {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.stage-bar .stage-add[aria-expanded="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.stage-bar .stage-add[aria-expanded="true"] span {
+  color: #fff;
+}
+.sound-menu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+.sound-menu button {
+  min-height: 40px;
+  border-radius: 11px;
+  border: 1px dashed var(--accent);
+  background: #f4f6ef;
+  font-size: 12px;
+  color: var(--ink);
+}
+.canvas-empty-hint.canvas-add {
+  inset: 22% 7%;
+  gap: 2cqw;
+  padding: 3cqw;
+}
+.canvas-empty-hint p {
+  margin: 0;
+}
+.canvas-add-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.4cqw;
+  width: 100%;
+  margin-top: 2cqw;
+}
+.canvas-add-row button {
+  display: grid;
+  justify-items: center;
+  gap: 1.2cqw;
+  min-height: 0;
+  padding: 2.6cqw 0;
+  border: 1px solid #e6dccb;
+  border-radius: 3.2cqw;
+  background: #fffdf8;
+  color: #6c6559;
+  cursor: pointer;
+}
+.canvas-add-row button span {
+  font-size: 5.2cqw;
+  line-height: 1;
+  color: var(--accent);
+  font-weight: 600;
+}
+.canvas-add-row button b {
+  font-size: 3.2cqw;
+  font-weight: 500;
+}
+.canvas-add-row button:hover {
+  border-color: var(--accent);
+}
+
+/* Calmer type on the Studio start screen (no heavy system bold). */
+.start-card b,
+.start-continue b {
+  font: 600 15px/1.35 "LD-elegant", "LD-chinese", Georgia, serif;
+  letter-spacing: 0.2px;
+}
+.start-card small {
+  font-size: 11px;
+}
+.start-card {
+  min-height: 108px;
+  padding: 12px 13px;
+}
+.start-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  font-size: 17px;
+}
+.start-sub {
+  font: 600 14px "LD-elegant", "LD-chinese", Georgia, serif;
+}
+.start-note {
+  font-size: 10.5px;
+}
+
+/* iPhone zooms into any field smaller than 16px and stays zoomed, which
+   pushed pages off the screen; touch screens get 16px fields. */
+@media (pointer: coarse) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+/* Start screen titles: the clean system face at a medium weight. */
+.start-card b,
+.start-continue b {
+  font: 600 15px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+}
+.start-sub {
+  font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}

@@ -170,6 +170,7 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  soundMenu = false,
   studioStart = false,
   account = null,
   loginAvatar = null,
@@ -636,6 +637,7 @@ function canvasHTML() {
     selectedId: selectedLayer,
     cropMode,
     dayPage: isDayPage(),
+    addChoices: addChoicesHTML("canvas-add-choice"),
   });
 }
 function photoRegion() {
@@ -689,7 +691,7 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls"><span>${t(layer.kind === "photo" ? "layer.photo" : layer.kind === "growth" ? "layer.growth" : "layer.selected")}</span><p class="gesture-help">${t("layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}${textTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
+  return `<div class="layer-controls"><span>${t(layer.kind === "photo" ? "layer.photo" : layer.kind === "growth" ? "layer.growth" : "layer.selected")}</span>${textTools}<p class="gesture-help">${t("layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -772,9 +774,9 @@ function templatePickerHTML(page) {
 function writeCardHTML() {
   const page = activePage();
   if (isDayPage())
-    return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b><button class="text-button" data-action="add-text-layer">＋ ${t("studio.textBox")}</button></div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
+    return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b></div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
   const index = editor.moments.indexOf(page);
-  return `<section class="write-card moment" aria-label="${t("write.title")}"><div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"><button class="text-button" data-action="add-text-layer">＋ ${t("studio.textBox")}</button></div><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}"></section>`;
+  return `<section class="write-card moment" aria-label="${t("write.title")}"><div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"></div><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}"></section>`;
 }
 function studioTools() {
   const page = activePage(),
@@ -1002,11 +1004,17 @@ async function studioStartAction(target) {
   }
   return true;
 }
+// Photo, text, video and sound are equal ways to add something to the paper.
+function addChoicesHTML(className = "") {
+  const item = (action, glyph, label) =>
+    `<button class="${className}" data-action="${action}" ${action === "add-sound" ? `aria-expanded="${soundMenu}"` : ""}><span aria-hidden="true">${glyph}</span><b>${t(label)}</b></button>`;
+  return item("add-photos", "▣", "add.photo") + item("add-text-layer", "Aa", "add.text") + item("add-video", "▶", "add.video") + item("add-sound", "♫", "add.sound");
+}
 function studioPage() {
   if (studioStart) return studioStartHTML();
   const dayPage = isDayPage();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button><button class="stage-add" data-action="add-photos">${icon("photo")} ${t("photo.addShort")}</button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : `<span></span>`}</div></div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1520,7 +1528,30 @@ async function action(target) {
     afterHistoryStep();
   }
   if (actionName === "upload") $("#photo-input").click();
-  if (actionName === "add-photos") $("#photos-input").click();
+  if (actionName === "add-photos") {
+    soundMenu = false;
+    $("#photos-input").click();
+  }
+  if (actionName === "add-video") {
+    soundMenu = false;
+    $("#video-input").click();
+  }
+  if (actionName === "add-sound") {
+    soundMenu = !soundMenu;
+    render();
+  }
+  if (actionName === "add-audio-file") {
+    soundMenu = false;
+    render();
+    $("#audio-input").click();
+  }
+  if (actionName === "add-record") {
+    // The stop button lives in the sound & video sheet.
+    soundMenu = false;
+    studioTool = "media";
+    render();
+    await startRecording();
+  }
   if (actionName === "save-draft") {
     draftDirty = true;
     flushDraft();
@@ -1854,7 +1885,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
-  if (event.target.closest(".layer-play")) return;
+  if (event.target.closest(".layer-play, .canvas-add-row")) return;
   const element = event.target.closest("[data-layer]");
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   // A second finger anywhere on the canvas pinches the selected layer.
@@ -3048,6 +3079,9 @@ async function v3Action(target) {
     return true;
   }
   if (name === "add-text-layer") {
+    soundMenu = false;
+    // Open the text panel straight away so the words can be typed.
+    studioTool = "layer";
     changeTarget((entry) => {
       const layer = {
         id: id(),
@@ -3067,6 +3101,9 @@ async function v3Action(target) {
       entry.layers.push(layer);
       selectedLayer = layer.id;
     });
+    const box = $('[data-layer-text="text"]');
+    box?.focus({ preventScroll: true });
+    box?.select();
     return true;
   }
   if (name === "collage-photo") {

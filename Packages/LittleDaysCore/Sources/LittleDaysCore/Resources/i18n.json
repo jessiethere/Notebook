@@ -1340,8 +1340,8 @@
     "en": "Moment deleted. You can undo."
   },
   "moment.canvasHint": {
-    "zh": "添加照片、贴纸或文字，自由排版这个小故事。",
-    "en": "Add photos, stickers or text and arrange this moment freely."
+    "zh": "点一下，添加照片、文字、视频或声音",
+    "en": "Tap to add a photo, text, video or sound"
   },
   "photo.addMany": {
     "zh": "添加照片（可多选）",
@@ -3522,5 +3522,29 @@
   "start.idea.note": {
     "zh": "想对自己说",
     "en": "A note to myself"
+  },
+  "add.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "add.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "add.video": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "add.sound": {
+    "zh": "声音",
+    "en": "Sound"
+  },
+  "add.record": {
+    "zh": "录一段",
+    "en": "Record"
+  },
+  "add.audioFile": {
+    "zh": "上传音频",
+    "en": "Upload audio"
   }
 }

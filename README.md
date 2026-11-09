@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**54 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`collab` 九套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**54 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`collab` 十套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -120,6 +120,7 @@ npm run test:browser:v34
 npm run test:browser:collab
 npm run test:browser:v35
 npm run test:browser:v36
+npm run test:browser:v37
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -137,6 +138,12 @@ npm run test:browser:v36
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 照片、文字、视频、声音并列
+
+- 创作页纸张下面现在是四个同样的按钮：照片 / 文字 / 视频 / 声音（声音可以录一段或上传）。点“文字”会马上在纸上加一段字，并直接打开输入。
+- 新的小故事还是空白时，纸上也有这四个按钮，点一下就能加内容。
+- 修好了 iPhone 上点输入框后页面被放大、字体比例变怪的问题；“今天想怎么开始？”卡片的标题字体更清爽。
 
 ### 2026-11-08 — 登录、功能介绍、修图、创作入口
 

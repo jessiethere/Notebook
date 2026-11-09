@@ -11,7 +11,8 @@
     "test:browser:v34": "node tests/v34-browser.cjs",
     "test:browser:collab": "node tests/collab-browser.cjs",
     "test:browser:v35": "node tests/v35-browser.cjs",
-    "test:browser:v36": "node tests/v36-browser.cjs"
+    "test:browser:v36": "node tests/v36-browser.cjs",
+    "test:browser:v37": "node tests/v37-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",
