@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.0",
+    date: "2026-11-09",
+    zh: {
+      title: "首页「今天」卡片：每张照片一页，可以左右滑",
+      items: [
+        "首页「今天」卡片现在按照片来滑：今天放进页面的每张照片各占一张（带那一页的标题），只有文字的页面也有一张；下面的小圆点跟着走。",
+        "以前是一页一张，今天只有一页（哪怕里面有好几张照片）时就滑不动；现在一页里的几张照片都能一张张看。",
+        "当天跨页上自动放的照片副本不会重复出现。",
+      ],
+    },
+    en: {
+      title: "Home's “Today” card: one slide per photo, swipe through them",
+      items: [
+        "Home's “Today” card now swipes by photo: every photo put on today's pages gets its own slide (with that page's line), and pages that are only words get one too; the dots follow.",
+        "Before, it was one slide per page, so a day with a single page (even with several photos) couldn't be swiped; now each photo on that page can be seen in turn.",
+        "Copies of photos on the day spread are not shown twice.",
+      ],
+    },
+  },
+  {
     version: "6.9",
     date: "2026-11-09",
     zh: {

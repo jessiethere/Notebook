@@ -461,28 +461,42 @@ function bookCard(book) {
   return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small></button>`;
 }
 
-// Home's today card: swipe through today's pages (a photo, or the words
-// when there is no photo), with a dot for each page. Tapping one opens the
-// day at that page.
+// Home's today card: swipe through what was kept today — every photo put on
+// today's pages (one slide each, with its page's line), and the pages that
+// are only words — with a dot for each. Tapping one opens the day at that page.
 function todayPeekHTML(entry) {
-  const pages = [...(hasDayPageContent(entry) ? [entry] : []), ...(entry.moments || [])].slice(0, 12);
-  if (!pages.length) return "";
+  const pages = [...(hasDayPageContent(entry) ? [entry] : []), ...(entry.moments || [])];
   const date = entry.date || dateKey();
   const isPhoto = (ref) => /^(photo|media):/.test(String(ref || ""));
-  const slides = pages.map((p, i) => {
+  const seen = new Set();
+  const slides = [];
+  for (const p of pages) {
     const layers = p.layers || [];
-    const ref = (isPhoto(p.backdrop) && p.backdrop) || layers.find((l) => l.kind === "photo" && l.mediaRef && !l.drawing)?.mediaRef || (p === entry ? entry.photo : "") || "";
-    const src = ref ? safePhoto(ref) : "";
     const texts = layers.filter((l) => l.kind === "text" && !l.bind && !l.gen && String(l.text || "").trim()).map((l) => String(l.text).trim());
     const title = (p.title || texts[0] || "").trim();
     const words = (p.body || texts.find((x) => x !== title) || "").replace(/\s+/g, " ").trim();
-    const kicker = [t("home.today"), pages.length > 1 ? `${i + 1} / ${pages.length}` : "", p === entry ? "" : p.time || "", entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
+    // Copies on the day spread (gen) are the same photos as the pages': once.
+    const refs = [
+      ...(isPhoto(p.backdrop) ? [p.backdrop] : []),
+      ...(p === entry && entry.photo ? [entry.photo] : []),
+      ...layers.filter((l) => l.kind === "photo" && l.mediaRef && !l.drawing && !l.gen).map((l) => l.mediaRef),
+    ].filter((ref) => ref && !seen.has(ref) && seen.add(ref));
+    const base = { page: p, title, time: p === entry ? "" : p.time || "" };
+    if (refs.length) refs.forEach((ref, i) => slides.push({ ...base, ref, words: i ? "" : words }));
+    else if (title || words) slides.push({ ...base, ref: "", words });
+  }
+  const shown = slides.slice(0, 12);
+  if (!shown.length) return "";
+  const n = shown.length;
+  const html = shown.map((slide, i) => {
+    const src = slide.ref ? safePhoto(slide.ref) : "";
+    const kicker = [t("home.today"), n > 1 ? `${i + 1} / ${n}` : "", slide.time, entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
     const cls = `${i === 0 ? "today-preview " : ""}hero-photo peek-slide${src ? "" : " peek-words"}`;
-    const moment = p === entry ? "" : ` data-moment="${esc(p.id)}"`;
-    return `<button class="${cls}" data-action="open-day" data-date="${esc(date)}"${moment} aria-label="${t("home.readToday")} ${i + 1}/${pages.length}">${src ? `<img src="${esc(src)}" alt="${t("photo.alt")}" loading="${i ? "lazy" : "eager"}"><span class="hero-shade" aria-hidden="true"></span>` : `<span class="peek-paper" aria-hidden="true"></span>`}<span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(title || t("entry.untitled"))}</b>${words ? `<small>${esc(words.slice(0, src ? 60 : 140))}</small>` : ""}</span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
+    const moment = slide.page === entry ? "" : ` data-moment="${esc(slide.page.id)}"`;
+    return `<button class="${cls}" data-action="open-day" data-date="${esc(date)}"${moment} aria-label="${t("home.readToday")} ${i + 1}/${n}">${src ? `<img src="${esc(src)}" alt="${t("photo.alt")}" loading="${i ? "lazy" : "eager"}"><span class="hero-shade" aria-hidden="true"></span>` : `<span class="peek-paper" aria-hidden="true"></span>`}<span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(slide.title || t("entry.untitled"))}</b>${slide.words ? `<small>${esc(slide.words.slice(0, src ? 60 : 140))}</small>` : ""}</span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
   });
-  const dots = pages.length > 1 ? `<div class="peek-dots" aria-hidden="true">${pages.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : "";
-  return `<div class="today-peek-wrap"><div class="today-peek" role="group" aria-label="${t("home.readToday")}">${slides.join("")}</div>${dots}</div>`;
+  const dots = n > 1 ? `<div class="peek-dots" aria-hidden="true">${shown.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : "";
+  return `<div class="today-peek-wrap"><div class="today-peek" role="group" aria-label="${t("home.readToday")}">${html.join("")}</div>${dots}</div>`;
 }
 // The dot under today's card follows the page in view.
 document.addEventListener(

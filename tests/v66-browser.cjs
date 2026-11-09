@@ -68,21 +68,38 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(m.backdrop, `photo:${photoId}`);
     passed.push("图库: choose in the sheet's grid, then write its line on that photo");
 
-    // 4. Home's today card: swipe through today's pages, dots below.
+    // 4. Home's today card: one slide per photo kept today (a page with three
+    // photos is three slides; copies on the day spread are not repeated), and
+    // the pages that are only words; a dot for each; swipe to move.
     await page.locator('[data-action="save-entry"]').tap();
     await require("./signed-in.cjs").homeAfterSave(page);
+    await page.evaluate((d) => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1"));
+      const e = s.entries.find((x) => x.date === d);
+      const photo = (id, ref, extra = {}) => ({ id, kind: "photo", text: "", mediaRef: ref, x: 50, y: 50, w: 40, h: 30, rotation: 0, scale: 1, ...extra });
+      e.layers = [...(e.layers || []), photo("spread-copy", "photo:latte-beans", { gen: true })];
+      e.moments.push({ id: "three-photos", time: "17:09", title: "下午的咖啡", body: "", tags: [], layers: [photo("a", "photo:latte-beans"), photo("b", "photo:corner-cafe"), photo("c", "photo:desk-corner")], media: [], layoutTemplate: "scrapbook" });
+      e.moments.push({ id: "only-words", title: "晚上", body: "早点睡。", tags: [], layers: [], media: [], layoutTemplate: "text" });
+      localStorage.setItem("little-days.v1", JSON.stringify(s));
+    }, today);
+    await page.reload();
+    await page.waitForSelector(".hero");
     const strip = page.locator(".today-peek");
     await strip.waitFor();
     const slides = await page.locator(".today-peek .peek-slide").count();
-    assert.ok(slides >= 1);
-    assert.equal(await page.locator(".peek-dots i").count(), slides > 1 ? slides : 0, "one dot per page");
-    assert.match(await page.locator(".today-peek").innerText(), /图库里的一张/, "the words written today");
-    if (slides > 1) {
-      await strip.evaluate((el) => el.scrollTo({ left: el.clientWidth, behavior: "instant" }));
-      await page.waitForFunction(() => document.querySelectorAll(".peek-dots i")[1]?.classList.contains("on"));
-    }
+    // 图库 page (1 photo) + three photos + words only = 5.
+    assert.equal(slides, 5, "one slide per photo, plus the words-only page");
+    assert.equal(await page.locator(".peek-dots i").count(), slides, "one dot per slide");
+    const text = await page.locator(".today-peek").innerText();
+    assert.match(text, /图库里的一张[\s\S]*下午的咖啡[\s\S]*早点睡/, "photos with their page's line, then the words");
+    assert.equal((text.match(/下午的咖啡/g) || []).length, 3, "each of the three photos");
+    await strip.evaluate((el) => el.scrollTo({ left: el.children[2].offsetLeft, behavior: "instant" }));
+    await page.waitForFunction(() => document.querySelectorAll(".peek-dots i")[2]?.classList.contains("on"));
     if (shots) await page.screenshot({ path: `${shots}/v66-peek.png` });
-    passed.push("Home: today's card swipes through today's pages (photos / words) with dots");
+    await page.locator(".today-peek .peek-slide").nth(2).click();
+    await page.waitForSelector(".day-detail");
+    await page.locator('#navigation [data-page="home"]').click();
+    passed.push("Home: today's card has a slide for every photo kept today and for words-only pages, with dots; tap opens the day");
 
     // 5. The type bar: a font chosen for the words leaves the title alone (and back).
     await page.locator('[data-action="today-write"]').tap();

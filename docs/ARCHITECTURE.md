@@ -230,3 +230,7 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `dayListItems(date)`（app.js）= 当天打卡习惯的 `title` + 做完的 `plans`；翻书页、导出共用。
 - `renderJournalCanvas(page, { dayList, dayListTitle })` 有清单时返回加高的画布（`withDayList`）；`buildPdf` 每页 MediaBox 高度 = 432 × 图片高 / 图片宽。
+
+## 2026-11-09 V7.0 todayPeekHTML
+
+- 按页面顺序收集照片引用（backdrop、封面 photo、非 `gen` / 非手绘照片图层），用 Set 去重；每个引用一张卡，无照片但有文字的页面一张卡；`data-moment` 指向所在页。
