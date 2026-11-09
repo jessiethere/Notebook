@@ -3,6 +3,13 @@
 import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
 import { isShape } from "./shapes.mjs";
+import { captionFit } from "./story-style.mjs";
+
+// A long one-line caption gets smaller (and may wrap to two lines).
+const captionClass = (text) => {
+  const fit = captionFit(text);
+  return fit.lines > 1 ? "fit-two" : fit.factor < 1 ? "fit-small" : "";
+};
 
 const num = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -191,7 +198,7 @@ export function canvasHTML(page, ctx, options = {}) {
     fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.bodyStyle))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!dayPage && page.layoutTemplate === "smart")
     // Photos in their own shapes, one line underneath (on a frosted label).
-    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div></div>`;
+    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title ${captionClass(page.title)}" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div></div>`;
   else if (!dayPage && page.layoutTemplate === "line")
     // Photo + one line: the photo is the page, one sentence on a frosted strip.
     fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div>${page.body ? `<div class="line-body">${esc(page.body)}</div>` : ""}</div>`;

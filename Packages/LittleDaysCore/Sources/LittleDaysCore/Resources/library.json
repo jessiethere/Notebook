@@ -2462,5 +2462,75 @@
       "source": "original (tools/make_music.py)",
       "license": "LittleDays-Original-Music.txt"
     }
+  ],
+  "kits": [
+    {
+      "id": "cream",
+      "nameZh": "奶油",
+      "nameEn": "Cream",
+      "swatch": "#F8F5EF",
+      "paper": "minimal",
+      "titleFont": "elegant",
+      "lineFont": "zh-wenkai",
+      "ink": "#2F2A26",
+      "accent": "#5F6F52",
+      "stickers": [
+        "leaf",
+        "daisy",
+        "coffee"
+      ],
+      "playful": false
+    },
+    {
+      "id": "blush",
+      "nameZh": "樱花",
+      "nameEn": "Blush",
+      "swatch": "#E8CFCF",
+      "paper": "cute",
+      "titleFont": "decorative",
+      "lineFont": "zh-kuaile",
+      "ink": "#4A3535",
+      "accent": "#A0605F",
+      "stickers": [
+        "tulip",
+        "pink-tape",
+        "bunny"
+      ],
+      "playful": true
+    },
+    {
+      "id": "sage",
+      "nameZh": "鼠尾草",
+      "nameEn": "Sage",
+      "swatch": "#C9D7C1",
+      "paper": "grid",
+      "titleFont": "vintage-serif",
+      "lineFont": "zh-xiaowei",
+      "ink": "#2F3A2A",
+      "accent": "#4F6447",
+      "stickers": [
+        "leaf",
+        "label",
+        "pencil"
+      ],
+      "playful": false
+    },
+    {
+      "id": "kraft",
+      "nameZh": "牛皮纸",
+      "nameEn": "Kraft",
+      "swatch": "#D9C3A0",
+      "paper": "kraft",
+      "titleFont": "handwritten",
+      "lineFont": "zh-xiaowei",
+      "ink": "#3A2A1C",
+      "accent": "#7A5A3A",
+      "stickers": [
+        "ticket",
+        "postcard",
+        "gingham-tape"
+      ],
+      "playful": true
+    }
   ]
 }

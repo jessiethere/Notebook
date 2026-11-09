@@ -28,6 +28,7 @@ import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJo
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
 import { photoTime } from "./js/exif.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
+import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -1921,7 +1922,8 @@ function startStory(groups) {
   if (empty && !hasMomentContent(findMoment(editor, empty) || {})) changeEditor((e) => removeMoment(e, empty), false);
   activeMomentId = null;
   quickResult = null;
-  story = { date: editor.date, book, step: "group", groups, selected: null, made: null, index: 0 };
+  const kit = kitForBook(catalog, state().books.find((b) => b.id === book));
+  story = { date: editor.date, book, kit: kit?.id || "", step: "group", groups, selected: null, made: null, index: 0 };
   page = "story";
   // No "a new page is open" note here: the story makes its pages later.
   clearTimeout(toastTimer);
@@ -1978,7 +1980,9 @@ function storyPage() {
   story.index = Math.max(0, Math.min(pages.length - 1, story.index));
   const current = pages[story.index];
   const tabs = pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("");
-  return `<header class="story-bar">${back}<h1>${t("story.previewTitle", { count: pages.length })}</h1><button class="primary story-save" data-action="story-save">${t("save")}</button></header><div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${tabs}</div><div class="story-canvas">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("result.shuffle")}</button><button data-action="story-adjust">✎ ${t("story.adjust")}</button></div><p class="save-help story-help">${t("story.previewHelp")}</p>`;
+  return `<header class="story-bar">${back}<h1>${t("story.previewTitle", { count: pages.length })}</h1><button class="primary story-save" data-action="story-save">${t("save")}</button></header><div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${tabs}</div><div class="story-canvas">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("result.shuffle")}</button><button data-action="story-adjust">✎ ${t("story.adjust")}</button></div><div class="story-kits" role="group" aria-label="${t("story.kit")}"><span>${t("story.kit")}</span>${kitList(catalog)
+    .map((kit) => `<button data-action="story-kit" data-kit="${esc(kit.id)}" aria-pressed="${kit.id === story.kit}"><i style="background:${esc(kit.swatch)}"></i>${esc(kitName(kit, languageCode()))}</button>`)
+    .join("")}</div><p class="save-help story-help">${t("story.previewHelp")}</p>`;
 }
 function storyCover(variant = 0) {
   const date = new Date(`${story.date}T12:00:00`);
@@ -1995,7 +1999,27 @@ function storyCover(variant = 0) {
     photos: (n) => t("story.photos", { count: n }),
     variant,
     makeId: id,
+    kit: findKit(catalog, story.kit),
   });
+}
+// One kit for the whole day: paper, fonts, ink and a few matching stickers,
+// only in empty corners. The cover is rebuilt in the kit's fonts and colours.
+function styleStory() {
+  const kit = findKit(catalog, story.kit);
+  if (!kit || !story.made) return;
+  changeEditor((entry) => {
+    story.made.ids.forEach((momentId, index) => {
+      const m = findMoment(entry, momentId);
+      if (!m) return;
+      applyKit(m, kit);
+      decorate(m, kit, { seed: index + (Number(m.layoutVariant) || 0), caption: Boolean(m.title), makeId: id });
+    });
+    if (story.made.cover) {
+      entry.layers = storyCover(Number(entry.layoutVariant) || 0);
+      applyKit(entry, kit);
+      decorate(entry, kit, { seed: Number(entry.layoutVariant) || 0, max: 1, makeId: id });
+    }
+  }, false);
 }
 function undoStory() {
   const made = story?.made;
@@ -2020,7 +2044,8 @@ function makeStory() {
       created.bookId = story.book;
       created.title = (group.line || "").trim().slice(0, 70);
       created.layoutTemplate = "smart";
-      created.layoutVariant = 0;
+      // The first look follows simple rules: one photo big, a few in the kit's mood.
+      created.layoutVariant = firstLook(group.items.length, findKit(catalog, story.kit));
       if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
       for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
       applyLayout(created, "smart");
@@ -2039,6 +2064,7 @@ function makeStory() {
       entry.bookId = story.book;
     }, false);
   }
+  styleStory();
   story.step = "preview";
   story.index = 0;
   flushDraft();
@@ -2104,13 +2130,18 @@ async function storyAction(actionName, target) {
   if (actionName === "story-step") story.step = target.dataset.step === "lines" ? "lines" : "group";
   if (actionName === "story-make") return makeStory();
   if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
+  if (actionName === "story-kit") {
+    story.kit = findKit(catalog, target.dataset.kit)?.id || story.kit;
+    styleStory();
+    flushDraft();
+    logEvent("story_kit", { kit: story.kit });
+  }
   if (actionName === "story-shuffle") {
     const current = storyPages()[story.index];
     if (!current) return;
     if (current.cover) {
       const variant = ((Number(editor.layoutVariant) || 0) + 1) % 3;
       changeEditor((entry) => {
-        entry.layers = storyCover(variant);
         entry.layoutVariant = variant;
       }, false);
     } else
@@ -2120,6 +2151,7 @@ async function storyAction(actionName, target) {
         m.layoutVariant = ((Number(m.layoutVariant) || 0) + 1) % 3;
         applyLayout(m, "smart");
       }, false);
+    styleStory();
     flushDraft();
   }
   if (actionName === "story-adjust") {
@@ -2153,6 +2185,11 @@ function quickPlaced(saved) {
     for (const item of saved)
       p.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
     applyLayout(p, "smart");
+    const kit = kitForBook(catalog, state().books.find((b) => b.id === (p.bookId || editor.bookId)));
+    if (kit) {
+      applyKit(p, kit);
+      decorate(p, kit, { caption: Boolean(p.title), makeId: id });
+    }
   });
   quickResult = activeMomentId;
   selectedLayer = null;
@@ -3224,6 +3261,9 @@ async function action(target) {
     changeTarget((p) => {
       p.layoutVariant = ((Number(p.layoutVariant) || 0) + 1) % 3;
       applyLayout(p, "smart");
+      // Decorations move with the new look (still only in empty corners).
+      const kit = p.kit && findKit(catalog, p.kit);
+      if (kit) decorate(p, kit, { seed: p.layoutVariant, caption: Boolean(p.title), makeId: id });
     });
     if (quickSession) quickSession.shuffles++;
     logEvent("layout_shuffle", { variant: activePage().layoutVariant });

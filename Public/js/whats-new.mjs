@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.4",
+    date: "2026-11-09",
+    zh: {
+      title: "今天的故事更好看：一整套配色，装饰只放在空白处",
+      items: [
+        "一天的封面和每一页用同一套「配色」（纸张、字体、颜色和几枚贴纸），默认跟这本书的颜色走；预览里点「配色」可以一次换掉整天：奶油、樱花、鼠尾草、牛皮纸。",
+        "只有一张照片的页会直接用大图；几张照片按配色的风格排。",
+        "每页最多放 2 枚贴纸，只放在空白的角落，不会压住照片、文字或那一句话。",
+        "很长的一句话会自动变小、最多两行，不再被截断；导出的图片和 PDF 也一样。",
+      ],
+    },
+    en: {
+      title: "Prettier stories: one style for the day, decorations only where it's empty",
+      items: [
+        "The cover and every page of a day share one style (paper, fonts, colours and a few stickers), matching the book by default; tap a style in the preview to change the whole day: Cream, Blush, Sage or Kraft.",
+        "A page with one photo opens with it big; a few photos follow the style's mood.",
+        "At most 2 stickers per page, only in empty corners — never over a photo, words or the caption.",
+        "A long line gets smaller and may use two lines instead of being cut off, in exported pictures and PDFs too.",
+      ],
+    },
+  },
+  {
     version: "6.3",
     date: "2026-11-09",
     zh: {

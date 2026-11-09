@@ -100,6 +100,21 @@ public struct MusicAsset: Decodable, Identifiable {
     public let license: String
 }
 
+/// V6.4: one style for a whole day (paper, fonts, ink, accent, stickers).
+public struct StoryKit: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let swatch: String
+    public let paper: String
+    public let titleFont: String
+    public let lineFont: String
+    public let ink: String
+    public let accent: String
+    public let stickers: [String]
+    public let playful: Bool
+}
+
 public struct PhotoAsset: Decodable, Identifiable {
     public let id: String
     public let collection: String
@@ -134,6 +149,7 @@ public struct AssetCatalog: Decodable {
     public let photos: [PhotoAsset]?
     public let photoCollections: [SceneCollection]?
     public let music: [MusicAsset]?
+    public let kits: [StoryKit]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }

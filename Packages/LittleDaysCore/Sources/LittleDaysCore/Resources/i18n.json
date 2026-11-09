@@ -5382,5 +5382,9 @@
   "story.part.night": {
     "zh": "夜里",
     "en": "night"
+  },
+  "story.kit": {
+    "zh": "配色",
+    "en": "Style"
   }
 }

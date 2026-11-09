@@ -148,6 +148,9 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var drawing: Bool?
     // V5.3: the photo's own shape (width / height), for the smart layout.
     public var aspect: Double?
+    // V6.4: a sticker the story kit placed in an empty corner (replaced when
+    // the page's look or kit changes).
+    public var deco: Bool?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -218,6 +221,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var music: String?
     /// V6.3: when this Moment's photos were taken (ISO 8601), from today's story.
     public var capturedAt: String?
+    /// V6.4: the story kit (library.json "kits" id) this page is styled with.
+    public var kit: String?
     public var visibility: String?
     public var updatedAt: String?
     public var savedAt: String?

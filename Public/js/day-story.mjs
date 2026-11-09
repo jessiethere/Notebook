@@ -95,11 +95,13 @@ const short = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…`
 // The layers of a timeline cover. moments: [{ time, title, photo: {
 // reference, name, aspect }, count }]; variant 0/1 start on the left/right,
 // 2 is a calm, straight version. Labels come from the caller (language).
-export function timelineLayers(moments, { dateSmall = "", dateBig = "", more = (n) => `+${n}`, photos = (n) => `${n}`, variant = 0, makeId } = {}) {
+export function timelineLayers(moments, { dateSmall = "", dateBig = "", more = (n) => `+${n}`, photos = (n) => `${n}`, variant = 0, makeId, kit = null } = {}) {
+  const ink = kit?.ink || "#2F2A26",
+    accent = kit?.accent || "#5F6F52";
   const layers = [];
   const id = makeId || (() => Math.random().toString(36).slice(2, 10));
-  layers.push(textLayer(id, dateSmall, { x: 28, y: 6.5, w: 44, fontSize: 10, spacing: 2, color: "#6F675D", weight: 500 }));
-  layers.push(textLayer(id, dateBig, { x: 28, y: 12.5, w: 44, fontSize: 32, fontId: "elegant", weight: 500 }));
+  layers.push(textLayer(id, dateSmall, { x: 28, y: 5.5, w: 44, fontSize: 10, spacing: 2, color: "#6F675D", weight: 500 }));
+  layers.push(textLayer(id, dateBig, { x: 28, y: 13, w: 44, fontSize: 32, fontId: kit?.titleFont || "elegant", color: ink, weight: 500 }));
   const hidden = Math.max(0, moments.length - TIMELINE_ROWS);
   const rows = hidden ? moments.slice(0, TIMELINE_ROWS - 1) : moments.slice(0, TIMELINE_ROWS);
   const count = rows.length + (hidden ? 1 : 0);
@@ -131,9 +133,12 @@ export function timelineLayers(moments, { dateSmall = "", dateBig = "", more = (
     const tx = textLeft + tw / 2;
     const align = left ? "left" : "right";
     const small = count >= 4;
-    layers.push(textLayer(id, moment.time || "·", { x: tx, y: cy - Math.min(4, rowH * 0.16), w: tw, fontSize: 11, color: "#5F6F52", weight: 700, align }));
+    layers.push(textLayer(id, moment.time || "·", { x: tx, y: cy - Math.min(4, rowH * 0.16), w: tw, fontSize: 11, color: accent, weight: 700, align }));
     const line = (moment.title || "").trim();
-    layers.push(textLayer(id, line ? short(line, small ? 28 : 40) : photos(moment.count || 0), { x: tx, y: cy + Math.min(3.5, rowH * 0.14), w: tw, fontSize: small ? 12 : 14, color: line ? "#2F2A26" : "#6F675D", align }));
+    const text = line ? short(line, small ? 28 : 40) : photos(moment.count || 0);
+    // Longer lines get a little smaller so they stay inside their row.
+    const size = (small ? 12 : 14) - (text.length > 16 ? 1.5 : 0);
+    layers.push(textLayer(id, text, { x: tx, y: cy + Math.min(3.5, rowH * 0.14), w: tw, fontSize: size, fontId: kit?.lineFont || "serif", color: line ? ink : "#6F675D", align }));
   });
   if (hidden) layers.push(textLayer(id, more(hidden + 1), { x: 50, y: bottom - rowH / 2, w: 80, fontSize: 13, color: "#6F675D", align: "center" }));
   return layers;

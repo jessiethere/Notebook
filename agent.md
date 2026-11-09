@@ -48,6 +48,21 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.4 排版引擎 v2 第一部分（Quick Create v3 · P0 ②）
+
+- 需求：用户「可以开始」，并问成长合并和 planner 需要确认什么（已在回复里列出任务 G 的两条确认项，未开发）。
+- 改动文件：
+  - library.json 新增 `kits`（cream / blush / sage / kraft：纸张、标题字体、句子字体、墨色、强调色、3 枚贴纸、playful）；Resources.swift `StoryKit` + `AssetCatalog.kits`；Models.swift：JournalMoment.kit、StickerLayer.deco（可选）；CoreTests。
+  - Public/js/story-style.mjs（新）：kitList / findKit / kitForBook（书的颜色 → 套装）/ applyKit（纸张、字体、墨色，不动照片）/ firstLook（1 张 → 大图，2–5 张按套装风格，更多 → 整齐）/ decorate（≤ 2 枚，只放在与照片、文字、标题条都不重叠的角落，重做时替换不累加）/ captionFit（长句缩小、最多两行）。
+  - day-story.mjs：封面时间线用套装的字体和颜色；长句略缩小；日期两行间距加大。
+  - app.js：故事生成时套用套装、第一眼规则和装饰；换一种后重新装饰；预览加「配色」4 个色点，一次改整天；单页快速结果也套用书的套装和装饰。
+  - canvas.mjs / export.mjs：标题条按 captionFit 缩小或两行（屏幕与导出一致）；**修复导出文字图层**：按图层自己的宽度、左中右对齐和垂直居中绘制（之前固定 700px 宽、从左边起画，时间线封面导出会错位）。
+  - styles.css、i18n.json（story.kit）、whats-new.mjs（V6.4）、tests/v61.test.mjs（新 6 项）、tests/v61-browser.cjs（新 4 组）、package.json、docs。
+- 决策与原因：套装跟书的颜色走，让一本书里的日子风格统一；装饰宁可不放也不压内容；胶片条 / 文字卡 / 杂志三个新模板本轮没做（需要改标题条和导出的位置，单独做更稳），已如实标在 ROADMAP。
+- 运行 / 测试：111 项 Node（新增 6 项）、12 项 Python、34 套浏览器 E2E 全部通过（v61：整天同一套配色、单张大图、每页 ≤ 2 枚装饰；换配色一次改整天并重建封面字体和贴纸；长句两行标题；保存后封面导出 1080×1350）。另外用截图检查了 3 套配色的封面和页面、导出的封面图片（文字位置与屏幕一致）。Linux 容器 + Chromium。
+- 已知问题：「换一种」和换配色会重建封面（还没有钉住手动调整，属于 ③）；牛皮纸套装原用龙藏体太细，改为站酷小薇；未在 iPhone 真机看字体效果。
+- 下一步：P0 ③ 自动与手动共存（钉住、吸附线、草稿恢复）；之后补三个新模板。
+
 ### 2026-11-09 — V6.3 今天的故事（Quick Create v3 · P0 ①）
 
 - 需求：用户「我喜欢新设计的六屏」；按 docs/QUICK_CREATE_PLAN.md 的顺序先做 P0 ①。（我发的确认问题被用户关掉，按「先做 ①，底部导航和成长合并留给任务 G」的默认推进，在回复里说明。）

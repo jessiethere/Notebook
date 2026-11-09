@@ -1,4 +1,5 @@
 import { MASK_SHAPES, shapePath } from "./shapes.mjs";
+import { captionFit } from "./story-style.mjs";
 const safePhoto = (photo) =>
   typeof photo !== "string"
     ? ""
@@ -392,11 +393,18 @@ export async function renderJournalCanvas(editor, options = {}) {
       const family = options.fontFamily
         ? options.fontFamily(layer.fontId || editor.font, options.catalog)
         : font;
-      ctx.font = `${layer.weight || 400} ${(layer.fontSize || 16) * 3.375}px ${family}`;
+      const size = (layer.fontSize || 16) * 3.375;
+      ctx.font = `${layer.weight || 400} ${size}px ${family}`;
       ctx.fillStyle = layer.color || "#2F2A26";
-      ctx.textAlign = layer.align || "left";
-      ctx.textBaseline = "top";
-      wrapText(ctx, layer.text, -350, -40, 700, (layer.fontSize || 16) * 5, 6);
+      // The box is the layer's own width (as on screen), aligned inside it.
+      const align = ["left", "center", "right"].includes(layer.align) ? layer.align : "left";
+      const width = layer.w != null ? (Math.max(10, Math.min(100, Number(layer.w))) / 100) * 1080 : 700;
+      ctx.textAlign = align;
+      // Centred on the layer's point like on screen, whatever the line count.
+      const lineHeight = size * 1.4;
+      const lines = Math.min(6, Math.max(1, Math.ceil(ctx.measureText(String(layer.text || "")).width / width)));
+      ctx.textBaseline = "middle";
+      wrapText(ctx, layer.text, align === "left" ? -width / 2 : align === "right" ? width / 2 : 0, layer.w != null ? -((lines - 1) * lineHeight) / 2 : -40, width, lineHeight, 6);
       ctx.restore();
       continue;
     }
@@ -419,8 +427,11 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillStyle = /^#[0-9a-f]{6}$/i.test(editor.textStyle?.color || "") ? editor.textStyle.color : "#2F2A26";
-    ctx.font = `500 ${Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 52}px ${font}`;
-    wrapText(ctx, editor.title, 540, 1196, 860, 64, 1);
+    // Same fit as on screen: long lines get smaller and may use two lines.
+    const fit = captionFit(editor.title);
+    const base = Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 52;
+    ctx.font = `500 ${Math.round(base * fit.factor)}px ${font}`;
+    wrapText(ctx, editor.title, 540, fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
     ctx.restore();
   }
   return canvas;
