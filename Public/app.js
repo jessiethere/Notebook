@@ -324,9 +324,12 @@ function openStudio(date = dateKey()) {
   if (page !== "studio" && page !== "settings") studioReturn = page;
   flushDraft();
   selectedDate = date;
-  const existing =
+  let existing =
     state().drafts[date] ||
     state().entries.find((entry) => entry.date === date);
+  // A sample day is only an example: writing on that date starts my own
+  // page (the sample goes away when the day is saved).
+  if (existing?.isDemo) existing = null;
   editor = existing
     ? structuredClone(existing)
     : {
@@ -1927,9 +1930,21 @@ function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
+// Save stays in reach: when the top bar has scrolled away, show the small
+// floating Save above the dock.
+let saveWatcher = null;
+function watchSaveButton() {
+  saveWatcher?.disconnect();
+  saveWatcher = null;
+  const bar = document.querySelector(".studio-bar");
+  const floating = document.querySelector(".float-save");
+  if (!bar || !floating || !("IntersectionObserver" in window)) return;
+  saveWatcher = new IntersectionObserver(([entry]) => (floating.hidden = entry.isIntersecting), { root: $("#app-scroll"), threshold: 0 });
+  saveWatcher.observe(bar);
+}
 function updateCanvas() {
   if ($("#canvas-wrap")) $("#canvas-wrap").innerHTML = canvasHTML();
   placeLayerBar();
@@ -2027,6 +2042,7 @@ function render() {
   }[page]();
   navigation();
   applyShellLanguage();
+  watchSaveButton();
   $("#app-scroll").scrollTop = scrollTop;
   if (focused) {
     const again = $(`#app ${focused}`);
@@ -2616,6 +2632,7 @@ async function action(target) {
       "quick-growth",
       "close-dialog",
       "save-entry",
+      "save-float",
       "open-day",
       "day-back",
       "save-moment",
@@ -3035,7 +3052,7 @@ async function action(target) {
     flushDraft();
     toast(t("草稿已保存，下次从 Studio 继续。"));
   }
-  if (actionName === "save-entry") {
+  if (actionName === "save-entry" || actionName === "save-float") {
     if (
       !editor.title.trim() &&
       !editor.body.trim() &&

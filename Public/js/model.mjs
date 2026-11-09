@@ -107,6 +107,7 @@ export function createInitialState(seed, today = dateKey()) {
     })),
   });
 }
+const SAMPLE_COVER = { title: "把日子过成喜欢的样子", body: "一杯热咖啡，一点慢下来的时间。\n今天，也收集到了生活的小小美好。", photo: "/assets/coffee.jpg" };
 export function normalizeState(value) {
   const result = structuredClone(value);
   const autoCover = { "Daily Life": ["floral-notebook", "tulip"], Travel: ["travel-album", "postcard"], Food: ["scrapbook-collage", "croissant"] };
@@ -140,6 +141,13 @@ export function normalizeState(value) {
   for (const entry of [...result.entries, ...Object.values(result.drafts)]) {
     // The sample page briefly used a drawn scene; it goes back to the photo.
     if (entry.isDemo && entry.id === "sample-today" && /^scene:/.test(entry.photo || "")) entry.photo = "/assets/coffee.jpg";
+    // Earlier, writing on the sample day kept the sample cover as my own. If
+    // that cover is still exactly the sample, it is cleared (my pages stay).
+    if (!entry.isDemo && entry.id === "sample-today" && entry.title === SAMPLE_COVER.title && (entry.body || "") === SAMPLE_COVER.body && entry.photo === SAMPLE_COVER.photo) {
+      entry.title = "";
+      entry.body = "";
+      entry.photo = "";
+    }
     entry.media ||= [];
     entry.fieldValues ||= {};
     entry.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };

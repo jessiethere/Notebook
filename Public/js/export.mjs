@@ -210,7 +210,17 @@ export async function renderJournalCanvas(editor, options = {}) {
     try {
       const image = await loadImage(resolvePhoto(editor.backdrop));
       const ratio = Math.max(1080 / image.width, 1350 / image.height);
-      ctx.drawImage(image, (1080 - image.width * ratio) / 2, (1350 - image.height * ratio) / 2, image.width * ratio, image.height * ratio);
+      if (backdropMatch[1] === "media") {
+        // My own photo: whole, over a soft blurred copy (as on screen).
+        ctx.save();
+        if ("filter" in ctx) ctx.filter = "blur(36px) saturate(1.1)";
+        ctx.drawImage(image, (1080 - image.width * ratio) / 2 - 40, (1350 - image.height * ratio) / 2 - 40, image.width * ratio + 80, image.height * ratio + 80);
+        ctx.restore();
+        ctx.fillStyle = "rgba(255,253,248,.35)";
+        ctx.fillRect(0, 0, 1080, 1350);
+        const fit = Math.min(1080 / image.width, 1350 / image.height);
+        ctx.drawImage(image, (1080 - image.width * fit) / 2, (1350 - image.height * fit) / 2, image.width * fit, image.height * fit);
+      } else ctx.drawImage(image, (1080 - image.width * ratio) / 2, (1350 - image.height * ratio) / 2, image.width * ratio, image.height * ratio);
     } catch {
       // Keep the plain paper if the background cannot load.
     }

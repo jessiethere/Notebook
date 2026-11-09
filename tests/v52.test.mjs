@@ -23,8 +23,7 @@ test("photos keep their own shape: nothing is cropped in the clean and hero look
     for (const variant of [0, 2]) {
       const slots = smartLayout(aspects, variant);
       assert.equal(slots.length, aspects.length);
-      // (One photo's hero look fills the page, so it may crop on purpose.)
-      if (aspects.length > 1 || variant === 0) assert.ok(Math.max(...cropLoss(aspects, slots)) < 0.02, `${aspects} / ${variant}`);
+      assert.ok(Math.max(...cropLoss(aspects, slots)) < 0.02, `${aspects} / ${variant}`);
       assert.ok(slots.every(inside), "on the page");
       if (aspects.length > 1 || variant === 0) {
         for (let i = 0; i < slots.length; i++) for (let j = i + 1; j < slots.length; j++) assert.ok(!overlap(slots[i], slots[j]), `no overlap ${aspects} / ${variant}`);
@@ -41,7 +40,12 @@ test("three looks to shuffle, each different", () => {
   }
   const scrapbook = smartLayout([1.5, 0.75, 1], 1);
   assert.ok(scrapbook.every((s) => s.frame === "border" && s.rotation !== 0));
-  assert.deepEqual(smartLayout([1.2], 2)[0], { x: 50, y: 50, w: 100, h: 100, rotation: 0, frame: "bare", tape: false }, "one photo can fill the page");
+  const big = smartLayout([1.2], 2)[0];
+  assert.equal(big.w, 100, "one photo can span the page");
+  assert.ok(cropLoss([1.2], [big])[0] < 0.02, "…without being cropped");
+  const tall = smartLayout([0.75], 2)[0];
+  assert.equal(tall.h, 100);
+  assert.ok(cropLoss([0.75], [tall])[0] < 0.02);
 });
 
 test("rows use the page's 4:5 shape; odd sizes are tamed", () => {

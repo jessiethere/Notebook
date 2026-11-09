@@ -72,6 +72,20 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 5. Delete a story right from its card; clear the day page ("no day page").
     await menu(page, "home");
+    // Today's sample is only an example (writing starts a fresh page), so
+    // this test makes today's page my own first: a cover with the photo.
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
+    await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1"));
+      const e = s.entries.find((x) => x.id === "sample-today");
+      if (e) Object.assign(e, { isDemo: false, title: "我的今天" });
+      localStorage.setItem("little-days.v1", JSON.stringify(s));
+    });
+    await page.reload();
+    await page.waitForSelector(".hero");
+
     await page.locator('.home-mag .moment-cta').tap();
     await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector('#journal-canvas [data-inline="title"]');

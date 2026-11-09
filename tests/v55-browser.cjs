@@ -101,6 +101,45 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(await page.locator(`[data-moment-view="page-${d1}"]`).count(), 0);
     passed.push("⋯ on a page: edit opens it in the studio; delete (confirmed) removes it");
 
+    // 5. Writing on a day that only has a sample starts my own page; my own
+    //    photo as a whole page is shown whole; Save floats when scrolled away.
+    const fresh = await (await browser.newContext({ ...devices["iPhone 13"] })).newPage();
+    fresh.on("pageerror", (error) => errors.push(error.message));
+    await fresh.goto(base);
+    await fresh.waitForSelector(".hero");
+    await fresh.locator('#navigation [data-page="studio"]').tap();
+    await fresh.locator('[data-action="quick-continue"]').tap().catch(() => {});
+    if (!(await fresh.locator("#journal-canvas").count())) {
+      await fresh.locator('[data-action="quick-way"][data-way="write"]').tap();
+      await fresh.locator('[data-action="quick-start"]').tap();
+    }
+    await fresh.waitForSelector("#journal-canvas");
+    assert.equal(await fresh.locator('.chapter-chips .cover-chip').innerText().then((t) => /把日子过成喜欢的样子/.test(t)), false, "the sample cover is not my page");
+    // Photo + a line with my own (portrait) photo, from the page modes.
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const portrait = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Photos/LD-photo-latte-art.jpg");
+    await fresh.locator('[data-action="add-moment"]').first().tap();
+    await fresh.locator('[data-action="page-mode"][data-mode="line"]').tap();
+    const chooser = fresh.waitForEvent("filechooser");
+    await fresh.locator('#choose-dialog [data-action="choose-album"]').tap();
+    await (await chooser).setFiles(portrait);
+    await fresh.waitForSelector("#journal-canvas.own-backdrop .backdrop-whole");
+    assert.equal(await fresh.locator("#journal-canvas .backdrop-whole").evaluate((img) => getComputedStyle(img).objectFit), "contain", "shown whole, not cropped");
+    await fresh.keyboard.type("整张照片都在");
+    await fresh.evaluate(() => document.activeElement.blur());
+    // Scroll the top bar away: the floating Save appears and saves the day.
+    await fresh.evaluate(() => (document.querySelector("#app-scroll").scrollTop = 600));
+    await fresh.waitForSelector(".float-save:not([hidden])");
+    await fresh.locator(".float-save").tap();
+    await fresh.waitForSelector(".hero");
+    const saved = await fresh.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);
+    assert.equal(saved.isDemo, false);
+    assert.notEqual(saved.title, "把日子过成喜欢的样子", "no sample words on my day");
+    assert.notEqual(saved.photo, "/assets/coffee.jpg", "no sample photo on my day");
+    assert.ok(saved.moments.some((m) => /^media:/.test(m.backdrop || "")));
+    passed.push("writing on the sample day starts my own page; my own photo is shown whole; floating Save when the top bar is away");
+
     assert.deepEqual(errors, []);
     console.log(`V5.7 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
   } finally {

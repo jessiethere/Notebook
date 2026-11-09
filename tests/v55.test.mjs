@@ -42,3 +42,22 @@ test("only real pages count: samples and empty days do not", () => {
   };
   assert.deepEqual([...recordedDays(state)].sort(), ["2026-11-07", "2026-11-09"]);
 });
+
+test("a sample cover that was saved as my own is cleared; my pages stay", async () => {
+  const { normalizeState } = await import("../Public/js/model.mjs");
+  const state = normalizeState({
+    schemaVersion: 1,
+    habits: [],
+    books: [],
+    checks: [],
+    drafts: {},
+    entries: [
+      { id: "sample-today", date: "2026-11-09", isDemo: false, title: "把日子过成喜欢的样子", body: "一杯热咖啡，一点慢下来的时间。\n今天，也收集到了生活的小小美好。", photo: "/assets/coffee.jpg", layers: [], media: [], moments: [{ id: "m", title: "奔跑", body: "", layers: [], media: [] }] },
+      { id: "sample-today", date: "2026-11-08", isDemo: false, title: "我改过的标题", body: "", photo: "/assets/coffee.jpg", layers: [], media: [], moments: [] },
+    ],
+  });
+  const [cleared, mine] = state.entries;
+  assert.deepEqual([cleared.title, cleared.body, cleared.photo], ["", "", ""]);
+  assert.equal(cleared.moments[0].title, "奔跑");
+  assert.equal(mine.title, "我改过的标题", "a changed cover is mine and stays");
+});

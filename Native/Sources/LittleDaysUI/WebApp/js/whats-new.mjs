@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.8",
+    date: "2026-11-09",
+    zh: {
+      title: "照片不再被裁掉；保存一直够得着；示例不会变成你的封面",
+      items: [
+        "用自己的照片做整页（照片 + 一句话）时，整张照片都显示，四周用这张照片的模糊效果补满；「换一种」的大图样子也不再裁掉。",
+        "往下滑、看不到上方「保存」时，工具栏上方会浮出一个「✓ 保存」。",
+        "在有示例的日子里写，会从一张干净的新页开始，保存后示例就被你的页面替换；之前已经被当成自己封面的示例图和示例文字会自动清掉（你自己的页都保留）。",
+      ],
+    },
+    en: {
+      title: "No more cropped photos; Save always in reach; samples never become your cover",
+      items: [
+        "Your own photo as a whole page (photo + a line) is shown whole, with a soft blurred copy filling the edges; the big-photo shuffle look no longer crops either.",
+        "Scroll down and a small “✓ Save” floats above the toolbar when the top Save is out of sight.",
+        "Writing on a day that has a sample starts a clean page, and saving replaces the sample. A sample cover that was earlier kept as yours is cleared (your own pages stay).",
+      ],
+    },
+  },
+  {
     version: "5.7",
     date: "2026-11-09",
     zh: {

@@ -11199,7 +11199,8 @@ dialog h2,
 /* ---------- Quick Create result & the shape-aware layout ---------- */
 .smart-page .line-strip {
   position: absolute;
-  z-index: 3;
+  /* Above the photos (a full-page photo sits under the caption). */
+  z-index: 25;
   left: 8%;
   right: 8%;
   bottom: 4%;
@@ -12008,4 +12009,48 @@ dialog h2,
 .streak-dialog:focus,
 .streak-dialog:focus-visible {
   outline: none;
+}
+
+/* My own photo as a whole page: whole, over a blurred copy of itself. */
+.own-backdrop .backdrop-fill {
+  position: absolute;
+  inset: -8%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(18px) saturate(1.1);
+  opacity: 0.85;
+}
+.own-backdrop .backdrop-whole {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* When the top Save has scrolled away, a small Save floats above the dock. */
+.float-save {
+  position: sticky;
+  z-index: 12;
+  bottom: 96px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  min-height: 40px;
+  margin: 0 0 -40px auto;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #7d8e66;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px #3c2d1e40;
+}
+.float-save[hidden] {
+  display: none;
+}
+.float-save svg {
+  width: 16px;
+  height: 16px;
 }

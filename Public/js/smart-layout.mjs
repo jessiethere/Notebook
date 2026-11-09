@@ -114,8 +114,10 @@ export function smartLayout(aspectsIn, variant = 0) {
   const look = SMART_VARIANTS[((variant % SMART_VARIANTS.length) + SMART_VARIANTS.length) % SMART_VARIANTS.length];
   if (n === 1) {
     if (look === "hero") {
-      // Full bleed: the photo is the page; the caption sits on top of it.
-      return [finish({ x: 50, y: 50, w: 100, h: 100 }, { frame: "bare" })];
+      // As big as the page allows, edge to edge, in its own shape (never
+      // cropped); the caption sits over its lower edge.
+      const { slots } = justify(aspects, [1], { top: 0, bottom: 100, left: 0, right: 100 }, 0);
+      return slots.map((s) => finish(s, { frame: "bare" }));
     }
     const region = look === "scrapbook" ? { top: 9, bottom: 76, left: 14, right: 86 } : SMART_REGION;
     const { slots } = justify(aspects, [1], region);

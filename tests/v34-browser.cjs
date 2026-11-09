@@ -34,6 +34,19 @@ async function size(download) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
+    // Today's sample is only an example (writing starts a fresh page), so
+    // this test makes today's page my own first: a cover with the photo.
+    await page.locator('[data-action="check"][data-habit="move"]').first().click();
+    await page.locator('[data-action="check"][data-habit="move"]').first().click();
+    await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
+    await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1"));
+      const e = s.entries.find((x) => x.id === "sample-today");
+      if (e) Object.assign(e, { isDemo: false, title: "我的今天" });
+      localStorage.setItem("little-days.v1", JSON.stringify(s));
+    });
+    await page.reload();
+    await page.waitForSelector(".hero");
     const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
