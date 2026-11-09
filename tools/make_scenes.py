@@ -190,12 +190,11 @@ NAMES = {
 # Page backgrounds (library.json "sceneCollections"). Real photos for a page's
 # picture live in tools/fetch_photos.py. The hand-drawn 'life' scenes are kept
 # only so pages that already use them still show them ("retired": not offered).
+# Kaleidoscopes, ribbons and the cartoon sky are retired too (the user found
+# them too busy): kept for pages that use them, no longer offered.
 COLLECTION_INFO = {
     'color': ('渐变色彩', 'Color', '柔和的光与颜色，铺满整页。', 'Soft light and color across the page.'),
     'pattern': ('可爱图案', 'Patterns', '云朵、小花、星星和爱心。', 'Clouds, flowers, stars and hearts.'),
-    'kaleido': ('万花筒', 'Kaleidoscope', '对称的花纹，每一张都不一样。', 'Mirrored patterns, each one different.'),
-    'ribbons': ('光影丝带', 'Ribbons', '深色上流动的发光彩带。', 'Glowing ribbons across the dark.'),
-    'sky': ('星空', 'Sky', '星球、月光和星云。', 'Planets, moonlight and nebulae.'),
 }
 # Backgrounds dark enough that words on them are set in white.
 DARK = {'color-midnight', 'kaleido-violet', 'pattern-stars', 'ribbons-aurora', 'ribbons-candy', 'ribbons-ember',
@@ -220,7 +219,7 @@ if __name__ == '__main__':
     catalog = json.loads(library.read_text(encoding='utf-8'))
     entries = [{'id': k, 'collection': 'life', 'category': c, 'nameZh': zh, 'nameEn': en, 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt', 'retired': True} for k, (zh, en, c) in NAMES.items()]
     for collection, keys in wp.COLLECTIONS[1:]:
-        entries += [{'id': k, 'collection': collection, 'category': collection, 'nameZh': wp.NAMES[k][0], 'nameEn': wp.NAMES[k][1], 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt', **({'tone': 'dark'} if k in DARK else {})} for k in keys]
+        entries += [{'id': k, 'collection': collection, 'category': collection, 'nameZh': wp.NAMES[k][0], 'nameEn': wp.NAMES[k][1], 'file': f'LD-scene-{k}.svg', 'license': 'LittleDays-Original-Scenes.txt', **({'tone': 'dark'} if k in DARK else {}), **({} if collection in COLLECTION_INFO else {'retired': True})} for k in keys]
     catalog['scenes'] = entries
     catalog['sceneCollections'] = [{'id': k, 'nameZh': v[0], 'nameEn': v[1], 'descZh': v[2], 'descEn': v[3]} for k, v in COLLECTION_INFO.items()]
     library.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

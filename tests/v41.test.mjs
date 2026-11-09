@@ -10,10 +10,12 @@ const library = JSON.parse(readFileSync(new URL("library.json", R)));
 
 test("every scene is listed with an original-art notice and its file exists", () => {
   assert.equal(library.scenes.length, 33);
-  // Five background collections, each listed with names and a line about it.
-  // The hand-drawn "life" scenes are retired: kept for older pages, not offered.
-  assert.deepEqual(library.sceneCollections.map((c) => c.id), ["color", "pattern", "kaleido", "ribbons", "sky"]);
-  assert.deepEqual(library.scenes.filter((s) => s.retired).map((s) => s.collection), Array(12).fill("life"));
+  // Two background collections, each listed with names and a line about it.
+  // Retired (kept for older pages, not offered): the hand-drawn "life" scenes,
+  // kaleidoscopes, ribbons and the cartoon sky.
+  assert.deepEqual(library.sceneCollections.map((c) => c.id), ["color", "pattern"]);
+  assert.deepEqual([...new Set(library.scenes.filter((s) => s.retired).map((s) => s.collection))], ["life", "ribbons", "kaleido", "sky"]);
+  assert.equal(library.scenes.filter((s) => !s.retired).length, 10);
   for (const c of library.sceneCollections) {
     assert.ok(c.nameZh && c.nameEn && c.descZh && c.descEn);
     assert.ok(library.scenes.some((s) => s.collection === c.id), c.id);

@@ -52,7 +52,14 @@ test("a page background covers the paper; words sit on a frosted card (white on 
   assert.equal(backdropOf({}, ctx), null);
   assert.equal(backdropOf({ backdrop: "scene:nope" }, ctx), null);
   assert.equal(backdropOf({ backdrop: "scene:color-peach" }, ctx).dark, false);
-  assert.equal(backdropOf({ backdrop: "scene:sky-moon" }, ctx).dark, true);
+  assert.equal(backdropOf({ backdrop: "scene:sky-moon" }, ctx).dark, true); // retired, still shown
+  // Library photos can be backgrounds too ("photo mood"), with a tone.
+  const photoCtx = { ...ctx, media: { resolve: (r) => (r.startsWith("photo:") ? `library/photos/LD-photo-${r.slice(6)}.jpg` : ctx.media.resolve(r)) } };
+  assert.deepEqual(library.photos.filter((p) => p.backdrop).map((p) => p.tone).sort(), [...Array(6).fill("dark"), ...Array(4).fill("light")]);
+  assert.equal(backdropOf({ backdrop: "photo:starry-lake" }, photoCtx).dark, true);
+  assert.equal(backdropOf({ backdrop: "photo:waves" }, photoCtx).dark, false);
+  assert.match(backdropOf({ backdrop: "photo:waves" }, photoCtx).src, /LD-photo-waves\.jpg$/);
+  assert.equal(backdropOf({ backdrop: "photo:nope" }, photoCtx), null);
   const day = { title: "今天", body: "", photo: "", layers: [], template: "cute", backdrop: "scene:sky-moon" };
   const html = canvasHTML(day, ctx, { readOnly: true });
   assert.match(html, /has-backdrop dark-backdrop/);

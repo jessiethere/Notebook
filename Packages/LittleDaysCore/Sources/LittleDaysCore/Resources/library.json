@@ -1204,7 +1204,8 @@
       "nameEn": "Aurora ribbons",
       "file": "LD-scene-ribbons-aurora.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "ribbons-sunset",
@@ -1214,7 +1215,8 @@
       "nameEn": "Sunset ribbons",
       "file": "LD-scene-ribbons-sunset.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "ribbons-candy",
@@ -1224,7 +1226,8 @@
       "nameEn": "Candy ribbons",
       "file": "LD-scene-ribbons-candy.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "ribbons-ember",
@@ -1234,7 +1237,8 @@
       "nameEn": "Embers",
       "file": "LD-scene-ribbons-ember.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "kaleido-lagoon",
@@ -1243,7 +1247,8 @@
       "nameZh": "泻湖",
       "nameEn": "Lagoon",
       "file": "LD-scene-kaleido-lagoon.svg",
-      "license": "LittleDays-Original-Scenes.txt"
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
     },
     {
       "id": "kaleido-garden",
@@ -1252,7 +1257,8 @@
       "nameZh": "花园",
       "nameEn": "Garden",
       "file": "LD-scene-kaleido-garden.svg",
-      "license": "LittleDays-Original-Scenes.txt"
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
     },
     {
       "id": "kaleido-sunrise",
@@ -1261,7 +1267,8 @@
       "nameZh": "朝霞",
       "nameEn": "Sunrise",
       "file": "LD-scene-kaleido-sunrise.svg",
-      "license": "LittleDays-Original-Scenes.txt"
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
     },
     {
       "id": "kaleido-violet",
@@ -1271,7 +1278,8 @@
       "nameEn": "Amethyst",
       "file": "LD-scene-kaleido-violet.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "pattern-clouds",
@@ -1318,7 +1326,8 @@
       "nameEn": "Blue planet",
       "file": "LD-scene-sky-blue-planet.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "sky-ringed",
@@ -1328,7 +1337,8 @@
       "nameEn": "Ringed planet",
       "file": "LD-scene-sky-ringed.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     },
     {
       "id": "sky-moon",
@@ -1338,7 +1348,8 @@
       "nameEn": "Moonlight",
       "file": "LD-scene-sky-moon.svg",
       "license": "LittleDays-Original-Scenes.txt",
-      "tone": "dark"
+      "tone": "dark",
+      "retired": true
     }
   ],
   "sceneCollections": [
@@ -1355,27 +1366,6 @@
       "nameEn": "Patterns",
       "descZh": "云朵、小花、星星和爱心。",
       "descEn": "Clouds, flowers, stars and hearts."
-    },
-    {
-      "id": "kaleido",
-      "nameZh": "万花筒",
-      "nameEn": "Kaleidoscope",
-      "descZh": "对称的花纹，每一张都不一样。",
-      "descEn": "Mirrored patterns, each one different."
-    },
-    {
-      "id": "ribbons",
-      "nameZh": "光影丝带",
-      "nameEn": "Ribbons",
-      "descZh": "深色上流动的发光彩带。",
-      "descEn": "Glowing ribbons across the dark."
-    },
-    {
-      "id": "sky",
-      "nameZh": "星空",
-      "nameEn": "Sky",
-      "descZh": "星球、月光和星云。",
-      "descEn": "Planets, moonlight and nebulae."
     }
   ],
   "photos": [
@@ -1575,7 +1565,9 @@
       "nameEn": "Cherry blossom",
       "file": "LD-photo-cherry-blossom.jpg",
       "source": "https://images.unsplash.com/photo-1522383225653-ed111181a951",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
     },
     {
       "id": "little-cactus",
@@ -1656,7 +1648,9 @@
       "nameEn": "Beach sunset",
       "file": "LD-photo-beach-sunset.jpg",
       "source": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
     },
     {
       "id": "waves",
@@ -1665,7 +1659,9 @@
       "nameEn": "Waves",
       "file": "LD-photo-waves.jpg",
       "source": "https://images.unsplash.com/photo-1505142468610-359e7d316be0",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
     },
     {
       "id": "beach-day",
@@ -1701,7 +1697,9 @@
       "nameEn": "Purple dusk",
       "file": "LD-photo-purple-dusk.jpg",
       "source": "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "valley-morning",
@@ -1719,7 +1717,9 @@
       "nameEn": "Golden field",
       "file": "LD-photo-golden-field.jpg",
       "source": "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "cloud-sea",
@@ -1728,7 +1728,9 @@
       "nameEn": "Sea of clouds",
       "file": "LD-photo-cloud-sea.jpg",
       "source": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "pink-ridges",
@@ -1737,7 +1739,9 @@
       "nameEn": "Pink ridges",
       "file": "LD-photo-pink-ridges.jpg",
       "source": "https://images.unsplash.com/photo-1500964757637-c85e8a162699",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "green-hills",
@@ -1782,7 +1786,9 @@
       "nameEn": "Starry lake",
       "file": "LD-photo-starry-lake.jpg",
       "source": "https://images.unsplash.com/photo-1534447677768-be436bb09401",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "violet-lake",
@@ -2043,7 +2049,9 @@
       "nameEn": "Misty hills",
       "file": "LD-photo-misty-hills.jpg",
       "source": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
     },
     {
       "id": "snowy-forest",
@@ -2052,7 +2060,9 @@
       "nameEn": "Snowy forest",
       "file": "LD-photo-snowy-forest.jpg",
       "source": "https://images.unsplash.com/photo-1491002052546-bf38f186af56",
-      "license": "Unsplash-Photos.txt"
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
     },
     {
       "id": "frost",

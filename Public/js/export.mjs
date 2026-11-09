@@ -200,11 +200,11 @@ async function renderJournalCanvas(editor, options = {}) {
     }
   }
   drawPaper(ctx, editor.template);
-  const backdropId = /^scene:([a-z0-9-]+)$/.exec(editor.backdrop || "")?.[1];
-  const backdrop = backdropId && (options.catalog?.scenes || []).find((scene) => scene.id === backdropId);
+  const backdropMatch = /^(scene|photo):([a-z0-9-]+)$/.exec(editor.backdrop || "");
+  const backdrop = backdropMatch && (backdropMatch[1] === "scene" ? options.catalog?.scenes : options.catalog?.photos)?.find((item) => item.id === backdropMatch[2]);
   if (backdrop) {
     try {
-      const image = await loadImage(resolvePhoto(`scene:${backdropId}`));
+      const image = await loadImage(resolvePhoto(editor.backdrop));
       const ratio = Math.max(1080 / image.width, 1350 / image.height);
       ctx.drawImage(image, (1080 - image.width * ratio) / 2, (1350 - image.height * ratio) / 2, image.width * ratio, image.height * ratio);
     } catch {

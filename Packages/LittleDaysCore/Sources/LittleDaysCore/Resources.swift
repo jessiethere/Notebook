@@ -94,6 +94,10 @@ public struct PhotoAsset: Decodable, Identifiable {
     public let file: String
     public let source: String
     public let license: String
+    /// Also offered as a whole-page background ("照片氛围").
+    public let backdrop: Bool?
+    /// "dark": words on it as a background are set in white.
+    public let tone: String?
 }
 
 public struct SceneCollection: Decodable, Identifiable {

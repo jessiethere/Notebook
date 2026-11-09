@@ -50,18 +50,18 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#choose-dialog [data-action="open-backdrops"]').tap();
     await page.waitForSelector('.tool-sheet.tall[data-tool-row="paper"] .backdrop-picker');
     assert.equal(await page.locator("#choose-dialog[open]").count(), 0);
-    assert.deepEqual(await page.$$eval(".backdrop-picker h4", (els) => els.map((el) => el.textContent)), ["渐变色彩", "可爱图案", "万花筒", "光影丝带", "星空"]);
-    assert.equal(await page.locator(".backdrop-option img").count(), 21);
+    assert.deepEqual(await page.$$eval(".backdrop-picker h4", (els) => els.map((el) => el.textContent)), ["照片氛围", "渐变色彩", "可爱图案"]);
+    assert.equal(await page.locator(".backdrop-option img").count(), 20);
     assert.equal(await page.locator('.backdrop-option[data-backdrop=""]').getAttribute("aria-pressed"), "true");
     const first = await page.locator(".tool-body > *").first().getAttribute("class");
     assert.match(first, /backdrop-picker/, "backgrounds come before paper styles");
-    passed.push("「换个页面背景」 opens Paper → backgrounds first (5 groups, 21 backgrounds)");
+    passed.push("「换个页面背景」 opens Paper → backgrounds first (photo mood, gradients, patterns: 20)");
 
     // 3. A light background: the page is covered, words on a frosted card.
-    await page.locator('.backdrop-option[data-backdrop="pattern-clouds"]').tap();
+    await page.locator('.backdrop-option[data-backdrop="scene:pattern-clouds"]').tap();
     await page.waitForSelector("#journal-canvas.has-backdrop:not(.dark-backdrop) .backdrop-veil");
     assert.match(await page.locator("#journal-canvas").evaluate((el) => getComputedStyle(el).backgroundImage), /LD-scene-pattern-clouds\.svg/);
-    assert.equal(await page.locator('.backdrop-option[data-backdrop="pattern-clouds"]').getAttribute("aria-pressed"), "true");
+    assert.equal(await page.locator('.backdrop-option[data-backdrop="scene:pattern-clouds"]').getAttribute("aria-pressed"), "true");
     await shot("v44-picker");
     await page.locator('[data-action="tool-close"]').tap();
     await page.waitForTimeout(250);
@@ -70,7 +70,7 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 4. A dark background: the words turn white.
     await page.locator('.dock-btn[data-tool="paper"]').tap();
-    await page.locator('.backdrop-option[data-backdrop="sky-moon"]').tap();
+    await page.locator('.backdrop-option[data-backdrop="photo:starry-lake"]').tap();
     await page.waitForSelector("#journal-canvas.dark-backdrop");
     assert.equal(await page.locator("#journal-canvas .canvas-title").evaluate((el) => getComputedStyle(el).color), "rgb(255, 255, 255)");
     assert.notEqual(await page.locator("#journal-canvas .canvas-body").evaluate((el) => getComputedStyle(el).color), "rgb(153, 140, 122)");
@@ -98,7 +98,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('[data-action="save-entry"]').tap();
     await page.waitForSelector(".hero");
     const saved = (await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")))).entries.find((e) => e.date === today);
-    assert.equal(saved.backdrop, "scene:sky-moon");
+    assert.equal(saved.backdrop, "photo:starry-lake");
     assert.equal(saved.photo, "photo:latte-art");
     await menu(page, "calendar");
     await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();

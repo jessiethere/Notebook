@@ -16,12 +16,13 @@ final class CoreTests: XCTestCase {
         // Original scene illustrations (photo-like material) and their notice.
         let scenes = try XCTUnwrap(catalog.scenes)
         XCTAssertEqual(scenes.count, 33)
-        XCTAssertEqual(catalog.sceneCollections?.count, 5)
-        XCTAssertEqual(scenes.filter { $0.retired == true }.count, 12)
+        XCTAssertEqual(catalog.sceneCollections?.count, 2)
+        XCTAssertEqual(scenes.filter { $0.retired == true }.count, 23)
         // Real photos for a page's picture (Unsplash License) and their source list.
         let photos = try XCTUnwrap(catalog.photos)
         XCTAssertEqual(photos.count, 78)
         XCTAssertEqual(catalog.photoCollections?.count, 13)
+        XCTAssertEqual(photos.filter { $0.backdrop == true }.count, 10)
         let photo = try SharedResources.libraryData(category: "photos", filename: photos[0].file)
         XCTAssertEqual(Array(photo.prefix(2)), [0xFF, 0xD8])
         XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "photos", filename: photos[0].license), as: UTF8.self).contains("Unsplash License"))

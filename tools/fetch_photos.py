@@ -122,6 +122,22 @@ PHOTOS = {
 }
 
 
+# Photos that also work as a whole-page background ("照片氛围"): open skies,
+# water and soft scenery with room for a frosted text card.
+BACKDROPS = ['beach-sunset', 'waves', 'cloud-sea', 'pink-ridges', 'purple-dusk', 'cherry-blossom',
+             'misty-hills', 'golden-field', 'snowy-forest', 'starry-lake']
+
+
+def tone(path):
+    """'dark' when the lower part of the photo (where the words sit) is dark."""
+    from PIL import Image
+    image = Image.open(path).convert('L')
+    w, h = image.size
+    lower = image.crop((0, int(h * 0.55), w, h)).resize((40, 20))
+    mean = sum(lower.tobytes()) / (40 * 20)
+    return 'dark' if mean < 120 else 'light'
+
+
 def source(unsplash_id):
     return f'https://images.unsplash.com/photo-{unsplash_id}'
 
@@ -145,7 +161,9 @@ def main():
     library = RES / 'library.json'
     catalog = json.loads(library.read_text(encoding='utf-8'))
     catalog['photos'] = [{'id': key, 'collection': c, 'nameZh': zh, 'nameEn': en, 'file': f'LD-photo-{key}.jpg',
-                          'source': source(uid), 'license': LICENSE} for key, (c, uid, zh, en) in PHOTOS.items()]
+                          'source': source(uid), 'license': LICENSE,
+                          **({'backdrop': True, 'tone': tone(OUT / f'LD-photo-{key}.jpg')} if key in BACKDROPS else {})}
+                         for key, (c, uid, zh, en) in PHOTOS.items()]
     catalog['photoCollections'] = [{'id': k, 'nameZh': v[0], 'nameEn': v[1], 'descZh': v[2], 'descEn': v[3]} for k, v in COLLECTIONS.items()]
     library.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(f'{len(PHOTOS)} photos in {len(COLLECTIONS)} collections → {OUT}')

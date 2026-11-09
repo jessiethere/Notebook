@@ -39,3 +39,4 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - **照片素材**：78 张来自 Unsplash 的照片，按心情和事件分 13 组，位于 `Resources/Photos/LD-photo-*.jpg`（800×1000 JPEG，约 12 MB）。由 `tools/fetch_photos.py` 一次性下载并随 App 打包，运行时不请求 Unsplash。每个文件的原图地址写在 `Photos/Unsplash-Photos.txt` 和 `library.json` 的 `photos[].source`。
 - 许可：Unsplash License（<https://unsplash.com/license>）允许免费商用、修改，不要求署名，但不允许把照片原样汇编成同类图库或壁纸服务。Little Days 只把它们作为写手帐时可选的配图；正式上架前仍应按上文完成全部资产的来源与授权审核。挑选时尽量避开可辨认的人脸和品牌标志。
 - **页面背景**：`Scenes/` 里的渐变、可爱图案、万花筒、光影丝带、星空（21 张）是项目原创，用作页面背景（`backdrop`）；12 张手绘“生活小景”标记为 `retired`，只为兼容已使用它们的页面而保留。
+- 2026-11-09 更新：万花筒、光影丝带、星空也标记为 `retired`（只为兼容保留）。照片素材中有 10 张标记 `backdrop: true`，可作为整页背景（“照片氛围”），`tone` 由 `tools/fetch_photos.py` 按画面下半部分亮度计算。

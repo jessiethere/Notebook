@@ -132,12 +132,15 @@ export function layerHTML(layer, ctx, options = {}) {
   return `<span class="${classes}"${interactive} style="${esc(layerGeometry(layer) + extraStyle)}">${inner}</span>`;
 }
 
-// The page's background picture (library.json "scenes"), if it has one.
+// The page's background picture, if it has one: original artwork
+// ("scene:<id>", library.json "scenes") or a library photo ("photo:<id>").
 export function backdropOf(page, ctx) {
-  const id = /^scene:([a-z0-9-]+)$/.exec(page?.backdrop || "")?.[1];
-  const scene = id && (ctx.catalog?.scenes || []).find((item) => item.id === id);
-  if (!scene) return null;
-  return { id, src: ctx.media.resolve(`scene:${id}`), dark: scene.tone === "dark" };
+  const match = /^(scene|photo):([a-z0-9-]+)$/.exec(page?.backdrop || "");
+  if (!match) return null;
+  const [reference, kind, id] = match;
+  const item = (kind === "scene" ? ctx.catalog?.scenes : ctx.catalog?.photos)?.find((entry) => entry.id === id);
+  if (!item) return null;
+  return { id, kind, src: ctx.media.resolve(reference), dark: item.tone === "dark" };
 }
 
 // page: an Entry (day page) or a Moment. Day pages keep the legacy fixed

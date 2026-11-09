@@ -4100,8 +4100,8 @@
     "en": "Page background"
   },
   "backdrop.note": {
-    "zh": "渐变、可爱图案和星空铺满整页，文字会放在一块磨砂卡片上。",
-    "en": "Gradients, cute patterns and sky across the whole page; the words sit on a frosted card."
+    "zh": "风景照片、渐变和可爱图案铺满整页，文字会放在一块磨砂卡片上。",
+    "en": "Scenery photos, gradients and cute patterns across the whole page; the words sit on a frosted card."
   },
   "backdrop.none": {
     "zh": "不用背景",
@@ -4116,7 +4116,27 @@
     "en": "Change the page background"
   },
   "backdrop.linkHint": {
-    "zh": "渐变、可爱图案、星空……",
-    "en": "Gradients, cute patterns, sky …"
+    "zh": "风景照片、渐变、可爱图案……",
+    "en": "Scenery, gradients, cute patterns …"
+  },
+  "home.today": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "home.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "home.inspire": {
+    "zh": "从一张照片开始",
+    "en": "Start from a photo"
+  },
+  "home.library": {
+    "zh": "照片素材",
+    "en": "Photo library"
+  },
+  "backdrop.photos": {
+    "zh": "照片氛围",
+    "en": "Photo mood"
   }
 }

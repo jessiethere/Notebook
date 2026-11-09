@@ -123,6 +123,10 @@ const paths = {
   gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z",
   users:
     "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6",
+  pen: "M4 20h4L19 9l-4-4L4 16v4ZM14 6l4 4",
+  pulse: "M3 12h4l2-6 4 12 2-6h6",
+  cloud: "M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.6 4.2 4.2 0 0 0 7 18Z",
+  palette: "M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.6 0-1.4 1-2.4 2.4-2.4H18a3 3 0 0 0 3-3c0-5-4-9-9-9ZM7.5 12h.01M10 8h.01M15 8h.01",
 };
 const icon = (name) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.spark}"/></svg>`;
@@ -137,10 +141,9 @@ const shortDate = (key) =>
     month: "long",
     day: "numeric",
   });
+// Habit themes as thin line icons (the home page keeps emoji to a minimum).
 const themeIcon = (theme) =>
-  ({ Learning: "📖", Fitness: "🌿", Wellness: "☁️", "Creative Life": "🎨" })[
-    theme
-  ] || "🌱";
+  icon({ Learning: "book", Fitness: "pulse", Wellness: "cloud", "Creative Life": "palette" }[theme] || "leaf");
 let media = new MediaStore(),
   catalog,
   bookDraft = null,
@@ -363,7 +366,7 @@ function habitRow(habit, date) {
   const done = state().checks.find(
     (check) => check.habitId === habit.id && check.date === date,
   );
-  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div><button class="note-button ${done?.note || done?.photo || done?.detail ? "has-note" : ""}" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done?.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">${done?.photo ? "🖼" : "✎"}<span>${t(done?.note || done?.photo || done?.detail ? "growth.noteShort" : "growth.addShort")}</span></button><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
+  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div><button class="note-button ${done?.note || done?.photo || done?.detail ? "has-note" : ""}" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done?.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">${icon(done?.photo ? "photo" : "pen")}<span>${t(done?.note || done?.photo || done?.detail ? "growth.noteShort" : "growth.addShort")}</span></button><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
 // One cover per day in a book: photos, date, mood and that day's Moments.
@@ -394,33 +397,41 @@ function bookCard(book) {
 }
 
 function home() {
-  // Calm home: one invitation to write; everything else lives in the tab bar.
+  // Photo-led home, like a magazine page: today's picture large, a row of
+  // library photos to start from, then habits and books.
   const entry = todayEntry(),
     completed = state().checks.filter((check) => check.date === dateKey()).length;
-  const date = new Date().toLocaleDateString(locale(), {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const now = new Date();
+  const weekday = now.toLocaleDateString(locale(), { weekday: "long" });
+  const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
   const photo = safePhoto(coverPhoto(entry));
   const moments = entry?.moments || [];
-  const preview = entry
-    ? `<button class="today-preview" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<span class="today-preview-mood">${esc(entry.mood || "✿")}</span>`}<span class="today-preview-copy"><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").slice(0, 40))}</small>${moments.length ? `<i>${t("day.statMoments", { count: moments.length })}</i>` : ""}${entry.isDemo ? `<i>${t("home.sample")}</i>` : ""}</span><span class="today-preview-go" aria-hidden="true">›</span></button>`
-    : (() => {
-        const scene = todayScene();
-        return scene
-          ? `<button class="today-scene" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b><em>${t("scene.useIt")} ›</em></span></button>`
-          : `<p class="today-blank">${t("home.blankBody")}</p>`;
-      })();
-  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
- <section class="hero today-card"><span class="date-label">${esc(date)}</span><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${preview}<button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
- <section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
+  const scene = todayScene();
+  let hero;
+  if (entry) {
+    const backdrop = photo || (scene ? safePhoto(`photo:${scene.id}`) : "");
+    const kicker = [t("home.today"), moments.length ? t("day.statMoments", { count: moments.length }) : "", entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
+    hero = `<button class="today-preview hero-photo" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${backdrop ? `<img src="${esc(backdrop)}" alt="${t("photo.alt")}">` : ""}<span class="hero-shade" aria-hidden="true"></span><span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").replace(/\s+/g, " ").slice(0, 60))}</small></span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
+  } else if (scene)
+    hero = `<button class="today-scene hero-photo" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span class="hero-shade" aria-hidden="true"></span><span class="hero-copy-block"><small class="hero-kicker">${t("scene.ofDay")} · ${esc(sceneName(scene))}</small><b>${t("home.prompt")}</b><em>${t("scene.useIt")} ›</em></span></button>`;
+  else hero = `<p class="today-blank">${t("home.blankBody")}</p>`;
+  const picks = [...todayPicks(), ...sceneCollections().map((c) => collectionScenes(c.id)[1])]
+    .filter((item, k, all) => item && item !== scene && all.indexOf(item) === k)
+    .slice(0, 6);
+  const inspire = picks.length
+    ? `<section class="home-section home-inspire"><div class="section-heading"><h2>${t("home.inspire")}</h2><button data-action="home-library">${t("home.library")} ›</button></div><div class="inspire-row">${picks
+        .map((item) => `<button class="inspire-card" data-action="use-scene" data-scene="${esc(item.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${item.id}`))}" alt="" loading="lazy"><span>${esc(sceneName(item))}</span></button>`)
+        .join("")}</div></section>`
+    : "";
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
+ <section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-moment"><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
+ ${inspire}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
    .join("")}</div></section><section class="home-section"><div class="section-heading"><h2>${t("home.books")}</h2><button data-action="nav" data-page="books">${t("home.allBooks")}</button></div><div class="book-grid">${[...state().books]
    .sort((a, b) => latestBook(b.id).localeCompare(latestBook(a.id)))
    .slice(0, 3)
    .map(bookCard)
-   .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p>`;
+   .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 function latestBook(bookId) {
   return (
@@ -1139,23 +1150,28 @@ function todayPicks() {
   });
   return [today, ...picks].filter((item, k, all) => item && all.indexOf(item) === k);
 }
-// Page backgrounds: original gradients, patterns, kaleidoscopes, ribbons, sky.
+// Page backgrounds: a few library photos ("photo mood"), then the original
+// gradients and cute patterns. Retired artwork is no longer offered.
 function backdrops() {
   return (catalog.scenes || []).filter((scene) => !scene.retired);
 }
 function backdropHTML(page) {
   const en = languageCode() === "en";
-  const current = /^scene:/.test(page.backdrop || "") ? page.backdrop.slice(6) : "";
-  const option = (id, inner, label) =>
-    `<button class="backdrop-option ${current === id ? "selected" : ""}" data-action="backdrop" data-backdrop="${esc(id)}" aria-pressed="${current === id}" aria-label="${esc(label)}">${inner}</button>`;
-  return `<section class="backdrop-picker"><div class="scene-head"><b>${t("backdrop.title")}</b><small>${t("backdrop.note")}</small></div><div class="backdrop-row backdrop-row-none">${option("", `<span class="backdrop-none">${t("backdrop.none")}</span>`, t("backdrop.none"))}</div>${(catalog.sceneCollections || [])
-    .map((c) => {
+  const current = /^(scene|photo):/.test(page.backdrop || "") ? page.backdrop : "";
+  const option = (reference, inner, label) =>
+    `<button class="backdrop-option ${current === reference ? "selected" : ""}" data-action="backdrop" data-backdrop="${esc(reference)}" aria-pressed="${current === reference}" aria-label="${esc(label)}">${inner}</button>`;
+  const thumb = (reference) => `<img src="${esc(safePhoto(reference))}" alt="" loading="lazy">`;
+  const photoMood = libraryPhotos().filter((photo) => photo.backdrop);
+  const groups = [
+    photoMood.length ? `<h4>${t("backdrop.photos")}</h4><div class="backdrop-row">${photoMood.map((photo) => option(`photo:${photo.id}`, thumb(`photo:${photo.id}`), sceneName(photo))).join("")}</div>` : "",
+    ...(catalog.sceneCollections || []).map((c) => {
       const items = backdrops().filter((scene) => scene.collection === c.id);
       return items.length
-        ? `<h4>${esc(en ? c.nameEn : c.nameZh)}</h4><div class="backdrop-row">${items.map((scene) => option(scene.id, `<img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">`, sceneName(scene))).join("")}</div>`
+        ? `<h4>${esc(en ? c.nameEn : c.nameZh)}</h4><div class="backdrop-row">${items.map((scene) => option(`scene:${scene.id}`, thumb(`scene:${scene.id}`), sceneName(scene))).join("")}</div>`
         : "";
-    })
-    .join("")}</section>`;
+    }),
+  ];
+  return `<section class="backdrop-picker"><div class="scene-head"><b>${t("backdrop.title")}</b><small>${t("backdrop.note")}</small></div><div class="backdrop-row backdrop-row-none">${option("", `<span class="backdrop-none">${t("backdrop.none")}</span>`, t("backdrop.none"))}</div>${groups.join("")}</section>`;
 }
 function sceneLibraryHTML() {
   const en = languageCode() === "en";
@@ -1943,9 +1959,9 @@ async function action(target) {
     render();
   }
   if (actionName === "backdrop") {
-    const id = target.dataset.backdrop;
+    const reference = target.dataset.backdrop;
     changeTarget((p) => {
-      if (id) p.backdrop = `scene:${id}`;
+      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) p.backdrop = reference;
       else delete p.backdrop;
     });
   }
@@ -3236,6 +3252,12 @@ async function v31Action(target) {
       return true;
     case "add-moment":
       addMomentNow();
+      return true;
+    case "home-library":
+      // Home → the whole photo library (album, today's picks, collections).
+      openStudio(dateKey());
+      beginStudio(null);
+      openPhotoChooser("layers");
       return true;
     case "quick-moment":
       // Home / Calendar / Day Detail: one tap to start writing a Moment.
