@@ -94,7 +94,7 @@ const shots = process.env.SHOTS_DIR || "";
     // 6. The day page: its title on the paper can be typed into too, and the
     // box below follows.
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await menu(page, "calendar");
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
@@ -109,8 +109,8 @@ const shots = process.env.SHOTS_DIR || "";
     await title.click();
     await page.keyboard.press("End");
     await page.keyboard.type("！");
-    await page.waitForFunction(() => document.querySelector("#entry-title")?.value.endsWith("！"));
-    passed.push("day page: type on the paper; the box below follows; reading mode stays read-only");
+    await page.waitForFunction(() => document.querySelector('#journal-canvas [data-inline="title"]')?.textContent.endsWith("！"));
+    passed.push("day page: type on the paper (no duplicate box below since V6.7); reading mode stays read-only");
 
     assert.deepEqual(errors, []);
     console.log(`V4.6 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

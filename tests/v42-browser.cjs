@@ -56,9 +56,9 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     }
     await menu(page, "studio");
     await openToday(page);
-    await page.locator("#entry-title").fill("我的第一页");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("我的第一页");
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await page.locator(".home-top .bell").tap();
     await page.waitForSelector('.inbox-item[data-type="level"]');
     assert.match(await page.locator('.inbox-item[data-type="level"]').innerText(), /升级啦/);

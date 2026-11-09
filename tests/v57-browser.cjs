@@ -44,7 +44,7 @@ const shots = process.env.SHOTS_DIR || "";
     assert.deepEqual(await bgm(), { music: "", playing: false }, "no music while writing");
     assert.match(await page.locator(".studio-music .music-chip").innerText(), /窗外下雨/);
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     const saved = await page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);
     const withMusic = saved.moments.find((m) => m.title === "有音乐的一页");
     assert.equal(withMusic.music, "rainy-window", "saved on the page");

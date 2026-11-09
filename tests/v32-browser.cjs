@@ -88,7 +88,7 @@ const shift = (key, days) => {
     await page.waitForSelector("#journal-canvas");
     // Tools are small icons in a dock at the bottom of the screen.
     const rows = await page.$$eval(".tool-dock [data-action='tool']", (els) => els.map((el) => el.dataset.tool));
-    assert.equal(await page.locator(".write-card #entry-title").count(), 1, "writing is always open");
+    assert.equal(await page.locator('#journal-canvas [data-inline="title"]').count(), 1, "the title is typed on the paper (always open)");
     for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
     // No second place to choose the journal or add media: those are the line
@@ -138,7 +138,7 @@ const shift = (key, days) => {
     await page.waitForFunction(() => document.querySelector('[data-tool-value="layout"]').textContent.includes("拍立得"));
     // Typing the title updates the page preview and the summary row.
     await tool("text");
-    await page.locator("#entry-title").fill("十一月的小日子");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("十一月的小日子");
     assert.match(await page.locator("#journal-canvas .canvas-title").innerText(), /十一月的小日子/);
     passed.push("studio desk: summary menu, one row open, pinned/enlargeable preview, 9 papers");
 
@@ -158,7 +158,7 @@ const shift = (key, days) => {
     await page.waitForFunction(() => document.querySelector('[data-tool-row="media"] audio').currentTime > 0.05);
     await page.locator('[data-tool-row="media"] .ld-play').click();
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     passed.push("moment media plays right after selecting the moment");
 
     // Pet / Parenting presets and five Chinese fonts.

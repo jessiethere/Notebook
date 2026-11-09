@@ -147,9 +147,9 @@ async function streamBytes(download) {
     assert.ok(book.coverImage.startsWith("media:"));
     await page.locator('[data-action="book-new-entry"]').click();
     await tool("text");
-    await page.locator("#entry-title").fill("我的第一片新叶 · My little leaf");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("我的第一片新叶 · My little leaf");
     await page
-      .locator("#entry-body")
+      .locator('#journal-canvas [data-inline="body"]')
       .fill("这些是用户自己的文字，不应随语言切换改变。");
     await tool("book");
     await page
@@ -296,7 +296,7 @@ async function streamBytes(download) {
     await nav("studio");
     await tool("text");
     assert.equal(
-      await page.locator("#entry-title").inputValue(),
+      await page.locator('#journal-canvas [data-inline="title"]').innerText(),
       "我的第一片新叶 · My little leaf",
     );
     await tool("font");
@@ -444,7 +444,7 @@ async function streamBytes(download) {
     await page.locator('[data-action="check"][data-habit="move"]').click();
     const newer = JSON.stringify(await read());
     await toolOn(second, "text");
-    await second.locator("#entry-body").fill("Unsaved work in the older tab");
+    await second.locator('#journal-canvas [data-inline="body"]').fill("Unsaved work in the older tab");
     await second.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("Another tab"),
     );

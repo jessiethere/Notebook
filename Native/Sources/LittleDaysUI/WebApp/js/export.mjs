@@ -284,7 +284,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     wrapText(ctx, editor.title || "", 540, editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
     if (editor.body) {
       ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#8D857B";
-      ctx.font = `34px ${font}`;
+      ctx.font = `34px ${options.fontFamily ? options.fontFamily(editor.bodyFont || editor.font, options.catalog) : font}`;
       wrapText(ctx, editor.body, 540, 1218, 860, 44, 1);
     }
     ctx.restore();

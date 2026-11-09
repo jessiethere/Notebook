@@ -87,8 +87,8 @@ const path = require("node:path");
       .first()
       .click();
     await tool("text");
-    await page.locator("#entry-title").fill("一朵花的练习");
-    await page.locator("#entry-body").fill("记住今天，也记住慢慢变好的自己。");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("一朵花的练习");
+    await page.locator('#journal-canvas [data-inline="body"]').fill("记住今天，也记住慢慢变好的自己。");
     // The journal is chosen in the line above the paper (not in the dock).
     await page.locator("[data-day-book]").selectOption(bookId);
     await tool("font");
@@ -187,21 +187,21 @@ const path = require("node:path");
     // Draft restore and text undo also work without formally saving a journal.
     await nav("studio");
     await tool("text");
-    await page.locator("#entry-title").fill("尚未收藏的草稿");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("尚未收藏的草稿");
     await waitSaved();
     await page.reload();
     await page.waitForSelector(".hero");
     await nav("studio");
     await tool("text");
     assert.equal(
-      await page.locator("#entry-title").inputValue(),
+      await page.locator('#journal-canvas [data-inline="title"]').innerText(),
       "尚未收藏的草稿",
     );
-    await page.locator("#entry-title").fill("修改后");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("修改后");
     assert.equal(await page.locator('[data-action="undo"]').isEnabled(), true);
     await page.locator('[data-action="undo"]').click();
     assert.equal(
-      await page.locator("#entry-title").inputValue(),
+      await page.locator('#journal-canvas [data-inline="title"]').innerText(),
       "尚未收藏的草稿",
     );
 

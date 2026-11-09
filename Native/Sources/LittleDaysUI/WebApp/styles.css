@@ -7039,6 +7039,10 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   box-shadow: 0 6px 16px var(--c-2f2a2640, #2f2a2640);
   transform: translate(-50%, -100%);
   white-space: nowrap;
+  /* Never wider than the page: more actions scroll sideways. */
+  max-width: calc(100% - 8px);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 .layer-bar.below {
   transform: translate(-50%, 0);
@@ -12490,6 +12494,17 @@ dialog h2,
   color: var(--ink);
   font-size: 14px;
   text-align: center;
+  gap: 6px;
+}
+.story-start-row button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .story-start-card > small {
   font-size: 11px;
@@ -13057,4 +13072,158 @@ dialog h2,
   width: 100%;
   font-size: 11px;
   color: var(--t-6f675d, #6F675D);
+}
+
+/* ---------- Swap photos by dragging one onto another (V6.7) ---------- */
+#journal-canvas .photo-layer.swap-target {
+  outline: 3px dashed var(--c-5f6f52, #5F6F52);
+  outline-offset: 3px;
+  filter: brightness(1.06);
+}
+.habit-more {
+  min-width: 40px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: 18px;
+  color: var(--muted);
+}
+.habit-delete {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 1px solid var(--c-f0c9c9, #f0c9c9);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--t-a0504f, #A0504F);
+}
+.story-where {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 8px;
+  margin: 0 4px 10px;
+}
+.story-where .story-book {
+  margin: 0;
+}
+.story-day {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-day input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+}
+.backfill-link {
+  justify-self: center;
+  font-size: 13px;
+}
+.quick-library {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content; /* rows keep their square photos (the box scrolls) */
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 8px 0 4px;
+  padding: 2px;
+  border-radius: 14px;
+}
+.quick-library button {
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--c-efeae1, #efeae1);
+}
+.quick-library img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.quick-library button.selected {
+  outline: 3px solid #5F6F52;
+  outline-offset: 2px;
+}
+
+/* V6.7 · Home's today card swipes through today's pages, dots below. */
+.home-mag .today-peek {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  border-radius: 24px;
+}
+.home-mag .today-peek::-webkit-scrollbar {
+  display: none;
+}
+.home-mag .today-peek .peek-slide {
+  flex: 0 0 100%;
+}
+/* More than one page: the next one peeks in, so it is clear you can swipe. */
+.home-mag .today-peek:has(.peek-slide + .peek-slide) .peek-slide {
+  flex-basis: 90%;
+}
+.home-mag .today-peek .peek-slide {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.home-mag .peek-words {
+  background: var(--c-fbf6ec, #fbf6ec);
+  color: var(--t-2b2622, #2b2622);
+  box-shadow: 0 10px 26px var(--c-3c2d1e1a, #3c2d1e1a);
+  border: 1px solid var(--c-ebe1d1, #ebe1d1);
+}
+.home-mag .peek-words .peek-paper {
+  position: absolute;
+  inset: 22px 20px 20px;
+  background: repeating-linear-gradient(180deg, transparent 0 31px, var(--c-e7dccb, #e7dccb) 31px 32px);
+  opacity: 0.7;
+}
+.home-mag .peek-words .today-preview-copy {
+  top: 56px;
+  bottom: auto;
+}
+.home-mag .peek-words b,
+.home-mag .peek-words .hero-kicker {
+  color: var(--t-2b2622, #2b2622) !important;
+  text-shadow: none;
+}
+.home-mag .peek-words .today-preview-copy small:not(.hero-kicker) {
+  color: var(--t-5c5048, #5c5048);
+  font-size: 15px;
+  line-height: 2.13;
+  -webkit-line-clamp: 7;
+}
+.home-mag .peek-words .hero-go {
+  background: var(--c-2b2622, #2b2622);
+  color: var(--t-ffffff, #ffffff);
+}
+.home-mag .peek-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.home-mag .peek-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-d8cdbd, #d8cdbd);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.home-mag .peek-dots i.on {
+  width: 18px;
+  background: var(--c-5f6b4e, #5f6b4e);
 }

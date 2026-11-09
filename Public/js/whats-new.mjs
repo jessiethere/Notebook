@@ -4,6 +4,46 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.7",
+    date: "2026-11-09",
+    zh: {
+      title: "保存后看到写好的那页、首页左右滑预览今天；拖动互换/替换照片、杂志风格；删习惯、补记昨天",
+      items: [
+        "「我的习惯」里每个习惯有「⋯」：可以改名字、改每周目标，或删除（会先问你，它的打卡记录也会一起删除）。",
+        "忘了记？首页有「忘了记？补记昨天」；选的照片如果是昨天拍的，会自动记到昨天（预览里也可以改日期）。",
+        "主题配色不再只在实验室里，设置里人人可用；字体里加了简单的默认黑体、宋体、楷体（用设备自带的字体）。",
+        "编辑封面时，纸下面重复的「今天的标题和文字」框去掉了，直接在纸上打字；在纸上打完字马上就能点「撤销」。",
+        "在「自定义」里，把一张照片拖到另一张上面松手，两张就会换位置；每张按自己的比例放进对方的框里，不会被裁掉。",
+        "选中照片，工具条里多了「替换」：换一张照片，位置不变，框会跟着新照片的横竖比例调整。",
+        "杂志风格：每页上方有「— 08:10 · MORNING」小标，标题更大、更像杂志标题，页脚有「LITTLE DAYS · NO. 09」；当天跨页有「LITTLE DAYS」刊头和大号日期，像一期杂志的封面。",
+        "装饰贴纸会避开多行文字，不再碰到长句子。",
+        "点「保存」后会直接翻到你刚写好的那一页（在手帐本里一页页翻），不再一下子跳回首页。",
+        "首页「今天」卡片可以向右滑，下面有小圆点：一页页预览今天写过的字和放过的照片，点一下就打开那一页。",
+        "「图库」直接在「今天怎么记？」里显示照片，点一张再开始写；选「我的相册」后取消，会回到原来的地方（首页或那个选择窗口），不会多出一张空白页。",
+        "在纸上打字时，换字体只改正在写的那一处（标题或正文），和字号、颜色一样分开调整。",
+        "首页「Aa 只写几句」去掉了「Aa」，就是「只写几句」：不放照片，直接在纸上写一页。",
+      ],
+    },
+    en: {
+      title: "See your page after Save, swipe through today on Home; swap/replace photos, Editorial; delete habits, fill in yesterday",
+      items: [
+        "Each habit in “My habits” has “⋯”: rename it, change its weekly goal, or delete it (you're asked first; its check-ins go too).",
+        "Forgot a day? Home has “Forgot? Fill in yesterday”; photos taken yesterday go to yesterday by themselves (the preview's date can be changed).",
+        "Colour themes are for everyone now, not only in Labs; the fonts include simple Sans, Serif and Kai defaults (your device's own fonts).",
+        "The cover's duplicate “Today's title and words” box under the paper is gone — type on the paper; typing there can be undone right away.",
+        "In Customize, drag a photo onto another and let go: they change places, each fitted into the other's frame in its own shape, never cropped.",
+        "Select a photo and tap “Replace”: the new photo takes the same place, and the frame follows its shape.",
+        "Editorial: a “— 08:10 · MORNING” kicker on each page, a bigger headline and a “LITTLE DAYS · NO. 09” folio; the day spread gets a LITTLE DAYS masthead and a big date, like a magazine cover.",
+        "Stickers now keep clear of longer, multi-line words.",
+        "After Save you see the page you just made, open in its journal (turn the pages), instead of jumping back to Home.",
+        "Home's “Today” card swipes sideways, with dots below: preview today's words and photos page by page; tap one to open it.",
+        "“Library” shows its photos right in “How shall we keep today?” — tap one, then start; cancelling “My photos” takes you back where you were (Home or that sheet), with no empty page left behind.",
+        "Typing on the paper, a new font changes only what you're writing (the title or the words), like size and colour.",
+        "Home's “Aa Just write” is now simply “Just write”: no photos, write a page on paper.",
+      ],
+    },
+  },
+  {
     version: "6.6",
     date: "2026-11-09",
     zh: {

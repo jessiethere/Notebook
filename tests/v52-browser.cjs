@@ -47,7 +47,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     // Labs can be switched on (and off) in Settings.
     await first.locator('#navigation [data-page="home"]').tap();
     await first.locator('[data-action="nav"][data-page="settings"]').tap();
-    assert.equal(await first.locator(".theme-picker, [data-action='theme']").count(), 0, "colour themes are in Labs");
+    assert.ok((await first.locator(".theme-picker, [data-action='theme']").count()) > 0, "colour themes for everyone (V6.7), not only in Labs");
     assert.equal(await first.locator('.news-card [data-action="whats-new"]').count(), 1, "update history in Settings");
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForSelector('[data-action="labs-toggle"][aria-pressed="true"]');
@@ -55,7 +55,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForFunction(() => !document.querySelector('#navigation [data-page="community"]'));
     await fresh.close();
-    passed.push("new install: straight to Home with a what's-new card; community, profile, shared books, themes and sign-in wait in Labs");
+    passed.push("new install: straight to Home with a what's-new card; community, profile, shared books and sign-in wait in Labs (themes for everyone)");
 
     // 2. Quick Create v2 with my own photos (several).
     const context = await browser.newContext({ ...devices["iPhone 13"] });

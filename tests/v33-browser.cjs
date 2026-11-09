@@ -94,7 +94,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.waitForSelector("#journal-canvas.text-only .canvas-title");
     assert.match(await page.locator("#journal-canvas .canvas-title").innerText(), /只有文字的一刻/);
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await nav("calendar");
     await page.locator(`[data-action="select-date"][data-date="${today}"]`).click();
     await page.waitForSelector(".day-detail");

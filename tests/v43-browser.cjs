@@ -30,7 +30,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.keyboard.type("在阳台晒太阳，读完了一章书。");
     await page.evaluate(() => document.activeElement.blur());
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     let s = await state();
     const saved = s.entries.find((e) => e.date === today);
     const note = saved.moments.find((m) => m.title === "周日早晨");
@@ -96,7 +96,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 5. Calendar photo wall: the month's pictures on a moving background.
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await menu(page, "calendar");
     await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
     await page.waitForSelector(".cal-wall");

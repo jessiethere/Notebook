@@ -102,7 +102,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**118 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`v57`、`v58`、`v59`、`v60`、`v61`、`v63`、`collab` 三十五套浏览器 E2E 全部通过（背景音乐只做了响度/频谱分析，未由人试听确认、也未在 iPhone 上播放；手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**118 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`v57`、`v58`、`v59`、`v60`、`v61`、`v63`、`v64`、`v65`、`collab` 三十七套浏览器 E2E 全部通过（背景音乐只做了响度/频谱分析，未由人试听确认、也未在 iPhone 上播放；手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -151,6 +151,8 @@ npm run test:browser:v59
 npm run test:browser:v60
 npm run test:browser:v61
 npm run test:browser:v63
+npm run test:browser:v64
+npm run test:browser:v65
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -168,6 +170,22 @@ npm run test:browser:v63
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 拖动互换照片、替换照片；杂志风格更像杂志（V6.7）
+
+- 「我的习惯」里每个习惯「⋯」：改名、改目标、删除（先确认，打卡记录一起删）。
+- 补记：首页「忘了记？补记昨天」；昨天拍的照片自动记到昨天，预览里可改日期。
+- 主题配色人人可用（不再只在实验室）；字体加默认黑体 / 宋体 / 楷体（设备自带字体，无需许可证）。
+- 封面编辑去掉纸下重复的「今天的标题和文字」框；纸上打字后可立即撤销。
+- 保存后直接翻到刚写好的那一页（手帐本翻页视图），不再跳回首页。
+- 首页「今天」卡片可左右滑动，下方圆点：一页页预览今天写的字和照片，点一下打开那一页。
+- 「今天怎么记？」选「图库」直接显示照片网格；选「我的相册」后取消会回到原处（首页或面板），不留空白页。
+- 纸上打字时换字体只改正在写的标题或正文（和字号、颜色一样分开）。
+- 首页「Aa Just write」去掉「Aa」，就是「Just write / 只写几句」。
+
+- 自定义里把一张照片拖到另一张上，两张互换位置（各自按比例放进对方的框，不裁切）。
+- 照片工具条新增「替换」：位置不变，框跟着新照片的比例调整。
+- 杂志风格：每页刊头小标「— 08:10 · MORNING」、更大的标题、页脚刊号；当天跨页有 LITTLE DAYS 刊头和大号日期。
 
 ### 2026-11-09 — 成长合并进「今天」（V6.6，任务 G）
 

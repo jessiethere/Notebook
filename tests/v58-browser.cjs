@@ -119,8 +119,10 @@ const shots = process.env.SHOTS_DIR || "";
     await page.keyboard.type("今天的新一页");
     await page.evaluate(() => document.activeElement.blur());
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
-    passed.push("a new page from ＋ still saves back to Home");
+    // V6.7: Save shows the page just written, in its book.
+    await page.waitForSelector(".flip-page:not(.is-cover)");
+    assert.match(await page.locator(".flip-page").innerText(), /今天的新一页/);
+    passed.push("a new page from ＋: Save shows that page in its book");
 
     assert.deepEqual(errors, []);
     console.log(`V6.1 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

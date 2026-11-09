@@ -182,7 +182,7 @@ async function size(download) {
 
     // 4. Reading view: clips play on the paper, not repeated below.
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await nav("calendar");
     await page.locator(`[data-action="select-date"][data-date="${today}"]`).click();
     await page.waitForSelector('.day-detail .video-layer video[src^="blob:"]');

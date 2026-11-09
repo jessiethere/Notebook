@@ -132,7 +132,7 @@ const shots = process.env.SHOTS_DIR || "";
     await fresh.evaluate(() => (document.querySelector("#app-scroll").scrollTop = 600));
     await fresh.waitForSelector(".float-save:not([hidden])");
     await fresh.locator(".float-save").tap();
-    await fresh.waitForSelector(".hero");
+    await fresh.waitForSelector(".flip-page:not(.is-cover)"); // V6.7: the page just made
     const saved = await fresh.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);
     assert.equal(saved.isDemo, false);
     assert.notEqual(saved.title, "把日子过成喜欢的样子", "no sample words on my day");

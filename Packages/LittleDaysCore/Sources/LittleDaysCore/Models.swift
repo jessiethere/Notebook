@@ -220,6 +220,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var bookId: String?
     public var template: String?
     public var font: String?
+    // V6.7: the words' own font (the type bar changes title and words apart).
+    public var bodyFont: String?
     // V5.5: the look of this page's title and words (type bar).
     public var textStyle: JournalTextStyle?
     public var bodyStyle: JournalTextStyle?

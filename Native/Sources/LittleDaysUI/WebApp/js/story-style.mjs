@@ -44,7 +44,14 @@ export function firstLook(photoCount, kit) {
 // The box a layer takes on the page, in % (x/y centre; w of width, h of height).
 export function layerBox(layer) {
   if (layer.kind === "photo" || layer.kind === "video") return { x: layer.x, y: layer.y, w: layer.w ?? 42, h: layer.h ?? 34 };
-  if (layer.kind === "text") return { x: layer.x, y: layer.y, w: layer.w ?? 60, h: Math.max(4, (layer.fontSize || 14) * 0.45) };
+  if (layer.kind === "text") {
+    // Several lines of words take several lines of room.
+    const w = layer.w ?? 60;
+    const size = layer.fontSize || 14;
+    const units = [...String(layer.text || "")].reduce((n, ch) => n + (/[\u3000-\u9fff\uff00-\uffef]/.test(ch) ? 1 : 0.55), 0);
+    const lines = Math.max(1, Math.ceil(units / Math.max(1, (w * 10.8) / (size * 3.375))));
+    return { x: layer.x, y: layer.y, w, h: Math.max(4, (lines * size * 3.375 * 1.4) / 13.5) };
+  }
   const w = STICKER_W * (layer.scale || 1);
   return { x: layer.x, y: layer.y, w, h: w * PAGE_RATIO };
 }

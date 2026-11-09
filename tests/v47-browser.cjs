@@ -45,7 +45,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(story.title, "海边的风");
     await page.evaluate(() => document.activeElement?.blur());
     await page.locator('[data-action="save-entry"]').tap();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     passed.push("记一页: a new page in that journal, ready to type");
 
     // 3. Calendar by journal: only that journal's days (and its pictures).

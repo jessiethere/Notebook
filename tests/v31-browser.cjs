@@ -273,7 +273,7 @@ async function noOverflow(page, label) {
     const geometry = photoGeometry((await day(D1)).layers);
     const order = (await day(D1)).layers.map((l) => l.id);
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await page.reload();
     await page.waitForSelector(".hero");
     entry = (await read()).entries.find((e) => e.date === D1);
@@ -350,7 +350,7 @@ async function noOverflow(page, label) {
       return saved.moments.length === 1 && saved.moments[0].id === id;
     }, cookingId);
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     entry = (await read()).entries.find((e) => e.date === D1);
     assert.deepEqual(entry.moments.map((m) => m.title), ["Gym Session", "Home Cooking", "Afternoon Coffee Time"]);
     passed.push("4/5 three Moments edited, reordered, saved individually and together");
@@ -469,7 +469,7 @@ async function noOverflow(page, label) {
     await page.locator('.moment-actions [data-action="moment-delete"]').click();
     await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     s = await read();
     assert.equal(s.checks.filter((c) => c.date === today).length, 2, "check-ins survive page deletion");
     const todayEntry = s.entries.find((e) => e.date === today);
@@ -668,7 +668,7 @@ async function noOverflow(page, label) {
     assert.match(await legacy.page.locator(".day-detail").innerText(), /让身体动起来/);
     await legacy.page.locator('.day-detail-top [data-action="edit-date"]').click();
     await l.tool("text");
-    assert.equal(await legacy.page.locator("#entry-title").inputValue(), "很久以前的一天");
+    assert.equal(await legacy.page.locator('#journal-canvas [data-inline="title"]').innerText(), "很久以前的一天");
     await legacy.page.waitForSelector('.canvas-photo img[src^="blob:"]');
     await l.nav("books");
     await legacy.page.locator('[data-action="pull-book"][data-book="daily"]').click();

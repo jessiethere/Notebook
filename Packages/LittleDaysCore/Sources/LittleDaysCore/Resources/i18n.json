@@ -5247,6 +5247,10 @@
     "zh": "只写几句",
     "en": "Just write"
   },
+  "story.justWriteHint": {
+    "zh": "不放照片，在纸上写一页",
+    "en": "No photos: write a page on paper"
+  },
   "story.moreWays": {
     "zh": "其他方式 ›",
     "en": "More ways ›"
@@ -5494,5 +5498,77 @@
   "plan.carry": {
     "zh": "把昨天没做完的 {count} 件搬到今天",
     "en": "Bring yesterday's {count} unfinished here"
+  },
+  "photo.swapped": {
+    "zh": "两张照片换了位置",
+    "en": "The two photos changed places"
+  },
+  "photo.replaceShort": {
+    "zh": "替换",
+    "en": "Replace"
+  },
+  "habit.edit": {
+    "zh": "编辑习惯",
+    "en": "Edit habit"
+  },
+  "habit.editHint": {
+    "zh": "改名字、类别或每周目标；已经打过的卡不会变。",
+    "en": "Change the name, theme or weekly goal; past check-ins stay."
+  },
+  "habit.delete": {
+    "zh": "删除这个习惯",
+    "en": "Delete this habit"
+  },
+  "habit.deleteConfirm": {
+    "zh": "删除「{name}」？它的 {count} 次打卡和心得也会一起删除，不能恢复。",
+    "en": "Delete “{name}”? Its {count} check-ins and notes go too, and can't be brought back."
+  },
+  "habit.deleted": {
+    "zh": "已删除「{name}」",
+    "en": "Deleted “{name}”"
+  },
+  "font.hei": {
+    "zh": "黑体（默认）",
+    "en": "Sans (default)"
+  },
+  "font.song": {
+    "zh": "宋体（默认）",
+    "en": "Serif (default)"
+  },
+  "font.kai": {
+    "zh": "楷体（默认）",
+    "en": "Kai (default)"
+  },
+  "settings.systemFonts": {
+    "zh": "黑体、宋体、楷体用的是你设备自带的字体（例如 iPhone 上的苹方、宋体），不随 App 分发，所以不需要另外的许可证；设备没有楷体时，会用 App 自带的霞鹜文楷代替。",
+    "en": "Sans, Serif and Kai use your device's own fonts (for example PingFang and Songti on iPhone), which are not shipped with the app, so no extra licence is needed; where the device has no Kai font, the bundled LXGW WenKai is used instead."
+  },
+  "story.datedFromPhotos": {
+    "zh": "这些照片是 {date} 拍的，已经记到那一天（预览里可以改日期）",
+    "en": "These photos were taken on {date}, so they go to that day (change the date in the preview)"
+  },
+  "story.previewTitleDay": {
+    "zh": "{date}的故事",
+    "en": "Story of {date}"
+  },
+  "story.day": {
+    "zh": "日期",
+    "en": "Day"
+  },
+  "story.backfill": {
+    "zh": "忘了记？补记昨天",
+    "en": "Forgot? Fill in yesterday"
+  },
+  "quick.start.lib": {
+    "zh": "用这张写一句话",
+    "en": "Write a line with this photo"
+  },
+  "quick.start.libPick": {
+    "zh": "先在上面选一张照片",
+    "en": "Pick a photo above first"
+  },
+  "quick.libFirst": {
+    "zh": "先选一张照片",
+    "en": "Pick a photo first"
   }
 }

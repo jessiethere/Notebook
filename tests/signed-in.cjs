@@ -89,3 +89,10 @@ module.exports.menu = async (page, tab) => {
   }
   await page.locator(`#navigation [data-page="${tab}"]`).click();
 };
+// Since V6.7, Save shows the page just made in its book (page view); older
+// suites then carry on from Home.
+module.exports.homeAfterSave = async (page) => {
+  await page.waitForSelector(".flip-page:not(.is-cover)");
+  await page.locator('#navigation [data-page="home"]').click();
+  await page.waitForSelector(".hero");
+};

@@ -210,3 +210,13 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - features.json 的 growth tab 加 `"inNav": false`（Swift `NavigationTab.inNav` 可选），网页导航过滤掉它；页面 `growth` / `journey` 仍然存在，高亮在「书架」。
 - 状态新增可选 `plans: { [date]: [{ id, text, done }] }`（Swift `JournalState.plans: [String: [DayPlan]]?`），schemaVersion 不变；旧数据没有该字段照常读取。今日清单是读取 checks + plans 的派生视图，不写入页面图层（所以不会影响「当天跨页」只在封面为空时生成的规则）。
+
+## 2026-11-09 V6.7 照片互换 / 替换
+
+- 互换：Studio 拖动（mode "move"）时用指针位置找下面最上层的照片（`swapCandidate`），松手时 `swapPhotos`：A 放到 B 的中心与倾斜，B 放到 A 拖动前的位置，各自用 `fitPhoto(aspect, 对方框宽, 对方框高, 自己的相框)` 缩放（不裁切），并交换叠放顺序；进入撤销历史，标记 `layoutEdited`。
+- 替换：图层工具条「替换」走已有的 `replace` 上传；新照片保留位置，用 `fitPhoto` 在旧框内按新比例重算 w / h，记录 `aspect`。
+- 杂志：`boundText` 支持 `prefix: "kicker"`（时间 + 英文时段）；`layoutMoment` 接受 `folio`，`layoutDay` 接受 `issue`。`story-style.layerBox` 的文字高度按行数估算，装饰不再压到多行文字。
+- 我的相册（Quick Create）：`startQuickRecord` 先 `chooseAttachment({kind:"quick", book, date})`，`handleImageUpload` 收到照片后才 `startPage`；`#attachment-image-input` 的 `cancel` 事件只在来自面板时重开面板（`lastQuick.fromHome` 区分）。
+- 保存后 `showSavedPage()`：按 `activePage()` 的 bookId 与 moment id 在 `flipPages(book)` 里找到位置，切到 books / flip。
+- 首页 `todayPeekHTML(entry)`：封面（有内容时）+ 各 Moment，最多 12 张；滚动用捕获阶段的 document scroll 监听更新圆点。
+- 字体：Moment 也可有可选 `bodyFont`（Swift `JournalMoment.bodyFont`），正文渲染 / 导出读 `bodyFont || font`。

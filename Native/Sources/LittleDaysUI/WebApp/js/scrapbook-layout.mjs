@@ -210,7 +210,13 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
     place[visual.id] = { x: round(box.x), y: round(box.y), w: round(box.w), h: round(box.h), rotation: tilt(style, i, v), frame, tape: false, ...extra };
   };
   // Words: the time (small) and the Moment's own line (bound, so edits show).
-  const meta = (values) => layers.push(textLayer(look, { bind: "time", text: input.time || "", fontId: look.meta, fontSize: style === "cozy" ? 14 : 9, spacing: style === "editorial" ? 2 : 0, color: look.muted, weight: style === "editorial" ? 600 : 400, ...values }));
+  const meta = (values) =>
+    layers.push(
+      style === "editorial"
+        ? // A magazine kicker: "— 08:10 · MORNING", in the accent colour.
+          textLayer(look, { bind: "time", prefix: "kicker", text: input.time || "", fontId: look.meta, fontSize: 8.5, spacing: 2.4, color: look.accent, weight: 700, ...values })
+        : textLayer(look, { bind: "time", text: input.time || "", fontId: look.meta, fontSize: style === "cozy" ? 14 : 9, spacing: 0, color: look.muted, weight: 400, ...values }),
+    );
   const caption = (values) => {
     layers.push(textLayer(look, { bind: "title", text: title, fontId: pickFont(title, look), ...values }));
   };
@@ -218,10 +224,14 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
 
   if (style === "editorial") {
     const textW = n === 1 && v !== 0 ? 50 : 86;
-    const fit = title ? fitText(title, 19, textW, 4) : { size: 19, lines: 0, height: 0 };
+    // A headline, not a caption: big serif for short lines, smaller for long.
+    const base = textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 19;
+    const fit = title ? fitText(title, base, textW, 4) : { size: base, lines: 0, height: 0 };
     const textH = title ? fit.height + 4 : 0;
-    const bottom = 96 - textH - audioBand;
-    if (input.time) meta({ x: v === 1 ? 70 : 30, y: 4.6, w: 40, align: v === 1 ? "right" : "left" });
+    const bottom = 94 - textH - audioBand;
+    // The folio at the foot of the page, like a magazine.
+    if (input.folio) layers.push(textLayer(look, { text: input.folio, x: v === 1 ? 30 : 70, y: 97.6, w: 50, fontId: look.meta, fontSize: 6.5, spacing: 2, color: look.muted, align: v === 1 ? "left" : "right" }));
+    if (input.time) meta({ x: v === 1 ? 58 : 42, y: 4.6, w: 70, align: v === 1 ? "right" : "left" });
     if (n === 1) {
       const a = safeAspect(visuals[0].aspect);
       if (a < 0.9 && title && v !== 0) {
@@ -268,7 +278,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
           top = -1;
         } else rowsIn(rest, region, frame).forEach((box2, i) => box2 && put(rest[i], box2, i + 1));
       } else rowsIn(visuals, { top: 8, bottom, left: 7, right: 93 }, frame).forEach((box2, i) => box2 && put(visuals[i], box2, i));
-      if (title && top !== -1) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size });
+      if (title && top !== -1) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size, weight: 500 });
     }
   } else if (style === "cozy") {
     const fit = title ? fitText(title, 22, 76, 3, 13) : { size: 22, lines: 0, height: 0 };
@@ -314,7 +324,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
 // moments: [{ id, time, title, photo: { reference, name, aspect } }] (the
 // Moment's best photo). The photos are copies (gen) of those references.
 // Returns { layers, paper, backdrop }.
-export function layoutDay(moments, styleId = "editorial", variant = 0, { dateSmall = "", dateBig = "", more = (n) => `+${n}`, makeId } = {}) {
+export function layoutDay(moments, styleId = "editorial", variant = 0, { dateSmall = "", dateBig = "", issue = "", more = (n) => `+${n}`, makeId } = {}) {
   const style = styleOf(styleId);
   const look = STYLE_LOOK[style];
   const v = ((variant % 3) + 3) % 3;
@@ -330,16 +340,20 @@ export function layoutDay(moments, styleId = "editorial", variant = 0, { dateSma
   const hero = heroIndex(visuals);
 
   if (style === "editorial") {
-    layers.push(textLayer(look, { id: id(), text: [dateSmall, dateBig].filter(Boolean).join(" · ").toUpperCase(), x: 50, y: 4.4, w: 86, fontId: look.meta, fontSize: 9, spacing: 2, color: look.muted, weight: 600 }));
+    // A magazine cover's masthead: the name, the issue, then a big date.
+    layers.push(textLayer(look, { id: id(), text: "LITTLE DAYS", x: 30, y: 3.4, w: 46, fontId: look.meta, fontSize: 7.5, spacing: 3, color: look.accent, weight: 700 }));
+    if (issue) layers.push(textLayer(look, { id: id(), text: issue, x: 70, y: 3.4, w: 46, fontId: look.meta, fontSize: 7.5, spacing: 2, color: look.muted, weight: 600, align: "right" }));
+    layers.push(textLayer(look, { id: id(), text: dateBig, x: 38, y: 9.4, w: 62, fontId: look.latin, fontSize: 34, color: look.ink, weight: 500 }));
+    if (dateSmall) layers.push(textLayer(look, { id: id(), text: dateSmall, x: 80, y: 10.6, w: 26, fontId: pickFont(dateSmall, look), fontSize: 10, color: look.muted, align: "right" }));
     const heroM = shown[hero];
     const heroTitle = (heroM.title || "").trim();
     const hf = heroTitle ? fitText(heroTitle, 17, 86, 2, 12) : { height: 0, size: 17 };
     const rest = shown.filter((_, i) => i !== hero);
-    const box = fitPhoto(heroM.photo.aspect, 86, rest.length ? 46 : 70, frame);
-    const heroBox = { ...box, x: v === 1 ? 7 + box.w / 2 : 93 - box.w / 2, y: 8 + box.h / 2 };
+    const box = fitPhoto(heroM.photo.aspect, 86, rest.length ? 42 : 66, frame);
+    const heroBox = { ...box, x: v === 1 ? 7 + box.w / 2 : 93 - box.w / 2, y: 15 + box.h / 2 };
     photo(heroM, heroBox, 0);
-    let y = 8 + box.h + 2.5;
-    bound(heroM, "time", { x: 30, y: y + 0.6, w: 46, fontId: look.meta, fontSize: 8, spacing: 1.5, color: look.muted, weight: 600 });
+    let y = 15 + box.h + 2.5;
+    bound(heroM, "time", { x: 30, y: y + 0.6, w: 46, fontId: look.meta, fontSize: 8, spacing: 2.4, color: look.accent, weight: 700, prefix: "kicker" });
     if (heroTitle) {
       bound(heroM, "title", { x: 50, y: y + 3 + hf.height / 2, w: 86, fontId: pickFont(heroTitle, look), fontSize: hf.size });
       y += 3 + hf.height;
@@ -403,10 +417,20 @@ export function layoutDay(moments, styleId = "editorial", variant = 0, { dateSma
 
 // The words a bound text layer shows on `page` (a Moment page, or the day's
 // cover whose `moments` hold the Moments the layer points at).
+// "08:10" → "MORNING" (a magazine kicker), "" when unknown.
+export function partWord(time) {
+  const h = Number(/^(\d{1,2}):/.exec(String(time || ""))?.[1]);
+  if (!Number.isFinite(h)) return "";
+  return h < 5 ? "NIGHT" : h < 12 ? "MORNING" : h < 18 ? "AFTERNOON" : h < 22 ? "EVENING" : "NIGHT";
+}
 export function boundText(layer, page) {
   if (!layer?.bind) return layer?.text ?? "";
   const source = layer.of ? (page?.moments || []).find((m) => m.id === layer.of) : page;
   if (!source) return layer.text || "";
+  if (layer.prefix === "kicker") {
+    const time = String(source.time || "").trim();
+    return time ? `— ${time}${partWord(time) ? ` · ${partWord(time)}` : ""}` : "";
+  }
   let text = String((layer.bind === "time" ? source.time : source.title) || "").trim();
   if (layer.prefix === "time" && source.time && text) text = `${source.time} ${text}`;
   if (layer.bind === "title" && !text && layer.prefix === "time") text = source.time || "";
