@@ -153,7 +153,7 @@ export function canvasHTML(page, ctx, options = {}) {
     fixed = `<div class="canvas-title" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || (readOnly ? "" : t("moment.titlePlaceholder")))}</div><div class="canvas-body" style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || (readOnly ? "" : t("moment.bodyPlaceholder")))}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
-    fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div>` : ""}</div>`;
+    fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;
   const classes = [
     "journal-canvas",
     template,

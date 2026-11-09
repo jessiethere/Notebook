@@ -13,6 +13,12 @@ final class CoreTests: XCTestCase {
         }
         let sticker = try SharedResources.libraryData(category: "stickers", filename: catalog.stickers[0].nativeFile)
         XCTAssertGreaterThan(sticker.count, 1000)
+        // Original scene illustrations (photo-like material) and their notice.
+        let scenes = try XCTUnwrap(catalog.scenes)
+        XCTAssertEqual(scenes.count, 12)
+        let scene = try SharedResources.libraryData(category: "scenes", filename: scenes[0].file)
+        XCTAssertTrue(String(decoding: scene, as: UTF8.self).hasPrefix("<svg"))
+        XCTAssertNoThrow(try SharedResources.libraryData(category: "scenes", filename: scenes[0].license))
         XCTAssertThrowsError(try SharedResources.libraryData(category: "fonts", filename: "../../seed.json"))
     }
 

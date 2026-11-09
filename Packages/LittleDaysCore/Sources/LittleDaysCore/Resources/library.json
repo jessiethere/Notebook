@@ -1019,5 +1019,103 @@
         }
       ]
     }
+  ],
+  "scenes": [
+    {
+      "id": "coffee-morning",
+      "category": "daily",
+      "nameZh": "早晨的咖啡",
+      "nameEn": "Morning coffee",
+      "file": "LD-scene-coffee-morning.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "sunrise-hills",
+      "category": "nature",
+      "nameZh": "山坡日出",
+      "nameEn": "Sunrise hills",
+      "file": "LD-scene-sunrise-hills.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "rainy-window",
+      "category": "daily",
+      "nameZh": "雨天窗边",
+      "nameEn": "Rainy window",
+      "file": "LD-scene-rainy-window.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "tulip-vase",
+      "category": "daily",
+      "nameZh": "一瓶郁金香",
+      "nameEn": "Tulips in a vase",
+      "file": "LD-scene-tulip-vase.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "beach-waves",
+      "category": "travel",
+      "nameZh": "海边的风",
+      "nameEn": "By the sea",
+      "file": "LD-scene-beach-waves.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "city-night",
+      "category": "travel",
+      "nameZh": "城市夜晚",
+      "nameEn": "City night",
+      "file": "LD-scene-city-night.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "picnic",
+      "category": "daily",
+      "nameZh": "草地野餐",
+      "nameEn": "Picnic",
+      "file": "LD-scene-picnic.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "book-tea",
+      "category": "daily",
+      "nameZh": "书和一杯茶",
+      "nameEn": "Book and tea",
+      "file": "LD-scene-book-tea.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "cat-window",
+      "category": "pets",
+      "nameZh": "窗台上的猫",
+      "nameEn": "Cat by the window",
+      "file": "LD-scene-cat-window.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "mountain-lake",
+      "category": "travel",
+      "nameZh": "山与湖",
+      "nameEn": "Mountain lake",
+      "file": "LD-scene-mountain-lake.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "autumn-leaves",
+      "category": "nature",
+      "nameZh": "秋天的树",
+      "nameEn": "Autumn leaves",
+      "file": "LD-scene-autumn-leaves.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "birthday-cake",
+      "category": "celebration",
+      "nameZh": "生日蛋糕",
+      "nameEn": "Birthday cake",
+      "file": "LD-scene-birthday-cake.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    }
   ]
 }

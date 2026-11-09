@@ -54,10 +54,10 @@
       "id": "sample-today",
       "dayOffset": 0,
       "title": "把日子过成喜欢的样子",
-      "body": "一杯热咖啡，一点慢下来的时间。\n今天，也收集到了生活的小小美好。",
+      "body": "一点慢下来的时间。\n今天，也收集到了生活的小小美好。",
       "mood": "☀️",
       "bookId": "daily",
-      "photo": "/assets/coffee.jpg",
+      "photo": "scene:daily",
       "template": "cute",
       "font": "serif"
     },
@@ -72,5 +72,19 @@
       "template": "vintage",
       "font": "serif"
     }
+  ],
+  "dailyScenes": [
+    "coffee-morning",
+    "sunrise-hills",
+    "rainy-window",
+    "tulip-vase",
+    "beach-waves",
+    "city-night",
+    "picnic",
+    "book-tea",
+    "cat-window",
+    "mountain-lake",
+    "autumn-leaves",
+    "birthday-cake"
   ]
 }

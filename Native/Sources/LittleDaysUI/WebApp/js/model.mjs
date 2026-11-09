@@ -17,6 +17,12 @@ export function weeklyCount(state, habitId, key) {
       c.habitId === habitId && c.date >= start && c.date <= addDays(start, 6),
   ).length;
 }
+// One scene a day for the sample page, the same all day long.
+export function sceneOfDay(ids, day = dateKey()) {
+  if (!ids?.length) return "";
+  const n = Math.floor(Date.parse(`${day}T12:00:00Z`) / 86400000);
+  return ids[((n % ids.length) + ids.length) % ids.length];
+}
 export function createInitialState(seed, today = dateKey()) {
   return normalizeState({
     schemaVersion: 1,
@@ -26,6 +32,7 @@ export function createInitialState(seed, today = dateKey()) {
     drafts: {},
     entries: seed.journals.map(({ dayOffset, ...entry }) => ({
       ...entry,
+      ...(entry.photo === "scene:daily" ? { photo: `scene:${sceneOfDay(seed.dailyScenes, today) || "coffee-morning"}` } : {}),
       date: addDays(today, dayOffset),
       layers: [],
       isDemo: true,

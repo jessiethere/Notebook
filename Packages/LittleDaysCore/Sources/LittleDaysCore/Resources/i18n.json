@@ -3786,5 +3786,33 @@
   "growth.noteShort": {
     "zh": "已写",
     "en": "Noted"
+  },
+  "scene.title": {
+    "zh": "素材库",
+    "en": "Scene library"
+  },
+  "scene.note": {
+    "zh": "原创插画，点一下放到纸上；可以再用“编辑图片”加滤镜和文字。",
+    "en": "Original illustrations — tap to place on the page, then “Edit photo” for filters and words."
+  },
+  "scene.today": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "scene.added": {
+    "zh": "已放上「{name}」",
+    "en": "Added “{name}”"
+  },
+  "scene.ofDay": {
+    "zh": "今日素材",
+    "en": "Picture of the day"
+  },
+  "scene.useIt": {
+    "zh": "用它写一页",
+    "en": "Write with it"
+  },
+  "scene.pick": {
+    "zh": "或者从素材库挑一张",
+    "en": "Or pick from the scene library"
   }
 }

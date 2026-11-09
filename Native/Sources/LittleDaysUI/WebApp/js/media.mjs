@@ -117,6 +117,8 @@ export class MediaStore {
     // Stored sample photos keep their original "/assets/…" value; they are
     // displayed through a relative URL so hosted copies of the app work too.
     if (/^\/assets\/[a-z0-9-]+\.jpg$/i.test(reference)) return reference.slice(1);
+    // Original scene illustrations bundled with the app (library.json "scenes").
+    if (/^scene:[a-z0-9-]+$/.test(reference)) return `library/scenes/LD-scene-${reference.slice(6)}.svg`;
     if (/^data:image\/(jpeg|png|webp);base64,/.test(reference)) return reference;
     return "";
   }

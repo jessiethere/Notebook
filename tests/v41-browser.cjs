@@ -1,0 +1,106 @@
+// Scene library + picture of the day: Home card, Studio start, photo panel,
+// placing, editing and exporting a scene. Original illustrations only.
+const { chromium, devices } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { menu } = require("./signed-in.cjs");
+const assert = require("node:assert/strict");
+const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
+  const passed = [];
+  try {
+    const context = await browser.newContext({ ...devices["iPhone 13"], acceptDownloads: true });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(base);
+    await page.waitForSelector(".hero");
+    const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
+    const state = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "null"));
+
+    // 1. The sample page uses today's picture (an original scene), and it loads.
+    // Storage is written on the first change: tick and untick a habit.
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
+    let s = await state();
+    const sample = s.entries.find((e) => e.isDemo && e.date === today);
+    assert.match(sample.photo, /^scene:/);
+    assert.equal(await page.locator(".hero img").evaluate((img) => img.complete && img.naturalWidth > 0), true);
+    passed.push(`sample page shows the picture of the day (${sample.photo})`);
+
+    // 2. Home: with nothing written today, the picture of the day invites writing.
+    await page.evaluate((d) => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1"));
+      s.entries = s.entries.filter((e) => e.date !== d);
+      delete s.drafts[d];
+      localStorage.setItem("little-days.v1", JSON.stringify(s));
+    }, today);
+    await page.reload();
+    await page.waitForSelector(".today-scene");
+    assert.match(await page.locator(".today-scene").innerText(), /今日素材[\s\S]*用它写一页/);
+    const sceneId = await page.locator(".today-scene").getAttribute("data-scene");
+    assert.equal(`scene:${sceneId}`, sample.photo, "same picture all day");
+    await page.locator(".today-scene").tap();
+    await page.waitForSelector(`#journal-canvas .photo-layer img[src*="LD-scene-${sceneId}"]`);
+    passed.push("Home: picture of the day → one tap puts it on today's page");
+
+    // 3. Photo panel: the library (12, today's first and marked), place another.
+    const dock = page.locator('[data-action="tool"][data-tool="photos"]');
+    if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
+    await page.waitForSelector(".scene-grid");
+    assert.equal(await page.locator(".scene-option").count(), 12);
+    assert.equal(await page.locator(".scene-option").first().getAttribute("data-scene"), sceneId);
+    assert.equal(await page.locator(".scene-option i").count(), 1);
+    const other = await page.locator(".scene-option").nth(5).getAttribute("data-scene");
+    await page.locator(".scene-option").nth(5).tap();
+    await page.waitForFunction((id) => {
+      const d = new Date();
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const draft = JSON.parse(localStorage.getItem("little-days.v1")).drafts[k];
+      return draft && [draft, ...draft.moments].some((p) => p.layers.some((l) => l.mediaRef === `scene:${id}`));
+    }, other);
+    passed.push("photo panel: 12 scenes, today's first; tap to place");
+
+    // 4. A scene can be edited like a photo (the original scene stays the source).
+    const layerId = await page.evaluate((id) => {
+      const d = new Date();
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const draft = JSON.parse(localStorage.getItem("little-days.v1")).drafts[k];
+      return [draft, ...draft.moments].flatMap((p) => p.layers).find((l) => l.mediaRef === `scene:${id}`).id;
+    }, other);
+    await page.locator(`[data-layer="${layerId}"]`).tap();
+    await page.locator('.layer-bar [data-action="photo-edit"]').tap();
+    await page.waitForSelector("#photo-editor[open] .pe-frame");
+    await page.locator('[data-pe-action="filter"][data-filter="film"]').tap();
+    await page.locator('[data-pe-action="done"]').tap();
+    await page.waitForFunction((id) => {
+      const d = new Date();
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const draft = JSON.parse(localStorage.getItem("little-days.v1")).drafts[k];
+      const l = [draft, ...draft.moments].flatMap((p) => p.layers).find((x) => x.sourceRef === `scene:${id}`);
+      return l && l.mediaRef.startsWith("media:") && l.edit.filter === "film";
+    }, other);
+    passed.push("edit a scene with filters (edited copy saved; the scene stays the source)");
+
+    // 5. Export works with scenes on the page.
+    await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
+    const png = page.waitForEvent("download");
+    await page.locator('[data-action="export"]').tap();
+    assert.match((await png).suggestedFilename(), /\.png$/);
+    // Start screen also offers the picture of the day.
+    await menu(page, "studio");
+    await page.waitForSelector(".start-scene");
+    assert.equal(await page.locator(".start-scene").getAttribute("data-scene"), sceneId);
+    passed.push("PNG export with scenes; Studio start offers the picture of the day");
+
+    assert.deepEqual(errors, []);
+    console.log(`V3.11 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
+  } finally {
+    await browser.close();
+  }
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

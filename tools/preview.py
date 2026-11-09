@@ -32,7 +32,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
         elif path.startswith('/library/'):
             parts = path.split('/')
-            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers'}:
+            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers', 'scenes'}:
                 self.send_error(404)
                 return
             category, name = parts[2:]

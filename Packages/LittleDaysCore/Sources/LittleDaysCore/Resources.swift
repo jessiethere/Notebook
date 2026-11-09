@@ -42,6 +42,8 @@ public struct Seed: Decodable {
     public let habits: [Habit]
     public let books: [JournalBook]
     public let journals: [JournalSeed]
+    /// Scene ids for "scene:daily" (the sample page's picture of the day).
+    public let dailyScenes: [String]?
 }
 
 public struct FontAsset: Decodable, Identifiable {
@@ -66,10 +68,21 @@ public struct StickerAsset: Decodable, Identifiable {
     public let license: String
 }
 
+/// Original scene illustrations ("photo-like" material for pages).
+public struct SceneAsset: Decodable, Identifiable {
+    public let id: String
+    public let category: String
+    public let nameZh: String
+    public let nameEn: String
+    public let file: String
+    public let license: String
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
     public let stickers: [StickerAsset]
+    public let scenes: [SceneAsset]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }
@@ -81,6 +94,7 @@ public enum SharedResources {
         switch category {
         case "fonts": allowed = Set(catalog.fonts.flatMap { [$0.file, $0.license] })
         case "stickers": allowed = Set(catalog.stickers.flatMap { [$0.file, $0.nativeFile, $0.license] })
+        case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

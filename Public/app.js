@@ -76,6 +76,7 @@ import {
   moveLayer,
 } from "./js/day.mjs";
 import {
+  sceneOfDay,
   Store,
   dateKey,
   addDays,
@@ -399,7 +400,12 @@ function home() {
   const moments = entry?.moments || [];
   const preview = entry
     ? `<button class="today-preview" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<span class="today-preview-mood">${esc(entry.mood || "✿")}</span>`}<span class="today-preview-copy"><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").slice(0, 40))}</small>${moments.length ? `<i>${t("day.statMoments", { count: moments.length })}</i>` : ""}${entry.isDemo ? `<i>${t("home.sample")}</i>` : ""}</span><span class="today-preview-go" aria-hidden="true">›</span></button>`
-    : `<p class="today-blank">${t("home.blankBody")}</p>`;
+    : (() => {
+        const scene = todayScene();
+        return scene
+          ? `<button class="today-scene" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b><em>${t("scene.useIt")} ›</em></span></button>`
+          : `<p class="today-blank">${t("home.blankBody")}</p>`;
+      })();
   return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></header>
  <section class="hero today-card"><span class="date-label">${esc(date)}</span><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${preview}<button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  <section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
@@ -855,7 +861,7 @@ function studioTools() {
             : dayPage && !photoTotal
               ? `<div class="editor-actions"><button data-action="upload">${t("studio.addPhoto")}</button></div>`
               : ""
-        }<p class="save-help">${t("photo.toolHelp")}</p>`,
+        }<p class="save-help">${t("photo.toolHelp")}</p>${sceneLibraryHTML()}`,
     },
     {
       id: "layout",
@@ -989,7 +995,10 @@ function studioStartHTML() {
     started
       ? `<button class="start-continue" data-action="start-continue"><span aria-hidden="true">📖</span><span><b>${t("start.continue")}</b><small>${esc(editor.title || t("entry.untitled"))}${editor.moments.length ? ` · ${t("day.statMoments", { count: editor.moments.length })}` : ""}</small></span><i>›</i></button><p class="start-note">${t("start.newMoment")}</p>`
       : ""
-  }<div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div><h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
+  }<div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div>${(() => {
+    const scene = todayScene();
+    return scene ? `<button class="start-scene" data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b></span><i>${t("scene.useIt")} ›</i></button>` : "";
+  })()}<h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
 }
 // Leaves the start screen; on a day that already has a page, the new thing
 // becomes a new Moment so nothing written earlier is mixed up.
@@ -1047,6 +1056,42 @@ async function studioStartAction(target) {
       return false;
   }
   return true;
+}
+// Original scene illustrations: one picked for each day, all in a library.
+function scenes() {
+  return catalog.scenes || [];
+}
+function sceneName(scene) {
+  return languageCode() === "en" ? scene.nameEn : scene.nameZh;
+}
+function todayScene() {
+  const id = sceneOfDay(scenes().map((scene) => scene.id), dateKey());
+  return scenes().find((scene) => scene.id === id);
+}
+function sceneLibraryHTML() {
+  const today = todayScene();
+  const list = today ? [today, ...scenes().filter((scene) => scene.id !== today.id)] : scenes();
+  return `<section class="scene-library"><div class="scene-head"><b>${t("scene.title")}</b><small>${t("scene.note")}</small></div><div class="scene-grid">${list
+    .map(
+      (scene) =>
+        `<button class="scene-option" data-action="use-scene" data-scene="${esc(scene.id)}" aria-label="${esc(sceneName(scene))}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<span>${esc(sceneName(scene))}</span></button>`,
+    )
+    .join("")}</div></section>`;
+}
+// Put a scene on the page being written (a new story if today already has one
+// when coming from Home).
+function useScene(id, fromHome = false) {
+  const scene = scenes().find((item) => item.id === id);
+  if (!scene) return;
+  if (fromHome || page !== "studio") {
+    studioStart = false;
+    openStudio(dateKey());
+    if (hasDayPageContent(editor) || editor.moments.length) addMomentNow();
+  }
+  studioTool = null;
+  addPhotoLayers([{ reference: `scene:${scene.id}`, name: sceneName(scene) }]);
+  flushDraft();
+  toast(t("scene.added", { name: sceneName(scene) }));
 }
 // Photo, text, video and sound are equal ways to add something to the paper.
 function emptyPaper(page = activePage()) {
@@ -1531,6 +1576,7 @@ async function action(target) {
     $("#app-scroll").scrollTop = 0;
   }
   if (actionName === "photo-edit") await reEditPhotoLayer();
+  if (actionName === "use-scene") useScene(target.dataset.scene, target.dataset.from === "home");
   if (actionName === "layer-shape") {
     const shape = target.dataset.shape;
     changeTarget((page) => {
@@ -2010,7 +2056,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
-  if (event.target.closest(".layer-play, .canvas-add-row, .layer-bar")) return;
+  if (event.target.closest(".layer-play, .canvas-add-row, .canvas-scene-link, .layer-bar")) return;
   // Touching the paper puts the keyboard away so the tools come back.
   if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
   const element = event.target.closest("[data-layer]");

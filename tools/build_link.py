@@ -49,6 +49,9 @@ def main():
     for sticker in catalog['stickers']:
         for name in {sticker['file'], sticker['license']}:
             files.append((SHARED / 'Stickers' / name, Path('library/stickers') / name))
+    for scene in catalog.get('scenes', []):
+        for name in {scene['file'], scene['license']}:
+            files.append((SHARED / 'Scenes' / name, Path('library/scenes') / name))
     for name in ['coffee.jpg', 'lake.jpg']:
         files.append((SHARED / 'Media' / name, Path('assets') / name))
     published = {}
