@@ -15,6 +15,8 @@ import {
 } from "./js/library.mjs";
 import {
   coverHTML,
+  coverPhotoRef,
+  MAGAZINE_COVERS,
   bookDialogHTML,
   fieldDefinitionHTML,
   customFieldsHTML,
@@ -664,6 +666,12 @@ function shelfHTML() {
   const pulled = books.find((book) => book.id === pulledBook);
   const spine = (book, index) => {
     const count = bookEntryCount(state(), book.id);
+    // Magazine covers stand on the shelf as magazine spines: the cover photo
+    // under a dark veil, the title in bold white, the issue number below.
+    if (MAGAZINE_COVERS.includes(book.coverTemplate)) {
+      const photo = safePhoto(coverPhotoRef(book, catalog));
+      return `<button class="spine mag-spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)}">${photo ? `<img class="spine-photo" src="${esc(photo)}" alt="" loading="lazy">` : ""}<span class="spine-brand">LD</span><span class="spine-title" style="--n:${Math.max(5, [...String(book.title || "")].length)}">${esc(book.title)}</span><small>NO.${String(count).padStart(2, "0")}</small></button>`;
+    }
     const sticker = book.coverDecoration && book.coverDecoration !== "none" ? stickerURL(book.coverDecoration, catalog) : "";
     return `<button class="spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${sticker ? `<img src="${esc(sticker)}" alt="">` : "<i></i>"}<span class="spine-title">${esc(book.title)}</span><small>${count}</small></button>`;
   };
@@ -683,7 +691,7 @@ function openProfile() {
   page = "books";
   booksView = "profile";
   selectedBook = null;
-  communityView = { ...communityView, publish: null, workId: null };
+  communityView = { ...communityView, publish: null, workId: null, userId: null };
   render();
   $("#app-scroll").scrollTop = 0;
 
@@ -1030,9 +1038,9 @@ document.addEventListener("focusout", (event) => {
 function writeCardHTML() {
   const page = activePage();
   if (isDayPage())
-    return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b></div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
+    return `<section class="write-card" aria-label="${t("write.title")}"><div class="write-head"><b>${t("write.dayTitle")}</b>${hasDayPageContent(editor) ? `<button class="write-delete" data-action="day-page-clear">${t("write.clearDay")}</button>` : ""}</div><input id="entry-title" class="write-title" data-editor-field="title" placeholder="${t("studio.titlePlaceholder")}" maxlength="70" value="${esc(editor.title)}" aria-label="${t("studio.titleLabel")}"><textarea id="entry-body" class="write-body" data-editor-field="body" maxlength="2000" placeholder="${t("studio.bodyPlaceholder")}" aria-label="${t("studio.bodyLabel")}">${esc(editor.body)}</textarea></section>`;
   const index = editor.moments.indexOf(page);
-  const head = `<div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"></div>`;
+  const head = `<div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time)}" aria-label="${t("moment.time")}"><button class="write-delete" data-action="moment-delete">${t("write.deleteStory")}</button></div>`;
   const tags = `<input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}">`;
   // A note page: the title and words are on the paper itself.
   if (page.layoutTemplate === "text")
@@ -3056,14 +3064,14 @@ async function collabAction(target) {
 const SIMULATED_REPLIES = ["community.sim1", "community.sim2", "community.sim3"];
 async function communityAction(target) {
   const name = target.dataset.action;
-  if (!name?.startsWith("community-")) return false;
+  if (!name?.startsWith("community-") && !name?.startsWith("space-")) return false;
   const demo = social();
   const work = communityView.workId;
   const user = target.dataset.user;
   try {
     switch (name) {
       case "community-tab":
-        openCommunity({ tab: target.dataset.tab, workId: null, chatUser: null, publish: null });
+        openCommunity({ tab: target.dataset.tab, workId: null, chatUser: null, publish: null, userId: null });
         $("#app-scroll").scrollTop = 0;
         break;
       case "community-open-work":
@@ -3071,7 +3079,11 @@ async function communityAction(target) {
         $("#app-scroll").scrollTop = 0;
         break;
       case "community-back":
-        openCommunity({ workId: null });
+        openCommunity({ workId: null, userId: null });
+        break;
+      case "community-open-user":
+        if (target.dataset.user && target.dataset.user !== "me") openCommunity({ userId: target.dataset.user, workId: null, chatUser: null, publish: null, tab: communityView.tab || "discover" });
+        $("#app-scroll").scrollTop = 0;
         break;
       case "community-like":
         Community.toggleLike(demo, work);
@@ -3191,7 +3203,7 @@ async function communityAction(target) {
       case "community-open-chat":
         Community.markRead(demo, user);
         persistSocial();
-        openCommunity({ tab: "messages", chatUser: user, workId: null });
+        openCommunity({ tab: "messages", chatUser: user, workId: null, userId: null });
         break;
       case "community-chat-back":
         openCommunity({ chatUser: null, chatMenu: false, shareOpen: false });
@@ -3247,6 +3259,41 @@ async function communityAction(target) {
       case "community-jump":
         if (target.dataset.target === "friends") openCommunity({ tab: "friends" });
         else document.getElementById(target.dataset.target)?.scrollIntoView({ block: "start", behavior: "smooth" });
+        break;
+      case "space-avatar":
+        Community.updateProfile(demo, { avatarPhoto: `photo:${target.dataset.photo}` });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-avatar-clear":
+        Community.updateProfile(demo, { avatarPhoto: "" });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-avatar-upload":
+        chooseAttachment({ kind: "avatar" });
+        break;
+      case "space-dress":
+        openCommunity({ dress: !communityView.dress });
+        break;
+      case "space-shelf":
+        openCommunity({ shelfPick: !communityView.shelfPick });
+        break;
+      case "space-banner":
+        Community.updateSpace(demo, { banner: `photo:${target.dataset.photo}` });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-accent":
+        Community.updateSpace(demo, { accent: target.dataset.accent });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-save":
+        Community.updateSpace(demo, { motto: $("#space-motto")?.value || "" });
+        persistSocial();
+        toast(t("space.saved"));
+        openCommunity({ dress: false });
         break;
       case "community-profile-edit":
         openCommunity({ editProfile: !communityView.editProfile });
@@ -3520,6 +3567,21 @@ async function v31Action(target) {
         false,
       );
       if (copy) selectMoment(copy.id);
+      return true;
+    }
+    case "day-page-clear": {
+      // "I don't want a day page": clear it (the day's stories stay).
+      if (!(await askConfirm(t("write.clearDayConfirm")))) return true;
+      changeEditor((entry) => {
+        entry.title = "";
+        entry.body = "";
+        entry.photo = "";
+        entry.layers = [];
+        entry.media = [];
+        entry.fieldValues = {};
+      });
+      selectedLayer = null;
+      toast(t("write.dayCleared"));
       return true;
     }
     case "moment-delete": {
@@ -4103,7 +4165,12 @@ async function handleImageUpload(event, target) {
     // New photos for the page open in the photo editor first (skip = as is).
     if (["photos", "replace"].includes(target?.kind)) saved = (await editPhotos(saved, "add")) || saved;
     const [{ reference }] = saved;
-    if (target?.kind === "cover") {
+    if (target?.kind === "avatar") {
+      // My own photo as my avatar (kept in this device's media store).
+      Community.updateProfile(social(), { avatarPhoto: reference });
+      persistSocial();
+      openCommunity();
+    } else if (target?.kind === "cover") {
       bookDraft = readBookForm();
       bookDraft.coverImage = reference;
       refreshBookPreview();
@@ -4547,6 +4614,9 @@ async function start() {
   try {
     await media.open();
     await media.hydrate(state());
+    // My uploaded avatar lives in the media store too (demo profile data).
+    const avatarRef = social().profile?.avatarPhoto || "";
+    if (avatarRef.startsWith("media:")) await media.acquire([avatarRef.slice(6)], "app");
     await migrateLegacyPhotos(store, media);
   } catch (error) {
     warning = t("media.migrationFailed");

@@ -375,6 +375,22 @@
       "title": "Western Magazine"
     },
     {
+      "id": "magazine-mono",
+      "title": "Mono Magazine"
+    },
+    {
+      "id": "magazine-film",
+      "title": "Film Magazine"
+    },
+    {
+      "id": "magazine-minimal",
+      "title": "Minimal Magazine"
+    },
+    {
+      "id": "magazine-collage",
+      "title": "Collage Magazine"
+    },
+    {
       "id": "minimal-linen",
       "title": "Minimal Linen"
     },

@@ -9,12 +9,25 @@ import * as C from "./community.mjs";
 const TABS = ["discover", "friends", "messages"];
 const FEEDS = ["all", "following", "popular", "categories"];
 
+// Avatars are photos (an upload or a library photo); without one, the first
+// letter of the name on a soft colour — never an emoji.
+let resolveMedia = () => "";
+function useMedia(ctx) {
+  resolveMedia = (ref) => (ref && ctx?.media?.resolve ? ctx.media.resolve(ref) : "");
+}
+function initial(name) {
+  const clean = String(name || "").replace(/[（(][^）)]*[）)]/g, "").trim();
+  return ([...clean][0] || "L").toUpperCase();
+}
 function avatar(user, size = "") {
-  return `<span class="c-avatar ${size}" aria-hidden="true">${esc(user?.avatar || "✿")}</span>`;
+  const src = resolveMedia(user?.photo || C.DEMO_AVATAR_PHOTOS[user?.id] || "");
+  if (src) return `<span class="c-avatar ${size} has-photo" aria-hidden="true"><img src="${esc(src)}" alt=""></span>`;
+  const hue = [...String(user?.name || "")].reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360;
+  return `<span class="c-avatar ${size} monogram" style="--hue:${hue}" aria-hidden="true">${esc(initial(user?.name))}</span>`;
 }
 function author(demo, id, ctx) {
   return id === "me"
-    ? { name: demo.profile?.name || ctx.t("community.me"), handle: "@me", avatar: demo.profile?.avatar || "🌷" }
+    ? { id: "me", name: demo.profile?.name || ctx.t("community.me"), handle: "@me", avatar: demo.profile?.avatar || "🌷", photo: demo.profile?.avatarPhoto || "" }
     : C.userById(demo, id);
 }
 
@@ -71,7 +84,7 @@ function workDetailHTML(demo, view, ctx, helpers) {
     ? `<div class="c-choices"><span class="small-label">${t("community.reportWhy")}</span>${C.REPORT_REASONS.map((reason) => `<button data-action="community-report" data-reason="${reason}">${t("community.reason." + reason)}</button>`).join("")}</div>`
     : "";
   const replyTo = view.replyTo && work.comments.find((c) => c.id === view.replyTo);
-  return `<article class="work-detail"><button class="back-button" data-action="community-back">${helpers.icon("back")} ${t("community.title")}</button>${workCoverHTML(work, ctx, true)}${photos.length > 1 ? `<div class="work-photos">${photos.slice(1).map((src) => `<img src="${esc(src)}" alt="" data-action="zoom-photo" data-src="${esc(src)}">`).join("")}</div>` : ""}<h2 class="work-title">${esc(work.title)}</h2><div class="work-author">${avatar(user)}<span><b>${esc(user?.name || "")}</b><small>${esc(user?.handle || "")} · ${esc(work.category)}</small></span>${relationButtons(demo, work.authorId, ctx)}</div>${(work.pages || [{ title: "", body: work.excerpt }]).map((page) => `<section class="work-page">${page.title ? `<h3>${esc(page.title)}</h3>` : ""}<p>${esc(page.body)}</p></section>`).join("")}${clips.length ? `<p class="save-help">${t("community.mediaCount", { count: clips.length })}</p>` : ""}<div class="work-actions"><button class="${work.likedByMe ? "selected" : ""}" data-action="community-like" aria-pressed="${work.likedByMe}">${work.likedByMe ? "♥" : "♡"} ${work.likes}</button><button data-action="community-save-menu" class="${work.savedAs ? "selected" : ""}">☆ ${work.saves}</button><button data-action="community-share">↗ ${t("community.share")}</button>${mine ? "" : `<button data-action="community-report-menu">⚑ ${t("community.report")}</button>`}</div>${saveMenu}${reportMenu}${
+  return `<article class="work-detail"><button class="back-button" data-action="community-back">${helpers.icon("back")} ${t("community.title")}</button>${workCoverHTML(work, ctx, true)}${photos.length > 1 ? `<div class="work-photos">${photos.slice(1).map((src) => `<img src="${esc(src)}" alt="" data-action="zoom-photo" data-src="${esc(src)}">`).join("")}</div>` : ""}<h2 class="work-title">${esc(work.title)}</h2><div class="work-author"><button class="user-link" data-action="community-open-user" data-user="${esc(work.authorId)}" ${mine ? "disabled" : ""}>${avatar(user)}<span><b>${esc(user?.name || "")}</b><small>${esc(user?.handle || "")} · ${esc(work.category)}</small></span></button>${relationButtons(demo, work.authorId, ctx)}</div>${(work.pages || [{ title: "", body: work.excerpt }]).map((page) => `<section class="work-page">${page.title ? `<h3>${esc(page.title)}</h3>` : ""}<p>${esc(page.body)}</p></section>`).join("")}${clips.length ? `<p class="save-help">${t("community.mediaCount", { count: clips.length })}</p>` : ""}<div class="work-actions"><button class="${work.likedByMe ? "selected" : ""}" data-action="community-like" aria-pressed="${work.likedByMe}">${work.likedByMe ? "♥" : "♡"} ${work.likes}</button><button data-action="community-save-menu" class="${work.savedAs ? "selected" : ""}">☆ ${work.saves}</button><button data-action="community-share">↗ ${t("community.share")}</button>${mine ? "" : `<button data-action="community-report-menu">⚑ ${t("community.report")}</button>`}</div>${saveMenu}${reportMenu}${
     mine
       ? `<div class="c-owner"><label class="check-label"><input type="checkbox" data-action="community-toggle-comments" ${work.commentsOpen ? "checked" : ""}> ${t("community.commentsOpen")}</label><button class="secondary danger small" data-action="community-unpublish">${t("community.unpublish")}</button></div>`
       : ""
@@ -86,7 +99,7 @@ function friendsHTML(demo, view, ctx) {
   const { t } = ctx;
   const row = (userId, buttons) => {
     const user = C.userById(demo, userId);
-    return user ? `<li class="c-user">${avatar(user)}<span><b>${esc(user.name)}</b><small>${esc(user.handle)} · ${esc(user.bio || "")}</small></span><span class="c-relations">${buttons}</span></li>` : "";
+    return user ? `<li class="c-user"><button class="user-link" data-action="community-open-user" data-user="${esc(user.id)}">${avatar(user)}<span><b>${esc(user.name)}</b><small>${esc(user.handle)} · ${esc(user.bio || "")}</small></span></button><span class="c-relations">${buttons}</span></li>` : "";
   };
   const btn = (action, userId, label, cls = "secondary") => `<button class="${cls} small" data-action="${action}" data-user="${esc(userId)}">${t(label)}</button>`;
   const incoming = C.visibleIncoming(demo);
@@ -119,31 +132,111 @@ function whoCanSeeHTML(demo, books, ctx) {
     .map((book) => {
       const on = C.isShowcased(demo, book.id);
       const members = (demo.collab?.[book.id]?.members || []).filter((m) => m.status === "active").length;
-      return `<li class="who-row"><span class="who-spine" style="--spine:${coverColor(book, ctx.tokens)}" aria-hidden="true"></span><span class="who-copy"><b>${esc(book.title)}</b><small>${t(on ? "who.coverShown" : "who.onlyMe")}${members ? ` · ${t("who.collab", { count: members })}` : ""}</small></span><span class="who-chips" role="group" aria-label="${t("who.label")} · ${esc(book.title)}"><button data-action="showcase" data-book="${esc(book.id)}" data-on="0" class="${on ? "" : "selected"}" aria-pressed="${!on}">🔒 ${t("who.private")}</button><button data-action="showcase" data-book="${esc(book.id)}" data-on="1" class="${on ? "selected" : ""}" aria-pressed="${on}">🖼 ${t("who.coverShort")}</button></span></li>`;
+      return `<li class="who-row"><span class="who-spine" style="--spine:${coverColor(book, ctx.tokens)}" aria-hidden="true"></span><span class="who-copy"><b>${esc(book.title)}</b><small>${t(on ? "who.coverShown" : "who.onlyMe")}${members ? ` · ${t("who.collab", { count: members })}` : ""}</small></span><span class="who-chips" role="group" aria-label="${t("who.label")} · ${esc(book.title)}"><button data-action="showcase" data-book="${esc(book.id)}" data-on="0" class="${on ? "" : "selected"}" aria-pressed="${!on}">${t("who.private")}</button><button data-action="showcase" data-book="${esc(book.id)}" data-on="1" class="${on ? "selected" : ""}" aria-pressed="${on}">${t("who.coverShort")}</button></span></li>`;
     })
     .join("");
-  return `<section id="p-visibility" class="p-section who-see"><h3>${t("who.title")}</h3><p class="save-help">${t("who.help")}</p><ul class="who-list">${rows || `<li class="save-help">${t("books.empty")}</li>`}</ul><ul class="who-facts"><li>📝 ${t("who.factPosts", { count: C.myWorks(demo).length })}</li><li>💬 ${t("who.factMessages")}</li><li>👥 ${t("who.factFriends")}</li></ul></section>`;
+  return `<section id="p-visibility" class="p-section who-see"><h3>${t("who.title")}</h3><p class="save-help">${t("who.help")}</p><ul class="who-list">${rows || `<li class="save-help">${t("books.empty")}</li>`}</ul><ul class="who-facts"><li>${t("who.factPosts", { count: C.myWorks(demo).length })}</li><li>${t("who.factMessages")}</li><li>${t("who.factFriends")}</li></ul></section>`;
 }
 function visitorPreviewHTML(demo, books, ctx) {
   const { t } = ctx;
   const v = C.visitorView(demo, books);
-  return `<details class="visitor-preview" id="p-preview"><summary>👀 ${t("who.preview")}</summary><div class="visitor-card"><div class="visitor-head">${avatar({ avatar: v.avatar }, "lg")}<div><b>${esc(v.name || t("community.me"))}</b><p>${esc(v.bio || "")}</p></div></div><h4>${t("who.previewCovers")}</h4>${v.covers.length ? `<div class="visitor-covers">${v.covers.map((book) => `<div>${coverHTML({ ...book, coverImage: "" }, ctx)}<small>${esc(book.title)}</small></div>`).join("")}</div>` : `<p class="save-help">${t("who.noCovers")}</p>`}<h4>${t("who.previewWorks")}</h4>${v.works.length ? `<ul class="visitor-works">${v.works.map((w) => `<li>${esc(w.title)}</li>`).join("")}</ul>` : `<p class="save-help">${t("community.noWorks")}</p>`}<p class="save-help">${t("who.previewNote")}</p></div></details>`;
+  return `<details class="visitor-preview" id="p-preview"><summary>${t("who.preview")}</summary><div class="visitor-card"><div class="visitor-head">${avatar({ avatar: v.avatar }, "lg")}<div><b>${esc(v.name || t("community.me"))}</b><p>${esc(v.bio || "")}</p></div></div><h4>${t("who.previewCovers")}</h4>${v.covers.length ? `<div class="visitor-covers">${v.covers.map((book) => `<div>${coverHTML({ ...book, coverImage: "" }, ctx)}<small>${esc(book.title)}</small></div>`).join("")}</div>` : `<p class="save-help">${t("who.noCovers")}</p>`}<h4>${t("who.previewWorks")}</h4>${v.works.length ? `<ul class="visitor-works">${v.works.map((w) => `<li>${esc(w.title)}</li>`).join("")}</ul>` : `<p class="save-help">${t("community.noWorks")}</p>`}<p class="save-help">${t("who.previewNote")}</p></div></details>`;
 }
 
 function levelHTML(xp, ctx) {
   if (!xp) return "";
   const { t } = ctx;
   const pct = Math.round(xp.progress * 100);
-  return `<section class="level-card" id="p-level"><div class="level-top"><span class="level-icon" aria-hidden="true">${xp.level.icon}</span><div><small>Lv.${xp.levelIndex + 1}</small><b>${t("level." + xp.level.id)}</b></div><span class="level-xp"><b>${xp.total}</b> ${t("level.xp")}</span></div><div class="level-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div><p class="level-next">${xp.next ? t("level.toNext", { count: xp.toNext, name: t("level." + xp.next.id) }) : t("level.max")}</p><div class="level-facts"><span>📅 ${t("level.activeDays", { count: xp.activeDays })}</span><span>🔥 ${t("level.streak", { count: xp.streak })}</span></div><details class="level-how"><summary>${t("level.how")}</summary><ul>${xp.breakdown.map((item) => `<li><span>${t("level.rule." + item.id)}</span><small>+${item.xp} × ${item.count}</small><b>${item.points}</b></li>`).join("")}</ul><p class="save-help">${t("level.note")}</p></details></section>`;
+  return `<section class="level-card" id="p-level"><div class="level-top"><div><small>Lv.${xp.levelIndex + 1}</small><b>${t("level." + xp.level.id)}</b></div><span class="level-xp"><b>${xp.total}</b> ${t("level.xp")}</span></div><div class="level-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div><p class="level-next">${xp.next ? t("level.toNext", { count: xp.toNext, name: t("level." + xp.next.id) }) : t("level.max")}</p><div class="level-facts"><span>${t("level.activeDays", { count: xp.activeDays })}</span><span>${t("level.streak", { count: xp.streak })}</span></div><details class="level-how"><summary>${t("level.how")}</summary><ul>${xp.breakdown.map((item) => `<li><span>${t("level.rule." + item.id)}</span><small>+${item.xp} × ${item.count}</small><b>${item.points}</b></li>`).join("")}</ul><p class="save-help">${t("level.note")}</p></details></section>`;
 }
 
+// A personal page like a photo app profile: banner, avatar, counts, name with
+// a small level tag, bio, the books put out (as highlights) and a grid of
+// posts. The same page for me (what visitors see) and for other people.
+function gridHTML(works, ctx) {
+  const { t } = ctx;
+  if (!works.length) return `<p class="save-help ig-empty">${t("community.noWorks")}</p>`;
+  return `<div class="ig-grid">${works
+    .map((work) => {
+      const photo = (work.media || []).find((item) => item.kind === "photo");
+      const src = photo ? ctx.media.resolve(photo.ref) : "";
+      return `<button class="ig-tile" data-action="community-open-work" data-work="${esc(work.id)}" aria-label="${esc(work.title)}">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : workCoverHTML(work, ctx)}<span>♡ ${work.likes}</span></button>`;
+    })
+    .join("")}</div>`;
+}
+function headerHTML({ user, banner, motto, counts, level, bio, actions, accent, dressButton }, ctx) {
+  const src = resolveMedia(banner);
+  return `<div class="space-banner">${src ? `<img src="${esc(src)}" alt="">` : ""}<span class="space-shade" aria-hidden="true"></span>${motto ? `<span class="space-motto">${esc(motto)}</span>` : ""}${dressButton || ""}</div><div class="ig-head">${avatar(user, "xl")}<div class="ig-counts">${counts.map(([value, label]) => `<span><b>${value}</b>${esc(label)}</span>`).join("")}</div></div><div class="ig-name space-who"><h2>${esc(user.name)}</h2>${level ? `<small class="ig-level">${esc(level)}</small>` : ""}</div><p class="ig-handle">${esc(user.handle || "")}</p><p class="ig-bio">${esc(bio)}</p><div class="ig-actions">${actions}</div>`;
+}
+function spaceHTML(demo, view, ctx, books, xp) {
+  const { t } = ctx;
+  const me = author(demo, "me", ctx);
+  const space = demo.profile.space || {};
+  const accent = C.SPACE_ACCENTS.includes(space.accent) ? space.accent : C.SPACE_ACCENTS[0];
+  const out = books.filter((book) => C.isShowcased(demo, book.id));
+  const works = C.myWorks(demo);
+  const stats = C.myStats(demo);
+  const library = ctx.catalog.photos || [];
+  const bannerPhotos = library.filter((p) => p.backdrop || ["views", "sea", "night", "flowers"].includes(p.collection)).slice(0, 18);
+  const avatarPhotos = library.filter((p) => ["pets", "flowers", "coffee", "sweet"].includes(p.collection)).slice(0, 16);
+  const pick = (action, list, current, key) =>
+    list.map((p) => `<button data-action="${action}" data-photo="${esc(p.id)}" class="${current === `photo:${p.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? p.nameEn : p.nameZh)}"><img src="${esc(resolveMedia(`photo:${p.id}`))}" alt="" loading="lazy"></button>`).join("");
+  const dress = view.dress
+    ? `<div class="space-dress-panel"><h4>${t("space.avatar")}</h4><div class="space-avatar-row"><button class="secondary small" data-action="space-avatar-upload">${t("space.avatarUpload")}</button>${demo.profile.avatarPhoto ? `<button class="text-button" data-action="space-avatar-clear">${t("space.avatarClear")}</button>` : ""}</div><div class="space-banners avatar-picks">${pick("space-avatar", avatarPhotos, demo.profile.avatarPhoto)}</div><h4>${t("space.banner")}</h4><div class="space-banners">${pick("space-banner", bannerPhotos, space.banner || C.SPACE_BANNER)}</div><h4>${t("space.accent")}</h4><div class="space-accents">${C.SPACE_ACCENTS.map((c) => `<button data-action="space-accent" data-accent="${c}" class="${c === accent ? "selected" : ""}" style="--swatch:${c}" aria-label="${c}" aria-pressed="${c === accent}"></button>`).join("")}</div><label class="field">${t("space.motto")}<input id="space-motto" maxlength="40" value="${esc(space.motto || "")}" placeholder="${t("space.mottoPlaceholder")}"></label><div class="editor-actions"><button class="primary small" data-action="space-save">${t("save")}</button><button class="secondary small" data-action="space-dress">${t("close")}</button></div></div>`
+    : "";
+  const shelf = view.shelfPick
+    ? `<ul class="space-shelf">${books
+        .map((book) => {
+          const on = C.isShowcased(demo, book.id);
+          return `<li><span class="space-shelf-cover">${coverHTML(book, ctx)}</span><span><b>${esc(book.title)}</b><small>${t(on ? "space.isOut" : "space.notOut")}</small></span><button class="${on ? "secondary" : "primary"} small" data-action="showcase" data-book="${esc(book.id)}" data-on="${on ? 0 : 1}">${t(on ? "space.takeBack" : "space.publishBook")}</button></li>`;
+        })
+        .join("")}</ul>`
+    : "";
+  const header = headerHTML(
+    {
+      user: me,
+      banner: space.banner || C.SPACE_BANNER,
+      motto: space.motto || t("space.mottoDefault"),
+      counts: [[stats.works, t("space.posts")], [out.length, t("space.books")], [stats.friends, t("community.statFriends")], [stats.following, t("community.statFollowing")]],
+      level: xp ? `Lv.${xp.levelIndex + 1} · ${t("level." + xp.level.id)}` : "",
+      bio: demo.profile.bio || t("community.bioEmpty"),
+      actions: `<button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button><button class="secondary small" data-action="space-dress" aria-expanded="${Boolean(view.dress)}">${t("space.dress")}</button><button class="primary small" data-action="community-publish-start">＋ ${t("space.post")}</button>`,
+      dressButton: `<button class="space-dress-btn" data-action="space-dress" aria-expanded="${Boolean(view.dress)}">${t("space.dress")}</button>`,
+    },
+    ctx,
+  );
+  const highlights = `<div class="ig-highlights space-book-row">${out.map((book) => `<button class="space-book" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx)}<b>${esc(book.title)}</b></button>`).join("")}<button class="ig-new" data-action="space-shelf" aria-expanded="${Boolean(view.shelfPick)}"><span>＋</span><b>${t(view.shelfPick ? "space.done" : "space.fromShelf")}</b></button></div>`;
+  return `<section class="space ig" style="--space-accent:${accent}">${header}${dress}<section class="space-section"><div class="space-head"><h3>${t("space.myBooks")}</h3></div>${highlights}${shelf}<p class="save-help">${t("space.booksNote")}</p></section><section class="space-section"><div class="space-head"><h3>${t("space.feed")}</h3></div>${gridHTML(works, ctx)}</section><p class="space-demo">${t("community.demoLabel")} · ${t("space.demoNote")}</p></section><h3 class="ig-manage-title">${t("space.manage")}</h3>`;
+}
+// Someone else's page: the same layout, with follow / add friend / message.
+function userPageHTML(demo, view, ctx) {
+  const { t } = ctx;
+  const user = C.userById(demo, view.userId);
+  if (!user) return `<div class="empty">${t("community.missing")}</div>`;
+  const works = demo.works.filter((work) => work.authorId === user.id && !(work.hidden || work.reported));
+  const likes = works.reduce((sum, work) => sum + (work.likes || 0), 0);
+  const blocked = demo.blocked.includes(user.id);
+  return `<section class="space ig other">${headerHTML(
+    {
+      user,
+      banner: C.DEMO_BANNERS[user.id] || C.SPACE_BANNER,
+      motto: "",
+      counts: [[works.length, t("space.posts")], [likes, t("community.statLikes")]],
+      level: "",
+      bio: user.bio || "",
+      actions: blocked ? `<p class="save-help">${t("space.blocked")}</p>` : relationButtons(demo, user.id, ctx),
+    },
+    ctx,
+  )}<section class="space-section"><div class="space-head"><h3>${t("space.feedOther")}</h3></div>${blocked ? "" : gridHTML(works, ctx)}</section><p class="space-demo">${t("community.demoLabel")} · ${t("space.otherNote")}</p></section>`;
+}
 export function profileHTML(demo, view, ctx, books = [], xp = null) {
   const { t } = ctx;
+  useMedia(ctx);
   const me = author(demo, "me", ctx);
   const stats = C.myStats(demo);
   const stat = (value, label, jump) => `<button class="p-stat" data-action="community-jump" data-target="${jump}"><b>${value}</b><span>${t(label)}</span></button>`;
   const edit = view.editProfile
-    ? `<div class="p-edit"><span class="small-label">${t("community.avatar")}</span><div class="p-avatars">${C.AVATARS.map((a) => `<button data-action="community-avatar" data-avatar="${a}" class="${demo.profile.avatar === a ? "selected" : ""}" aria-pressed="${demo.profile.avatar === a}">${a}</button>`).join("")}</div><label class="field">${t("community.profileName")}<input id="profile-name" maxlength="30" value="${esc(demo.profile.name)}" placeholder="${t("community.me")}"></label><label class="field">${t("community.profileBio")}<textarea id="profile-bio" maxlength="120" placeholder="${t("community.bioPlaceholder")}">${esc(demo.profile.bio)}</textarea></label><div class="dialog-actions"><button class="secondary" data-action="community-profile-cancel">${t("cancel")}</button><button class="primary" data-action="community-profile-save">${t("save")}</button></div></div>`
+    ? `<div class="p-edit"><span class="small-label">${t("community.avatar")}</span><div class="space-avatar-row"><button class="secondary small" data-action="space-avatar-upload">${t("space.avatarUpload")}</button><button class="text-button" data-action="space-dress">${t("space.avatarPick")}</button></div><label class="field">${t("community.profileName")}<input id="profile-name" maxlength="30" value="${esc(demo.profile.name)}" placeholder="${t("community.me")}"></label><label class="field">${t("community.profileBio")}<textarea id="profile-bio" maxlength="120" placeholder="${t("community.bioPlaceholder")}">${esc(demo.profile.bio)}</textarea></label><div class="dialog-actions"><button class="secondary" data-action="community-profile-cancel">${t("cancel")}</button><button class="primary" data-action="community-profile-save">${t("save")}</button></div></div>`
     : "";
   const savedType = view.savedType || "";
   const saved = C.savedWorks(demo, savedType);
@@ -164,7 +257,7 @@ export function profileHTML(demo, view, ctx, books = [], xp = null) {
     .filter(Boolean)
     .map((u) => `<li class="c-user">${avatar(u)}<span><b>${esc(u.name)}</b></span><span class="c-relations"><button class="secondary small" data-action="community-unblock" data-user="${esc(u.id)}">${t("community.unblock")}</button></span></li>`)
     .join("");
-  return `<section class="p-card">${avatar(me, "lg")}<div class="p-who"><h2>${esc(me.name)}</h2><small>@me · ${t("community.privateJournal")}</small><p>${esc(demo.profile.bio || t("community.bioEmpty"))}</p></div><button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button></section>${edit}<div class="p-stats">${stat(stats.works, "community.statWorks", "p-works")}${stat(stats.likes, "community.statLikes", "p-works")}${stat(stats.following, "community.statFollowing", "p-following")}${stat(stats.friends, "community.statFriends", "friends")}${stat(stats.saved, "community.statSaved", "p-saved")}</div>${levelHTML(xp, ctx)}${whoCanSeeHTML(demo, books, ctx)}${visitorPreviewHTML(demo, books, ctx)}<section id="p-works" class="p-section"><div class="section-heading"><h3>${t("community.myPosts")}</h3></div><button class="primary full-width" data-action="community-publish-start">＋ ${t("community.publishStart")}</button><p class="save-help">${t("community.privateDefault")}</p><ul class="p-works">${manage || `<li class="save-help">${t("community.noWorks")}</li>`}</ul></section><section id="p-saved" class="p-section"><h3>${t("community.mySaved")}</h3><div class="material-categories"><button data-action="community-saved-type" data-type="" class="${savedType ? "" : "selected"}">${t("all")}</button>${C.SAVE_TYPES.map((type) => `<button data-action="community-saved-type" data-type="${type}" class="${savedType === type ? "selected" : ""}">${t("community.savedType." + type)}</button>`).join("")}</div>${saved.length ? `<div class="work-grid">${saved.map((w) => workCardHTML(demo, w, ctx)).join("")}</div>` : `<p class="save-help">${t("community.noSaved")}</p>`}</section><section id="p-following" class="p-section"><h3>${t("community.myFollowing")} · ${demo.following.length}</h3><ul class="c-list">${following || `<li class="save-help">${t("community.followingEmpty")}</li>`}</ul></section><section class="p-section"><h3>${t("community.settings")}</h3><label class="check-label"><input type="checkbox" data-profile-setting="defaultCommentsOpen" ${demo.profile.defaultCommentsOpen ? "checked" : ""}> ${t("community.defaultComments")}</label><label class="field">${t("community.whoCanRequest")}<select data-profile-setting="friendRequests"><option value="everyone" ${demo.profile.friendRequests === "everyone" ? "selected" : ""}>${t("community.requestsEveryone")}</option><option value="following" ${demo.profile.friendRequests === "following" ? "selected" : ""}>${t("community.requestsFollowing")}</option></select></label><p class="save-help">${t("community.messagesFriendsOnly")}</p></section><section class="p-section"><h3>${t("community.blocked")} · ${demo.blocked.length}</h3><ul class="c-list">${blocked || `<li class="save-help">${t("community.noBlocked")}</li>`}</ul></section><button class="secondary full-width" data-action="community-reset">↺ ${t("community.reset")}</button>`;
+  return `${spaceHTML(demo, view, ctx, books, xp)}${edit}<div class="p-stats">${stat(stats.works, "community.statWorks", "p-works")}${stat(stats.likes, "community.statLikes", "p-works")}${stat(stats.following, "community.statFollowing", "p-following")}${stat(stats.friends, "community.statFriends", "friends")}${stat(stats.saved, "community.statSaved", "p-saved")}</div>${levelHTML(xp, ctx)}${whoCanSeeHTML(demo, books, ctx)}${visitorPreviewHTML(demo, books, ctx)}<section id="p-works" class="p-section"><div class="section-heading"><h3>${t("community.myPosts")}</h3></div><p class="save-help">${t("community.privateDefault")}</p><ul class="p-works">${manage || `<li class="save-help">${t("community.noWorks")}</li>`}</ul></section><section id="p-saved" class="p-section"><h3>${t("community.mySaved")}</h3><div class="material-categories"><button data-action="community-saved-type" data-type="" class="${savedType ? "" : "selected"}">${t("all")}</button>${C.SAVE_TYPES.map((type) => `<button data-action="community-saved-type" data-type="${type}" class="${savedType === type ? "selected" : ""}">${t("community.savedType." + type)}</button>`).join("")}</div>${saved.length ? `<div class="work-grid">${saved.map((w) => workCardHTML(demo, w, ctx)).join("")}</div>` : `<p class="save-help">${t("community.noSaved")}</p>`}</section><section id="p-following" class="p-section"><h3>${t("community.myFollowing")} · ${demo.following.length}</h3><ul class="c-list">${following || `<li class="save-help">${t("community.followingEmpty")}</li>`}</ul></section><section class="p-section"><h3>${t("community.settings")}</h3><label class="check-label"><input type="checkbox" data-profile-setting="defaultCommentsOpen" ${demo.profile.defaultCommentsOpen ? "checked" : ""}> ${t("community.defaultComments")}</label><label class="field">${t("community.whoCanRequest")}<select data-profile-setting="friendRequests"><option value="everyone" ${demo.profile.friendRequests === "everyone" ? "selected" : ""}>${t("community.requestsEveryone")}</option><option value="following" ${demo.profile.friendRequests === "following" ? "selected" : ""}>${t("community.requestsFollowing")}</option></select></label><p class="save-help">${t("community.messagesFriendsOnly")}</p></section><section class="p-section"><h3>${t("community.blocked")} · ${demo.blocked.length}</h3><ul class="c-list">${blocked || `<li class="save-help">${t("community.noBlocked")}</li>`}</ul></section><button class="secondary full-width" data-action="community-reset">↺ ${t("community.reset")}</button>`;
 }
 
 function messagesHTML(demo, view, ctx, helpers) {
@@ -224,15 +317,17 @@ function publishHTML(demo, view, journal, ctx) {
 }
 
 export function communityHTML(demo, view, journal, ctx, helpers) {
+  useMedia(ctx);
   const { t } = ctx;
   const unread = C.unreadCount(demo);
   const requests = C.visibleIncoming(demo).length;
   const me = author(demo, "me", ctx);
   // Sub-pages (a work, a chat) keep only a one-line demo label.
-  const sub = Boolean(view.workId || view.chatUser);
+  const sub = Boolean(view.workId || view.chatUser || view.userId);
   const header = sub ? `<p class="demo-chip">${t("community.demoLabel")}</p>` : `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="me-chip" data-action="open-profile" aria-label="${t("me.open")}">${avatar(me, "xs")}<span>${t("me.short")}</span></button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
   if (view.publish) return header + `<div class="community-body">${publishHTML(demo, view, journal, ctx)}</div>`;
   if (view.workId) return header + workDetailHTML(demo, view, ctx, helpers);
+  if (view.userId) return header + `<button class="back-button" data-action="community-back">${helpers.icon("back")} ${t("community.title")}</button>` + userPageHTML(demo, view, ctx);
   const badge = (n) => (n ? ` <i class="c-badge">${n}</i>` : "");
   const tabs = `<nav class="community-tabs main" aria-label="${t("community.title")}">${TABS.map((tab) => `<button data-action="community-tab" data-tab="${tab}" class="${view.tab === tab ? "selected" : ""}" aria-pressed="${view.tab === tab}">${t("community.tab." + tab)}${tab === "messages" ? badge(unread) : tab === "friends" ? badge(requests) : ""}</button>`).join("")}</nav>`;
   let body = "";
@@ -260,6 +355,7 @@ export function communityHTML(demo, view, journal, ctx, helpers) {
 
 const INBOX_FILTERS = ["all", "system", "friends", "interaction", "messages"];
 export function inboxHTML(demo, filter, ctx, helpers) {
+  useMedia(ctx);
   const { t } = ctx;
   const all = C.inboxItems(demo);
   const current = INBOX_FILTERS.includes(filter) ? filter : "all";

@@ -25,7 +25,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     const openMe = async () => {
       await nav("books");
       await page.locator('[data-action="books-view"][data-view="profile"]').click();
-      await page.waitForSelector(".p-card");
+      await page.waitForSelector(".ig-head");
     };
     const tool = async (id) => {
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
@@ -206,13 +206,17 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
 
     // My profile: manage my community presence.
     await openMe();
-    await page.locator('[data-action="community-profile-edit"]').click();
-    await page.locator('[data-action="community-avatar"][data-avatar="🐰"]').click();
+    // Avatar: a photo (no emoji); without one, the first letter of the name.
+    assert.equal(await page.locator(".ig-head .c-avatar.monogram").count(), 1);
+    await page.locator('.ig-actions [data-action="space-dress"]').click();
+    const avatarPhoto = await page.locator('[data-action="space-avatar"]').first().getAttribute("data-photo");
+    await page.locator('[data-action="space-avatar"]').first().click();
+    await page.waitForSelector(`.ig-head .c-avatar img[src*="LD-photo-${avatarPhoto}"]`);
+    await page.locator('.ig-actions [data-action="community-profile-edit"]').click();
     await page.locator("#profile-name").fill("小日子收藏家");
     await page.locator("#profile-bio").fill("记录早餐、散步和慢慢变好的自己");
     await page.locator('[data-action="community-profile-save"]').click();
-    assert.match(await page.locator(".p-card").innerText(), /小日子收藏家[\s\S]*慢慢变好/);
-    assert.equal(await page.locator(".p-card .c-avatar").innerText(), "🐰");
+    assert.match(await page.locator(".space.ig").innerText(), /小日子收藏家[\s\S]*慢慢变好/);
     // Saved items by type (the cover saved earlier).
     await page.locator('[data-action="community-saved-type"][data-type="cover"]').click();
     assert.match(await page.locator("#p-saved").innerText(), /Kyoto/);
@@ -227,7 +231,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.locator('[data-profile-setting="defaultCommentsOpen"]').uncheck();
     await page.locator('[data-profile-setting="friendRequests"]').selectOption("following");
     demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
-    assert.deepEqual([demo.profile.name, demo.profile.avatar, demo.profile.defaultCommentsOpen, demo.profile.friendRequests], ["小日子收藏家", "🐰", false, "following"]);
+    assert.deepEqual([demo.profile.name, demo.profile.avatarPhoto, demo.profile.defaultCommentsOpen, demo.profile.friendRequests], ["小日子收藏家", `photo:${avatarPhoto}`, false, "following"]);
     assert.ok(!demo.blocked.includes("u-june") && !demo.following.includes("u-river"));
     // New posts follow the default; my name appears on my post.
     await page.locator('[data-action="community-publish-start"]').click();
@@ -263,7 +267,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${tab} ${width}`);
       }
       await page.locator('[data-action="open-profile"]').click();
-      await page.waitForSelector(".p-card");
+      await page.waitForSelector(".ig-head");
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `profile ${width}`);
       await nav("community");
     }

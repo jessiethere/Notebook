@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**66 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`collab` 二十一套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**68 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`collab` 二十三套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -132,6 +132,8 @@ npm run test:browser:v45
 npm run test:browser:v46
 npm run test:browser:v47
 npm run test:browser:v48
+npm run test:browser:v49
+npm run test:browser:v50
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -149,6 +151,14 @@ npm run test:browser:v48
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 主页像 Instagram，可以装扮；杂志书脊；6 种杂志封面；统一黑体
+
+- 我的主页就是别人看到的样子：背景图、照片头像、作品和好友数、一行小小的等级标签、「我出的书」（从书架挑一本出书，只展示封面）、动态方格。可以装扮：换头像（上传自己的照片或从照片里选）、背景图、主题色、签名。
+- 别人的主页也一样，可以关注、加好友、私信（本机演示）。
+- 书架上的杂志封面手帐本变成杂志书脊；封面新增黑白极简、胶片、留白、拼贴，共 6 种杂志风。
+- 界面文字统一改为黑体。
+- 写作页右上角可以直接「删除这一页」；当日主页也可以选「不要当日主页」。
 
 ### 2026-11-09 — 照片按原比例显示，浏览像美图
 

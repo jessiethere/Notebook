@@ -6,6 +6,24 @@ export const DEMO_KEY = "little-days.demo-social";
 export const SAVE_TYPES = ["work", "template", "recipe", "cover", "pack"];
 export const REPORT_REASONS = ["spam", "harassment", "privacy", "copyright", "other"];
 export const AVATARS = ["🌷", "🌼", "🍓", "🐰", "🐱", "🌿", "☁️", "📖", "☕", "🌙"];
+// Demo people show a photo (from the photo library) instead of an emoji, and
+// a banner on their page. Kept here so older saved demo data gets them too.
+export const DEMO_AVATAR_PHOTOS = {
+  "u-xiaoman": "photo:latte-art",
+  "u-river": "photo:open-road",
+  "u-mumu": "photo:ginger-cat",
+  "u-lin": "photo:forest-walk",
+  "u-june": "photo:strawberry-cups",
+  "u-tutu": "photo:balloons",
+};
+export const DEMO_BANNERS = {
+  "u-xiaoman": "photo:brunch",
+  "u-river": "photo:hot-air-balloons",
+  "u-mumu": "photo:stair-cat",
+  "u-lin": "photo:misty-hills",
+  "u-june": "photo:party-cake",
+  "u-tutu": "photo:confetti",
+};
 export const DEFAULT_PROFILE = {
   name: "",
   avatar: "🌷",
@@ -388,10 +406,34 @@ export function deleteConversation(state, userId) {
 
 /* ---------- My profile (manage my own community presence) ---------- */
 
+// My space (like a personal zone page): a banner photo from the photo
+// library, an accent colour and a one-line motto. Demo, on this device only.
+export const SPACE_ACCENTS = ["#7d8e66", "#b5838d", "#6d8299", "#c08b5c", "#8e7cc3", "#2b2622"];
+export const SPACE_BANNER = "photo:pink-ridges";
+export function updateSpace(state, values) {
+  const space = { ...(state.profile.space || {}) };
+  if (values.banner != null) {
+    if (!/^photo:[a-z0-9-]+$/.test(values.banner)) throw new Error("community.setting");
+    space.banner = values.banner;
+  }
+  if (values.accent != null) {
+    if (!SPACE_ACCENTS.includes(values.accent)) throw new Error("community.setting");
+    space.accent = values.accent;
+  }
+  if (values.motto != null) space.motto = String(values.motto).trim().slice(0, 40);
+  state.profile = { ...state.profile, space };
+  return space;
+}
 export function updateProfile(state, values) {
   const next = { ...state.profile };
   if (values.name != null) next.name = String(values.name).trim().slice(0, 30);
   if (values.bio != null) next.bio = String(values.bio).trim().slice(0, 120);
+  // A photo avatar: my own upload ("media:<id>", kept in this device's media
+  // store) or a library photo ("photo:<id>"); "" goes back to my initial.
+  if (values.avatarPhoto != null) {
+    if (values.avatarPhoto && !/^(media:[a-f0-9-]{36}|photo:[a-z0-9-]+)$/i.test(values.avatarPhoto)) throw new Error("community.avatar.error");
+    next.avatarPhoto = values.avatarPhoto;
+  }
   if (values.avatar != null) {
     if (!AVATARS.includes(values.avatar)) throw new Error("community.avatar.error");
     next.avatar = values.avatar;

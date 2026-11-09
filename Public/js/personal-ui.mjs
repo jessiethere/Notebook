@@ -39,7 +39,17 @@ export function coverPhotoRef(book, catalog) {
   const seed = [...String(book.id || book.title || "")].reduce((sum, c) => (sum * 31 + c.charCodeAt(0)) >>> 0, 7);
   return `photo:${list[seed % list.length].id}`;
 }
-export const MAGAZINE_COVERS = ["magazine-jp", "magazine-west"];
+export const MAGAZINE_COVERS = ["magazine-jp", "magazine-west", "magazine-mono", "magazine-film", "magazine-minimal", "magazine-collage"];
+// A few more photos for collage covers: the cover photo, then others from the
+// same theme (always the same ones for the same book).
+function extraPhotoRefs(book, catalog, count) {
+  const main = coverPhotoRef(book, catalog);
+  const photos = catalog.photos || [];
+  const pool = photos.filter((photo) => photo.collection === coverCollection(book) && `photo:${photo.id}` !== main);
+  const list = pool.length ? pool : photos;
+  const seed = [...String(book.id || book.title || "")].reduce((sum, c) => (sum * 17 + c.charCodeAt(0)) >>> 0, 3);
+  return [main, ...Array.from({ length: count }, (_, k) => list.length ? `photo:${list[(seed + k * 2) % list.length].id}` : "")];
+}
 function magazineCoverHTML(book, ctx, template) {
   const { tokens, media } = ctx;
   const photo = media.resolve(coverPhotoRef(book, ctx.catalog));
@@ -49,6 +59,18 @@ function magazineCoverHTML(book, ctx, template) {
   const title = esc(book.title || "Little Days");
   const line = esc((book.description || "").trim());
   const img = photo ? `<img class="mag-photo" src="${esc(photo)}" alt="">` : `<span class="mag-photo mag-photo-empty"></span>`;
+  const date = `'${String(now.getFullYear()).slice(2)} ${String(now.getMonth() + 1).padStart(2, "0")} ${String(now.getDate()).padStart(2, "0")}`;
+  if (template === "magazine-mono")
+    return `<div class="book-cover cover-magazine-mono" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span>LITTLE DAYS</span><span>NO.${String(now.getMonth() + 1).padStart(2, "0")}</span></span><b class="cover-title">${title}</b><span class="mag-frame">${img}</span><span class="mag-foot"><span>${esc(topic)}</span><span>${esc(issue)}</span></span></div>`;
+  if (template === "magazine-film")
+    return `<div class="book-cover cover-magazine-film" style="--cover-color:${coverColor(book, tokens)}"><span class="film-holes" aria-hidden="true"></span><span class="mag-frame">${img}<i class="film-date">${esc(date)}</i></span><span class="film-holes bottom" aria-hidden="true"></span><span class="mag-foot"><b class="cover-title">${title}</b><span>${esc(topic)} · LITTLE DAYS</span></span></div>`;
+  if (template === "magazine-minimal")
+    return `<div class="book-cover cover-magazine-minimal" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-brand">little days</span><span class="mag-frame">${img}</span><b class="cover-title">${title}</b><span class="mag-foot">${line || esc(issue)}</span></div>`;
+  if (template === "magazine-collage") {
+    const [, second, third] = extraPhotoRefs(book, ctx.catalog, 2);
+    const extra = (ref) => (media.resolve(ref) ? `<img class="mag-photo" src="${esc(media.resolve(ref))}" alt="">` : `<span class="mag-photo mag-photo-empty"></span>`);
+    return `<div class="book-cover cover-magazine-collage" style="--cover-color:${coverColor(book, tokens)}"><span class="collage-grid"><span class="c-main">${img}</span><span class="c-a">${extra(second)}</span><span class="c-b">${extra(third)}</span></span><span class="collage-band"><b class="cover-title">${title}</b><span>${esc(topic)} · ${esc(issue)}</span></span></div>`;
+  }
   if (template === "magazine-west")
     return `<div class="book-cover cover-magazine-west" style="--cover-color:${coverColor(book, tokens)}">${img}<span class="mag-shade" aria-hidden="true"></span><span class="mag-top"><span>${esc(issue)}</span><span>${esc(topic)}</span></span><span class="mag-masthead">LITTLE DAYS</span><span class="mag-lines"><b class="cover-title">${title}</b>${line ? `<i>${line}</i>` : ""}</span><span class="mag-barcode" aria-hidden="true"></span></div>`;
   return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">little days</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Little Days")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;

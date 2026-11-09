@@ -18,7 +18,7 @@ const ctx = {
 };
 
 test("two magazine covers come first; new and sample journals use them", () => {
-  assert.deepEqual(library.coverTemplates.slice(0, 2).map((c) => c.id), MAGAZINE_COVERS);
+  assert.deepEqual(library.coverTemplates.slice(0, MAGAZINE_COVERS.length).map((c) => c.id), MAGAZINE_COVERS);
   const fresh = createInitialState(seed, "2026-11-09");
   assert.deepEqual(fresh.books.map((b) => b.coverTemplate), ["magazine-jp", "magazine-west", "magazine-jp"]);
 });

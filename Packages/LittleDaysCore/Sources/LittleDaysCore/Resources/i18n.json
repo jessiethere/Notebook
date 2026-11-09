@@ -2216,8 +2216,8 @@
     "en": "Allow comments"
   },
   "community.unpublish": {
-    "zh": "撤回为私人",
-    "en": "Make private again"
+    "zh": "删除这条动态",
+    "en": "Delete this post"
   },
   "community.unpublishConfirm": {
     "zh": "把这篇撤回为私人？社区里将不再显示。",
@@ -3056,8 +3056,8 @@
     "en": "Me"
   },
   "shelf.hint": {
-    "zh": "轻点书脊，把想看的那本书抽出来 ✿",
-    "en": "Tap a spine to pull out the book you want ✿"
+    "zh": "轻点书脊，把想看的那本抽出来",
+    "en": "Tap a spine to pull out the one you want"
   },
   "shelf.open": {
     "zh": "打开这本",
@@ -4226,5 +4226,153 @@
   "photo.square": {
     "zh": "方图",
     "en": "Square"
+  },
+  "space.dress": {
+    "zh": "装扮空间",
+    "en": "Decorate"
+  },
+  "space.banner": {
+    "zh": "背景图",
+    "en": "Banner"
+  },
+  "space.accent": {
+    "zh": "主题色",
+    "en": "Accent colour"
+  },
+  "space.motto": {
+    "zh": "签名",
+    "en": "Motto"
+  },
+  "space.mottoPlaceholder": {
+    "zh": "一句话介绍你的空间",
+    "en": "One line about your space"
+  },
+  "space.mottoDefault": {
+    "zh": "收藏生活里的小日子",
+    "en": "Collecting little days"
+  },
+  "space.saved": {
+    "zh": "空间已装扮好",
+    "en": "Your space is updated"
+  },
+  "space.books": {
+    "zh": "出版的书",
+    "en": "Books out"
+  },
+  "space.posts": {
+    "zh": "动态",
+    "en": "Posts"
+  },
+  "space.myBooks": {
+    "zh": "我出的书",
+    "en": "My books"
+  },
+  "space.booksNote": {
+    "zh": "从书架挑一本“出书”：别人只看到封面和书名，里面的页面不公开。",
+    "en": "Pick a journal from your shelf to put out: others see only the cover and title, never the pages."
+  },
+  "space.fromShelf": {
+    "zh": "从书架出书",
+    "en": "From my shelf"
+  },
+  "space.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "space.isOut": {
+    "zh": "已出书 · 展示封面",
+    "en": "Out · cover shown"
+  },
+  "space.notOut": {
+    "zh": "在书架上 · 仅自己",
+    "en": "On the shelf · only me"
+  },
+  "space.publishBook": {
+    "zh": "出书",
+    "en": "Put out"
+  },
+  "space.takeBack": {
+    "zh": "收回",
+    "en": "Take back"
+  },
+  "space.feed": {
+    "zh": "我的动态",
+    "en": "My posts"
+  },
+  "space.post": {
+    "zh": "发一条",
+    "en": "New post"
+  },
+  "space.demoNote": {
+    "zh": "空间、出书和动态都只在这台设备上演示，未真正公开。",
+    "en": "Your space, books and posts are a demo on this device; nothing is really public."
+  },
+  "cover.magazine-mono": {
+    "zh": "黑白极简",
+    "en": "Mono"
+  },
+  "cover.magazine-film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "cover.magazine-minimal": {
+    "zh": "留白",
+    "en": "Minimal"
+  },
+  "cover.magazine-collage": {
+    "zh": "拼贴",
+    "en": "Collage"
+  },
+  "space.avatar": {
+    "zh": "头像",
+    "en": "Profile photo"
+  },
+  "space.avatarUpload": {
+    "zh": "上传自己的照片",
+    "en": "Upload a photo"
+  },
+  "space.avatarClear": {
+    "zh": "改回名字首字",
+    "en": "Use my initial"
+  },
+  "space.avatarPick": {
+    "zh": "从照片里选",
+    "en": "Pick a photo"
+  },
+  "space.manage": {
+    "zh": "只有你能看到 · 管理我的主页",
+    "en": "Only you see this · manage your page"
+  },
+  "space.isFriend": {
+    "zh": "好友",
+    "en": "Friend"
+  },
+  "space.blocked": {
+    "zh": "你已屏蔽对方。",
+    "en": "You blocked this person."
+  },
+  "space.otherNote": {
+    "zh": "虚拟用户的主页，关注、加好友和私信都只在这台设备上模拟。",
+    "en": "A demo person: following, friend requests and messages are simulated on this device."
+  },
+  "space.feedOther": {
+    "zh": "动态",
+    "en": "Posts"
+  },
+  "write.deleteStory": {
+    "zh": "删除这一页",
+    "en": "Delete this page"
+  },
+  "write.clearDay": {
+    "zh": "不要当日主页",
+    "en": "Remove the day page"
+  },
+  "write.clearDayConfirm": {
+    "zh": "清空当日主页的标题、文字和照片？这一天的小故事都会保留，可以撤销。",
+    "en": "Clear the day page's title, words and photos? This day's stories stay, and you can undo."
+  },
+  "write.dayCleared": {
+    "zh": "当日主页已清空，这一天只保留小故事",
+    "en": "Day page cleared; this day keeps its stories"
   }
 }

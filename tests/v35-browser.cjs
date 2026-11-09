@@ -60,7 +60,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await nav("community");
     assert.deepEqual(await page.$$eval(".community-tabs.main [data-action='community-tab']", (els) => els.map((el) => el.dataset.tab)), ["discover", "friends", "messages"]);
     await page.locator('[data-action="open-profile"]').click();
-    await page.waitForSelector(".p-card");
+    await page.waitForSelector(".ig-head");
     assert.equal(await page.locator("#navigation [data-page='books'].active").count(), 1, "profile lives in My Books");
     assert.equal(await page.locator('[data-action="books-view"][data-view="profile"][aria-selected="true"]').count(), 1);
     assert.equal(await page.locator(".who-row").count(), books.length);
@@ -69,7 +69,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('[data-action="community-profile-edit"]').click();
     await page.locator("#profile-name").fill("书架主人");
     await page.locator('[data-action="community-profile-save"]').click();
-    assert.match(await page.locator(".p-card").innerText(), /书架主人/);
+    assert.match(await page.locator(".space.ig").innerText(), /书架主人/);
     assert.equal(await page.locator(".bookshelf, .community-tabs").count(), 0);
     passed.push("我的主页 in My Books; community links to it; all books private by default; edits stay in place");
 

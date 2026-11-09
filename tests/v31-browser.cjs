@@ -463,7 +463,7 @@ async function noOverflow(page, label) {
     await page.locator('[data-action="insert-growth"][data-habit="reading"]').click();
     await page.waitForSelector(".growth-layer");
     await tool("chapters");
-    await page.locator('[data-action="moment-delete"]').click();
+    await page.locator('.moment-actions [data-action="moment-delete"]').click();
     await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.locator('[data-action="save-entry"]').click();
     await page.waitForSelector(".hero");

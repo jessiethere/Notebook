@@ -23,7 +23,9 @@
     "test:browser:v45": "node tests/v45-browser.cjs",
     "test:browser:v46": "node tests/v46-browser.cjs",
     "test:browser:v47": "node tests/v47-browser.cjs",
-    "test:browser:v48": "node tests/v48-browser.cjs"
+    "test:browser:v48": "node tests/v48-browser.cjs",
+    "test:browser:v49": "node tests/v49-browser.cjs",
+    "test:browser:v50": "node tests/v50-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

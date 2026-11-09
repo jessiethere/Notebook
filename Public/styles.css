@@ -5609,7 +5609,8 @@ details.check-history[open] > summary > span:first-child::after {
 }
 .shelf-hint {
   text-align: center;
-  font: 13px/1.6 "LD-handwritten", "LD-chinese", serif;
+  font: 500 13px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  letter-spacing: 0.04em;
   color: var(--t-9b8f7d, #9b8f7d);
   margin: 6px 0 14px;
 }
@@ -9260,4 +9261,935 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   display: block;
   margin-top: 5px;
   font-size: 12px;
+}
+
+/* ---------- My space (a personal zone page) ---------- */
+.space {
+  --space-accent: var(--c-7d8e66, #7d8e66);
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.space-banner {
+  position: relative;
+  height: 190px;
+  margin: 0 -23px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--space-accent), var(--c-2b2622, #2b2622));
+}
+.space-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.space-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--c-00000026, #00000026) 0%, var(--c-00000000, #00000000) 40%, var(--c-00000073, #00000073) 100%);
+}
+.space-motto {
+  position: absolute;
+  left: 23px;
+  right: 120px;
+  top: 18px;
+  font: 600 17px/1.35 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--t-ffffff, #ffffff);
+  text-shadow: 0 1px 8px var(--c-00000059, #00000059);
+}
+.space-dress-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-ffffffd9, #ffffffd9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font: 600 12px -apple-system, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-id {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+  margin-top: -42px;
+  position: relative;
+}
+.space-who {
+  padding-top: 48px;
+}
+.space-id > button {
+  margin-top: 50px;
+}
+.space-id .c-avatar {
+  width: 78px;
+  height: 78px;
+  font-size: 40px;
+  border: 4px solid var(--c-f8f5ef, #f8f5ef);
+  box-shadow: 0 6px 16px var(--c-3c2d1e33, #3c2d1e33);
+  background: var(--c-fffdf9, #fffdf9);
+}
+.space-who h2 {
+  margin: 0;
+  font: 700 20px/1.25 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-who small {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--space-accent);
+  color: var(--t-ffffff, #ffffff);
+  font-size: 11px;
+  font-weight: 600;
+}
+.space-who p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--t-6f675d, #6f675d);
+}
+.space-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 12px 6px;
+  border-radius: 16px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 4px 14px var(--c-3c2d1e10, #3c2d1e10);
+  text-align: center;
+}
+.space-stats span {
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.space-stats b {
+  font: 700 18px -apple-system, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-section {
+  display: grid;
+  gap: 10px;
+}
+.space-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.space-head h3 {
+  margin: 0;
+  font: 700 17px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-head h3::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 15px;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--space-accent);
+  vertical-align: -2px;
+}
+.space-book-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  scrollbar-width: none;
+}
+.space-book {
+  flex: 0 0 112px;
+  display: grid;
+  gap: 6px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.space-book .book-cover {
+  width: 112px;
+  height: 150px;
+  box-shadow: 0 8px 18px var(--c-3c2d1e2e, #3c2d1e2e);
+}
+.space-book b {
+  font-size: 12px;
+  color: var(--t-2b2622, #2b2622);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.space-empty {
+  min-height: 72px;
+  border: 1.5px dashed var(--c-d9d1c3, #d9d1c3);
+  border-radius: 14px;
+  background: none;
+  color: var(--t-8a8178, #8a8178);
+  font-size: 13px;
+}
+.space-shelf {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.space-shelf li {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--c-fffdf9, #fffdf9);
+}
+.space-shelf-cover .book-cover {
+  width: 48px;
+  height: 64px;
+}
+.space-shelf b {
+  display: block;
+  font-size: 13px;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-shelf small {
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.space-post {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 4px 14px var(--c-3c2d1e10, #3c2d1e10);
+}
+.space-post header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.space-post header b {
+  display: block;
+  font-size: 13px;
+}
+.space-post header small {
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.space-post h4 {
+  margin: 0;
+  font: 600 15px/1.4 -apple-system, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.space-post > img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.space-post footer {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--t-8a8178, #8a8178);
+}
+.space-post footer .text-button {
+  margin-left: auto;
+}
+.space-dress-panel {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 4px 14px var(--c-3c2d1e14, #3c2d1e14);
+}
+.space-dress-panel h4 {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.space-banners {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.space-banners button {
+  flex: 0 0 84px;
+  height: 52px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 10px;
+}
+.space-banners button.selected {
+  border-color: var(--c-2b2622, #2b2622);
+}
+.space-banners img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.space-accents {
+  display: flex;
+  gap: 10px;
+}
+.space-accents button {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 3px solid var(--c-fffdf9, #fffdf9);
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--c-e3dccf, #e3dccf);
+}
+.space-accents button.selected {
+  box-shadow: 0 0 0 2px var(--swatch);
+}
+.space-demo {
+  margin: 0;
+  font-size: 11px;
+  color: var(--t-a39a8e, #a39a8e);
+  text-align: center;
+}
+
+/* ---------- Magazine spines on the shelf ---------- */
+.spine.mag-spine {
+  overflow: hidden;
+  padding: 8px 4px 8px;
+  background: var(--c-2b2622, #2b2622);
+  color: var(--t-ffffff, #ffffff);
+  isolation: isolate;
+}
+.spine.mag-spine .spine-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+.spine.mag-spine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, var(--c-0000008c, #0000008c), var(--c-00000059, #00000059) 40%, var(--c-000000a6, #000000a6));
+}
+.spine.mag-spine .spine-brand {
+  font: 800 9px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.08em;
+  writing-mode: horizontal-tb;
+  opacity: 0.9;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--c-ffffffb3, #ffffffb3);
+  margin-bottom: 4px;
+}
+.spine.mag-spine .spine-title {
+  /* One character wide: each character sits under the last (no vertical
+     writing mode, so every font stacks evenly). */
+  writing-mode: horizontal-tb;
+  width: 1.2em;
+  flex: 0 1 auto;
+  min-height: 0;
+  margin: auto 0;
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: min(13px, calc(124px / var(--n, 6) / 1.18));
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: 0;
+  color: var(--t-ffffff, #ffffff);
+  text-shadow: 0 1px 4px var(--c-00000066, #00000066);
+}
+.spine.mag-spine small {
+  font: 600 9px -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.06em;
+  color: var(--t-ffffffd9, #ffffffd9);
+}
+
+/* ---------- More magazine covers ---------- */
+.book-cover.cover-magazine-mono,
+.book-cover.cover-magazine-film,
+.book-cover.cover-magazine-minimal,
+.book-cover.cover-magazine-collage {
+  container-type: size;
+  display: block;
+  overflow: hidden;
+  font-size: 0;
+}
+.cover-magazine-mono::after,
+.cover-magazine-film::after,
+.cover-magazine-minimal::after,
+.cover-magazine-collage::after {
+  content: none !important;
+}
+.cover-magazine-mono .mag-photo,
+.cover-magazine-film .mag-photo,
+.cover-magazine-minimal .mag-photo,
+.cover-magazine-collage .mag-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-magazine-mono .cover-title,
+.cover-magazine-film .cover-title,
+.cover-magazine-minimal .cover-title,
+.cover-magazine-collage .cover-title {
+  position: static;
+  max-height: none;
+  overflow: hidden;
+  text-wrap: balance;
+}
+/* Mono: white page, a heavy black title, a black-and-white photo. */
+.cover-magazine-mono {
+  background: var(--c-ffffff, #ffffff);
+  color: var(--t-111111, #111111);
+}
+.cover-magazine-mono .mag-top {
+  position: absolute;
+  top: 5cqw;
+  left: 7cqw;
+  right: 7cqw;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 2cqw;
+  border-bottom: 0.8cqw solid var(--c-111111, #111111);
+  font: 800 5cqw/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.06em;
+}
+.cover-magazine-mono .cover-title {
+  position: absolute;
+  top: 14cqw;
+  left: 7cqw;
+  right: 7cqw;
+  font: 900 12cqw/1.08 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: -0.02em;
+  text-align: left;
+  color: var(--t-111111, #111111);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cover-magazine-mono .mag-frame {
+  position: absolute;
+  left: 7cqw;
+  right: 7cqw;
+  top: 46cqh;
+  bottom: 11cqh;
+  overflow: hidden;
+}
+.cover-magazine-mono .mag-frame .mag-photo {
+  filter: grayscale(1) contrast(1.1);
+}
+.cover-magazine-mono .mag-foot {
+  position: absolute;
+  left: 7cqw;
+  right: 7cqw;
+  bottom: 4cqh;
+  display: flex;
+  justify-content: space-between;
+  font: 700 4cqw/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.1em;
+}
+/* Film: a strip of film with sprocket holes and an orange date stamp. */
+.cover-magazine-film {
+  background: var(--c-141210, #141210);
+  color: var(--t-f4ede1, #f4ede1);
+}
+.cover-magazine-film .film-holes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3cqh;
+  height: 5cqh;
+  background: repeating-linear-gradient(90deg, transparent 0 3cqw, var(--c-f4ede1d9, #f4ede1d9) 3cqw 8cqw, transparent 8cqw 11cqw);
+  -webkit-mask: linear-gradient(var(--c-000000, #000) 0 0);
+  border-radius: 1cqw;
+  opacity: 0.9;
+}
+.cover-magazine-film .film-holes.bottom {
+  top: auto;
+  bottom: 27cqh;
+}
+.cover-magazine-film .mag-frame {
+  position: absolute;
+  left: 6cqw;
+  right: 6cqw;
+  top: 11cqh;
+  bottom: 35cqh;
+  overflow: hidden;
+  border-radius: 1cqw;
+}
+.cover-magazine-film .mag-frame .mag-photo {
+  filter: saturate(1.15) contrast(1.05) sepia(0.12);
+}
+.cover-magazine-film .film-date {
+  position: absolute;
+  right: 4cqw;
+  bottom: 3cqw;
+  font: 700 5.6cqw/1 "Courier New", ui-monospace, monospace;
+  font-style: normal;
+  color: var(--t-ff8a2a, #ff8a2a);
+  text-shadow: 0 0 2cqw var(--c-ff6a0099, #ff6a0099);
+  letter-spacing: 0.06em;
+}
+.cover-magazine-film .mag-foot {
+  position: absolute;
+  left: 7cqw;
+  right: 7cqw;
+  bottom: 6cqh;
+  display: grid;
+  gap: 2cqw;
+}
+.cover-magazine-film .cover-title {
+  font: 600 8.6cqw/1.2 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  text-align: left;
+  color: var(--t-f4ede1, #f4ede1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cover-magazine-film .mag-foot span {
+  font: 600 3.8cqw/1 "Courier New", ui-monospace, monospace;
+  letter-spacing: 0.12em;
+  color: var(--t-f4ede1a6, #f4ede1a6);
+}
+/* Minimal: lots of white, a small centred photo, a quiet title. */
+.cover-magazine-minimal {
+  background: var(--c-fbfaf6, #fbfaf6);
+  color: var(--t-2b2622, #2b2622);
+}
+.cover-magazine-minimal .mag-brand {
+  position: absolute;
+  top: 7cqw;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: italic 500 8cqw/1 "LD-elegant", Georgia, serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.cover-magazine-minimal .mag-frame {
+  position: absolute;
+  left: 22cqw;
+  right: 22cqw;
+  top: 26cqh;
+  height: 56cqw;
+  overflow: hidden;
+}
+.cover-magazine-minimal .cover-title {
+  position: absolute;
+  left: 10cqw;
+  right: 10cqw;
+  top: calc(26cqh + 62cqw);
+  font: 500 7.4cqw/1.3 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--t-2b2622, #2b2622);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cover-magazine-minimal .mag-foot {
+  position: absolute;
+  left: 10cqw;
+  right: 10cqw;
+  bottom: 6cqh;
+  text-align: center;
+  font: 500 3.6cqw/1.3 -apple-system, "Helvetica Neue", "PingFang SC", Arial, sans-serif;
+  letter-spacing: 0.14em;
+  color: var(--t-9a8f80, #9a8f80);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Collage: three photos and a coloured band with the title. */
+.cover-magazine-collage {
+  background: var(--c-f6f2ea, #f6f2ea);
+}
+.cover-magazine-collage .collage-grid {
+  position: absolute;
+  inset: 4cqw 4cqw 24cqh;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2.4cqw;
+}
+.cover-magazine-collage .collage-grid > span {
+  overflow: hidden;
+  border-radius: 1.6cqw;
+}
+.cover-magazine-collage .c-main {
+  grid-row: 1 / 3;
+}
+.cover-magazine-collage .collage-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22cqh;
+  display: grid;
+  align-content: center;
+  gap: 1.6cqw;
+  padding: 0 6cqw;
+  background: var(--cover-color, var(--c-c9b9a3, #c9b9a3));
+  filter: saturate(1.2);
+}
+.cover-magazine-collage .cover-title {
+  font: 700 8.4cqw/1.15 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  text-align: left;
+  color: var(--t-2b2622, #2b2622);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cover-magazine-collage .collage-band span {
+  font: 600 3.6cqw/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--t-2b2622b3, #2b2622b3);
+}
+
+.space-dress-panel .editor-actions .primary {
+  border: 0;
+  background: var(--space-accent, var(--c-7d8e66, #7d8e66));
+  color: var(--t-ffffff, #ffffff);
+}
+
+/* ---------- One UI typeface: the system sans (PingFang on iPhone) ----------
+   Everything that is app interface uses it. What stays as chosen: the words
+   on journal pages, book covers and spines, the "Little Days" wordmark and
+   magazine mastheads. */
+:root {
+  --ui-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+.page-title,
+.page-subtitle,
+.month-controls h2,
+.cal-wall-head h2,
+dialog h2,
+.today-prompt,
+.home-quote,
+.section-caption,
+.p-who h2,
+.p-who p,
+.p-stat b,
+.pulled-copy h2,
+.chapter-strip h2,
+.chapter-index,
+.chapter-no,
+.chapter-chip b span:first-child,
+.day-masthead h1,
+.day-contents span,
+.day-cover-copy strong,
+.day-cover-date b,
+.journey-cover h2,
+.journey-date b,
+.journey-note,
+.journey-page-no,
+.journey-stat b,
+.collab-page h3,
+.collab-page p,
+.reflection-chip b,
+.reflection-chip span,
+.reflection-note b,
+.reflection-note p,
+.habit-note,
+.work-title,
+.work-rank,
+.work-page p,
+.work-cover b,
+.write-head b,
+.write-title,
+.write-body,
+.start-continue b,
+.start-ideas button,
+.start-scene b,
+.start-sub,
+.studio-banner h3,
+.studio-bar .date-input,
+.tour-card h2,
+.login-tag,
+.media-card-title > span,
+.desktop-note h1,
+.level-card b,
+.level-card small {
+  font-family: var(--ui-sans) !important;
+  font-style: normal !important;
+  letter-spacing: normal;
+}
+.page-title,
+.month-controls h2,
+.cal-wall-head h2,
+dialog h2,
+.p-stat b,
+.journey-stat b,
+.day-masthead h1,
+.pulled-copy h2 {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Profile like a photo app: avatar, counts, highlights, grid ---------- */
+.c-avatar.has-photo {
+  overflow: hidden;
+  padding: 0;
+}
+.c-avatar.has-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+.c-avatar.monogram {
+  background: hsl(var(--hue, 30) 30% 86%);
+  color: hsl(var(--hue, 30) 30% 30%);
+  font: 700 0.62em/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  display: inline-grid;
+  place-items: center;
+}
+.c-avatar.xl {
+  width: 84px;
+  height: 84px;
+  font-size: 34px;
+  flex: none;
+}
+.ig .space-banner {
+  height: 150px;
+}
+.ig-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  gap: 16px;
+  margin-top: -46px;
+  position: relative;
+}
+.ig-head .c-avatar.xl {
+  border: 4px solid var(--c-f8f5ef, #f8f5ef);
+  box-shadow: 0 6px 16px var(--c-3c2d1e33, #3c2d1e33);
+  background-color: var(--c-fffdf9, #fffdf9);
+}
+.ig-head .c-avatar.xl.monogram {
+  background: hsl(var(--hue, 30) 30% 86%);
+}
+.ig-counts {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding-bottom: 4px;
+  text-align: center;
+}
+.ig-counts span {
+  display: grid;
+  gap: 1px;
+  font-size: 11px;
+  color: var(--t-8a8178, #8a8178);
+}
+.ig-counts b {
+  font: 700 17px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.ig-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 0 !important;
+}
+.ig-name h2 {
+  margin: 0;
+  font: 700 18px/1.3 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--t-2b2622, #2b2622);
+}
+.ig-level {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--space-accent, var(--c-7d8e66, #7d8e66));
+  border-radius: 999px;
+  background: none !important;
+  color: var(--space-accent, var(--t-7d8e66, #7d8e66)) !important;
+  font-size: 11px !important;
+  font-weight: 600;
+  margin: 0 !important;
+}
+.ig-handle {
+  margin: -8px 0 0;
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.ig-bio {
+  margin: -6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--t-4a433c, #4a433c);
+}
+.ig-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+}
+.ig-actions .c-relations {
+  display: contents;
+}
+.ig-actions button {
+  min-height: 34px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+.ig-actions .primary {
+  background: var(--space-accent, var(--c-7d8e66, #7d8e66));
+  border-color: var(--space-accent, var(--c-7d8e66, #7d8e66));
+  color: var(--t-ffffff, #ffffff);
+}
+.ig-highlights {
+  align-items: start;
+}
+.ig-new {
+  flex: 0 0 84px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--t-6f675d, #6f675d);
+}
+.ig-new span {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 112px;
+  border: 1.5px dashed var(--c-d9d1c3, #d9d1c3);
+  border-radius: 8px;
+  font-size: 26px;
+  color: var(--t-a39a8e, #a39a8e);
+}
+.ig-new b {
+  font-size: 12px;
+  font-weight: 500;
+}
+.ig .space-book {
+  flex: 0 0 84px;
+}
+.ig .space-book .book-cover {
+  width: 84px;
+  height: 112px;
+}
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin: 0 -23px;
+}
+.ig-tile {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: var(--c-eee7da, #eee7da);
+}
+.ig-tile img,
+.ig-tile .work-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ig-tile .work-cover {
+  border-radius: 0;
+  box-shadow: none;
+}
+.ig-tile > span {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t-ffffff, #ffffff);
+  text-shadow: 0 1px 4px var(--c-00000080, #00000080);
+}
+.ig-empty {
+  text-align: center;
+  padding: 18px 0;
+}
+.ig-manage-title {
+  margin: 26px 0 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-e6dfd3, #e6dfd3);
+  font: 600 13px -apple-system, "PingFang SC", sans-serif;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.space-avatar-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.avatar-picks button {
+  flex: 0 0 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+}
+.user-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+}
+.user-link:disabled {
+  opacity: 1;
+}
+/* A compact level card (no emoji). */
+.level-card {
+  padding: 12px 14px !important;
+}
+.level-card .level-top {
+  gap: 10px !important;
+}
+
+/* Delete / remove, right on the writing card. */
+.write-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.write-delete {
+  margin-left: auto;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--c-ecd3cf, #ecd3cf);
+  border-radius: 999px;
+  background: var(--c-fff7f5, #fff7f5);
+  color: var(--t-b0574b, #b0574b);
+  font-size: 12px;
+  white-space: nowrap;
 }
