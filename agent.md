@@ -48,6 +48,20 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.3 今天的故事（Quick Create v3 · P0 ①）
+
+- 需求：用户「我喜欢新设计的六屏」；按 docs/QUICK_CREATE_PLAN.md 的顺序先做 P0 ①。（我发的确认问题被用户关掉，按「先做 ①，底部导航和成长合并留给任务 G」的默认推进，在回复里说明。）
+- 改动文件：
+  - Public/js/exif.mjs（新）：读 JPEG EXIF DateTimeOriginal（IFD0 → Exif IFD；读不到用文件时间）；`photoTime(file)` 在 `imageBlob()` 缩图前调用。
+  - Public/js/day-story.mjs（新）：groupByTime（间隔 > 90 分钟分开，无时间的照片跟在前一张后面）、movePhoto / splitAt / removePhoto（纯函数）、clockLabel、partOfDay、timelineLayers（封面时间线 = 普通照片层 + 文字层，左右交错、按原比例不裁切、超过 5 个 Moment 显示「还有 N 个」，3 种样子）。
+  - Public/app.js：首页「今天有什么值得记录？」卡片（today-photos / today-write 直接开始；「其他方式」仍是原来的面板）；照片上传记录拍摄时间，分成 ≥ 2 组时进入 story 页面（分组 → 每组一句 → 预览），否则保持原来的一页结果页；预览页签、换一种（封面 3 种、页面沿用 smart 3 种）、自己调整（进 Studio，‹ 回到预览，保存直接进书）、往回再生成不会重复；保存后打开书的翻页并翻到这一天；离开第一步不留下任何页。
+  - Public/js/canvas.mjs、export.mjs：封面 `layoutTemplate: "timeline"` 时不画默认标题 / 正文 / 心情 / 照片占位。
+  - Public/styles.css、i18n.json（story.*）、whats-new.mjs（V6.3）、Models.swift（JournalMoment.capturedAt 可选）+ CoreTests、package.json、tests/exif-fixture.cjs（新：给公开示例照片加合成 EXIF 时间）、tests/v60.test.mjs（新 4 项）、tests/v60-browser.cjs（新 7 组）。
+- 决策与原因：封面做成普通图层而不是新的渲染模板，这样阅读、导出、PDF、翻页、自由编辑全部直接可用；自动封面只在封面为空时写入；分组里挪照片先用「点选 + 前一个 / 后一个」，长按拖动留到 P1（更稳，测试更可靠）。
+- 运行 / 测试：105 项 Node（新增 4 项：EXIF、按时间分组、挪照片 / 分开 / 去掉、封面时间线）、12 项 Python、33 套浏览器 E2E 全部通过（v60：首页 → 选 5 张带拍摄时间的照片 → 分成 3 个 Moment → 挪照片再挪回 → 两组写一句 → 封面 + 3 页 → 换一种 → 自己调整再回来 → 回到写一句再生成不重复 → 保存进书并翻到封面 → 日历里显示 → 第一步离开不留页 → 同一时段照片仍是一页）。Linux 容器 + Chromium；未在 iPhone 真机验证。
+- 已知问题：网页上 iPhone 照片的 EXIF 时间是否保留未在真机验证（读不到时整组按选择顺序成一页）；主题套装、文字适配、钉住手动调整属于 P0 ② ③，还没做；封面「换一种」会重排封面图层（还没有钉住保护）；底部导航仍是 6 个。
+- 下一步：P0 ② 排版引擎 v2，P0 ③ 自动与手动共存。
+
 ### 2026-11-09 — 查看方式改为固定链接；差异化与 Quick Create v3 方案（仅文档，待确认）
 
 - 需求：①「Windows 使用 localhost:8080 交互预览」这块改为继续用 claude 固定链接看修改后的 App；②长篇需求「产品差异化战略与 Quick Create 核心体验升级」：本轮不大规模写代码，先检查仓库、批判性分析差异化、设计 Quick Create 旅程和页面、Auto Layout 方案、优先级、验证实验，回答三个问题，等确认后再实施。

@@ -176,7 +176,10 @@ export function canvasHTML(page, ctx, options = {}) {
   const inline = (field, placeholder, max) =>
     `contenteditable="plaintext-only" spellcheck="false" role="textbox" aria-multiline="${field === "body"}" data-inline="${field}" data-max="${max}" data-placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}"`;
   let fixed = "";
-  if (dayPage) {
+  if (dayPage && page.layoutTemplate === "timeline")
+    // Today's story cover: time, a photo and a line per Moment, all layers.
+    fixed = veil;
+  else if (dayPage) {
     const photo = media.resolve(page.photo);
     const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
     const titleText = readOnly
@@ -199,6 +202,7 @@ export function canvasHTML(page, ctx, options = {}) {
     "journal-canvas",
     template,
     dayPage ? "day-canvas" : "moment-canvas",
+    dayPage && page.layoutTemplate === "timeline" ? "timeline-cover" : "",
     page.layoutTemplate === "text" ? "text-only" : "",
     !dayPage && page.layoutTemplate === "line" ? "line-page" : "",
     !dayPage && page.layoutTemplate === "smart" ? "smart-page" : "",

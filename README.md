@@ -102,7 +102,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**101 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`v57`、`v58`、`v59`、`collab` 三十二套浏览器 E2E 全部通过（背景音乐只做了响度/频谱分析，未由人试听确认、也未在 iPhone 上播放；手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**105 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`v57`、`v58`、`v59`、`v60`、`collab` 三十三套浏览器 E2E 全部通过（背景音乐只做了响度/频谱分析，未由人试听确认、也未在 iPhone 上播放；手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -148,6 +148,7 @@ npm run test:browser:v56
 npm run test:browser:v57
 npm run test:browser:v58
 npm run test:browser:v59
+npm run test:browser:v60
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -165,6 +166,13 @@ npm run test:browser:v59
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 今天的故事：选照片，自动排成一天（V6.3，Quick Create v3 第一步）
+
+- 首页最上面「今天有什么值得记录？」+「选今天的照片」，不用先选书、模板或字体。
+- 照片按拍摄时间自动分成几个 Moment，可以挪照片、从某张分开；每个 Moment 写一句（可跳过）。
+- 自动排成「封面时间线 + 每个 Moment 一页」，可以换一种、自己调整；保存后直接翻到书里今天这几页。
+- 按设计稿 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt 实现了第 ①–④、⑥ 屏；底部导航还没改成 4 个（和任务 G 一起做）。
 
 ### 2026-11-09 — 查看方式改为固定链接；Quick Create v3 方案（文档，待确认）
 

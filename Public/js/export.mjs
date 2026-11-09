@@ -286,7 +286,8 @@ export async function renderJournalCanvas(editor, options = {}) {
     }
     ctx.restore();
   }
-  if (dayPage || editor.layoutTemplate === "text") {
+  // A timeline cover (today's story) is all layers: no title / words / mood.
+  if ((dayPage && editor.layoutTemplate !== "timeline") || editor.layoutTemplate === "text") {
     const titleColor = editor.textStyle?.color || "#2F2A26";
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;

@@ -12432,3 +12432,304 @@ dialog h2,
   white-space: nowrap;
   font-size: 13px;
 }
+
+/* ---------- Quick Create v3: today's story (V6.3) ---------- */
+.story-start-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 20px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--paper);
+  box-shadow: 0 10px 30px rgba(47, 42, 38, 0.06);
+}
+.story-start-card .today-prompt {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.3;
+}
+.story-start-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-start-card .story-photos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 54px;
+  border-radius: 18px;
+  background: var(--c-5f6f52, #5F6F52);
+  font-size: 16px;
+  font-weight: 700;
+}
+.story-start-card .story-photos svg {
+  width: 20px;
+  height: 20px;
+}
+.story-start-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.story-start-row button,
+.story-start-row .moment-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 46px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 14px;
+  text-align: center;
+}
+.story-start-card > small {
+  font-size: 11px;
+  color: var(--t-6f675d, #6F675D);
+  text-align: center;
+}
+.story-bar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 10px;
+}
+.story-bar h1 {
+  margin: 0;
+  font-size: 16px;
+  text-align: center;
+}
+.story-bar .text-button {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 4px;
+}
+.story-bar .story-save {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--c-5f6f52, #5F6F52);
+}
+.story-intro {
+  margin: 0 4px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-groups,
+.story-lines {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+.story-group,
+.story-line-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+}
+.story-group header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.story-group header b,
+.story-line-top b {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: var(--c-e5ede0, #E5EDE0);
+  color: var(--t-3f4d35, #3F4D35);
+}
+.tone-afternoon header b,
+.tone-afternoon .story-line-top b {
+  background: var(--c-f4e4e4, #F4E4E4);
+  color: var(--t-7a4b4b, #7A4B4B);
+}
+.tone-evening header b,
+.tone-evening .story-line-top b,
+.tone-night header b,
+.tone-night .story-line-top b {
+  background: var(--c-f6efcf, #F6EFCF);
+  color: var(--t-6a5b22, #6A5B22);
+}
+.story-group header small,
+.story-line-top small {
+  font-size: 12px;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.story-thumb {
+  width: 84px;
+  height: 84px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--c-efeae1, #EFEAE1);
+}
+.story-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.story-thumb.selected {
+  outline: 3px solid var(--c-5f6f52, #5F6F52);
+  outline-offset: 2px;
+}
+.story-split {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--t-8d857b, #8D857B);
+}
+.story-split span {
+  flex: 1;
+  border-top: 1.5px dashed var(--c-d9d1c4, #d9d1c4);
+}
+.story-photo-bar {
+  position: sticky;
+  bottom: 96px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--ink);
+}
+.story-photo-bar button {
+  flex: 1 1 auto;
+  min-height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--t-ffffff, #FFFFFF);
+  font-size: 13px;
+}
+.story-photo-bar .danger-text {
+  color: var(--t-f2b8b8, #F2B8B8);
+}
+.story-foot {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 6px;
+  margin: 12px -16px 0;
+  padding: 12px 16px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  text-align: center;
+}
+.story-foot .primary {
+  min-height: 52px;
+  border-radius: 18px;
+  background: var(--c-5f6f52, #5F6F52);
+  font-size: 15px;
+  font-weight: 700;
+}
+.story-foot small {
+  font-size: 12px;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-book {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 10px;
+  font-size: 13px;
+  color: var(--t-6f675d, #6F675D);
+}
+.story-book select {
+  flex: 1;
+  min-height: 40px;
+}
+.story-line-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.story-line-top img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.story-line-card input {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-bottom: 1.5px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  font-size: 16px;
+  padding: 0;
+}
+.story-line-card input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.story-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.story-tabs button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 12px;
+  color: var(--ink);
+}
+.story-tabs button[aria-selected="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--t-ffffff, #FFFFFF);
+}
+.story-canvas {
+  margin: 0 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px rgba(47, 42, 38, 0.14);
+}
+.story-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+.story-tools button {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  font-size: 14px;
+  color: var(--ink);
+}
+.story-help {
+  text-align: center;
+}

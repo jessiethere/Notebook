@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.3",
+    date: "2026-11-09",
+    zh: {
+      title: "今天的故事：选照片，自动排成一天",
+      items: [
+        "首页最上面问「今天有什么值得记录？」，点「选今天的照片」就开始，不用先选手帐本、模板或字体。",
+        "照片会按拍摄时间自动分成几个 Moment（比如早上健身、下午咖啡、晚上做饭）；点一张照片可以挪到前一个 / 后一个 Moment，或从这张分开。",
+        "每个 Moment 可以写一句（都能跳过），然后自动排成「封面时间线 + 每个 Moment 一页」，每页都能「换一种」，也能「自己调整」再回来。",
+        "保存后直接打开这本书、翻到今天这几页；日历里也能看到。照片都在一个时间段的，还是和以前一样直接得到一页。",
+      ],
+    },
+    en: {
+      title: "Today's story: pick photos, get your day laid out",
+      items: [
+        "Home now asks “What's worth keeping today?” — tap “Pick today's photos” to start; no book, template or font to choose first.",
+        "Photos are grouped into Moments by when they were taken (a morning workout, afternoon coffee, dinner); tap a photo to move it to the Moment before or after, or split there.",
+        "Write a line for each Moment (or skip), and get a timeline cover plus one page per Moment; shuffle any page, or adjust it yourself and come back.",
+        "Saving opens the book at today's pages; the calendar has them too. Photos all from one time of day still make a single page, as before.",
+      ],
+    },
+  },
+  {
     version: "6.2",
     date: "2026-11-09",
     zh: {

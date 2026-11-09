@@ -8,7 +8,7 @@
 
 ## 2026-11-09 提案：差异化与 Quick Create v3（待确认）
 
-见 [QUICK_CREATE_PLAN.md](QUICK_CREATE_PLAN.md)：定位「选今天的照片，一分钟得到喜欢的手账页，日子变成一本书」；旅程 ＋ → 选照片 → 按时间分 Moment → 每组一句 → 封面时间线 + 每组一页 → 保存进书；P0 = 多 Moment Quick Create、排版引擎 v2、自动与手动共存。未实施。
+见 [QUICK_CREATE_PLAN.md](QUICK_CREATE_PLAN.md)：定位「选今天的照片，一分钟得到喜欢的手账页，日子变成一本书」；旅程 ＋ → 选照片 → 按时间分 Moment → 每组一句 → 封面时间线 + 每组一页 → 保存进书；P0 = 多 Moment Quick Create、排版引擎 v2、自动与手动共存。V6.3 已实施第一项（今天的故事）；② ③ 未实施。
 
 ## V3.3 新增
 

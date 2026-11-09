@@ -5230,5 +5230,157 @@
   "music.bookRemoved": {
     "zh": "这本书不放音乐了",
     "en": "No music for this book"
+  },
+  "story.prompt": {
+    "zh": "今天有什么值得记录？",
+    "en": "What's worth keeping today?"
+  },
+  "story.promptHint": {
+    "zh": "选几张今天的照片，剩下的交给 Little Days。",
+    "en": "Pick a few photos from today — Little Days does the rest."
+  },
+  "story.pickPhotos": {
+    "zh": "选今天的照片",
+    "en": "Pick today's photos"
+  },
+  "story.justWrite": {
+    "zh": "只写几句",
+    "en": "Just write"
+  },
+  "story.moreWays": {
+    "zh": "其他方式 ›",
+    "en": "More ways ›"
+  },
+  "story.noSetup": {
+    "zh": "不用先选手帐本、模板或字体 · 之后都能改",
+    "en": "No book, template or font to choose first — change anything later"
+  },
+  "story.photosTitle": {
+    "zh": "今天的 {count} 张照片",
+    "en": "Today's {count} photos"
+  },
+  "story.groupHint": {
+    "zh": "按拍摄时间分成了 {count} 个 Moment。点一张照片，可以把它移到前一个 / 后一个 Moment。",
+    "en": "Grouped by when they were taken into {count} Moments. Tap a photo to move it to the Moment before or after."
+  },
+  "story.splitHere": {
+    "zh": "在这里分开",
+    "en": "A new Moment"
+  },
+  "story.photos": {
+    "zh": "{count} 张",
+    "en": "{count} photos"
+  },
+  "story.photoActions": {
+    "zh": "这张照片",
+    "en": "This photo"
+  },
+  "story.toPrev": {
+    "zh": "前一个",
+    "en": "Earlier"
+  },
+  "story.toNext": {
+    "zh": "后一个",
+    "en": "Later"
+  },
+  "story.split": {
+    "zh": "从这张分开",
+    "en": "Split here"
+  },
+  "story.remove": {
+    "zh": "去掉",
+    "en": "Remove"
+  },
+  "story.keepOne": {
+    "zh": "至少留一张照片",
+    "en": "Keep at least one photo"
+  },
+  "story.layoutNow": {
+    "zh": "直接排版",
+    "en": "Lay out now"
+  },
+  "story.toLines": {
+    "zh": "下一步：每个 Moment 写一句",
+    "en": "Next: a line for each Moment"
+  },
+  "story.skipAll": {
+    "zh": "都可以跳过 · 不需要选模板",
+    "en": "Everything can be skipped — no template to pick"
+  },
+  "story.momentsTitle": {
+    "zh": "今天的 {count} 个 Moment",
+    "en": "Today's {count} Moments"
+  },
+  "story.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "story.into": {
+    "zh": "放进",
+    "en": "Into"
+  },
+  "story.lineLabel": {
+    "zh": "一句话",
+    "en": "A line"
+  },
+  "story.linePlaceholder": {
+    "zh": "写一句…（可以不写）",
+    "en": "A line… (optional)"
+  },
+  "story.make": {
+    "zh": "排成今天的故事",
+    "en": "Make today's story"
+  },
+  "story.previewTitle": {
+    "zh": "今天的故事 · {count} 页",
+    "en": "Today's story · {count} pages"
+  },
+  "story.pages": {
+    "zh": "这几页",
+    "en": "Pages"
+  },
+  "story.page": {
+    "zh": "一页",
+    "en": "Page"
+  },
+  "story.adjust": {
+    "zh": "自己调整",
+    "en": "Adjust it myself"
+  },
+  "story.previewHelp": {
+    "zh": "每页都可以「换一种」；想自己挪照片、加贴纸就点「自己调整」。保存后会收进书里。",
+    "en": "“Shuffle” any page; “Adjust it myself” to move photos or add stickers. Saving puts it in your book."
+  },
+  "story.saved": {
+    "zh": "已收进《{name}》",
+    "en": "Saved in “{name}”"
+  },
+  "story.discard": {
+    "zh": "不做这个故事了吗？选的照片不会放进手帐。",
+    "en": "Leave this story? The photos won't go into your journal."
+  },
+  "story.more": {
+    "zh": "还有 {count} 个 Moment",
+    "en": "{count} more Moments"
+  },
+  "story.noTime": {
+    "zh": "没有时间",
+    "en": "No time"
+  },
+  "story.part.morning": {
+    "zh": "早上",
+    "en": "morning"
+  },
+  "story.part.afternoon": {
+    "zh": "下午",
+    "en": "afternoon"
+  },
+  "story.part.evening": {
+    "zh": "晚上",
+    "en": "evening"
+  },
+  "story.part.night": {
+    "zh": "夜里",
+    "en": "night"
   }
 }

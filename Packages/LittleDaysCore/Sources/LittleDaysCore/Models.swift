@@ -216,6 +216,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var backdrop: String?
     /// V6.0: background music for this page, a library.json "music" id.
     public var music: String?
+    /// V6.3: when this Moment's photos were taken (ISO 8601), from today's story.
+    public var capturedAt: String?
     public var visibility: String?
     public var updatedAt: String?
     public var savedAt: String?

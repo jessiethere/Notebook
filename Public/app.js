@@ -26,6 +26,8 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
+import { photoTime } from "./js/exif.mjs";
+import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -484,7 +486,7 @@ function home() {
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
- ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-open" data-photo=""><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
+ ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write">Aa ${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small></div>${hero}</section>
  ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
    .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p></div>`;
@@ -1905,8 +1907,235 @@ async function startQuickRecord() {
     render();
     await drawOnPage();
   } else setPageMode("note", { quiet: true });
-  toast(t("book.writingIn", { name }));
+  // (My own photos: the book is shown again before the story is made.)
+  if (!(way === "photo" && photo === "mine")) toast(t("book.writingIn", { name }));
 }
+// ---------- Quick Create v3: today's story ----------
+// Photos taken at different times become Moments (split where more than 90
+// minutes pass): check the groups, write a line for each (or skip), then one
+// page per Moment, plus a timeline cover when the cover is still empty.
+let story = null; // { date, book, step: group|lines|preview, groups, selected, made, index }
+function startStory(groups) {
+  const empty = activeMomentId;
+  const book = activePage()?.bookId || editor.bookId || "daily";
+  if (empty && !hasMomentContent(findMoment(editor, empty) || {})) changeEditor((e) => removeMoment(e, empty), false);
+  activeMomentId = null;
+  quickResult = null;
+  story = { date: editor.date, book, step: "group", groups, selected: null, made: null, index: 0 };
+  page = "story";
+  // No "a new page is open" note here: the story makes its pages later.
+  clearTimeout(toastTimer);
+  $("#toast").classList.remove("visible");
+  logEvent("story_start", { photos: groups.reduce((n, g) => n + g.items.length, 0), moments: groups.length });
+  render();
+  $("#app-scroll").scrollTop = 0;
+}
+const storyPhoto = (item) => safePhoto(item.reference);
+function storyTimeLabel(group) {
+  const part = partOfDay(group.start);
+  return [clockLabel(group.start), part ? t("story.part." + part) : ""].filter(Boolean).join(" ") || t("story.noTime");
+}
+function storyPages() {
+  const made = story?.made;
+  if (!made) return [];
+  const pages = made.cover ? [{ cover: true, page: editor, label: t("day.cover") }] : [];
+  for (const momentId of made.ids) {
+    const moment = findMoment(editor, momentId);
+    if (moment) pages.push({ cover: false, page: moment, label: moment.time || t("story.page") });
+  }
+  return pages;
+}
+function storyPage() {
+  if (!story || !editor) return "";
+  const back = `<button class="studio-back story-back" data-action="story-back" aria-label="${t("studio.back")}">${icon("back")}</button>`;
+  const total = story.groups.reduce((n, g) => n + g.items.length, 0);
+  if (story.step === "group") {
+    const cards = story.groups
+      .map((group, g) => `${g ? `<div class="story-split" aria-hidden="true"><span></span>${t("story.splitHere")}<span></span></div>` : ""}<section class="story-group tone-${partOfDay(group.start) || "none"}"><header><b>${esc(storyTimeLabel(group))}</b><small>${t("story.photos", { count: group.items.length })}</small></header><div class="story-thumbs">${group.items
+        .map((item, i) => {
+          const on = story.selected?.g === g && story.selected?.i === i;
+          return `<button class="story-thumb ${on ? "selected" : ""}" data-action="story-photo" data-g="${g}" data-i="${i}" aria-pressed="${on}" aria-label="${esc(item.name || t("photo.alt"))}"><img src="${esc(storyPhoto(item))}" alt=""></button>`;
+        })
+        .join("")}</div></section>`)
+      .join("");
+    const sel = story.selected;
+    const bar = sel
+      ? `<div class="story-photo-bar" role="group" aria-label="${t("story.photoActions")}"><button data-action="story-move" data-dir="-1">‹ ${t("story.toPrev")}</button><button data-action="story-move" data-dir="1">${t("story.toNext")} ›</button>${sel.i > 0 ? `<button data-action="story-split">${t("story.split")}</button>` : ""}<button class="danger-text" data-action="story-remove">${t("story.remove")}</button></div>`
+      : "";
+    return `<header class="story-bar">${back}<h1>${t("story.photosTitle", { count: total })}</h1><button class="text-button" data-action="story-make">${t("story.layoutNow")}</button></header><p class="story-intro">${t("story.groupHint", { count: story.groups.length })}</p><div class="story-groups">${cards}</div>${bar}<div class="story-foot"><button class="primary full-width" data-action="story-step" data-step="lines">${t("story.toLines")}</button><small>${t("story.skipAll")}</small></div>`;
+  }
+  if (story.step === "lines") {
+    const books = state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === story.book ? "selected" : ""}>${esc(b.title)}</option>`).join("");
+    const cards = story.groups
+      .map((group, g) => `<section class="story-line-card tone-${partOfDay(group.start) || "none"}"><div class="story-line-top">${group.items
+        .slice(0, 2)
+        .map((item) => `<img src="${esc(storyPhoto(item))}" alt="">`)
+        .join("")}<b>${esc(storyTimeLabel(group))}</b><small>${t("story.photos", { count: group.items.length })}</small></div><label><span class="visually-hidden">${t("story.lineLabel")}</span><input type="text" maxlength="70" data-story-line="${g}" value="${esc(group.line || "")}" placeholder="${t("story.linePlaceholder")}"></label></section>`)
+      .join("");
+    return `<header class="story-bar">${back}<h1>${t("story.momentsTitle", { count: story.groups.length })}</h1><button class="text-button" data-action="story-make">${t("story.skip")}</button></header><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><div class="story-lines">${cards}</div><div class="story-foot"><button class="primary full-width" data-action="story-make">${t("story.make")} ›</button><small>${t("story.skipAll")}</small></div>`;
+  }
+  const pages = storyPages();
+  story.index = Math.max(0, Math.min(pages.length - 1, story.index));
+  const current = pages[story.index];
+  const tabs = pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("");
+  return `<header class="story-bar">${back}<h1>${t("story.previewTitle", { count: pages.length })}</h1><button class="primary story-save" data-action="story-save">${t("save")}</button></header><div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${tabs}</div><div class="story-canvas">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("result.shuffle")}</button><button data-action="story-adjust">✎ ${t("story.adjust")}</button></div><p class="save-help story-help">${t("story.previewHelp")}</p>`;
+}
+function storyCover(variant = 0) {
+  const date = new Date(`${story.date}T12:00:00`);
+  const moments = story.made.ids.map((momentId) => {
+    const m = findMoment(editor, momentId);
+    const group = story.groups[story.made.ids.indexOf(momentId)];
+    const pick = group.items.find((item) => (item.aspect || 1) >= 1) || group.items[0];
+    return { time: m?.time || "", title: m?.title || "", photo: pick, count: group.items.length };
+  });
+  return timelineLayers(moments, {
+    dateSmall: date.toLocaleDateString(locale(), { weekday: "long" }).toUpperCase(),
+    dateBig: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    more: (n) => t("story.more", { count: n }),
+    photos: (n) => t("story.photos", { count: n }),
+    variant,
+    makeId: id,
+  });
+}
+function undoStory() {
+  const made = story?.made;
+  if (!made) return;
+  changeEditor((entry) => {
+    for (const momentId of made.ids) removeMoment(entry, momentId);
+    if (made.cover) {
+      entry.layers = [];
+      delete entry.layoutTemplate;
+      delete entry.layoutVariant;
+    }
+  }, false);
+  story.made = null;
+}
+function makeStory() {
+  undoStory();
+  const ids = [];
+  for (const group of story.groups) {
+    let created;
+    changeEditor((entry) => {
+      created = createMoment(entry, { time: clockLabel(group.start) });
+      created.bookId = story.book;
+      created.title = (group.line || "").trim().slice(0, 70);
+      created.layoutTemplate = "smart";
+      created.layoutVariant = 0;
+      if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
+      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
+      applyLayout(created, "smart");
+      entry.moments.push(created);
+    }, false);
+    ids.push(created.id);
+  }
+  story.made = { ids, cover: false };
+  // A timeline cover, only when the day's cover is still empty.
+  if (ids.length >= 2 && !hasDayPageContent(editor)) {
+    story.made.cover = true;
+    changeEditor((entry) => {
+      entry.layers = storyCover(0);
+      entry.layoutTemplate = "timeline";
+      entry.layoutVariant = 0;
+      entry.bookId = story.book;
+    }, false);
+  }
+  story.step = "preview";
+  story.index = 0;
+  flushDraft();
+  logEvent("story_made", { moments: ids.length, lines: story.groups.filter((g) => (g.line || "").trim()).length, cover: story.made.cover });
+  render();
+  $("#app-scroll").scrollTop = 0;
+}
+function finishStory() {
+  const { book, date } = story;
+  clearTimeout(draftTimer);
+  store.update((s) => saveEntry(s, editor));
+  draftDirty = false;
+  logEvent("story_saved", { moments: story.made?.ids.length || 0 });
+  story = null;
+  readReturn = null;
+  // Straight into the book, page by page, at the first page of this day.
+  page = "books";
+  selectedBook = book;
+  bookView = "flip";
+  flipBookId = book;
+  const at = flipPages(book).findIndex((p) => p.date === date);
+  flipIndex = at >= 0 ? at + 1 : 0;
+  flipTurn = 0;
+  render();
+  $("#app-scroll").scrollTop = 0;
+  document.querySelector(".flip-book")?.scrollIntoView({ block: "start" });
+  toast(t("story.saved", { name: state().books.find((b) => b.id === book)?.title || "" }));
+}
+async function storyAction(actionName, target) {
+  if (!story) return;
+  const sel = story.selected;
+  if (actionName === "story-back") {
+    if (story.step === "preview") {
+      undoStory();
+      story.step = "lines";
+    } else if (story.step === "lines") story.step = "group";
+    else {
+      if (!(await askConfirm(t("story.discard")))) return;
+      story = null;
+      navigate("home");
+      return;
+    }
+  }
+  if (actionName === "story-photo") {
+    const g = Number(target.dataset.g),
+      i = Number(target.dataset.i);
+    story.selected = sel?.g === g && sel?.i === i ? null : { g, i };
+  }
+  if (actionName === "story-move" && sel) {
+    story.groups = movePhoto(story.groups, sel.g, sel.i, Number(target.dataset.dir));
+    story.selected = null;
+  }
+  if (actionName === "story-split" && sel) {
+    story.groups = splitAt(story.groups, sel.g, sel.i);
+    story.selected = null;
+  }
+  if (actionName === "story-remove" && sel) {
+    const left = removePhoto(story.groups, sel.g, sel.i);
+    if (!left.length) return toast(t("story.keepOne"));
+    story.groups = left;
+    story.selected = null;
+  }
+  if (actionName === "story-step") story.step = target.dataset.step === "lines" ? "lines" : "group";
+  if (actionName === "story-make") return makeStory();
+  if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
+  if (actionName === "story-shuffle") {
+    const current = storyPages()[story.index];
+    if (!current) return;
+    if (current.cover) {
+      const variant = ((Number(editor.layoutVariant) || 0) + 1) % 3;
+      changeEditor((entry) => {
+        entry.layers = storyCover(variant);
+        entry.layoutVariant = variant;
+      }, false);
+    } else
+      changeEditor((entry) => {
+        const m = findMoment(entry, current.page.id);
+        if (!m) return;
+        m.layoutVariant = ((Number(m.layoutVariant) || 0) + 1) % 3;
+        applyLayout(m, "smart");
+      }, false);
+    flushDraft();
+  }
+  if (actionName === "story-adjust") {
+    const current = storyPages()[story.index];
+    if (!current) return;
+    page = "studio";
+    selectMoment(current.cover ? null : current.page.id);
+    readReturn = { page: "story", book: selectedBook, date: selectedDate, moment: "" };
+    render();
+    $("#app-scroll").scrollTop = 0;
+    return;
+  }
+  if (actionName === "story-save") return finishStory();
+  render();
+}
+
 // ---------- Quick Create result: shuffle / a line / edit / done ----------
 // After picking my photos the page is already laid out; this view keeps only
 // four choices so finishing a page takes seconds. "编辑" opens every tool.
@@ -2219,7 +2448,7 @@ function render() {
   const signedIn = Account.isSignedIn(account);
   $("#phone").classList.toggle("signed-out", !signedIn);
   // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
-  $("#phone").classList.toggle("in-studio", signedIn && page === "studio");
+  $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "story"));
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
@@ -2233,6 +2462,7 @@ function render() {
     growth: growthPage,
     books: booksPage,
     studio: studioPage,
+    story: storyPage,
     day: () => dayDetailHTML(selectedDate, ctx(), { icon, friendlyDate }),
     journey: () =>
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
@@ -3248,6 +3478,21 @@ async function action(target) {
     soundMenu = false;
     $("#video-input").click();
   }
+  if (actionName === "today-photos" || actionName === "today-write") {
+    // Home's "what's worth keeping today?": start straight away, no sheet.
+    quickOpenedAt = Date.now();
+    quickTaps = 1;
+    const way = actionName === "today-photos" ? "photo" : "write";
+    logEvent("quick_open", { way, from: "home" });
+    quick = { date: dateKey(), book: lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily", way, photo: "mine" };
+    quickSession = { started: quickOpenedAt, taps: 1, shuffles: 0 };
+    await startQuickRecord();
+    return;
+  }
+  if (actionName.startsWith("story-")) {
+    await storyAction(actionName, target);
+    return;
+  }
   if (actionName === "music-sheet") {
     soundMenu = false;
     if (page === "studio") render();
@@ -3300,7 +3545,10 @@ async function action(target) {
     store.update((s) => saveEntry(s, editor));
     draftDirty = false;
     toast(t("这一天，已经好好收藏。🌷"));
-    if (readReturn) returnToReading();
+    if (readReturn?.page === "story" && story) {
+      readReturn = null;
+      finishStory();
+    } else if (readReturn) returnToReading();
     else navigate("home");
   }
   if (actionName === "export") {
@@ -3331,6 +3579,11 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("input", (event) => {
   const target = event.target;
+  if (target.dataset?.storyLine != null && story) {
+    const group = story.groups[Number(target.dataset.storyLine)];
+    if (group) group.line = target.value.slice(0, 70);
+    return;
+  }
   if (target.dataset?.musicVolume != null) {
     const value = saveVolume(Number(target.value) / 100);
     music.setVolume(value);
@@ -3410,6 +3663,10 @@ document.addEventListener("input", (event) => {
   }
 });
 document.addEventListener("change", (event) => {
+  if (event.target.dataset?.storyBook != null && story) {
+    story.book = event.target.value;
+    return;
+  }
   if (handleV3Change(event)) return;
   if (event.target.id === "editor-date" && event.target.value) {
     try {
@@ -5297,10 +5554,12 @@ async function handleImageUpload(event, target) {
     // Every Blob is written to IndexedDB before any metadata references it.
     for (const file of files.slice(0, multiple ? MAX_PHOTOS_PER_PICK : 1)) {
       try {
+        // When it was taken: read before shrinking (re-encoding drops EXIF).
+        const shot = target?.kind === "quick" ? await photoTime(file) : null;
         const blob = await imageBlob(file),
           aspect = imageAspects.get(blob),
           mediaId = await media.put(blob, { kind: "photo", name: file.name, aspect });
-        saved.push({ reference: `media:${mediaId}`, name: file.name, aspect });
+        saved.push({ reference: `media:${mediaId}`, name: file.name, aspect, time: shot?.time ?? null });
       } catch (error) {
         if (!multiple) throw error;
         failed++;
@@ -5312,7 +5571,10 @@ async function handleImageUpload(event, target) {
     const [{ reference }] = saved;
     if (target?.kind === "quick") {
       // Quick Create: my photos, laid out in their own shapes; no editor.
-      quickPlaced(saved);
+      // Taken at different times of the day: today's story (one page each).
+      const groups = groupByTime(saved);
+      if (groups.length > 1) startStory(groups);
+      else quickPlaced(saved);
     } else if (target?.kind === "backdrop") {
       // My own photo as the whole page (photo + one line).
       changeTarget((p) => {
