@@ -61,3 +61,16 @@ test("a sample cover that was saved as my own is cleared; my pages stay", async 
   assert.equal(cleared.moments[0].title, "奔跑");
   assert.equal(mine.title, "我改过的标题", "a changed cover is mine and stays");
 });
+
+test("reading a book in the app may include samples; sharing never does", async () => {
+  const { bookSharePages } = await import("../Public/js/book-share.mjs");
+  const state = {
+    entries: [
+      { date: "2026-11-01", isDemo: true, bookId: "food", title: "", moments: [{ id: "s", bookId: "food", title: "示例" }] },
+      { date: "2026-11-02", bookId: "food", title: "", moments: [{ id: "m", bookId: "food", title: "我的" }] },
+    ],
+    drafts: {},
+  };
+  assert.deepEqual(bookSharePages(state, "food").map((p) => p.moment.title), ["我的"]);
+  assert.deepEqual(bookSharePages(state, "food", { includeDemo: true }).map((p) => p.moment.title), ["示例", "我的"]);
+});

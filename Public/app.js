@@ -680,6 +680,72 @@ document.addEventListener(
   },
   true,
 );
+// ---------- Read a book like a book: one page at a time ----------
+// The cover first, then every page in date order; swipe, ‹ ›, or the arrow
+// keys turn the page. The list view stays the other choice (remembered).
+const BOOK_VIEW_KEY = "little-days.book-view";
+let bookView = (() => {
+  try {
+    return localStorage.getItem(BOOK_VIEW_KEY) === "flip" ? "flip" : "list";
+  } catch {
+    return "list";
+  }
+})();
+let flipIndex = 0,
+  flipTurn = 0,
+  flipBookId = null;
+function flipPages(bookId) {
+  return bookSharePages(state(), bookId, { includeDemo: true });
+}
+function flipBookHTML(book) {
+  const pages = flipPages(book.id);
+  if (flipBookId !== book.id) {
+    flipBookId = book.id;
+    flipIndex = 0;
+  }
+  const total = pages.length + 1;
+  flipIndex = Math.max(0, Math.min(total - 1, flipIndex));
+  const range = dateRange(pages);
+  const when = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric" });
+  let body;
+  if (flipIndex === 0)
+    body = `<div class="flip-cover">${coverHTML(book, ctx())}<h3>${esc(book.title)}</h3>${book.description ? `<p>${esc(book.description)}</p>` : ""}<small>${range ? `${range.from === range.to ? when(range.from) : `${when(range.from)} – ${when(range.to)}`} · ` : ""}${t("bookShare.pages", { count: pages.length })}</small>${pages.length ? `<span class="flip-start">${t("flip.start")} ›</span>` : `<span class="save-help">${t("books.empty")}</span>`}</div>`;
+  else {
+    const { date, entry, moment } = pages[flipIndex - 1];
+    const page = moment || entry;
+    const demo = entry.isDemo || moment?.isDemo;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button>`;
+  }
+  const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
+  flipTurn = 0;
+  return `<section class="flip-book" aria-roledescription="book"><div class="flip-stage" data-flip-stage><article class="flip-page ${flipIndex === 0 ? "is-cover" : ""} ${turn}" aria-live="polite">${body}</article></div><nav class="flip-nav" aria-label="${t("flip.label")}"><button data-action="flip" data-dir="-1" ${flipIndex === 0 ? "disabled" : ""} aria-label="${t("journey.prev")}">‹</button><span>${t("journey.pageOf", { page: flipIndex + 1, total })}</span><button data-action="flip" data-dir="1" ${flipIndex >= total - 1 ? "disabled" : ""} aria-label="${t("journey.next")}">›</button></nav><p class="save-help flip-hint">${t("flip.hint")}</p></section>`;
+}
+function turnPage(dir) {
+  if (!selectedBook || bookView !== "flip" || !dir) return;
+  const total = flipPages(selectedBook).length + 1;
+  const next = Math.max(0, Math.min(total - 1, flipIndex + dir));
+  if (next === flipIndex) return;
+  flipIndex = next;
+  flipTurn = dir;
+  render();
+}
+// Swipe to turn (a mostly sideways move); arrow keys on a keyboard.
+let flipSwipe = null;
+document.addEventListener("pointerdown", (event) => {
+  if (event.target.closest?.("[data-flip-stage]")) flipSwipe = { x: event.clientX, y: event.clientY };
+});
+document.addEventListener("pointerup", (event) => {
+  if (!flipSwipe) return;
+  const dx = event.clientX - flipSwipe.x,
+    dy = event.clientY - flipSwipe.y;
+  flipSwipe = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) turnPage(dx < 0 ? 1 : -1);
+});
+document.addEventListener("keydown", (event) => {
+  if (page !== "books" || !selectedBook || bookView !== "flip" || event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+  if (event.key === "ArrowRight") turnPage(1);
+  if (event.key === "ArrowLeft") turnPage(-1);
+});
 function booksPage() {
   if (selectedBook) {
     const book = state().books.find((b) => b.id === selectedBook),
@@ -687,11 +753,11 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p><div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
-    }`;
+    }`}`;
   }
   if (booksView === "profile")
     return `<header class="page-top"><div><button class="back-button" data-action="books-view" data-view="shelf">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bell()}</header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
@@ -2808,6 +2874,15 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "book-view") {
+    bookView = target.dataset.view === "flip" ? "flip" : "list";
+    try {
+      localStorage.setItem(BOOK_VIEW_KEY, bookView);
+    } catch {}
+    flipIndex = 0;
+    render();
+  }
+  if (actionName === "flip") turnPage(Number(target.dataset.dir) || 0);
   if (actionName === "streak-open") openStreak({ celebrate: false });
   if (actionName === "streak-close") $("#streak-dialog")?.close();
   if (actionName === "streak-write") {

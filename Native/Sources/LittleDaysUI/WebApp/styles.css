@@ -12041,11 +12041,11 @@ dialog h2,
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
-  background: #7d8e66;
-  color: #ffffff;
+  background: var(--c-7d8e66, #7d8e66);
+  color: var(--t-ffffff, #ffffff);
   font-size: 14px;
   font-weight: 600;
-  box-shadow: 0 6px 16px #3c2d1e40;
+  box-shadow: 0 6px 16px var(--c-3c2d1e40, #3c2d1e40);
 }
 .float-save[hidden] {
   display: none;
@@ -12053,4 +12053,166 @@ dialog h2,
 .float-save svg {
   width: 16px;
   height: 16px;
+}
+
+/* ---------- A book read page by page ---------- */
+.book-view-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 14px 0 12px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--c-ece6da, #ece6da);
+}
+.book-view-switch button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: 13px;
+  color: var(--t-7a7166, #7a7166);
+}
+.book-view-switch button[aria-selected="true"] {
+  background: var(--paper);
+  color: var(--ink, var(--t-2f2a26, #2f2a26));
+  font-weight: 600;
+  box-shadow: 0 1px 4px var(--c-3c2d1e1f, #3c2d1e1f);
+}
+.flip-book {
+  margin: 4px 0 20px;
+}
+.flip-stage {
+  perspective: 1600px;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.flip-page {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-height: 460px;
+  padding: 18px 16px 16px 24px;
+  border-radius: 6px 16px 16px 6px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: inset 10px 0 14px -10px var(--c-3c2d1e33, #3c2d1e33), 0 8px 22px var(--c-3c2d1e24, #3c2d1e24);
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+/* The spine of the book along the left edge. */
+.flip-page::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(90deg, var(--c-00000014, #00000014), var(--c-00000000, #00000000));
+}
+.flip-page.is-cover {
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.flip-cover {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+.flip-cover .book-cover {
+  width: 170px;
+  height: 226px;
+}
+.flip-cover h3 {
+  margin: 8px 0 0;
+  font-size: 20px;
+}
+.flip-cover p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--t-6f675d, #6f675d);
+}
+.flip-cover small {
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.flip-start {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-7d8e66, #7d8e66);
+}
+.flip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.flip-title {
+  margin: 0;
+  font-size: 18px;
+}
+.flip-canvas .journal-canvas {
+  box-shadow: none;
+}
+.flip-open {
+  justify-self: end;
+  font-size: 13px;
+}
+.flip-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--t-6f675d, #6f675d);
+}
+.flip-nav button {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 50%;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 22px;
+  color: var(--t-2b2622, #2b2622);
+}
+.flip-nav button:disabled {
+  opacity: 0.35;
+}
+.flip-hint {
+  text-align: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .flip-page.turn-next {
+    animation: page-turn-next 0.5s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+  }
+  .flip-page.turn-prev {
+    transform-origin: right center;
+    animation: page-turn-prev 0.5s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+  }
+}
+@keyframes page-turn-next {
+  0% {
+    opacity: 0.2;
+    transform: rotateY(-75deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0);
+  }
+}
+@keyframes page-turn-prev {
+  0% {
+    opacity: 0.2;
+    transform: rotateY(75deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0);
+  }
 }

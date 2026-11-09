@@ -21,10 +21,11 @@ const hasCover = (entry) =>
 // this book and has something on it), then that day's pages in their order.
 // Saved days are used; a day that only exists as a draft is included too.
 // Sample (demo) days are left out.
-export function bookSharePages(state, bookId) {
+// (Reading the book in the app may include the sample days; sharing never does.)
+export function bookSharePages(state, bookId, { includeDemo = false } = {}) {
   const days = new Map();
-  for (const entry of state.entries || []) if (!entry.isDemo) days.set(entry.date, entry);
-  for (const [date, draft] of Object.entries(state.drafts || {})) if (!days.has(date) && !draft.isDemo) days.set(date, draft);
+  for (const entry of state.entries || []) if (includeDemo || !entry.isDemo) days.set(entry.date, entry);
+  for (const [date, draft] of Object.entries(state.drafts || {})) if (!days.has(date) && (includeDemo || !draft.isDemo)) days.set(date, draft);
   const pages = [];
   for (const date of [...days.keys()].sort()) {
     const entry = days.get(date);

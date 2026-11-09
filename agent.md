@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-09 — V5.9 书的详情页：列表 / 翻页两种看法
+
+- 需求（用户截图，书的详情页列表）：「能不能可以选择这样也可以选择像书一样翻页」。
+- 改动文件：Public/app.js（书详情页加「列表 / 翻页」切换，存 `little-days.book-view`；flipBookHTML：封面页 + 每页只读画布 + 日期/时间/示例标记 + 「打开这一天」；turnPage、左右滑动（|dx|>50）、键盘左右键；`book-view` / `flip` 动作）；Public/js/book-share.mjs（bookSharePages 增加 `includeDemo` 选项，阅读包含示例，分享默认仍排除）；Public/styles.css（切换按钮、书页、书脊阴影、翻页动画，尊重 reduced-motion）；Packages/LittleDaysCore/.../i18n.json（flip.* 中英文）；Public/themes.css（sync_tokens 新增一个颜色变量）；Public/js/whats-new.mjs（V5.9）；tests/v55.test.mjs（includeDemo）、tests/v56-browser.cjs（新）、package.json（test:browser:v56）。
+- 决策与原因：翻页复用分享 PDF 的页面顺序（同一个 bookSharePages），保证「看到的」和「分享出去的」顺序一致；阅读时示例也显示并标注，避免新用户打开空书；照片 + 一句话 / 智能排版 / 随手写的页不再在页面上方重复标题。没有新增数据字段，只新增一个本机界面偏好键。
+- 运行 / 测试：94 项 Node、12 项 Python、29 套浏览器 E2E 全部通过（v56 新增：默认列表 → 切到翻页 → 封面 → 下一页带翻页动画 → 滑动 → 键盘左键 → 打开这一天 → 刷新后仍是翻页）。Linux 容器 + Chromium；未在 iPhone 真机验证滑动手感。
+- 已知问题：翻页动画是单页 3D 旋转，不是真实的纸张卷曲；大书（上百页）一次只渲染当前页，未做预加载。
+- 下一步：日历阅读页隐藏重复标题；「目录」并入「整理这一天」；F5 数据可靠性；F6 原生最小闭环。
+
 ### 2026-11-09 — V5.8 照片不裁切、保存浮动按钮、示例不再变成自己的封面
 
 - 需求（用户截图，日历里一页猫的照片）：上传后照片被自动裁切，可能漏掉一部分；上传后保存按钮在最下方；上传完封面还是示例图和示例文字。

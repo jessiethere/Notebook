@@ -5130,5 +5130,29 @@
   "streak.begin": {
     "zh": "今天记一页，从第 1 天开始。",
     "en": "Add a page today to start at day 1."
+  },
+  "flip.label": {
+    "zh": "怎么看这本书",
+    "en": "How to read this book"
+  },
+  "flip.list": {
+    "zh": "列表",
+    "en": "List"
+  },
+  "flip.flip": {
+    "zh": "翻页",
+    "en": "Page by page"
+  },
+  "flip.start": {
+    "zh": "往后翻",
+    "en": "Turn the page"
+  },
+  "flip.hint": {
+    "zh": "左右滑动或点 ‹ › 翻页；电脑上可以用方向键。",
+    "en": "Swipe or tap ‹ › to turn pages; arrow keys work on a computer."
+  },
+  "flip.openDay": {
+    "zh": "打开这一天",
+    "en": "Open this day"
   }
 }

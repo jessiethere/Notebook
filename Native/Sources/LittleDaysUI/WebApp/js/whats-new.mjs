@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.9",
+    date: "2026-11-09",
+    zh: {
+      title: "书可以像书一样一页一页翻",
+      items: [
+        "打开一本书，标题下面可以选「列表」或「翻页」，会记住你的选择。",
+        "「翻页」先看封面（书名、日期范围、页数），再按日期一页一页往后看，示例页会标出来。",
+        "左右滑动、点 ‹ ›，或按键盘左右键翻页，有翻书的小动画（系统设置“减少动态效果”时不播放）；每页下方「打开这一天」可以回到那天编辑。",
+      ],
+    },
+    en: {
+      title: "Read a book page by page, like a real book",
+      items: [
+        "Open a book and choose “List” or “Flip” under its title; your choice is remembered.",
+        "“Flip” starts with the cover (title, dates, page count), then every page in date order; sample pages are marked.",
+        "Swipe, tap ‹ ›, or use the arrow keys to turn pages with a little page-turn animation (off with “reduce motion”); “Open this day” under each page takes you back to edit it.",
+      ],
+    },
+  },
+  {
     version: "5.8",
     date: "2026-11-09",
     zh: {
