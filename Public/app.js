@@ -392,8 +392,11 @@ function openStudio(date = dateKey()) {
 }
 function navigation() {
   // Sub-pages highlight the tab they belong to.
-  const current = { journey: "growth", day: "calendar", inbox: "home" }[page] || page;
+  const current = { journey: "books", growth: "books", day: "calendar", inbox: "home" }[page] || page;
+  // Growth is not a tab of its own (V6.6): habits are checked on Home's
+  // "today" card and kept in the "My habits" book on the shelf.
   $("#navigation").innerHTML = features.tabs
+    .filter((tab) => tab.inNav !== false)
     .filter((tab) => labsOn() || !LAB_PAGES.includes(tab.id))
     .map(
       (tab) =>
@@ -488,10 +491,55 @@ function home() {
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
- ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write">Aa ${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small></div>${hero}</section>
- ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
-   .habits.map((habit) => habitRow(habit, dateKey()))
-   .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p></div>`;
+ ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write">Aa ${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small></div>${todayListHTML()}${hero}</section>
+ ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
+}
+// ---------- Today: habits and (Labs) things to do, on Home ----------
+// Growth merged into the day (V6.6): check a habit with one tap here; what
+// was done shows on that day's page as "today's list"; the habit book on the
+// shelf keeps the journey, stats and reflections.
+const MAX_PLANS = 5;
+function plansOf(date) {
+  return (state().plans?.[date] || []).filter((p) => p && typeof p.text === "string");
+}
+function todayListHTML() {
+  const today = dateKey();
+  const habits = state().habits;
+  const done = state().checks.filter((check) => check.date === today).length;
+  const rows = habits.map((habit) => habitRow(habit, today)).join("");
+  let plans = "";
+  if (labsOn()) {
+    const items = plansOf(today);
+    const yesterday = plansOf(addDays(today, -1)).filter((p) => !p.done);
+    plans = `<div class="today-plans"><div class="today-sub"><b>${t("plan.title")}</b><small>${t("plan.hint")}</small></div><ul>${items
+      .map((p) => `<li class="${p.done ? "done" : ""}"><button class="plan-check" data-action="plan-toggle" data-plan="${esc(p.id)}" aria-pressed="${p.done}" aria-label="${esc(p.text)}">${p.done ? "✓" : ""}</button><span>${esc(p.text)}</span><button class="plan-remove" data-action="plan-remove" data-plan="${esc(p.id)}" aria-label="${t("plan.remove")}">×</button></li>`)
+      .join("")}</ul>${items.length < MAX_PLANS ? `<div class="plan-add"><input type="text" maxlength="60" data-plan-input placeholder="${t("plan.placeholder")}" aria-label="${t("plan.placeholder")}"><button data-action="plan-add">${t("plan.add")}</button></div>` : ""}${yesterday.length && !items.length ? `<button class="text-button plan-carry" data-action="plan-carry">${t("plan.carry", { count: yesterday.length })}</button>` : ""}</div>`;
+  }
+  return `<section class="today-list" aria-label="${t("today.title")}"><div class="section-heading"><div><h2>${t("today.habits")}</h2><small>${t("home.completed", { done, total: habits.length })}</small></div><button data-action="nav" data-page="growth">${t("habits.book")} ›</button></div><div class="habit-list">${rows}</div>${plans}</section>`;
+}
+function savePlans(date, change) {
+  store.update((next) => {
+    next.plans ||= {};
+    const list = (next.plans[date] ||= []);
+    change(list);
+    next.plans[date] = list.slice(0, MAX_PLANS);
+    if (!next.plans[date].length) delete next.plans[date];
+  });
+  render();
+}
+function addPlan() {
+  const input = document.querySelector("[data-plan-input]");
+  const text = (input?.value || "").trim().slice(0, 60);
+  if (!text) return input?.focus();
+  savePlans(dateKey(), (list) => list.length < MAX_PLANS && list.push({ id: id(), text, done: false }));
+  logEvent("plan_add", {});
+  document.querySelector("[data-plan-input]")?.focus();
+}
+// The shelf's habit book: a cover that opens the growth journey.
+function habitBookHTML() {
+  const habits = state().habits;
+  const week = state().checks.filter((c) => c.date >= weekStart(dateKey())).length;
+  return `<button class="habit-book" data-action="nav" data-page="growth"><span class="habit-book-cover" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19c9 0 14-6 14-14C10 5 5 10 5 19zM5 19c3-5 6-8 10-10"/></svg><i>My Habits</i></span><span class="habit-book-copy"><b>${t("habits.book")}</b><small>${t("habits.bookCount", { count: habits.length, week })}</small><small>${t("habits.bookHint")}</small></span><em>${t("habits.open")} ›</em></button>`;
 }
 function latestBook(bookId) {
   return (
@@ -655,7 +703,7 @@ function growthPage() {
       return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">${t("journey.chip", { count: pages })} ›</button></div></section>`;
     })
     .join("");
-  return `<header class="page-top"><div><h1 class="page-title">${t("growth.title")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header>${summary}${cards || `<div class="empty">${t("growth.none")}<br><button class="primary" data-action="new-habit">${t("growth.new")}</button></div>`}${reflectionsHTML(today)}${checkHistoryHTML()}`;
+  return `<header class="page-top"><div><button class="back-button" data-action="nav" data-page="books">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("habits.book")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header>${summary}${cards || `<div class="empty">${t("growth.none")}<br><button class="primary" data-action="new-habit">${t("growth.new")}</button></div>`}${reflectionsHTML(today)}${checkHistoryHTML()}`;
 }
 
 // Two small notes (week / month); a filled one shows a short preview.
@@ -851,9 +899,15 @@ function flipBookHTML(book) {
     body = `<div class="flip-cover">${coverHTML(book, ctx())}<h3>${esc(book.title)}</h3>${book.description ? `<p>${esc(book.description)}</p>` : ""}<small>${range ? `${range.from === range.to ? when(range.from) : `${when(range.from)} – ${when(range.to)}`} · ` : ""}${t("bookShare.pages", { count: pages.length })}</small>${pages.length ? `<span class="flip-start">${t("flip.start")} ›</span>` : `<span class="save-help">${t("books.empty")}</span>`}</div>`;
   else {
     const { date, entry, moment } = pages[flipIndex - 1];
+    // The day's list (habits checked, things done) on its first page.
+    const firstOfDay = flipIndex === 1 || pages[flipIndex - 2].date !== date;
+    const listed = firstOfDay
+      ? [...state().checks.filter((c) => c.date === date).map((c) => state().habits.find((h) => h.id === c.habitId)?.name).filter(Boolean), ...plansOf(date).filter((p) => p.done).map((p) => p.text)]
+      : [];
+    const checklist = listed.length ? `<p class="flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</p>` : "";
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -903,7 +957,7 @@ function booksPage() {
   const ours = booksView === "our";
   const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${!ours}">${t("books.mine")}</button><button role="tab" data-action="books-view" data-view="our" aria-selected="${ours}">${t("books.ours")}</button></div>`;
   const list = ours ? state().books.filter(isOurBook) : state().books;
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
@@ -3611,6 +3665,18 @@ async function action(target) {
     soundMenu = false;
     $("#video-input").click();
   }
+  if (actionName === "plan-add") return addPlan();
+  if (actionName === "plan-toggle")
+    return savePlans(dateKey(), (list) => {
+      const item = list.find((p) => p.id === target.dataset.plan);
+      if (item) item.done = !item.done;
+    });
+  if (actionName === "plan-remove") return savePlans(dateKey(), (list) => list.splice(list.findIndex((p) => p.id === target.dataset.plan), 1));
+  if (actionName === "plan-carry") {
+    // Yesterday's unfinished things, only when asked (nothing moves by itself).
+    const left = plansOf(addDays(dateKey(), -1)).filter((p) => !p.done);
+    return savePlans(dateKey(), (list) => left.forEach((p) => list.length < MAX_PLANS && list.push({ id: id(), text: p.text, done: false })));
+  }
   if (actionName === "today-photos" || actionName === "today-write") {
     // Home's "what's worth keeping today?": start straight away, no sheet.
     quickOpenedAt = Date.now();
@@ -6212,6 +6278,13 @@ $("#app").addEventListener("pointerup", (event) => {
   journeySwipe = null;
   if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5)
     openJourney(journeyHabit, journeyPage + (dx < 0 ? 1 : -1));
+});
+// Enter adds a thing to do (Home, Labs).
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.matches?.("[data-plan-input]")) {
+    event.preventDefault();
+    addPlan();
+  }
 });
 document.addEventListener("keydown", (event) => {
   if (page !== "journey" || event.target.closest("input,textarea,select,dialog"))

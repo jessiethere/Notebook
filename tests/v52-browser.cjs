@@ -31,7 +31,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.goto(base);
     await first.waitForSelector(".hero");
     assert.equal(await first.locator("section.login, #tour:not([hidden])").count(), 0, "no sign-in page or tour");
-    assert.deepEqual(await first.$$eval("#navigation [data-page]", (els) => els.map((el) => el.dataset.page)), ["home", "calendar", "studio", "growth", "books"]);
+    assert.deepEqual(await first.$$eval("#navigation [data-page]", (els) => els.map((el) => el.dataset.page)), ["home", "calendar", "studio", "books"], "4 tabs: growth is on Home since V6.6");
     assert.equal(await first.locator(".bell").count(), 0, "no notification bell");
     // What's new: a card on Home after an update; the full list opens from it.
     await first.locator(".whats-new-open").tap();

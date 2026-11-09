@@ -34,6 +34,13 @@ public struct GrowthReflection: Codable, Identifiable, Equatable {
     public var updatedAt: String?
 }
 
+/// V6.6 (Labs): one thing to do today; done ones show on the day's list.
+public struct DayPlan: Codable, Identifiable, Equatable {
+    public var id: String
+    public var text: String
+    public var done: Bool
+}
+
 public struct JournalBook: Codable, Identifiable, Equatable {
     public var id: String
     public var title: String
@@ -299,6 +306,8 @@ public struct DayState: Codable {
     public var checks: [HabitCheck]
     public var drafts: [String: JournalEntry]
     public var reflections: [GrowthReflection]?
+    /// V6.6 (Labs): things to do, by day ("yyyy-MM-dd"), at most 5 each.
+    public var plans: [String: [DayPlan]]?
 
     public init(seed: Seed, today: String = DayKey.string()) {
         habits = seed.habits

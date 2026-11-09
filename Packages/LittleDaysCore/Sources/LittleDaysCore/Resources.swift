@@ -11,6 +11,9 @@ public struct NavigationTab: Decodable, Identifiable {
     public let title: String
     public let subtitle: String
     public let symbol: String
+    /// V6.6: false = a page without its own tab (Growth lives on Home's
+    /// "today" card and in the "My habits" book).
+    public let inNav: Bool?
 }
 
 public struct MaterialTemplate: Decodable, Identifiable {

@@ -67,7 +67,9 @@ function growthHTML(date, ctx) {
   const { state, t } = ctx;
   const checks = state.checks.filter((check) => check.date === date);
   const week = findReflection(state, "week", periodKey("week", date));
-  if (!checks.length && !week) return "";
+  // V6.6 "today's list": the habits checked and the things done that day.
+  const done = (state.plans?.[date] || []).filter((p) => p?.done && typeof p.text === "string");
+  if (!checks.length && !week && !done.length) return "";
   const items = checks
     .map((check) => {
       const habit = state.habits.find((item) => item.id === check.habitId);
@@ -78,7 +80,8 @@ function growthHTML(date, ctx) {
   const weekly = week
     ? `<div class="reflection-note small"><b>${t("reflection.weekOf", { date: week.key })}</b>${["wentWell", "challenges", "learned", "nextFocus"].map((key) => (week[key] ? `<p><span>${t("reflection." + key)}</span>${esc(week[key])}</p>` : "")).join("")}</div>`
     : "";
-  return `<section class="day-growth"><div class="section-heading"><h2>🌱 ${t("day.growth")}</h2><span class="badge">${t("private")}</span></div>${items ? `<ul>${items}</ul>` : ""}${weekly}</section>`;
+  const plans = done.length ? `<ul class="day-plans">${done.map((p) => `<li><i aria-hidden="true">✓</i>${esc(p.text)}</li>`).join("")}</ul>` : "";
+  return `<section class="day-growth today-list-card"><span class="checklist-tape" aria-hidden="true"></span><div class="section-heading"><h2>${t("day.checklist")}</h2><span class="badge">${t("private")}</span></div>${items ? `<ul>${items}</ul>` : ""}${plans}${weekly}</section>`;
 }
 
 export function dayDetailHTML(date, ctx, helpers) {
@@ -117,5 +120,5 @@ export function dayDetailHTML(date, ctx, helpers) {
     !dayPage && !moments && !growth
       ? `<div class="empty">${t("calendar.empty")}<br><button class="primary" data-action="edit-date" data-date="${date}">${helpers.icon("plus")} ${t("calendar.add")}</button></div>`
       : "";
-  return `<article class="day-detail"><header class="day-detail-top"><button class="back-button" data-action="day-back">${helpers.icon("back")} ${t("calendar.title")}</button><button class="primary" data-action="edit-date" data-date="${date}">${t("day.edit")}</button></header><div class="day-masthead"><span class="day-eyebrow">LITTLE DAYS · ${t("day.reading")}</span><h1>${esc(helpers.friendlyDate(date))}</h1>${stats.length ? `<p class="day-stats">${stats.map(esc).join(" · ")}</p>` : ""}${music ? `<div class="day-music">${musicChipHTML(music, ctx)}</div>` : ""}<span class="day-seal">${esc(entry?.mood || "✿")}</span></div>${banner}${contents}${dayPage}${moments}<button class="moment-cta in-day" data-action="quick-open" data-date="${date}"><span>✎</span><span><b>${t("moment.ctaDay")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button>${growth}${empty}<p class="home-quote">Some days become memories. All days become you.</p></article>`;
+  return `<article class="day-detail"><header class="day-detail-top"><button class="back-button" data-action="day-back">${helpers.icon("back")} ${t("calendar.title")}</button><button class="primary" data-action="edit-date" data-date="${date}">${t("day.edit")}</button></header><div class="day-masthead"><span class="day-eyebrow">LITTLE DAYS · ${t("day.reading")}</span><h1>${esc(helpers.friendlyDate(date))}</h1>${stats.length ? `<p class="day-stats">${stats.map(esc).join(" · ")}</p>` : ""}${music ? `<div class="day-music">${musicChipHTML(music, ctx)}</div>` : ""}<span class="day-seal">${esc(entry?.mood || "✿")}</span></div>${banner}${contents}${growth}${dayPage}${moments}<button class="moment-cta in-day" data-action="quick-open" data-date="${date}"><span>✎</span><span><b>${t("moment.ctaDay")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button>${empty}<p class="home-quote">Some days become memories. All days become you.</p></article>`;
 }

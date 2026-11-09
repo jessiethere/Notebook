@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.6",
+    date: "2026-11-09",
+    zh: {
+      title: "成长合并进「今天」：首页打卡、今日清单、书架上的「我的习惯」",
+      items: [
+        "底部导航少了「成长」：现在是 首页 / 日历 / ＋ / 书架。",
+        "首页「今天」卡片里有「今天的小习惯」，一点就打卡；「我的习惯 ›」打开成长之书、统计、每周回顾和习惯设置。",
+        "书架上多了一本「我的习惯」，和其他书放在一起。",
+        "打过卡的习惯（和做完的事）会以「今日清单」小便签出现在那一天的阅读页最上面，翻书时也会出现在那天的第一页下方。",
+        "实验室：首页可以写「今天想做的事」，最多 5 件，打勾、删除；没做完的不会自动挪到明天，第二天可以点「搬到今天」。",
+      ],
+    },
+    en: {
+      title: "Growth is part of your day: check in on Home, today's list, “My habits” on the shelf",
+      items: [
+        "No more Growth tab: the menu is Home / Calendar / ＋ / Books.",
+        "Home's “today” card has your little habits — one tap to check in; “My habits ›” opens the growth journey, stats, weekly reflections and habit settings.",
+        "“My habits” also sits on the shelf with your other books.",
+        "Habits checked (and things done) appear as a small “Today's list” at the top of that day, and under that day's first page when you flip the book.",
+        "Labs: write up to 5 “things to do today” on Home, check or remove them; unfinished ones never move by themselves — tap “bring them here” the next day.",
+      ],
+    },
+  },
+  {
     version: "6.5",
     date: "2026-11-09",
     zh: {

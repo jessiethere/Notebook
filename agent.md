@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.6 成长合并进「今天」（任务 G）
+
+- 需求：用户「没有看到我们说的合并成长」——任务 G 已确认，上一轮我排到了下一轮；本轮实施。
+- 改动文件：features.json（growth `inNav: false`）；Public/app.js（导航过滤、growth/journey 高亮书架；首页「今天」卡片内 todayListHTML：今天的小习惯 + 我的习惯链接 + 实验室「今天想做的事」；书架 habitBookHTML；成长页页头改名「我的习惯」并可返回书架；plan-add / toggle / remove / carry 动作与 Enter 键；翻书页第一页下方 flip-checklist）；Public/js/day-view.mjs（成长区改为「今日清单」便签并移到当天顶部，含做完的事）；styles.css；i18n.json（today.* / habits.* / plan.* / day.checklist，导览文字更新）；whats-new.mjs（V6.6）；Resources.swift（NavigationTab.inNav）、Models.swift（DayPlan、JournalState.plans）+ CoreTests；tests/signed-in.cjs（goTab / menu 的 "growth" 改为从首页卡片进入）；tests/v63-browser.cjs（新 6 组）；package.json；docs（PRODUCT_SPEC、ARCHITECTURE、ROADMAP、STRATEGY、README）。
+- 决策与原因：今日清单做成读取打卡与计划的派生视图，而不是往页面里写贴纸图层——不改用户页面，也不会让空封面变成「有内容」从而挡住当天跨页的自动生成；代价是导出图片 / PDF 里还没有它（已记在未完成）。「今天想做的事」按任务 G 边界：≤ 5 件、无提醒、不自动顺延，放在实验室。
+- 运行 / 测试：118 项 Node、12 项 Python、35 套浏览器 E2E 全部通过（v63 新 6 组：4 个 tab、首页打卡、我的习惯进出、实验室计划增删勾与上限 5、今日清单在日历与翻书页、昨天未完成只在点了之后搬过来；v52 的导航断言更新为 4 个 tab）。Linux 容器 + Chromium。
+- 已知问题：今日清单还没画进导出图片 / PDF；首页卡片里的习惯行沿用原组件（卡中卡）；原生 SwiftUI 原型视图未改。
+- 下一步：吸附对齐线、草稿恢复；今日清单进导出；看用户反馈再调首页卡片层级。
+
 ### 2026-11-09 — V6.5 Quick Create V2：Scrapbook 排版引擎 + 三种风格 + 更短的流程
 
 - 需求：长需求「Quick Create V2 设计优化与差异化升级」：生成结果要像真正的 Scrapbook（主次、节奏、照片是主角、日期不抢戏、Wow），三种布局逻辑不同的风格（Minimal Editorial 默认 / Cozy Scrapbook / Playful Collage）一键切换并保留内容，流程改为「上传 → 自动分组 → 直接生成初稿 → 可选写字 → 保存」，预览里直接写 Moment 文字，Quick 与 Creative 同一份数据，手动调整不被未经确认覆盖，10 个场景验证并提供真实截图。另：用户对任务 G 回复「可以」（已确认，排到下一轮）。

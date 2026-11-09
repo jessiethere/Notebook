@@ -3248,12 +3248,12 @@
     "en": "After picking photos, add filters, crop to a ratio, adjust light and warmth, and put a title on the picture. The original is kept so you can re-edit."
   },
   "tour.growth.title": {
-    "zh": "成长，一点点",
-    "en": "Grow, little by little"
+    "zh": "习惯，在今天里",
+    "en": "Habits, inside your day"
   },
   "tour.growth.body": {
-    "zh": "打卡小习惯，写下感想；每周、每月回顾；成长轨迹像一本书一样翻看。",
-    "en": "Check in small habits and note how it went; reflect each week and month; flip through your growth like a book."
+    "zh": "首页「今天」卡片里一点就打卡，打过的会出现在当天的「今日清单」上；成长之书和每周回顾在书架的「我的习惯」里。",
+    "en": "Check a habit with one tap on Home's “today” card; it shows on that day's list. The growth journey and weekly reflections live in “My habits” on the shelf."
   },
   "tour.shelf.title": {
     "zh": "书架和我的主页",
@@ -5442,5 +5442,57 @@
   "story.relayoutConfirm": {
     "zh": "这一页你自己调整过，重新排版会改掉你的调整。继续吗？",
     "en": "You adjusted this page. Re-layout will undo your changes. Continue?"
+  },
+  "today.title": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "today.habits": {
+    "zh": "今天的小习惯",
+    "en": "Today's little habits"
+  },
+  "habits.book": {
+    "zh": "我的习惯",
+    "en": "My habits"
+  },
+  "habits.bookCount": {
+    "zh": "{count} 个习惯 · 本周打卡 {week} 次",
+    "en": "{count} habits · {week} check-ins this week"
+  },
+  "habits.bookHint": {
+    "zh": "成长之书、每周回顾、习惯设置都在这里",
+    "en": "The growth journey, weekly reflections and habit settings"
+  },
+  "habits.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "day.checklist": {
+    "zh": "今日清单",
+    "en": "Today's list"
+  },
+  "plan.title": {
+    "zh": "今天想做的事",
+    "en": "Things to do today"
+  },
+  "plan.hint": {
+    "zh": "最多 5 件 · 实验室",
+    "en": "Up to 5 · Labs"
+  },
+  "plan.placeholder": {
+    "zh": "想做的一件事…",
+    "en": "Something to do…"
+  },
+  "plan.add": {
+    "zh": "加上",
+    "en": "Add"
+  },
+  "plan.remove": {
+    "zh": "删掉这件事",
+    "en": "Remove"
+  },
+  "plan.carry": {
+    "zh": "把昨天没做完的 {count} 件搬到今天",
+    "en": "Bring yesterday's {count} unfinished here"
   }
 }

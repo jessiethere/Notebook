@@ -205,3 +205,8 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 三种风格是三套构图逻辑：editorial（主图 + 不对称 + 行排列，照片不重叠）、cozy（拍立得散落 / 宽松网格，倾斜、胶带）、playful（拼贴打包：每张与最近的一张相接、重叠 ≤ 12%，柔色背景）。相框高度按照片比例和相框内边距计算（`frameHeight`），所以不裁切；文字按字数估算行数（`textBlock` / `fitText`），自动缩小并预留空间；内容少时整体放到视觉中心。
 - 数据（全部可选，schemaVersion 不变）：页面 `layoutTemplate: "scrapbook"`、`layoutStyle`；图层 `gen`（引擎生成，重排时替换）、`bind`（"title" / "time"）、`of`（跨页上指向的 Moment id）、`excerpt`、`prefix`、`chip`。绑定文字在 canvas.mjs 和 export.mjs 里都从页面 / Moment 读取，所以预览、阅读、翻书、PDF、自由编辑改的是同一份文字；自由编辑里改绑定文字会写回 Moment 的 title。
 - 手动调整保护：拖动 / 缩放已有的 `layoutEdited` 标记；换风格时如有这样的页会先确认（取消 = 保留这些页），重新排版也会确认。旧页面（smart / timeline / text）照旧显示，不迁移。
+
+## 2026-11-09 V6.6 成长合并
+
+- features.json 的 growth tab 加 `"inNav": false`（Swift `NavigationTab.inNav` 可选），网页导航过滤掉它；页面 `growth` / `journey` 仍然存在，高亮在「书架」。
+- 状态新增可选 `plans: { [date]: [{ id, text, done }] }`（Swift `JournalState.plans: [String: [DayPlan]]?`），schemaVersion 不变；旧数据没有该字段照常读取。今日清单是读取 checks + plans 的派生视图，不写入页面图层（所以不会影响「当天跨页」只在封面为空时生成的规则）。

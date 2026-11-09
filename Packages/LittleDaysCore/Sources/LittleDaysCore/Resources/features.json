@@ -9,7 +9,7 @@
       "symbol": "calendar"
     },
     { "id": "studio", "title": "Studio", "subtitle": "创作", "symbol": "plus" },
-    { "id": "growth", "title": "Growth", "subtitle": "成长", "symbol": "leaf" },
+    { "id": "growth", "title": "Growth", "subtitle": "成长", "symbol": "leaf", "inNav": false },
     {
       "id": "books",
       "title": "My Books",

@@ -45,6 +45,12 @@ module.exports.goTab = async (page, tab) => {
     await back.click();
     await page.waitForSelector("#phone:not(.in-studio)");
   }
+  // Growth has no tab since V6.6: open "My habits" from Home's today card.
+  if (tab === "growth") {
+    await page.locator('#navigation [data-page="home"]').click();
+    await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
+    return;
+  }
   await page.locator(`#navigation [data-page="${tab}"]`).click();
   if (tab === "studio") await module.exports.openToday(page);
 };
@@ -75,6 +81,11 @@ module.exports.menu = async (page, tab) => {
   if (await page.locator("#phone.in-studio").count()) {
     await page.locator('[data-action="studio-back"], [data-action="start-close"]').first().click();
     await page.waitForSelector("#phone:not(.in-studio)");
+  }
+  if (tab === "growth") {
+    await page.locator('#navigation [data-page="home"]').click();
+    await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
+    return;
   }
   await page.locator(`#navigation [data-page="${tab}"]`).click();
 };
