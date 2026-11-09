@@ -4986,5 +4986,149 @@
   "tool.fields": {
     "zh": "记录项目",
     "en": "Record fields"
+  },
+  "read.addTitle": {
+    "zh": "加标题",
+    "en": "Add a title"
+  },
+  "read.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "read.titleHint": {
+    "zh": "双击标题就能改",
+    "en": "Double-click the title to change it"
+  },
+  "read.titleSaved": {
+    "zh": "标题已保存",
+    "en": "Title saved"
+  },
+  "read.pageMenu": {
+    "zh": "这一页",
+    "en": "This page"
+  },
+  "read.edit": {
+    "zh": "编辑这一页",
+    "en": "Edit this page"
+  },
+  "read.editHint": {
+    "zh": "打开写作页，换照片、文字和装饰",
+    "en": "Open it to change photos, words and decorations"
+  },
+  "read.rename": {
+    "zh": "改标题",
+    "en": "Rename"
+  },
+  "read.deleteHint": {
+    "zh": "可以撤销前先确认；照片和录音文件仍保留在本机",
+    "en": "You'll be asked first; media files stay on this device"
+  },
+  "weekdays.short": {
+    "zh": "一,二,三,四,五,六,日",
+    "en": "M,T,W,T,F,S,S"
+  },
+  "streak.chip": {
+    "zh": "连续 {count} 天 · 本周 {week} 天",
+    "en": "{count}-day streak · {week} this week"
+  },
+  "streak.start": {
+    "zh": "今天记一页，开始连续记录",
+    "en": "Add a page today to start a streak"
+  },
+  "streak.stampTop": {
+    "zh": "连续",
+    "en": "DAY"
+  },
+  "streak.stampBottom": {
+    "zh": "天",
+    "en": "STREAK"
+  },
+  "streak.title": {
+    "zh": "连续记录 {count} 天",
+    "en": "{count} days in a row"
+  },
+  "streak.none": {
+    "zh": "今天还没记",
+    "en": "Nothing yet today"
+  },
+  "streak.first": {
+    "zh": "今天也记下来了。小日子，一页一页攒起来。",
+    "en": "Today is kept. Little days add up, page by page."
+  },
+  "streak.keep": {
+    "zh": "又多了一页，明天见。",
+    "en": "One more page. See you tomorrow."
+  },
+  "streak.milestone.3": {
+    "zh": "三天了！一个小习惯正在长出来。",
+    "en": "Three days! A little habit is starting."
+  },
+  "streak.milestone.7": {
+    "zh": "整整一周！这一周都被好好收藏了。",
+    "en": "A whole week, kept."
+  },
+  "streak.milestone.14": {
+    "zh": "两周了，已经是一本小册子的厚度。",
+    "en": "Two weeks — that's a little booklet."
+  },
+  "streak.milestone.30": {
+    "zh": "一个月！这个月的你，都在书里。",
+    "en": "A month! All of this month is in your book."
+  },
+  "streak.milestone.50": {
+    "zh": "50 天，了不起的坚持。",
+    "en": "50 days — wonderful."
+  },
+  "streak.milestone.100": {
+    "zh": "100 天！值得为自己庆祝一下。",
+    "en": "100 days! Time to celebrate yourself."
+  },
+  "streak.milestone.200": {
+    "zh": "200 天，一大本生活之书。",
+    "en": "200 days — a big book of life."
+  },
+  "streak.milestone.365": {
+    "zh": "一整年！谢谢你一直记录。",
+    "en": "A whole year! Thank you for keeping it."
+  },
+  "streak.weekLabel": {
+    "zh": "本周记了 {count} 天",
+    "en": "{count} days this week"
+  },
+  "streak.thisWeek": {
+    "zh": "本周 {count} 天",
+    "en": "{count} this week"
+  },
+  "streak.next": {
+    "zh": "再 {count} 天到 {goal} 天",
+    "en": "{count} more to {goal}"
+  },
+  "streak.best": {
+    "zh": "最长 {count} 天",
+    "en": "Best {count}"
+  },
+  "streak.rest": {
+    "zh": "中间休息了一天，连续没有断。",
+    "en": "You took a rest day — the streak is still on."
+  },
+  "streak.restRule": {
+    "zh": "每周可以休息一天，连续不会断。",
+    "en": "One rest day a week won't break your streak."
+  },
+  "streak.ok": {
+    "zh": "好",
+    "en": "Nice"
+  },
+  "streak.write": {
+    "zh": "去记一页",
+    "en": "Add a page"
+  },
+  "streak.continue": {
+    "zh": "今天记一页，就到第 {count} 天了。",
+    "en": "Add a page today for day {count}."
+  },
+  "streak.begin": {
+    "zh": "今天记一页，从第 1 天开始。",
+    "en": "Add a page today to start at day 1."
   }
 }

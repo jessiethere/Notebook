@@ -52,9 +52,14 @@ function mediaListHTML(page, ctx) {
     : "";
 }
 
-export function momentChapterHTML(moment, index, ctx) {
+export function momentChapterHTML(moment, index, ctx, date = "") {
   const { t } = ctx;
-  return `<section class="moment-chapter" id="moment-${esc(moment.id)}" data-moment-view="${esc(moment.id)}"><div class="chapter-head"><span class="chapter-no">${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</span>${moment.time ? `<span class="chapter-time">${esc(moment.time)}</span>` : ""}${moment.mood ? `<span class="chapter-mood">${esc(moment.mood)}</span>` : ""}</div><h2 class="chapter-title" style="font-family:${esc(fontFamily(moment.font, ctx.catalog))}">${esc(moment.title || t("moment.untitled"))}</h2>${moment.tags?.length ? `<div class="chapter-tags">${moment.tags.map((tag) => `<span>#${esc(tag)}</span>`).join("")}</div>` : ""}${moment.layoutTemplate === "text" || moment.layoutTemplate === "line" || moment.backdrop || moment.layers?.some((layer) => !(layer.kind === "photo" && !layer.mediaRef)) ? `<div class="chapter-canvas">${canvasHTML(moment, ctx, { readOnly: true, dayPage: false })}</div>` : ""}${moment.layoutTemplate === "text" || moment.layoutTemplate === "line" ? "" : pageBodyHTML(moment, ctx)}${mediaListHTML(moment, ctx)}<footer class="chapter-foot">${bookBadge(moment.bookId, ctx)}${moment.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`;
+  // Reading, with a way to change it: double-click (or tap, when untitled)
+  // the title to write one; ⋯ for edit / delete.
+  const title = moment.title
+    ? esc(moment.title)
+    : `<span class="title-add">＋ ${t("read.addTitle")}</span>`;
+  return `<section class="moment-chapter" id="moment-${esc(moment.id)}" data-moment-view="${esc(moment.id)}"><div class="chapter-head"><span class="chapter-no">${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</span>${moment.time ? `<span class="chapter-time">${esc(moment.time)}</span>` : ""}${moment.mood ? `<span class="chapter-mood">${esc(moment.mood)}</span>` : ""}${date ? `<button class="chapter-more" data-action="page-menu" data-date="${esc(date)}" data-moment="${esc(moment.id)}" aria-label="${t("read.more")}">⋯</button>` : ""}</div><h2 class="chapter-title ${moment.title ? "" : "untitled"}" ${date ? `data-title-edit data-date="${esc(date)}" data-moment="${esc(moment.id)}" tabindex="0" title="${t("read.titleHint")}"` : ""} style="font-family:${esc(fontFamily(moment.font, ctx.catalog))}">${title}</h2>${moment.tags?.length ? `<div class="chapter-tags">${moment.tags.map((tag) => `<span>#${esc(tag)}</span>`).join("")}</div>` : ""}${moment.layoutTemplate === "text" || moment.layoutTemplate === "line" || moment.backdrop || moment.layers?.some((layer) => !(layer.kind === "photo" && !layer.mediaRef)) ? `<div class="chapter-canvas">${canvasHTML(moment, ctx, { readOnly: true, dayPage: false })}</div>` : ""}${moment.layoutTemplate === "text" || moment.layoutTemplate === "line" ? "" : pageBodyHTML(moment, ctx)}${mediaListHTML(moment, ctx)}<footer class="chapter-foot">${bookBadge(moment.bookId, ctx)}${moment.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`;
 }
 
 function growthHTML(date, ctx) {
@@ -90,10 +95,10 @@ export function dayDetailHTML(date, ctx, helpers) {
   ].filter(Boolean);
   const dayPage =
     entry && hasDayPageContent(entry)
-      ? `<section class="day-page"><div class="chapter-head"><span class="chapter-no">${t("day.cover")}</span><span class="chapter-time">${t("cover.what")}</span>${entry.mood ? `<span class="chapter-mood">${esc(entry.mood)}</span>` : ""}</div><div class="chapter-canvas">${canvasHTML(entry, ctx, { readOnly: true, dayPage: true })}</div>${(entry.body || "").length > 60 || (entry.body || "").includes("\n") ? pageBodyHTML(entry, ctx) : ""}${fieldsHTML(entry, ctx)}${mediaListHTML(entry, ctx)}<footer class="chapter-foot">${bookBadge(entry.bookId, ctx)}${entry.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`
+      ? `<section class="day-page"><div class="chapter-head"><span class="chapter-no">${t("day.cover")}</span><span class="chapter-time">${t("cover.what")}</span><button class="chapter-more" data-action="page-menu" data-date="${esc(date)}" data-moment="" aria-label="${t("read.more")}">⋯</button>${entry.mood ? `<span class="chapter-mood">${esc(entry.mood)}</span>` : ""}</div><div class="chapter-canvas">${canvasHTML(entry, ctx, { readOnly: true, dayPage: true })}</div>${(entry.body || "").length > 60 || (entry.body || "").includes("\n") ? pageBodyHTML(entry, ctx) : ""}${fieldsHTML(entry, ctx)}${mediaListHTML(entry, ctx)}<footer class="chapter-foot">${bookBadge(entry.bookId, ctx)}${entry.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`
       : "";
   const moments = (entry?.moments || [])
-    .map((moment, index) => momentChapterHTML(moment, index, ctx))
+    .map((moment, index) => momentChapterHTML(moment, index, ctx, date))
     .join("");
   const growth = growthHTML(date, ctx);
   const banner =

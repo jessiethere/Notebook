@@ -6,6 +6,11 @@
 function seedAccount() {
   try {
     if (localStorage.getItem("little-days.labs") === null) localStorage.setItem("little-days.labs", "1");
+    // The streak stamp moment is tested in v55; older suites skip it.
+    if (localStorage.getItem("little-days.celebrated") === null) {
+      const d = new Date();
+      localStorage.setItem("little-days.celebrated", `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+    }
     if (!localStorage.getItem("little-days.account"))
       localStorage.setItem(
         "little-days.account",

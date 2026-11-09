@@ -11771,3 +11771,241 @@ dialog h2,
   top: -5px;
   left: 12px;
 }
+
+/* ---------- Streak: chip on Home, the stamp moment ---------- */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin-top: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 999px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t-6f675d, #6f675d);
+}
+.streak-chip.done {
+  border-color: var(--c-c9d3b8, #c9d3b8);
+  background: var(--c-eef1e7, #eef1e7);
+  color: var(--t-4f5c3f, #4f5c3f);
+}
+.streak-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-c9bfae, #c9bfae);
+}
+.streak-chip.done .streak-dot {
+  background: var(--c-7d8e66, #7d8e66);
+}
+.streak-dialog {
+  width: min(360px, calc(100vw - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 26px;
+  background: var(--c-fffdf9, #fffdf9);
+  color: var(--t-2b2622, #2b2622);
+  overflow: visible;
+}
+.streak-dialog::backdrop {
+  background: var(--c-2b262266, #2b262266);
+}
+.streak-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 30px 22px 20px;
+  text-align: center;
+  overflow: hidden;
+  border-radius: 26px;
+}
+.streak-stamp {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 118px;
+  height: 118px;
+  border: 3px solid var(--c-b5838d, #b5838d);
+  border-radius: 50%;
+  outline: 2px dashed var(--c-b5838d, #b5838d);
+  outline-offset: -11px;
+  color: var(--t-b5838d, #b5838d);
+  transform: rotate(-8deg);
+}
+.streak-stamp b {
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 700;
+}
+.streak-stamp small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.milestone .streak-stamp {
+  border-color: var(--c-7d8e66, #7d8e66);
+  outline-color: var(--c-7d8e66, #7d8e66);
+  color: var(--t-7d8e66, #7d8e66);
+}
+.streak-card h2 {
+  margin: 6px 0 0;
+  font-size: 20px;
+}
+.streak-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--t-4a433c, #4a433c);
+}
+.streak-week {
+  display: grid;
+  grid-template-columns: repeat(7, 32px);
+  gap: 6px;
+  margin: 8px 0 2px;
+}
+.streak-week span {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+.streak-week i {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-e3dccf, #e3dccf);
+  background: var(--c-ffffff, #ffffff);
+}
+.streak-week span.on i {
+  border-color: var(--c-7d8e66, #7d8e66);
+  background: var(--c-7d8e66, #7d8e66) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 70% no-repeat;
+}
+.streak-week small {
+  font-size: 10px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.streak-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--t-8a8073, #8a8073);
+}
+.streak-card .primary {
+  margin-top: 6px;
+}
+/* The stamp moment (skipped when reduced motion is preferred). */
+@media (prefers-reduced-motion: no-preference) {
+  .celebrate .streak-stamp {
+    animation: stamp-drop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+  .celebrate .streak-week span.on i {
+    animation: dot-fill 0.35s ease-out both;
+    animation-delay: calc(0.45s + var(--i) * 0.07s);
+  }
+  .celebrate .streak-card > h2,
+  .celebrate .streak-message {
+    animation: rise 0.4s ease-out 0.35s both;
+  }
+  .streak-confetti i {
+    position: absolute;
+    top: -12px;
+    left: calc(6% + var(--i) * 5.6%);
+    width: 7px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--c-b5838d, #b5838d);
+    opacity: 0;
+    animation: paper-fall 1.6s ease-in calc(0.15s + var(--i) * 0.045s) both;
+  }
+  .streak-confetti i:nth-child(3n) {
+    background: var(--c-7d8e66, #7d8e66);
+  }
+  .streak-confetti i:nth-child(4n) {
+    background: var(--c-e7b93f, #e7b93f);
+  }
+  .streak-confetti i:nth-child(5n) {
+    background: var(--c-6d8299, #6d8299);
+  }
+}
+@keyframes stamp-drop {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-24deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-6deg);
+  }
+  100% {
+    transform: scale(1) rotate(-8deg);
+  }
+}
+@keyframes dot-fill {
+  0% {
+    transform: scale(0.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes paper-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(420px) rotate(calc(160deg + var(--i) * 25deg));
+  }
+}
+
+/* ---------- Reading a day: rename / edit / delete in place ---------- */
+.chapter-head {
+  position: relative;
+}
+.chapter-more {
+  margin-left: auto;
+  min-width: 34px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--t-8a8073, #8a8073);
+}
+.chapter-title[data-title-edit] {
+  cursor: text;
+  border-radius: 6px;
+}
+.chapter-title.editing {
+  outline: 1.5px dashed var(--c-b9af9f, #b9af9f);
+  outline-offset: 4px;
+}
+.title-add {
+  font-size: 0.8em;
+  color: var(--t-a39886, #a39886);
+}
+.danger-option b {
+  color: var(--t-b0473d, #b0473d);
+}
+.streak-dialog:focus,
+.streak-dialog:focus-visible {
+  outline: none;
+}

@@ -42,6 +42,7 @@ import { experience } from "./js/levels.mjs";
 import { openDrawBoard } from "./js/draw.mjs";
 import { logEvent, readEvents, summarize } from "./js/events.mjs";
 import { UPDATES, LATEST, noteFor, hasUnseen, markSeen } from "./js/whats-new.mjs";
+import { recordedDays, streakInfo, bestStreak, CELEBRATED_KEY } from "./js/streak.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
@@ -305,6 +306,8 @@ function navigate(target) {
   flushDraft();
   quickResult = null;
   if (LAB_PAGES.includes(target) && !labsOn()) target = "home";
+  // Back on Home after writing today's first page: the stamp moment.
+  if (target === "home") setTimeout(() => maybeCelebrate(), 260);
   if (target === "studio") {
     // The ＋ in the menu asks how to record: photo + one line, just write, or
     // draw — and which journal it goes into.
@@ -459,7 +462,7 @@ function home() {
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
  ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-open" data-photo=""><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
@@ -2173,6 +2176,120 @@ function openContributeQuestion() {
   dialog.innerHTML = `<div class="choose-sheet contribute-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("contribute.title")}</h2><p class="save-help">${t("contribute.note")}</p>${option("view")}${option("add")}${option("unsure")}</div>`;
   dialog.showModal();
 }
+// ---------- A gentle streak and the stamp moment ----------
+// Days in a row with a page; one missed day a week is a rest day. After
+// today's first page, back on Home, a "Day N" stamp drops onto the page.
+function streakNow() {
+  return streakInfo(recordedDays(state()), dateKey());
+}
+function streakChipHTML() {
+  const s = streakNow();
+  return `<button class="streak-chip ${s.today ? "done" : ""}" data-action="streak-open"><i class="streak-dot" aria-hidden="true"></i>${s.streak ? t("streak.chip", { count: s.streak, week: s.weekCount }) : t("streak.start")}</button>`;
+}
+function maybeCelebrate() {
+  if (page !== "home" || document.querySelector("dialog[open]")) return;
+  const s = streakNow();
+  if (!s.today) return;
+  let last = "";
+  try {
+    last = localStorage.getItem(CELEBRATED_KEY) || "";
+  } catch {}
+  if (last === dateKey()) return;
+  try {
+    localStorage.setItem(CELEBRATED_KEY, dateKey());
+  } catch {}
+  openStreak({ celebrate: true });
+  logEvent("celebrate", { pages: s.streak, kind: s.milestone ? "milestone" : "day" });
+}
+function openStreak({ celebrate = false } = {}) {
+  const s = streakNow();
+  const best = bestStreak(recordedDays(state()));
+  let dialog = $("#streak-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "streak-dialog";
+    dialog.className = "streak-dialog";
+    dialog.setAttribute("aria-labelledby", "streak-title");
+    document.body.append(dialog);
+  }
+  const weekdays = t("weekdays.short").split(",");
+  const message = !s.today ? t(s.streak ? "streak.continue" : "streak.begin", { count: s.streak + 1 }) : s.milestone ? t(`streak.milestone.${s.milestone}`) : s.streak <= 1 ? t("streak.first") : t("streak.keep");
+  const confetti = celebrate ? `<div class="streak-confetti" aria-hidden="true">${Array.from({ length: 16 }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div>` : "";
+  dialog.innerHTML = `<div class="streak-card ${celebrate ? "celebrate" : ""} ${s.milestone ? "milestone" : ""}">${confetti}<div class="streak-stamp" aria-hidden="true"><small>${t("streak.stampTop")}</small><b>${s.streak}</b><small>${t("streak.stampBottom")}</small></div><h2 id="streak-title">${s.streak ? t("streak.title", { count: s.streak }) : t("streak.none")}</h2><p class="streak-message">${esc(message)}</p><div class="streak-week" role="img" aria-label="${t("streak.weekLabel", { count: s.weekCount })}">${s.week.map((on, i) => `<span class="${on ? "on" : ""}" style="--i:${i}"><i></i><small>${esc(weekdays[i] || "")}</small></span>`).join("")}</div><p class="streak-meta">${[t("streak.thisWeek", { count: s.weekCount }), s.next ? t("streak.next", { count: s.next - s.streak, goal: s.next }) : "", best > s.streak ? t("streak.best", { count: best }) : ""].filter(Boolean).join(" · ")}</p>${s.restsUsed ? `<p class="save-help">${t("streak.rest")}</p>` : `<p class="save-help">${t("streak.restRule")}</p>`}<button class="primary full-width" data-action="streak-close">${t(s.today ? "streak.ok" : "streak.write")}</button></div>`;
+  if (!s.today) dialog.querySelector('[data-action="streak-close"]').dataset.action = "streak-write";
+  dialog.showModal();
+}
+// ---------- Reading a day: rename, edit or delete a page in place ----------
+function readCopies(date) {
+  // The saved day and its draft (if any) both change, so they stay in step.
+  return (next) => [next.entries.find((e) => e.date === date), next.drafts[date]].filter(Boolean);
+}
+function startTitleEdit(el) {
+  if (el.isContentEditable) return;
+  const { date, moment } = el.dataset;
+  const original = el.querySelector(".title-add") ? "" : el.textContent;
+  el.textContent = original;
+  el.contentEditable = "plaintext-only";
+  el.classList.add("editing");
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  getSelection().removeAllRanges();
+  getSelection().addRange(range);
+  const finish = (keep) => {
+    el.removeEventListener("blur", onBlur);
+    el.removeEventListener("keydown", onKey);
+    const title = el.textContent.replace(/\s+/g, " ").trim().slice(0, 70);
+    if (keep && title !== original) {
+      store.update((next) => {
+        for (const day of readCopies(date)(next)) {
+          const page = moment ? findMoment(day, moment) : day;
+          if (page) page.title = title;
+        }
+      });
+      toast(t("read.titleSaved"));
+    }
+    render();
+  };
+  const onBlur = () => finish(true);
+  const onKey = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      el.blur();
+    } else if (event.key === "Escape") {
+      el.removeEventListener("blur", onBlur);
+      finish(false);
+    }
+  };
+  el.addEventListener("blur", onBlur);
+  el.addEventListener("keydown", onKey);
+}
+document.addEventListener("dblclick", (event) => {
+  const el = event.target.closest?.("[data-title-edit]");
+  if (el && page === "day") startTitleEdit(el);
+});
+document.addEventListener("click", (event) => {
+  // An untitled page: one tap is enough to add a title.
+  const el = event.target.closest?.("[data-title-edit].untitled");
+  if (el && page === "day") startTitleEdit(el);
+});
+function openPageMenu(date, momentId) {
+  const dialog = $("#choose-dialog");
+  const isCover = !momentId;
+  dialog.innerHTML = `<div class="choose-sheet page-menu-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(isCover ? "day.cover" : "read.pageMenu")}</h2><button class="contribute-option" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>✎ ${t("read.edit")}</b><small>${t("read.editHint")}</small></button>${isCover ? "" : `<button class="contribute-option" data-action="read-rename" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>Aa ${t("read.rename")}</b><small>${t("read.titleHint")}</small></button>`}<button class="contribute-option danger-option" data-action="read-delete" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>${t(isCover ? "write.clearDay" : "write.deleteStory")}</b><small>${t("read.deleteHint")}</small></button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  dialog.showModal();
+}
+async function deleteReadPage(date, momentId) {
+  if (!(await askConfirm(t(momentId ? "moment.deleteConfirm" : "write.clearDayConfirm")))) return;
+  store.update((next) => {
+    for (const day of readCopies(date)(next)) {
+      if (momentId) removeMoment(day, momentId);
+      else Object.assign(day, { title: "", body: "", photo: "", layers: [], media: [], fieldValues: {} });
+    }
+  });
+  render();
+  toast(t(momentId ? "moment.deleted" : "write.dayCleared"));
+}
 // ---------- What's new (update notes inside the app) ----------
 function whatsNewCardHTML() {
   const note = noteFor(UPDATES[0], languageCode());
@@ -2674,6 +2791,28 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "streak-open") openStreak({ celebrate: false });
+  if (actionName === "streak-close") $("#streak-dialog")?.close();
+  if (actionName === "streak-write") {
+    $("#streak-dialog")?.close();
+    openQuickRecord();
+  }
+  if (actionName === "page-menu") openPageMenu(target.dataset.date, target.dataset.moment || "");
+  if (actionName === "read-edit") {
+    $("#choose-dialog").close();
+    const momentId = target.dataset.moment || "";
+    openStudio(target.dataset.date);
+    selectMoment(momentId || null);
+  }
+  if (actionName === "read-rename") {
+    $("#choose-dialog").close();
+    const el = document.querySelector(`[data-title-edit][data-moment="${CSS.escape(target.dataset.moment || "")}"]`);
+    if (el) startTitleEdit(el);
+  }
+  if (actionName === "read-delete") {
+    $("#choose-dialog").close();
+    await deleteReadPage(target.dataset.date, target.dataset.moment || "");
+  }
   if (actionName === "samples-remove") {
     if (!(await askConfirm(t("samples.confirm")))) return;
     let removed = 0;

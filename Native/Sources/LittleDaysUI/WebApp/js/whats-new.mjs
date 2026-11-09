@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "5.7",
+    date: "2026-11-09",
+    zh: {
+      title: "连续记录的小印章；看书时也能改标题、编辑或删除",
+      items: [
+        "首页显示「连续 N 天 · 本周 M 天」。每天记下第一页回到首页时，会盖下一个「连续 N 天」的小印章，还有纸片飘落；3、7、14、30 天会有特别的话。",
+        "宽松规则：每周可以休息一天，连续不会断；示例不算。",
+        "在日历里看某一天时：没标题的页点「＋ 加标题」，有标题的双击就能改；每页右上角「⋯」可以编辑这一页或删除。",
+      ],
+    },
+    en: {
+      title: "A little streak stamp; rename, edit or delete while reading",
+      items: [
+        "Home shows “N-day streak · M this week”. After today's first page, back on Home, a “Day N” stamp lands with a little paper confetti; 3, 7, 14 and 30 days get a special line.",
+        "Gentle rule: one rest day a week won't break the streak; samples don't count.",
+        "Reading a day: tap “＋ Add a title” on an untitled page, or double-click a title to change it; ⋯ on each page edits or deletes it.",
+      ],
+    },
+  },
+  {
     version: "5.6",
     date: "2026-11-09",
     zh: {
