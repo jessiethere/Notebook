@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.1",
+    date: "2026-11-09",
+    zh: {
+      title: "那一天的「今日清单」放到页面后面，更安静",
+      items: [
+        "打开某一天时，「今日清单」不再放在最上面，而是放在这一天的页面后面，像一天的结尾。",
+        "清单变成一行一行的 ✓：打卡的习惯和做完的事长得一样；不再每条都有大卡片和「写感想」。",
+        "点习惯那一行：有感想就打开来看，没有就直接写。",
+      ],
+    },
+    en: {
+      title: "A day's “Today's list” moves after the pages, quieter",
+      items: [
+        "Opening a day, “Today's list” is no longer at the top: it comes after that day's pages, like the end of the day.",
+        "The list is simple ✓ rows: habits checked and things done look alike — no big card and “Add a note” link for each.",
+        "Tap a habit's row to read its note, or write one if there isn't one yet.",
+      ],
+    },
+  },
+  {
     version: "7.0",
     date: "2026-11-09",
     zh: {

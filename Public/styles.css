@@ -13353,3 +13353,85 @@ dialog h2,
   font-size: 13px;
   line-height: 1.6;
 }
+
+/* V7.1 · The day's list: after the pages, one quiet list of ✓ rows. */
+.day-growth.today-list-card {
+  margin: 18px 4px 16px;
+  padding: 16px 16px 8px;
+  transform: rotate(-0.3deg);
+}
+.today-list-card .section-heading {
+  margin-bottom: 4px;
+}
+.today-list-card .section-heading h2 {
+  font-size: 15px;
+}
+.day-checklist {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.day-checklist li + li {
+  border-top: 1px dashed var(--c-e2d7c5, #E2D7C5);
+}
+.check-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  padding: 9px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  font: inherit;
+}
+.check-line > i {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--c-5f6f52, #5F6F52);
+  color: var(--t-ffffff, #FFFFFF);
+  font-size: 12px;
+  font-style: normal;
+}
+.check-line > span:not(.check-line-go) {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.check-line b {
+  font-size: 14px;
+  font-weight: 500;
+}
+.check-line small {
+  font-size: 12px;
+  color: var(--t-8d857b, #8D857B);
+}
+.check-line em {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--t-6f675d, #6F675D);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.check-line img {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.check-line-go {
+  flex: none;
+  color: var(--t-8d857b, #8D857B);
+  font-size: 15px;
+}

@@ -81,6 +81,13 @@ const shots = process.env.SHOTS_DIR || "";
     assert.match(list, /今日清单/);
     assert.match(list, /给妈妈打电话/, "the thing done");
     assert.doesNotMatch(list, /买花/, "not the ones still to do");
+    // V7.1: after the day's pages, as one quiet list of ✓ rows (habits and things done alike).
+    assert.ok(await page.evaluate(() => {
+      const d = document.querySelector(".day-detail"), list = d.querySelector(".today-list-card");
+      return ![...d.querySelectorAll(".moment-chapter, .day-page")].some((el) => list.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }), "the list comes after the pages");
+    assert.ok((await page.locator(".today-list-card .day-checklist .check-line").count()) >= 2, "habits and things done as ✓ rows");
+    assert.equal(await page.locator('.today-list-card [data-action="check-note"].text-button').count(), 0, "no repeated 写感想 links");
     if (shots) await page.screenshot({ path: `${shots}/v63-day.png` });
     passed.push("today's list on the day: habits checked and things done (not the undone ones)");
 
