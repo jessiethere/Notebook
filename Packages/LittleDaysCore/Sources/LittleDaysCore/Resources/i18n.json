@@ -5154,5 +5154,57 @@
   "flip.openDay": {
     "zh": "打开这一天",
     "en": "Open this day"
+  },
+  "music.title": {
+    "zh": "背景音乐",
+    "en": "Background music"
+  },
+  "music.short": {
+    "zh": "配乐",
+    "en": "Music"
+  },
+  "music.hint": {
+    "zh": "给这一页配一首轻音乐。看这一天、翻这本书时会轻轻循环播放；导出视频时也会带上。",
+    "en": "Give this page a soft piece of music. It loops quietly when you read the day or flip the book, and goes into the page's video."
+  },
+  "music.original": {
+    "zh": "全部是 Little Days 原创的轻音乐，可以放心用在你的页面、视频和书里。",
+    "en": "All original Little Days music — free to use in your pages, videos and books."
+  },
+  "music.use": {
+    "zh": "用这首",
+    "en": "Use"
+  },
+  "music.chosen": {
+    "zh": "✓ 已选",
+    "en": "✓ Chosen"
+  },
+  "music.none": {
+    "zh": "不要背景音乐",
+    "en": "No music"
+  },
+  "music.preview": {
+    "zh": "试听",
+    "en": "Listen"
+  },
+  "music.stopPreview": {
+    "zh": "暂停试听",
+    "en": "Pause"
+  },
+  "music.added": {
+    "zh": "已配上「{name}」",
+    "en": "Added “{name}”"
+  },
+  "music.removed": {
+    "zh": "这一页不放音乐了",
+    "en": "No music on this page"
+  },
+  "music.change": {
+    "zh": "换一首",
+    "en": "Change"
+  },
+  "music.toggle": {
+    "zh": "播放 / 暂停「{name}」",
+    "en": "Play / pause “{name}”"
   }
 }

@@ -212,6 +212,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var layoutVariant: Int?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
+    /// V6.0: background music for this page, a library.json "music" id.
+    public var music: String?
     public var visibility: String?
     public var updatedAt: String?
     public var savedAt: String?
@@ -236,6 +238,8 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     // V5.5: size / colour chosen for the page's words in the type bar.
     public var bodyStyle: JournalTextStyle?
     public var bodyFont: String?
+    /// V6.0: background music for the day's cover page (library.json "music" id).
+    public var music: String?
     public var visibility: String?
     public var moments: [JournalMoment]?
     public var layoutTemplate: String?

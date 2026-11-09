@@ -55,6 +55,9 @@ def main():
     for photo in catalog.get('photos', []):
         for name in {photo['file'], photo['license']}:
             files.append((SHARED / 'Photos' / name, Path('library/photos') / name))
+    for track in catalog.get('music', []):
+        for name in {track['file'], track['license']}:
+            files.append((SHARED / 'Music' / name, Path('library/music') / name))
     for name in ['coffee.jpg', 'lake.jpg']:
         files.append((SHARED / 'Media' / name, Path('assets') / name))
     published = {}

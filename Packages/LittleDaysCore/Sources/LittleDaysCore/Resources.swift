@@ -86,6 +86,20 @@ public struct SceneAsset: Decodable, Identifiable {
 }
 
 /// Real photos for a page's picture (Unsplash License; `source` is the original).
+/// Original background music (tools/make_music.py), played on a loop.
+public struct MusicAsset: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let moodZh: String
+    public let moodEn: String
+    public let bpm: Int
+    public let seconds: Double
+    public let file: String
+    public let source: String
+    public let license: String
+}
+
 public struct PhotoAsset: Decodable, Identifiable {
     public let id: String
     public let collection: String
@@ -119,6 +133,7 @@ public struct AssetCatalog: Decodable {
     public let sceneCollections: [SceneCollection]?
     public let photos: [PhotoAsset]?
     public let photoCollections: [SceneCollection]?
+    public let music: [MusicAsset]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }
@@ -132,6 +147,7 @@ public enum SharedResources {
         case "stickers": allowed = Set(catalog.stickers.flatMap { [$0.file, $0.nativeFile, $0.license] })
         case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
         case "photos": allowed = Set((catalog.photos ?? []).flatMap { [$0.file, $0.license] })
+        case "music": allowed = Set((catalog.music ?? []).flatMap { [$0.file, $0.license] })
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

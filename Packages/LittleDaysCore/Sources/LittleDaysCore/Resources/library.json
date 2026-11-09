@@ -2364,5 +2364,67 @@
       "descZh": "春花、夏树、冬雪。",
       "descEn": "Spring blossom, summer trees, winter snow."
     }
+  ],
+  "music": [
+    {
+      "id": "afternoon-coffee",
+      "nameZh": "午后咖啡",
+      "nameEn": "Afternoon coffee",
+      "moodZh": "轻松",
+      "moodEn": "Easy",
+      "bpm": 78,
+      "seconds": 49.3,
+      "file": "LD-music-afternoon-coffee.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "rainy-window",
+      "nameZh": "窗外下雨",
+      "nameEn": "Rain on the window",
+      "moodZh": "安静",
+      "moodEn": "Quiet",
+      "bpm": 70,
+      "seconds": 48.0,
+      "file": "LD-music-rainy-window.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "little-walk",
+      "nameZh": "出门散步",
+      "nameEn": "A little walk",
+      "moodZh": "明亮",
+      "moodEn": "Bright",
+      "bpm": 90,
+      "seconds": 42.7,
+      "file": "LD-music-little-walk.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "good-night",
+      "nameZh": "晚安",
+      "nameEn": "Good night",
+      "moodZh": "睡前",
+      "moodEn": "Bedtime",
+      "bpm": 62,
+      "seconds": 46.5,
+      "file": "LD-music-good-night.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "seaside",
+      "nameZh": "海边",
+      "nameEn": "By the sea",
+      "moodZh": "放空",
+      "moodEn": "Drift",
+      "bpm": 74,
+      "seconds": 45.5,
+      "file": "LD-music-seaside.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    }
   ]
 }

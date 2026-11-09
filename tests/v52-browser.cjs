@@ -79,8 +79,8 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await picker.setFiles(pics);
     await page.waitForSelector(".quick-result-bar");
     assert.equal(await page.locator("#photo-editor[open]").count(), 0, "no photo editor in the quick path");
-    assert.deepEqual(await page.$$eval(".quick-result-bar [data-action]", (els) => els.map((el) => el.dataset.action)), ["smart-shuffle", "smart-caption", "share-story", "quick-edit"]);
-    assert.equal(await page.locator(".tool-dock-wrap, .chapter-chips, .page-mode").count(), 0, "only the four choices");
+    assert.deepEqual(await page.$$eval(".quick-result-bar [data-action]", (els) => els.map((el) => el.dataset.action)), ["smart-shuffle", "smart-caption", "music-sheet", "share-story", "quick-edit"]);
+    assert.equal(await page.locator(".tool-dock-wrap, .chapter-chips, .page-mode").count(), 0, "only the five choices (music since V6.0)");
     await page.waitForTimeout(1300);
     let s = await story();
     assert.equal(s.layoutTemplate, "smart");

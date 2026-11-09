@@ -60,10 +60,10 @@ function wav(seconds = 1) {
     assert.deepEqual(underPaper, onPaper.filter((a) => a !== "draw-new"), "then the same choices sit under the paper");
     passed.push("text: one tap, type straight away, shows on the paper");
 
-    // 3. Sound: a small choice of record / upload; upload lands on the paper.
+    // 3. Sound: a small choice of background music (V6.0) / record / upload; upload lands on the paper.
     await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
     await page.locator('.stage-bar [data-action="add-sound"]').tap();
-    assert.equal(await page.locator(".sound-menu button").count(), 2);
+    assert.equal(await page.locator(".sound-menu button").count(), 3);
     assert.equal(await page.locator('.stage-bar [data-action="add-sound"]').getAttribute("aria-expanded"), "true");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="add-audio-file"]').tap();

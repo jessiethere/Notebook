@@ -73,7 +73,7 @@ py -3 tools\preview.py --open
 - **视频与音频**：视频上传/设置封面/内嵌播放；音频上传/播放；麦克风授权后录音并保存。浏览器原生控制支持暂停、进度、时长、静音，刷新后可重开。
 - **简体中文 / English**：Home 右上角 Settings 切换并保存偏好；界面、表单、状态双语，用户的书名、正文、文件名和媒体不翻译。
 - **数据保护**：新媒体放进 IndexedDB，LocalStorage 存元数据和引用；旧主照片安全迁移。Settings 可导出/确认恢复完整本机备份；旧标签页更新会提示冲突。
-- **始终私人**：新旧书本默认 Private，Public / Shared 暂禁用。本轮没有联网社区、好友、私信、协作或音乐，不假装已经有服务端权限控制。
+- **始终私人**：新旧书本默认 Private，Public / Shared 暂禁用。没有联网社区、好友、私信或协作，不假装已经有服务端权限控制。背景音乐只有 App 自带的 5 首原创轻音乐（V6.0），不连接任何音乐平台。
 
 ![Little Days V3 Web 手帐本界面，非 SwiftUI 截图](docs/images/little-days-v3-books.png)
 
@@ -100,7 +100,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**94 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`collab` 二十九套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**99 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`v53`、`v54`、`v55`、`v56`、`v57`、`collab` 三十套浏览器 E2E 全部通过（背景音乐只做了响度/频谱分析，未由人试听确认、也未在 iPhone 上播放；手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -143,6 +143,7 @@ npm run test:browser:v53
 npm run test:browser:v54
 npm run test:browser:v55
 npm run test:browser:v56
+npm run test:browser:v57
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -152,7 +153,7 @@ npm run test:browser:v56
 - 视频单文件 50 MB，音频 20 MB，录音单次最多 5 分钟；格式兼容性取决于浏览器，当前验证 Chromium。浏览器原生媒体/日期控件的语言跟随浏览器设置。
 - 新媒体在 IndexedDB，仍属本机站点数据，清理浏览器数据可能删除。完整备份媒体导出上限 100 MB，导入文件上限 150 MB；尚无分卷、加密或云备份。
 - 静态 PNG 不包含可播放的音视频；导出与 DOM 排版存在差异。主照片自由裁切、滤镜、完整相框和高级信息卡片仍未实现。
-- 没有真实用户账号、社区/好友/私信服务、协作角色与原子版本控制、背景音乐或流媒体接入（社区、好友、私信、共同创作目前是本机演示，标注“演示 · 未联网”）。旧标签页提示不等于多人协作。
+- 没有真实用户账号、社区/好友/私信服务、协作角色与原子版本控制或流媒体音乐接入（背景音乐只有 5 首原创曲，还没有音量滑块和整本书的音乐）（社区、好友、私信、共同创作目前是本机演示，标注“演示 · 未联网”）。旧标签页提示不等于多人协作。
 - 优先做 Windows/iOS 平台实测与原生个人能力对齐；再按 Phase 2 做清楚标注的社交原型，Phase 3 服务端，Phase 4 协作，Phase 5 高级创作/授权音乐。
 
 ## 协作与会话接续
@@ -160,6 +161,13 @@ npm run test:browser:v56
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 给页面配一首背景音乐（V6.0）
+
+- 新增 5 首 Little Days 原创轻音乐（午后咖啡、窗外下雨、出门散步、晚安、海边），由 `tools/make_music.py` 用代码合成，不是从音乐平台抓的歌。
+- 写一页时「♫ 声音 → 背景音乐」，或做好一页后点「♫ 配乐」：先试听再选，写的时候不播放。
+- 在日历里看这一天、或翻书翻到这一页时会轻轻循环播放，点「♫ 曲名」暂停；离开就停，放录音或视频时先暂停。
+- 导出这一页的视频会带上音乐（只有音乐的页面导出 15 秒，结尾淡出）。
 
 ### 2026-11-09 — 书可以像书一样一页一页翻（V5.9）
 

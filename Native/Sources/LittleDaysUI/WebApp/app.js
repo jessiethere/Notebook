@@ -26,6 +26,7 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
+import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, musicChipHTML } from "./js/music.mjs";
 import {
   backdropOf,
   canvasHTML as sharedCanvasHTML,
@@ -683,6 +684,100 @@ document.addEventListener(
 // ---------- Read a book like a book: one page at a time ----------
 // The cover first, then every page in date order; swipe, ‹ ›, or the arrow
 // keys turn the page. The list view stays the other choice (remembered).
+// ---------- Background music ----------
+// Original soft loops a page can keep. They play while a day is read or a
+// book is flipped (never while writing), one at a time.
+const music = createMusicPlayer();
+let musicPaused = false,
+  musicContext = "";
+music.onChange(syncMusicChips);
+function syncMusicChips() {
+  const current = music.current(),
+    playing = music.playing();
+  document.querySelectorAll('[data-action="music-toggle"]').forEach((chip) => {
+    const on = chip.dataset.music === current && playing;
+    chip.classList.toggle("playing", on);
+    chip.setAttribute("aria-pressed", String(on));
+    const glyph = chip.querySelector("i");
+    if (glyph) glyph.textContent = on ? "❚❚" : "▶";
+  });
+  document.querySelectorAll("[data-music-preview]").forEach((button) => {
+    const on = button.dataset.musicPreview === current && playing;
+    button.classList.toggle("playing", on);
+    button.textContent = on ? "❚❚" : "▶";
+    button.setAttribute("aria-label", t(on ? "music.stopPreview" : "music.preview"));
+  });
+}
+function musicSheetOpen() {
+  return Boolean(document.querySelector("#choose-dialog[open] .music-sheet"));
+}
+// What should be playing for the view on screen.
+function syncMusic() {
+  if (musicSheetOpen()) return;
+  let wanted = "",
+    keep = false,
+    context = page;
+  if (page === "day") {
+    const entry = state().entries.find((e) => e.date === selectedDate) || state().drafts[selectedDate];
+    wanted = dayMusic(entry);
+    context = `day:${selectedDate}`;
+  } else if (page === "books" && selectedBook && bookView === "flip") {
+    const turned = flipIndex > 0 ? flipPages(selectedBook)[flipIndex - 1] : null;
+    wanted = (turned?.moment || turned?.entry)?.music || "";
+    keep = true; // a page without music keeps the book's music going
+    context = `book:${selectedBook}`;
+  }
+  if (context !== musicContext) {
+    musicContext = context;
+    musicPaused = false;
+  }
+  const track = findTrack(catalog, wanted);
+  if (track) {
+    if (!musicPaused && music.current() !== track.id) music.play(track);
+  } else if (!keep || !music.current()) music.stop();
+  syncMusicChips();
+}
+function toggleMusic(id) {
+  const track = findTrack(catalog, id);
+  if (!track) return;
+  if (music.current() === id && music.playing()) {
+    music.pause();
+    musicPaused = true;
+    syncMusicChips();
+  } else {
+    musicPaused = false;
+    music.play(track);
+  }
+}
+function openMusicSheet() {
+  const dialog = $("#choose-dialog");
+  const chosen = activePage()?.music || "";
+  const rows = musicTracks(catalog)
+    .map((track) => {
+      const name = trackName(track, languageCode());
+      const on = track.id === chosen;
+      return `<li class="music-row ${on ? "chosen" : ""}"><button type="button" class="music-preview" data-action="music-preview" data-music="${esc(track.id)}" data-music-preview="${esc(track.id)}" aria-label="${t("music.preview")}">▶</button><span class="music-info"><b>${esc(name)}</b><small>${esc(trackMood(track, languageCode()))} · ${clock(track.seconds)}</small></span><button type="button" class="${on ? "secondary" : "primary"} music-pick" data-action="music-pick" data-music="${esc(track.id)}" ${on ? 'aria-current="true"' : ""}>${t(on ? "music.chosen" : "music.use")}</button></li>`;
+    })
+    .join("");
+  dialog.innerHTML = `<div class="choose-sheet music-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>♫ ${t("music.title")}</h2><p class="save-help">${t("music.hint")}</p><ul class="music-list">${rows}</ul><p class="music-note-line">${t("music.original")}</p>${chosen ? `<button class="text-button music-none" data-action="music-none">${t("music.none")}</button>` : ""}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  syncMusicChips();
+}
+function chooseMusic(id) {
+  const track = findTrack(catalog, id);
+  changeTarget((p) => {
+    if (track) p.music = track.id;
+    else delete p.music;
+  });
+  music.stop();
+  if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+  toast(track ? t("music.added", { name: trackName(track, languageCode()) }) : t("music.removed"));
+}
+function studioMusicHTML() {
+  const track = findTrack(catalog, activePage()?.music);
+  return track ? `<div class="studio-music"><button type="button" class="music-chip" data-action="music-sheet"><span class="music-note" aria-hidden="true">♫</span><span class="music-name">${esc(trackName(track, languageCode()))}</span><i aria-hidden="true">${t("music.change")}</i></button></div>` : "";
+}
+
 const BOOK_VIEW_KEY = "little-days.book-view";
 let bookView = (() => {
   try {
@@ -714,7 +809,7 @@ function flipBookHTML(book) {
     const { date, entry, moment } = pages[flipIndex - 1];
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button>`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button>`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -1801,7 +1896,7 @@ function quickResultHTML() {
   const pageNow = activePage();
   const variant = (Number(pageNow.layoutVariant) || 0) % 3;
   const book = state().books.find((b) => b.id === (pageNow.bookId || editor.bookId));
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><span class="quick-result-title">${t("result.title")}</span><button class="primary" data-action="quick-done">${t("result.done")} ${icon("check")}</button></header><p class="quick-result-book">${t("result.inBook", { name: book?.title || "" })}</p><div class="studio-stage large quick-stage"><div class="canvas-wrap moment-wrap" id="canvas-wrap">${canvasHTML()}</div></div><div class="quick-result-bar"><button data-action="smart-shuffle"><span class="shuffle-glyph" aria-hidden="true">↻</span><b>${t("result.shuffle")}</b><small>${variant + 1} / 3</small></button><button data-action="smart-caption"><span aria-hidden="true">Aa</span><b>${t(pageNow.title ? "result.editLine" : "result.addLine")}</b></button><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="quick-edit"><span aria-hidden="true">✎</span><b>${t("result.edit")}</b></button></div><p class="save-help quick-result-help">${t("result.help")}</p>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><span class="quick-result-title">${t("result.title")}</span><button class="primary" data-action="quick-done">${t("result.done")} ${icon("check")}</button></header><p class="quick-result-book">${t("result.inBook", { name: book?.title || "" })}</p><div class="studio-stage large quick-stage"><div class="canvas-wrap moment-wrap" id="canvas-wrap">${canvasHTML()}</div></div><div class="quick-result-bar"><button data-action="smart-shuffle"><span class="shuffle-glyph" aria-hidden="true">↻</span><b>${t("result.shuffle")}</b><small>${variant + 1} / 3</small></button><button data-action="smart-caption"><span aria-hidden="true">Aa</span><b>${t(pageNow.title ? "result.editLine" : "result.addLine")}</b></button><button data-action="music-sheet" class="${pageNow.music ? "has-music" : ""}"><span aria-hidden="true">♫</span><b>${t("music.short")}</b>${pageNow.music ? `<small>${esc(trackName(findTrack(catalog, pageNow.music), languageCode()))}</small>` : ""}</button><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="quick-edit"><span aria-hidden="true">✎</span><b>${t("result.edit")}</b></button></div><p class="save-help quick-result-help">${t("result.help")}</p>`;
 }
 function finishQuickPage() {
   const pageNow = activePage();
@@ -1996,7 +2091,7 @@ function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -2124,6 +2219,7 @@ function render() {
   if (page === "settings") showMediaUsage();
   pinStageForSheet();
   placeLayerBar();
+  syncMusic();
   const dock = $(".tool-dock");
   if (dock) {
     dock.scrollLeft = dockScroll;
@@ -3106,6 +3202,21 @@ async function action(target) {
     soundMenu = false;
     $("#video-input").click();
   }
+  if (actionName === "music-sheet") {
+    soundMenu = false;
+    if (page === "studio") render();
+    openMusicSheet();
+  }
+  if (actionName === "music-preview") {
+    const track = findTrack(catalog, target.dataset.music);
+    if (music.current() === track?.id && music.playing()) {
+      music.pause();
+      syncMusicChips();
+    } else music.play(track);
+  }
+  if (actionName === "music-pick") chooseMusic(target.dataset.music);
+  if (actionName === "music-none") chooseMusic("");
+  if (actionName === "music-toggle") toggleMusic(target.dataset.music);
   if (actionName === "add-sound") {
     soundMenu = !soundMenu;
     render();
@@ -3390,6 +3501,8 @@ $("#attachment-image-input").addEventListener("change", (event) =>
 $("#video-input").addEventListener("change", (event) =>
   handleMediaUpload(event, "video"),
 );
+// Closing the music sheet ends a preview (and resumes what the view plays).
+$("#choose-dialog").addEventListener("close", () => syncMusic());
 $("#audio-input").addEventListener("change", (event) =>
   handleMediaUpload(event, "audio"),
 );
@@ -4388,8 +4501,11 @@ async function exportPageVideo() {
   dialog.showModal();
   try {
     document.querySelectorAll("#app audio, #app video").forEach((element) => element.pause());
+    music.stop();
+    const track = findTrack(catalog, activePage().music);
     await exportJournalVideo(activePage(), {
       ...exportOptions(),
+      music: track ? await music.url(track) : "",
       isCancelled: () => cancelled,
       onProgress: (seconds, total) => {
         $("#export-progress").style.width = `${Math.min(100, (seconds / total) * 100)}%`;

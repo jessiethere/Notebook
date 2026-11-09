@@ -658,7 +658,9 @@ function drawAudioTicket(ctx, layer, name, font) {
 }
 
 // Records the page as a video: the paper as background, video clips playing
-// in their frames, and every clip's sound mixed in. Up to 60 seconds.
+// in their frames, and every clip's sound mixed in. Up to 60 seconds. The
+// page's background music (options.music, a URL) loops softly underneath and
+// fades out at the end; a page with only music becomes a 15-second video.
 export async function exportJournalVideo(editor, options = {}) {
   const resolve = options.resolvePhoto || safePhoto;
   const base = await renderJournalCanvas(editor, { ...options, skipVideo: true });
@@ -695,14 +697,38 @@ export async function exportJournalVideo(editor, options = {}) {
   const lengths = elements.map(({ el, clip }) =>
     Number.isFinite(el.duration) && el.duration > 0 ? el.duration : Number(clip.duration) || 0,
   );
-  const duration = Math.min(60, Math.max(4, ...lengths));
+  let music = null;
+  if (options.music) {
+    music = document.createElement("audio");
+    music.preload = "auto";
+    music.loop = true;
+    music.src = options.music;
+    await new Promise((done) => {
+      const timer = setTimeout(done, 5000);
+      music.oncanplaythrough = music.onerror = () => {
+        clearTimeout(timer);
+        done();
+      };
+    });
+    if (music.error) music = null;
+  }
+  const duration = Math.min(60, Math.max(music && !elements.length ? 15 : 4, ...lengths));
   const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
   let audio = null,
     mix = null;
-  if (AudioCtx && elements.length) {
+  let musicGain = null;
+  if (AudioCtx && (elements.length || music)) {
     audio = new AudioCtx();
     mix = audio.createMediaStreamDestination();
     for (const { el } of elements) audio.createMediaElementSource(el).connect(mix);
+    if (music) {
+      // Softer under voices and videos; fades out over the last 1.5 s.
+      musicGain = audio.createGain();
+      const level = elements.length ? 0.35 : 0.8;
+      musicGain.gain.setValueAtTime(level, 0);
+      audio.createMediaElementSource(music).connect(musicGain).connect(mix);
+      musicGain.level = level;
+    }
   }
   const stream = canvas.captureStream(30);
   mix?.stream.getAudioTracks().forEach((track) => stream.addTrack(track));
@@ -733,11 +759,16 @@ export async function exportJournalVideo(editor, options = {}) {
   recorder.start(250);
   await audio?.resume();
   await Promise.all(
-    elements.map(({ el }) => {
+    [...elements.map(({ el }) => el), ...(musicGain ? [music] : [])].map((el) => {
       el.currentTime = 0;
       return el.play().catch(() => {});
     }),
   );
+  if (musicGain) {
+    const now = audio.currentTime;
+    musicGain.gain.setValueAtTime(musicGain.level, now + Math.max(0, duration - 1.5));
+    musicGain.gain.linearRampToValueAtTime(0, now + duration);
+  }
   const started = performance.now();
   let cancelled = false;
   await new Promise((done) => {
@@ -752,6 +783,7 @@ export async function exportJournalVideo(editor, options = {}) {
     requestAnimationFrame(tick);
   });
   elements.forEach(({ el }) => el.pause());
+  music?.pause();
   recorder.stop();
   await stopped;
   stream.getTracks().forEach((track) => track.stop());

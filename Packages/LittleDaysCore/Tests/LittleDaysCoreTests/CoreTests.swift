@@ -30,6 +30,13 @@ final class CoreTests: XCTestCase {
         XCTAssertTrue(String(decoding: scene, as: UTF8.self).hasPrefix("<svg"))
         XCTAssertNoThrow(try SharedResources.libraryData(category: "scenes", filename: scenes[0].license))
         XCTAssertThrowsError(try SharedResources.libraryData(category: "fonts", filename: "../../seed.json"))
+        // Original background music (tools/make_music.py) and its notice.
+        let music = try XCTUnwrap(catalog.music)
+        XCTAssertEqual(music.count, 5)
+        let track = try SharedResources.libraryData(category: "music", filename: music[0].file)
+        XCTAssertGreaterThan(track.count, 100_000)
+        XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "music", filename: music[0].license), as: UTF8.self).contains("Original music"))
+        XCTAssertThrowsError(try SharedResources.libraryData(category: "music", filename: "LD-photo-latte-art.jpg"))
     }
 
     func testLegacyJournalWithoutV3FieldsStillDecodes() throws {
@@ -76,7 +83,7 @@ final class CoreTests: XCTestCase {
         var entries = object["entries"] as! [[String: Any]]
         let photo: [String: Any] = ["id": "p1", "kind": "photo", "text": "a.jpg", "mediaRef": "media:p1", "x": 33, "y": 44, "w": 50, "h": 40, "scale": 1, "rotation": 7, "frame": "polaroid", "tape": true, "crop": ["x": 20, "y": 70, "zoom": 1.5], "sourceRef": "media:orig", "shape": "heart", "edit": ["filter": "warm", "brightness": 10, "ratio": "1:1", "rotate": 90, "text": ["value": "周末", "style": "label", "color": "#FFFFFF", "size": 9, "x": 50, "y": 82]]]
         let drawing: [String: Any] = ["id": "d1", "kind": "photo", "text": "drawing", "mediaRef": "media:ink", "x": 40, "y": 30, "w": 60, "h": 20, "scale": 1, "rotation": 0, "frame": "bare", "drawing": true, "aspect": 1.5]
-        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "backdrop": "scene:color-peach", "textStyle": ["size": 30, "color": "#7D8E66"], "bodyStyle": ["size": 16], "layers": [photo, drawing], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
+        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "backdrop": "scene:color-peach", "music": "rainy-window", "textStyle": ["size": 30, "color": "#7D8E66"], "bodyStyle": ["size": 16], "layers": [photo, drawing], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
         entries[0]["backdrop"] = "scene:sky-moon"
         entries[0]["photo"] = "photo:latte-art"
         entries[0]["layers"] = [["id": "g", "kind": "growth", "text": "Move", "habitId": "move", "checkDate": "2026-11-07", "x": 50, "y": 50, "w": 62, "scale": 1, "rotation": -2]]
@@ -99,6 +106,7 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(moment.layers?.last?.aspect, 1.5)
         XCTAssertEqual(moment.textStyle?.color, "#7D8E66")
         XCTAssertEqual(moment.bodyStyle?.size, 16)
+        XCTAssertEqual(moment.music, "rainy-window")
         XCTAssertEqual(moment.media?.first?.origin, "recording")
         // Page backgrounds and library photos keep their references.
         XCTAssertEqual(moment.backdrop, "scene:color-peach")

@@ -48,7 +48,7 @@ class PreviewTests(unittest.TestCase):
             self.assertGreater(len(response.read()), 1000)
 
     def test_v3_library_and_font_mime_types(self):
-        for path, expected in [('/shared/library.json', 'application/json'), ('/shared/i18n.json', 'application/json'), ('/library/fonts/LD-handwritten.ttf', 'font/ttf'), ('/library/stickers/LD-sticker-bear.svg', 'image/svg+xml'), ('/library/stickers/LD-sticker-bear.png', 'image/png')]:
+        for path, expected in [('/shared/library.json', 'application/json'), ('/shared/i18n.json', 'application/json'), ('/library/fonts/LD-handwritten.ttf', 'font/ttf'), ('/library/stickers/LD-sticker-bear.svg', 'image/svg+xml'), ('/library/stickers/LD-sticker-bear.png', 'image/png'), ('/library/music/LD-music-afternoon-coffee.mp3', 'audio/mpeg')]:
             with urlopen(self.base + path) as response:
                 self.assertIn(expected, response.headers['Content-Type'])
                 self.assertGreater(len(response.read()), 100)

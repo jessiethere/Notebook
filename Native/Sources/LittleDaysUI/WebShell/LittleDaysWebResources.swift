@@ -6,7 +6,7 @@ import LittleDaysCore
 ///
 /// Routes mirror `tools/preview.py` so the iPhone shell and the localhost
 /// preview load byte-for-byte the same HTML/CSS/JavaScript:
-/// - `/shared/<name>.json`, `/library/<fonts|stickers|scenes|photos>/<file>`, `/assets/<name>.jpg`
+/// - `/shared/<name>.json`, `/library/<fonts|stickers|scenes|photos|music>/<file>`, `/assets/<name>.jpg`
 ///   come from the LittleDaysCore bundle (`SharedResources`, same allow-lists);
 /// - everything else comes from `WebApp/`, a copy of `Public/` kept in sync by
 ///   `tools/sync_native_web.py` (checked by `tests/test_native_shell.py`).
@@ -62,6 +62,7 @@ enum LittleDaysWebResources {
         case "png": return "image/png"
         case "jpg", "jpeg": return "image/jpeg"
         case "ttf": return "font/ttf"
+        case "mp3": return "audio/mpeg"
         case "txt": return "text/plain; charset=utf-8"
         default: return "application/octet-stream"
         }

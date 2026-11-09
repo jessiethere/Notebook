@@ -20,7 +20,7 @@
 - schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
 - 新媒体在 IndexedDB，LocalStorage 只存轻量数据；本机备份是用户主动下载文件，不上传服务器。
 - 原生 Core 支持 V3 Codable；SwiftUI 基础页面增加共享双语、字体注册/选择与 PNG 封面。原生音视频/完整封面字段编辑和画布未对齐 Web。
-- 没有真实账号、社区、好友、私信、协作或背景音乐。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
+- 没有真实账号、社区、好友、私信或协作。背景音乐（V6.0）只有 5 首原创合成曲（tools/make_music.py → Resources/Music，library.json `music`），不接音乐平台。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
 
 ## 关键决策
 
@@ -47,6 +47,26 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-09 — V6.0 推荐背景音乐（原创轻音乐，可加到页面）
+
+- 需求：「能不能有推荐的背景 sofi 音乐让用户可以加」（理解为柔和的 lofi 背景音乐）。
+- 约束：AGENTS.md 禁止擅自抓取流媒体歌曲；PRODUCT_SPEC 要求只用原创/明确授权音频。因此没有下载任何网上音乐，而是自己作曲合成。
+- 改动文件：
+  - tools/make_music.py（新）：numpy 合成 + ffmpeg(libmp3lame 96k) 编码，固定随机种子；FM 电钢琴、Karplus-Strong 拨弦、八音盒、铺底、噪声鼓、雨声/海浪/黑胶噪声，尾音回绕实现无缝循环，整体 -19 dBFS RMS 归一 + 轻微磁带抖动。
+  - Resources/Music/LD-music-{afternoon-coffee,rainy-window,little-walk,good-night,seaside}.mp3 + LittleDays-Original-Music.txt；library.json 新增 `music`（id、中英文名、心情、bpm、秒数、来源、许可）。
+  - tools/preview.py、tools/build_link.py、Resources.swift（MusicAsset、libraryData "music"）、LittleDaysWebResources.swift（mp3 MIME）：三个入口都能提供 `library/music/`。
+  - Models.swift：JournalMoment / JournalEntry 新增可选 `music`；CoreTests 加解码与目录检查。
+  - Public/js/music.mjs（新）：目录辅助函数、dayMusic、musicChipHTML、共享播放器（blob URL，单例，循环）。
+  - Public/app.js：选曲面板（试听 / 用这首 / 不要背景音乐）；入口在「♫ 声音」菜单和快速结果页「♫ 配乐」；写作页上方显示「♫ 曲名 换一首」；阅读一天、翻书时 syncMusic 自动播放，chip 暂停/播放（暂停后在同一天/同一本书内不再自动恢复），离开即停；导出视频传入音乐。
+  - Public/js/day-view.mjs：日期标题下的「♫ 曲名」；与当天音乐不同的页在页眉有自己的 chip。
+  - Public/js/export.mjs：视频导出混入循环音乐（有其他声音 0.35，只有音乐 0.8 且 15 秒），结尾 1.5 秒淡出。
+  - Public/styles.css（music-chip、music-sheet 等）、i18n.json（music.*）、whats-new.mjs（V6.0）、docs（ASSETS、ARCHITECTURE、ROADMAP、PRODUCT_SPEC、DESIGN_SYSTEM）。
+  - tests/v57.test.mjs（新，5 项）、tests/v57-browser.cjs（新，5 组）、tests/test_preview.py（mp3 MIME）、package.json。
+- 决策与原因：音乐存在「页」上（与 PRODUCT_SPEC 一致），阅读一天时只放一首（封面优先，否则第一页的），避免一屏里几首抢着放；写作时不自动播放，免得打扰。播放器用 blob URL，是因为 WKWebView 的自定义 scheme 不支持音视频的分段请求。版本号用 6.0 而不是 5.10（更新记录按数字排序，5.10 会排在 5.9 后面）。
+- 验证：我在容器里无法亲耳试听；用 ffmpeg ebur128 检查五首响度约 -17.5～-18.3 LUFS、峰值 ≤ -3.7 dBFS（无削波），并检查频段分布（第一次太闷、「散步」低频过重，已调整重新生成）。99 项 Node、12 项 Python、30 套浏览器 E2E 全部通过（v57：选曲试听 → 保存在页上 → 写作时不播放 → 阅读这一天自动播放、可暂停、离开即停 → 翻书到该页播放 → 其他声音开始时暂停且不自动恢复 → 只有音乐的页面导出约 15 秒视频且解码后有声音）。v37、v52 因「声音」菜单多了一项、快速结果页多了「配乐」按钮而更新了预期。Linux 容器 + Chromium。
+- 已知问题：没有音量滑块；没有「整本书一首音乐」；翻到没有音乐的页会继续放上一首；音乐循环点可能有极短的 MP3 编码间隙；未在 iPhone 真机 / WKWebView 验证播放与自动播放策略。
+- 下一步：请用户在链接里试听，按喜好调整曲风或增加曲目；可加音量和整本书音乐。
 
 ### 2026-11-09 — V5.9 书的详情页：列表 / 翻页两种看法
 
