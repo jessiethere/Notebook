@@ -1196,8 +1196,8 @@
     "en": "Edit"
   },
   "day.cover": {
-    "zh": "当日主页",
-    "en": "Day page"
+    "zh": "第一页",
+    "en": "First page"
   },
   "day.growth": {
     "zh": "当天的成长",
@@ -1788,8 +1788,8 @@
     "en": "Add photos first to choose a layout here."
   },
   "moment.addShort": {
-    "zh": "写小故事",
-    "en": "New moment"
+    "zh": "新的一页",
+    "en": "New page"
   },
   "moment.none": {
     "zh": "还没有小故事。",
@@ -1988,8 +1988,8 @@
     "en": "Add a moment to this day"
   },
   "moment.ctaHint": {
-    "zh": "选一本书，配不配照片都可以",
-    "en": "Pick a journal, with or without a photo"
+    "zh": "照片 + 一句话、随手写，或者手绘",
+    "en": "Photo + a line, just write, or draw"
   },
   "community.title": {
     "zh": "社区",
@@ -3836,44 +3836,44 @@
     "en": "XP"
   },
   "level.seed": {
-    "zh": "一颗种子",
-    "en": "Seed"
+    "zh": "第一页",
+    "en": "First page"
   },
   "level.sprout": {
-    "zh": "刚发芽",
-    "en": "Sprout"
+    "zh": "随手记",
+    "en": "Note-taker"
   },
   "level.leaf": {
-    "zh": "长叶子",
-    "en": "Leafing"
+    "zh": "贴纸控",
+    "en": "Sticker fan"
   },
   "level.bud": {
-    "zh": "小花苞",
-    "en": "Bud"
+    "zh": "手帐控",
+    "en": "Journaler"
   },
   "level.bloom": {
-    "zh": "开花了",
-    "en": "Bloom"
+    "zh": "小作者",
+    "en": "Storyteller"
   },
   "level.garden": {
-    "zh": "小花园",
-    "en": "Garden"
+    "zh": "杂志主编",
+    "en": "Editor"
   },
   "level.forest": {
-    "zh": "一片森林",
-    "en": "Forest"
+    "zh": "出版人",
+    "en": "Publisher"
   },
   "level.meadow": {
-    "zh": "彩虹草地",
-    "en": "Rainbow meadow"
+    "zh": "文具店主",
+    "en": "Shopkeeper"
   },
   "level.toNext": {
     "zh": "再得 {count} 经验升到「{name}」",
     "en": "{count} XP to “{name}”"
   },
   "level.max": {
-    "zh": "已经是最高等级啦 🌈",
-    "en": "Top level reached 🌈"
+    "zh": "已经是最高等级啦",
+    "en": "Top level reached"
   },
   "level.activeDays": {
     "zh": "活跃 {count} 天",
@@ -3980,8 +3980,8 @@
     "en": "Back up"
   },
   "inbox.levelUp": {
-    "zh": "升级啦！你现在是「{name}」 🎉",
-    "en": "Level up! You're now “{name}” 🎉"
+    "zh": "升级啦！你现在是「{name}」",
+    "en": "Level up! You're now “{name}”"
   },
   "inbox.seeLevel": {
     "zh": "看看等级",
@@ -4364,16 +4364,16 @@
     "en": "Delete this page"
   },
   "write.clearDay": {
-    "zh": "不要当日主页",
-    "en": "Remove the day page"
+    "zh": "删除这一页",
+    "en": "Delete this page"
   },
   "write.clearDayConfirm": {
-    "zh": "清空当日主页的标题、文字和照片？这一天的小故事都会保留，可以撤销。",
-    "en": "Clear the day page's title, words and photos? This day's stories stay, and you can undo."
+    "zh": "删除这一页的标题、文字和照片？这一天的其他页都会保留，可以撤销。",
+    "en": "Delete this page's title, words and photos? The day's other pages stay, and you can undo."
   },
   "write.dayCleared": {
-    "zh": "当日主页已清空，这一天只保留小故事",
-    "en": "Day page cleared; this day keeps its stories"
+    "zh": "这一页已删除",
+    "en": "Page deleted"
   },
   "books.mine": {
     "zh": "我的书",
@@ -4388,16 +4388,16 @@
     "en": "No books with friends yet. Open a book and invite friends under Write together (demo)."
   },
   "quick.title": {
-    "zh": "记一页",
-    "en": "Add a page"
+    "zh": "今天怎么记？",
+    "en": "How shall we keep today?"
   },
   "quick.book": {
-    "zh": "记到哪本书",
+    "zh": "记在哪本书",
     "en": "Which journal"
   },
   "quick.photo": {
-    "zh": "配一张照片",
-    "en": "A photo"
+    "zh": "选一张照片",
+    "en": "Choose a photo"
   },
   "quick.noPhoto": {
     "zh": "不用",
@@ -4408,8 +4408,8 @@
     "en": "Today's"
   },
   "quick.pick": {
-    "zh": "相册 / 素材",
-    "en": "Album / library"
+    "zh": "照片库",
+    "en": "Library"
   },
   "quick.start": {
     "zh": "开始写",
@@ -4418,5 +4418,225 @@
   "write.inBook": {
     "zh": "记到",
     "en": "In"
+  },
+  "way.photo": {
+    "zh": "照片 + 一句话",
+    "en": "Photo + a line"
+  },
+  "way.photoHint": {
+    "zh": "挑一张好看的照片，写一句话",
+    "en": "A lovely photo and one sentence"
+  },
+  "way.write": {
+    "zh": "随手写",
+    "en": "Just write"
+  },
+  "way.writeHint": {
+    "zh": "像备忘录，点纸就打字",
+    "en": "Like a note: tap and type"
+  },
+  "way.draw": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "way.drawHint": {
+    "zh": "用手指或 Apple Pencil 画",
+    "en": "Finger or Apple Pencil"
+  },
+  "quick.mine": {
+    "zh": "我的照片",
+    "en": "My photo"
+  },
+  "quick.start.photo": {
+    "zh": "写一句话",
+    "en": "Write a line"
+  },
+  "quick.start.write": {
+    "zh": "开始写",
+    "en": "Start writing"
+  },
+  "quick.start.draw": {
+    "zh": "开始画",
+    "en": "Start drawing"
+  },
+  "quick.continue": {
+    "zh": "继续看今天的 {count} 页",
+    "en": "Open today's {count} page(s)"
+  },
+  "quick.more": {
+    "zh": "其他",
+    "en": "Also"
+  },
+  "mode.line": {
+    "zh": "照片+一句",
+    "en": "Photo + line"
+  },
+  "mode.lineOn": {
+    "zh": "照片就是这一页，写一句话吧",
+    "en": "The photo is the page — add one line"
+  },
+  "draw.title": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "draw.short": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "draw.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "draw.canvas": {
+    "zh": "画板：在这一页上画",
+    "en": "Drawing board on this page"
+  },
+  "draw.tools": {
+    "zh": "画笔",
+    "en": "Brushes"
+  },
+  "draw.colors": {
+    "zh": "颜色",
+    "en": "Colours"
+  },
+  "draw.size": {
+    "zh": "粗细",
+    "en": "Size"
+  },
+  "draw.clear": {
+    "zh": "清空",
+    "en": "Clear"
+  },
+  "draw.hint": {
+    "zh": "直接在这一页上画。用 Apple Pencil 时会按力度变粗细，手掌碰到屏幕也不会画上。画好后可以移动、缩放，也能接着画。",
+    "en": "Draw right on the page. With Apple Pencil, pressing harder draws thicker and your palm won't leave marks. Afterwards you can move, resize or draw more."
+  },
+  "draw.pen": {
+    "zh": "钢笔",
+    "en": "Pen"
+  },
+  "draw.marker": {
+    "zh": "马克笔",
+    "en": "Marker"
+  },
+  "draw.pencil": {
+    "zh": "铅笔",
+    "en": "Pencil"
+  },
+  "draw.eraser": {
+    "zh": "橡皮",
+    "en": "Eraser"
+  },
+  "draw.again": {
+    "zh": "接着画",
+    "en": "Draw more"
+  },
+  "draw.saved": {
+    "zh": "手绘已经放在这一页上",
+    "en": "Your drawing is on the page"
+  },
+  "line.pickPhoto": {
+    "zh": "选一张照片",
+    "en": "Choose a photo"
+  },
+  "line.placeholder": {
+    "zh": "写一句话…",
+    "en": "Write one line…"
+  },
+  "line.chooseTitle": {
+    "zh": "选一张照片做这一页",
+    "en": "Choose the photo for this page"
+  },
+  "space.dressTitle": {
+    "zh": "装扮我的空间",
+    "en": "Decorate my space"
+  },
+  "space.dressNote": {
+    "zh": "改动马上生效，别人来看时就是这个样子（本机演示）。",
+    "en": "Changes show right away — this is what visitors see (demo on this device)."
+  },
+  "dress.look": {
+    "zh": "套装",
+    "en": "Looks"
+  },
+  "dress.avatar": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "dress.banner": {
+    "zh": "背景图",
+    "en": "Banner"
+  },
+  "dress.color": {
+    "zh": "主题色",
+    "en": "Colour"
+  },
+  "dress.frame": {
+    "zh": "头像框",
+    "en": "Frame"
+  },
+  "dress.layout": {
+    "zh": "动态版式",
+    "en": "Post layout"
+  },
+  "dress.motto": {
+    "zh": "签名",
+    "en": "Motto"
+  },
+  "look.blush": {
+    "zh": "樱粉",
+    "en": "Blush"
+  },
+  "look.cafe": {
+    "zh": "咖啡馆",
+    "en": "Café"
+  },
+  "look.sea": {
+    "zh": "海边",
+    "en": "Seaside"
+  },
+  "look.night": {
+    "zh": "星夜",
+    "en": "Starry"
+  },
+  "look.meadow": {
+    "zh": "原野",
+    "en": "Meadow"
+  },
+  "look.mono": {
+    "zh": "极简",
+    "en": "Minimal"
+  },
+  "frame.plain": {
+    "zh": "无框",
+    "en": "None"
+  },
+  "frame.ring": {
+    "zh": "细环",
+    "en": "Ring"
+  },
+  "frame.double": {
+    "zh": "双环",
+    "en": "Double"
+  },
+  "frame.dashed": {
+    "zh": "虚线",
+    "en": "Dashed"
+  },
+  "frame.petal": {
+    "zh": "圆角方",
+    "en": "Rounded"
+  },
+  "spaceLayout.grid": {
+    "zh": "方格",
+    "en": "Grid"
+  },
+  "spaceLayout.magazine": {
+    "zh": "杂志",
+    "en": "Magazine"
+  },
+  "spaceLayout.list": {
+    "zh": "大图",
+    "en": "Large"
   }
 }

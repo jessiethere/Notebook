@@ -2,7 +2,7 @@
 // other artwork are page backgrounds (Paper panel, or from the photo chooser).
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 const shots = process.env.SHOTS_DIR || "";
@@ -34,7 +34,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.reload();
     await page.waitForSelector(".hero");
     await menu(page, "studio");
-    await page.locator('[data-action="start-words"]').tap();
+    await openToday(page);
     await page.locator("#entry-title").fill("周日的小美好");
     await page.locator("#entry-body").fill("晒太阳，读书，喝了一杯热可可。");
     await page.locator("#journal-canvas .photo-placeholder").tap();

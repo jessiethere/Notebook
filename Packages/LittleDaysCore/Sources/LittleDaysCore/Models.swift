@@ -141,6 +141,9 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var edit: PhotoEdit?
     // V3.8: landscape / portrait / square / circle / arch / heart / film.
     public var shape: String?
+    // V5.2: a hand drawing (kind == "photo", a transparent PNG trimmed to the
+    // ink); it keeps its place instead of joining photo layouts.
+    public var drawing: Bool?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString

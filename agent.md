@@ -48,6 +48,24 @@
 
 ## 更新日志
 
+### 2026-11-09 — 记录一天的三种方式（照片 + 一句话 / 随手写 / 手绘）；手绘画板；装扮空间更完整；等级改为文具店主题；在线链接固定到侧栏
+
+- 需求：有才的用户可以在 iPad 上手绘加入页面；不一定要有 day page，记录一天的方式是：好看的照片 + 一句话、随手写、手绘；功能齐全但越不 confuse 越好。Decorate 很重要；Level 不一定用树。查看方式按现在的在线链接，最好有一个随手能打开的地方。
+- 改动文件：Public/app.js（记录面板 openQuickRecord/renderQuickRecord/startQuickRecord/startPage/quickMore、drawOnPage、页面模式 pageModeOf/setPageMode 三种、照片做整页 backdrop、删除旧的创作开始页和单独的随手记页面、framedPhoto 计数、装扮动作 space-dress-tab/space-look/space-frame/space-layout）；新增 Public/js/draw.mjs（画板）；Public/js/canvas.mjs（line 页、media: 背景、drawing-layer）；Public/js/export.mjs（line 页导出、自己照片背景）；Public/js/media.mjs（backdrop 计入媒体引用/备份）；Public/js/day.mjs（framedPhoto，排版不移动手绘）；Public/js/community.mjs / community-view.mjs（SPACE_LOOKS/FRAMES/LAYOUTS、装扮分页）；Public/js/levels.mjs；Public/styles.css；tools/sync_tokens.py（.draw-page 保持纸色）；i18n.json；Models.swift（JournalLayer.drawing）与 CoreTests；tests：signed-in.cjs（openToday）、v33、v36–v44、v47、v49 更新，新增 v51.test.mjs、v51-browser.cjs，package.json 加 test:browser:v51；AGENTS.md、docs/PRODUCT_SPEC.md、README；新增 Open-Little-Days.url。
+- 功能：
+  - 底部「＋」、首页「记一页」、今日照片、书上的「记一页」都打开同一个面板「今天怎么记？」：照片 + 一句话 / 随手写 / 手绘三选一，再选记在哪本书（记住上次的方式和书）；今天已有内容时可以「继续看今天的 N 页」；「其他」里是自由排版、视频、声音。
+  - 每次记录都是这一天的一页（新的 Moment），不再需要先填「当日主页」。旧的当日主页有内容时作为「第一页」保留；没内容就不显示，打开这一天直接落在第一页。
+  - 照片 + 一句话：照片就是整页（今日照片、照片库、或我的照片——存 IndexedDB），底部毛玻璃条上写一句话；导出图片同样效果。
+  - 手绘：在这一页上直接画（下面显示页面本身），钢笔（Apple Pencil 按压力度变粗细）、马克笔（半透明）、铅笔、橡皮，10 种颜色、粗细、撤销/重做/清空；用过 Pencil 后手掌触碰不会画上。完成后裁到笔迹范围，作为可移动、缩放的图层放回页面（`drawing: true`，frame bare），选中后可「接着画」，清空即删除；照片排版不会移动手绘。写作页上方的方式条有「手绘」，空白纸上的添加选项也有。
+  - 写作页上方的方式条：照片+一句 / 随手写 / 自由排版 / 手绘，可以随时换。
+  - 装扮空间：「装扮空间」按钮用主题色突出；面板分页：套装（6 套一键：背景+主题色+头像框+动态版式）、头像、背景图、主题色、头像框（无框/细环/双环/虚线/圆角方）、动态版式（方格/杂志/大图）、签名，改动即时生效。
+  - 等级名称改为文具店主题（id 不变）：第一页、随手记、贴纸控、手帐控、小作者、杂志主编、出版人、文具店主；去掉等级和升级通知里的 emoji。
+  - 在线链接已固定（pin）在 claude.ai 侧栏；仓库根目录 `Open-Little-Days.url` 双击即在浏览器打开在线链接；AGENTS/README/PRODUCT_SPEC 改为以在线链接为查看方式。
+- 决策与原因：三种方式覆盖「好看 + 简单」「快」「有才」三类用户，其余能力收进「其他」和工具栏，减少第一眼的选择；手绘做成普通图片图层，导出、备份、移动、缩放都沿用现有逻辑，不新增图层类型；装扮的套装让不想细调的人一步到位。旧的开始页（六宫格、灵感）和单独随手记页面与新面板重复，已删除。
+- 运行/测试：Linux 容器 + Chromium。75 项 Node、12 项 Python 通过；24 套浏览器 E2E 全部通过（browser、v3、v31–v51、collab）。新增 v51 覆盖面板三种方式、照片+一句话（今日照片/我的照片/导出）、随手写、手绘（压力、手掌忽略、马克笔、撤销重做、裁切、接着画、清空、取消）、删除页面后落点、装扮套装/头像框/版式。手绘只用合成 Pointer 事件和鼠标测试，**未在真实 iPad / Apple Pencil 上验证**；Swift 未编译（无工具链）。
+- 已知问题：Apple Pencil 压力、手掌忽略在真机 WKWebView 中的表现待验证；手绘接着画时原图以位图重画，旋转后的手绘再编辑会转正；面板里「我的照片」一次选一张；装扮仍是本机演示。
+- 下一步：在 iPad 上实测手绘手感（笔触平滑、延迟）；考虑手绘笔刷更多质感（水彩、蜡笔）和形状贴纸；装扮可以增加字体/卡片样式。
+
 ### 2026-11-09 — 书架（我的书 / 共同的书）；「记一页」先选书；纸下写字卡拿掉；删除这一页放到看得见的地方
 
 - 需求：My Books 改名 Books（书架），书架页和首页都能切换「我的书 / 共同的书」；今日照片点进去不要直接进编辑照片；快捷记录要能选记到哪本书；Write a moment 与 Write with it 重复；随手写模式纸下的小编辑卡拿掉；不知道怎么删掉不喜欢的一页。

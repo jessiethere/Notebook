@@ -52,7 +52,8 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
 
     // 1. A new video gets a cover straight away (no black box).
     await page.locator('#navigation [data-page="studio"]').tap();
-    await page.locator('[data-action="start-words"]').tap();
+    await page.locator('[data-action="quick-way"][data-way="write"]').tap();
+    await page.locator('[data-action="quick-start"]').tap();
     await page.waitForSelector("#journal-canvas");
     await page.locator("#video-input").setInputFiles({ name: "walk.webm", mimeType: "video/webm", buffer: video });
     await page.waitForSelector('#journal-canvas .video-layer video[poster^="blob:"]');

@@ -410,15 +410,44 @@ export function deleteConversation(state, userId) {
 // library, an accent colour and a one-line motto. Demo, on this device only.
 export const SPACE_ACCENTS = ["#7d8e66", "#b5838d", "#6d8299", "#c08b5c", "#8e7cc3", "#2b2622"];
 export const SPACE_BANNER = "photo:pink-ridges";
+// Decorating my space: an avatar frame, how my posts are laid out, and
+// one-tap looks that set the banner, colour, frame and layout together.
+export const SPACE_FRAMES = ["plain", "ring", "double", "dashed", "petal"];
+export const SPACE_LAYOUTS = ["grid", "magazine", "list"];
+export const SPACE_LOOKS = [
+  { id: "blush", banner: "photo:pink-ridges", accent: "#b5838d", frame: "ring", layout: "grid" },
+  { id: "cafe", banner: "photo:latte-art", accent: "#c08b5c", frame: "double", layout: "magazine" },
+  { id: "sea", banner: "photo:beach-sunset", accent: "#6d8299", frame: "plain", layout: "grid" },
+  { id: "night", banner: "photo:milky-way", accent: "#8e7cc3", frame: "dashed", layout: "list" },
+  { id: "meadow", banner: "photo:golden-field", accent: "#7d8e66", frame: "petal", layout: "magazine" },
+  { id: "mono", banner: "photo:misty-hills", accent: "#2b2622", frame: "plain", layout: "grid" },
+];
 export function updateSpace(state, values) {
   const space = { ...(state.profile.space || {}) };
+  if (values.look != null) {
+    const look = SPACE_LOOKS.find((item) => item.id === values.look);
+    if (!look) throw new Error("community.setting");
+    Object.assign(space, { banner: look.banner, accent: look.accent, frame: look.frame, layout: look.layout, look: look.id });
+  }
+  if (values.frame != null) {
+    if (!SPACE_FRAMES.includes(values.frame)) throw new Error("community.setting");
+    space.frame = values.frame;
+    delete space.look;
+  }
+  if (values.layout != null) {
+    if (!SPACE_LAYOUTS.includes(values.layout)) throw new Error("community.setting");
+    space.layout = values.layout;
+    delete space.look;
+  }
   if (values.banner != null) {
     if (!/^photo:[a-z0-9-]+$/.test(values.banner)) throw new Error("community.setting");
     space.banner = values.banner;
+    delete space.look;
   }
   if (values.accent != null) {
     if (!SPACE_ACCENTS.includes(values.accent)) throw new Error("community.setting");
     space.accent = values.accent;
+    delete space.look;
   }
   if (values.motto != null) space.motto = String(values.motto).trim().slice(0, 40);
   state.profile = { ...state.profile, space };

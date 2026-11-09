@@ -35,17 +35,18 @@ function wav(seconds = 1) {
     // 1. "Start with words" opens a note page (type on the paper); switching
     // to 自由排版 gives an empty paper that offers the four choices.
     await menu(page, "studio");
-    await page.locator('[data-action="start-words"]').tap();
+    await page.locator('[data-action="quick-way"][data-way="write"]').tap();
+    await page.locator('[data-action="quick-start"]').tap();
     await page.waitForSelector('[data-action="page-mode"][data-mode="note"][aria-pressed="true"]');
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
     await page.evaluate(() => document.activeElement.blur());
     await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
     await page.waitForSelector("#journal-canvas .canvas-add-row");
     const onPaper = await page.$$eval("#journal-canvas .canvas-add-row button", (els) => els.map((el) => el.dataset.action));
-    assert.deepEqual(onPaper, ["add-photos", "add-text-layer", "add-video", "add-sound"]);
+    assert.deepEqual(onPaper, ["add-photos", "add-text-layer", "draw-new", "add-video", "add-sound"]);
     assert.equal(await page.locator(".stage-bar .stage-add").count(), 0, "shown once: on the empty paper only");
     assert.equal(await page.locator(".write-card [data-action='add-text-layer']").count(), 0, "no hidden text-box link");
-    passed.push("empty paper offers photo / text / video / sound (once)");
+    passed.push("empty paper offers photo / text / draw / video / sound (once)");
 
     // 2. Text: one tap adds words to the paper with the typing box ready.
     await page.locator('#journal-canvas [data-action="add-text-layer"]').tap();
@@ -55,7 +56,8 @@ function wav(seconds = 1) {
     await page.waitForFunction(() => document.querySelector("#journal-canvas").innerText.includes("今天的风很温柔"));
     assert.equal(await page.locator("#journal-canvas .canvas-add-row").count(), 0, "hint goes once the paper has something");
     const underPaper = await page.$$eval(".stage-bar .stage-add", (els) => els.map((el) => el.dataset.action));
-    assert.deepEqual(underPaper, onPaper, "then the same four choices sit under the paper");
+    // Draw sits in the bar above the paper, so under it are the other four.
+    assert.deepEqual(underPaper, onPaper.filter((a) => a !== "draw-new"), "then the same choices sit under the paper");
     passed.push("text: one tap, type straight away, shows on the paper");
 
     // 3. Sound: a small choice of record / upload; upload lands on the paper.
@@ -100,16 +102,16 @@ function wav(seconds = 1) {
     assert.ok(pickers.every((size) => size === "13px" || size === "14px"), pickers.join());
     assert.match(await page.locator('meta[name="viewport"]').getAttribute("content"), /maximum-scale=1/);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-    // Start screen titles use a medium system weight, not heavy bold.
+    // The record sheet's titles use a medium system weight, not heavy bold.
     await menu(page, "studio");
-    await page.waitForSelector(".start-card b");
+    await page.waitForSelector(".quick-way b");
     // Read from whatever is on screen now (a media-ready redraw can replace the node).
     const weight = await page.waitForFunction(() => {
-      const el = document.querySelector(".start-card b");
+      const el = document.querySelector(".quick-way b");
       return el && el.isConnected && getComputedStyle(el).fontWeight;
     }).then((handle) => handle.jsonValue());
     assert.equal(weight, "600");
-    passed.push("iPhone: 16px typing fields, 14px menus/dates, no auto-zoom, no sideways scroll, calm start-screen type");
+    passed.push("iPhone: 16px typing fields, 14px menus/dates, no auto-zoom, no sideways scroll, calm record-sheet type");
 
     assert.deepEqual(errors, []);
     console.log(`V3.7 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

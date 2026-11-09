@@ -42,7 +42,8 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
 
     // 1. A portrait video stands upright; a landscape one lies flat.
     await menu(page, "studio");
-    await page.locator('[data-action="start-words"]').tap();
+    await page.locator('[data-action="quick-way"][data-way="write"]').tap();
+    await page.locator('[data-action="quick-start"]').tap();
     await page.waitForSelector("#journal-canvas");
     await page.locator("#video-input").setInputFiles({ name: "tall.webm", mimeType: "video/webm", buffer: Buffer.from(await makeVideo(90, 160)) });
     await page.waitForFunction(() => document.querySelectorAll("#journal-canvas .video-layer").length === 1);
@@ -152,8 +153,12 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     await page.waitForSelector(".hero");
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "cool", "theme remembered");
     await menu(page, "studio");
-    await page.locator('[data-action="start-continue"]').tap();
-    const paper = await page.locator("#journal-canvas").evaluate((el) => getComputedStyle(el).backgroundColor);
+    await page.locator('[data-action="quick-continue"]').tap();
+    // (Read from the canvas on screen now: a media-ready redraw can replace it.)
+    const paper = await page.waitForFunction(() => {
+      const el = document.querySelector("#journal-canvas");
+      return el?.isConnected && getComputedStyle(el).backgroundColor;
+    }).then((handle) => handle.jsonValue());
     assert.ok(lum(paper) > 0.85, `journal paper stays light (${paper})`);
     // Back to Soft removes the attribute.
     await menu(page, "home");

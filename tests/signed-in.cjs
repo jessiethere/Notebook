@@ -25,9 +25,11 @@ module.exports = function signedIn(chromium) {
   };
   return chromium;
 };
-// The ＋ (Studio) in the menu opens a "how do you want to start?" screen.
-// Older suites expect the editor, so they continue today's page (or start
-// with words on an empty day). tests/v36-browser.cjs tests the screen itself.
+// The ＋ (Studio) in the menu opens the "how shall we keep today?" sheet
+// (photo + a line / just write / draw). Older suites test the editor itself on
+// today's page, so they open today's pages (or, on an empty day, today's
+// page editor directly — the same editor the calendar opens for a date).
+// tests/v36-browser.cjs and v51 test the sheet itself.
 module.exports.goTab = async (page, tab) => {
   // Studio is full-screen: leave it with its own ‹ before using the menu.
   if (await page.locator("#phone.in-studio").count()) {
@@ -36,11 +38,22 @@ module.exports.goTab = async (page, tab) => {
     await page.waitForSelector("#phone:not(.in-studio)");
   }
   await page.locator(`#navigation [data-page="${tab}"]`).click();
-  if (tab === "studio") {
-    await page.waitForSelector(".studio-start");
-    await page.locator('[data-action="start-continue"], [data-action="start-words"]').first().click();
-    await page.waitForSelector("#journal-canvas");
-  }
+  if (tab === "studio") await module.exports.openToday(page);
+};
+// From the record sheet into today's editor (see goTab).
+module.exports.openToday = async (page) => {
+  await page.waitForSelector("#choose-dialog[open] .quick-sheet");
+  if (await page.locator('[data-action="quick-continue"]').count()) await page.locator('[data-action="quick-continue"]').click();
+  else
+    await page.evaluate(() => {
+      document.querySelector("#choose-dialog").close();
+      const open = document.createElement("button");
+      open.dataset.action = "edit-today";
+      open.hidden = true;
+      document.querySelector("#app").append(open);
+      open.click();
+    });
+  await page.waitForSelector("#journal-canvas");
 };
 // New page photos open the photo editor; older suites keep the originals.
 module.exports.skipPhotoEditor = async (page) => {

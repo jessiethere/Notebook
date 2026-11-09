@@ -32,6 +32,10 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 2. 记一页 writes a page straight into that journal (typed on the paper).
     await page.locator('.home-book-write[data-book="travel"]').tap();
+    // The record sheet opens with that journal chosen.
+    await page.waitForSelector('#choose-dialog[open] [data-action="quick-book"][data-book="travel"][aria-pressed="true"]');
+    await page.locator('[data-action="quick-way"][data-way="write"]').tap();
+    await page.locator('[data-action="quick-start"]').tap();
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     await page.keyboard.type("海边的风");
     await page.waitForTimeout(1300);

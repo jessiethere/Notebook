@@ -62,7 +62,7 @@ const scan = (page) =>
     pages.settings = await scan(page);
     await page.locator(".settings-nav .back-button").tap();
     await menu(page, "studio");
-    await page.locator('[data-action="start-continue"]').tap();
+    await page.locator('[data-action="quick-continue"]').tap();
     await page.waitForSelector("#journal-canvas");
     pages.studio = await scan(page);
     await page.locator('[data-action="tool"][data-tool="layout"]').tap();

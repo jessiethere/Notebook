@@ -210,6 +210,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     // Avatar: a photo (no emoji); without one, the first letter of the name.
     assert.equal(await page.locator(".ig-head .c-avatar.monogram").count(), 1);
     await page.locator('.ig-actions [data-action="space-dress"]').click();
+    await page.locator('[data-action="space-dress-tab"][data-tab="avatar"]').click();
     const avatarPhoto = await page.locator('[data-action="space-avatar"]').first().getAttribute("data-photo");
     await page.locator('[data-action="space-avatar"]').first().click();
     await page.waitForSelector(`.ig-head .c-avatar img[src*="LD-photo-${avatarPhoto}"]`);

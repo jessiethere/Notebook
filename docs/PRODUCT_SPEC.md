@@ -4,7 +4,7 @@
 
 **记录生活的美好，也收藏一点点变好的自己。** / **Collect moments, grow gently.**
 
-产品结合数字手帐、生活记录、成长追踪与未来的社交分享。界面像精品文具店，简约、温柔、有创作感；素材丰富可爱，不做成传统效率工具或普通信息流社交媒体。最终 iPhone 使用 Swift / SwiftUI；Windows 继续采用独立 HTML/CSS/JavaScript localhost 预览，保留 Vapor 和共享 Core。不能把 HTML 预览称为实际运行的 SwiftUI。
+产品结合数字手帐、生活记录、成长追踪与未来的社交分享。界面像精品文具店，简约、温柔、有创作感；素材丰富可爱，不做成传统效率工具或普通信息流社交媒体。最终 iPhone App 是 Swift / SwiftUI 外壳（WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。日常查看每次更新用**在线链接** https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （已固定在 claude.ai 侧栏；项目文件夹里双击 `Open-Little-Days.url` 也能打开）；localhost 预览只在需要录音、导出等浏览器受限功能时备用。保留 Vapor 和共享 Core。不能把网页预览称为实际运行的 SwiftUI 或真机结果。
 
 ## V3.3 新增
 

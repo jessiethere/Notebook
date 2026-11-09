@@ -270,6 +270,7 @@ export function visitMediaReferences(state, visit) {
       object[key] = visit(object[key], type);
   };
   const page = (item) => {
+    reference(item, "backdrop");
     for (const clip of item.media || []) {
       reference(clip, "source", "clip");
       reference(clip, "poster");

@@ -200,8 +200,12 @@ async function renderJournalCanvas(editor, options = {}) {
     }
   }
   drawPaper(ctx, editor.template);
-  const backdropMatch = /^(scene|photo):([a-z0-9-]+)$/.exec(editor.backdrop || "");
-  const backdrop = backdropMatch && (backdropMatch[1] === "scene" ? options.catalog?.scenes : options.catalog?.photos)?.find((item) => item.id === backdropMatch[2]);
+  const backdropMatch = /^(scene|photo|media):([a-z0-9-]+)$/i.exec(editor.backdrop || "");
+  const backdrop =
+    backdropMatch &&
+    (backdropMatch[1] === "media"
+      ? resolvePhoto(editor.backdrop) && { tone: "light" }
+      : (backdropMatch[1] === "scene" ? options.catalog?.scenes : options.catalog?.photos)?.find((item) => item.id === backdropMatch[2]));
   if (backdrop) {
     try {
       const image = await loadImage(resolvePhoto(editor.backdrop));
@@ -251,6 +255,26 @@ async function renderJournalCanvas(editor, options = {}) {
         ? '"Trebuchet MS", "Microsoft YaHei", sans-serif'
         : "sans-serif";
   await document.fonts.ready;
+  if (!dayPage && editor.layoutTemplate === "line") {
+    // Photo + one line: one sentence on a frosted strip at the bottom.
+    ctx.fillStyle = darkBackdrop ? "rgba(18,16,30,.55)" : "rgba(255,255,255,.8)";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(65, 1112, 950, 182, 38);
+    else ctx.rect(65, 1112, 950, 182);
+    ctx.fill();
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = darkBackdrop ? "#FFFFFF" : "#2F2A26";
+    ctx.font = `500 54px ${font}`;
+    wrapText(ctx, editor.title || "", 540, editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
+    if (editor.body) {
+      ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#8D857B";
+      ctx.font = `34px ${font}`;
+      wrapText(ctx, editor.body, 540, 1218, 860, 44, 1);
+    }
+    ctx.restore();
+  }
   if (dayPage || editor.layoutTemplate === "text") {
     const titleColor = editor.textStyle?.color || "#2F2A26";
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;

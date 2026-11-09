@@ -153,10 +153,10 @@ function levelHTML(xp, ctx) {
 // A personal page like a photo app profile: banner, avatar, counts, name with
 // a small level tag, bio, the books put out (as highlights) and a grid of
 // posts. The same page for me (what visitors see) and for other people.
-function gridHTML(works, ctx) {
+function gridHTML(works, ctx, layout = "grid") {
   const { t } = ctx;
   if (!works.length) return `<p class="save-help ig-empty">${t("community.noWorks")}</p>`;
-  return `<div class="ig-grid">${works
+  return `<div class="ig-grid layout-${C.SPACE_LAYOUTS.includes(layout) ? layout : "grid"}">${works
     .map((work) => {
       const photo = (work.media || []).find((item) => item.kind === "photo");
       const src = photo ? ctx.media.resolve(photo.ref) : "";
@@ -164,9 +164,9 @@ function gridHTML(works, ctx) {
     })
     .join("")}</div>`;
 }
-function headerHTML({ user, banner, motto, counts, level, bio, actions, accent, dressButton }, ctx) {
+function headerHTML({ user, banner, motto, counts, level, bio, actions, accent, dressButton, frame = "plain" }, ctx) {
   const src = resolveMedia(banner);
-  return `<div class="space-banner">${src ? `<img src="${esc(src)}" alt="">` : ""}<span class="space-shade" aria-hidden="true"></span>${motto ? `<span class="space-motto">${esc(motto)}</span>` : ""}${dressButton || ""}</div><div class="ig-head">${avatar(user, "xl")}<div class="ig-counts">${counts.map(([value, label]) => `<span><b>${value}</b>${esc(label)}</span>`).join("")}</div></div><div class="ig-name space-who"><h2>${esc(user.name)}</h2>${level ? `<small class="ig-level">${esc(level)}</small>` : ""}</div><p class="ig-handle">${esc(user.handle || "")}</p><p class="ig-bio">${esc(bio)}</p><div class="ig-actions">${actions}</div>`;
+  return `<div class="space-banner">${src ? `<img src="${esc(src)}" alt="">` : ""}<span class="space-shade" aria-hidden="true"></span>${motto ? `<span class="space-motto">${esc(motto)}</span>` : ""}${dressButton || ""}</div><div class="ig-head frame-${C.SPACE_FRAMES.includes(frame) ? frame : "plain"}">${avatar(user, "xl")}<div class="ig-counts">${counts.map(([value, label]) => `<span><b>${value}</b>${esc(label)}</span>`).join("")}</div></div><div class="ig-name space-who"><h2>${esc(user.name)}</h2>${level ? `<small class="ig-level">${esc(level)}</small>` : ""}</div><p class="ig-handle">${esc(user.handle || "")}</p><p class="ig-bio">${esc(bio)}</p><div class="ig-actions">${actions}</div>`;
 }
 function spaceHTML(demo, view, ctx, books, xp) {
   const { t } = ctx;
@@ -181,8 +181,20 @@ function spaceHTML(demo, view, ctx, books, xp) {
   const avatarPhotos = library.filter((p) => ["pets", "flowers", "coffee", "sweet"].includes(p.collection)).slice(0, 16);
   const pick = (action, list, current, key) =>
     list.map((p) => `<button data-action="${action}" data-photo="${esc(p.id)}" class="${current === `photo:${p.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? p.nameEn : p.nameZh)}"><img src="${esc(resolveMedia(`photo:${p.id}`))}" alt="" loading="lazy"></button>`).join("");
+  const frame = C.SPACE_FRAMES.includes(space.frame) ? space.frame : "plain";
+  const layout = C.SPACE_LAYOUTS.includes(space.layout) ? space.layout : "grid";
+  const tab = ["look", "avatar", "banner", "color", "frame", "layout", "motto"].includes(view.dressTab) ? view.dressTab : "look";
+  const dressBody = {
+    look: () => `<div class="dress-looks">${C.SPACE_LOOKS.map((look) => `<button data-action="space-look" data-look="${look.id}" class="${space.look === look.id ? "selected" : ""}" aria-pressed="${space.look === look.id}" style="--swatch:${look.accent}"><img src="${esc(resolveMedia(look.banner))}" alt="" loading="lazy"><span class="look-avatar frame-${look.frame}" aria-hidden="true"></span><b>${t("look." + look.id)}</b><small>${t("frame." + look.frame)} · ${t("spaceLayout." + look.layout)}</small></button>`).join("")}</div>`,
+    avatar: () => `<div class="space-avatar-row"><button class="secondary small" data-action="space-avatar-upload">${t("space.avatarUpload")}</button>${demo.profile.avatarPhoto ? `<button class="text-button" data-action="space-avatar-clear">${t("space.avatarClear")}</button>` : ""}</div><div class="space-banners avatar-picks">${pick("space-avatar", avatarPhotos, demo.profile.avatarPhoto)}</div>`,
+    banner: () => `<div class="space-banners">${pick("space-banner", bannerPhotos, space.banner || C.SPACE_BANNER)}</div>`,
+    color: () => `<div class="space-accents">${C.SPACE_ACCENTS.map((c) => `<button data-action="space-accent" data-accent="${c}" class="${c === accent ? "selected" : ""}" style="--swatch:${c}" aria-label="${c}" aria-pressed="${c === accent}"></button>`).join("")}</div>`,
+    frame: () => `<div class="dress-frames">${C.SPACE_FRAMES.map((f) => `<button data-action="space-frame" data-frame="${f}" class="${f === frame ? "selected" : ""}" aria-pressed="${f === frame}"><span class="look-avatar frame-${f}" aria-hidden="true"></span><small>${t("frame." + f)}</small></button>`).join("")}</div>`,
+    layout: () => `<div class="dress-layouts">${C.SPACE_LAYOUTS.map((l) => `<button data-action="space-layout" data-layout="${l}" class="${l === layout ? "selected" : ""}" aria-pressed="${l === layout}"><span class="layout-mini layout-${l}" aria-hidden="true">${"<i></i>".repeat(l === "list" ? 2 : l === "magazine" ? 4 : 6)}</span><small>${t("spaceLayout." + l)}</small></button>`).join("")}</div>`,
+    motto: () => `<label class="field">${t("space.motto")}<input id="space-motto" maxlength="40" value="${esc(space.motto || "")}" placeholder="${t("space.mottoPlaceholder")}"></label><div class="editor-actions"><button class="primary small" data-action="space-save">${t("save")}</button></div>`,
+  };
   const dress = view.dress
-    ? `<div class="space-dress-panel"><h4>${t("space.avatar")}</h4><div class="space-avatar-row"><button class="secondary small" data-action="space-avatar-upload">${t("space.avatarUpload")}</button>${demo.profile.avatarPhoto ? `<button class="text-button" data-action="space-avatar-clear">${t("space.avatarClear")}</button>` : ""}</div><div class="space-banners avatar-picks">${pick("space-avatar", avatarPhotos, demo.profile.avatarPhoto)}</div><h4>${t("space.banner")}</h4><div class="space-banners">${pick("space-banner", bannerPhotos, space.banner || C.SPACE_BANNER)}</div><h4>${t("space.accent")}</h4><div class="space-accents">${C.SPACE_ACCENTS.map((c) => `<button data-action="space-accent" data-accent="${c}" class="${c === accent ? "selected" : ""}" style="--swatch:${c}" aria-label="${c}" aria-pressed="${c === accent}"></button>`).join("")}</div><label class="field">${t("space.motto")}<input id="space-motto" maxlength="40" value="${esc(space.motto || "")}" placeholder="${t("space.mottoPlaceholder")}"></label><div class="editor-actions"><button class="primary small" data-action="space-save">${t("save")}</button><button class="secondary small" data-action="space-dress">${t("close")}</button></div></div>`
+    ? `<div class="space-dress-panel" id="space-dress"><div class="dress-top"><b>${t("space.dressTitle")}</b><button class="text-button" data-action="space-dress">${t("space.done")}</button></div><nav class="dress-tabs" role="tablist" aria-label="${t("space.dressTitle")}">${Object.keys(dressBody).map((id) => `<button role="tab" data-action="space-dress-tab" data-tab="${id}" aria-selected="${id === tab}" class="${id === tab ? "selected" : ""}">${t("dress." + id)}</button>`).join("")}</nav><div class="dress-body">${dressBody[tab]()}</div><p class="save-help">${t("space.dressNote")}</p></div>`
     : "";
   const shelf = view.shelfPick
     ? `<ul class="space-shelf">${books
@@ -200,13 +212,14 @@ function spaceHTML(demo, view, ctx, books, xp) {
       counts: [[stats.works, t("space.posts")], [out.length, t("space.books")], [stats.friends, t("community.statFriends")], [stats.following, t("community.statFollowing")]],
       level: xp ? `Lv.${xp.levelIndex + 1} · ${t("level." + xp.level.id)}` : "",
       bio: demo.profile.bio || t("community.bioEmpty"),
-      actions: `<button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button><button class="secondary small" data-action="space-dress" aria-expanded="${Boolean(view.dress)}">${t("space.dress")}</button><button class="primary small" data-action="community-publish-start">＋ ${t("space.post")}</button>`,
+      actions: `<button class="secondary small" data-action="community-profile-edit">${t("community.editProfile")}</button><button class="secondary small dress-cta" data-action="space-dress" aria-expanded="${Boolean(view.dress)}"><i class="dress-glyph" aria-hidden="true"></i>${t("space.dress")}</button><button class="primary small" data-action="community-publish-start">＋ ${t("space.post")}</button>`,
+      frame,
       dressButton: `<button class="space-dress-btn" data-action="space-dress" aria-expanded="${Boolean(view.dress)}">${t("space.dress")}</button>`,
     },
     ctx,
   );
   const highlights = `<div class="ig-highlights space-book-row">${out.map((book) => `<button class="space-book" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx)}<b>${esc(book.title)}</b></button>`).join("")}<button class="ig-new" data-action="space-shelf" aria-expanded="${Boolean(view.shelfPick)}"><span>＋</span><b>${t(view.shelfPick ? "space.done" : "space.fromShelf")}</b></button></div>`;
-  return `<section class="space ig" style="--space-accent:${accent}">${header}${dress}<section class="space-section"><div class="space-head"><h3>${t("space.myBooks")}</h3></div>${highlights}${shelf}<p class="save-help">${t("space.booksNote")}</p></section><section class="space-section"><div class="space-head"><h3>${t("space.feed")}</h3></div>${gridHTML(works, ctx)}</section><p class="space-demo">${t("community.demoLabel")} · ${t("space.demoNote")}</p></section><h3 class="ig-manage-title">${t("space.manage")}</h3>`;
+  return `<section class="space ig" style="--space-accent:${accent}">${header}${dress}<section class="space-section"><div class="space-head"><h3>${t("space.myBooks")}</h3></div>${highlights}${shelf}<p class="save-help">${t("space.booksNote")}</p></section><section class="space-section"><div class="space-head"><h3>${t("space.feed")}</h3></div>${gridHTML(works, ctx, layout)}</section><p class="space-demo">${t("community.demoLabel")} · ${t("space.demoNote")}</p></section><h3 class="ig-manage-title">${t("space.manage")}</h3>`;
 }
 // Someone else's page: the same layout, with follow / add friend / message.
 function userPageHTML(demo, view, ctx) {

@@ -75,7 +75,8 @@ final class CoreTests: XCTestCase {
         var object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(DayState(seed: seed, today: "2026-11-07"))) as! [String: Any]
         var entries = object["entries"] as! [[String: Any]]
         let photo: [String: Any] = ["id": "p1", "kind": "photo", "text": "a.jpg", "mediaRef": "media:p1", "x": 33, "y": 44, "w": 50, "h": 40, "scale": 1, "rotation": 7, "frame": "polaroid", "tape": true, "crop": ["x": 20, "y": 70, "zoom": 1.5], "sourceRef": "media:orig", "shape": "heart", "edit": ["filter": "warm", "brightness": 10, "ratio": "1:1", "rotate": 90, "text": ["value": "周末", "style": "label", "color": "#FFFFFF", "size": 9, "x": 50, "y": 82]]]
-        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "backdrop": "scene:color-peach", "layers": [photo], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
+        let drawing: [String: Any] = ["id": "d1", "kind": "photo", "text": "drawing", "mediaRef": "media:ink", "x": 40, "y": 30, "w": 60, "h": 20, "scale": 1, "rotation": 0, "frame": "bare", "drawing": true]
+        entries[0]["moments"] = [["id": "m1", "title": "Gym Session", "time": "08:00", "body": "squats", "tags": ["fitness"], "backdrop": "scene:color-peach", "layers": [photo, drawing], "media": [["id": "c", "kind": "audio", "name": "voice", "mime": "audio/webm", "source": "media:v", "origin": "recording"]]]]
         entries[0]["backdrop"] = "scene:sky-moon"
         entries[0]["photo"] = "photo:latte-art"
         entries[0]["layers"] = [["id": "g", "kind": "growth", "text": "Move", "habitId": "move", "checkDate": "2026-11-07", "x": 50, "y": 50, "w": 62, "scale": 1, "rotation": -2]]
@@ -93,6 +94,8 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(moment.layers?.first?.edit?.filter, "warm")
         XCTAssertEqual(moment.layers?.first?.edit?.text?.value, "周末")
         XCTAssertEqual(moment.layers?.first?.shape, "heart")
+        // V5.2 hand drawing: stays a drawing (not a layout photo).
+        XCTAssertEqual(moment.layers?.last?.drawing, true)
         XCTAssertEqual(moment.media?.first?.origin, "recording")
         // Page backgrounds and library photos keep their references.
         XCTAssertEqual(moment.backdrop, "scene:color-peach")

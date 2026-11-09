@@ -2,7 +2,7 @@
 // placing, editing and exporting a scene. Original illustrations only.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
@@ -43,16 +43,20 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const sceneId = await page.locator(".today-scene").getAttribute("data-scene");
     assert.ok(sceneId, "a picture of the day");
     await page.locator(".today-scene").tap();
-    // 记一页 opens with today's photo chosen; nothing written yet, so it goes
-    // into the day page's main picture spot (part of the layout).
+    // The record sheet opens on 照片 + 一句话 with today's photo chosen; the
+    // photo becomes the whole page, with one line to write on it.
+    await page.waitForSelector('#choose-dialog[open] [data-action="quick-way"][data-way="photo"][aria-pressed="true"]');
     await page.waitForSelector('#choose-dialog[open] [data-action="quick-photo"][data-photo="today"][aria-pressed="true"]');
     await page.locator('#choose-dialog [data-action="quick-start"]').tap();
-    await page.waitForSelector(`#journal-canvas .canvas-photo img[src*="LD-photo-${sceneId}"]`);
-    passed.push("Home: picture of the day → one tap fills today's main picture spot");
+    await page.waitForSelector("#journal-canvas.line-page");
+    assert.match(await page.locator("#journal-canvas").getAttribute("style"), new RegExp(`LD-photo-${sceneId}`));
+    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
+    await page.waitForSelector('[data-action="page-mode"][data-mode="layout"][aria-pressed="true"]');
+    passed.push("Home: picture of the day → one tap makes a photo + one line page");
 
     // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
     await page.evaluate(() => document.activeElement?.blur());
-    const dock = page.locator('[data-action="tool"][data-tool="photos"]');
+    const dock = page.locator('.dock-btn[data-tool="photos"]');
     if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
     await page.waitForSelector(".wall-gallery");
     const photoCollections = await page.evaluate(async () => (await (await fetch("shared/library.json")).json()).photoCollections.map((c) => c.id));
@@ -109,11 +113,12 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
-    // Start screen also offers the picture of the day.
+    // The record sheet also offers the picture of the day.
     await menu(page, "studio");
-    await page.waitForSelector(".start-scene");
-    assert.equal(await page.locator(".start-scene").getAttribute("data-scene"), sceneId);
-    passed.push("PNG export with scenes; Studio start offers the picture of the day");
+    await page.locator('[data-action="quick-way"][data-way="photo"]').tap();
+    await page.waitForSelector('#choose-dialog [data-action="quick-photo"][data-photo="today"] img');
+    assert.match(await page.locator('#choose-dialog [data-action="quick-photo"][data-photo="today"] img').getAttribute("src"), new RegExp(`LD-photo-${sceneId}`));
+    passed.push("PNG export with scenes; the record sheet offers the picture of the day");
 
     assert.deepEqual(errors, []);
     console.log(`V3.11 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

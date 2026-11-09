@@ -83,7 +83,7 @@ export function layerHTML(layer, ctx, options = {}) {
     // An empty frame from a template: shown while editing, hidden when reading.
     if (!layer.mediaRef && readOnly) return "";
     const empty = !layer.mediaRef;
-    classes += ` art-layer photo-layer frame-${frame}${isShape(layer.shape) ? ` shape-${layer.shape}` : ""}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
+    classes += ` art-layer photo-layer frame-${layer.drawing ? "bare drawing-layer" : frame}${isShape(layer.shape) && !layer.drawing ? ` shape-${layer.shape}` : ""}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
     inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
@@ -135,9 +135,14 @@ export function layerHTML(layer, ctx, options = {}) {
 // The page's background picture, if it has one: original artwork
 // ("scene:<id>", library.json "scenes") or a library photo ("photo:<id>").
 export function backdropOf(page, ctx) {
-  const match = /^(scene|photo):([a-z0-9-]+)$/.exec(page?.backdrop || "");
+  const match = /^(scene|photo|media):([a-z0-9-]+)$/i.exec(page?.backdrop || "");
   if (!match) return null;
   const [reference, kind, id] = match;
+  // My own photo (kept in this device's media store) can be a background too.
+  if (kind === "media") {
+    const src = ctx.media.resolve(reference);
+    return src ? { id, kind, src, dark: false } : null;
+  }
   const item = (kind === "scene" ? ctx.catalog?.scenes : ctx.catalog?.photos)?.find((entry) => entry.id === id);
   if (!item) return null;
   return { id, kind, src: ctx.media.resolve(reference), dark: item.tone === "dark" };
@@ -172,6 +177,9 @@ export function canvasHTML(page, ctx, options = {}) {
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
     fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+  else if (!dayPage && page.layoutTemplate === "line")
+    // Photo + one line: the photo is the page, one sentence on a frosted strip.
+    fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)}>${esc(page.title || "")}</div>${page.body ? `<div class="line-body">${esc(page.body)}</div>` : ""}</div>`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
     fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;
@@ -180,6 +188,7 @@ export function canvasHTML(page, ctx, options = {}) {
     template,
     dayPage ? "day-canvas" : "moment-canvas",
     page.layoutTemplate === "text" ? "text-only" : "",
+    !dayPage && page.layoutTemplate === "line" ? "line-page" : "",
     backdrop ? "has-backdrop" : "",
     backdrop?.dark ? "dark-backdrop" : "",
     readOnly ? "read-only" : "",

@@ -2,7 +2,7 @@
 // full-height chat. iPhone 13 emulation; demo data only.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
@@ -45,7 +45,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await menu(page, "books");
     await page.locator('[data-action="books-view"][data-view="profile"]').tap();
     await page.waitForSelector(".level-card");
-    assert.match(await page.locator(".level-card").innerText(), /Lv\.1[\s\S]*一颗种子[\s\S]*0[\s\S]*经验/);
+    assert.match(await page.locator(".level-card").innerText(), /Lv\.1[\s\S]*第一页[\s\S]*0[\s\S]*经验/);
     // Earn XP: three check-ins with notes and a written page → over 30 XP.
     await menu(page, "home");
     for (const habit of ["move", "reading", "pause"]) {
@@ -55,7 +55,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
       await page.locator('#dialog-form [type="submit"]').tap();
     }
     await menu(page, "studio");
-    await page.locator('[data-action="start-continue"]').tap();
+    await openToday(page);
     await page.locator("#entry-title").fill("我的第一页");
     await page.locator('[data-action="save-entry"]').tap();
     await page.waitForSelector(".hero");
@@ -64,7 +64,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.match(await page.locator('.inbox-item[data-type="level"]').innerText(), /升级啦/);
     await page.locator('.inbox-item[data-type="level"] [data-action="open-profile"]').tap();
     await page.waitForSelector(".level-card");
-    assert.match(await page.locator(".level-card").innerText(), /Lv\.2[\s\S]*刚发芽/);
+    assert.match(await page.locator(".level-card").innerText(), /Lv\.2[\s\S]*随手记/);
     passed.push("level card (Lv.1 → Lv.2 after real writing/check-ins); level-up notification links to it");
 
     // 3. "谁能看到": compact chips at a normal size (no giant selects).

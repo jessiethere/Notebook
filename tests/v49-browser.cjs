@@ -40,10 +40,13 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     // 3. Decorate: banner photo, accent colour and motto are saved.
     await page.locator('.space [data-action="space-dress"]').first().tap();
     await page.waitForSelector(".space-dress-panel");
+    await page.locator('[data-action="space-dress-tab"][data-tab="banner"]').tap();
     const banner = await page.locator('.space-banners [data-action="space-banner"]').nth(3).getAttribute("data-photo");
     await page.locator('.space-banners [data-action="space-banner"]').nth(3).tap();
     await page.waitForSelector(`.space-banner img[src*="LD-photo-${banner}"]`);
+    await page.locator('[data-action="space-dress-tab"][data-tab="color"]').tap();
     await page.locator('.space-accents [data-accent="#6d8299"]').tap();
+    await page.locator('[data-action="space-dress-tab"][data-tab="motto"]').tap();
     await page.locator("#space-motto").fill("跑步、植物和慢慢变好的我");
     await page.locator('[data-action="space-save"]').tap();
     await page.waitForSelector(".space-dress-panel", { state: "detached" });

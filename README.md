@@ -6,6 +6,9 @@
 ## 👉 [点这里直接打开 Little Days（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
 
 > 不用安装、不用运行任何东西，点开就是最新版；只有你自己能打开（登录 claude.ai）。每次更新都会发布到这同一个链接。
+>
+> **随手就能打开的地方**：① 已固定（pin）在 claude.ai 左侧栏，名字是「Little Days · 手帐文具店」；② 项目文件夹里双击 **Open-Little-Days.url**，直接用浏览器打开在线链接；③ 也可以把这个链接加到浏览器书签栏。
+> 查看方式统一用这个在线链接；iPhone 上最终是 Swift / SwiftUI 外壳里运行同一个界面。
 > 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
 
 本机预览：[http://localhost:8080](http://localhost:8080)（先双击项目文件夹里的 **Start-Windows.cmd**，它会自动更新到最新版并启动）。
@@ -97,7 +100,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**68 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`collab` 二十三套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**75 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`collab` 二十四套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -134,6 +137,7 @@ npm run test:browser:v47
 npm run test:browser:v48
 npm run test:browser:v49
 npm run test:browser:v50
+npm run test:browser:v51
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -151,6 +155,15 @@ npm run test:browser:v50
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 记录一天的三种方式；可以手绘；装扮空间；等级换成文具店主题
+
+- 点「＋」或「记一页」，先选今天怎么记：**照片 + 一句话**（照片就是整页，下面写一句）、**随手写**（像备忘录）、**手绘**（手指或 Apple Pencil 直接在页面上画），再选记在哪本书。每次记录都是这一天的一页，不用先填「当日主页」。
+- 手绘有钢笔、马克笔、铅笔、橡皮和 10 种颜色，可以撤销；画好的内容可以移动、缩放、选中后「接着画」。
+- 写作页上方随时可以在「照片+一句 / 随手写 / 自由排版 / 手绘」之间切换。
+- 我的主页的「装扮空间」更完整：6 套一键套装、头像框、动态版式（方格 / 杂志 / 大图）、背景图、主题色、签名。
+- 等级改名为：第一页 → 随手记 → 贴纸控 → 手帐控 → 小作者 → 杂志主编 → 出版人 → 文具店主。
+- 在线链接已固定在 claude.ai 左侧栏；项目文件夹里双击 `Open-Little-Days.url` 也能直接打开。
 
 ### 2026-11-09 — 书架分「我的书 / 共同的书」；「记一页」先选书再写
 

@@ -1,15 +1,17 @@
 // Experience and levels, worked out from what a person has actually written
 // on this device (nothing extra is stored; samples don't count). Community
 // posts count too while the community is a local demo.
+// Stationery-shop levels (not plants): from a first page to running the shop.
+// The ids stay the same so earlier level-up notes still read correctly.
 export const LEVELS = [
-  { id: "seed", xp: 0, icon: "🌰" },
-  { id: "sprout", xp: 30, icon: "🌱" },
-  { id: "leaf", xp: 90, icon: "🌿" },
-  { id: "bud", xp: 200, icon: "🌷" },
-  { id: "bloom", xp: 400, icon: "🌸" },
-  { id: "garden", xp: 700, icon: "🏡" },
-  { id: "forest", xp: 1100, icon: "🌳" },
-  { id: "meadow", xp: 1600, icon: "🌈" },
+  { id: "seed", xp: 0, icon: "page" },
+  { id: "sprout", xp: 30, icon: "note" },
+  { id: "leaf", xp: 90, icon: "sticker" },
+  { id: "bud", xp: 200, icon: "journal" },
+  { id: "bloom", xp: 400, icon: "story" },
+  { id: "garden", xp: 700, icon: "editor" },
+  { id: "forest", xp: 1100, icon: "publisher" },
+  { id: "meadow", xp: 1600, icon: "shop" },
 ];
 export const XP_RULES = [
   { id: "activeDay", xp: 10 },

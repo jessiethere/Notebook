@@ -384,6 +384,11 @@ export function autoLayout(count, template, region = { top: 4, bottom: 60 }) {
   }));
 }
 
+// A framed photo takes part in layouts; a hand drawing (also a picture
+// layer) stays where it was drawn.
+export function framedPhoto(layer) {
+  return layer?.kind === "photo" && !layer.drawing;
+}
 export function photoLayer(reference, name, values = {}) {
   return {
     id: newId(),
@@ -408,11 +413,11 @@ export function photoLayer(reference, name, values = {}) {
 // empty frames (filled by the next photo pick); "text" keeps the page to the
 // title and words. Existing photos are never removed.
 export function applyPageTemplate(page, count, template, region, options = {}) {
-  const filled = page.layers.filter((layer) => layer.kind === "photo" && layer.mediaRef);
+  const filled = page.layers.filter((layer) => framedPhoto(layer) && layer.mediaRef);
   if (template === "text") {
     if ((filled.length || page.photo) && !options.force) throw new Error("layout.textHasPhotos");
     // Words only: photos leave the page (their files stay on the device; undoable).
-    page.layers = page.layers.filter((layer) => layer.kind !== "photo");
+    page.layers = page.layers.filter((layer) => !framedPhoto(layer));
     if (page.photo) page.photo = "";
     page.layers = page.layers.filter((layer) => !(layer.kind === "photo" && !layer.mediaRef));
     page.layoutTemplate = "text";
@@ -446,7 +451,7 @@ export function fillEmptySlots(page, references) {
 }
 
 export function applyLayout(page, template, region) {
-  const photos = page.layers.filter((layer) => layer.kind === "photo");
+  const photos = page.layers.filter(framedPhoto);
   const slots = autoLayout(photos.length, template, region);
   photos.forEach((layer, index) => {
     Object.assign(layer, slots[index], { scale: 1 });

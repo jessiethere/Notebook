@@ -2,7 +2,7 @@
 // start screen and the photo editor (filters / crop / adjust / title).
 // Synthetic and bundled sample images only.
 const { chromium } = require("playwright");
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -82,29 +82,29 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     assert.equal(await page.locator("#tour").isHidden(), true, "no second tour after signing back in");
     passed.push("Settings back/close, replay tour, sign out and back in without losing data");
 
-    // 4. Studio start screen: continue today's page or start something new.
+    // 4. The record sheet: three ways in, open today's pages, or close.
     await menu(page, "studio");
-    await page.waitForSelector(".studio-start");
-    assert.equal(await page.locator(".start-card").count(), 6);
-    assert.equal(await page.locator('[data-action="start-continue"]').count(), 1, "today already has a page");
-    await page.locator('[data-action="start-close"]').click();
+    await page.waitForSelector("#choose-dialog[open] .quick-sheet");
+    assert.deepEqual(await page.$$eval('[data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["photo", "write", "draw"]);
+    assert.equal(await page.locator('[data-action="quick-continue"]').count(), 1, "today already has a page");
+    await page.locator('#choose-dialog [data-action="choose-close"]').click();
     await page.waitForSelector(".hero");
     await menu(page, "studio");
-    await page.locator('[data-action="start-idea"][data-idea="happy"]').click();
-    await page.waitForSelector('[data-moment-field="title"]');
-    assert.equal(await page.locator('[data-moment-field="title"]').inputValue(), "让我开心的一件事");
-    await page.waitForFunction(() => document.querySelector("#draft-status")?.textContent);
+    await page.locator('[data-action="quick-way"][data-way="write"]').click();
+    await page.locator('[data-action="quick-start"]').click();
+    await page.waitForSelector('#journal-canvas [data-inline="title"]');
+    await page.keyboard.type("让我开心的一件事");
     let d = await page.waitForFunction(() => {
       const d = new Date();
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       return JSON.parse(localStorage.getItem("little-days.v1"))?.drafts?.[key]?.moments?.some((m) => m.title === "让我开心的一件事");
     });
-    passed.push("Studio start: six ways in, continue, close, idea starts a new Moment");
+    passed.push("record sheet: three ways in, open today's pages, close, just write starts a new page");
 
-    // 5. Start with photos → editor: filter, 1:1 crop, warmth, title; skip-free.
+    // 5. Photos on a free layout page → editor: filter, 1:1 crop, warmth, title.
     await menu(page, "studio");
-    await page.waitForSelector(".studio-start");
-    await page.locator('[data-action="start-photos"]').click();
+    await page.locator('[data-action="quick-more"][data-more="layout"]').click();
+    await page.locator('#journal-canvas [data-action="add-photos"]').click();
     await page.waitForSelector("#choose-dialog[open]");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('#choose-dialog [data-action="choose-album"]').click();

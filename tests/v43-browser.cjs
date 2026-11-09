@@ -2,7 +2,7 @@
 // the main picture spot, pull-up sheets and the calendar photo wall.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
@@ -19,15 +19,17 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     const state = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "null"));
 
-    // 1. Quick note: one tap from ＋, just type; saved as a words-only story.
+    // 1. Just write: from ＋ pick 随手写 and type on the paper; saved as a page.
     await menu(page, "studio");
-    await page.locator('[data-action="start-note"]').tap();
-    await page.waitForSelector(".quick-note");
-    assert.equal(await page.evaluate(() => document.activeElement?.id), "note-title");
-    assert.equal(await page.locator("#note-title").evaluate((el) => getComputedStyle(el).fontSize), "26px");
-    await page.locator("#note-title").fill("周日早晨");
-    await page.locator("#note-body").fill("在阳台晒太阳，读完了一章书。");
-    await page.locator('[data-action="note-done"][data-keep="1"]').tap();
+    await page.locator('[data-action="quick-way"][data-way="write"]').tap();
+    await page.locator('[data-action="quick-start"]').tap();
+    await page.waitForSelector('#journal-canvas [data-inline="title"]');
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
+    await page.keyboard.type("周日早晨");
+    await page.locator('#journal-canvas [data-inline="body"]').click();
+    await page.keyboard.type("在阳台晒太阳，读完了一章书。");
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator('[data-action="save-entry"]').tap();
     await page.waitForSelector(".hero");
     let s = await state();
     const saved = s.entries.find((e) => e.date === today);
@@ -35,12 +37,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.ok(note, "saved to today");
     assert.equal(note.body, "在阳台晒太阳，读完了一章书。");
     assert.equal(note.layoutTemplate, "text");
-    // Back without writing saves nothing.
-    await menu(page, "studio");
-    await page.locator('[data-action="start-note"]').tap();
-    await page.locator('[data-action="note-done"][data-keep="0"]').tap();
-    assert.equal((await state()).entries.find((e) => e.date === today).moments.length, saved.moments.length);
-    passed.push("quick note: one tap, title + words, saved as a story; empty back saves nothing");
+    passed.push("just write: one choice from ＋, title + words typed on the paper, saved as a page");
 
     // 2. A fresh day: the main picture spot can be tapped; a scene goes into it.
     await page.evaluate((d) => {
@@ -52,7 +49,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.reload();
     await page.waitForSelector(".hero");
     await menu(page, "studio");
-    await page.locator('[data-action="start-words"]').tap();
+    await openToday(page);
     await page.waitForSelector('#journal-canvas .photo-placeholder[data-action="photo-chooser"]');
     await page.locator("#journal-canvas .photo-placeholder").tap();
     await page.waitForSelector("#choose-dialog[open]");

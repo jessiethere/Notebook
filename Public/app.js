@@ -37,6 +37,7 @@ import { dayDetailHTML } from "./js/day-view.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import { communityHTML, profileHTML, inboxHTML, bellHTML } from "./js/community-view.mjs";
 import { experience } from "./js/levels.mjs";
+import { openDrawBoard } from "./js/draw.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
@@ -73,6 +74,7 @@ import {
   fillEmptySlots,
   TEMPLATES_BY_COUNT,
   photoLayer,
+  framedPhoto,
   mediaLayer,
   isOnPage,
   freeMainPhoto,
@@ -184,12 +186,10 @@ let activeMomentId = null,
   collabOpen = false,
   photoTarget = "layers",
   sheetTall = false,
-  noteReturn = "home",
   inboxFilter = "all",
   inboxReturn = "home",
   studioReturn = "home",
   soundMenu = false,
-  studioStart = false,
   account = null,
   loginAvatar = null,
   tourStep = 0,
@@ -282,9 +282,9 @@ function changeEditor(change, redraw = true) {
 function navigate(target) {
   flushDraft();
   if (target === "studio") {
-    // The ＋ in the menu first asks how to start (photos, words, sound…).
-    studioStart = true;
-    openStudio(dateKey());
+    // The ＋ in the menu asks how to record: photo + one line, just write, or
+    // draw — and which journal it goes into.
+    openQuickRecord();
     return;
   }
   if (target === "settings" && page !== "settings") settingsReturn = page;
@@ -326,6 +326,9 @@ function openStudio(date = dateKey()) {
   future = [];
   selectedLayer = null;
   activeMomentId = null;
+  // There is no separate "day page" to fill in: a day is its pages. An old
+  // day page with something on it stays the first page.
+  if (!hasDayPageContent(editor) && editor.moments.length) activeMomentId = editor.moments[0].id;
   cropMode = false;
   draftDirty = false;
   if (page === "studio") media.release("studio");
@@ -418,7 +421,7 @@ function home() {
     const kicker = [t("home.today"), moments.length ? t("day.statMoments", { count: moments.length }) : "", entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
     hero = `<button class="today-preview hero-photo" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${backdrop ? `<img src="${esc(backdrop)}" alt="${t("photo.alt")}">` : ""}<span class="hero-shade" aria-hidden="true"></span><span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").replace(/\s+/g, " ").slice(0, 60))}</small></span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
   } else if (scene)
-    hero = `<button class="today-scene hero-photo" data-action="quick-open" data-photo="today" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span class="hero-shade" aria-hidden="true"></span><span class="hero-copy-block"><small class="hero-kicker">${t("scene.ofDay")} · ${esc(sceneName(scene))}</small><b>${t("home.prompt")}</b><em>${t("scene.useIt")} ›</em></span></button>`;
+    hero = `<button class="today-scene hero-photo" data-action="quick-open" data-way="photo" data-photo="today" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span class="hero-shade" aria-hidden="true"></span><span class="hero-copy-block"><small class="hero-kicker">${t("scene.ofDay")} · ${esc(sceneName(scene))}</small><b>${t("home.prompt")}</b><em>${t("scene.useIt")} ›</em></span></button>`;
   else hero = `<p class="today-blank">${t("home.blankBody")}</p>`;
   // The journals, in the same order as on the shelf: open one, or add a page
   // straight into it (a fitness, plants or family journal each keeps its own).
@@ -726,7 +729,9 @@ function layerBarHTML() {
   if (!layer || page !== "studio") return "";
   const b = (action, label, extra = "") => `<button type="button" data-action="${action}" ${extra}>${label}</button>`;
   const first =
-    layer.kind === "photo" && layer.mediaRef
+    layer.drawing
+      ? b("draw-edit", `✎ ${t("draw.again")}`)
+      : layer.kind === "photo" && layer.mediaRef
       ? b("photo-edit", `✨ ${t("pe.open")}`)
       : layer.kind === "video"
         ? b("video-cover", `🖼 ${t("poster.short")}`, `data-clip="${esc(layer.clipId)}"`)
@@ -824,7 +829,7 @@ function layerControls() {
 // One-line summary per tool; tapping a row opens its details (one at a time)
 // while the page preview stays pinned above, so every change is visible.
 function pageCounts(page) {
-  const photos = page.layers.filter((layer) => layer.kind === "photo").length,
+  const photos = page.layers.filter(framedPhoto).length,
     videos = page.media.filter((clip) => clip.kind === "video").length,
     audios = page.media.filter((clip) => clip.kind === "audio").length;
   return { photos, videos, audios };
@@ -838,7 +843,10 @@ function chapterChipsHTML() {
       .map((b) => `<i>${b}</i>`)
       .join("");
   };
-  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button><button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>✿ ${t("day.cover")}</b>${badges(editor)}</button>${moments
+  const dayChip = hasDayPageContent(editor) || !moments.length || !activeMomentId
+    ? `<button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>${esc(editor.title || t("day.cover"))}</b>${badges(editor)}</button>`
+    : "";
+  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button>${dayChip}${moments
     .map(
       (moment, index) =>
         `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><b><span>${String(index + 1).padStart(2, "0")}</span> <span data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</span></b>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
@@ -875,9 +883,9 @@ function fontName(id) {
 }
 // Template picker: first how many photos (or words only), then a layout.
 function templatePickerHTML(page) {
-  const filled = page.layers.filter((layer) => layer.kind === "photo" && layer.mediaRef).length +
+  const filled = page.layers.filter((layer) => framedPhoto(layer) && layer.mediaRef).length +
     (isDayPage() && editor.photo ? 1 : 0);
-  const slots = page.layers.filter((layer) => layer.kind === "photo").length;
+  const slots = page.layers.filter(framedPhoto).length;
   const current = page.layoutTemplate === "text" ? 0 : Math.min(5, slots || filled);
   const count = templateCount ?? current;
   const counts = [0, 1, 2, 3, 4, 5]
@@ -901,12 +909,15 @@ function templatePickerHTML(page) {
 // Two ways to make a story page: 随手写 (a note: the title and words are on the
 // paper, tap and type) and 自由排版 (photos, text boxes and stickers placed
 // freely; the boxes below the paper are its name and a caption).
+function pageModeOf(page = activePage()) {
+  return page.layoutTemplate === "text" ? "note" : page.layoutTemplate === "line" ? "line" : "layout";
+}
 function pageModeHTML() {
   if (isDayPage()) return "";
-  const note = activePage().layoutTemplate === "text";
-  const b = (mode, glyph, on) =>
-    `<button data-action="page-mode" data-mode="${mode}" class="${on ? "selected" : ""}" aria-pressed="${on}">${icon(glyph)}<span>${t("mode." + mode)}</span></button>`;
-  return `<div class="page-mode" role="group" aria-label="${t("mode.label")}">${b("note", "pen", note)}${b("layout", "photo", !note)}</div>`;
+  const mode = pageModeOf();
+  const b = (id, glyph) =>
+    `<button data-action="page-mode" data-mode="${id}" class="${mode === id ? "selected" : ""}" aria-pressed="${mode === id}">${glyph}<span>${t("mode." + id)}</span></button>`;
+  return `<div class="page-mode three" role="group" aria-label="${t("mode.label")}">${b("line", icon("photo"))}${b("note", icon("pen"))}${b("layout", '<i class="mode-grid" aria-hidden="true"></i>')}<button class="page-draw" data-action="draw-new">${'<i class="draw-glyph draw-pen" aria-hidden="true"></i>'}<span>${t("draw.short")}</span></button></div>`;
 }
 // One line above the paper: which journal this page goes into, its time, and
 // deleting it (a story) or removing the day page.
@@ -931,18 +942,25 @@ function noteToLayout(page) {
 }
 function setPageMode(mode, { quiet = false } = {}) {
   if (isDayPage()) return;
-  const note = mode === "note";
-  if ((activePage().layoutTemplate === "text") === note) {
-    if (note) focusInline(activePage().title ? "body" : "title");
+  const now = pageModeOf();
+  if (now === mode) {
+    if (mode === "note") focusInline(activePage().title ? "body" : "title");
+    if (mode === "line") activePage().backdrop ? focusInline("title") : openPhotoChooser("line");
     return;
   }
   changeTarget((p) => {
     if (p === editor) return;
-    if (note) p.layoutTemplate = "text";
+    if (mode === "note") p.layoutTemplate = "text";
+    else if (mode === "line") p.layoutTemplate = "line";
     else noteToLayout(p);
   });
-  if (!quiet) toast(t(note ? "mode.noteOn" : "mode.layoutOn"));
-  if (note) focusInline(activePage().title ? "body" : "title");
+  if (!quiet) toast(t("mode." + mode + "On"));
+  if (mode === "note") focusInline(activePage().title ? "body" : "title");
+  if (mode === "line") {
+    // The photo is the page: pick one first when there is none yet.
+    if (!activePage().backdrop) openPhotoChooser("line");
+    else focusInline("title");
+  }
 }
 function focusInline(field) {
   const el = $(`#journal-canvas [data-inline="${field}"]`);
@@ -1061,8 +1079,8 @@ function writeCardHTML() {
   const index = editor.moments.indexOf(page);
   const head = `<div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b></div>`;
   const tags = `<input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}">`;
-  // A note page: the title and words are on the paper itself — no card below.
-  if (page.layoutTemplate === "text") return "";
+  // A note or a photo + one line page: the words are on the paper itself.
+  if (page.layoutTemplate === "text" || page.layoutTemplate === "line") return "";
   // A free layout: the page is the picture; these words go under it.
   return `<section class="write-card moment" aria-label="${t("write.title")}">${head}<label class="write-label">${t("write.pageName")}</label><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><label class="write-label">${t("write.caption")}</label><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><p class="write-tip">${icon("text")} ${t("write.layoutTip")}</p>${tags}</section>`;
 }
@@ -1224,82 +1242,6 @@ function growthPanelHTML() {
     .join("")}`;
 }
 
-const START_IDEAS = ["meal", "walk", "happy", "note"];
-function studioStartHTML() {
-  const started = hasDayPageContent(editor) || editor.moments.length > 0;
-  const date = new Date(`${editor.date}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric", weekday: "long" });
-  const card = (id, icon) => `<button class="start-card start-${id}" data-action="start-${id}"><span class="start-icon" aria-hidden="true">${icon}</span><b>${t("start." + id)}</b><small>${t("start." + id + "Hint")}</small></button>`;
-  return `<section class="studio-start"><header class="start-top"><div><span class="date-label">${esc(date)}</span><h1 class="page-title">${t("start.title")}</h1></div><button class="icon-button" data-action="start-close" aria-label="${t("close")}">×</button></header>${
-    started
-      ? `<button class="start-continue" data-action="start-continue"><span aria-hidden="true">📖</span><span><b>${t("start.continue")}</b><small>${esc(editor.title || t("entry.untitled"))}${editor.moments.length ? ` · ${t("day.statMoments", { count: editor.moments.length })}` : ""}</small></span><i>›</i></button><p class="start-note">${t("start.newMoment")}</p>`
-      : ""
-  }<button class="start-quicknote" data-action="start-note"><span class="start-note-icon" aria-hidden="true">✎</span><span><b>${t("note.start")}</b><small>${t("note.startHint")}</small></span><i>›</i></button><div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div>${(() => {
-    const scene = todayScene();
-    return scene ? `<button class="start-scene" data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b></span><i>${t("scene.useIt")} ›</i></button>` : "";
-  })()}<h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
-}
-// Leaves the start screen; on a day that already has a page, the new thing
-// becomes a new Moment so nothing written earlier is mixed up.
-function beginStudio(tool = null) {
-  studioStart = false;
-  const started = hasDayPageContent(editor) || editor.moments.length > 0;
-  if (started) addMomentNow();
-  studioTool = tool;
-  render();
-}
-async function studioStartAction(target) {
-  const name = target.dataset.action;
-  if (!name?.startsWith("start-")) return false;
-  switch (name) {
-    case "start-close":
-      studioStart = false;
-      navigate("home");
-      break;
-    case "start-continue":
-      studioStart = false;
-      render();
-      break;
-    case "start-photos":
-      beginStudio(null);
-      openPhotoChooser("layers");
-      break;
-    case "start-note":
-      studioStart = false;
-      openNote();
-      break;
-    case "start-words":
-      beginStudio(null);
-      if (isDayPage()) $("#entry-title")?.focus();
-      else setPageMode("note", { quiet: true });
-      break;
-    case "start-video":
-      beginStudio("media");
-      $("#video-input").click();
-      break;
-    case "start-voice":
-      beginStudio("media");
-      await startRecording();
-      break;
-    case "start-template":
-      beginStudio("layout");
-      break;
-    case "start-growth":
-      beginStudio("growth");
-      break;
-    case "start-idea": {
-      beginStudio(null);
-      const title = t("start.idea." + target.dataset.idea);
-      changeTarget((page) => {
-        if (!page.title) page.title = title;
-      });
-      (isDayPage() ? $("#entry-body") : $('[data-moment-field="body"]'))?.focus();
-      break;
-    }
-    default:
-      return false;
-  }
-  return true;
-}
 // Experience from this device's journal; a level-up leaves a notification.
 function myExperience() {
   const xp = experience(state(), social(), dateKey());
@@ -1387,53 +1329,151 @@ function lastQuickBook() {
     return "";
   }
 }
-function openQuickRecord(photo = "") {
-  quick = { book: lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily", photo };
+const QUICK_WAY_KEY = "little-days.quick-way";
+const QUICK_WAYS = ["photo", "write", "draw"];
+function lastQuickWay() {
+  try {
+    const way = localStorage.getItem(QUICK_WAY_KEY);
+    return QUICK_WAYS.includes(way) ? way : "";
+  } catch {
+    return "";
+  }
+}
+function openQuickRecord({ way = "", photo = "", book = "" } = {}) {
+  if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+  quick = {
+    book: state().books.some((b) => b.id === book) ? book : lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily",
+    way: QUICK_WAYS.includes(way) ? way : lastQuickWay() || "write",
+    photo: photo || (todayScene() ? "today" : "pick"),
+  };
   renderQuickRecord();
   $("#choose-dialog").showModal();
 }
+function quickWayArt(way) {
+  const scene = todayScene();
+  if (way === "photo")
+    return scene ? `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><i class="way-line" aria-hidden="true"></i>` : `<span class="way-icon">${icon("photo")}</span>`;
+  if (way === "write") return `<span class="way-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+  return `<svg class="way-squiggle" viewBox="0 0 64 48" aria-hidden="true"><path d="M6 34c8-20 16-22 20-10s10 14 16 0 12-14 16-6"/><circle cx="50" cy="12" r="5"/></svg>`;
+}
 function renderQuickRecord() {
   const scene = todayScene();
+  const today = todayEntry() || state().drafts[dateKey()];
+  const pages = today ? (hasDayPageContent(today) ? 1 : 0) + (today.moments?.length || 0) : 0;
+  const way = (id) =>
+    `<button class="quick-way way-${id} ${quick.way === id ? "selected" : ""}" data-action="quick-way" data-way="${id}" aria-pressed="${quick.way === id}"><span class="way-art">${quickWayArt(id)}</span><b>${t("way." + id)}</b><small>${t("way." + id + "Hint")}</small></button>`;
   const opt = (value, inner, label) =>
     `<button data-action="quick-photo" data-photo="${value}" class="${quick.photo === value ? "selected" : ""}" aria-pressed="${quick.photo === value}" aria-label="${esc(label)}">${inner}</button>`;
-  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("quick.title")}</h2><h3>${t("quick.book")}</h3><div class="quick-books">${state()
+  const photos =
+    quick.way === "photo"
+      ? `<h3>${t("quick.photo")}</h3><div class="quick-photos">${scene ? opt("today", `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${t("quick.today")}</span>`, t("quick.today")) : ""}${opt("pick", `<span class="quick-none">${icon("photo")}</span><span>${t("quick.pick")}</span>`, t("quick.pick"))}${opt("mine", `<span class="quick-none">${icon("plus")}</span><span>${t("quick.mine")}</span>`, t("quick.mine"))}</div>`
+      : "";
+  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("quick.title")}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
     .books.map((book) => `<button data-action="quick-book" data-book="${esc(book.id)}" class="${quick.book === book.id ? "selected" : ""}" aria-pressed="${quick.book === book.id}">${coverHTML(book, ctx())}<span>${esc(book.title)}</span></button>`)
-    .join("")}</div><h3>${t("quick.photo")}</h3><div class="quick-photos">${opt("", `<span class="quick-none">${t("quick.noPhoto")}</span>`, t("quick.noPhoto"))}${scene ? opt("today", `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${t("quick.today")}</span>`, t("quick.today")) : ""}${opt("pick", `<span class="quick-none">${icon("photo")}</span><span>${t("quick.pick")}</span>`, t("quick.pick"))}</div><button class="primary full-width quick-start" data-action="quick-start">${icon("pen")} ${t("quick.start")}</button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+    .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t("quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
 }
-async function startQuickRecord() {
-  const { book, photo } = quick;
-  const scene = todayScene();
+// Every record is a new page of today, in the chosen journal.
+function startPage(book) {
   try {
     localStorage.setItem(QUICK_BOOK_KEY, book);
   } catch {}
-  $("#choose-dialog").close();
-  quick = null;
+  if ($("#choose-dialog")?.open) $("#choose-dialog").close();
   openStudio(dateKey());
-  const name = state().books.find((b) => b.id === book)?.title || "";
-  // Nothing written today yet: this is the day's own page (today's photo
-  // goes into its main picture spot). Otherwise a new story page.
-  if (!hasDayPageContent(editor) && !editor.moments.length) {
-    studioStart = false;
-    changeEditor((e) => {
-      e.bookId = book;
-      if (photo === "today" && scene) e.photo = `photo:${scene.id}`;
-    });
-    if (photo === "pick") openPhotoChooser("main");
-    else $("#entry-title")?.focus();
-    toast(t("book.writingIn", { name }));
-    return;
-  }
   addMomentNow();
   changeTarget((m) => {
     if (m !== editor) m.bookId = book;
-  });
-  if (photo === "today" && scene) {
-    addPhotoLayers([{ reference: `photo:${scene.id}`, name: sceneName(scene) }]);
-    studioTool = null;
+  }, false);
+  return state().books.find((b) => b.id === book)?.title || "";
+}
+async function startQuickRecord() {
+  const { book, way, photo } = quick;
+  const scene = todayScene();
+  try {
+    localStorage.setItem(QUICK_WAY_KEY, way);
+  } catch {}
+  quick = null;
+  const name = startPage(book);
+  if (way === "photo") {
+    changeTarget((m) => {
+      m.layoutTemplate = "line";
+      if (photo === "today" && scene) m.backdrop = `photo:${scene.id}`;
+    });
+    if (photo === "today" && scene) focusInline("title");
+    else if (photo === "mine") chooseAttachment({ kind: "backdrop" });
+    else openPhotoChooser("line");
+  } else if (way === "draw") {
     render();
-  } else if (photo === "pick") openPhotoChooser("layers");
-  else setPageMode("note", { quiet: true });
+    await drawOnPage();
+  } else setPageMode("note", { quiet: true });
   toast(t("book.writingIn", { name }));
+}
+async function quickMore(kind) {
+  const book = quick?.book || state().books[0]?.id || "daily";
+  quick = null;
+  startPage(book);
+  if (kind === "video") {
+    studioTool = "media";
+    render();
+    $("#video-input").click();
+  } else if (kind === "voice") {
+    studioTool = "media";
+    soundMenu = true;
+    render();
+  } else render();
+}
+// ---------- Hand drawing (手绘) ----------
+// Draw right on the page being written; the drawing is kept as a picture on
+// this device and can be drawn on again later.
+async function drawOnPage(layerId = null) {
+  if (page !== "studio") return;
+  const pageNow = activePage();
+  const layer = layerId ? pageNow.layers.find((l) => l.id === layerId) : null;
+  const under = sharedCanvasHTML({ ...pageNow, layers: pageNow.layers.filter((l) => l.id !== layerId) }, ctx(), { readOnly: true, dayPage: isDayPage() });
+  let dialog = $("#draw-dialog");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "draw-dialog";
+    dialog.className = "draw-dialog";
+    dialog.setAttribute("aria-label", t("draw.title"));
+    document.body.append(dialog);
+  }
+  const result = await openDrawBoard({
+    dialog,
+    background: under,
+    base: layer ? { src: safePhoto(layer.mediaRef), x: layer.x, y: layer.y, w: layer.w, h: layer.h, scale: layer.scale, rotation: layer.rotation } : null,
+    t,
+  });
+  if (!result) return;
+  if (result.empty) {
+    changeTarget((p) => {
+      p.layers = p.layers.filter((l) => l.id !== layerId);
+    });
+    selectedLayer = null;
+    render();
+    return;
+  }
+  try {
+    const mediaId = await media.put(result.blob, { kind: "photo", name: "drawing" });
+    const reference = `media:${mediaId}`;
+    let placed;
+    changeTarget((p) => {
+      const existing = layerId && p.layers.find((l) => l.id === layerId);
+      if (existing) {
+        Object.assign(existing, result.layer, { mediaRef: reference, scale: 1, rotation: 0, crop: { x: 50, y: 50, zoom: 1 }, frame: "bare", drawing: true });
+        placed = existing;
+      } else {
+        placed = photoLayer(reference, "drawing", { ...result.layer, frame: "bare", drawing: true });
+        p.layers.push(placed);
+      }
+    });
+    selectedLayer = null;
+    flushDraft();
+    render();
+    toast(t("draw.saved"));
+  } catch (error) {
+    console.warn("Drawing could not be saved", error?.name);
+    toast(t("media.failed"));
+  }
 }
 // Photo browser (like a poster app): the chosen photo large in its own shape
 // on top, the collections as tabs, and a two-column waterfall of photos that
@@ -1475,45 +1515,13 @@ function openSceneCollection(id) {
   dialog.showModal();
   renderPhotoBrowser({ keepScroll: false });
 }
-// Quick note, like the Notes app: a title line and the words, nothing else.
-function openNote() {
-  if (page !== "note") noteReturn = page === "studio" ? "home" : page;
-  page = "note";
-  render();
-  $("#note-title")?.focus();
-}
-function noteHTML() {
-  const date = new Date().toLocaleDateString(locale(), { month: "long", day: "numeric", weekday: "long" });
-  return `<section class="quick-note"><header class="note-top"><button class="note-back" data-action="note-done" data-keep="0">${icon("back")} ${t("note.back")}</button><span>${esc(date)}</span><button class="note-done" data-action="note-done" data-keep="1">${t("note.done")}</button></header><input id="note-title" class="note-title" maxlength="70" placeholder="${t("note.titlePlaceholder")}" autocomplete="off"><textarea id="note-body" class="note-body" maxlength="4000" placeholder="${t("note.bodyPlaceholder")}"></textarea><p class="note-help">${t("note.help")}</p></section>`;
-}
-// Saves the note as a words-only little story on today's page.
-function saveNote() {
-  const title = $("#note-title")?.value.trim() || "";
-  const body = $("#note-body")?.value.trim() || "";
-  if (!title && !body) return false;
-  openStudio(dateKey());
-  const now = new Date();
-  changeEditor((entry) => {
-    const moment = createMoment(entry, {
-      title: title || body.split("\n")[0].slice(0, 40),
-      body: title ? body : body.split("\n").slice(1).join("\n"),
-      time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
-    });
-    moment.layoutTemplate = "text";
-    entry.moments.push(moment);
-  }, false);
-  clearTimeout(draftTimer);
-  store.update((s) => saveEntry(s, editor));
-  draftDirty = false;
-  return true;
-}
 // One place to add a picture: the album, the scene library, or today's pick.
 function openPhotoChooser(targetSlot = "layers") {
   photoTarget = targetSlot;
   const en = languageCode() === "en";
   const picks = todayPicks();
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(targetSlot === "main" ? "choose.mainTitle" : "choose.title")}</h2><button class="choose-album" data-action="choose-album"><span aria-hidden="true">📷</span><span><b>${t("choose.album")}</b><small>${t(targetSlot === "main" ? "choose.albumOne" : "choose.albumMany")}</small></span><i>›</i></button><h3>${t("choose.picks")}</h3><div class="choose-picks">${picks
+  dialog.innerHTML = `<div class="choose-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(targetSlot === "main" ? "choose.mainTitle" : targetSlot === "line" ? "line.chooseTitle" : "choose.title")}</h2><button class="choose-album" data-action="choose-album"><span aria-hidden="true">📷</span><span><b>${t("choose.album")}</b><small>${t(targetSlot === "main" ? "choose.albumOne" : "choose.albumMany")}</small></span><i>›</i></button><h3>${t("choose.picks")}</h3><div class="choose-picks">${picks
     .map((scene) => `<button data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${esc(sceneName(scene))}</span></button>`)
     .join("")}</div><h3>${t("scene.title")}</h3><div class="choose-collections">${sceneCollections()
     .map((c) => {
@@ -1529,13 +1537,23 @@ function useScene(id, fromHome = false) {
   const scene = libraryPhotos().find((item) => item.id === id);
   if (!scene) return;
   if (fromHome || page !== "studio") {
-    studioStart = false;
     openStudio(dateKey());
     if (hasDayPageContent(editor) || editor.moments.length) addMomentNow();
   }
   studioTool = null;
   const reference = `photo:${scene.id}`;
   const pageNow = activePage();
+  // Photo + one line: the photo becomes the page itself.
+  if (!isDayPage() && (photoTarget === "line" || pageNow.layoutTemplate === "line")) {
+    changeTarget((p) => {
+      p.backdrop = reference;
+      p.layoutTemplate = "line";
+    });
+    photoTarget = "layers";
+    flushDraft();
+    focusInline("title");
+    return;
+  }
   const emptySlot = pageNow.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
   // A day page's main picture spot (or a chosen frame) takes the scene, so it
   // sits in the layout instead of floating on top of it.
@@ -1550,15 +1568,14 @@ function useScene(id, fromHome = false) {
 }
 // Photo, text, video and sound are equal ways to add something to the paper.
 function emptyPaper(page = activePage()) {
-  return !isDayPage() && !page.layers?.length && page.layoutTemplate !== "text";
+  return !isDayPage() && !page.layers?.length && page.layoutTemplate !== "text" && page.layoutTemplate !== "line";
 }
 function addChoicesHTML(className = "") {
   const item = (action, glyph, label) =>
     `<button class="${className}" data-action="${action}" ${action === "add-sound" ? `aria-expanded="${soundMenu}"` : ""}><span aria-hidden="true">${glyph}</span><b>${t(label)}</b></button>`;
-  return item("add-photos", "▣", "add.photo") + item("add-text-layer", "Aa", "add.text") + item("add-video", "▶", "add.video") + item("add-sound", "♫", "add.sound");
+  return item("add-photos", "▣", "add.photo") + item("add-text-layer", "Aa", "add.text") + (className === "canvas-add-choice" ? item("draw-new", "✎", "draw.short") : "") + item("add-video", "▶", "add.video") + item("add-sound", "♫", "add.sound");
 }
 function studioPage() {
-  if (studioStart) return studioStartHTML();
   const dayPage = isDayPage();
   // One compact bar (date · draft state · save) leaves the room to the page.
   return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
@@ -1637,7 +1654,7 @@ function render() {
   const signedIn = Account.isSignedIn(account);
   $("#phone").classList.toggle("signed-out", !signedIn);
   // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
-  $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "note"));
+  $("#phone").classList.toggle("in-studio", signedIn && page === "studio");
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
@@ -1658,7 +1675,6 @@ function render() {
       communityHTML(social(), communityView, state(), ctx(), { icon }),
     settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
-    note: noteHTML,
   }[page]();
   navigation();
   applyShellLanguage();
@@ -1846,12 +1862,6 @@ function accountAction(target) {
       else apply();
       return true;
     }
-    case "note-done": {
-      const saved = target.dataset.keep === "1" || $("#note-title")?.value.trim() || $("#note-body")?.value.trim() ? saveNote() : false;
-      if (saved) toast(t("note.saved"));
-      navigate(saved ? "home" : noteReturn && noteReturn !== "note" ? noteReturn : "home");
-      return true;
-    }
     case "studio-back":
       flushDraft();
       navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
@@ -2013,11 +2023,6 @@ async function action(target) {
   if (await v3Action(target)) return;
   if (actionName === "nav") navigate(target.dataset.page);
   if (actionName === "edit-today") openStudio(dateKey());
-  if (actionName === "quick-photo") {
-    studioTool = "photos";
-    openStudio(dateKey());
-    $("#photos-input").click();
-  }
   if (actionName === "quick-text") {
     studioTool = null;
     openStudio(dateKey());
@@ -2139,7 +2144,23 @@ async function action(target) {
     pulledBook = null;
     render();
   }
-  if (actionName === "quick-open") openQuickRecord(target.dataset.photo || "");
+  if (actionName === "quick-open") openQuickRecord({ way: target.dataset.way || "", photo: target.dataset.photo || "" });
+  if (actionName === "quick-way" && quick) {
+    quick.way = target.dataset.way;
+    renderQuickRecord();
+  }
+  if (actionName === "quick-continue") {
+    quick = null;
+    $("#choose-dialog").close();
+    openStudio(dateKey());
+  }
+  if (actionName === "quick-more" && quick) await quickMore(target.dataset.more);
+  if (actionName === "draw-new") {
+    soundMenu = false;
+    await drawOnPage();
+  }
+  if (actionName === "draw-edit" && selectedLayerOf()?.drawing) await drawOnPage(selectedLayer);
+  if (actionName === "line-photo") openPhotoChooser("line");
   if (actionName === "quick-book" && quick) {
     quick.book = target.dataset.book;
     renderQuickRecord();
@@ -2153,17 +2174,7 @@ async function action(target) {
     homeBooks = target.dataset.view === "our" ? "our" : "mine";
     render();
   }
-  if (actionName === "book-write") {
-    const book = state().books.find((b) => b.id === target.dataset.book);
-    if (!book) return;
-    openStudio(dateKey());
-    addMomentNow();
-    changeTarget((m) => {
-      if (m !== editor) m.bookId = book.id;
-    });
-    setPageMode("note", { quiet: true });
-    toast(t("book.writingIn", { name: book.title }));
-  }
+  if (actionName === "book-write") openQuickRecord({ book: target.dataset.book });
   if (actionName === "calendar-book") {
     calendarBook = target.dataset.book || "";
     render();
@@ -2264,7 +2275,8 @@ async function action(target) {
   }
   if (actionName === "choose-album") {
     $("#choose-dialog").close();
-    if (photoTarget === "main") $("#photo-input").click();
+    if (photoTarget === "line") chooseAttachment({ kind: "backdrop" });
+    else if (photoTarget === "main") $("#photo-input").click();
     else $("#photos-input").click();
   }
   if (actionName === "choose-close") $("#choose-dialog").close();
@@ -3386,6 +3398,24 @@ async function communityAction(target) {
         persistSocial();
         openCommunity();
         break;
+      case "space-dress-tab":
+        openCommunity({ dress: true, dressTab: target.dataset.tab });
+        break;
+      case "space-look":
+        Community.updateSpace(demo, { look: target.dataset.look });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-frame":
+        Community.updateSpace(demo, { frame: target.dataset.frame });
+        persistSocial();
+        openCommunity();
+        break;
+      case "space-layout":
+        Community.updateSpace(demo, { layout: target.dataset.layout });
+        persistSocial();
+        openCommunity();
+        break;
       case "space-save":
         Community.updateSpace(demo, { motto: $("#space-motto")?.value || "" });
         persistSocial();
@@ -3678,6 +3708,7 @@ async function v31Action(target) {
         entry.fieldValues = {};
       });
       selectedLayer = null;
+      if (editor.moments.length) selectMoment(editor.moments[0].id);
       toast(t("write.dayCleared"));
       return true;
     }
@@ -3690,7 +3721,7 @@ async function v31Action(target) {
       )
         return true;
       changeEditor((entry) => removeMoment(entry, moment.id), false);
-      selectMoment(null);
+      selectMoment(!hasDayPageContent(editor) && editor.moments.length ? editor.moments.at(-1).id : null);
       toast(t("moment.deleted"));
       return true;
     }
@@ -3732,7 +3763,7 @@ async function v31Action(target) {
         return true;
       const count = Number(target.dataset.count ?? -1);
       const hasPhotos =
-        Boolean(page.photo) || page.layers.some((layer) => layer.kind === "photo" && layer.mediaRef);
+        Boolean(page.photo) || page.layers.some((layer) => framedPhoto(layer) && layer.mediaRef);
       let force = false;
       if (target.dataset.template === "text" && hasPhotos) {
         if (!(await askConfirm(t("layout.textConfirm")))) return true;
@@ -3833,7 +3864,6 @@ async function v3Action(target) {
   if (await v31Action(target)) return true;
   if (await communityAction(target)) return true;
   if (await collabAction(target)) return true;
-  if (await studioStartAction(target)) return true;
   if (name === "new-book") {
     openBookDialog();
     return true;
@@ -4262,7 +4292,16 @@ async function handleImageUpload(event, target) {
     // New photos for the page open in the photo editor first (skip = as is).
     if (["photos", "replace"].includes(target?.kind)) saved = (await editPhotos(saved, "add")) || saved;
     const [{ reference }] = saved;
-    if (target?.kind === "avatar") {
+    if (target?.kind === "backdrop") {
+      // My own photo as the whole page (photo + one line).
+      changeTarget((p) => {
+        if (p === editor) return;
+        p.backdrop = reference;
+        p.layoutTemplate = "line";
+      });
+      flushDraft();
+      focusInline("title");
+    } else if (target?.kind === "avatar") {
       // My own photo as my avatar (kept in this device's media store).
       Community.updateProfile(social(), { avatarPhoto: reference });
       persistSocial();
@@ -4343,15 +4382,13 @@ function addPhotoLayers(saved) {
     // Empty frames from a chosen template are filled first, in order.
     const hadSlots = page.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
     const remaining = fillEmptySlots(page, saved);
-    if (page.layoutTemplate === "text" && saved.length) noteToLayout(page);
+    if ((page.layoutTemplate === "text" || page.layoutTemplate === "line") && saved.length) noteToLayout(page);
     if (hadSlots && !remaining.length) {
       selectedLayer = null;
       return;
     }
     saved = remaining;
-    const existing = page.layers.filter(
-      (layer) => layer.kind === "photo",
-    ).length;
+    const existing = page.layers.filter(framedPhoto).length;
     const added = saved.map(({ reference, name, sourceRef, edit }, index) =>
       photoLayer(reference, name, {
         ...(sourceRef ? { sourceRef, edit } : {}),
