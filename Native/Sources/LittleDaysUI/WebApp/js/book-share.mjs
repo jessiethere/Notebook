@@ -61,7 +61,10 @@ export function buildPdf(jpegs, { title = "Little Days" } = {}) {
     body();
     push("\nendobj\n");
   };
-  const { width: W, height: H } = PDF_PAGE;
+  const { width: W } = PDF_PAGE;
+  // Each page takes its picture's own shape (a day's first page can be taller:
+  // it carries the day's list underneath).
+  const pageHeight = (jpeg) => (jpeg.width && jpeg.height ? Math.round((W * jpeg.height) / jpeg.width) : PDF_PAGE.height);
   const n = jpegs.length;
   // 1 catalog, 2 pages, 3 info, then per page: page, content, image.
   const pageId = (i) => 4 + i * 3;
@@ -73,6 +76,7 @@ export function buildPdf(jpegs, { title = "Little Days" } = {}) {
   object(3, () => push(`<< /Title <FEFF${hex}> /Producer (Little Days) >>`));
   jpegs.forEach((jpeg, i) => {
     const id = pageId(i);
+    const H = pageHeight(jpeg);
     const content = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
     object(id, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${id + 2} 0 R >> >> /Contents ${id + 1} 0 R >>`));
     object(id + 1, () => push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));

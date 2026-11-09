@@ -1,11 +1,13 @@
 // V6.6 E2E — Growth merged into the day (task G): 4 tabs (no Growth tab);
 // habits checked on Home's "today" card; the "My habits" book on the shelf
 // opens the growth journey (and goes back); what was done shows as "today's
-// list" on the day and on the book's page; Labs: up to 5 things to do today,
-// done ones on the list, yesterday's unfinished only moved when asked.
+// list" on the day and on the book's page; up to 8 things to do today (V6.8,
+// for everyone), done ones on the list (also drawn under the exported page),
+// yesterday's unfinished only moved when asked.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
-const { menu } = require("./signed-in.cjs");
+const { menu, openToday } = require("./signed-in.cjs");
+const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 const shots = process.env.SHOTS_DIR || "";
@@ -14,7 +16,7 @@ const shots = process.env.SHOTS_DIR || "";
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const passed = [];
   try {
-    const context = await browser.newContext({ ...devices["iPhone 13"] });
+    const context = await browser.newContext({ ...devices["iPhone 13"], acceptDownloads: true });
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -61,15 +63,15 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForFunction((d) => (JSON.parse(localStorage.getItem("little-days.v1")).plans?.[d] || []).length === 2, today);
     await page.locator('.today-plans [data-action="plan-toggle"]').first().tap();
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d][0].done === true, today);
-    for (const x of ["读书", "跑步", "洗衣服"]) {
+    for (const x of ["读书", "跑步", "洗衣服", "交水费", "整理照片", "早点睡"]) {
       await page.locator("[data-plan-input]").fill(x);
       await page.locator('[data-action="plan-add"]').tap();
     }
-    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d].length === 5, today);
-    assert.equal(await page.locator("[data-plan-input]").count(), 0, "five at most");
+    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d].length === 8, today);
+    assert.equal(await page.locator("[data-plan-input]").count(), 0, "eight at most");
     await page.locator('.today-plans [data-action="plan-remove"]').last().tap();
-    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d].length === 4, today);
-    passed.push("planner: up to 5 things to do today — add (button / Enter), check, remove");
+    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).plans[d].length === 7, today);
+    passed.push("planner: up to 8 things to do today — add (button / Enter), check, remove");
 
     // 4. The day's list: on the day in the calendar.
     await menu(page, "calendar");
@@ -105,6 +107,8 @@ const shots = process.env.SHOTS_DIR || "";
       await page.locator('[data-action="flip"][data-dir="1"]').tap();
       await page.waitForSelector(".flip-page:not(.is-cover)");
       if (await page.locator(".flip-checklist").count()) {
+        const moveTitle = (await store()).habits.find((h) => h.id === "move").title;
+        assert.ok((await page.locator(".flip-checklist").innerText()).includes(moveTitle), "the habit checked, by name");
         assert.match(await page.locator(".flip-checklist").innerText(), /今日清单[\s\S]*给妈妈打电话/);
         seen = true;
         break;
@@ -112,6 +116,18 @@ const shots = process.env.SHOTS_DIR || "";
     }
     assert.ok(seen, "the list shows on that day's first page");
     passed.push("today's list also on the book's page for that day");
+
+    // 5b. Exporting that day's first page draws the list under the page.
+    await menu(page, "studio");
+    await openToday(page);
+    const download = page.waitForEvent("download");
+    await page.locator('[data-action="export"]').click();
+    const png = fs.readFileSync(await (await download).path());
+    if (shots) fs.writeFileSync(`${shots}/v63-export.png`, png);
+    assert.equal(png.readUInt32BE(16), 1080);
+    assert.ok(png.readUInt32BE(20) > 1350, `the list strip under the page (${png.readUInt32BE(20)}px tall)`);
+    await page.locator('[data-action="studio-back"]').click();
+    passed.push("export: the day's first page carries today's list underneath");
 
     // 6. Yesterday's unfinished things move only when asked.
     await page.evaluate(([t, y]) => {

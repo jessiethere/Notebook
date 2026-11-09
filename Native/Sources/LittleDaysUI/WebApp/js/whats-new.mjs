@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.9",
+    date: "2026-11-09",
+    zh: {
+      title: "今天要做的事最多 8 件；今日清单画进导出图片和 PDF",
+      items: [
+        "「今天要做的事」从最多 5 件放宽到 8 件。",
+        "导出图片时，当天第一页下面会多一条「今日清单」：打卡的习惯和做完的事，不会盖住页面本身。",
+        "分享整本书的 PDF 里，每天的第一页也带着这条清单；这一页会稍微长一点，不会被压扁。",
+        "翻书页上的「今日清单」现在会显示打卡习惯的名字（之前只显示做完的事）。",
+        "习惯保留在「我的习惯」里，首页一行入口不变。",
+      ],
+    },
+    en: {
+      title: "Up to 8 things in Today's plan; the day's list in exported pictures and PDFs",
+      items: [
+        "“Today's plan” now holds up to 8 things (was 5).",
+        "Exporting a picture of a day's first page adds a “Today's list” strip underneath: habits checked and things done, without covering the page.",
+        "In a shared book's PDF, each day's first page carries the list too; that page is a little taller instead of squashed.",
+        "The list on the flip book's page now names the habits checked (before, only the things done showed).",
+        "Habits stay in My habits, with the one line on Home as before.",
+      ],
+    },
+  },
+  {
     version: "6.8",
     date: "2026-11-09",
     zh: {

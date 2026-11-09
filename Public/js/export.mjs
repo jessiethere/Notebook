@@ -454,6 +454,81 @@ export async function renderJournalCanvas(editor, options = {}) {
     wrapText(ctx, editor.title, 540, fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
     ctx.restore();
   }
+  return options.dayList?.length ? withDayList(canvas, options.dayList, options.dayListTitle) : canvas;
+}
+// The day's list (habits checked, things done) as a strip under the page, as
+// in the flip book: it never covers the page itself.
+const LIST_FONT = '"PingFang SC", -apple-system, "Helvetica Neue", "Microsoft YaHei", sans-serif';
+export function dayListRows(ctx, items, maxWidth) {
+  const rows = [[]];
+  let width = 0;
+  for (const raw of items.slice(0, 13)) {
+    const text = `✓ ${String(raw).slice(0, 40)}`;
+    const w = ctx.measureText(text).width + 64;
+    if (rows.at(-1).length && width + w > maxWidth) {
+      rows.push([]);
+      width = 0;
+    }
+    rows.at(-1).push({ text, w: Math.min(w, maxWidth) });
+    width += w + 14;
+  }
+  return rows;
+}
+function withDayList(page, items, title = "") {
+  const measure = document.createElement("canvas").getContext("2d");
+  measure.font = `30px ${LIST_FONT}`;
+  const rows = dayListRows(measure, items, 1080 - 144);
+  const height = 172 + rows.length * 66;
+  const canvas = document.createElement("canvas");
+  canvas.width = page.width;
+  canvas.height = page.height + height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(page, 0, 0);
+  ctx.fillStyle = "#FBF6EC";
+  ctx.fillRect(0, page.height, canvas.width, height);
+  ctx.strokeStyle = "#D9CDB8";
+  ctx.setLineDash([10, 8]);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(48, page.height + 24);
+  ctx.lineTo(canvas.width - 48, page.height + 24);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // A bit of washi tape, like the sticky note on the day page.
+  ctx.save();
+  ctx.translate(canvas.width / 2, page.height + 24);
+  ctx.rotate(-0.03);
+  ctx.fillStyle = "rgba(186,200,160,.75)";
+  ctx.fillRect(-70, -14, 140, 28);
+  ctx.restore();
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#2F2A26";
+  ctx.font = `600 34px ${LIST_FONT}`;
+  ctx.fillText(title || "今日清单", 72, page.height + 82);
+  ctx.font = `30px ${LIST_FONT}`;
+  rows.forEach((row, r) => {
+    let x = 72;
+    const y = page.height + 130 + r * 66;
+    for (const chip of row) {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.strokeStyle = "#E2D7C5";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, chip.w, 52, 26);
+      else ctx.rect(x, y, chip.w, 52);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#4F5D43";
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, chip.w - 18, 52);
+      ctx.clip();
+      ctx.fillText(chip.text, x + 32, y + 27);
+      ctx.restore();
+      x += chip.w + 14;
+    }
+  });
   return canvas;
 }
 const fileName = (editor, options, ext) =>

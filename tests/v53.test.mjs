@@ -53,3 +53,12 @@ test("the PDF is well formed: one page per picture, offsets point at objects", (
     assert.ok(text.startsWith(`${i + 1} 0 obj`, offset), `object ${i + 1}`);
   });
 });
+
+test("V6.8: a taller picture (a day's list underneath) gets a taller page, not squashed", () => {
+  const page = { bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), width: 1080, height: 1350 };
+  const tall = { ...page, height: 1588 };
+  const text = new TextDecoder("latin1").decode(buildPdf([page, tall]));
+  assert.match(text, new RegExp(`/MediaBox \\[0 0 ${PDF_PAGE.width} ${PDF_PAGE.height}\\]`));
+  assert.match(text, /\/MediaBox \[0 0 432 635\]/);
+  assert.match(text, /q 432 0 0 635 0 0 cm/);
+});

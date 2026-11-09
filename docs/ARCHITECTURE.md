@@ -225,3 +225,8 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `todayListHTML()` 只渲染 planner（`plansOf` / `savePlans`，不再看 `labsOn`）和 `.today-habits-link`（`data-action="nav" data-page="growth"`）。
 - `newsSectionHTML()` 在设置渲染时读 `hasUnseen()` 再 `markSeen()`；首页齿轮 `.settings-gear .news-dot` 由 `hasUnseen()` 决定。`whatsNewCardHTML` 与 `whats-new-dismiss` 已移除。
+
+## 2026-11-09 V6.9 今日清单进导出
+
+- `dayListItems(date)`（app.js）= 当天打卡习惯的 `title` + 做完的 `plans`；翻书页、导出共用。
+- `renderJournalCanvas(page, { dayList, dayListTitle })` 有清单时返回加高的画布（`withDayList`）；`buildPdf` 每页 MediaBox 高度 = 432 × 图片高 / 图片宽。

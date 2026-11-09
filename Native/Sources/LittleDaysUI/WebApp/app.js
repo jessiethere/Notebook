@@ -536,7 +536,7 @@ function home() {
 // Growth merged into the day (V6.6): check a habit with one tap here; what
 // was done shows on that day's page as "today's list"; the habit book on the
 // shelf keeps the journey, stats and reflections.
-const MAX_PLANS = 5;
+const MAX_PLANS = 8;
 function plansOf(date) {
   return (state().plans?.[date] || []).filter((p) => p && typeof p.text === "string");
 }
@@ -574,6 +574,14 @@ function addPlan() {
   savePlans(dateKey(), (list) => list.length < MAX_PLANS && list.push({ id: id(), text, done: false }));
   logEvent("plan_add", {});
   document.querySelector("[data-plan-input]")?.focus();
+}
+// The day's list: the habits checked and the things done that day (shown on
+// the day page, the flip book and drawn under the page in exports).
+function dayListItems(date) {
+  return [
+    ...state().checks.filter((c) => c.date === date).map((c) => state().habits.find((h) => h.id === c.habitId)?.title).filter(Boolean),
+    ...plansOf(date).filter((p) => p.done).map((p) => p.text),
+  ];
 }
 // The shelf's habit book: a cover that opens the growth journey.
 function habitBookHTML() {
@@ -942,9 +950,7 @@ function flipBookHTML(book) {
     const { date, entry, moment } = pages[flipIndex - 1];
     // The day's list (habits checked, things done) on its first page.
     const firstOfDay = flipIndex === 1 || pages[flipIndex - 2].date !== date;
-    const listed = firstOfDay
-      ? [...state().checks.filter((c) => c.date === date).map((c) => state().habits.find((h) => h.id === c.habitId)?.name).filter(Boolean), ...plansOf(date).filter((p) => p.done).map((p) => p.text)]
-      : [];
+    const listed = firstOfDay ? dayListItems(date) : [];
     const checklist = listed.length ? `<p class="flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</p>` : "";
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
@@ -2896,7 +2902,8 @@ async function shareBook(bookId) {
     for (let i = 0; i < pages.length; i++) {
       if (cancelled) throw Object.assign(new Error("cancelled"), { code: "cancelled" });
       const { date, entry, moment } = pages[i];
-      const canvas = await renderJournalCanvas(moment || entry, { ...exportOptionsFor(!moment, date), skipVideo: true });
+      const firstOfDay = i === 0 || pages[i - 1].date !== date;
+      const canvas = await renderJournalCanvas(moment || entry, { ...exportOptionsFor(!moment, date, "", firstOfDay), skipVideo: true });
       images.push(await jpeg(canvas));
       $("#export-progress").style.width = `${Math.round(((i + 1) / pages.length) * 100)}%`;
       $("#export-time").textContent = t("bookShare.progress", { now: i + 1, total: pages.length });
@@ -3926,7 +3933,9 @@ async function action(target) {
   }
   if (actionName === "export") {
     logEvent("export", { size: "feed" });
-    await exportJournalImage(activePage(), exportOptions());
+    // The day's first page carries the day's list underneath (as in the book).
+    const first = activePage() === (hasDayPageContent(editor) ? editor : editor.moments[0] || editor);
+    await exportJournalImage(activePage(), { ...exportOptions(), dayList: first ? dayListItems(editor.date) : [] });
     toast(t("export.photoDone"));
   }
 }
@@ -5225,8 +5234,10 @@ function exportOptions() {
   const page = activePage();
   return exportOptionsFor(isDayPage(), editor.date, isDayPage() ? "" : `moment-${editor.moments.indexOf(page) + 1}`);
 }
-function exportOptionsFor(dayPage, date, suffix = "") {
+function exportOptionsFor(dayPage, date, suffix = "", withList = false) {
   return {
+    dayList: withList ? dayListItems(date) : [],
+    dayListTitle: t("day.checklist"),
     resolvePhoto: safePhoto,
     catalog,
     fontFamily,
