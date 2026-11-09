@@ -177,6 +177,9 @@ export function canvasHTML(page, ctx, options = {}) {
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
     fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(font, catalog))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+  else if (!dayPage && page.layoutTemplate === "smart")
+    // Photos in their own shapes, one line underneath (on a frosted label).
+    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)}>${esc(page.title || "")}</div></div>`;
   else if (!dayPage && page.layoutTemplate === "line")
     // Photo + one line: the photo is the page, one sentence on a frosted strip.
     fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)}>${esc(page.title || "")}</div>${page.body ? `<div class="line-body">${esc(page.body)}</div>` : ""}</div>`;
@@ -189,6 +192,7 @@ export function canvasHTML(page, ctx, options = {}) {
     dayPage ? "day-canvas" : "moment-canvas",
     page.layoutTemplate === "text" ? "text-only" : "",
     !dayPage && page.layoutTemplate === "line" ? "line-page" : "",
+    !dayPage && page.layoutTemplate === "smart" ? "smart-page" : "",
     backdrop ? "has-backdrop" : "",
     backdrop?.dark ? "dark-backdrop" : "",
     readOnly ? "read-only" : "",

@@ -1,6 +1,7 @@
 // V3.1 pure helpers: a Day (Entry) contains ordered Moments; Growth checks
 // stay unique per (habitId, date) and can carry private reflections.
 import { normalizeMoment } from "./model.mjs";
+import { smartLayout, SMART_VARIANTS } from "./smart-layout.mjs";
 
 const newId = () => globalThis.crypto.randomUUID();
 const clamp = (value, min, max) =>
@@ -452,6 +453,16 @@ export function fillEmptySlots(page, references) {
 
 export function applyLayout(page, template, region) {
   const photos = page.layers.filter(framedPhoto);
+  if (template === "smart") {
+    // Photos keep their own shape; layoutVariant picks one of three looks.
+    const variant = (Number(page.layoutVariant) || 0) % SMART_VARIANTS.length;
+    const slots = smartLayout(photos.map((layer) => layer.aspect), variant);
+    photos.forEach((layer, index) => Object.assign(layer, slots[index], { scale: 1, crop: { x: 50, y: 50, zoom: 1 } }));
+    page.layoutTemplate = "smart";
+    page.layoutVariant = variant;
+    page.layoutEdited = false;
+    return photos.length;
+  }
   const slots = autoLayout(photos.length, template, region);
   photos.forEach((layer, index) => {
     Object.assign(layer, slots[index], { scale: 1 });

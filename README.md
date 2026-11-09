@@ -100,7 +100,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**75 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`collab` 二十四套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**81 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`collab` 二十五套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -138,6 +138,7 @@ npm run test:browser:v48
 npm run test:browser:v49
 npm run test:browser:v50
 npm run test:browser:v51
+npm run test:browser:v52
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -155,6 +156,13 @@ npm run test:browser:v51
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 选几张照片，一页就排好了（V5.2）
+
+- 「＋」→ 照片 + 一句话 → 从相册一次选几张：照片保持原来的横竖比例，自动排成一页。下面只有四个按钮：**换一种**（三种样子）、**写一句话**、**分享**（Story 9:16 图片）、**编辑**；点「完成」就放进选好的书。
+- 排版工具里也可以「按照片形状自动排」。
+- 社区、私信、我的主页 / 装扮 / 等级、共同的书、颜色主题、登录页先收进「实验室」（设置里可以打开），新安装直接进入首页。
+- 设置里有「测试记录」：只记用了哪些功能、用了多久，不含文字和照片，参加测试时可以导出。
 
 ### 2026-11-09 — 产品战略与开发优先级建议（文档，待确认）
 

@@ -1,8 +1,11 @@
 // Older browser suites test the app behind the sign-in page: give every new
 // browser context a local account that has already seen the welcome tour.
 // (tests/v36-browser.cjs covers sign-in and the tour themselves.)
+// They also switch Labs on (community, profile, shared books, themes), which
+// new installs hide while the core is being tested (tests/v52 covers that).
 function seedAccount() {
   try {
+    if (localStorage.getItem("little-days.labs") === null) localStorage.setItem("little-days.labs", "1");
     if (!localStorage.getItem("little-days.account"))
       localStorage.setItem(
         "little-days.account",

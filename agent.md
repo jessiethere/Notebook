@@ -48,6 +48,31 @@
 
 ## 更新日志
 
+### 2026-11-09 — V5.2 验证核心：Quick Create v2、按照片形状自动排、实验室开关 + 测试记录、Story 分享
+
+- 需求：用户确认 STRATEGY.md 的优先级（「可以」），按任务 F 顺序开发：F1 Quick Create 易用性、F2 多照片自动排版、F3 测试版精简 + 事件记录、F4 分享导出。
+- 改动文件：
+  - 新增 Public/js/smart-layout.mjs（按照片宽高比排行，枚举行划分并打分；三种样子 clean / scrapbook / hero）；新增 Public/js/events.mjs（本机测试记录：白名单字段，最多 600 条）。
+  - Public/js/day.mjs（applyLayout 支持 "smart"、layoutVariant）；Public/js/canvas.mjs（smart 页底部一句话）；Public/js/export.mjs（smart 页导出一句话、renderStoryCanvas / shareStory 9:16）。
+  - Public/app.js：imageBlob 记录宽高比；照片图层带 aspect；quick 上传路径；快速结果页 quickResultHTML / quickPlaced / finishQuickPage；smart-shuffle / apply-smart / share-story / export-events / labs-toggle；实验室 labsOn 及隐藏逻辑；事件埋点。
+  - Public/js/personal-ui.mjs（设置里的测试记录卡和实验室卡）；Public/styles.css；i18n.json。
+  - Models.swift（JournalLayer.aspect、Entry/Moment.layoutVariant，均为可选）与 CoreTests。
+  - tests：signed-in.cjs 为老测试打开实验室；v36 打开实验室测登录；v51 照片选项顺序与「我的照片」改为 smart；新增 v52.test.mjs、v52-browser.cjs；package.json 增加 test:browser:v52。
+  - 文档：ROADMAP（已确认 + V5.2 清单）、STRATEGY（已确认、进度）、README。
+- 功能：
+  - 「＋」→ 照片 + 一句话：默认「我的相册」（可多选），其次「今日推荐」「图库」。选完直接得到排好的一页：照片保持原比例不裁切；下面四个按钮：换一种（1/3、2/3、3/3：整齐 / 手帐风（边框、轻微倾斜、胶带）/ 大图在上）、写一句话（写在页面底部的标签上）、分享、编辑；右上「完成」保存这一天并回到首页，提示「已放进《书名》」。快速路径不弹照片编辑器（编辑页里仍可用）。
+  - 排版工具顶部新增「按照片形状自动排」，任何页面都可用；手绘不参与排版。
+  - 实验室：新安装默认收起社区和私信、通知铃、我的主页 / 装扮 / 等级、共同的书、颜色主题、登录页和导览，直接进入首页；设置 →「实验室」可以打开或收起。代码和数据都保留。
+  - 测试记录：只在本机记录事件名、时间、用时、点击数、照片数、换了几次、有没有写一句话，不记录文字、名字、照片和媒体引用；设置 →「导出测试记录」得到 JSON（含摘要：完成页数、中位用时、活跃天数、分享数）。
+  - 分享：快速结果页和编辑页底部有「分享」，生成 1080×1920 的 Story 图片（页面居中，底部小字 made with Little Days）。浏览器 / 外壳支持文件分享时调起系统分享面板，否则下载。
+- 决策与原因：用行式排版（justified rows）保证不裁照片，比按张数套模板更「默认就好看」；三种样子覆盖干净、手帐感、主次分明三种审美；新安装默认收起暂停模块，让测试反馈集中在核心体验；测试记录只存白名单字段，保护隐私。
+- 运行 / 测试：81 项 Node、12 项 Python 通过；25 套浏览器 E2E 全部通过（browser、v3、v31–v52、collab）。v52 覆盖：新安装直接进首页和实验室开关、多张照片快速成页（不裁切、无编辑器、四个按钮）、换一种、写一句、Story 1080×1920、完成保存、测试记录内容和导出、排版工具里的自动排。环境是 Linux 容器 + Chromium；**系统分享面板未在 iOS 真机 / WKWebView 验证**（测试里走的是下载回退），Swift 未编译。
+- 已知问题：
+  - 裁切焦点还是居中（smart 不裁切所以影响小，但手帐风和单张整页仍会裁）；纸张颜色还没有跟随照片。
+  - 用户自己浏览器里的在线链接：实验室默认收起，需要到设置里打开才能看到社区等模块。
+  - 老的「当日主页」编辑仍有纸下输入框。
+- 下一步：F5 数据可靠性；F6 原生最小闭环（需要 Mac）；首次打开引导页；每周 / 每月回顾。
+
 ### 2026-11-09 — 产品战略重新定位与开发优先级建议（仅文档，待确认）
 
 - 需求：以产品负责人 / UX / 战略顾问身份，批判性地完成任务 A–F（定位、风险、优先级、用户旅程、30 天验证计划、下一阶段开发建议），明确区分事实、假设和待验证项；不讨论商业化；本次不做大规模代码重构。

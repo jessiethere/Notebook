@@ -14,6 +14,10 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
   const passed = [];
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York" });
+    // The sign-in page and tour are Labs modules (hidden on a new install).
+    await context.addInitScript(() => {
+      if (localStorage.getItem("little-days.labs") === null) localStorage.setItem("little-days.labs", "1");
+    });
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));

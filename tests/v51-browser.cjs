@@ -45,7 +45,9 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     assert.equal(await page.locator('[data-action="quick-continue"]').count(), 0);
     assert.equal(await page.locator('#choose-dialog [data-action="quick-photo"]').count(), 0, "photo choices only for photo + a line");
     await page.locator('[data-action="quick-way"][data-way="photo"]').tap();
-    assert.deepEqual(await page.$$eval('#choose-dialog [data-action="quick-photo"]', (els) => els.map((el) => el.dataset.photo)), ["today", "pick", "mine"]);
+    assert.deepEqual(await page.$$eval('#choose-dialog [data-action="quick-photo"]', (els) => els.map((el) => el.dataset.photo)), ["mine", "today", "pick"]);
+    assert.match(await page.locator('[data-action="quick-start"]').innerText(), /选照片/, "my own photos first");
+    await page.locator('[data-action="quick-photo"][data-photo="today"]').tap();
     assert.match(await page.locator('[data-action="quick-start"]').innerText(), /写一句话/);
     if (shots) await page.screenshot({ path: `${shots}/v51-sheet.png` });
     passed.push("＋ asks how to keep today: photo + a line / just write / draw, and which journal");
@@ -85,11 +87,13 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="quick-start"]').tap();
     await (await chooser).setFiles({ name: "mine.png", mimeType: "image/png", buffer: pixel });
-    await page.waitForFunction(() => /blob:/.test(document.querySelector("#journal-canvas.line-page")?.getAttribute("style") || ""));
+    await page.waitForSelector(".quick-result-bar #journal-canvas, .quick-result-bar");
+    await page.waitForSelector("#journal-canvas.smart-page .photo-layer img[src^='blob:']");
     await page.waitForTimeout(1300);
     d = await draft();
-    assert.match(d.moments.at(-1).backdrop, /^media:[0-9a-f-]{36}$/);
-    passed.push("photo + a line with my own photo (kept on this device)");
+    assert.equal(d.moments.at(-1).layoutTemplate, "smart");
+    assert.match(d.moments.at(-1).layers[0].mediaRef, /^media:[0-9a-f-]{36}$/);
+    passed.push("photo + a line with my own photo (kept on this device, laid out in its own shape)");
 
     // 4. Just write: a note page, typed on the paper.
     await menu(page, "studio");

@@ -4404,11 +4404,11 @@
     "en": "None"
   },
   "quick.today": {
-    "zh": "今日照片",
-    "en": "Today's"
+    "zh": "今日推荐",
+    "en": "Pick of the day"
   },
   "quick.pick": {
-    "zh": "照片库",
+    "zh": "图库",
     "en": "Library"
   },
   "quick.start": {
@@ -4444,8 +4444,8 @@
     "en": "Finger or Apple Pencil"
   },
   "quick.mine": {
-    "zh": "我的照片",
-    "en": "My photo"
+    "zh": "我的相册",
+    "en": "My photos"
   },
   "quick.start.photo": {
     "zh": "写一句话",
@@ -4694,5 +4694,105 @@
   "pages.manageLong": {
     "zh": "整理顺序 / 删除",
     "en": "Reorder / delete"
+  },
+  "quick.start.pick": {
+    "zh": "选照片（可多选）",
+    "en": "Choose photos"
+  },
+  "layout.smart": {
+    "zh": "按照片形状自动排",
+    "en": "Auto · fits each photo"
+  },
+  "layout.smartHint": {
+    "zh": "横的竖的都不裁掉，可以换三种样子",
+    "en": "Keeps every photo's shape; three looks to shuffle"
+  },
+  "result.title": {
+    "zh": "这一页好了",
+    "en": "Your page is ready"
+  },
+  "result.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "result.inBook": {
+    "zh": "放进《{name}》",
+    "en": "Goes into “{name}”"
+  },
+  "result.shuffle": {
+    "zh": "换一种",
+    "en": "Shuffle"
+  },
+  "result.addLine": {
+    "zh": "写一句话",
+    "en": "Add a line"
+  },
+  "result.editLine": {
+    "zh": "改这句话",
+    "en": "Edit the line"
+  },
+  "result.edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "result.help": {
+    "zh": "不喜欢这个排法就点「换一种」；想自己摆放、加贴纸就点「编辑」。",
+    "en": "Not quite right? Shuffle. Want to arrange it yourself or add stickers? Tap Edit."
+  },
+  "result.saved": {
+    "zh": "已放进《{name}》",
+    "en": "Saved in “{name}”"
+  },
+  "testlog.title": {
+    "zh": "测试记录",
+    "en": "Test log"
+  },
+  "testlog.note": {
+    "zh": "只在这台设备上记录用了哪些功能、用了多久，不含文字、照片和名字。参加测试时可以导出发给我们。",
+    "en": "Kept only on this device: which features you used and how long they took — no words, photos or names. If you're testing, you can export it and send it to us."
+  },
+  "testlog.export": {
+    "zh": "导出测试记录",
+    "en": "Export test log"
+  },
+  "testlog.saved": {
+    "zh": "已导出 {count} 条记录",
+    "en": "Exported {count} events"
+  },
+  "labs.title": {
+    "zh": "实验室",
+    "en": "Labs"
+  },
+  "labs.note": {
+    "zh": "正在测试核心体验时，这些功能先收起来：社区和私信、我的主页与装扮、等级、共同的书、颜色主题、登录页。打开后会重新出现；数据一直保留在这台设备上。",
+    "en": "While we test the core, these are tucked away: community and messages, my profile and decorating, levels, shared books, colour themes and the sign-in page. Turn them back on here; their data stays on this device."
+  },
+  "labs.turnOn": {
+    "zh": "打开实验室功能",
+    "en": "Turn Labs on"
+  },
+  "labs.turnOff": {
+    "zh": "收起实验室功能",
+    "en": "Turn Labs off"
+  },
+  "labs.on": {
+    "zh": "实验室功能已打开",
+    "en": "Labs on"
+  },
+  "labs.off": {
+    "zh": "实验室功能已收起",
+    "en": "Labs off"
+  },
+  "share.story": {
+    "zh": "分享",
+    "en": "Share"
+  },
+  "share.done": {
+    "zh": "已经分享",
+    "en": "Shared"
+  },
+  "share.saved": {
+    "zh": "已保存一张 Story 尺寸（9:16）的图片",
+    "en": "Saved a Story-size (9:16) picture"
   }
 }

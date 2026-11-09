@@ -144,6 +144,8 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // V5.2: a hand drawing (kind == "photo", a transparent PNG trimmed to the
     // ink); it keeps its place instead of joining photo layouts.
     public var drawing: Bool?
+    // V5.3: the photo's own shape (width / height), for the smart layout.
+    public var aspect: Double?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -202,6 +204,9 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var collapsed: Bool?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
+    // three looks (clean / scrapbook / hero) is shown.
+    public var layoutVariant: Int?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
     public var visibility: String?
@@ -230,6 +235,9 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var moments: [JournalMoment]?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
+    // three looks (clean / scrapbook / hero) is shown.
+    public var layoutVariant: Int?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
 

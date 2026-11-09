@@ -385,6 +385,23 @@ async function renderJournalCanvas(editor, options = {}) {
     ctx.fillText(layer.text, 0, 0);
     ctx.restore();
   }
+  if (!dayPage && editor.layoutTemplate === "smart" && editor.title) {
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.shadowColor = "rgba(40,30,60,.12)";
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(65, 1150, 950, 150, 38);
+    else ctx.rect(65, 1150, 950, 150);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#2F2A26";
+    ctx.font = `500 52px ${font}`;
+    wrapText(ctx, editor.title, 540, 1196, 860, 64, 1);
+    ctx.restore();
+  }
   return canvas;
 }
 const fileName = (editor, options, ext) =>
@@ -394,6 +411,53 @@ function download(href, name) {
   link.download = name;
   link.href = href;
   link.click();
+}
+// A 9:16 picture for Stories: the page centred on paper, with a small
+// "made with Little Days" line at the bottom.
+export const STORY = { width: 1080, height: 1920 };
+export async function renderStoryCanvas(editor, options = {}) {
+  const page = await renderJournalCanvas(editor, options);
+  const canvas = document.createElement("canvas");
+  canvas.width = STORY.width;
+  canvas.height = STORY.height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#F4EFE6";
+  ctx.fillRect(0, 0, STORY.width, STORY.height);
+  const w = 960,
+    h = (page.height / page.width) * w,
+    x = (STORY.width - w) / 2,
+    y = (STORY.height - h) / 2 - 40;
+  ctx.save();
+  ctx.shadowColor = "rgba(60,45,30,.22)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 12;
+  ctx.fillStyle = "#FFFDF8";
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+  ctx.drawImage(page, x, y, w, h);
+  ctx.fillStyle = "#9A8F80";
+  ctx.font = '500 30px "PingFang SC", -apple-system, "Helvetica Neue", sans-serif';
+  ctx.textAlign = "center";
+  ctx.fillText("made with Little Days", STORY.width / 2, STORY.height - 110);
+  return canvas;
+}
+// Opens the share sheet with the Story picture where the browser / iOS shell
+// can share files; otherwise saves it. Resolves "shared" | "saved" | "cancelled".
+export async function shareStory(editor, options = {}) {
+  const canvas = await renderStoryCanvas(editor, options);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  const name = fileName(editor, { ...options, suffix: "story" }, "png");
+  const file = blob && typeof File === "function" ? new File([blob], name, { type: "image/png" }) : null;
+  if (file && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: "Little Days" });
+      return "shared";
+    } catch (error) {
+      if (error?.name === "AbortError") return "cancelled";
+    }
+  }
+  download(canvas.toDataURL("image/png"), name);
+  return "saved";
 }
 export async function exportJournalImage(editor, options = {}) {
   const canvas = await renderJournalCanvas(editor, options);

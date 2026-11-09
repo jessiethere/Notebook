@@ -24,7 +24,7 @@ import {
   settingsHTML,
   fieldLabel,
 } from "./js/personal-ui.mjs";
-import { loadImage, exportJournalImage, exportJournalVideo } from "./js/export.mjs";
+import { loadImage, exportJournalImage, exportJournalVideo, shareStory } from "./js/export.mjs";
 import {
   backdropOf,
   canvasHTML as sharedCanvasHTML,
@@ -39,6 +39,7 @@ import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import { communityHTML, profileHTML, inboxHTML, bellHTML } from "./js/community-view.mjs";
 import { experience } from "./js/levels.mjs";
 import { openDrawBoard } from "./js/draw.mjs";
+import { logEvent, readEvents, summarize } from "./js/events.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
@@ -280,8 +281,25 @@ function changeEditor(change, redraw = true) {
   if (redraw) render();
   else updateCanvas();
 }
+// Labs: modules paused while we test the core (community, messages, levels,
+// decorating, shared books, colour themes, sign-in page). The code and data
+// stay; they are hidden unless switched on in Settings (this device only).
+const LABS_KEY = "little-days.labs";
+function labsOn() {
+  try {
+    return localStorage.getItem(LABS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+const LAB_PAGES = ["community", "inbox"];
+function bell() {
+  return labsOn() ? bellHTML(social(), ctx()) : "";
+}
 function navigate(target) {
   flushDraft();
+  quickResult = null;
+  if (LAB_PAGES.includes(target) && !labsOn()) target = "home";
   if (target === "studio") {
     // The ＋ in the menu asks how to record: photo + one line, just write, or
     // draw — and which journal it goes into.
@@ -343,6 +361,7 @@ function navigation() {
   // Sub-pages highlight the tab they belong to.
   const current = { journey: "growth", day: "calendar", inbox: "home" }[page] || page;
   $("#navigation").innerHTML = features.tabs
+    .filter((tab) => labsOn() || !LAB_PAGES.includes(tab.id))
     .map(
       (tab) =>
         `<button class="nav-item ${tab.id === current ? "active" : ""} ${tab.id}" data-action="nav" data-page="${tab.id}" aria-label="${t("nav." + tab.id)}" ${tab.id === current ? 'aria-current="page"' : ""}>${icon(tab.symbol)}<span>${t("nav." + tab.id)}</span></button>`,
@@ -428,13 +447,13 @@ function home() {
   // straight into it (a fitness, plants or family journal each keeps its own).
   const ourBooks = state().books.filter(isOurBook);
   const shown = homeBooks === "our" ? ourBooks : state().books;
-  const books = `<section class="home-section home-books"><div class="section-heading"><div><h2>${t("home.books")}</h2><small>${t("home.booksHint")}</small></div><button data-action="nav" data-page="books">${t("home.shelf")} ›</button></div><div class="home-book-tabs" role="tablist"><button role="tab" data-action="home-books" data-view="mine" aria-selected="${homeBooks !== "our"}">${t("books.mine")}</button><button role="tab" data-action="home-books" data-view="our" aria-selected="${homeBooks === "our"}">${t("books.ours")}${ourBooks.length ? ` · ${ourBooks.length}` : ""}</button></div>${homeBooks === "our" && !ourBooks.length ? `<p class="save-help our-empty">${t("books.oursEmpty")}</p>` : ""}<div class="home-book-row">${shown
+  const books = `<section class="home-section home-books"><div class="section-heading"><div><h2>${t("home.books")}</h2><small>${t("home.booksHint")}</small></div><button data-action="nav" data-page="books">${t("home.shelf")} ›</button></div>${labsOn() ? `<div class="home-book-tabs" role="tablist"><button role="tab" data-action="home-books" data-view="mine" aria-selected="${homeBooks !== "our"}">${t("books.mine")}</button><button role="tab" data-action="home-books" data-view="our" aria-selected="${homeBooks === "our"}">${t("books.ours")}${ourBooks.length ? ` · ${ourBooks.length}` : ""}</button></div>` : ""}${homeBooks === "our" && !ourBooks.length ? `<p class="save-help our-empty">${t("books.oursEmpty")}</p>` : ""}<div class="home-book-row">${shown
     .map((book) => {
       const count = bookEntryCount(state(), book.id);
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
  <section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-open" data-photo=""><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
@@ -656,18 +675,18 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${collabSectionHTML(social(), book, ctx(), collabOpen)}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
     }`;
   }
   if (booksView === "profile")
-    return `<header class="page-top"><div><button class="back-button" data-action="books-view" data-view="shelf">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bellHTML(social(), ctx())}</header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
+    return `<header class="page-top"><div><button class="back-button" data-action="books-view" data-view="shelf">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bell()}</header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
   const ours = booksView === "our";
   const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${!ours}">${t("books.mine")}</button><button role="tab" data-action="books-view" data-view="our" aria-selected="${ours}">${t("books.ours")}</button></div>`;
   const list = ours ? state().books.filter(isOurBook) : state().books;
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions"><button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${switcher}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}<p class="home-quote">A home for every little story.</p>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
@@ -940,7 +959,8 @@ function templatePickerHTML(page) {
         `<button data-action="apply-layout" data-count="${count}" data-template="${template}" class="layout-option ${page.layoutTemplate === template && !page.layoutEdited ? "selected" : ""}"><span class="layout-icon layout-${template}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${t("layout." + template)}</button>`,
     )
     .join("");
-  return `<span class="small-label">${t("layout.step1")}</span><div class="count-options">${counts}</div><span class="small-label">${t("layout.step2")}</span><div class="layout-options">${options}</div><p class="save-help">${t(count === 0 ? "layout.textHelp" : "layout.slotHelp")}</p>`;
+  const smart = filled ? `<button class="smart-option ${page.layoutTemplate === "smart" && !page.layoutEdited ? "selected" : ""}" data-action="apply-smart"><b>${t("layout.smart")}</b><small>${t("layout.smartHint")}</small></button>` : "";
+  return `${smart}<span class="small-label">${t("layout.step1")}</span><div class="count-options">${counts}</div><span class="small-label">${t("layout.step2")}</span><div class="layout-options">${options}</div><p class="save-help">${t(count === 0 ? "layout.textHelp" : "layout.slotHelp")}</p>`;
 }
 // Writing comes first: the words of this page are always open under the
 // preview; styling lives in the menu below ("装饰这一页").
@@ -949,7 +969,7 @@ function templatePickerHTML(page) {
 // paper, tap and type) and 自由排版 (photos, text boxes and stickers placed
 // freely; the boxes below the paper are its name and a caption).
 function pageModeOf(page = activePage()) {
-  return page.layoutTemplate === "text" ? "note" : page.layoutTemplate === "line" ? "line" : "layout";
+  return page.layoutTemplate === "text" ? "note" : ["line", "smart"].includes(page.layoutTemplate) ? "line" : "layout";
 }
 function pageModeHTML() {
   if (isDayPage()) return "";
@@ -970,7 +990,14 @@ function pageBarHTML() {
 // A note page becomes a free layout: what was written on the paper stays on
 // it as text boxes (the title also stays the page's name in the contents).
 function noteToLayout(page) {
+  const fromSmart = page.layoutTemplate === "smart";
   page.layoutTemplate = null;
+  if (fromSmart) {
+    const line = (page.title || "").trim();
+    if (line) page.layers.push({ id: id(), kind: "text", text: line.slice(0, 500), x: 50, y: 90, w: 84, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize: 18, color: "#2F2A26", weight: 500, spacing: 0, align: "center" });
+    page.layoutEdited = true;
+    return;
+  }
   const title = (page.title || "").trim();
   const words = (page.body || "").trim();
   const box = (text, y, fontSize, color) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize, color, weight: 400, spacing: 0, align: "left" });
@@ -984,7 +1011,7 @@ function setPageMode(mode, { quiet = false } = {}) {
   const now = pageModeOf();
   if (now === mode) {
     if (mode === "note") focusInline(activePage().title ? "body" : "title");
-    if (mode === "line") activePage().backdrop ? focusInline("title") : openPhotoChooser("line");
+    if (mode === "line") activePage().backdrop || activePage().layoutTemplate === "smart" ? focusInline("title") : openPhotoChooser("line");
     return;
   }
   changeTarget((p) => {
@@ -1119,7 +1146,7 @@ function writeCardHTML() {
   const head = `<div class="write-head"><b>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}</b></div>`;
   const tags = `<input class="write-tags" data-moment-field="tags" maxlength="200" placeholder="${t("moment.tagsPlaceholder")}" value="${esc(page.tags.join(", "))}" aria-label="${t("moment.tags")}">`;
   // A note or a photo + one line page: the words are on the paper itself.
-  if (page.layoutTemplate === "text" || page.layoutTemplate === "line") return "";
+  if (["text", "line", "smart"].includes(page.layoutTemplate)) return "";
   // A free layout: the page is the picture; these words go under it.
   return `<section class="write-card moment" aria-label="${t("write.title")}">${head}<label class="write-label">${t("write.pageName")}</label><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><label class="write-label">${t("write.caption")}</label><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><p class="write-tip">${icon("text")} ${t("write.layoutTip")}</p>${tags}</section>`;
 }
@@ -1378,13 +1405,18 @@ function lastQuickWay() {
     return "";
   }
 }
+let quickOpenedAt = 0,
+  quickTaps = 0;
 function openQuickRecord({ way = "", photo = "", book = "", date = "" } = {}) {
+  quickOpenedAt = Date.now();
+  quickTaps = 0;
+  logEvent("quick_open", { way });
   if ($("#choose-dialog")?.open) $("#choose-dialog").close();
   quick = {
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : dateKey(),
     book: state().books.some((b) => b.id === book) ? book : lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily",
     way: QUICK_WAYS.includes(way) ? way : lastQuickWay() || "write",
-    photo: photo || (todayScene() ? "today" : "pick"),
+    photo: photo || "mine",
   };
   renderQuickRecord();
   $("#choose-dialog").showModal();
@@ -1406,11 +1438,11 @@ function renderQuickRecord() {
     `<button data-action="quick-photo" data-photo="${value}" class="${quick.photo === value ? "selected" : ""}" aria-pressed="${quick.photo === value}" aria-label="${esc(label)}">${inner}</button>`;
   const photos =
     quick.way === "photo"
-      ? `<h3>${t("quick.photo")}</h3><div class="quick-photos">${scene ? opt("today", `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${t("quick.today")}</span>`, t("quick.today")) : ""}${opt("pick", `<span class="quick-none">${icon("photo")}</span><span>${t("quick.pick")}</span>`, t("quick.pick"))}${opt("mine", `<span class="quick-none">${icon("plus")}</span><span>${t("quick.mine")}</span>`, t("quick.mine"))}</div>`
+      ? `<h3>${t("quick.photo")}</h3><div class="quick-photos">${opt("mine", `<span class="quick-none">${icon("photo")}</span><span>${t("quick.mine")}</span>`, t("quick.mine"))}${scene ? opt("today", `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${t("quick.today")}</span>`, t("quick.today")) : ""}${opt("pick", `<span class="quick-none">${icon("book")}</span><span>${t("quick.pick")}</span>`, t("quick.pick"))}</div>`
       : "";
   $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
     .books.map((book) => `<button data-action="quick-book" data-book="${esc(book.id)}" class="${quick.book === book.id ? "selected" : ""}" aria-pressed="${quick.book === book.id}">${coverHTML(book, ctx())}<span>${esc(book.title)}</span></button>`)
-    .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t("quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+    .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t(quick.way === "photo" && quick.photo === "mine" ? "quick.start.pick" : "quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
 }
 // Every record is a new page of today, in the chosen journal.
 function startPage(book, date = dateKey()) {
@@ -1439,13 +1471,70 @@ async function startQuickRecord() {
       if (photo === "today" && scene) m.backdrop = `photo:${scene.id}`;
     });
     if (photo === "today" && scene) focusInline("title");
-    else if (photo === "mine") chooseAttachment({ kind: "backdrop" });
-    else openPhotoChooser("line");
+    else if (photo === "mine") {
+      // My own photos (several): laid out in their own shapes, see quickPlaced.
+      changeTarget((m) => {
+        m.layoutTemplate = "smart";
+        delete m.backdrop;
+      }, false);
+      chooseAttachment({ kind: "quick" });
+    } else openPhotoChooser("line");
   } else if (way === "draw") {
     render();
     await drawOnPage();
   } else setPageMode("note", { quiet: true });
   toast(t("book.writingIn", { name }));
+}
+// ---------- Quick Create result: shuffle / a line / edit / done ----------
+// After picking my photos the page is already laid out; this view keeps only
+// four choices so finishing a page takes seconds. "编辑" opens every tool.
+let quickResult = null; // the Moment id being finished, while in this view
+let quickSession = null; // { started, taps, shuffles } for the test log
+function quickResultActive() {
+  return Boolean(quickResult && quickResult === activeMomentId && page === "studio" && findMoment(editor, quickResult));
+}
+function quickPlaced(saved) {
+  changeTarget((p) => {
+    if (p === editor) return;
+    p.layoutTemplate = "smart";
+    p.layoutVariant = 0;
+    delete p.backdrop;
+    for (const item of saved)
+      p.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
+    applyLayout(p, "smart");
+  });
+  quickResult = activeMomentId;
+  selectedLayer = null;
+  studioTool = null;
+  flushDraft();
+  render();
+  logEvent("quick_placed", { photos: saved.length });
+}
+function quickResultHTML() {
+  const pageNow = activePage();
+  const variant = (Number(pageNow.layoutVariant) || 0) % 3;
+  const book = state().books.find((b) => b.id === (pageNow.bookId || editor.bookId));
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><span class="quick-result-title">${t("result.title")}</span><button class="primary" data-action="quick-done">${t("result.done")} ${icon("check")}</button></header><p class="quick-result-book">${t("result.inBook", { name: book?.title || "" })}</p><div class="studio-stage large quick-stage"><div class="canvas-wrap moment-wrap" id="canvas-wrap">${canvasHTML()}</div></div><div class="quick-result-bar"><button data-action="smart-shuffle"><span class="shuffle-glyph" aria-hidden="true">↻</span><b>${t("result.shuffle")}</b><small>${variant + 1} / 3</small></button><button data-action="smart-caption"><span aria-hidden="true">Aa</span><b>${t(pageNow.title ? "result.editLine" : "result.addLine")}</b></button><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="quick-edit"><span aria-hidden="true">✎</span><b>${t("result.edit")}</b></button></div><p class="save-help quick-result-help">${t("result.help")}</p>`;
+}
+function finishQuickPage() {
+  const pageNow = activePage();
+  if (quickSession)
+    logEvent("page_done", {
+      ms: Date.now() - quickSession.started,
+      taps: quickSession.taps,
+      shuffles: quickSession.shuffles,
+      photos: pageNow.layers.filter(framedPhoto).length,
+      variant: Number(pageNow.layoutVariant) || 0,
+      line: Boolean(pageNow.title),
+    });
+  quickSession = null;
+  quickResult = null;
+  clearTimeout(draftTimer);
+  store.update((s) => saveEntry(s, editor));
+  draftDirty = false;
+  const book = state().books.find((b) => b.id === (pageNow.bookId || editor.bookId));
+  navigate("home");
+  toast(t("result.saved", { name: book?.title || "" }));
 }
 async function quickMore(kind) {
   const book = quick?.book || state().books[0]?.id || "daily";
@@ -1602,7 +1691,7 @@ function useScene(id, fromHome = false) {
     changeEditor((entry) => {
       entry.photo = reference;
     });
-  } else addPhotoLayers([{ reference, name: sceneName(scene) }]);
+  } else addPhotoLayers([{ reference, name: sceneName(scene), aspect: scene.w && scene.h ? scene.w / scene.h : undefined }]);
   photoTarget = "layers";
   flushDraft();
   toast(t("scene.added", { name: sceneName(scene) }));
@@ -1618,8 +1707,9 @@ function addChoicesHTML(className = "") {
 }
 function studioPage() {
   const dayPage = isDayPage();
+  if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1714,7 +1804,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: labsOn() ? themePickerHTML() : "", labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
   }[page]();
   navigation();
@@ -1758,6 +1848,10 @@ function applyTheme(id) {
   else document.documentElement.dataset.theme = theme.id;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && theme.swatch?.[0]) meta.content = theme.swatch[0];
+}
+function labsCardHTML() {
+  const on = labsOn();
+  return `<section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
 }
 function themePickerHTML() {
   const current = loadTheme();
@@ -2203,6 +2297,60 @@ async function action(target) {
   }
   if (actionName === "draw-edit" && selectedLayerOf()?.drawing) await drawOnPage(selectedLayer);
   if (actionName === "line-photo") openPhotoChooser("line");
+  if (actionName === "smart-shuffle") {
+    changeTarget((p) => {
+      p.layoutVariant = ((Number(p.layoutVariant) || 0) + 1) % 3;
+      applyLayout(p, "smart");
+    });
+    if (quickSession) quickSession.shuffles++;
+    logEvent("layout_shuffle", { variant: activePage().layoutVariant });
+  }
+  if (actionName === "apply-smart") {
+    const pageNow = activePage();
+    if (pageNow.layoutEdited && !(await askConfirm(t("layout.confirm")))) return;
+    changeTarget((p) => {
+      if (p === editor) freeMainPhoto(p);
+      applyLayout(p, "smart");
+    });
+    toast(t("layout.applied", { name: t("layout.smart") }));
+  }
+  if (actionName === "smart-caption") focusInline("title");
+  if (actionName === "quick-edit") {
+    quickResult = null;
+    logEvent("quick_edit");
+    render();
+  }
+  if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "share-story") {
+    // Stories size (9:16); the share sheet where supported, else a download.
+    const result = await shareStory(activePage(), exportOptions());
+    logEvent(result === "shared" ? "share" : "export", { size: "story", kind: result });
+    if (result !== "cancelled") toast(t(result === "shared" ? "share.done" : "share.saved"));
+  }
+  if (actionName === "labs-toggle") {
+    try {
+      if (labsOn()) localStorage.removeItem(LABS_KEY);
+      else localStorage.setItem(LABS_KEY, "1");
+    } catch {}
+    if (!labsOn()) {
+      homeBooks = "mine";
+      if (booksView !== "shelf") booksView = "shelf";
+    }
+    render();
+    toast(t(labsOn() ? "labs.on" : "labs.off"));
+  }
+  if (actionName === "export-events") {
+    // The local test log: what happened and when, no content. Shared only if
+    // the tester chooses to send the file.
+    const events = readEvents();
+    const file = new Blob([JSON.stringify({ app: "Little Days", exported: new Date().toISOString(), summary: summarize(events), events }, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = `little-days-test-log-${dateKey()}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+    toast(t("testlog.saved", { count: events.length }));
+  }
   if (actionName === "quick-book" && quick) {
     quick.book = target.dataset.book;
     renderQuickRecord();
@@ -2211,7 +2359,11 @@ async function action(target) {
     quick.photo = target.dataset.photo || "";
     renderQuickRecord();
   }
-  if (actionName === "quick-start" && quick) await startQuickRecord();
+  if (actionName === "quick-start" && quick) {
+    quickSession = { started: quickOpenedAt || Date.now(), taps: quickTaps, shuffles: 0 };
+    logEvent("quick_start", { way: quick.way, photo: quick.way === "photo" ? quick.photo : "" });
+    await startQuickRecord();
+  }
   if (actionName === "home-books") {
     homeBooks = target.dataset.view === "our" ? "our" : "mine";
     render();
@@ -2383,6 +2535,7 @@ async function action(target) {
     navigate("home");
   }
   if (actionName === "export") {
+    logEvent("export", { size: "feed" });
     await exportJournalImage(activePage(), exportOptions());
     toast(t("export.photoDone"));
   }
@@ -2390,6 +2543,11 @@ async function action(target) {
 
 document.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
+  // Taps from opening the record sheet to finishing a page (test log only).
+  if (target) {
+    quickTaps++;
+    if (quickSession) quickSession.taps++;
+  }
   if (target)
     action(target).catch((error) => {
       console.error(error);
@@ -2551,6 +2709,7 @@ $("#dialog-form").addEventListener("submit", (event) => {
       const book = readBookForm();
       validateFieldDefinitions(book.fields);
       book.id ||= id();
+      if (dialogKind === "book") logEvent("book_create");
       store.update((next) => saveBook(next, book));
       selectedBook = book.id;
       page = "books";
@@ -2835,7 +2994,10 @@ function commitGesture() {
     history.push(before);
     if (history.length > 30) history.shift();
     future = [];
-    if (layer.kind === "photo") activePage().layoutEdited = true;
+    if (layer.kind === "photo") {
+      if (!activePage().layoutEdited) logEvent("layout_manual_edit", { kind: activePage().layoutTemplate || "free" });
+      activePage().layoutEdited = true;
+    }
     scheduleDraft();
   }
   render();
@@ -3076,7 +3238,7 @@ function refreshBookPreview() {
 }
 function chooseAttachment(target) {
   attachmentTarget = target;
-  $("#attachment-image-input").multiple = target.kind === "collage";
+  $("#attachment-image-input").multiple = ["collage", "quick"].includes(target.kind);
   $("#attachment-image-input").click();
 }
 function afterHistoryStep() {
@@ -4245,6 +4407,8 @@ function handleV3Change(event) {
   }
   return false;
 }
+// The shape (width / height) of each picture we keep, for the smart layout.
+const imageAspects = new WeakMap();
 async function imageBlob(file) {
   if (!file.type.startsWith("image/") || file.size > 20 * 1024 * 1024)
     throw new Error(t("media.imageLimit"));
@@ -4262,8 +4426,10 @@ async function imageBlob(file) {
   canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) =>
-        blob ? resolve(blob) : reject(new Error("Image encoding failed")),
+      (blob) => {
+        if (blob) imageAspects.set(blob, canvas.width / canvas.height);
+        return blob ? resolve(blob) : reject(new Error("Image encoding failed"));
+      },
       "image/jpeg",
       0.84,
     ),
@@ -4332,7 +4498,7 @@ async function handleImageUpload(event, target) {
     return;
   }
   busyMedia = true;
-  const multiple = ["photos", "collage"].includes(target?.kind);
+  const multiple = ["photos", "collage", "quick"].includes(target?.kind);
   let failed = 0;
   try {
     let saved = [];
@@ -4340,8 +4506,9 @@ async function handleImageUpload(event, target) {
     for (const file of files.slice(0, multiple ? MAX_PHOTOS_PER_PICK : 1)) {
       try {
         const blob = await imageBlob(file),
-          mediaId = await media.put(blob, { kind: "photo", name: file.name });
-        saved.push({ reference: `media:${mediaId}`, name: file.name });
+          aspect = imageAspects.get(blob),
+          mediaId = await media.put(blob, { kind: "photo", name: file.name, aspect });
+        saved.push({ reference: `media:${mediaId}`, name: file.name, aspect });
       } catch (error) {
         if (!multiple) throw error;
         failed++;
@@ -4351,7 +4518,10 @@ async function handleImageUpload(event, target) {
     // New photos for the page open in the photo editor first (skip = as is).
     if (["photos", "replace"].includes(target?.kind)) saved = (await editPhotos(saved, "add")) || saved;
     const [{ reference }] = saved;
-    if (target?.kind === "backdrop") {
+    if (target?.kind === "quick") {
+      // Quick Create: my photos, laid out in their own shapes; no editor.
+      quickPlaced(saved);
+    } else if (target?.kind === "backdrop") {
       // My own photo as the whole page (photo + one line).
       changeTarget((p) => {
         if (p === editor) return;
@@ -4411,7 +4581,7 @@ async function handleImageUpload(event, target) {
       });
       flushDraft();
     }
-    toast(
+    if (target?.kind !== "quick" || failed) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1
@@ -4448,9 +4618,10 @@ function addPhotoLayers(saved) {
     }
     saved = remaining;
     const existing = page.layers.filter(framedPhoto).length;
-    const added = saved.map(({ reference, name, sourceRef, edit }, index) =>
+    const added = saved.map(({ reference, name, sourceRef, edit, aspect }, index) =>
       photoLayer(reference, name, {
         ...(sourceRef ? { sourceRef, edit } : {}),
+        ...(aspect ? { aspect: Math.round(aspect * 1000) / 1000 } : {}),
         x: Math.min(85, 30 + ((existing + index) % 6) * 8),
         y: Math.min(80, 22 + ((existing + index) % 6) * 6),
         rotation: [-4, 3, -2, 5, -3, 2][(existing + index) % 6],
@@ -4459,7 +4630,8 @@ function addPhotoLayers(saved) {
     page.layers.push(...added);
     if (!page.layoutEdited) {
       const total = existing + added.length;
-      applyLayout(page, suggestLayout(total), photoRegion());
+      if (page.layoutTemplate === "smart") applyLayout(page, "smart");
+      else applyLayout(page, suggestLayout(total), photoRegion());
     }
     selectedLayer = added.at(-1).id;
   });
@@ -4803,6 +4975,11 @@ async function start() {
   applyTheme(loadTheme());
   store = new Store(localStorage, responses[2]);
   account = Account.loadAccount(localStorage);
+  // Without Labs there is no sign-in page or tour: open straight onto Home.
+  if (!labsOn() && !Account.isSignedIn(account)) {
+    Account.signIn(localStorage, {});
+    account = Account.finishTour(localStorage);
+  }
   let warning = "";
   try {
     await media.open();
