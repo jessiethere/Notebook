@@ -151,6 +151,15 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // V6.4: a sticker the story kit placed in an empty corner (replaced when
     // the page's look or kit changes).
     public var deco: Bool?
+    // V6.5 (Quick Create V2): made by the layout engine (replaced on re-layout);
+    // a text bound to a Moment's own words ("title" / "time"), `of` the Moment
+    // id on the day spread, shown as an excerpt / after the time / on a chip.
+    public var gen: Bool?
+    public var bind: String?
+    public var of: String?
+    public var excerpt: Int?
+    public var prefix: String?
+    public var chip: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -215,6 +224,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
     // three looks (clean / scrapbook / hero) is shown.
     public var layoutVariant: Int?
+    /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
+    public var layoutStyle: String?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
     /// V6.0: background music for this page, a library.json "music" id.
@@ -256,6 +267,8 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
     // three looks (clean / scrapbook / hero) is shown.
     public var layoutVariant: Int?
+    /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
+    public var layoutStyle: String?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
 

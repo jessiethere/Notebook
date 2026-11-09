@@ -77,13 +77,16 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     const picker = await chooser;
     assert.equal(picker.isMultiple(), true, "several photos at once");
     await picker.setFiles(pics);
-    await page.waitForSelector(".quick-result-bar");
+    // Quick Create V2 (V6.5): straight to a designed draft, words optional.
+    await page.waitForSelector(".story-styles");
     assert.equal(await page.locator("#photo-editor[open]").count(), 0, "no photo editor in the quick path");
-    assert.deepEqual(await page.$$eval(".quick-result-bar [data-action]", (els) => els.map((el) => el.dataset.action)), ["smart-shuffle", "smart-caption", "music-sheet", "share-story", "quick-edit"]);
-    assert.equal(await page.locator(".tool-dock-wrap, .chapter-chips, .page-mode").count(), 0, "only the five choices (music since V6.0)");
+    assert.deepEqual(await page.$$eval(".story-styles [data-action]", (els) => els.map((el) => el.dataset.style)), ["editorial", "cozy", "playful"]);
+    assert.deepEqual(await page.$$eval(".story-tools [data-action]", (els) => els.map((el) => el.dataset.action)), ["story-shuffle", "story-text", "story-group"]);
+    assert.deepEqual(await page.$$eval(".story-actions [data-action]", (els) => els.map((el) => el.dataset.action)), ["story-adjust", "story-save"]);
+    assert.equal(await page.locator(".tool-dock-wrap, .chapter-chips, .page-mode").count(), 0, "no editing tools in the way");
     await page.waitForTimeout(1300);
     let s = await story();
-    assert.equal(s.layoutTemplate, "smart");
+    assert.equal(s.layoutTemplate, "scrapbook");
     const photos = s.layers.filter((l) => l.kind === "photo");
     assert.equal(photos.length, 4);
     assert.ok(photos.every((l) => l.aspect > 0), "each photo remembers its shape");
@@ -91,23 +94,29 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     // Each frame has the photo's own shape (page is 4:5): nothing cropped.
     for (const l of photos) assert.ok(Math.abs(((l.w / l.h) * 0.8) / l.aspect - 1) < 0.03, `frame fits photo ${l.aspect}`);
     if (shots) await page.screenshot({ path: `${shots}/v52-result.png` });
-    passed.push("Quick Create v2: several of my photos → laid out in their own shapes, no editor in the way");
+    passed.push("Quick Create V2: several of my photos → a designed page right away, in their own shapes, no editor in the way");
 
-    // 3. Shuffle through three looks; add the line on the paper; done.
-    const look = async () => JSON.stringify((await story()).layers.map((l) => [l.x, l.y, l.w, l.frame]));
+    // 3. Re-layout, a line written in the preview, save into the book.
+    const look = async () => JSON.stringify((await story()).layers.filter((l) => l.kind === "photo").map((l) => [l.x, l.y, l.w]));
     const before = await look();
-    await page.locator('[data-action="smart-shuffle"]').tap();
+    await page.locator('[data-action="story-shuffle"]').tap();
     await page.waitForTimeout(1300);
     assert.equal((await story()).layoutVariant, 1);
     assert.notEqual(await look(), before);
-    assert.match(await page.locator('[data-action="smart-shuffle"]').innerText(), /2 \/ 3/);
-    await page.locator('[data-action="smart-caption"]').tap();
-    assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
-    await page.keyboard.type("和朋友喝咖啡的下午");
-    await page.evaluate(() => document.activeElement.blur());
-    // Share: a Story-size picture (no share sheet in this browser → saved).
+    await page.locator('.story-tools [data-action="story-text"]').tap();
+    await page.locator("[data-story-word]").fill("和朋友喝咖啡的下午");
+    await page.locator('[data-action="story-text-done"]').tap();
+    await page.waitForFunction(() => /和朋友喝咖啡的下午/.test(document.querySelector(".story-canvas").innerText));
+    await page.locator('[data-action="story-save"]').tap();
+    await page.waitForSelector(".flip-page:not(.is-cover)");
+    const saved = await page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d).moments.at(-1), today);
+    assert.equal(saved.title, "和朋友喝咖啡的下午");
+    assert.equal(saved.layoutTemplate, "scrapbook");
+    // Share: a Story-size picture from the page (no share sheet here → saved).
+    await page.locator(".flip-edit").tap();
+    await page.waitForSelector("#journal-canvas");
     const download = page.waitForEvent("download");
-    await page.locator('[data-action="share-story"]').tap();
+    await page.locator('.studio-footer [data-action="share-story"]').tap();
     const file = await download;
     assert.match(file.suggestedFilename(), /story\.png$/);
     const size = await page.evaluate(async (url) => {
@@ -117,20 +126,18 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
       return [img.naturalWidth, img.naturalHeight];
     }, `data:image/png;base64,${fs.readFileSync(await file.path()).toString("base64")}`);
     assert.deepEqual(size, [1080, 1920]);
-    await page.locator('[data-action="quick-done"]').tap();
-    await page.waitForSelector(".hero");
-    const saved = await page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d).moments.at(-1), today);
-    assert.equal(saved.title, "和朋友喝咖啡的下午");
-    assert.equal(saved.layoutTemplate, "smart");
-    passed.push("shuffle (three looks), a line typed on the page, Story-size share picture (1080×1920), done saves the day");
+    await page.locator('[data-action="studio-back"]').tap();
+    await page.waitForSelector(".flip-page");
+    passed.push("re-layout, a line written in the preview, saved into the book; Story-size share picture (1080×1920)");
 
     // 4. The test log: what happened and how long, no content.
     const events = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.events")));
     const names = events.map((e) => e.e);
-    for (const name of ["quick_open", "quick_start", "quick_placed", "layout_shuffle", "export", "page_done"]) assert.ok(names.includes(name), name);
+    for (const name of ["quick_open", "quick_start", "story_start", "story_made", "story_relayout", "story_words", "story_saved", "page_done"]) assert.ok(names.includes(name), name);
     const done = events.find((e) => e.e === "page_done");
     assert.ok(done.ms > 0 && done.taps >= 4 && done.photos === 4 && done.shuffles === 1 && done.line === true, JSON.stringify(done));
     assert.doesNotMatch(JSON.stringify(events), /咖啡|coffee|media:/);
+    await menu(page, "home");
     await page.locator('[data-action="nav"][data-page="settings"]').tap();
     const logFile = page.waitForEvent("download");
     await page.locator('[data-action="export-events"]').tap();

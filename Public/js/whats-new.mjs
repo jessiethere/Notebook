@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.5",
+    date: "2026-11-09",
+    zh: {
+      title: "Quick Create V2：选完照片就是一页好看的手账，三种风格",
+      items: [
+        "选完照片直接看到排好的初稿：几个 Moment 的一天会有一张「当天跨页」，再加每个 Moment 一页；不用先写字、不用先选模板。",
+        "三种真正不同的风格，一键切换：杂志（大主图、衬线字、留白）、手账（拍立得、胶带、手写字、牛皮纸）、拼贴（错落叠放、柔色背景、贴纸）。照片、文字和顺序都会保留。",
+        "想写的话，点页面或「写一句」就能给每个 Moment 写感想，页面会自动重新排好；不写也很好看。",
+        "「重新排版」换一种构图；「调整分组」可以挪照片；「自定义」进入自由编辑。你自己调整过的页，换风格或重新排版前会先问你。",
+        "照片按原比例放进相框，不会被裁掉；长句子会自动变小、换行，不会被截断。",
+      ],
+    },
+    en: {
+      title: "Quick Create V2: pick photos, get a beautiful page — in three styles",
+      items: [
+        "Right after picking photos you see a designed draft: a day spread for days with several Moments, plus one page per Moment. No words or template needed first.",
+        "Three truly different styles, one tap to switch: Editorial (a big hero photo, serif type, white space), Cozy (Polaroids, tape, handwriting, kraft paper) and Collage (layered pieces, soft colour, stickers). Photos, words and order are kept.",
+        "Want words? Tap the page or “Add words” to write a line for each Moment; the page re-arranges itself. It looks good without words too.",
+        "“Re-layout” tries another composition; “Regroup” moves photos between Moments; “Customize” opens free editing. Pages you adjusted yourself are never changed without asking.",
+        "Photos sit in frames of their own shape, never cropped; long lines shrink and wrap instead of being cut off.",
+      ],
+    },
+  },
+  {
     version: "6.4",
     date: "2026-11-09",
     zh: {

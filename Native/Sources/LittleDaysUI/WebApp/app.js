@@ -29,6 +29,7 @@ import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share
 import { photoTime } from "./js/exif.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
+import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -1528,8 +1529,14 @@ function inlineInput(target) {
   if (target.dataset.inlineLayer) {
     const layerId = target.dataset.inlineLayer;
     inlineChange(() => {
-      const layer = activePage().layers.find((l) => l.id === layerId);
-      if (layer) layer.text = text.slice(0, 500);
+      const page = activePage();
+      const layer = page.layers.find((l) => l.id === layerId);
+      if (!layer) return;
+      if (layer.bind) {
+        // Words bound to a Moment: edit the Moment itself (one source of truth).
+        const source = layer.of ? findMoment(editor, layer.of) : page;
+        if (source) source[layer.bind === "time" ? "time" : "title"] = text.slice(0, layer.bind === "time" ? 12 : 70);
+      } else layer.text = text.slice(0, 500);
     });
     const box = $('[data-layer-text="text"]');
     if (box && document.activeElement !== box) box.value = text;
@@ -1911,26 +1918,27 @@ async function startQuickRecord() {
   // (My own photos: the book is shown again before the story is made.)
   if (!(way === "photo" && photo === "mine")) toast(t("book.writingIn", { name }));
 }
-// ---------- Quick Create v3: today's story ----------
-// Photos taken at different times become Moments (split where more than 90
-// minutes pass): check the groups, write a line for each (or skip), then one
-// page per Moment, plus a timeline cover when the cover is still empty.
-let story = null; // { date, book, step: group|lines|preview, groups, selected, made, index }
+// ---------- Quick Create V2: today's story ----------
+// Pick photos → they are grouped into Moments by when they were taken → a
+// designed draft right away (a day spread when there are several Moments,
+// plus one page per Moment), in one of three styles. Words are optional and
+// added right in the preview; groups can be adjusted; "Customize" opens the
+// same pages in the studio. Pages edited by hand are never re-laid-out
+// without asking.
+let story = null; // { date, book, style, step: preview|group, groups, selected, made, index }
 function startStory(groups) {
   const empty = activeMomentId;
   const book = activePage()?.bookId || editor.bookId || "daily";
   if (empty && !hasMomentContent(findMoment(editor, empty) || {})) changeEditor((e) => removeMoment(e, empty), false);
   activeMomentId = null;
   quickResult = null;
-  const kit = kitForBook(catalog, state().books.find((b) => b.id === book));
-  story = { date: editor.date, book, kit: kit?.id || "", step: "group", groups, selected: null, made: null, index: 0 };
+  story = { date: editor.date, book, style: "editorial", step: "preview", groups, selected: null, made: null, index: 0 };
   page = "story";
-  // No "a new page is open" note here: the story makes its pages later.
+  // No "a new page is open" note here: the story makes its own pages.
   clearTimeout(toastTimer);
   $("#toast").classList.remove("visible");
   logEvent("story_start", { photos: groups.reduce((n, g) => n + g.items.length, 0), moments: groups.length });
-  render();
-  $("#app-scroll").scrollTop = 0;
+  makeStory();
 }
 const storyPhoto = (item) => safePhoto(item.reference);
 function storyTimeLabel(group) {
@@ -1947,6 +1955,118 @@ function storyPages() {
   }
   return pages;
 }
+// The Moments a page shows: the whole day on the spread, else its own.
+function storyMomentsOf(current) {
+  if (!current) return [];
+  return current.cover ? story.made.ids.map((momentId) => findMoment(editor, momentId)).filter(Boolean) : [current.page];
+}
+const visualLayers = (page) => page.layers.filter((l) => !l.gen && !l.deco && !l.drawing && ((l.kind === "photo" && l.mediaRef) || l.kind === "video"));
+const layerAspect = (l) => l.aspect || (l.w && l.h ? (l.w / l.h) * 0.8 : 1);
+// Lay out one page in the story's style (its own variant), replacing only
+// what the engine made before; the user's own stickers / text stay.
+function layoutStoryPage(target, isCover) {
+  const style = styleOf(target.layoutStyle || story.style);
+  const variant = Number(target.layoutVariant) || 0;
+  const look = STYLE_LOOK[style];
+  let result;
+  if (isCover) {
+    const moments = story.made.ids
+      .map((momentId) => findMoment(target, momentId))
+      .filter(Boolean)
+      .map((m) => {
+        const photos = visualLayers(m).filter((l) => l.kind === "photo");
+        const hero = photos[heroIndex(photos.map((l) => ({ aspect: layerAspect(l) })))];
+        return hero ? { id: m.id, time: m.time, title: m.title, photo: { reference: hero.mediaRef, name: hero.text, aspect: layerAspect(hero) } } : null;
+      })
+      .filter(Boolean);
+    const date = new Date(`${story.date}T12:00:00`);
+    result = layoutDay(moments, style, variant, {
+      dateSmall: date.toLocaleDateString(locale(), { weekday: "long" }),
+      dateBig: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      more: (n) => t("story.more", { count: n }),
+      makeId: id,
+    });
+    target.layers = target.layers.filter((l) => !l.gen && !l.deco).concat(result.layers);
+  } else {
+    const visuals = visualLayers(target);
+    const audio = target.layers.filter((l) => l.kind === "audio");
+    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l) })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time }, style, variant);
+    target.layers = target.layers.filter((l) => !l.gen && !l.deco);
+    for (const layer of target.layers) if (result.place[layer.id]) Object.assign(layer, result.place[layer.id]);
+    target.layers.push(...result.layers.map((l) => ({ id: id(), ...l })));
+  }
+  target.layoutTemplate = "scrapbook";
+  target.layoutStyle = style;
+  target.template = result.paper;
+  if (result.backdrop) target.backdrop = result.backdrop;
+  else if (/^scene:color-/.test(target.backdrop || "")) delete target.backdrop;
+  decorate(target, { stickers: look.stickers }, { seed: variant + (isCover ? 1 : 0), max: look.deco, makeId: id });
+  target.layoutEdited = false;
+}
+// Lay out every page of the story (or only `which`); pages edited by hand
+// stay unless `force`.
+function layoutStory({ which = null, force = false } = {}) {
+  changeEditor((entry) => {
+    for (const p of storyPages()) {
+      if (which && !which.includes(p.cover ? "cover" : p.page.id)) continue;
+      const target = p.cover ? entry : findMoment(entry, p.page.id);
+      if (!target || (target.layoutEdited && !force)) continue;
+      layoutStoryPage(target, p.cover);
+    }
+  }, false);
+}
+function undoStory() {
+  const made = story?.made;
+  if (!made) return;
+  changeEditor((entry) => {
+    for (const momentId of made.ids) removeMoment(entry, momentId);
+    if (made.cover) {
+      entry.layers = [];
+      for (const key of ["layoutTemplate", "layoutVariant", "layoutStyle", "backdrop"]) delete entry[key];
+    }
+  }, false);
+  story.made = null;
+}
+function makeStory() {
+  undoStory();
+  const ids = [];
+  for (const group of story.groups) {
+    let created;
+    changeEditor((entry) => {
+      created = createMoment(entry, { time: clockLabel(group.start) });
+      created.bookId = story.book;
+      created.title = (group.line || "").trim().slice(0, 70);
+      created.layoutTemplate = "scrapbook";
+      created.layoutStyle = story.style;
+      created.layoutVariant = 0;
+      if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
+      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
+      entry.moments.push(created);
+    }, false);
+    ids.push(created.id);
+  }
+  // A day spread, only when there are several Moments and the cover is empty.
+  story.made = { ids, cover: ids.length >= 2 && !hasDayPageContent(editor) };
+  if (story.made.cover)
+    changeEditor((entry) => {
+      entry.layoutTemplate = "scrapbook";
+      entry.layoutStyle = story.style;
+      entry.layoutVariant = 0;
+      entry.bookId = story.book;
+    }, false);
+  layoutStory({ force: true });
+  story.step = "preview";
+  story.index = 0;
+  flushDraft();
+  logEvent("story_made", { moments: ids.length, cover: story.made.cover, style: story.style });
+  render();
+  $("#app-scroll").scrollTop = 0;
+}
+const STYLE_ICONS = {
+  editorial: '<svg viewBox="0 0 40 50" aria-hidden="true"><rect x="5" y="5" width="30" height="22" rx="1"/><path d="M5 33h22M5 38h16"/></svg>',
+  cozy: '<svg viewBox="0 0 40 50" aria-hidden="true"><g transform="rotate(-6 14 18)"><rect x="4" y="6" width="18" height="22" rx="1"/></g><g transform="rotate(6 27 30)"><rect x="18" y="18" width="18" height="22" rx="1"/></g></svg>',
+  playful: '<svg viewBox="0 0 40 50" aria-hidden="true"><rect x="4" y="8" width="20" height="16" rx="1"/><circle cx="29" cy="30" r="8"/><rect x="8" y="30" width="12" height="14" rx="1"/></svg>',
+};
 function storyPage() {
   if (!story || !editor) return "";
   const back = `<button class="studio-back story-back" data-action="story-back" aria-label="${t("studio.back")}">${icon("back")}</button>`;
@@ -1964,120 +2084,74 @@ function storyPage() {
     const bar = sel
       ? `<div class="story-photo-bar" role="group" aria-label="${t("story.photoActions")}"><button data-action="story-move" data-dir="-1">‹ ${t("story.toPrev")}</button><button data-action="story-move" data-dir="1">${t("story.toNext")} ›</button>${sel.i > 0 ? `<button data-action="story-split">${t("story.split")}</button>` : ""}<button class="danger-text" data-action="story-remove">${t("story.remove")}</button></div>`
       : "";
-    return `<header class="story-bar">${back}<h1>${t("story.photosTitle", { count: total })}</h1><button class="text-button" data-action="story-make">${t("story.layoutNow")}</button></header><p class="story-intro">${t("story.groupHint", { count: story.groups.length })}</p><div class="story-groups">${cards}</div>${bar}<div class="story-foot"><button class="primary full-width" data-action="story-step" data-step="lines">${t("story.toLines")}</button><small>${t("story.skipAll")}</small></div>`;
-  }
-  if (story.step === "lines") {
-    const books = state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === story.book ? "selected" : ""}>${esc(b.title)}</option>`).join("");
-    const cards = story.groups
-      .map((group, g) => `<section class="story-line-card tone-${partOfDay(group.start) || "none"}"><div class="story-line-top">${group.items
-        .slice(0, 2)
-        .map((item) => `<img src="${esc(storyPhoto(item))}" alt="">`)
-        .join("")}<b>${esc(storyTimeLabel(group))}</b><small>${t("story.photos", { count: group.items.length })}</small></div><label><span class="visually-hidden">${t("story.lineLabel")}</span><input type="text" maxlength="70" data-story-line="${g}" value="${esc(group.line || "")}" placeholder="${t("story.linePlaceholder")}"></label></section>`)
-      .join("");
-    return `<header class="story-bar">${back}<h1>${t("story.momentsTitle", { count: story.groups.length })}</h1><button class="text-button" data-action="story-make">${t("story.skip")}</button></header><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><div class="story-lines">${cards}</div><div class="story-foot"><button class="primary full-width" data-action="story-make">${t("story.make")} ›</button><small>${t("story.skipAll")}</small></div>`;
+    return `<header class="story-bar">${back}<h1>${t("story.photosTitle", { count: total })}</h1><span></span></header><p class="story-intro">${t("story.groupHint", { count: story.groups.length })}</p><div class="story-groups">${cards}</div>${bar}<div class="story-foot"><button class="primary full-width" data-action="story-regroup">${t("story.regroupDone")}</button></div>`;
   }
   const pages = storyPages();
   story.index = Math.max(0, Math.min(pages.length - 1, story.index));
   const current = pages[story.index];
-  const tabs = pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("");
-  return `<header class="story-bar">${back}<h1>${t("story.previewTitle", { count: pages.length })}</h1><button class="primary story-save" data-action="story-save">${t("save")}</button></header><div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${tabs}</div><div class="story-canvas">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("result.shuffle")}</button><button data-action="story-adjust">✎ ${t("story.adjust")}</button></div><div class="story-kits" role="group" aria-label="${t("story.kit")}"><span>${t("story.kit")}</span>${kitList(catalog)
-    .map((kit) => `<button data-action="story-kit" data-kit="${esc(kit.id)}" aria-pressed="${kit.id === story.kit}"><i style="background:${esc(kit.swatch)}"></i>${esc(kitName(kit, languageCode()))}</button>`)
-    .join("")}</div><p class="save-help story-help">${t("story.previewHelp")}</p>`;
+  const tabs = pages.length > 1 ? `<div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("")}</div>` : "";
+  const styles = STYLES.map((s) => `<button data-action="story-style" data-style="${s}" aria-pressed="${s === story.style}">${STYLE_ICONS[s]}<b>${t("story.style." + s)}</b></button>`).join("");
+  const words = storyMomentsOf(current).some((m) => (m.title || "").trim());
+  const books = state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === story.book ? "selected" : ""}>${esc(b.title)}</option>`).join("");
+  return `<header class="story-bar">${back}<h1>${t("story.previewTitle", { count: pages.length })}</h1><span></span></header><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label>${tabs}<button class="story-canvas" data-action="story-text" aria-label="${t("story.addWords")}">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</button><div class="story-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("story.relayout")}</button><button data-action="story-text">Aa ${t(words ? "story.editWords" : "story.addWords")}</button>${total > 1 ? `<button data-action="story-group">${t("story.regroup")}</button>` : ""}</div><div class="story-actions"><button class="secondary" data-action="story-adjust">✎ ${t("story.customize")}</button><button class="primary" data-action="story-save">${t("save")}</button></div>`;
 }
-function storyCover(variant = 0) {
-  const date = new Date(`${story.date}T12:00:00`);
-  const moments = story.made.ids.map((momentId) => {
-    const m = findMoment(editor, momentId);
-    const group = story.groups[story.made.ids.indexOf(momentId)];
-    const pick = group.items.find((item) => (item.aspect || 1) >= 1) || group.items[0];
-    return { time: m?.time || "", title: m?.title || "", photo: pick, count: group.items.length };
-  });
-  return timelineLayers(moments, {
-    dateSmall: date.toLocaleDateString(locale(), { weekday: "long" }).toUpperCase(),
-    dateBig: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    more: (n) => t("story.more", { count: n }),
-    photos: (n) => t("story.photos", { count: n }),
-    variant,
-    makeId: id,
-    kit: findKit(catalog, story.kit),
-  });
+// Words for the Moments on this page, in a small sheet (all optional).
+function openStoryText() {
+  const current = storyPages()[story.index];
+  const moments = storyMomentsOf(current);
+  if (!moments.length) return;
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet story-text-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("story.wordsTitle")}</h2><p class="save-help">${t("story.wordsHint")}</p>${moments
+    .map((m) => `<label class="story-word"><span>${esc(m.time || t("story.page"))}</span><input type="text" maxlength="70" data-story-word="${esc(m.id)}" value="${esc(m.title || "")}" placeholder="${t("story.linePlaceholder")}"></label>`)
+    .join("")}<button class="primary full-width" data-action="story-text-done">${t("pages.done")}</button></div>`;
+  dialog.showModal();
+  dialog.querySelector("input")?.focus();
 }
-// One kit for the whole day: paper, fonts, ink and a few matching stickers,
-// only in empty corners. The cover is rebuilt in the kit's fonts and colours.
-function styleStory() {
-  const kit = findKit(catalog, story.kit);
-  if (!kit || !story.made) return;
+async function saveStoryText() {
+  const inputs = [...document.querySelectorAll("[data-story-word]")];
+  const changed = [];
   changeEditor((entry) => {
-    story.made.ids.forEach((momentId, index) => {
-      const m = findMoment(entry, momentId);
-      if (!m) return;
-      applyKit(m, kit);
-      decorate(m, kit, { seed: index + (Number(m.layoutVariant) || 0), caption: Boolean(m.title), makeId: id });
-    });
-    if (story.made.cover) {
-      entry.layers = storyCover(Number(entry.layoutVariant) || 0);
-      applyKit(entry, kit);
-      decorate(entry, kit, { seed: Number(entry.layoutVariant) || 0, max: 1, makeId: id });
+    for (const input of inputs) {
+      const m = findMoment(entry, input.dataset.storyWord);
+      const value = input.value.trim().slice(0, 70);
+      if (m && (m.title || "") !== value) {
+        m.title = value;
+        m.updatedAt = new Date().toISOString();
+        changed.push(m.id);
+        const group = story.groups[story.made.ids.indexOf(m.id)];
+        if (group) group.line = value;
+      }
     }
   }, false);
-}
-function undoStory() {
-  const made = story?.made;
-  if (!made) return;
-  changeEditor((entry) => {
-    for (const momentId of made.ids) removeMoment(entry, momentId);
-    if (made.cover) {
-      entry.layers = [];
-      delete entry.layoutTemplate;
-      delete entry.layoutVariant;
-    }
-  }, false);
-  story.made = null;
-}
-function makeStory() {
-  undoStory();
-  const ids = [];
-  for (const group of story.groups) {
-    let created;
-    changeEditor((entry) => {
-      created = createMoment(entry, { time: clockLabel(group.start) });
-      created.bookId = story.book;
-      created.title = (group.line || "").trim().slice(0, 70);
-      created.layoutTemplate = "smart";
-      // The first look follows simple rules: one photo big, a few in the kit's mood.
-      created.layoutVariant = firstLook(group.items.length, findKit(catalog, story.kit));
-      if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
-      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
-      applyLayout(created, "smart");
-      entry.moments.push(created);
-    }, false);
-    ids.push(created.id);
-  }
-  story.made = { ids, cover: false };
-  // A timeline cover, only when the day's cover is still empty.
-  if (ids.length >= 2 && !hasDayPageContent(editor)) {
-    story.made.cover = true;
-    changeEditor((entry) => {
-      entry.layers = storyCover(0);
-      entry.layoutTemplate = "timeline";
-      entry.layoutVariant = 0;
-      entry.bookId = story.book;
-    }, false);
-  }
-  styleStory();
-  story.step = "preview";
-  story.index = 0;
+  $("#choose-dialog").close();
+  if (!changed.length) return render();
+  // Words take room: lay out those pages again (and the day spread), except
+  // pages edited by hand, which keep their places (the words still show).
+  layoutStory({ which: [...changed, "cover"] });
   flushDraft();
-  logEvent("story_made", { moments: ids.length, lines: story.groups.filter((g) => (g.line || "").trim()).length, cover: story.made.cover });
+  logEvent("story_words", { count: changed.length });
   render();
-  $("#app-scroll").scrollTop = 0;
 }
 function finishStory() {
   const { book, date } = story;
   clearTimeout(draftTimer);
   store.update((s) => saveEntry(s, editor));
   draftDirty = false;
-  logEvent("story_saved", { moments: story.made?.ids.length || 0 });
+  logEvent("story_saved", { moments: story.made?.ids.length || 0, style: story.style });
+  // The same "page done" record as before, for the 30-day test (no content).
+  if (quickSession) {
+    const made = (story.made?.ids || []).map((momentId) => findMoment(editor, momentId)).filter(Boolean);
+    logEvent("page_done", {
+      ms: Date.now() - quickSession.started,
+      taps: quickSession.taps,
+      shuffles: quickSession.shuffles,
+      photos: made.reduce((n, m) => n + visualLayers(m).length, 0),
+      moments: made.length,
+      line: made.some((m) => (m.title || "").trim()),
+      style: story.style,
+    });
+    quickSession = null;
+  }
   story = null;
   readReturn = null;
   // Straight into the book, page by page, at the first page of this day.
@@ -2097,16 +2171,29 @@ async function storyAction(actionName, target) {
   if (!story) return;
   const sel = story.selected;
   if (actionName === "story-back") {
-    if (story.step === "preview") {
-      undoStory();
-      story.step = "lines";
-    } else if (story.step === "lines") story.step = "group";
-    else {
-      if (!(await askConfirm(t("story.discard")))) return;
-      story = null;
-      navigate("home");
-      return;
+    if (story.step === "group") return storyAction("story-regroup", target);
+    if (!(await askConfirm(t("story.discard")))) return;
+    undoStory();
+    flushDraft();
+    story = null;
+    navigate("home");
+    return;
+  }
+  if (actionName === "story-group") {
+    story.step = "group";
+    story.selected = null;
+  }
+  if (actionName === "story-regroup") {
+    // Words already written stay with their Moment (by its first photo).
+    const lines = new Map();
+    for (const [i, momentId] of (story.made?.ids || []).entries()) {
+      const m = findMoment(editor, momentId);
+      const first = story.groups[i]?.items[0]?.reference;
+      if (m?.title && first) lines.set(first, m.title);
     }
+    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "" }));
+    story.selected = null;
+    return makeStory();
   }
   if (actionName === "story-photo") {
     const g = Number(target.dataset.g),
@@ -2127,32 +2214,38 @@ async function storyAction(actionName, target) {
     story.groups = left;
     story.selected = null;
   }
-  if (actionName === "story-step") story.step = target.dataset.step === "lines" ? "lines" : "group";
-  if (actionName === "story-make") return makeStory();
   if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
-  if (actionName === "story-kit") {
-    story.kit = findKit(catalog, target.dataset.kit)?.id || story.kit;
-    styleStory();
+  if (actionName === "story-text") return openStoryText();
+  if (actionName === "story-text-done") return saveStoryText();
+  if (actionName === "story-style") {
+    const next = styleOf(target.dataset.style);
+    if (next === story.style) return;
+    const edited = storyPages().filter((p) => p.page.layoutEdited).length;
+    // Pages adjusted by hand are only changed when the person says so.
+    const force = edited ? await askConfirm(t("story.styleConfirm", { count: edited })) : false;
+    story.style = next;
+    changeEditor((entry) => {
+      for (const p of storyPages()) {
+        const target2 = p.cover ? entry : findMoment(entry, p.page.id);
+        if (target2 && (!target2.layoutEdited || force)) target2.layoutStyle = next;
+      }
+    }, false);
+    layoutStory({ force });
     flushDraft();
-    logEvent("story_kit", { kit: story.kit });
+    logEvent("story_style", { style: next, kept: force ? 0 : edited });
   }
   if (actionName === "story-shuffle") {
     const current = storyPages()[story.index];
     if (!current) return;
-    if (current.cover) {
-      const variant = ((Number(editor.layoutVariant) || 0) + 1) % 3;
-      changeEditor((entry) => {
-        entry.layoutVariant = variant;
-      }, false);
-    } else
-      changeEditor((entry) => {
-        const m = findMoment(entry, current.page.id);
-        if (!m) return;
-        m.layoutVariant = ((Number(m.layoutVariant) || 0) + 1) % 3;
-        applyLayout(m, "smart");
-      }, false);
-    styleStory();
+    if (current.page.layoutEdited && !(await askConfirm(t("story.relayoutConfirm")))) return;
+    changeEditor((entry) => {
+      const target2 = current.cover ? entry : findMoment(entry, current.page.id);
+      if (target2) target2.layoutVariant = ((Number(target2.layoutVariant) || 0) + 1) % 3;
+    }, false);
+    layoutStory({ which: [current.cover ? "cover" : current.page.id], force: true });
     flushDraft();
+    if (quickSession) quickSession.shuffles++;
+    logEvent("story_relayout", { style: story.style });
   }
   if (actionName === "story-adjust") {
     const current = storyPages()[story.index];
@@ -3599,7 +3692,8 @@ async function action(target) {
 }
 
 document.addEventListener("click", (event) => {
-  const target = event.target.closest("[data-action]");
+  // In the story preview the whole page is one target: tap it to add words.
+  const target = event.target.closest(".story-canvas") || event.target.closest("[data-action]");
   // Taps from opening the record sheet to finishing a page (test log only).
   if (target) {
     quickTaps++;
@@ -3704,7 +3798,16 @@ document.addEventListener("input", (event) => {
 });
 document.addEventListener("change", (event) => {
   if (event.target.dataset?.storyBook != null && story) {
+    // The whole story goes into the chosen book.
     story.book = event.target.value;
+    changeEditor((entry) => {
+      for (const momentId of story.made?.ids || []) {
+        const m = findMoment(entry, momentId);
+        if (m) m.bookId = story.book;
+      }
+      if (story.made?.cover) entry.bookId = story.book;
+    }, false);
+    flushDraft();
     return;
   }
   if (handleV3Change(event)) return;
@@ -5612,9 +5715,8 @@ async function handleImageUpload(event, target) {
     if (target?.kind === "quick") {
       // Quick Create: my photos, laid out in their own shapes; no editor.
       // Taken at different times of the day: today's story (one page each).
-      const groups = groupByTime(saved);
-      if (groups.length > 1) startStory(groups);
-      else quickPlaced(saved);
+      // Quick Create V2: every pick becomes a designed story (one Moment too).
+      startStory(groupByTime(saved));
     } else if (target?.kind === "backdrop") {
       // My own photo as the whole page (photo + one line).
       changeTarget((p) => {

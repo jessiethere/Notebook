@@ -12771,3 +12771,105 @@ dialog h2,
 .story-kits button[aria-pressed="true"] i {
   box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink);
 }
+
+/* ---------- Quick Create V2 · scrapbook pages (V6.5) ---------- */
+.chip-text .layer-text {
+  display: inline-block;
+  padding: 0.5cqw 1.6cqw;
+  border-radius: 999px;
+  background: var(--chip);
+}
+.bound-text .layer-text:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.55;
+}
+.scrapbook-page .text-layer {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.style-editorial .photo-layer.frame-bare {
+  box-shadow: 0 0.6cqw 2.4cqw rgba(47, 42, 38, 0.12);
+}
+.style-cozy .photo-layer {
+  box-shadow: 0 0.8cqw 2cqw rgba(58, 42, 28, 0.25);
+}
+.story-canvas {
+  display: block;
+  width: calc(100% - 16px);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.story-styles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+}
+.story-styles button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+}
+.story-styles svg {
+  width: 22px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+}
+.story-styles button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #FFFFFF;
+}
+.story-tools {
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+.story-tools button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.story-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  margin: 12px -16px 0;
+  padding: 12px 16px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.story-actions button {
+  min-height: 52px;
+  border-radius: 18px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.story-actions .primary {
+  background: #5F6F52;
+}
+.story-word {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #6F675D;
+}
+.story-word input {
+  min-height: 44px;
+  font-size: 16px;
+}
+.story-text-sheet .primary {
+  margin-top: 8px;
+}

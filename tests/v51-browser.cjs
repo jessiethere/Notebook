@@ -87,12 +87,14 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="quick-start"]').tap();
     await (await chooser).setFiles({ name: "mine.png", mimeType: "image/png", buffer: pixel });
-    await page.waitForSelector(".quick-result-bar #journal-canvas, .quick-result-bar");
-    await page.waitForSelector("#journal-canvas.smart-page .photo-layer img[src^='blob:']");
+    // Quick Create V2 (V6.5): a designed draft right away; saved into the book.
+    await page.waitForSelector(".story-canvas .scrapbook-page .photo-layer img[src^='blob:']");
     await page.waitForTimeout(1300);
     d = await draft();
-    assert.equal(d.moments.at(-1).layoutTemplate, "smart");
+    assert.equal(d.moments.at(-1).layoutTemplate, "scrapbook");
     assert.match(d.moments.at(-1).layers[0].mediaRef, /^media:[0-9a-f-]{36}$/);
+    await page.locator('[data-action="story-save"]').tap();
+    await page.waitForSelector(".flip-page");
     passed.push("photo + a line with my own photo (kept on this device, laid out in its own shape)");
 
     // 4. Just write: a note page, typed on the paper.

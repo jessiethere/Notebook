@@ -57,13 +57,15 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
       const chooser = page.waitForEvent("filechooser");
       await page.locator('[data-action="quick-start"]').tap();
       await (await chooser).setFiles(files);
-      await page.waitForSelector(".quick-result-bar");
-      await page.locator('[data-action="smart-caption"]').tap();
-      await page.keyboard.type(line);
-      await page.evaluate(() => document.activeElement.blur());
-      await page.locator('[data-action="quick-done"]').tap();
-      await page.waitForSelector(".hero");
+      // Quick Create V2: a line in the preview, saved into the book.
+      await page.waitForSelector(".story-styles");
+      await page.locator('.story-tools [data-action="story-text"]').tap();
+      await page.locator("[data-story-word]").fill(line);
+      await page.locator('[data-action="story-text-done"]').tap();
+      await page.locator('[data-action="story-save"]').tap();
+      await page.waitForSelector(".flip-page");
     }
+    await menu(page, "home");
     await page.locator(`.home-book-cover[data-book="${bookId}"]`).tap();
     await page.waitForSelector(".book-share");
     assert.match(await page.locator(".book-share-help").innerText(), /PDF/);

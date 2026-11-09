@@ -195,6 +195,13 @@ Windows 无 Git：下载仓库 ZIP，全部解压，进入含 Start-Windows.cmd�
 
 Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 `Native/LittleDays.xcodeproj`。当前 Linux 验证不能替代 Windows CMD/Python Launcher、iOS SDK 构建、模拟器或真机。
 
-## 2026-11-09 提案：Quick Create v3 的技术增量（V6.3 已实施 P0 ①：exif.mjs、day-story.mjs、story 页面、timeline 封面；② ③ 未实施）
+## 2026-11-09 提案：Quick Create v3 的技术增量（V6.3 已实施 P0 ①：exif.mjs、day-story.mjs、story 页面、timeline 封面；V6.5 Quick Create V2 见下）
 
 见 [QUICK_CREATE_PLAN.md](QUICK_CREATE_PLAN.md) §8。要点：不换技术栈、不重写；新增纯模块 `day-story.mjs`（按时间分组、选模板、封面时间线、装饰空位）和 `exif.mjs`（在 `imageBlob()` 缩图前读拍摄时间，因为 canvas 重新编码会丢 EXIF）；扩展 `smart-layout.mjs`（新模板、钉住图层当障碍物、文字量测）；数据只加可选字段（页面 `capturedAt` / `kit` / `alsoIn` / `habitId` / `fieldValues`，图层 `pinned`，封面 `layoutTemplate: "timeline"`），schemaVersion 不变、不迁移，自动封面只在封面为空时写入；原生 PhotoKit 桥接列为 P1。Vapor、IndexedDB 不变。
+
+## 2026-11-09 V6.5 Quick Create V2 · Scrapbook 排版引擎
+
+- `Public/js/scrapbook-layout.mjs`（纯函数，可单测）：`layoutMoment(input, style, variant)` 返回每个照片 / 视频图层的位置（x、y、w、h、旋转、相框、胶带）+ 生成的文字图层；`layoutDay(moments, style, variant)` 生成「当天跨页」（每个 Moment 一张代表照片，最多 4 个，其余显示「还有 N 个」）；`boundText(layer, page)` 读出绑定文字。
+- 三种风格是三套构图逻辑：editorial（主图 + 不对称 + 行排列，照片不重叠）、cozy（拍立得散落 / 宽松网格，倾斜、胶带）、playful（拼贴打包：每张与最近的一张相接、重叠 ≤ 12%，柔色背景）。相框高度按照片比例和相框内边距计算（`frameHeight`），所以不裁切；文字按字数估算行数（`textBlock` / `fitText`），自动缩小并预留空间；内容少时整体放到视觉中心。
+- 数据（全部可选，schemaVersion 不变）：页面 `layoutTemplate: "scrapbook"`、`layoutStyle`；图层 `gen`（引擎生成，重排时替换）、`bind`（"title" / "time"）、`of`（跨页上指向的 Moment id）、`excerpt`、`prefix`、`chip`。绑定文字在 canvas.mjs 和 export.mjs 里都从页面 / Moment 读取，所以预览、阅读、翻书、PDF、自由编辑改的是同一份文字；自由编辑里改绑定文字会写回 Moment 的 title。
+- 手动调整保护：拖动 / 缩放已有的 `layoutEdited` 标记；换风格时如有这样的页会先确认（取消 = 保留这些页），重新排版也会确认。旧页面（smart / timeline / text）照旧显示，不迁移。

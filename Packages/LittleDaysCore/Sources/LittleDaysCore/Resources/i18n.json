@@ -5332,8 +5332,8 @@
     "en": "Make today's story"
   },
   "story.previewTitle": {
-    "zh": "今天的故事 · {count} 页",
-    "en": "Today's story · {count} pages"
+    "zh": "今天的故事",
+    "en": "Today's story"
   },
   "story.pages": {
     "zh": "这几页",
@@ -5386,5 +5386,61 @@
   "story.kit": {
     "zh": "配色",
     "en": "Style"
+  },
+  "story.style.editorial": {
+    "zh": "杂志",
+    "en": "Editorial"
+  },
+  "story.style.cozy": {
+    "zh": "手账",
+    "en": "Cozy"
+  },
+  "story.style.playful": {
+    "zh": "拼贴",
+    "en": "Collage"
+  },
+  "story.styleLabel": {
+    "zh": "风格",
+    "en": "Style"
+  },
+  "story.relayout": {
+    "zh": "重新排版",
+    "en": "Re-layout"
+  },
+  "story.addWords": {
+    "zh": "写一句",
+    "en": "Add words"
+  },
+  "story.editWords": {
+    "zh": "改文字",
+    "en": "Edit words"
+  },
+  "story.regroup": {
+    "zh": "调整分组",
+    "en": "Regroup"
+  },
+  "story.regroupDone": {
+    "zh": "完成，重新生成",
+    "en": "Done — make it again"
+  },
+  "story.customize": {
+    "zh": "自定义",
+    "en": "Customize"
+  },
+  "story.wordsTitle": {
+    "zh": "给这几个 Moment 写一句",
+    "en": "A line for these Moments"
+  },
+  "story.wordsHint": {
+    "zh": "都可以不写。写了会自动排进页面，看书时也会显示。",
+    "en": "All optional. Words go onto the page and show when you read the book."
+  },
+  "story.styleConfirm": {
+    "zh": "有 {count} 页是你自己调整过的。要一起换成新风格吗？（取消：保留这几页不动，只换其他页）",
+    "en": "{count} pages were adjusted by you. Restyle them too? (Cancel keeps them as they are and restyles the rest.)"
+  },
+  "story.relayoutConfirm": {
+    "zh": "这一页你自己调整过，重新排版会改掉你的调整。继续吗？",
+    "en": "You adjusted this page. Re-layout will undo your changes. Continue?"
   }
 }

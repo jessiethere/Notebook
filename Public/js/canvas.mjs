@@ -4,6 +4,7 @@ import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
 import { isShape } from "./shapes.mjs";
 import { captionFit } from "./story-style.mjs";
+import { boundText } from "./scrapbook-layout.mjs";
 
 // A long one-line caption gets smaller (and may wrap to two lines).
 const captionClass = (text) => {
@@ -133,9 +134,13 @@ export function layerHTML(layer, ctx, options = {}) {
       classes += " art-layer";
       inner = `<img src="${esc(image)}" alt="" draggable="false">`;
     } else if (layer.kind === "text") {
-      classes += " text-layer";
-      extraStyle = `;${textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || defaultFont, 16, catalog)};text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}`;
-      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}">${esc(layer.text)}</span>`;
+      // A text bound to a Moment's own words (Quick Create V2) shows them, so
+      // editing the words anywhere updates the page; empty ones hide when reading.
+      const words = layer.bind ? boundText(layer, options.page) : layer.text;
+      if (layer.bind && !words && readOnly) return "";
+      classes += ` text-layer${layer.bind ? " bound-text" : ""}${layer.chip ? " chip-text" : ""}`;
+      extraStyle = `;${textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || defaultFont, 16, catalog)};text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}${/^#[0-9a-f]{6}$/i.test(layer.chip || "") ? `;--chip:${layer.chip}` : ""}`;
+      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${layer.bind && !words ? ` data-placeholder="${esc(t("story.linePlaceholder"))}"` : ""}>${esc(words)}</span>`;
     } else inner = esc(layer.text);
   }
   if (selected) {
@@ -178,12 +183,13 @@ export function canvasHTML(page, ctx, options = {}) {
   // A page background (gradient, pattern, sky ...) covers the paper; the words
   // sit on a frosted card so they stay easy to read.
   const backdrop = backdropOf(page, ctx);
-  const veil = backdrop && (dayPage || page.layoutTemplate === "text") ? `<div class="backdrop-veil" aria-hidden="true"></div>` : "";
+  const designed = page.layoutTemplate === "scrapbook" || (dayPage && page.layoutTemplate === "timeline");
+  const veil = backdrop && !designed && (dayPage || page.layoutTemplate === "text") ? `<div class="backdrop-veil" aria-hidden="true"></div>` : "";
   // Editable words on the paper: tap and type, like a note.
   const inline = (field, placeholder, max) =>
     `contenteditable="plaintext-only" spellcheck="false" role="textbox" aria-multiline="${field === "body"}" data-inline="${field}" data-max="${max}" data-placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}"`;
   let fixed = "";
-  if (dayPage && page.layoutTemplate === "timeline")
+  if (page.layoutTemplate === "scrapbook" || (dayPage && page.layoutTemplate === "timeline"))
     // Today's story cover: time, a photo and a line per Moment, all layers.
     fixed = veil;
   else if (dayPage) {
@@ -210,6 +216,7 @@ export function canvasHTML(page, ctx, options = {}) {
     template,
     dayPage ? "day-canvas" : "moment-canvas",
     dayPage && page.layoutTemplate === "timeline" ? "timeline-cover" : "",
+    page.layoutTemplate === "scrapbook" ? `scrapbook-page style-${page.layoutStyle || "editorial"}` : "",
     page.layoutTemplate === "text" ? "text-only" : "",
     !dayPage && page.layoutTemplate === "line" ? "line-page" : "",
     !dayPage && page.layoutTemplate === "smart" ? "smart-page" : "",

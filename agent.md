@@ -48,6 +48,22 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.5 Quick Create V2：Scrapbook 排版引擎 + 三种风格 + 更短的流程
+
+- 需求：长需求「Quick Create V2 设计优化与差异化升级」：生成结果要像真正的 Scrapbook（主次、节奏、照片是主角、日期不抢戏、Wow），三种布局逻辑不同的风格（Minimal Editorial 默认 / Cozy Scrapbook / Playful Collage）一键切换并保留内容，流程改为「上传 → 自动分组 → 直接生成初稿 → 可选写字 → 保存」，预览里直接写 Moment 文字，Quick 与 Creative 同一份数据，手动调整不被未经确认覆盖，10 个场景验证并提供真实截图。另：用户对任务 G 回复「可以」（已确认，排到下一轮）。
+- 改动文件：
+  - Public/js/scrapbook-layout.mjs（新）：三种风格的构图（editorial 主图 + 行排列、cozy 拍立得散落、playful 拼贴打包）、当天跨页、frameHeight / fitPhoto（按相框内边距算高度，照片不裁）、textBlock / fitText（文字估算与缩小）、centreVertically、boundText、pickFont（中文用中文字体）。
+  - Public/app.js：故事流程改为选完照片直接生成（一个 Moment 也走这里，不再进旧的单页结果页）；预览：页签、大画布（点画布写字）、风格三按钮、重新排版、写一句、调整分组、自定义、保存、放进哪本书；写字面板；换风格 / 重新排版对手动调整过的页先确认；保存时记录 page_done（实验日志）；自由编辑里改绑定文字写回 Moment。
+  - Public/js/canvas.mjs、export.mjs：绑定文字、时间小标签（chip）、scrapbook 页不画旧的固定标题 / 照片占位 / 面纱。
+  - Public/styles.css、i18n.json（story.style.* 等）、whats-new.mjs（V6.5）、Models.swift（layoutStyle；StickerLayer gen / bind / of / excerpt / prefix / chip，全部可选）+ CoreTests。
+  - tests：v62.test.mjs（新 7 项，含 3 风格 × 1–12 张 × 3 种文字 × 3 变化的全量规则检查）；v60-browser 重写为 V2 流程（7 组）；v61-browser 重写为压力测试（10 张 / 4 个 Moment / 中英长文字，三种风格每页在浏览器里测量照片和文字都在页面内，5 页都能导出）；v51 / v52 / v53 改为新流程（原来测旧单页结果页）。
+  - docs：ARCHITECTURE、DESIGN_SYSTEM（三种风格表）、PRODUCT_SPEC、ROADMAP、STRATEGY（任务 G 勾选已确认）、README；截图 `docs/images/quick-create-v2/`（公开示例照片，非用户数据）。
+- 决策与原因：在现有图层模型上做（引擎只改照片位置并替换自己生成的图层，用户自己加的贴纸 / 文字保留），不重写；文字用「绑定」而不是复制，避免改字后页面不同步；单个 Moment 也走新流程，保证 1 张照片也好看；保留旧代码（旧的结果页、smart 布局、timeline 封面）以兼容旧数据和其他入口。
+- 视觉检查（真实浏览器截图）：1 / 3 / 5 / 10 张照片和长文字，三种风格逐一看过并迭代：杂志单张改为通栏、内容少时居中、两张照片按六四分配；手账字体缺字改霞鹜文楷、跨页小字单行；拼贴单张放大、拼贴改为相接散开。
+- 运行 / 测试：118 项 Node（新增 7 项排版引擎测试）、12 项 Python、34 套浏览器 E2E 全部通过（v60 V2 流程 7 组：直接出初稿、预览写字、三种风格保留内容、调整分组、手动调整保护、保存进书与日历、单张与放弃；v61 压力：10 张 / 4 Moment / 中英长文字三风格逐页测量无溢出、5 页导出 1080×1350；v51 / v52 / v53 更新为新流程）。Linux 容器 + Chromium。
+- 已知问题 / 不足：杂志风格偏克制，Wow 感主要来自大主图，没有更强的版式元素（如大号引言、分栏线）；拼贴的叠放顺序不按时间；当天跨页最多 4 个 Moment；预览里改字后整页会重新排（手动调整过的页除外）；吸附对齐线、草稿恢复、长按拖动分组尚未做；未在 iPhone 真机验证字体和触控；视频 / 录音只做了排版规则和单测，没有在故事流程里实际添加视频。
+- 下一步：任务 G（成长合并 + 今天想做的事）；P0 ③ 的吸附线和草稿恢复；杂志风格再加一两个强版式。
+
 ### 2026-11-09 — V6.4 排版引擎 v2 第一部分（Quick Create v3 · P0 ②）
 
 - 需求：用户「可以开始」，并问成长合并和 planner 需要确认什么（已在回复里列出任务 G 的两条确认项，未开发）。

@@ -1,7 +1,9 @@
-// V6.3 E2E — Quick Create v3 (P0 ①), today's story: Home asks "what's worth
-// keeping today?" → pick photos → grouped into Moments by when they were
-// taken (EXIF) → a line each (optional) → a timeline cover + one page per
-// Moment → adjust in the studio and come back → save straight into the book.
+// V6.5 E2E — Quick Create V2: pick photos → grouped by when they were taken
+// (EXIF) → a designed draft right away (a day spread + one page per Moment,
+// in the Editorial style) → words are optional, written in the preview →
+// three styles with their own layouts → groups can be adjusted → Customize
+// opens the same pages; pages adjusted by hand are never re-laid-out without
+// asking → save straight into the book.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
 const { menu } = require("./signed-in.cjs");
@@ -32,112 +34,133 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
       ["coffee-cheers", "14:50"],
       ["home-dinner", "19:05"],
     ].map(([id, time]) => ({ name: `${id}.jpg`, mimeType: "image/jpeg", buffer: withExifTime(fs.readFileSync(path.join(lib, `LD-photo-${id}.jpg`)), `${exifDay} ${time}:00`) }));
-    const before = await page.evaluate((d) => (JSON.parse(localStorage.getItem("little-days.v1") || "null")?.entries || []).find((e) => e.date === d)?.moments?.length || 0, today);
+    const store = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
+    const draft = async () => (await store()).drafts[today];
+    const before = ((await store())?.entries || []).find((e) => e.date === today)?.moments?.length || 0;
 
-    // 1. Home: one question, one big button; photos are grouped by time.
+    // 1. Pick photos → a designed draft right away (no steps in between).
     assert.match(await page.locator(".story-start-card .today-prompt").innerText(), /今天有什么值得记录/);
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="today-photos"]').tap();
     await (await chooser).setFiles(pics);
-    await page.waitForSelector(".story-group");
-    assert.equal(await page.locator(".story-group").count(), 3, "three Moments: morning, afternoon, evening");
-    assert.match(await page.locator(".story-group").nth(0).innerText(), /08:10 早上[\s\S]*2 张/);
-    assert.match(await page.locator(".story-group").nth(2).innerText(), /19:05 晚上/);
+    await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
+    assert.equal(await page.locator(".story-tabs button").count(), 4, "a day spread + one page per Moment");
+    assert.equal(await page.locator('.story-styles [aria-pressed="true"]').getAttribute("data-style"), "editorial", "Editorial by default");
     assert.equal(await page.locator("#phone.in-studio").count(), 1, "full screen, no menu");
-    if (shots) await page.screenshot({ path: `${shots}/v60-group.png` });
-    passed.push("Home → pick today's photos → grouped into 3 Moments by when they were taken");
+    let d = await draft();
+    assert.equal(d.layoutTemplate, "scrapbook");
+    const mine = () => d.moments.slice(-3);
+    assert.deepEqual(mine().map((m) => m.time), ["08:10", "14:30", "19:05"]);
+    assert.deepEqual(mine().map((m) => m.layers.filter((l) => l.kind === "photo" && !l.gen).length), [2, 2, 1]);
+    assert.ok(mine().every((m) => m.layoutTemplate === "scrapbook" && m.title === ""), "words are optional");
+    if (shots) await page.screenshot({ path: `${shots}/v60-draft.png` });
+    passed.push("pick 5 photos → straight to a designed draft: a day spread + 3 Moment pages (Editorial), no words needed");
 
-    // 2. Move a photo to the next Moment, then back.
-    await page.locator('[data-action="story-photo"][data-g="1"][data-i="1"]').tap();
-    await page.waitForSelector(".story-photo-bar");
-    await page.locator('[data-action="story-move"][data-dir="1"]').tap();
-    assert.deepEqual(await page.$$eval(".story-group", (els) => els.map((el) => el.querySelectorAll(".story-thumb").length)), [2, 1, 2]);
-    await page.locator('[data-action="story-photo"][data-g="2"][data-i="0"]').tap();
-    await page.locator('[data-action="story-move"][data-dir="-1"]').tap();
-    assert.deepEqual(await page.$$eval(".story-group", (els) => els.map((el) => el.querySelectorAll(".story-thumb").length)), [2, 2, 1]);
-    passed.push("tap a photo to move it to the Moment before / after");
+    // 2. Words, written in the preview (tap the page); the page shows them.
+    await page.locator(".story-canvas").tap();
+    await page.waitForSelector("#choose-dialog[open] [data-story-word]");
+    assert.equal(await page.locator("[data-story-word]").count(), 3, "the spread: all three Moments");
+    await page.locator("[data-story-word]").nth(0).fill("练腿日，深蹲终于到 60kg");
+    await page.locator("[data-story-word]").nth(1).fill("和小雨在新开的店喝拿铁 latte");
+    await page.locator('[data-action="story-text-done"]').tap();
+    await page.waitForFunction(() => /练腿日/.test(document.querySelector(".story-canvas").innerText));
+    d = await draft();
+    assert.deepEqual(mine().map((m) => m.title), ["练腿日，深蹲终于到 60kg", "和小雨在新开的店喝拿铁 latte", ""]);
+    const bound = d.layers.filter((l) => l.bind === "title");
+    assert.ok(bound.length >= 1 && bound.every((l) => l.of), "the spread's words are bound to their Moments");
+    passed.push("words written in the preview show on the page (bound to the Moment, one source of truth)");
 
-    // 3. A line for some Moments (others skipped) → the story.
-    await page.locator('[data-action="story-step"][data-step="lines"]').tap();
-    await page.waitForSelector("[data-story-line]");
-    await page.locator('[data-story-line="0"]').fill("练腿日，深蹲终于到 60kg");
-    await page.locator('[data-story-line="1"]').fill("和小雨在新开的店喝拿铁");
-    if (shots) await page.screenshot({ path: `${shots}/v60-lines.png` });
-    await page.locator('.story-foot [data-action="story-make"]').tap();
-    await page.waitForSelector(".story-canvas .timeline-cover");
-    assert.equal(await page.locator(".story-tabs button").count(), 4, "a cover + one page per Moment");
-    assert.equal(await page.locator(".story-canvas .timeline-cover .photo-layer, .story-canvas .timeline-cover [data-layer-kind=photo], .story-canvas .timeline-cover img").count() >= 3, true);
-    assert.match(await page.locator(".story-canvas").innerText(), /08:10[\s\S]*练腿日[\s\S]*14:30[\s\S]*和小雨/);
-    if (shots) {
-      await page.waitForTimeout(400);
-      await page.screenshot({ path: `${shots}/v60-preview.png` });
+    // 3. Three styles, each its own layout; switching keeps photos, words and order.
+    const snapshot = (e) => JSON.stringify(e.moments.slice(-3).map((m) => [m.id, m.title, m.layers.filter((l) => l.kind === "photo" && !l.gen).map((l) => l.mediaRef)]));
+    const keep = snapshot(d);
+    const looks = {};
+    for (const style of ["cozy", "playful", "editorial"]) {
+      await page.locator(`[data-action="story-style"][data-style="${style}"]`).tap();
+      await page.waitForSelector(`.story-canvas .scrapbook-page.style-${style}`);
+      d = await draft();
+      assert.equal(snapshot(d), keep, `${style}: same photos, words and order`);
+      const m = mine()[0];
+      looks[style] = { frame: m.layers.find((l) => l.kind === "photo").frame, paper: m.template, backdrop: m.backdrop || "" };
+      if (shots) await page.screenshot({ path: `${shots}/v60-${style}.png` });
     }
-    const draft = () => page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d], today);
-    await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts?.[d]?.layoutTemplate === "timeline", today);
-    // A page of its own: shuffle changes its look.
-    await page.locator('.story-tabs button').nth(1).tap();
-    await page.waitForSelector(".story-canvas .moment-canvas");
-    const v0 = (await draft()).moments.find((m) => m.title === "练腿日，深蹲终于到 60kg").layoutVariant;
-    await page.locator('[data-action="story-shuffle"]').tap();
-    await page.waitForFunction(([d, v]) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d].moments.find((m) => m.title === "练腿日，深蹲终于到 60kg").layoutVariant !== v, [today, v0]);
-    passed.push("a line for two Moments (one skipped) → a timeline cover + 3 pages; shuffle a page");
+    assert.deepEqual(looks.editorial, { frame: "bare", paper: "minimal", backdrop: "" });
+    assert.deepEqual([looks.cozy.frame, looks.cozy.paper], ["polaroid", "kraft"]);
+    assert.ok(looks.playful.frame === "border" && /^scene:color-/.test(looks.playful.backdrop));
+    passed.push("Editorial / Cozy / Collage: different frames, papers and backdrops; photos, words and order kept");
 
-    // 4. Adjust it myself: the studio on that page, ‹ comes back to the story.
+    // 4. Adjust the groups: move a photo to the next Moment, make it again.
+    await page.locator('[data-action="story-group"]').tap();
+    await page.waitForSelector(".story-group");
+    await page.locator('[data-action="story-photo"][data-g="1"][data-i="1"]').tap();
+    await page.locator('[data-action="story-move"][data-dir="1"]').tap();
+    await page.locator('[data-action="story-regroup"]').tap();
+    await page.waitForSelector(".story-canvas .scrapbook-page");
+    d = await draft();
+    assert.deepEqual(mine().map((m) => m.layers.filter((l) => l.kind === "photo" && !l.gen).length), [2, 1, 2]);
+    assert.equal(mine()[0].title, "练腿日，深蹲终于到 60kg", "words stay with their Moment");
+    assert.equal(d.moments.length, before + 3, "remade, not doubled");
+    passed.push("adjust the groups and make it again: words kept, nothing doubled");
+
+    // 5. Customize: drag a photo on the 08:10 page; back in the preview a
+    //    style change asks first, and Cancel keeps that page as it is.
+    await page.locator(".story-tabs button").nth(1).tap();
     await page.locator('[data-action="story-adjust"]').tap();
-    await page.waitForSelector("#journal-canvas");
+    await page.waitForSelector("#journal-canvas .photo-layer");
+    const layer = page.locator("#journal-canvas .photo-layer").first();
+    const box = await layer.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 30, box.y + box.height / 2 + 24, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
     await page.locator('[data-action="studio-back"]').tap();
-    await page.waitForSelector(".story-tabs");
-    // Back to the lines and again: no duplicate pages.
-    await page.locator('[data-action="story-back"]').tap();
-    await page.waitForSelector("[data-story-line]");
-    assert.equal(await page.locator('[data-story-line="0"]').inputValue(), "练腿日，深蹲终于到 60kg", "the lines are kept");
-    await page.locator('.story-foot [data-action="story-make"]').tap();
-    await page.waitForSelector(".story-canvas .timeline-cover");
-    assert.equal((await draft()).moments.length, before + 3, "remade, not doubled");
-    passed.push("adjust in the studio and come back; going back and remaking does not double the pages");
+    await page.waitForSelector(".story-styles");
+    d = await draft();
+    const edited = mine()[0];
+    assert.equal(edited.layoutEdited, true, "the drag marks the page as adjusted by hand");
+    const placed = JSON.stringify(edited.layers.filter((l) => l.kind === "photo").map((l) => [l.x, l.y]));
+    await page.locator('[data-action="story-style"][data-style="cozy"]').tap();
+    await page.waitForSelector("#confirm-dialog[open]");
+    assert.match(await page.locator("#confirm-message").innerText(), /1 页是你自己调整过的/);
+    await page.locator("#confirm-cancel").tap();
+    await page.waitForFunction((day) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[day].moments.slice(-2).every((m) => m.layoutStyle === "cozy"), today);
+    d = await draft();
+    assert.equal(mine()[0].layoutStyle, "editorial", "the adjusted page keeps its style");
+    assert.equal(JSON.stringify(mine()[0].layers.filter((l) => l.kind === "photo").map((l) => [l.x, l.y])), placed, "…and its photos where they were put");
+    passed.push("Customize = the same pages; a page adjusted by hand is kept unless the person says yes");
 
-    // 5. Save → straight into the book, page by page, at this day's cover.
+    // 6. Save → straight into the book at the day spread; the calendar has it.
     await page.locator('[data-action="story-save"]').tap();
-    await page.waitForSelector(".flip-page:not(.is-cover) .timeline-cover");
-    const saved = await page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);
-    assert.equal(saved.layoutTemplate, "timeline");
-    const mine = saved.moments.slice(-3);
-    assert.deepEqual(mine.map((m) => m.time), ["08:10", "14:30", "19:05"]);
-    assert.deepEqual(mine.map((m) => m.layers.filter((l) => l.kind === "photo").length), [2, 2, 1]);
-    assert.ok(mine.every((m) => /T/.test(m.capturedAt || "")), "when it was taken is kept");
-    assert.equal(mine[2].title, "");
+    await page.waitForSelector(".flip-page:not(.is-cover) .scrapbook-page");
+    const saved = (await store()).entries.find((e) => e.date === today);
+    assert.equal(saved.layoutTemplate, "scrapbook");
+    assert.ok(saved.moments.slice(-3).every((m) => /T/.test(m.capturedAt || "")));
     if (shots) {
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(500);
       await page.screenshot({ path: `${shots}/v60-book.png` });
     }
-    passed.push("save → the book opens page by page at today's timeline cover; times, photos and lines saved");
-
-    // 6. Reading the day in the calendar: the cover and the three pages.
     await menu(page, "calendar");
     await page.locator(`[data-action="select-date"][data-date="${today}"]`).first().tap();
-    await page.waitForSelector(".day-detail .day-page .timeline-cover");
-    assert.ok((await page.locator(".day-detail .moment-chapter").count()) >= 3);
-    passed.push("the calendar shows the day with its timeline cover and pages");
+    await page.waitForSelector(".day-detail .day-page .scrapbook-page");
+    assert.match(await page.locator(".day-detail .day-page").innerText(), /练腿日/);
+    passed.push("save → the book opens at today's spread; the calendar reads the same pages and words");
 
-    // 7. Leaving at the first step keeps nothing; one time of day = one page as before.
+    // 7. One photo: one page, no spread. Leaving the preview keeps nothing.
     await menu(page, "home");
     const c2 = page.waitForEvent("filechooser");
     await page.locator('[data-action="today-photos"]').tap();
-    await (await c2).setFiles(pics.slice(0, 1).concat(pics.slice(4)));
-    await page.waitForSelector(".story-group");
+    await (await c2).setFiles(pics.slice(4));
+    await page.waitForSelector(".story-canvas .scrapbook-page");
+    assert.equal(await page.locator(".story-tabs").count(), 0, "one page, no tabs");
     await page.locator('[data-action="story-back"]').tap();
     await page.locator("#confirm-ok").tap();
     await page.waitForSelector(".hero");
-    const after = await page.evaluate((d) => { const s = JSON.parse(localStorage.getItem("little-days.v1")); return (s.drafts[d] || s.entries.find((e) => e.date === d)).moments.length; }, today);
+    const after = await page.evaluate((day) => { const s = JSON.parse(localStorage.getItem("little-days.v1")); return (s.drafts[day] || s.entries.find((e) => e.date === day)).moments.length; }, today);
     assert.equal(after, before + 3, "nothing added");
-    const c3 = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
-    await (await c3).setFiles(pics.slice(2, 4));
-    await page.waitForSelector(".quick-result-bar");
-    passed.push("leaving the first step adds nothing; photos from one time of day still give one page (as before)");
+    passed.push("one photo gives one page; leaving the preview adds nothing");
 
     assert.deepEqual(errors, []);
-    console.log(`V6.3 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
+    console.log(`V6.5 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
   } finally {
     await browser.close();
   }

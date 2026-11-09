@@ -1,5 +1,6 @@
 import { MASK_SHAPES, shapePath } from "./shapes.mjs";
 import { captionFit } from "./story-style.mjs";
+import { boundText } from "./scrapbook-layout.mjs";
 const safePhoto = (photo) =>
   typeof photo !== "string"
     ? ""
@@ -227,7 +228,8 @@ export async function renderJournalCanvas(editor, options = {}) {
     }
   }
   const darkBackdrop = backdrop?.tone === "dark";
-  if (backdrop && (dayPage || editor.layoutTemplate === "text")) {
+  const designed = editor.layoutTemplate === "scrapbook" || (dayPage && editor.layoutTemplate === "timeline");
+  if (backdrop && !designed && (dayPage || editor.layoutTemplate === "text")) {
     ctx.fillStyle = darkBackdrop ? "rgba(18,16,30,.58)" : "rgba(255,255,255,.74)";
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(76, 824, 928, 482, 36);
@@ -288,7 +290,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.restore();
   }
   // A timeline cover (today's story) is all layers: no title / words / mood.
-  if ((dayPage && editor.layoutTemplate !== "timeline") || editor.layoutTemplate === "text") {
+  if ((dayPage && !designed) || editor.layoutTemplate === "text") {
     const titleColor = editor.textStyle?.color || "#2F2A26";
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
@@ -390,6 +392,12 @@ export async function renderJournalCanvas(editor, options = {}) {
       continue;
     }
     if (layer.kind === "text") {
+      // Words bound to a Moment (Quick Create V2) are read from the page.
+      const words = layer.bind ? boundText(layer, editor) : layer.text;
+      if (!words) {
+        ctx.restore();
+        continue;
+      }
       const family = options.fontFamily
         ? options.fontFamily(layer.fontId || editor.font, options.catalog)
         : font;
@@ -402,9 +410,21 @@ export async function renderJournalCanvas(editor, options = {}) {
       ctx.textAlign = align;
       // Centred on the layer's point like on screen, whatever the line count.
       const lineHeight = size * 1.4;
-      const lines = Math.min(6, Math.max(1, Math.ceil(ctx.measureText(String(layer.text || "")).width / width)));
+      const lines = Math.min(6, Math.max(1, Math.ceil(ctx.measureText(String(words)).width / width)));
       ctx.textBaseline = "middle";
-      wrapText(ctx, layer.text, align === "left" ? -width / 2 : align === "right" ? width / 2 : 0, layer.w != null ? -((lines - 1) * lineHeight) / 2 : -40, width, lineHeight, 6);
+      if (/^#[0-9a-f]{6}$/i.test(layer.chip || "")) {
+        // A small coloured label behind the words (playful time chips).
+        const textW = Math.min(width, ctx.measureText(String(words)).width) + size * 0.9;
+        const chipX = align === "left" ? -width / 2 - size * 0.45 : align === "right" ? width / 2 - textW + size * 0.45 : -textW / 2;
+        const color = ctx.fillStyle;
+        ctx.fillStyle = layer.chip;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(chipX, -size * 0.75, textW, size * 1.5, size * 0.75);
+        else ctx.rect(chipX, -size * 0.75, textW, size * 1.5);
+        ctx.fill();
+        ctx.fillStyle = color;
+      }
+      wrapText(ctx, words, align === "left" ? -width / 2 : align === "right" ? width / 2 : 0, layer.w != null ? -((lines - 1) * lineHeight) / 2 : -40, width, lineHeight, 6);
       ctx.restore();
       continue;
     }
