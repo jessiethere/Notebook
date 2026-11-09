@@ -367,6 +367,14 @@
   ],
   "coverTemplates": [
     {
+      "id": "magazine-jp",
+      "title": "Japanese Magazine"
+    },
+    {
+      "id": "magazine-west",
+      "title": "Western Magazine"
+    },
+    {
       "id": "minimal-linen",
       "title": "Minimal Linen"
     },

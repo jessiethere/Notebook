@@ -144,6 +144,7 @@ const shortDate = (key) =>
 // Habit themes as thin line icons (the home page keeps emoji to a minimum).
 const themeIcon = (theme) =>
   icon({ Learning: "book", Fitness: "pulse", Wellness: "cloud", "Creative Life": "palette" }[theme] || "leaf");
+let calendarBook = "";
 let media = new MediaStore(),
   catalog,
   bookDraft = null,
@@ -415,22 +416,18 @@ function home() {
   } else if (scene)
     hero = `<button class="today-scene hero-photo" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span class="hero-shade" aria-hidden="true"></span><span class="hero-copy-block"><small class="hero-kicker">${t("scene.ofDay")} · ${esc(sceneName(scene))}</small><b>${t("home.prompt")}</b><em>${t("scene.useIt")} ›</em></span></button>`;
   else hero = `<p class="today-blank">${t("home.blankBody")}</p>`;
-  const picks = [...todayPicks(), ...sceneCollections().map((c) => collectionScenes(c.id)[1])]
-    .filter((item, k, all) => item && item !== scene && all.indexOf(item) === k)
-    .slice(0, 6);
-  const inspire = picks.length
-    ? `<section class="home-section home-inspire"><div class="section-heading"><h2>${t("home.inspire")}</h2><button data-action="home-library">${t("home.library")} ›</button></div><div class="inspire-row">${picks
-        .map((item) => `<button class="inspire-card" data-action="use-scene" data-scene="${esc(item.id)}" data-from="home"><img src="${esc(safePhoto(`photo:${item.id}`))}" alt="" loading="lazy"><span>${esc(sceneName(item))}</span></button>`)
-        .join("")}</div></section>`
-    : "";
+  // The journals, in the same order as on the shelf: open one, or add a page
+  // straight into it (a fitness, plants or family journal each keeps its own).
+  const books = `<section class="home-section home-books"><div class="section-heading"><div><h2>${t("home.books")}</h2><small>${t("home.booksHint")}</small></div><button data-action="nav" data-page="books">${t("home.shelf")} ›</button></div><div class="home-book-row">${state()
+    .books.map((book) => {
+      const count = bookEntryCount(state(), book.id);
+      return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
+    })
+    .join("")}<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button></div></section>`;
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
  <section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-moment"><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
- ${inspire}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
+ ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
-   .join("")}</div></section><section class="home-section"><div class="section-heading"><h2>${t("home.books")}</h2><button data-action="nav" data-page="books">${t("home.allBooks")}</button></div><div class="book-grid">${[...state().books]
-   .sort((a, b) => latestBook(b.id).localeCompare(latestBook(a.id)))
-   .slice(0, 3)
-   .map(bookCard)
    .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 function latestBook(bookId) {
@@ -492,6 +489,17 @@ function dayMarks(key) {
 
 // Photo wall: the month as a grid of that day's pictures on a slowly moving
 // background (like a month "wrapped" story).
+// Calendar by journal: "" shows every day; a book id shows only its days and
+// that book's pictures.
+function calendarBookDays() {
+  if (!calendarBook || !state().books.some((b) => b.id === calendarBook)) return null;
+  return new Map(bookDays(state(), calendarBook).map((day) => [day.date, day]));
+}
+function calendarBookChips() {
+  if (state().books.length < 2) return "";
+  const chip = (id, label) => `<button data-action="calendar-book" data-book="${esc(id)}" class="${calendarBook === id ? "selected" : ""}" aria-pressed="${calendarBook === id}">${esc(label)}</button>`;
+  return `<div class="calendar-books" role="group" aria-label="${t("home.books")}">${chip("", t("calendar.allBooks"))}${state().books.map((b) => chip(b.id, b.title)).join("")}</div>`;
+}
 function calendarWallHTML() {
   const year = month.getFullYear(),
     monthIndex = month.getMonth(),
@@ -501,11 +509,12 @@ function calendarWallHTML() {
   let days = 0,
     pictures = 0,
     backdrop = "";
+  const only = calendarBookDays();
   const cells = Array.from({ length: count }, (_, i) => {
     const key = dateKey(new Date(year, monthIndex, i + 1));
-    const entry = state().entries.find((e) => e.date === key) || state().drafts[key];
-    const photo = entry ? safePhoto(coverPhoto(entry)) : "";
-    const has = entry && (hasDayPageContent(entry) || entry.moments?.length);
+    const entry = only ? (only.has(key) ? state().entries.find((e) => e.date === key) : null) : state().entries.find((e) => e.date === key) || state().drafts[key];
+    const photo = only ? (only.get(key)?.photos[0] ? safePhoto(only.get(key).photos[0]) : "") : entry ? safePhoto(coverPhoto(entry)) : "";
+    const has = entry && (only ? true : hasDayPageContent(entry) || entry.moments?.length);
     if (has) days++;
     if (photo) {
       pictures++;
@@ -529,12 +538,13 @@ function calendarPage() {
     languageCode() === "en"
       ? ["M", "T", "W", "T", "F", "S", "S"]
       : ["一", "二", "三", "四", "五", "六", "日"];
+  const only = calendarMode === "memory" ? calendarBookDays() : null;
   const cells = Array.from({ length: count }, (_, i) => {
     const key = dateKey(new Date(year, monthIndex, i + 1)),
-      recorded = state().entries.find((e) => e.date === key),
+      recorded = only && !only.has(key) ? null : state().entries.find((e) => e.date === key),
       total = state().checks.filter((c) => c.date === key).length,
-      marks = dayMarks(key),
-      thumb = safePhoto(coverPhoto(recorded));
+      marks = only && !only.has(key) ? { html: "", label: "", hasContent: false } : dayMarks(key),
+      thumb = only ? (only.get(key)?.photos[0] ? safePhoto(only.get(key).photos[0]) : "") : safePhoto(coverPhoto(recorded));
     const mark =
       calendarMode === "memory"
         ? thumb
@@ -547,8 +557,8 @@ function calendarPage() {
   }).join("");
   const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header>`;
   if (calendarMode === "wall")
-    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarWallHTML()}`;
-  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
+    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
+  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -2010,6 +2020,21 @@ async function action(target) {
     pulledBook = null;
     render();
   }
+  if (actionName === "book-write") {
+    const book = state().books.find((b) => b.id === target.dataset.book);
+    if (!book) return;
+    openStudio(dateKey());
+    addMomentNow();
+    changeTarget((m) => {
+      if (m !== editor) m.bookId = book.id;
+    });
+    setPageMode("note", { quiet: true });
+    toast(t("book.writingIn", { name: book.title }));
+  }
+  if (actionName === "calendar-book") {
+    calendarBook = target.dataset.book || "";
+    render();
+  }
   if (actionName === "shelf-write") {
     const book = target.dataset.book;
     openStudio(dateKey());
@@ -2804,7 +2829,7 @@ function openBookDialog(book = null) {
         category: "Daily Life",
         color: "blush",
         cover: "🌷",
-        coverTemplate: "minimal-linen",
+        coverTemplate: "magazine-jp",
         coverFont: "elegant",
         coverDecoration: "tulip",
         coverImage: "",
@@ -3643,6 +3668,13 @@ async function v3Action(target) {
   }
   if (name === "cover-photo") {
     chooseAttachment({ kind: "cover" });
+    return true;
+  }
+  if (name === "cover-library-photo") {
+    bookDraft = readBookForm();
+    bookDraft.coverImage = `photo:${target.dataset.photo}`;
+    document.querySelectorAll(".cover-photo-picks button").forEach((b) => b.classList.toggle("selected", b === target));
+    refreshBookPreview();
     return true;
   }
   if (name === "cover-photo-remove") {

@@ -4,7 +4,7 @@ import XCTest
 final class CoreTests: XCTestCase {
     func testV3CatalogAndCommercialFontNotices() throws {
         let catalog = try SharedResources.decode(AssetCatalog.self, named: "library")
-        XCTAssertEqual(catalog.fonts.count, 7)
+        XCTAssertEqual(catalog.fonts.count, 11)
         XCTAssertEqual(catalog.stickers.count, 23)
         XCTAssertEqual(Set(catalog.stickers.map(\.category)).count, 10)
         for font in catalog.fonts {

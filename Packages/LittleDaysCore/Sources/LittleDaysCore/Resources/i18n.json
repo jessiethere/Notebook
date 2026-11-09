@@ -4174,5 +4174,45 @@
   "write.layoutTip": {
     "zh": "想在纸上写字：点「文字」加一个文字框，再点一下就能直接打字。",
     "en": "To write on the paper: tap Text to add a box, then tap it again to type."
+  },
+  "cover.magazine-jp": {
+    "zh": "日系杂志",
+    "en": "Japanese magazine"
+  },
+  "cover.magazine-west": {
+    "zh": "欧美杂志",
+    "en": "Western magazine"
+  },
+  "books.coverPhotoPick": {
+    "zh": "封面照片（也可以上传自己的）",
+    "en": "Cover photo (or upload your own)"
+  },
+  "home.booksHint": {
+    "zh": "选一本，接着记",
+    "en": "Pick a journal and keep going"
+  },
+  "home.shelf": {
+    "zh": "书架",
+    "en": "Shelf"
+  },
+  "home.writeIn": {
+    "zh": "记一页",
+    "en": "Add a page"
+  },
+  "home.newBook": {
+    "zh": "新手帐",
+    "en": "New journal"
+  },
+  "book.writingIn": {
+    "zh": "写进「{name}」",
+    "en": "Writing in “{name}”"
+  },
+  "calendar.allBooks": {
+    "zh": "全部手帐",
+    "en": "All journals"
+  },
+  "calendar.bookEmpty": {
+    "zh": "这一天「{name}」里还没有记录。",
+    "en": "Nothing in “{name}” on this day."
   }
 }

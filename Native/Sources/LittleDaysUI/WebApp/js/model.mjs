@@ -42,7 +42,15 @@ export function createInitialState(seed, today = dateKey()) {
 }
 export function normalizeState(value) {
   const result = structuredClone(value);
+  const autoCover = { "Daily Life": ["floral-notebook", "tulip"], Travel: ["travel-album", "postcard"], Food: ["scrapbook-collage", "croissant"] };
+  const sampleMagazine = { daily: "magazine-jp", travel: "magazine-west", food: "magazine-jp" };
   for (const book of result.books) {
+    // The sample books once got these covers automatically; if they were never
+    // changed (same template, sticker, no photo), they become magazine covers
+    // one time (coverRestyled keeps a later choice of the old cover).
+    const auto = autoCover[book.category];
+    if (!book.coverRestyled && sampleMagazine[book.id] && !book.coverImage && auto && book.coverTemplate === auto[0] && (book.coverDecoration || auto[1]) === auto[1]) book.coverTemplate = sampleMagazine[book.id];
+    if (sampleMagazine[book.id]) book.coverRestyled = true;
     book.visibility ||= "private";
     book.description ??= "";
     book.coverTemplate ||=

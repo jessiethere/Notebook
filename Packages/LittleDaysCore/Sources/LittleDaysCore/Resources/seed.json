@@ -32,21 +32,24 @@
       "title": "平凡日子里的小确幸",
       "category": "Daily Life",
       "color": "blush",
-      "cover": "🌷"
+      "cover": "🌷",
+      "coverTemplate": "magazine-jp"
     },
     {
       "id": "travel",
       "title": "去看更大的世界",
       "category": "Travel",
       "color": "sage",
-      "cover": "🏔️"
+      "cover": "🏔️",
+      "coverTemplate": "magazine-west"
     },
     {
       "id": "food",
       "title": "好好吃饭，好好生活",
       "category": "Food",
       "color": "butter",
-      "cover": "🥐"
+      "cover": "🥐",
+      "coverTemplate": "magazine-jp"
     }
   ],
   "journals": [

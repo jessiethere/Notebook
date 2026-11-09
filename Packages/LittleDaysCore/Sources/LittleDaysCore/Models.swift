@@ -44,7 +44,10 @@ public struct JournalBook: Codable, Identifiable, Equatable {
     public var coverTemplate: String?
     public var coverFont: String?
     public var coverDecoration: String?
+    /// "media:<id>" (own upload) or "photo:<id>" (photo library); magazine covers use it.
     public var coverImage: String?
+    /// The sample journals were switched to magazine covers once.
+    public var coverRestyled: Bool?
     public var visibility: String?
     public var fields: [BookField]?
 }

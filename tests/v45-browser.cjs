@@ -32,27 +32,16 @@ const shots = process.env.SHOTS_DIR || "";
     if (shots) await page.screenshot({ path: `${shots}/v45-home.png` });
     passed.push("Home: today's page as a large photo; line icons, no emoji; nothing wider than the screen");
 
-    // 2. "Start from a photo": real library photos; one tap writes with it.
-    const cards = page.locator(".home-mag .inspire-card");
-    assert.equal(await cards.count(), 6);
-    const srcs = await cards.locator("img").evaluateAll((els) => els.map((el) => el.getAttribute("src")));
-    assert.ok(srcs.every((src) => /library\/photos\/LD-photo-/.test(src)));
-    const pick = await cards.nth(2).getAttribute("data-scene");
-    await cards.nth(2).tap();
-    await page.waitForSelector(`#journal-canvas img[src*="LD-photo-${pick}"]`);
-    passed.push("「从一张照片开始」: six library photos; tap one to write with it");
-
-    // 3. "照片素材 ›" opens the whole library chooser.
-    await page.locator('[data-action="studio-back"]').tap().catch(() => {});
-    await page.waitForSelector(".home-mag, .studio-start", { timeout: 10000 });
-    if (!(await page.locator(".home-mag").count())) await page.locator('.bottom-nav [data-page="home"], [data-action="nav"][data-page="home"]').first().tap();
-    await page.waitForSelector(".home-mag");
-    await page.locator('.home-mag [data-action="home-library"]').tap();
-    await page.waitForSelector("#choose-dialog[open] .choose-collections button");
-    assert.equal(await page.locator("#choose-dialog .choose-collections button").count(), 13);
-    passed.push("「照片素材 ›」 opens the album / picks / 13 collections chooser");
+    // 2. Below writing: the journals (the photo row is gone).
+    assert.equal(await page.locator(".home-mag .inspire-card, .home-mag .home-inspire").count(), 0);
+    assert.ok((await page.locator(".home-mag .home-book").count()) >= 3);
+    passed.push("journals row replaces the photo row");
 
     // 4. A fresh day: the photo of the day fills the hero and invites writing.
+    // (Storage is written on the first change: tick and untick a habit.)
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.locator('[data-action="check"][data-habit="move"]').first().tap();
+    await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     await page.evaluate((d) => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
       s.entries = s.entries.filter((e) => e.date !== d);
@@ -62,9 +51,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.reload();
     await page.waitForSelector(".home-mag .hero-photo.today-scene img");
     assert.match(await page.locator(".home-mag .today-scene").innerText(), /今日照片[\s\S]*今天想记下什么[\s\S]*用它写一页/);
-    const heroId = await page.locator(".home-mag .today-scene").getAttribute("data-scene");
-    assert.ok(!(await page.locator(`.home-mag .inspire-card[data-scene="${heroId}"]`).count()), "the hero photo is not repeated below");
-    passed.push("fresh day: photo of the day as the hero (not repeated in the row)");
+    passed.push("fresh day: photo of the day as the hero");
 
     assert.deepEqual(errors, []);
     console.log(`V4.5 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

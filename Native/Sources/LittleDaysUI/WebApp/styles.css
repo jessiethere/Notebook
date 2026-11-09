@@ -8338,6 +8338,7 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
 /* ---------- Home: photo-led, magazine-like (fewer boxes, no emoji) ---------- */
 .home-mag {
   --home-gutter: 23px;
+  --zh-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   display: block;
   min-width: 0;
   max-width: 100%;
@@ -8348,7 +8349,7 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
 }
 .home-mag .home-top {
   align-items: flex-end;
-  margin: 4px 0 18px;
+  margin: 14px 0 18px;
 }
 .home-mag .masthead {
   display: grid;
@@ -8388,8 +8389,8 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   overflow: visible;
 }
 .home-mag .today-prompt {
-  font: 400 22px/1.35 "LD-zh-xiaowei", "LD-elegant", "LD-chinese", Georgia, serif;
-  letter-spacing: 0.02em;
+  font: 600 23px/1.35 var(--zh-display);
+  letter-spacing: -0.01em;
   color: var(--t-2b2622, #2b2622);
 }
 .home-mag .hero-photo {
@@ -8443,7 +8444,8 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   text-overflow: ellipsis;
 }
 .home-mag .hero-photo b {
-  font: 400 26px/1.3 "LD-zh-xiaowei", "LD-elegant", "LD-chinese", Georgia, serif;
+  font: 700 25px/1.32 var(--zh-display);
+  letter-spacing: -0.01em;
   color: var(--t-ffffff, #ffffff);
   white-space: normal;
   text-shadow: 0 1px 12px var(--c-00000040, #00000040);
@@ -8538,7 +8540,8 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   margin-bottom: 12px;
 }
 .home-mag .home-section h2 {
-  font: 400 19px/1.3 "LD-zh-xiaowei", "LD-elegant", "LD-chinese", Georgia, serif;
+  font: 600 19px/1.3 var(--zh-display);
+  letter-spacing: -0.01em;
   color: var(--t-2b2622, #2b2622);
 }
 .home-mag .home-section .section-heading > button {
@@ -8773,4 +8776,339 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* ---------- Home: the journals, in shelf order ---------- */
+.home-mag .home-books .section-heading > div {
+  display: grid;
+  gap: 2px;
+}
+.home-mag .home-books .section-heading small {
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.home-book-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  margin-right: calc(-1 * var(--home-gutter, 20px));
+  padding: 4px var(--home-gutter, 20px) 12px 0;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.home-book-row::-webkit-scrollbar {
+  display: none;
+}
+.home-book {
+  flex: 0 0 136px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+.home-book-cover {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.home-book .book-cover {
+  width: 136px;
+  height: 180px;
+  border-radius: 4px 10px 10px 4px;
+  box-shadow: 0 10px 22px var(--c-3c2d1e2e, #3c2d1e2e), 0 1px 2px var(--c-3c2d1e1f, #3c2d1e1f);
+}
+.home-book > b {
+  margin-top: 6px;
+  font: 600 13px/1.35 var(--zh-display, -apple-system, "PingFang SC", sans-serif);
+  color: var(--t-2b2622, #2b2622);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-book > small {
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.home-book-write {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  margin-top: 2px;
+  padding: 0 12px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 999px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 12px;
+  color: var(--t-5f6e4b, #5f6e4b);
+}
+.home-book-write svg,
+.home-book-new svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.home-book-new {
+  flex: 0 0 110px;
+  height: 180px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  border: 1.5px dashed var(--c-d9d1c3, #d9d1c3);
+  border-radius: 10px;
+  background: none;
+  color: var(--t-8a8178, #8a8178);
+  font-size: 12px;
+  scroll-snap-align: start;
+}
+.home-book-new svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Calendar: one journal at a time ---------- */
+.calendar-books {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 10px 0 4px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.calendar-books button {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 999px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 12px;
+  color: var(--t-6f675d, #6f675d);
+  white-space: nowrap;
+}
+.calendar-books button.selected {
+  border-color: var(--c-7d8e66, #7d8e66);
+  background: var(--c-7d8e66, #7d8e66);
+  color: var(--t-ffffff, #ffffff);
+}
+
+/* ---------- Magazine covers (Japanese / Western) ---------- */
+.book-cover.cover-magazine-west,
+.book-cover.cover-magazine-jp {
+  container-type: size;
+  display: block;
+  overflow: hidden;
+  font-size: 0;
+}
+.cover-magazine-west::after,
+.cover-magazine-jp::after {
+  content: none !important;
+}
+.cover-magazine-west .mag-photo,
+.cover-magazine-jp .mag-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mag-photo-empty {
+  background: linear-gradient(160deg, var(--c-d9cfbf, #d9cfbf), var(--c-a99c88, #a99c88));
+}
+/* Western: full-bleed photo, a big serif masthead, cover lines in white. */
+.cover-magazine-west {
+  background: var(--c-2b2622, #2b2622);
+  color: var(--t-ffffff, #ffffff);
+}
+.cover-magazine-west .mag-photo {
+  position: absolute;
+  inset: 0;
+}
+.cover-magazine-west .mag-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--c-00000059, #00000059) 0%, var(--c-00000000, #00000000) 32%, var(--c-00000000, #00000000) 52%, var(--c-000000b3, #000000b3) 100%);
+}
+.cover-magazine-west .mag-top {
+  position: absolute;
+  top: 5cqw;
+  left: 8cqw;
+  right: 6cqw;
+  display: flex;
+  justify-content: space-between;
+  font: 600 4.6cqw/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--t-ffffffd9, #ffffffd9);
+  z-index: 2;
+}
+.cover-magazine-west .mag-masthead {
+  position: absolute;
+  top: 9cqw;
+  left: 7cqw;
+  right: 4cqw;
+  font: 600 14.5cqw/0.95 "LD-elegant", "Didot", "Bodoni 72", Georgia, serif;
+  letter-spacing: -0.01em;
+  color: var(--t-ffffff, #ffffff);
+  text-shadow: 0 1px 6px var(--c-00000040, #00000040);
+  white-space: nowrap;
+  z-index: 2;
+}
+.cover-magazine-west .mag-lines {
+  position: absolute;
+  left: 8cqw;
+  right: 22cqw;
+  bottom: 8cqw;
+  display: grid;
+  gap: 2.5cqw;
+  z-index: 2;
+}
+.cover-magazine-west .cover-title {
+  position: static;
+  max-height: none;
+  text-align: left;
+  font: 700 11cqw/1.18 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--t-ffffff, #ffffff);
+  text-shadow: 0 1px 8px var(--c-00000059, #00000059);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cover-magazine-west .mag-lines i {
+  font: 500 5.4cqw/1.4 -apple-system, "PingFang SC", sans-serif;
+  font-style: normal;
+  color: var(--t-ffffffcc, #ffffffcc);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cover-magazine-west .mag-barcode {
+  position: absolute;
+  right: 6cqw;
+  bottom: 6cqw;
+  width: 11cqw;
+  height: 7cqw;
+  background: repeating-linear-gradient(90deg, var(--c-ffffff, #ffffff) 0 1px, transparent 1px 2.5px, var(--c-ffffff, #ffffff) 2.5px 3px, transparent 3px 4.5px);
+  opacity: 0.75;
+  z-index: 2;
+}
+/* Japanese: a calm paper cover, a framed photo, the title set vertically. */
+.cover-magazine-jp {
+  background: var(--c-f6f2ea, #f6f2ea);
+  color: var(--t-2b2622, #2b2622);
+}
+.cover-magazine-jp .mag-top {
+  position: absolute;
+  top: 6cqw;
+  left: 9cqw;
+  right: 8cqw;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font: 600 4.2cqw/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.14em;
+  color: var(--t-8a8178, #8a8178);
+}
+.cover-magazine-jp .mag-brand {
+  font: italic 500 9cqw/1 "LD-elegant", Georgia, serif;
+  letter-spacing: 0.01em;
+  color: var(--t-2b2622, #2b2622);
+}
+.cover-magazine-jp .mag-frame {
+  position: absolute;
+  top: 19cqh;
+  left: 9cqw;
+  right: 9cqw;
+  bottom: 21cqh;
+  overflow: hidden;
+  background: var(--c-e8e1d5, #e8e1d5);
+}
+.cover-magazine-jp .cover-title,
+.cover-magazine-jp .mag-vertical {
+  position: absolute;
+  top: 15cqh;
+  left: auto;
+  right: 5cqw;
+  bottom: auto;
+  /* One character wide, so each character sits under the last (a vertical
+     title); the size shrinks for long titles so they still fit. */
+  width: calc(1em + 4.4cqw);
+  max-height: 66cqh;
+  padding: 2.4cqw 2.2cqw;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  text-wrap: wrap;
+  writing-mode: horizontal-tb;
+  background: var(--c-f6f2ea, #f6f2ea);
+  font: 700 min(8.6cqw, calc(60cqh / var(--n, 6) / 1.18)) / 1.18 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0;
+  color: var(--t-2b2622, #2b2622);
+  text-align: center;
+  overflow: hidden;
+  z-index: 3;
+}
+.cover-magazine-jp .mag-foot {
+  position: absolute;
+  left: 9cqw;
+  right: 9cqw;
+  bottom: 6cqh;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 3cqw;
+  row-gap: 2cqw;
+  align-items: center;
+  font: 600 4cqw/1.3 -apple-system, "Helvetica Neue", "PingFang SC", Arial, sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--t-2b2622, #2b2622);
+}
+.cover-magazine-jp .mag-foot i {
+  height: 1px;
+  background: var(--cover-color, var(--c-c9b9a3, #c9b9a3));
+  filter: saturate(1.4) brightness(0.85);
+}
+.cover-magazine-jp .mag-foot span:last-child {
+  grid-column: 1 / -1;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--t-8a8178, #8a8178);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Book dialog: a row of library photos for the cover. */
+.cover-photo-picks {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scrollbar-width: none;
+}
+.cover-photo-picks button {
+  flex: 0 0 56px;
+  height: 72px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--c-eee7da, #eee7da);
+}
+.cover-photo-picks button.selected {
+  border-color: var(--c-6c7b56, #6c7b56);
+}
+.cover-photo-picks img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }

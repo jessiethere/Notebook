@@ -14,8 +14,48 @@ export function fieldLabel(field, language) {
     ? field.labelEn || field.label
     : field.labelZh || field.label;
 }
+// Magazine covers use a photo: the book's own, or one from the photo library
+// that suits what the book is about (always the same one for the same book).
+const COVER_COLLECTIONS = [
+  [/fit|sport|gym|run|运动|健身|跑/i, "move"],
+  [/plant|garden|flower|植物|花|绿/i, "flowers"],
+  [/pet|cat|dog|宠物|猫|狗/i, "pets"],
+  [/parent|family|kid|baby|亲子|家庭|宝宝|孩子/i, "celebrate"],
+  [/travel|trip|旅行|旅游|出发/i, "travel"],
+  [/food|cook|recipe|美食|吃|做饭/i, "food"],
+  [/read|study|learn|book|学习|读书|阅读/i, "quiet"],
+  [/daily|life|日常|生活/i, "coffee"],
+];
+export function coverCollection(book) {
+  const text = `${book.category || ""} ${book.title || ""}`;
+  return (COVER_COLLECTIONS.find(([pattern]) => pattern.test(text)) || [null, "views"])[1];
+}
+export function coverPhotoRef(book, catalog) {
+  if (book.coverImage) return book.coverImage;
+  const photos = catalog.photos || [];
+  const pool = photos.filter((photo) => photo.collection === coverCollection(book));
+  const list = pool.length ? pool : photos;
+  if (!list.length) return "";
+  const seed = [...String(book.id || book.title || "")].reduce((sum, c) => (sum * 31 + c.charCodeAt(0)) >>> 0, 7);
+  return `photo:${list[seed % list.length].id}`;
+}
+export const MAGAZINE_COVERS = ["magazine-jp", "magazine-west"];
+function magazineCoverHTML(book, ctx, template) {
+  const { tokens, media } = ctx;
+  const photo = media.resolve(coverPhotoRef(book, ctx.catalog));
+  const now = new Date();
+  const issue = now.toLocaleDateString("en", { month: "short", year: "numeric" }).toUpperCase();
+  const topic = String(book.category || "Journal").toUpperCase();
+  const title = esc(book.title || "Little Days");
+  const line = esc((book.description || "").trim());
+  const img = photo ? `<img class="mag-photo" src="${esc(photo)}" alt="">` : `<span class="mag-photo mag-photo-empty"></span>`;
+  if (template === "magazine-west")
+    return `<div class="book-cover cover-magazine-west" style="--cover-color:${coverColor(book, tokens)}">${img}<span class="mag-shade" aria-hidden="true"></span><span class="mag-top"><span>${esc(issue)}</span><span>${esc(topic)}</span></span><span class="mag-masthead">LITTLE DAYS</span><span class="mag-lines"><b class="cover-title">${title}</b>${line ? `<i>${line}</i>` : ""}</span><span class="mag-barcode" aria-hidden="true"></span></div>`;
+  return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">little days</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Little Days")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;
+}
 export function coverHTML(book, ctx) {
   const { catalog, tokens, media, t } = ctx;
+  if (MAGAZINE_COVERS.includes(book.coverTemplate)) return magazineCoverHTML(book, ctx, book.coverTemplate);
   const template = catalog.coverTemplates.some(
     (item) => item.id === book.coverTemplate,
   )
@@ -25,11 +65,21 @@ export function coverHTML(book, ctx) {
   const photo = media.resolve(book.coverImage || "");
   return `<div class="book-cover cover-${template}" style="--cover-color:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${photo ? `<img class="cover-photo" src="${esc(photo)}" alt="">` : ""}<span class="cover-rule"></span><span class="cover-title">${esc(book.title || "Little Days")}</span>${decoration && book.coverDecoration !== "none" ? `<img class="cover-decoration" src="${decoration}" alt="">` : ""}<span class="cover-imprint">LITTLE DAYS</span></div>`;
 }
+// Photos offered for a cover: the ones that suit the book first, then a mix.
+function coverPhotoPicks(book, catalog) {
+  const photos = catalog.photos || [];
+  const suited = photos.filter((photo) => photo.collection === coverCollection(book));
+  const others = photos.filter((photo, k) => photo.collection !== coverCollection(book) && k % 6 === 0);
+  return [...suited, ...others].slice(0, 14);
+}
 export function bookDialogHTML(book, ctx) {
   const { catalog, t, tokens } = ctx;
   return `<h2>${t(book.id ? "books.dialogEdit" : "books.dialogNew")}</h2><p class="dialog-description">${t("books.dialogDescription")}</p><div id="book-cover-preview" class="book-cover-preview">${coverHTML(book, ctx)}</div><div class="dialog-fields">
  <label class="field">${t("books.name")}<input name="title" required maxlength="60" placeholder="${t("books.namePlaceholder")}" value="${esc(book.title || "")}"></label><label class="field">${t("books.description")}<textarea name="description" maxlength="300">${esc(book.description || "")}</textarea></label><label class="field">${t("books.category")}<input name="category" required maxlength="40" value="${esc(book.category || "Daily Life")}"></label>
- <label class="field">${t("books.cover")}</label><input name="coverTemplate" type="hidden" value="${esc(book.coverTemplate || "minimal-linen")}"><div class="cover-template-grid">${catalog.coverTemplates.map((template) => `<button type="button" data-action="cover-template" data-template="${template.id}" class="cover-option ${(book.coverTemplate || "minimal-linen") === template.id ? "selected" : ""}">${coverHTML({ ...book, coverTemplate: template.id, coverImage: "" }, ctx)}<span>${t("cover." + template.id)}</span></button>`).join("")}</div>
+ <label class="field">${t("books.cover")}</label><input name="coverTemplate" type="hidden" value="${esc(book.coverTemplate || "minimal-linen")}"><div class="cover-template-grid">${catalog.coverTemplates.map((template) => `<button type="button" data-action="cover-template" data-template="${template.id}" class="cover-option ${(book.coverTemplate || "minimal-linen") === template.id ? "selected" : ""}">${coverHTML({ ...book, coverTemplate: template.id, coverImage: MAGAZINE_COVERS.includes(template.id) ? book.coverImage : "" }, ctx)}<span>${t("cover." + template.id)}</span></button>`).join("")}</div>
+ <label class="field">${t("books.coverPhotoPick")}</label><div class="cover-photo-picks">${coverPhotoPicks(book, catalog)
+   .map((photo) => `<button type="button" data-action="cover-library-photo" data-photo="${esc(photo.id)}" class="${book.coverImage === `photo:${photo.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? photo.nameEn : photo.nameZh)}"><img src="${esc(ctx.media.resolve(`photo:${photo.id}`))}" alt="" loading="lazy"></button>`)
+   .join("")}</div>
  <div class="field-row"><label class="field">${t("books.color")}<select name="color">${["blush", "sage", "butter", "blue", "cream"].map((color) => `<option value="${color}" ${book.color === color ? "selected" : ""}>${t("color." + color)}</option>`).join("")}</select></label><label class="field">${t("books.font")}<select name="coverFont">${catalog.fonts.map((font) => `<option value="${font.id}" ${(book.coverFont || "elegant") === font.id ? "selected" : ""}>${font.name}</option>`).join("")}</select></label></div>
  <label class="field">${t("books.decoration")}<select name="coverDecoration"><option value="none" ${book.coverDecoration === "none" ? "selected" : ""}>${t("books.none")}</option>${catalog.stickers
    .slice(0, 16)
