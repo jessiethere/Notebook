@@ -1074,18 +1074,45 @@ function sceneName(scene) {
   return languageCode() === "en" ? scene.nameEn : scene.nameZh;
 }
 function todayScene() {
-  const id = sceneOfDay(scenes().map((scene) => scene.id), dateKey());
+  // Same set as new journals' sample page: the hand-drawn life scenes.
+  const id = sceneOfDay(scenes().filter((scene) => (scene.collection || "life") === "life").map((scene) => scene.id), dateKey());
   return scenes().find((scene) => scene.id === id);
 }
-function sceneLibraryHTML() {
+// The scene library looks like a wallpaper gallery: one row per collection
+// (stacked previews, name, a line about it, "Use"), then a swipeable sheet.
+function sceneCollections() {
+  return (catalog.sceneCollections || []).filter((c) => scenes().some((scene) => (scene.collection || "life") === c.id));
+}
+function collectionScenes(id) {
+  const list = scenes().filter((scene) => (scene.collection || "life") === id);
   const today = todayScene();
-  const list = today ? [today, ...scenes().filter((scene) => scene.id !== today.id)] : scenes();
-  return `<section class="scene-library"><div class="scene-head"><b>${t("scene.title")}</b><small>${t("scene.note")}</small></div><div class="scene-grid">${list
+  return today && id === (today.collection || "life") ? [today, ...list.filter((scene) => scene !== today)] : list;
+}
+function sceneLibraryHTML() {
+  const en = languageCode() === "en";
+  return `<section class="wall-gallery"><div class="scene-head"><b>${t("scene.title")}</b><small>${t("scene.note")}</small></div>${sceneCollections()
+    .map((c) => {
+      const preview = collectionScenes(c.id).slice(0, 3);
+      return `<article class="wall-row"><button class="wall-stack" data-action="scene-collection" data-collection="${esc(c.id)}" aria-label="${esc(en ? c.nameEn : c.nameZh)}">${preview
+        .map((scene, k) => `<img class="wall-card w${k}" src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">`)
+        .reverse()
+        .join("")}</button><div class="wall-copy"><h4>${esc(en ? c.nameEn : c.nameZh)}</h4><p>${esc(en ? c.descEn : c.descZh)}</p><button class="wall-get" data-action="scene-collection" data-collection="${esc(c.id)}">${t("scene.get")}</button></div></article>`;
+    })
+    .join("")}</section>`;
+}
+function openSceneCollection(id) {
+  const c = sceneCollections().find((item) => item.id === id);
+  if (!c) return;
+  const en = languageCode() === "en";
+  const today = todayScene();
+  const dialog = $("#scene-dialog");
+  dialog.innerHTML = `<div class="wall-sheet"><header><button class="wall-close" data-action="scene-close" aria-label="${t("close")}">×</button><h2>${esc(en ? c.nameEn : c.nameZh)}</h2><span></span></header><p class="wall-desc">${esc(en ? c.descEn : c.descZh)}</p><div class="wall-scroller">${collectionScenes(id)
     .map(
       (scene) =>
-        `<button class="scene-option" data-action="use-scene" data-scene="${esc(scene.id)}" aria-label="${esc(sceneName(scene))}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="" loading="lazy">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<span>${esc(sceneName(scene))}</span></button>`,
+        `<figure class="wall-big"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt="">${scene === today ? `<i>${t("scene.today")}</i>` : ""}<figcaption><b>${esc(sceneName(scene))}</b><button class="wall-use" data-action="use-scene" data-scene="${esc(scene.id)}">${t("scene.useThis")}</button></figcaption></figure>`,
     )
-    .join("")}</div></section>`;
+    .join("")}</div><p class="wall-hint">${t("scene.swipe")}</p></div>`;
+  dialog.showModal();
 }
 // Put a scene on the page being written (a new story if today already has one
 // when coming from Home).
@@ -1634,7 +1661,12 @@ async function action(target) {
     $("#app-scroll").scrollTop = 0;
   }
   if (actionName === "photo-edit") await reEditPhotoLayer();
-  if (actionName === "use-scene") useScene(target.dataset.scene, target.dataset.from === "home");
+  if (actionName === "use-scene") {
+    if ($("#scene-dialog")?.open) $("#scene-dialog").close();
+    useScene(target.dataset.scene, target.dataset.from === "home");
+  }
+  if (actionName === "scene-collection") openSceneCollection(target.dataset.collection);
+  if (actionName === "scene-close") $("#scene-dialog").close();
   if (actionName === "layer-shape") {
     const shape = target.dataset.shape;
     changeTarget((page) => {

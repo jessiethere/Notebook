@@ -3792,8 +3792,8 @@
     "en": "Scene library"
   },
   "scene.note": {
-    "zh": "原创插画，点一下放到纸上；可以再用“编辑图片”加滤镜和文字。",
-    "en": "Original illustrations — tap to place on the page, then “Edit photo” for filters and words."
+    "zh": "原创插画与壁纸，放到纸上后还能用“编辑图片”加滤镜和文字。",
+    "en": "Original illustrations and wallpapers — add them to a page, then “Edit photo” for filters and words."
   },
   "scene.today": {
     "zh": "今天",
@@ -4006,5 +4006,17 @@
   "inbox.comment": {
     "zh": "{name} 评论了「{work}」：{text}",
     "en": "{name} commented on “{work}”: {text}"
+  },
+  "scene.get": {
+    "zh": "使用",
+    "en": "Get"
+  },
+  "scene.useThis": {
+    "zh": "用这张",
+    "en": "Use this"
+  },
+  "scene.swipe": {
+    "zh": "左右滑动看更多",
+    "en": "Swipe for more"
   }
 }

@@ -1023,6 +1023,7 @@
   "scenes": [
     {
       "id": "coffee-morning",
+      "collection": "life",
       "category": "daily",
       "nameZh": "早晨的咖啡",
       "nameEn": "Morning coffee",
@@ -1031,6 +1032,7 @@
     },
     {
       "id": "sunrise-hills",
+      "collection": "life",
       "category": "nature",
       "nameZh": "山坡日出",
       "nameEn": "Sunrise hills",
@@ -1039,6 +1041,7 @@
     },
     {
       "id": "rainy-window",
+      "collection": "life",
       "category": "daily",
       "nameZh": "雨天窗边",
       "nameEn": "Rainy window",
@@ -1047,6 +1050,7 @@
     },
     {
       "id": "tulip-vase",
+      "collection": "life",
       "category": "daily",
       "nameZh": "一瓶郁金香",
       "nameEn": "Tulips in a vase",
@@ -1055,6 +1059,7 @@
     },
     {
       "id": "beach-waves",
+      "collection": "life",
       "category": "travel",
       "nameZh": "海边的风",
       "nameEn": "By the sea",
@@ -1063,6 +1068,7 @@
     },
     {
       "id": "city-night",
+      "collection": "life",
       "category": "travel",
       "nameZh": "城市夜晚",
       "nameEn": "City night",
@@ -1071,6 +1077,7 @@
     },
     {
       "id": "picnic",
+      "collection": "life",
       "category": "daily",
       "nameZh": "草地野餐",
       "nameEn": "Picnic",
@@ -1079,6 +1086,7 @@
     },
     {
       "id": "book-tea",
+      "collection": "life",
       "category": "daily",
       "nameZh": "书和一杯茶",
       "nameEn": "Book and tea",
@@ -1087,6 +1095,7 @@
     },
     {
       "id": "cat-window",
+      "collection": "life",
       "category": "pets",
       "nameZh": "窗台上的猫",
       "nameEn": "Cat by the window",
@@ -1095,6 +1104,7 @@
     },
     {
       "id": "mountain-lake",
+      "collection": "life",
       "category": "travel",
       "nameZh": "山与湖",
       "nameEn": "Mountain lake",
@@ -1103,6 +1113,7 @@
     },
     {
       "id": "autumn-leaves",
+      "collection": "life",
       "category": "nature",
       "nameZh": "秋天的树",
       "nameEn": "Autumn leaves",
@@ -1111,11 +1122,245 @@
     },
     {
       "id": "birthday-cake",
+      "collection": "life",
       "category": "celebration",
       "nameZh": "生日蛋糕",
       "nameEn": "Birthday cake",
       "file": "LD-scene-birthday-cake.svg",
       "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-peach",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "蜜桃晨光",
+      "nameEn": "Peach glow",
+      "file": "LD-scene-color-peach.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-ocean",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "海的颜色",
+      "nameEn": "Ocean",
+      "file": "LD-scene-color-ocean.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-lavender",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "薰衣草黄昏",
+      "nameEn": "Lavender dusk",
+      "file": "LD-scene-color-lavender.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-mint",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "薄荷清晨",
+      "nameEn": "Mint morning",
+      "file": "LD-scene-color-mint.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-rose",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "玫瑰金",
+      "nameEn": "Rose gold",
+      "file": "LD-scene-color-rose.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-midnight",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "午夜霓虹",
+      "nameEn": "Midnight neon",
+      "file": "LD-scene-color-midnight.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "ribbons-aurora",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "极光丝带",
+      "nameEn": "Aurora ribbons",
+      "file": "LD-scene-ribbons-aurora.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "ribbons-sunset",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "落日丝带",
+      "nameEn": "Sunset ribbons",
+      "file": "LD-scene-ribbons-sunset.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "ribbons-candy",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "糖果丝带",
+      "nameEn": "Candy ribbons",
+      "file": "LD-scene-ribbons-candy.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "ribbons-ember",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "余烬",
+      "nameEn": "Embers",
+      "file": "LD-scene-ribbons-ember.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "kaleido-lagoon",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "泻湖",
+      "nameEn": "Lagoon",
+      "file": "LD-scene-kaleido-lagoon.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "kaleido-garden",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "花园",
+      "nameEn": "Garden",
+      "file": "LD-scene-kaleido-garden.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "kaleido-sunrise",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "朝霞",
+      "nameEn": "Sunrise",
+      "file": "LD-scene-kaleido-sunrise.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "kaleido-violet",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "紫晶",
+      "nameEn": "Amethyst",
+      "file": "LD-scene-kaleido-violet.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-clouds",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "云朵和小蜜蜂",
+      "nameEn": "Clouds & bees",
+      "file": "LD-scene-pattern-clouds.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-flowers",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "满天小花",
+      "nameEn": "Little flowers",
+      "file": "LD-scene-pattern-flowers.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-stars",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "星星月亮",
+      "nameEn": "Stars & moons",
+      "file": "LD-scene-pattern-stars.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-hearts",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "小爱心",
+      "nameEn": "Little hearts",
+      "file": "LD-scene-pattern-hearts.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "sky-blue-planet",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "蓝色星球",
+      "nameEn": "Blue planet",
+      "file": "LD-scene-sky-blue-planet.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "sky-ringed",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "土星环",
+      "nameEn": "Ringed planet",
+      "file": "LD-scene-sky-ringed.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "sky-moon",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "月光",
+      "nameEn": "Moonlight",
+      "file": "LD-scene-sky-moon.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    }
+  ],
+  "sceneCollections": [
+    {
+      "id": "life",
+      "nameZh": "生活小景",
+      "nameEn": "Little scenes",
+      "descZh": "手绘的日常：咖啡、雨天、海边、猫咪……适合当一页的主图。",
+      "descEn": "Hand-drawn everyday moments — coffee, rain, the sea, a cat."
+    },
+    {
+      "id": "color",
+      "nameZh": "渐变色彩",
+      "nameEn": "Color",
+      "descZh": "柔和的光与颜色，像一块会发光的玻璃。",
+      "descEn": "Soft light and color, like glowing glass."
+    },
+    {
+      "id": "ribbons",
+      "nameZh": "光影丝带",
+      "nameEn": "Ribbons",
+      "descZh": "深色背景上流动的发光彩带。",
+      "descEn": "Glowing ribbons flowing across the dark."
+    },
+    {
+      "id": "kaleido",
+      "nameZh": "万花筒",
+      "nameEn": "Kaleidoscope",
+      "descZh": "十二重对称的花纹，每一张都不一样。",
+      "descEn": "Twelve-fold mirrored patterns, each one different."
+    },
+    {
+      "id": "pattern",
+      "nameZh": "可爱图案",
+      "nameEn": "Patterns",
+      "descZh": "云朵、小花、星星和爱心，铺满整页。",
+      "descEn": "Clouds, flowers, stars and hearts all over."
+    },
+    {
+      "id": "sky",
+      "nameZh": "星空",
+      "nameEn": "Sky",
+      "descZh": "星球、月光和星云。",
+      "descEn": "Planets, moonlight and nebulae."
     }
   ]
 }

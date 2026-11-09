@@ -7609,3 +7609,180 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
   color: var(--t-a3957f, #a3957f);
   text-align: center;
 }
+
+/* V3.12 · Scene library as a wallpaper gallery. */
+.wall-gallery {
+  margin-top: 14px;
+  display: grid;
+  gap: 4px;
+}
+.wall-row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+}
+.wall-stack {
+  position: relative;
+  height: 150px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.wall-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 92px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1.5px solid var(--c-00000024, #00000024);
+  box-shadow: 0 6px 16px var(--c-2f2a2633, #2f2a2633);
+}
+.wall-card.w1 {
+  left: 10px;
+  top: 6px;
+  height: 138px;
+  filter: brightness(0.92);
+}
+.wall-card.w2 {
+  left: 20px;
+  top: 12px;
+  height: 126px;
+  filter: brightness(0.84);
+}
+.wall-copy h4 {
+  margin: 0;
+  font: 700 19px/1.25 -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+.wall-copy p {
+  margin: 6px 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--t-8d857b, #8d857b);
+}
+.wall-get {
+  min-height: 34px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-3a3632, #3a3632);
+  color: var(--t-ffffff, #ffffff);
+  font: 600 14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.scene-dialog {
+  width: 100vw;
+  max-width: 430px;
+  height: min(100dvh, 930px);
+  max-height: 100dvh;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 26px;
+  background: var(--c-0b0b0c, #0b0b0c);
+  color: var(--t-ffffff, #ffffff);
+}
+.scene-dialog::backdrop {
+  background: var(--c-000000b3, #000000b3);
+}
+.wall-sheet {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.wall-sheet header {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 14px 14px 4px;
+}
+.wall-sheet h2 {
+  margin: 0;
+  text-align: center;
+  font: 700 17px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.wall-close {
+  width: 40px;
+  height: 40px;
+  min-height: 0;
+  border-radius: 50%;
+  border: 0;
+  background: var(--c-ffffff24, #ffffff24);
+  color: var(--t-ffffff, #ffffff);
+  font-size: 22px;
+}
+.wall-desc {
+  margin: 4px 24px 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--t-ffffff99, #ffffff99);
+}
+.wall-scroller {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 6px 24px 10px;
+  scrollbar-width: none;
+}
+.wall-scroller::-webkit-scrollbar {
+  display: none;
+}
+.wall-big {
+  position: relative;
+  flex: 0 0 72%;
+  margin: 0;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wall-big img {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: cover;
+  border-radius: 30px;
+  box-shadow: 0 14px 40px var(--c-00000080, #00000080);
+}
+.wall-big i {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-style: normal;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--c-ffffffd9, #ffffffd9);
+  color: var(--t-2f2a26, #2f2a26);
+  font-weight: 600;
+}
+.wall-big figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.wall-big figcaption b {
+  font: 600 15px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.wall-use {
+  min-height: 34px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-ffffff2e, #ffffff2e);
+  color: var(--t-ffffff, #ffffff);
+  font: 600 14px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.wall-hint {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--t-ffffff66, #ffffff66);
+}

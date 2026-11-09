@@ -46,22 +46,30 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector(`#journal-canvas .photo-layer img[src*="LD-scene-${sceneId}"]`);
     passed.push("Home: picture of the day → one tap puts it on today's page");
 
-    // 3. Photo panel: the library (12, today's first and marked), place another.
+    // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
     const dock = page.locator('[data-action="tool"][data-tool="photos"]');
     if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
-    await page.waitForSelector(".scene-grid");
-    assert.equal(await page.locator(".scene-option").count(), 12);
-    assert.equal(await page.locator(".scene-option").first().getAttribute("data-scene"), sceneId);
-    assert.equal(await page.locator(".scene-option i").count(), 1);
-    const other = await page.locator(".scene-option").nth(5).getAttribute("data-scene");
-    await page.locator(".scene-option").nth(5).tap();
+    await page.waitForSelector(".wall-gallery");
+    assert.deepEqual(await page.$$eval(".wall-get", (els) => els.map((el) => el.dataset.collection)), ["life", "color", "ribbons", "kaleido", "pattern", "sky"]);
+    assert.equal(await page.locator('.wall-row').first().locator('.wall-card').count(), 3, "stacked previews");
+    await page.locator('.wall-get[data-collection="life"]').tap();
+    await page.waitForSelector("#scene-dialog[open] .wall-big");
+    assert.equal(await page.locator("#scene-dialog .wall-big").count(), 12);
+    assert.equal(await page.locator("#scene-dialog .wall-big").first().locator(".wall-use").getAttribute("data-scene"), sceneId, "today's first");
+    await page.locator('[data-action="scene-close"]').tap();
+    await page.locator('.wall-get[data-collection="ribbons"]').tap();
+    await page.waitForSelector("#scene-dialog[open] .wall-big");
+    assert.equal(await page.locator("#scene-dialog .wall-big").count(), 4);
+    const other = await page.locator("#scene-dialog .wall-use").nth(1).getAttribute("data-scene");
+    await page.locator("#scene-dialog .wall-use").nth(1).tap();
+    await page.waitForSelector("#scene-dialog:not([open])", { state: "attached" });
     await page.waitForFunction((id) => {
       const d = new Date();
       const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const draft = JSON.parse(localStorage.getItem("little-days.v1")).drafts[k];
       return draft && [draft, ...draft.moments].some((p) => p.layers.some((l) => l.mediaRef === `scene:${id}`));
     }, other);
-    passed.push("photo panel: 12 scenes, today's first; tap to place");
+    passed.push("gallery: 6 collections with stacked previews → swipe sheet; today's first; use one");
 
     // 4. A scene can be edited like a photo (the original scene stays the source).
     const layerId = await page.evaluate((id) => {

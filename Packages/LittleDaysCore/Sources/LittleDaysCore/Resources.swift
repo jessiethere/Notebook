@@ -71,6 +71,8 @@ public struct StickerAsset: Decodable, Identifiable {
 /// Original scene illustrations ("photo-like" material for pages).
 public struct SceneAsset: Decodable, Identifiable {
     public let id: String
+    /// life / color / ribbons / kaleido / pattern / sky
+    public let collection: String?
     public let category: String
     public let nameZh: String
     public let nameEn: String
@@ -78,11 +80,20 @@ public struct SceneAsset: Decodable, Identifiable {
     public let license: String
 }
 
+public struct SceneCollection: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let descZh: String
+    public let descEn: String
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
     public let stickers: [StickerAsset]
     public let scenes: [SceneAsset]?
+    public let sceneCollections: [SceneCollection]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }
