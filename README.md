@@ -11,15 +11,15 @@
 > 查看方式统一用这个在线链接；iPhone 上最终是 Swift / SwiftUI 外壳里运行同一个界面。
 > 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
 
-本机预览：[http://localhost:8080](http://localhost:8080)（先双击项目文件夹里的 **Start-Windows.cmd**，它会自动更新到最新版并启动）。
+备用（一般不需要）：本机预览 [http://localhost:8080](http://localhost:8080)，只在要录音、下载导出文件时用（双击 **Start-Windows.cmd** 启动）。
 
 **在 Claude 桌面 App 里随时点击**：用 Claude 桌面 App 新建一个**本地**会话并选择 `Notebook` 文件夹，在 Browser 面板的 **Dev servers** 菜单里点 **Little Days (Windows)** 即可启动并打开（配置在 `.claude/launch.json`）。网页版/云端会话的侧栏目前没有这个服务器列表。
 
 最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
-**架构：最终发布 iOS App；iOS App 是 Swift 外壳（SwiftUI + WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。** 所以你在 localhost 链接里看到的，就是 iPhone 上会看到的同一个界面——在 Windows 浏览器就能检查每次更新、告诉我哪里要改，不需要每次用 Mac/Xcode。保留 Vapor 与共享 Swift Core；没有使用 React。
+**架构：最终发布 iOS App；iOS App 是 Swift 外壳（SwiftUI + WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。** 所以你在 claude.ai 固定链接里看到的，就是 iPhone 上会看到的同一个界面——点开链接就能检查每次更新、告诉我哪里要改，不需要每次用 Mac/Xcode。保留 Vapor 与共享 Swift Core；没有使用 React。
 
-## 查看最新版：点 localhost 链接
+## 备用：本机 localhost 预览（一般不需要，查看更新请用上面的固定链接）
 
 **在 Claude 会话里**：每次开始工作时，预览服务会在后台启动并登记为预览链接。直接点开会话里的 **localhost:8080** 预览即可看到最新代码，不需要下载任何东西。
 
@@ -92,6 +92,8 @@ py -3 tools\preview.py --open
 | [DESIGN_SYSTEM](docs/DESIGN_SYSTEM.md) | 配色、精致封面、字体、素材和双语规范 |
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | 当前架构/兼容策略，以及未部署的社交后端和权限设计 |
 | [ROADMAP](docs/ROADMAP.md) | Phase 1–5 的详细任务与验收清单 |
+| [STRATEGY](docs/STRATEGY.md) | 产品战略、竞品、优先级与待确认提案（任务 G） |
+| [QUICK_CREATE_PLAN](docs/QUICK_CREATE_PLAN.md) | 差异化与 Quick Create v3 方案（待确认）；设计稿 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt |
 | [ASSETS](docs/ASSETS.md) | 素材来源、SIL OFL 和原创许可 |
 | [Windows 指南](docs/WINDOWS_PREVIEW.md) | 无 Git 下载、启动、更新与故障排查 |
 | `Public/js/` | 元数据、IndexedDB、通用 UI、素材、双语与图片导出模块 |
@@ -163,6 +165,11 @@ npm run test:browser:v59
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 查看方式改为固定链接；Quick Create v3 方案（文档，待确认）
+
+- 以后统一用 claude.ai 固定链接查看修改后的 App；localhost 只是备用。
+- 新增 [docs/QUICK_CREATE_PLAN.md](docs/QUICK_CREATE_PLAN.md)：差异化分析、Quick Create 旅程、7 个排版模板、技术增量、优先级、15–20 人验证方案；6 屏 iPhone 设计稿：https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt 。没有改 App 代码。
 
 ### 2026-11-09 — 竞品补充：My Diary（文档）
 

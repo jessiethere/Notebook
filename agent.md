@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 README 顶部的 http://localhost:8080 链接 / 会话 servers 预览查看每次更新，不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
+- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 claude.ai 固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A 查看每次更新（2026-11-09 用户确认取代 Windows localhost:8080），不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
 - **V3.1（Web）已实现**：Calendar 只读 Day Detail（全部 Moments、照片排版、统一音频播放器/录音/视频直接播放、照片放大、成长感想）；多照片自由排版（多选、独立图层、拖动/双指缩放旋转/鼠标把手/滚轮/方向键、裁切、相框/胶带、图层顺序、五种 Auto Layout、撤销重做）；一天多个 Moments（章节、排序、复制、删除、折叠、单独保存）；Growth 打卡感想、周/月回顾、成长卡片引用插入。全部仍为 schemaVersion 1 的可选字段，旧记录不迁移即可打开。
 - 媒体对象 URL 改为按视图 scope 引用计数：图片 app 级常驻，音视频仅 Studio / Day Detail 打开时从 IndexedDB 载入，离开即撤销。
 - 本轮环境（Ubuntu 24.04 容器）没有 Swift 工具链，且 download.swift.org 被网络策略拒绝（403），因此 Swift Core/Vapor 测试本轮**未运行**；Swift 模型只做了可选字段扩展与新增测试源码。
@@ -47,6 +47,17 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-09 — 查看方式改为固定链接；差异化与 Quick Create v3 方案（仅文档，待确认）
+
+- 需求：①「Windows 使用 localhost:8080 交互预览」这块改为继续用 claude 固定链接看修改后的 App；②长篇需求「产品差异化战略与 Quick Create 核心体验升级」：本轮不大规模写代码，先检查仓库、批判性分析差异化、设计 Quick Create 旅程和页面、Auto Layout 方案、优先级、验证实验，回答三个问题，等确认后再实施。
+- 改动文件：AGENTS.md（新增长期规范：查看方式统一为 claude.ai 固定链接，localhost 仅备用；六项回复第三项改为「在线链接（Claude 固定链接）与查看方式」）；README.md（固定链接为标准查看方式，localhost 改为备用；文档表加 STRATEGY / QUICK_CREATE_PLAN）；docs/ARCHITECTURE.md（同上，并加技术增量提案）；docs/QUICK_CREATE_PLAN.md（新，完整方案）；docs/PRODUCT_SPEC.md、DESIGN_SYSTEM.md、ROADMAP.md（提案指向，标注未实施）；agent.md 当前状态里的查看方式。
+- 设计稿：新建 claude.ai 设计画布 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt （6 屏 iPhone 高保真，可点击跳转；照片用 App 自带的 Unsplash 示例图）。
+- 关键发现（来自代码）：Quick Create 已有一半（多照片、按形状不裁切、3 种样子、结果页）；缺多 Moment 一次完成、页面层次、统一套装、钉住手动调整；`imageBlob()` 用 canvas 重编码会丢 EXIF，按时间分组要先读；结构化字段 `fieldValues` 在「一天」上而不是「一页」；`bookId` 单值；app.js 5,911 行。
+- 决策与原因：建议「封面时间线 + 每个 Moment 一页」而不是把一天塞进一张 4:5 的页（手机上太挤、排版不可控）；规则式排版，不用生成式 AI；所有新字段可选、不迁移。
+- 运行 / 测试：只改文档，没有改 App 代码，没有运行测试。
+- 未完成：全部实施项等用户确认（QUICK_CREATE_PLAN §12）；竞品中 Day One 是否仍提供打印成书未核实；网页上 iOS 照片 EXIF 是否保留未核实。
+- 下一步：用户确认后按 P0 ① → ② → ③ 开发。
 
 ### 2026-11-09 — 竞品补充：My Diary（文档）
 

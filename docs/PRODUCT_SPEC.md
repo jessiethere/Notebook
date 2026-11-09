@@ -6,6 +6,10 @@
 
 产品结合数字手帐、生活记录、成长追踪与未来的社交分享。界面像精品文具店，简约、温柔、有创作感；素材丰富可爱，不做成传统效率工具或普通信息流社交媒体。最终 iPhone App 是 Swift / SwiftUI 外壳（WKWebView），里面运行的就是 `Public/` 这一份 HTML/CSS/JavaScript。日常查看每次更新用**在线链接** https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （已固定在 claude.ai 侧栏；项目文件夹里双击 `Open-Little-Days.url` 也能打开）；localhost 预览只在需要录音、导出等浏览器受限功能时备用。保留 Vapor 和共享 Core。不能把网页预览称为实际运行的 SwiftUI 或真机结果。
 
+## 2026-11-09 提案：差异化与 Quick Create v3（待确认）
+
+见 [QUICK_CREATE_PLAN.md](QUICK_CREATE_PLAN.md)：定位「选今天的照片，一分钟得到喜欢的手账页，日子变成一本书」；旅程 ＋ → 选照片 → 按时间分 Moment → 每组一句 → 封面时间线 + 每组一页 → 保存进书；P0 = 多 Moment Quick Create、排版引擎 v2、自动与手动共存。未实施。
+
 ## V3.3 新增
 
 | 反馈 / 需求 | 现在的做法 |
