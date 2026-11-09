@@ -153,6 +153,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.locator("#chat-text").fill("周末一起去看花吗？");
     await page.locator('[data-action="community-send"]').click();
     await page.locator('[data-action="community-sticker"][data-sticker="tulip"]').click();
+    await page.locator('[data-action="community-share-toggle"]').click();
     await page.locator("#chat-share-work").selectOption("w1");
     await page.locator('[data-action="community-send"]').click();
     await page.waitForSelector(".bubble small:has-text('模拟回复')");

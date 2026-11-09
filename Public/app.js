@@ -33,7 +33,8 @@ import {
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
-import { communityHTML, profileHTML } from "./js/community-view.mjs";
+import { communityHTML, profileHTML, inboxHTML, bellHTML } from "./js/community-view.mjs";
+import { experience } from "./js/levels.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
@@ -175,6 +176,8 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  inboxFilter = "all",
+  inboxReturn = "home",
   studioReturn = "home",
   soundMenu = false,
   studioStart = false,
@@ -323,7 +326,7 @@ function openStudio(date = dateKey()) {
 }
 function navigation() {
   // Sub-pages highlight the tab they belong to.
-  const current = { journey: "growth", day: "calendar" }[page] || page;
+  const current = { journey: "growth", day: "calendar", inbox: "home" }[page] || page;
   $("#navigation").innerHTML = features.tabs
     .map(
       (tab) =>
@@ -406,7 +409,7 @@ function home() {
           ? `<button class="today-scene" data-action="use-scene" data-scene="${esc(scene.id)}" data-from="home"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b><em>${t("scene.useIt")} ›</em></span></button>`
           : `<p class="today-blank">${t("home.blankBody")}</p>`;
       })();
-  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></header>
+  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><span class="home-actions">${bellHTML(social(), ctx())}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
  <section class="hero today-card"><span class="date-label">${esc(date)}</span><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${preview}<button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  <section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
@@ -596,7 +599,7 @@ function booksPage() {
   }
   const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${booksView === "shelf"}">📚 ${t("shelf.tab")}</button><button role="tab" data-action="books-view" data-view="profile" aria-selected="${booksView === "profile"}">${esc(social().profile?.avatar || "🌷")} ${t("me.tab")}</button></div>`;
   if (booksView === "profile")
-    return `<header class="page-top"><div><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div></header>${switcher}<div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books)}`;
+    return `<header class="page-top"><div><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bellHTML(social(), ctx())}</header>${switcher}<div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
   return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></header>${switcher}${shelfHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
@@ -1057,6 +1060,12 @@ async function studioStartAction(target) {
   }
   return true;
 }
+// Experience from this device's journal; a level-up leaves a notification.
+function myExperience() {
+  const xp = experience(state(), social(), dateKey());
+  if (Community.noteLevel(social(), xp.levelIndex, xp.level.id)) persistSocial();
+  return xp;
+}
 // Original scene illustrations: one picked for each day, all in a library.
 function scenes() {
   return catalog.scenes || [];
@@ -1201,6 +1210,7 @@ function render() {
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
     settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML() }),
+    inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
   }[page]();
   navigation();
   applyShellLanguage();
@@ -1336,6 +1346,54 @@ function accountAction(target) {
       applyTheme(id);
       render();
       toast(t("theme.changed", { name: t("theme." + id) }));
+      return true;
+    }
+    case "inbox-open":
+      if (page !== "inbox") inboxReturn = page === "books" && booksView === "profile" ? "profile" : page;
+      myExperience();
+      page = "inbox";
+      render();
+      $("#app-scroll").scrollTop = 0;
+      return true;
+    case "inbox-back": {
+      // Opening the center marks everything as seen.
+      Community.markInboxRead(social());
+      persistSocial();
+      if (inboxReturn === "profile") openProfile();
+      else navigate(inboxReturn && inboxReturn !== "inbox" ? inboxReturn : "home");
+      return true;
+    }
+    case "inbox-filter":
+      inboxFilter = target.dataset.filter;
+      render();
+      return true;
+    case "inbox-read-all":
+      Community.markInboxRead(social());
+      for (const conversation of social().conversations) conversation.messages.forEach((m) => (m.read = true));
+      persistSocial();
+      render();
+      toast(t("inbox.allRead"));
+      return true;
+    case "inbox-accept":
+    case "inbox-decline":
+      if (name === "inbox-accept") Community.acceptFriend(social(), target.dataset.user);
+      else Community.declineFriend(social(), target.dataset.user);
+      persistSocial();
+      render();
+      toast(t(name === "inbox-accept" ? "community.accepted" : "community.declined"));
+      return true;
+    case "showcase": {
+      const bookId = target.dataset.book;
+      const on = target.dataset.on === "1";
+      if (on === Community.isShowcased(social(), bookId)) return true;
+      const apply = () => {
+        Community.setShowcase(social(), bookId, on);
+        persistSocial();
+        toast(t(on ? "who.shownToast" : "who.hiddenToast"));
+        render();
+      };
+      if (on) askConfirm(t("who.confirm")).then((ok) => ok && apply());
+      else apply();
       return true;
     }
     case "studio-back":
@@ -2695,7 +2753,13 @@ async function communityAction(target) {
         openCommunity({ tab: "messages", chatUser: user, workId: null });
         break;
       case "community-chat-back":
-        openCommunity({ chatUser: null });
+        openCommunity({ chatUser: null, chatMenu: false, shareOpen: false });
+        break;
+      case "community-chat-menu":
+        openCommunity({ chatMenu: !communityView.chatMenu });
+        break;
+      case "community-share-toggle":
+        openCommunity({ shareOpen: !communityView.shareOpen });
         break;
       case "community-sticker":
       case "community-send": {

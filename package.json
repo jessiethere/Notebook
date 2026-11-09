@@ -16,7 +16,8 @@
     "test:browser:v38": "node tests/v38-browser.cjs",
     "test:browser:v39": "node tests/v39-browser.cjs",
     "test:browser:v40": "node tests/v40-browser.cjs",
-    "test:browser:v41": "node tests/v41-browser.cjs"
+    "test:browser:v41": "node tests/v41-browser.cjs",
+    "test:browser:v42": "node tests/v42-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

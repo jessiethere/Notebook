@@ -3814,5 +3814,197 @@
   "scene.pick": {
     "zh": "或者从素材库挑一张",
     "en": "Or pick from the scene library"
+  },
+  "community.accepted": {
+    "zh": "已加为好友",
+    "en": "You're now friends"
+  },
+  "community.declined": {
+    "zh": "已拒绝申请",
+    "en": "Request declined"
+  },
+  "more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "who.coverShort": {
+    "zh": "展示封面",
+    "en": "Show cover"
+  },
+  "level.xp": {
+    "zh": "经验",
+    "en": "XP"
+  },
+  "level.seed": {
+    "zh": "一颗种子",
+    "en": "Seed"
+  },
+  "level.sprout": {
+    "zh": "刚发芽",
+    "en": "Sprout"
+  },
+  "level.leaf": {
+    "zh": "长叶子",
+    "en": "Leafing"
+  },
+  "level.bud": {
+    "zh": "小花苞",
+    "en": "Bud"
+  },
+  "level.bloom": {
+    "zh": "开花了",
+    "en": "Bloom"
+  },
+  "level.garden": {
+    "zh": "小花园",
+    "en": "Garden"
+  },
+  "level.forest": {
+    "zh": "一片森林",
+    "en": "Forest"
+  },
+  "level.meadow": {
+    "zh": "彩虹草地",
+    "en": "Rainbow meadow"
+  },
+  "level.toNext": {
+    "zh": "再得 {count} 经验升到「{name}」",
+    "en": "{count} XP to “{name}”"
+  },
+  "level.max": {
+    "zh": "已经是最高等级啦 🌈",
+    "en": "Top level reached 🌈"
+  },
+  "level.activeDays": {
+    "zh": "活跃 {count} 天",
+    "en": "{count} active days"
+  },
+  "level.streak": {
+    "zh": "连续 {count} 天",
+    "en": "{count}-day streak"
+  },
+  "level.how": {
+    "zh": "怎么获得经验？",
+    "en": "How to earn XP"
+  },
+  "level.rule.activeDay": {
+    "zh": "每个记录过的日子",
+    "en": "Each day you wrote or checked in"
+  },
+  "level.rule.page": {
+    "zh": "写一页当日手帐",
+    "en": "A day page"
+  },
+  "level.rule.moment": {
+    "zh": "写一个小故事",
+    "en": "A little story"
+  },
+  "level.rule.photo": {
+    "zh": "放一张照片（最多 300）",
+    "en": "A photo (up to 300)"
+  },
+  "level.rule.check": {
+    "zh": "完成一次打卡",
+    "en": "A habit check-in"
+  },
+  "level.rule.note": {
+    "zh": "写一条打卡心得",
+    "en": "A check-in note"
+  },
+  "level.rule.reflection": {
+    "zh": "写一次周 / 月回顾",
+    "en": "A weekly or monthly reflection"
+  },
+  "level.rule.post": {
+    "zh": "发布一篇作品（演示）",
+    "en": "A community post (demo)"
+  },
+  "level.note": {
+    "zh": "经验只根据这台设备上你自己写的内容计算，示例内容不算，也不会上传。",
+    "en": "XP is worked out from what you wrote on this device (samples don't count) and is never uploaded."
+  },
+  "inbox.title": {
+    "zh": "消息通知",
+    "en": "Notifications"
+  },
+  "inbox.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "inbox.readAll": {
+    "zh": "全部已读",
+    "en": "Mark all read"
+  },
+  "inbox.allRead": {
+    "zh": "都标为已读了",
+    "en": "All marked as read"
+  },
+  "inbox.empty": {
+    "zh": "这里还没有消息。",
+    "en": "Nothing here yet."
+  },
+  "inbox.waiting": {
+    "zh": "等待处理",
+    "en": "Waiting"
+  },
+  "inbox.filter.all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "inbox.filter.system": {
+    "zh": "系统",
+    "en": "System"
+  },
+  "inbox.filter.friends": {
+    "zh": "好友申请",
+    "en": "Friends"
+  },
+  "inbox.filter.interaction": {
+    "zh": "互动",
+    "en": "Activity"
+  },
+  "inbox.filter.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "inbox.system.welcome": {
+    "zh": "欢迎来到 Little Days！每天记一点点，就是很好的开始。",
+    "en": "Welcome to Little Days! A little every day is a lovely start."
+  },
+  "inbox.system.backup": {
+    "zh": "小提醒：手帐只保存在这台设备上，记得在「设置」里定期导出备份。",
+    "en": "Tip: your journal lives on this device — export a backup in Settings now and then."
+  },
+  "inbox.goBackup": {
+    "zh": "去备份",
+    "en": "Back up"
+  },
+  "inbox.levelUp": {
+    "zh": "升级啦！你现在是「{name}」 🎉",
+    "en": "Level up! You're now “{name}” 🎉"
+  },
+  "inbox.seeLevel": {
+    "zh": "看看等级",
+    "en": "See level"
+  },
+  "inbox.friend": {
+    "zh": "{name} 想加你为好友",
+    "en": "{name} wants to be friends"
+  },
+  "inbox.message": {
+    "zh": "{name} 发来 {count} 条新私信：{text}",
+    "en": "{name} sent {count} new message(s): {text}"
+  },
+  "inbox.reply": {
+    "zh": "去回复",
+    "en": "Reply"
+  },
+  "inbox.like": {
+    "zh": "{name} 赞了你的作品「{work}」",
+    "en": "{name} liked “{work}”"
+  },
+  "inbox.comment": {
+    "zh": "{name} 评论了「{work}」：{text}",
+    "en": "{name} commented on “{work}”: {text}"
   }
 }

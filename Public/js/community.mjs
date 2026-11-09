@@ -41,6 +41,12 @@ const WORKS = [
   ["w12", "u-tutu", "亲子食谱：南瓜饼", "Food", "recipe", "cute", "berry", "南瓜 200g · 糯米粉 150g · 少量糖。", 40, 160, 10, 66],
 ];
 
+function starterInbox(now) {
+  return [
+    { id: newId(), type: "system", key: "welcome", at: new Date(now - 60 * 1000).toISOString() },
+    { id: newId(), type: "system", key: "backup", at: new Date(now - 30 * 1000).toISOString() },
+  ];
+}
 export function createDemoState(now = Date.now()) {
   const works = WORKS.map(([id, authorId, title, category, kind, paper, sticker, excerpt, daysAgo, likes, commentCount, saves]) => ({
     id, authorId, title, category, kind, paper, sticker, excerpt,
@@ -65,6 +71,11 @@ export function createDemoState(now = Date.now()) {
     requests: { incoming: ["u-mumu"], outgoing: [] },
     blocked: [],
     reports: [],
+    // Notifications: system notes and (simulated) interactions; friend
+    // requests and unread messages are added live from the state.
+    inbox: starterInbox(now),
+    inboxReadAt: null,
+    levelSeen: 0,
     conversations: [
       {
         id: "c-xiaoman",
@@ -85,6 +96,9 @@ export function loadDemo(storage) {
       if (state?.version === 1 && Array.isArray(state.works)) {
         // Older demo saves had no profile yet.
         state.profile = { ...DEFAULT_PROFILE, ...(state.profile || {}) };
+        // Older demo saves had no notifications yet.
+        state.inbox ||= starterInbox(Date.now());
+        state.levelSeen ??= 0;
         return state;
       }
     }
@@ -239,7 +253,58 @@ export function publishDay(state, journal, date, selection) {
     comments: [], extraComments: 0,
   };
   state.works.unshift(item);
+  simulateInteractions(state, item);
   return item;
+}
+// A published work gets a couple of (clearly simulated) reactions so the
+// notification center has something to show in the demo.
+function simulateInteractions(state, work) {
+  const fans = state.users.filter((user) => !state.blocked.includes(user.id)).slice(0, 2);
+  const at = Date.now();
+  if (fans[0]) {
+    work.likes += 1;
+    state.inbox.push({ id: newId(), type: "like", userId: fans[0].id, workId: work.id, at: new Date(at + 1000).toISOString(), simulated: true });
+  }
+  if (fans[1] && work.commentsOpen) {
+    const text = "好温柔的一页 ✿";
+    work.comments.push({ id: newId(), authorId: fans[1].id, text, createdAt: new Date(at + 2000).toISOString(), replies: [], simulated: true });
+    state.inbox.push({ id: newId(), type: "comment", userId: fans[1].id, workId: work.id, text, at: new Date(at + 2000).toISOString(), simulated: true });
+  }
+}
+
+/* ---------- Notifications ---------- */
+
+// One list: stored notes + pending friend requests + unread messages.
+export function inboxItems(state) {
+  const items = (state.inbox || [])
+    .filter((item) => !item.userId || !state.blocked.includes(item.userId))
+    .map((item) => ({ ...item, category: item.type === "system" || item.type === "level" ? "system" : "interaction" }));
+  for (const userId of visibleIncoming(state))
+    items.push({ id: `friend-${userId}`, type: "friend", category: "friends", userId, at: state.requestAt?.[userId] || null, pending: true });
+  for (const conversation of state.conversations || []) {
+    if (state.blocked.includes(conversation.userId)) continue;
+    const unread = conversation.messages.filter((m) => m.from !== "me" && !m.read);
+    if (unread.length)
+      items.push({ id: `chat-${conversation.userId}`, type: "message", category: "messages", userId: conversation.userId, text: unread.at(-1).text, count: unread.length, at: unread.at(-1).at, pending: true });
+  }
+  return items.sort((a, b) => Number(Boolean(b.pending && !b.at)) - Number(Boolean(a.pending && !a.at)) || String(b.at || "").localeCompare(String(a.at || "")));
+}
+export function isFresh(item) {
+  return Boolean(item.pending || !item.seen);
+}
+export function inboxUnread(state) {
+  return inboxItems(state).filter(isFresh).length;
+}
+export function markInboxRead(state) {
+  state.inboxReadAt = new Date().toISOString();
+  for (const item of state.inbox || []) item.seen = true;
+}
+// Level-up notes (levels come from the private journal, worked out locally).
+export function noteLevel(state, levelIndex, levelId) {
+  if (levelIndex <= (state.levelSeen || 0)) return false;
+  state.levelSeen = levelIndex;
+  state.inbox.push({ id: newId(), type: "level", key: levelId, at: new Date().toISOString() });
+  return true;
 }
 
 /* ---------- Follow vs Friends ---------- */

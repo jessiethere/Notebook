@@ -64,7 +64,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(await page.locator("#navigation [data-page='books'].active").count(), 1, "profile lives in My Books");
     assert.equal(await page.locator('[data-action="books-view"][data-view="profile"][aria-selected="true"]').count(), 1);
     assert.equal(await page.locator(".who-row").count(), books.length);
-    assert.equal(await page.locator('.who-row select option:checked[value="private"]').count(), books.length, "all private by default");
+    assert.equal(await page.locator('.who-row [data-action="showcase"][data-on="0"][aria-pressed="true"]').count(), books.length, "all private by default");
     // Profile edits re-render in place (stay on My Books).
     await page.locator('[data-action="community-profile-edit"]').click();
     await page.locator("#profile-name").fill("书架主人");
@@ -75,12 +75,13 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 4. Showcase a cover: needs confirmation; cancel keeps it private.
     const first = books[0];
-    const select = page.locator(`[data-showcase="${first.id}"]`);
-    await select.selectOption("cover");
+    const coverChip = page.locator(`[data-action="showcase"][data-book="${first.id}"][data-on="1"]`);
+    await coverChip.click();
     await page.locator("#confirm-dialog[open] #confirm-cancel").click();
-    await page.waitForFunction((id) => document.querySelector(`[data-showcase="${id}"]`).value === "private", first.id);
+    await page.waitForSelector("#confirm-dialog:not([open])", { state: "attached" });
+    assert.equal(await coverChip.getAttribute("aria-pressed"), "false");
     assert.equal((await demo()).profile.showcase.includes(first.id), false);
-    await page.locator(`[data-showcase="${first.id}"]`).selectOption("cover");
+    await coverChip.click();
     await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.waitForFunction((id) => JSON.parse(localStorage.getItem("little-days.demo-social")).profile.showcase.includes(id), first.id);
     // Visitor preview shows only that cover, no pages.
