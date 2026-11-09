@@ -40,6 +40,7 @@ import { communityHTML, profileHTML, inboxHTML, bellHTML } from "./js/community-
 import { experience } from "./js/levels.mjs";
 import { openDrawBoard } from "./js/draw.mjs";
 import { logEvent, readEvents, summarize } from "./js/events.mjs";
+import { UPDATES, LATEST, noteFor, hasUnseen, markSeen } from "./js/whats-new.mjs";
 import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
@@ -454,7 +455,7 @@ function home() {
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div></div><span class="home-actions">${bell()}<button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></span></header>
- <section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-open" data-photo=""><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
+ ${hasUnseen() ? whatsNewCardHTML() : ""}<section class="hero today-card"><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${hero}<button class="moment-cta" data-action="quick-open" data-photo=""><span>${icon("pen")}</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  ${books}<section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
    .join("")}</div></section><p class="home-quote">Collect moments, grow gently.</p></div>`;
@@ -1849,9 +1850,24 @@ function applyTheme(id) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && theme.swatch?.[0]) meta.content = theme.swatch[0];
 }
+// ---------- What's new (update notes inside the app) ----------
+function whatsNewCardHTML() {
+  const note = noteFor(UPDATES[0], languageCode());
+  return `<div class="whats-new"><button class="whats-new-open" data-action="whats-new"><small>${t("news.badge", { version: LATEST })}</small><b>${esc(note.title)}</b><span>${t("news.see")} ›</span></button><button class="whats-new-close" data-action="whats-new-dismiss" aria-label="${t("close")}">×</button></div>`;
+}
+function openWhatsNew() {
+  const en = languageCode() === "en";
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet news-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("news.title")}</h2>${UPDATES.map((update) => {
+    const note = noteFor(update, en ? "en" : "zh");
+    return `<section class="news-entry"><header><span class="news-version">V${esc(update.version)}</span><time>${esc(update.date)}</time></header><h3>${esc(note.title)}</h3><ul>${note.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section>`;
+  }).join("")}<button class="primary full-width" data-action="choose-close">${t("news.ok")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  markSeen();
+}
 function labsCardHTML() {
   const on = labsOn();
-  return `<section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
+  return `<section class="settings-card news-card"><h2>${t("news.title")}</h2><p>${t("news.current", { version: LATEST })}</p><button class="secondary" data-action="whats-new">${t("news.see")}</button></section><section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
 }
 function themePickerHTML() {
   const current = loadTheme();
@@ -2321,6 +2337,14 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
+  if (actionName === "whats-new") {
+    openWhatsNew();
+    if (page === "home") render();
+  }
+  if (actionName === "whats-new-dismiss") {
+    markSeen();
+    render();
+  }
   if (actionName === "share-story") {
     // Stories size (9:16); the share sheet where supported, else a download.
     const result = await shareStory(activePage(), exportOptions());

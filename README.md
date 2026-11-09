@@ -100,7 +100,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**81 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`collab` 二十五套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**82 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`v44`、`v45`、`v46`、`v47`、`v48`、`v49`、`v50`、`v51`、`v52`、`collab` 二十五套浏览器 E2E 全部通过（手绘未在真实 iPad / Apple Pencil 上验证；系统分享面板未在 iOS 真机验证），详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -156,6 +156,11 @@ npm run test:browser:v52
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 链接里可以看到更新记录（V5.3）
+
+- 每次更新后，打开链接时首页顶部会出现「新版本」卡片，点开就能看这次改了什么；设置 →「更新记录」可以看全部版本。
+- claude.ai 上的链接卡片描述也会写上最新版本的一句话。
 
 ### 2026-11-09 — 选几张照片，一页就排好了（V5.2）
 

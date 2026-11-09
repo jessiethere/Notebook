@@ -74,3 +74,16 @@ test("the test log keeps no content and stays small", () => {
   const summary = summarize([{ e: "page_done", t: Date.UTC(2026, 10, 1), ms: 60000 }, { e: "page_done", t: Date.UTC(2026, 10, 2), ms: 90000 }, { e: "share", t: Date.UTC(2026, 10, 2) }]);
   assert.deepEqual([summary.quickPages, summary.activeDays, summary.shares, summary.medianSeconds], [2, 2, 1, 90]);
 });
+
+test("what's new: newest first, both languages, one entry per version", async () => {
+  const { UPDATES, LATEST, hasUnseen, markSeen } = await import("../Public/js/whats-new.mjs");
+  assert.equal(LATEST, UPDATES[0].version);
+  const versions = UPDATES.map((u) => u.version);
+  assert.equal(new Set(versions).size, versions.length);
+  assert.deepEqual([...versions].sort((a, b) => Number(b) - Number(a)), versions, "newest first");
+  for (const u of UPDATES) for (const lang of ["zh", "en"]) assert.ok(u[lang].title && u[lang].items.length, `${u.version} ${lang}`);
+  const storage = memory();
+  assert.equal(hasUnseen(storage), true);
+  markSeen(storage);
+  assert.equal(hasUnseen(storage), false);
+});

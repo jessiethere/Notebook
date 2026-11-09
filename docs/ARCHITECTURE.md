@@ -109,7 +109,7 @@ DayState   += reflections?: [{id, period:"week"|"month", key, wentWell,
 ### V5.2 增量（全部可选，旧数据不变）
 
 - 照片图层 `aspect`（原图宽 / 高）；页面（Entry / Moment）`layoutVariant`（0–2）；`layoutTemplate` 新值 `"smart"`（按照片形状自动排，`Public/js/smart-layout.mjs`）、`"line"`（照片 + 一句话）；手绘图层 `drawing: true`；`backdrop` 可以是 `media:`（自己的照片，计入备份引用）。
-- 本机测试记录 `little-days.events`（`Public/js/events.mjs`）：只存白名单字段，不上传；实验室开关 `little-days.labs`（"1" = 打开）。两者都只是本机便利设置，不属于手帐数据，也不进备份。
+- 本机测试记录 `little-days.events`（`Public/js/events.mjs`）：只存白名单字段，不上传；实验室开关 `little-days.labs`（"1" = 打开）；已看过的更新版本 `little-days.seen-version`（更新内容在 `Public/js/whats-new.mjs`）。两者都只是本机便利设置，不属于手帐数据，也不进备份。
 
 ### V3.1 媒体加载与对象 URL 生命周期
 

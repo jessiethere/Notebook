@@ -4794,5 +4794,25 @@
   "share.saved": {
     "zh": "已保存一张 Story 尺寸（9:16）的图片",
     "en": "Saved a Story-size (9:16) picture"
+  },
+  "news.badge": {
+    "zh": "新版本 V{version}",
+    "en": "New · V{version}"
+  },
+  "news.see": {
+    "zh": "看看更新",
+    "en": "See what's new"
+  },
+  "news.title": {
+    "zh": "更新记录",
+    "en": "What's new"
+  },
+  "news.ok": {
+    "zh": "知道了",
+    "en": "Got it"
+  },
+  "news.current": {
+    "zh": "当前版本 V{version}。每次更新改了什么，都在这里。",
+    "en": "You're on V{version}. Every update's changes are listed here."
   }
 }

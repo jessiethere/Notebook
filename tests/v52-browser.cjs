@@ -33,6 +33,14 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     assert.equal(await first.locator("section.login, #tour:not([hidden])").count(), 0, "no sign-in page or tour");
     assert.deepEqual(await first.$$eval("#navigation [data-page]", (els) => els.map((el) => el.dataset.page)), ["home", "calendar", "studio", "growth", "books"]);
     assert.equal(await first.locator(".bell").count(), 0, "no notification bell");
+    // What's new: a card on Home after an update; the full list opens from it.
+    await first.locator(".whats-new-open").tap();
+    await first.waitForSelector("#choose-dialog[open] .news-sheet");
+    const latest = await first.locator(".news-entry .news-version").first().innerText();
+    assert.match(latest, /^V\d+\.\d+$/);
+    await first.locator('#choose-dialog [data-action="choose-close"]').tap();
+    await first.waitForFunction(() => !document.querySelector(".whats-new"));
+    assert.equal(await first.evaluate(() => localStorage.getItem("little-days.seen-version")), latest.slice(1), "seen on this device");
     assert.equal(await first.locator(".home-book-tabs").count(), 0, "no shared-books tabs");
     await first.locator('#navigation [data-page="books"]').tap();
     assert.equal(await first.locator(".me-chip, .shelf-switch").count(), 0, "no profile / shared books on the shelf");
@@ -40,13 +48,14 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.locator('#navigation [data-page="home"]').tap();
     await first.locator('[data-action="nav"][data-page="settings"]').tap();
     assert.equal(await first.locator(".theme-picker, [data-action='theme']").count(), 0, "colour themes are in Labs");
+    assert.equal(await first.locator('.news-card [data-action="whats-new"]').count(), 1, "update history in Settings");
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForSelector('[data-action="labs-toggle"][aria-pressed="true"]');
     assert.equal(await first.locator('#navigation [data-page="community"]').count(), 1);
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForFunction(() => !document.querySelector('#navigation [data-page="community"]'));
     await fresh.close();
-    passed.push("new install: straight to Home; community, profile, shared books, themes and sign-in wait in Labs");
+    passed.push("new install: straight to Home with a what's-new card; community, profile, shared books, themes and sign-in wait in Labs");
 
     // 2. Quick Create v2 with my own photos (several).
     const context = await browser.newContext({ ...devices["iPhone 13"] });

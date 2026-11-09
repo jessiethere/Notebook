@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-09 — V5.3 链接里可以看到更新记录
+
+- 需求：用户截图 claude.ai 聊天里的 Little Days 链接卡片，说「我想把 update 加到这里」，希望打开链接就能看到每次更新了什么。聊天里的卡片只显示标题，无法放更多内容，所以做了两件事：应用内显示更新，链接卡片的描述写上最新更新。
+- 改动文件：新增 Public/js/whats-new.mjs（UPDATES：V5.3、V5.2、V5.1、V5.0，中英文）；Public/app.js（首页「新版本」卡片 whatsNewCardHTML、更新记录面板 openWhatsNew、设置里的「更新记录」卡、whats-new / whats-new-dismiss 动作）；Public/styles.css；i18n.json（news.*）；AGENTS.md（每次发布都要加更新条目并设置 Artifact 描述）；docs/ARCHITECTURE.md；tests v52.test.mjs、v52-browser.cjs。
+- 功能：每台设备第一次看到新版本时，首页顶部出现「新版本 V5.3 · 标题 · 看看更新 ›」，可以点 × 关掉；点开是「更新记录」面板，按版本从新到旧列出每次改了什么；设置 →「更新记录」随时可以再看。已看过的版本记在本机（little-days.seen-version）。Artifact 的 description 改为最新版本的一句话。
+- 决策与原因：更新内容放在 App 里，用户在手机上打开链接就能看到，不依赖聊天界面；条目只写实际完成的内容，与 README 日志一致。
+- 运行 / 测试：82 项 Node、12 项 Python、25 套浏览器 E2E 全部通过（v52 新增：首页卡片 → 更新记录面板 → 标记已看过；设置里有入口）。Linux 容器 + Chromium。
+- 已知问题：聊天中的链接卡片本身只显示标题（这是 claude.ai 的界面），描述显示在 claude.ai 的 Artifact 列表卡片上。
+- 下一步：之后每次发布都在 whats-new.mjs 加一条；继续 F5 数据可靠性、F6 原生最小闭环。
+
 ### 2026-11-09 — V5.2 验证核心：Quick Create v2、按照片形状自动排、实验室开关 + 测试记录、Story 分享
 
 - 需求：用户确认 STRATEGY.md 的优先级（「可以」），按任务 F 顺序开发：F1 Quick Create 易用性、F2 多照片自动排版、F3 测试版精简 + 事件记录、F4 分享导出。
