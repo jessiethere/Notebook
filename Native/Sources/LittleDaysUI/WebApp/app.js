@@ -305,6 +305,7 @@ function bell() {
 }
 function navigate(target) {
   flushDraft();
+  readReturn = null;
   quickResult = null;
   if (LAB_PAGES.includes(target) && !labsOn()) target = "home";
   // Back on Home after writing today's first page: the stamp moment.
@@ -321,7 +322,23 @@ function navigate(target) {
   render();
   $("#app-scroll").scrollTop = 0;
 }
+// Editing a page straight from where it is read (the day, or the book page
+// by page): saving or ‹ goes back to that same spot.
+let readReturn = null;
+function returnToReading() {
+  const back = readReturn;
+  readReturn = null;
+  flushDraft();
+  quickResult = null;
+  page = back.page;
+  selectedBook = back.book;
+  selectedDate = back.date;
+  flipTurn = 0;
+  render();
+  if (back.page === "day" && back.moment) document.getElementById(`moment-${back.moment}`)?.scrollIntoView({ block: "start" });
+}
 function openStudio(date = dateKey()) {
+  readReturn = null;
   if (page !== "studio" && page !== "settings") studioReturn = page;
   flushDraft();
   selectedDate = date;
@@ -809,7 +826,7 @@ function flipBookHTML(book) {
     const { date, entry, moment } = pages[flipIndex - 1];
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button>`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -2635,6 +2652,10 @@ function accountAction(target) {
     }
     case "studio-back":
       flushDraft();
+      if (readReturn) {
+        returnToReading();
+        return true;
+      }
       navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
       return true;
     case "settings-back":
@@ -2987,10 +3008,12 @@ async function action(target) {
   }
   if (actionName === "page-menu") openPageMenu(target.dataset.date, target.dataset.moment || "");
   if (actionName === "read-edit") {
-    $("#choose-dialog").close();
+    if ($("#choose-dialog").open) $("#choose-dialog").close();
     const momentId = target.dataset.moment || "";
+    const from = { page, book: selectedBook, date: selectedDate, moment: momentId };
     openStudio(target.dataset.date);
     selectMoment(momentId || null);
+    if (from.page === "day" || from.page === "books") readReturn = { ...from, date: from.page === "day" ? target.dataset.date : from.date };
   }
   if (actionName === "read-rename") {
     $("#choose-dialog").close();
@@ -3254,7 +3277,8 @@ async function action(target) {
     store.update((s) => saveEntry(s, editor));
     draftDirty = false;
     toast(t("这一天，已经好好收藏。🌷"));
-    navigate("home");
+    if (readReturn) returnToReading();
+    else navigate("home");
   }
   if (actionName === "export") {
     logEvent("export", { size: "feed" });

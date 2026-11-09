@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.1",
+    date: "2026-11-09",
+    zh: {
+      title: "看到哪页，就在哪页编辑",
+      items: [
+        "用「翻页」看书时，每一页下面都有「✎ 编辑这一页」，点一下直接打开这一页，不用先回到那一天再找。",
+        "在日历里看某一天时，每一页右上角有「✎ 编辑」，一下就能改（「⋯」里仍然可以改标题或删除）。",
+        "改完点「保存」或左上角返回，会回到你刚才看的那一页。",
+        "示例页没有编辑按钮（它们只是示范）。",
+      ],
+    },
+    en: {
+      title: "Edit a page right where you are reading it",
+      items: [
+        "Flipping a book page by page, every page has “✎ Edit this page” — no need to go to that day and find it first.",
+        "Reading a day in the calendar, every page has “✎ Edit” at its top right (⋯ still has rename and delete).",
+        "Save or ‹ takes you back to the page you were reading.",
+        "Sample pages have no edit button (they are only examples).",
+      ],
+    },
+  },
+  {
     version: "6.0",
     date: "2026-11-09",
     zh: {

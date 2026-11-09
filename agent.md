@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-09 — V6.1 在阅读的地方直接编辑
+
+- 需求（用户截图，翻页看书的一页）：「现在这个 edit 要去那天然后找到这个 page 然后 edit，可以直接 edit 吗」。
+- 改动文件：Public/app.js（翻页每页加「✎ 编辑这一页」= 已有的 read-edit 动作；read-edit 记住来源 readReturn {page, book, date, moment}，保存 / ‹ 时 returnToReading 回到同一本书的同一页或同一天并滚到那一页；openStudio 与 navigate 清空 readReturn，避免旧的返回点）；Public/js/day-view.mjs（阅读一天时，自己的封面和每一页页眉加「✎ 编辑」，示例页不显示）；Public/styles.css（chapter-edit、flip-actions、flip-edit）；Public/js/whats-new.mjs（V6.1）；tests/v58-browser.cjs（新）、package.json。
+- 决策与原因：复用已有的 read-edit（打开当天 + 选中那一页），不新建编辑路径；示例页不给编辑按钮，因为 openStudio 对示例日从空白页开始，点了会让人以为内容丢了。从 ＋ 新写的页保存后仍回首页（印章时刻在首页）。
+- 运行 / 测试：99 项 Node、12 项 Python、31 套浏览器 E2E 全部通过（v58：翻页中「✎ 编辑这一页」打开那一页 → 改标题保存 → 回到同一本书同一页且显示新标题；‹ 也回到同一页；示例页没有 ✎、自己的页都有；阅读一天时「✎ 编辑」→ 保存 / ‹ 回到这一天；从 ＋ 新写仍回首页）。Linux 容器 + Chromium。
+- 已知问题：书的「列表」视图点某一天仍是先打开那一天（一天可能有好几页）；从阅读页进入编辑后保存，不会在首页出现连续记录印章（回首页时才出现）。
+- 下一步：用户试用后决定列表视图要不要也加直接编辑。
+
 ### 2026-11-09 — V6.0 推荐背景音乐（原创轻音乐，可加到页面）
 
 - 需求：「能不能有推荐的背景 sofi 音乐让用户可以加」（理解为柔和的 lofi 背景音乐）。
