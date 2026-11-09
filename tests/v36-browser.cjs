@@ -104,8 +104,10 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     // 5. Start with photos → editor: filter, 1:1 crop, warmth, title; skip-free.
     await menu(page, "studio");
     await page.waitForSelector(".studio-start");
-    const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="start-photos"]').click();
+    await page.waitForSelector("#choose-dialog[open]");
+    const chooser = page.waitForEvent("filechooser");
+    await page.locator('#choose-dialog [data-action="choose-album"]').click();
     await (await chooser).setFiles([
       { name: "lake-a.jpg", mimeType: "image/jpeg", buffer: sample },
       { name: "lake-b.jpg", mimeType: "image/jpeg", buffer: sample },

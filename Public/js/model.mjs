@@ -63,6 +63,8 @@ export function normalizeState(value) {
     book.fields ||= [];
   }
   for (const entry of [...result.entries, ...Object.values(result.drafts)]) {
+    // The sample page briefly used a drawn scene; it goes back to the photo.
+    if (entry.isDemo && entry.id === "sample-today" && /^scene:/.test(entry.photo || "")) entry.photo = "/assets/coffee.jpg";
     entry.media ||= [];
     entry.fieldValues ||= {};
     entry.textStyle ||= { size: 20, color: "#2F2A26", weight: 400, spacing: 0 };

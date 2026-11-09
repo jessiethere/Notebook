@@ -19,16 +19,16 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     const state = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "null"));
 
-    // 1. The sample page uses today's picture (an original scene), and it loads.
+    // 1. The sample page shows the coffee photo; the picture of the day is offered on Home.
     // Storage is written on the first change: tick and untick a habit.
     await page.locator('[data-action="check"][data-habit="move"]').first().tap();
     await page.locator('[data-action="check"][data-habit="move"]').first().tap();
     await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
     let s = await state();
     const sample = s.entries.find((e) => e.isDemo && e.date === today);
-    assert.match(sample.photo, /^scene:/);
+    assert.equal(sample.photo, "/assets/coffee.jpg");
     assert.equal(await page.locator(".hero img").evaluate((img) => img.complete && img.naturalWidth > 0), true);
-    passed.push(`sample page shows the picture of the day (${sample.photo})`);
+    passed.push("sample page keeps the coffee photo");
 
     // 2. Home: with nothing written today, the picture of the day invites writing.
     await page.evaluate((d) => {
@@ -41,10 +41,11 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector(".today-scene");
     assert.match(await page.locator(".today-scene").innerText(), /今日素材[\s\S]*用它写一页/);
     const sceneId = await page.locator(".today-scene").getAttribute("data-scene");
-    assert.equal(`scene:${sceneId}`, sample.photo, "same picture all day");
+    assert.ok(sceneId, "a picture of the day");
     await page.locator(".today-scene").tap();
-    await page.waitForSelector(`#journal-canvas .photo-layer img[src*="LD-scene-${sceneId}"]`);
-    passed.push("Home: picture of the day → one tap puts it on today's page");
+    // It goes into the page's main picture spot (part of the layout).
+    await page.waitForSelector(`#journal-canvas .canvas-photo img[src*="LD-scene-${sceneId}"]`);
+    passed.push("Home: picture of the day → one tap fills today's main picture spot");
 
     // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
     const dock = page.locator('[data-action="tool"][data-tool="photos"]');

@@ -4018,5 +4018,81 @@
   "scene.swipe": {
     "zh": "左右滑动看更多",
     "en": "Swipe for more"
+  },
+  "calendar.wall": {
+    "zh": "照片墙",
+    "en": "Photo wall"
+  },
+  "calendar.wrapped": {
+    "zh": "{year} · 这个月的小日子",
+    "en": "{year} · wrapped"
+  },
+  "calendar.wallStats": {
+    "zh": "这个月记录了 {days} 天 · {pictures} 张照片",
+    "en": "{days} days written · {pictures} pictures this month"
+  },
+  "choose.title": {
+    "zh": "添加照片",
+    "en": "Add a picture"
+  },
+  "choose.mainTitle": {
+    "zh": "选一张主照片",
+    "en": "Choose the main picture"
+  },
+  "choose.album": {
+    "zh": "从相册选择",
+    "en": "From your photos"
+  },
+  "choose.albumMany": {
+    "zh": "可以一次选好几张，之后能修图",
+    "en": "Pick several at once, then edit them"
+  },
+  "choose.albumOne": {
+    "zh": "选一张放在主照片位",
+    "en": "One for the main picture spot"
+  },
+  "choose.picks": {
+    "zh": "今日推荐",
+    "en": "Today's picks"
+  },
+  "sheet.grow": {
+    "zh": "向上拉开更多",
+    "en": "Pull up for more"
+  },
+  "sheet.shrink": {
+    "zh": "收起一点",
+    "en": "Make smaller"
+  },
+  "note.start": {
+    "zh": "随手记",
+    "en": "Quick note"
+  },
+  "note.startHint": {
+    "zh": "像备忘录一样，点开就写",
+    "en": "Like Notes — tap and type"
+  },
+  "note.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "note.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "note.titlePlaceholder": {
+    "zh": "标题",
+    "en": "Title"
+  },
+  "note.bodyPlaceholder": {
+    "zh": "记点什么……",
+    "en": "Write something…"
+  },
+  "note.help": {
+    "zh": "保存后会成为今天的一个小故事，之后可以再加照片和装饰。",
+    "en": "It becomes a little story on today's page; add pictures later if you like."
+  },
+  "note.saved": {
+    "zh": "已记下，放进了今天的手帐 ✿",
+    "en": "Saved to today's page ✿"
   }
 }

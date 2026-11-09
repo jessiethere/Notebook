@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**60 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`collab` 十五套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**60 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`v39`、`v40`、`v41`、`v42`、`v43`、`collab` 十六套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -126,6 +126,7 @@ npm run test:browser:v39
 npm run test:browser:v40
 npm run test:browser:v41
 npm run test:browser:v42
+npm run test:browser:v43
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -143,6 +144,14 @@ npm run test:browser:v42
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 随手记、照片选择、日历照片墙
+
+- 点 ＋ 后最上面是“随手记”：像备忘录一样点开就打字，完成后自动存进今天。
+- 加照片时先弹出选择：从相册选、今日推荐、素材库；素材会放进当日主页的主照片位或版式相框里，不再随便飘在上面。主照片位本身也可以直接点。
+- 底部工具面板顶部有把手，可以往上拉展开、往下拉收起。
+- 日历新增“照片墙”：每天一格放当天的照片，背景会缓慢流动。
+- 示例页换回了咖啡照片。
 
 ### 2026-11-09 — 素材库换成苹果壁纸风格
 

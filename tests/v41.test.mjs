@@ -36,12 +36,16 @@ test("scene of the day: same all day, changes day to day, covers the set", () =>
   assert.equal(sceneOfDay([], "2026-11-09"), "");
 });
 
-test("a new journal's sample page uses that day's scene (not always coffee)", () => {
+test("the sample page keeps the coffee photo; an earlier scene sample goes back to it", async () => {
   const a = createInitialState(seed, "2026-11-09").entries.find((e) => e.id === "sample-today");
-  const b = createInitialState(seed, "2026-11-10").entries.find((e) => e.id === "sample-today");
-  assert.match(a.photo, /^scene:[a-z-]+$/);
-  assert.notEqual(a.photo, b.photo);
-  assert.equal(a.photo, `scene:${sceneOfDay(seed.dailyScenes, "2026-11-09")}`);
-  // The other samples keep their photos.
+  assert.equal(a.photo, "/assets/coffee.jpg");
+  const { normalizeState } = await import("../Public/js/model.mjs");
+  const state = createInitialState(seed, "2026-11-09");
+  state.entries.find((e) => e.id === "sample-today").photo = "scene:picnic";
+  const own = { ...structuredClone(state.entries[0]), id: "mine", isDemo: false, photo: "scene:picnic" };
+  state.entries.push(own);
+  const fixed = normalizeState(state);
+  assert.equal(fixed.entries.find((e) => e.id === "sample-today").photo, "/assets/coffee.jpg");
+  assert.equal(fixed.entries.find((e) => e.id === "mine").photo, "scene:picnic", "a person's own choice stays");
   assert.equal(createInitialState(seed, "2026-11-09").entries.find((e) => e.id === "sample-walk").photo, "/assets/lake.jpg");
 });

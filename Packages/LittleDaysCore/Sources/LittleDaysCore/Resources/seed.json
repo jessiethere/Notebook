@@ -54,10 +54,10 @@
       "id": "sample-today",
       "dayOffset": 0,
       "title": "把日子过成喜欢的样子",
-      "body": "一点慢下来的时间。\n今天，也收集到了生活的小小美好。",
+      "body": "一杯热咖啡，一点慢下来的时间。\n今天，也收集到了生活的小小美好。",
       "mood": "☀️",
       "bookId": "daily",
-      "photo": "scene:daily",
+      "photo": "/assets/coffee.jpg",
       "template": "cute",
       "font": "serif"
     },

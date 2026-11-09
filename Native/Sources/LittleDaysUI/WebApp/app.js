@@ -176,6 +176,9 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  photoTarget = "layers",
+  sheetTall = false,
+  noteReturn = "home",
   inboxFilter = "all",
   inboxReturn = "home",
   studioReturn = "home",
@@ -476,6 +479,34 @@ function dayMarks(key) {
   };
 }
 
+// Photo wall: the month as a grid of that day's pictures on a slowly moving
+// background (like a month "wrapped" story).
+function calendarWallHTML() {
+  const year = month.getFullYear(),
+    monthIndex = month.getMonth(),
+    count = new Date(year, monthIndex + 1, 0).getDate(),
+    offset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+  const weekdays = languageCode() === "en" ? ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] : ["一", "二", "三", "四", "五", "六", "日"];
+  let days = 0,
+    pictures = 0,
+    backdrop = "";
+  const cells = Array.from({ length: count }, (_, i) => {
+    const key = dateKey(new Date(year, monthIndex, i + 1));
+    const entry = state().entries.find((e) => e.date === key) || state().drafts[key];
+    const photo = entry ? safePhoto(coverPhoto(entry)) : "";
+    const has = entry && (hasDayPageContent(entry) || entry.moments?.length);
+    if (has) days++;
+    if (photo) {
+      pictures++;
+      backdrop ||= photo;
+    }
+    return photo
+      ? `<button class="wall-day has-photo ${key === dateKey() ? "today" : ""}" data-action="open-day" data-date="${key}" aria-label="${key}"><img src="${esc(photo)}" alt="" loading="lazy"><b>${i + 1}</b></button>`
+      : `<button class="wall-day ${has ? "has-words" : ""} ${key === dateKey() ? "today" : ""}" data-action="${has ? "open-day" : "edit-date"}" data-date="${key}" aria-label="${key}"><span>${i + 1}</span>${has ? "<i>✎</i>" : ""}</button>`;
+  }).join("");
+  const title = month.toLocaleDateString(locale(), { month: "long" });
+  return `<section class="cal-wall">${backdrop ? `<img class="cal-wall-backdrop" src="${esc(backdrop)}" alt="" aria-hidden="true">` : ""}<div class="cal-wall-glow" aria-hidden="true"></div><div class="cal-wall-head"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><div><h2>${esc(title)}</h2><small>${t("calendar.wrapped", { year })}</small></div><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="cal-wall-grid">${weekdays.map((d) => `<span class="wall-weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div><p class="cal-wall-stats">${t("calendar.wallStats", { days, pictures })}</p></section>`;
+}
 function calendarPage() {
   const year = month.getFullYear(),
     monthIndex = month.getMonth(),
@@ -503,7 +534,10 @@ function calendarPage() {
           : "";
     return `<button class="day-cell ${key === selectedDate ? "selected" : ""} ${key === dateKey() ? "today" : ""} ${key > dateKey() ? "future" : ""}" data-action="select-date" data-date="${key}" data-has-content="${marks.hasContent}" aria-label="${key}${recorded ? " " + t("calendar.hasEntry") : ""}${marks.label ? " · " + marks.label : ""}" aria-pressed="${key === selectedDate}"><span>${new Intl.NumberFormat(locale()).format(i + 1)}</span><span class="day-mark">${mark}</span>${calendarMode === "memory" ? marks.html : ""}</button>`;
   }).join("");
-  return `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header><div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
+  const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header>`;
+  if (calendarMode === "wall")
+    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarWallHTML()}`;
+  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -858,7 +892,7 @@ function studioTools() {
       label: "tool.photos",
       value: photoTotal ? t("photo.count", { count: photoTotal }) : t("tool.none"),
       body: () =>
-        `<button class="primary full-width" data-action="add-photos">${icon("photo")} ${t("photo.addMany")}</button>${
+        `<button class="primary full-width" data-action="choose-album">${icon("photo")} ${t("photo.addMany")}</button>${
           dayPage && editor.photo
             ? `<div class="editor-actions"><button data-action="upload">${t("studio.replacePhoto")}</button><button data-action="free-main-photo">${t("photo.freeMain")}</button></div>`
             : dayPage && !photoTotal
@@ -955,7 +989,7 @@ function toolMenuHTML() {
   if (studioTool && !tools.some((tool) => tool.id === studioTool)) studioTool = null;
   const open = tools.find((tool) => tool.id === studioTool);
   const sheet = open
-    ? `<section class="tool-sheet open" data-tool-row="${open.id}" aria-label="${t(open.label)}"><div class="sheet-head"><span class="tool-icon" aria-hidden="true">${open.icon}</span><b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head"><span class="tool-icon" aria-hidden="true">${open.icon}</span><b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const dock = `<nav class="tool-dock" aria-label="${t("write.decorate")}">${tools
     .map(
@@ -998,7 +1032,7 @@ function studioStartHTML() {
     started
       ? `<button class="start-continue" data-action="start-continue"><span aria-hidden="true">📖</span><span><b>${t("start.continue")}</b><small>${esc(editor.title || t("entry.untitled"))}${editor.moments.length ? ` · ${t("day.statMoments", { count: editor.moments.length })}` : ""}</small></span><i>›</i></button><p class="start-note">${t("start.newMoment")}</p>`
       : ""
-  }<div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div>${(() => {
+  }<button class="start-quicknote" data-action="start-note"><span class="start-note-icon" aria-hidden="true">✎</span><span><b>${t("note.start")}</b><small>${t("note.startHint")}</small></span><i>›</i></button><div class="start-grid">${card("photos", "📷")}${card("words", "✎")}${card("video", "🎬")}${card("voice", "🎙")}${card("template", "▦")}${card("growth", "🌱")}</div>${(() => {
     const scene = todayScene();
     return scene ? `<button class="start-scene" data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span><small>${t("scene.ofDay")}</small><b>${esc(sceneName(scene))}</b></span><i>${t("scene.useIt")} ›</i></button>` : "";
   })()}<h2 class="start-sub">${t("start.ideas")}</h2><div class="start-ideas">${START_IDEAS.map((idea) => `<button data-action="start-idea" data-idea="${idea}">${t("start.idea." + idea)}</button>`).join("")}</div></section>`;
@@ -1025,8 +1059,12 @@ async function studioStartAction(target) {
       render();
       break;
     case "start-photos":
-      beginStudio("photos");
-      $("#photos-input").click();
+      beginStudio(null);
+      openPhotoChooser("layers");
+      break;
+    case "start-note":
+      studioStart = false;
+      openNote();
       break;
     case "start-words":
       beginStudio(null);
@@ -1114,6 +1152,55 @@ function openSceneCollection(id) {
     .join("")}</div><p class="wall-hint">${t("scene.swipe")}</p></div>`;
   dialog.showModal();
 }
+// Quick note, like the Notes app: a title line and the words, nothing else.
+function openNote() {
+  if (page !== "note") noteReturn = page === "studio" ? "home" : page;
+  page = "note";
+  render();
+  $("#note-title")?.focus();
+}
+function noteHTML() {
+  const date = new Date().toLocaleDateString(locale(), { month: "long", day: "numeric", weekday: "long" });
+  return `<section class="quick-note"><header class="note-top"><button class="note-back" data-action="note-done" data-keep="0">${icon("back")} ${t("note.back")}</button><span>${esc(date)}</span><button class="note-done" data-action="note-done" data-keep="1">${t("note.done")}</button></header><input id="note-title" class="note-title" maxlength="70" placeholder="${t("note.titlePlaceholder")}" autocomplete="off"><textarea id="note-body" class="note-body" maxlength="4000" placeholder="${t("note.bodyPlaceholder")}"></textarea><p class="note-help">${t("note.help")}</p></section>`;
+}
+// Saves the note as a words-only little story on today's page.
+function saveNote() {
+  const title = $("#note-title")?.value.trim() || "";
+  const body = $("#note-body")?.value.trim() || "";
+  if (!title && !body) return false;
+  openStudio(dateKey());
+  const now = new Date();
+  changeEditor((entry) => {
+    const moment = createMoment(entry, {
+      title: title || body.split("\n")[0].slice(0, 40),
+      body: title ? body : body.split("\n").slice(1).join("\n"),
+      time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    });
+    moment.layoutTemplate = "text";
+    entry.moments.push(moment);
+  }, false);
+  clearTimeout(draftTimer);
+  store.update((s) => saveEntry(s, editor));
+  draftDirty = false;
+  return true;
+}
+// One place to add a picture: the album, the scene library, or today's pick.
+function openPhotoChooser(targetSlot = "layers") {
+  photoTarget = targetSlot;
+  const en = languageCode() === "en";
+  const today = todayScene();
+  const picks = [today, ...scenes().filter((s) => s !== today && (s.collection || "life") !== "life").slice(0, 3)].filter(Boolean);
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(targetSlot === "main" ? "choose.mainTitle" : "choose.title")}</h2><button class="choose-album" data-action="choose-album"><span aria-hidden="true">📷</span><span><b>${t("choose.album")}</b><small>${t(targetSlot === "main" ? "choose.albumOne" : "choose.albumMany")}</small></span><i>›</i></button><h3>${t("choose.picks")}</h3><div class="choose-picks">${picks
+    .map((scene) => `<button data-action="use-scene" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`scene:${scene.id}`))}" alt=""><span>${esc(sceneName(scene))}</span></button>`)
+    .join("")}</div><h3>${t("scene.title")}</h3><div class="choose-collections">${sceneCollections()
+    .map((c) => {
+      const cover = collectionScenes(c.id)[0];
+      return `<button data-action="scene-collection" data-collection="${esc(c.id)}"><img src="${esc(safePhoto(`scene:${cover.id}`))}" alt=""><span>${esc(en ? c.nameEn : c.nameZh)}</span></button>`;
+    })
+    .join("")}</div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  dialog.showModal();
+}
 // Put a scene on the page being written (a new story if today already has one
 // when coming from Home).
 function useScene(id, fromHome = false) {
@@ -1125,7 +1212,17 @@ function useScene(id, fromHome = false) {
     if (hasDayPageContent(editor) || editor.moments.length) addMomentNow();
   }
   studioTool = null;
-  addPhotoLayers([{ reference: `scene:${scene.id}`, name: sceneName(scene) }]);
+  const reference = `scene:${scene.id}`;
+  const pageNow = activePage();
+  const emptySlot = pageNow.layers.some((layer) => layer.kind === "photo" && !layer.mediaRef);
+  // A day page's main picture spot (or a chosen frame) takes the scene, so it
+  // sits in the layout instead of floating on top of it.
+  if (!emptySlot && isDayPage() && (photoTarget === "main" || (!editor.photo && editor.layoutTemplate !== "text"))) {
+    changeEditor((entry) => {
+      entry.photo = reference;
+    });
+  } else addPhotoLayers([{ reference, name: sceneName(scene) }]);
+  photoTarget = "layers";
   flushDraft();
   toast(t("scene.added", { name: sceneName(scene) }));
 }
@@ -1217,7 +1314,7 @@ function render() {
   const signedIn = Account.isSignedIn(account);
   $("#phone").classList.toggle("signed-out", !signedIn);
   // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
-  $("#phone").classList.toggle("in-studio", signedIn && page === "studio");
+  $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "note"));
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
@@ -1238,6 +1335,7 @@ function render() {
       communityHTML(social(), communityView, state(), ctx(), { icon }),
     settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
+    note: noteHTML,
   }[page]();
   navigation();
   applyShellLanguage();
@@ -1421,6 +1519,12 @@ function accountAction(target) {
       };
       if (on) askConfirm(t("who.confirm")).then((ok) => ok && apply());
       else apply();
+      return true;
+    }
+    case "note-done": {
+      const saved = target.dataset.keep === "1" || $("#note-title")?.value.trim() || $("#note-body")?.value.trim() ? saveNote() : false;
+      if (saved) toast(t("note.saved"));
+      navigate(saved ? "home" : noteReturn && noteReturn !== "note" ? noteReturn : "home");
       return true;
     }
     case "studio-back":
@@ -1663,9 +1767,13 @@ async function action(target) {
   if (actionName === "photo-edit") await reEditPhotoLayer();
   if (actionName === "use-scene") {
     if ($("#scene-dialog")?.open) $("#scene-dialog").close();
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
     useScene(target.dataset.scene, target.dataset.from === "home");
   }
-  if (actionName === "scene-collection") openSceneCollection(target.dataset.collection);
+  if (actionName === "scene-collection") {
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+    openSceneCollection(target.dataset.collection);
+  }
   if (actionName === "scene-close") $("#scene-dialog").close();
   if (actionName === "layer-shape") {
     const shape = target.dataset.shape;
@@ -1788,9 +1896,19 @@ async function action(target) {
     afterHistoryStep();
   }
   if (actionName === "upload") $("#photo-input").click();
-  if (actionName === "add-photos") {
+  if (actionName === "add-photos" || actionName === "photo-chooser") {
     soundMenu = false;
-    $("#photos-input").click();
+    openPhotoChooser(target.dataset.target === "main" ? "main" : "layers");
+  }
+  if (actionName === "choose-album") {
+    $("#choose-dialog").close();
+    if (photoTarget === "main") $("#photo-input").click();
+    else $("#photos-input").click();
+  }
+  if (actionName === "choose-close") $("#choose-dialog").close();
+  if (actionName === "sheet-grow") {
+    sheetTall = !sheetTall;
+    render();
   }
   if (actionName === "add-video") {
     soundMenu = false;
@@ -2146,7 +2264,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
-  if (event.target.closest(".layer-play, .canvas-add-row, .canvas-scene-link, .layer-bar")) return;
+  if (event.target.closest(".layer-play, .canvas-add-row, .canvas-scene-link, .layer-bar, .photo-placeholder")) return;
   // Touching the paper puts the keyboard away so the tools come back.
   if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
   const element = event.target.closest("[data-layer]");
@@ -4222,3 +4340,29 @@ document.addEventListener(
   },
   true,
 );
+
+// Pull a panel's grabber up for more room, down to make it smaller or close it.
+let sheetDrag = null;
+document.addEventListener("pointerdown", (event) => {
+  const grip = event.target.closest(".sheet-grabber, .sheet-head");
+  if (!grip || event.target.closest(".sheet-close")) return;
+  sheetDrag = { y: event.clientY, moved: false };
+});
+document.addEventListener("pointermove", (event) => {
+  if (sheetDrag && Math.abs(event.clientY - sheetDrag.y) > 8) sheetDrag.moved = true;
+});
+document.addEventListener("pointerup", (event) => {
+  if (!sheetDrag) return;
+  const dy = event.clientY - sheetDrag.y;
+  const moved = sheetDrag.moved;
+  sheetDrag = null;
+  if (!moved || page !== "studio") return;
+  if (dy < -30 && !sheetTall) {
+    sheetTall = true;
+    render();
+  } else if (dy > 30) {
+    if (sheetTall) sheetTall = false;
+    else studioTool = null;
+    render();
+  }
+});

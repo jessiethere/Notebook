@@ -70,8 +70,11 @@ function wav(seconds = 1) {
     assert.equal(await picker.element().evaluate((el) => el.id), "video-input");
     await picker.setFiles([]);
     // Photos open the photo picker (multiple).
-    const photoChooser = page.waitForEvent("filechooser");
+    // Photos first offer: album, today's picks and the scene library.
     await page.locator('.stage-bar [data-action="add-photos"]').tap();
+    await page.waitForSelector("#choose-dialog[open]");
+    const photoChooser = page.waitForEvent("filechooser");
+    await page.locator('#choose-dialog [data-action="choose-album"]').tap();
     const photoPicker = await photoChooser;
     assert.equal(photoPicker.isMultiple(), true);
     await photoPicker.setFiles([]);
