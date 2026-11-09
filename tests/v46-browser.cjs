@@ -102,7 +102,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector(".day-detail");
     assert.equal(await page.locator('.day-detail [contenteditable]').count(), 0, "reading mode is not editable");
     await page.locator('.day-detail-top [data-action="edit-date"]').tap();
-    const dayChip = page.locator('[data-action="moment-select"][data-moment=""], .chapter-chips [data-day-page], .chapter-chips button:has-text("当日主页")').first();
+    const dayChip = page.locator('.chapter-chips .cover-chip').first();
     if (await dayChip.count()) await dayChip.tap();
     await page.waitForSelector('#journal-canvas.day-canvas [data-inline="title"]');
     const title = page.locator('#journal-canvas [data-inline="title"]');

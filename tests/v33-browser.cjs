@@ -101,7 +101,10 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.equal(await page.locator(".day-detail .empty-slot").count(), 0, "empty frames are hidden when reading");
     assert.equal(await page.locator(".day-detail .moment-canvas.text-only").count(), 1);
     // Day Detail offers "add a moment to this day".
-    await page.locator('.day-detail [data-action="quick-moment"]').click();
+    await page.locator('.day-detail [data-action="quick-open"]').click();
+    await page.waitForSelector("#choose-dialog[open] .quick-sheet");
+    await page.locator('[data-action="quick-way"][data-way="write"]').click();
+    await page.locator('[data-action="quick-start"]').click();
     await page.waitForSelector('.page-bar [data-action="moment-delete"]');
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.length === 3, today);
     passed.push("templates by photo count with empty frames, text-only page, add-moment from Day Detail");

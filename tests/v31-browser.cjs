@@ -497,7 +497,7 @@ async function noOverflow(page, label) {
     await page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
     await page.waitForSelector(".day-detail");
     const englishDay = await page.locator(".day-detail").innerText();
-    assert.match(englishDay, /CHAPTER 01|Chapter 01/i);
+    assert.match(englishDay, /PAGE 01|Page 01/i);
     assert.match(englishDay, /Afternoon Coffee Time/);
     assert.match(englishDay, /番茄牛腩食谱/);
     assert.match(await page.locator(".day-detail .audio-layer .layer-play").first().getAttribute("aria-label"), /^Play /);

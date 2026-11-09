@@ -26,6 +26,7 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo } from "./js/export.mjs";
 import {
+  backdropOf,
   canvasHTML as sharedCanvasHTML,
   layerGeometry,
   cropStyle,
@@ -843,15 +844,53 @@ function chapterChipsHTML() {
       .map((b) => `<i>${b}</i>`)
       .join("");
   };
-  const dayChip = hasDayPageContent(editor) || !moments.length || !activeMomentId
-    ? `<button class="chapter-chip ${activeMomentId ? "" : "active"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><b>${esc(editor.title || t("day.cover"))}</b>${badges(editor)}</button>`
-    : "";
-  return `<nav class="chapter-chips" aria-label="${t("moment.title")}"><button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button>${dayChip}${moments
+  // The cover sums up the day in one line (optional); each page keeps one
+  // thing that happened. They sit side by side, cover first.
+  const hasCover = hasDayPageContent(editor);
+  const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}">${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
+  return `<div class="strip-head"><span>${t("strip.summary", { count: moments.length })}</span>${moments.length ? `<button class="text-button" data-action="pages-manage">${t("pages.manageLong")}</button>` : ""}</div><nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
-        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><b><span>${String(index + 1).padStart(2, "0")}</span> <span data-chapter-label="${esc(moment.id)}">${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</span></b>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
+        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}">${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
     )
-    .join("")}</nav>`;
+    .join("")}<button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button></nav>`;
+}
+// A small picture of a page for the strip and the "整理" sheet.
+function pageThumbHTML(p, cover = false) {
+  const framed = p.layers?.find((l) => framedPhoto(l) && l.mediaRef);
+  const drawing = p.layers?.find((l) => l.drawing && l.mediaRef);
+  const src = backdropOf(p, ctx())?.src || (cover ? safePhoto(p.photo) : "") || (framed ? safePhoto(framed.mediaRef) : "") || "";
+  if (src) return `<span class="page-thumb" aria-hidden="true"><img src="${esc(src)}" alt=""></span>`;
+  if (drawing) return `<span class="page-thumb drawn" aria-hidden="true"><img src="${esc(safePhoto(drawing.mediaRef))}" alt=""></span>`;
+  return `<span class="page-thumb lines ${cover ? "cover" : ""}" aria-hidden="true"><i></i><i></i><i></i></span>`;
+}
+// 整理这一天: the cover and the pages in order — move up / down, delete.
+function openPagesManage() {
+  renderPagesManage();
+  const dialog = $("#choose-dialog");
+  if (!dialog.open) dialog.showModal();
+}
+function renderPagesManage() {
+  const moments = editor.moments || [];
+  const book = (id) => state().books.find((b) => b.id === id)?.title || "";
+  const hasCover = hasDayPageContent(editor);
+  $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
+    .map(
+      (m, i) =>
+        `<li class="pages-row">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">${t("delete")}</button></li>`,
+    )
+    .join("")}</ul><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
+}
+async function removePage(momentId) {
+  const moment = findMoment(editor, momentId);
+  if (!moment) return;
+  if (hasMomentContent(moment) && !(await askConfirm(t("moment.deleteConfirm")))) return;
+  changeEditor((entry) => removeMoment(entry, momentId), false);
+  if (activeMomentId === momentId || !findMoment(editor, activeMomentId))
+    activeMomentId = !hasDayPageContent(editor) && editor.moments.length ? editor.moments.at(-1).id : null;
+  selectedLayer = null;
+  render();
+  toast(t("moment.deleted"));
 }
 function chaptersOutlineHTML() {
   const moments = editor.moments || [];
@@ -924,7 +963,7 @@ function pageModeHTML() {
 function pageBarHTML() {
   const options = (current) => state().books.map((b) => `<option value="${esc(b.id)}" ${current === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("");
   if (isDayPage())
-    return `<div class="page-bar"><label class="write-book">${t("write.inBook")}<select data-day-book aria-label="${t("write.inBook")}">${options(editor.bookId)}</select></label>${hasDayPageContent(editor) ? `<button class="write-delete" data-action="day-page-clear">${t("write.clearDay")}</button>` : ""}</div>`;
+    return `<p class="cover-hint">${t("cover.hint")}</p><div class="page-bar"><label class="write-book">${t("write.inBook")}<select data-day-book aria-label="${t("write.inBook")}">${options(editor.bookId)}</select></label>${hasDayPageContent(editor) ? `<button class="write-delete" data-action="day-page-clear">${t("write.clearDay")}</button>` : ""}</div>`;
   const page = activePage();
   return `<div class="page-bar"><label class="write-book">${t("write.inBook")}<select data-moment-field="bookId" aria-label="${t("write.inBook")}">${options(page.bookId || editor.bookId)}</select></label><input type="time" class="write-time" data-moment-field="time" value="${esc(page.time || "")}" aria-label="${t("moment.time")}"><button class="write-delete" data-action="moment-delete">${t("write.deleteStory")}</button></div>`;
 }
@@ -1058,7 +1097,7 @@ function inlineInput(target) {
   } else {
     const moment = activePage();
     const label = document.querySelector(`[data-chapter-label="${CSS.escape(moment.id)}"]`);
-    if (label) label.textContent = (moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled"));
+    if (label) label.textContent = moment.title || t("moment.untitled");
   }
 }
 document.addEventListener("focusout", (event) => {
@@ -1339,9 +1378,10 @@ function lastQuickWay() {
     return "";
   }
 }
-function openQuickRecord({ way = "", photo = "", book = "" } = {}) {
+function openQuickRecord({ way = "", photo = "", book = "", date = "" } = {}) {
   if ($("#choose-dialog")?.open) $("#choose-dialog").close();
   quick = {
+    date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : dateKey(),
     book: state().books.some((b) => b.id === book) ? book : lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily",
     way: QUICK_WAYS.includes(way) ? way : lastQuickWay() || "write",
     photo: photo || (todayScene() ? "today" : "pick"),
@@ -1358,7 +1398,7 @@ function quickWayArt(way) {
 }
 function renderQuickRecord() {
   const scene = todayScene();
-  const today = todayEntry() || state().drafts[dateKey()];
+  const today = state().drafts[quick.date] || state().entries.find((e) => e.date === quick.date);
   const pages = today ? (hasDayPageContent(today) ? 1 : 0) + (today.moments?.length || 0) : 0;
   const way = (id) =>
     `<button class="quick-way way-${id} ${quick.way === id ? "selected" : ""}" data-action="quick-way" data-way="${id}" aria-pressed="${quick.way === id}"><span class="way-art">${quickWayArt(id)}</span><b>${t("way." + id)}</b><small>${t("way." + id + "Hint")}</small></button>`;
@@ -1368,17 +1408,17 @@ function renderQuickRecord() {
     quick.way === "photo"
       ? `<h3>${t("quick.photo")}</h3><div class="quick-photos">${scene ? opt("today", `<img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span>${t("quick.today")}</span>`, t("quick.today")) : ""}${opt("pick", `<span class="quick-none">${icon("photo")}</span><span>${t("quick.pick")}</span>`, t("quick.pick"))}${opt("mine", `<span class="quick-none">${icon("plus")}</span><span>${t("quick.mine")}</span>`, t("quick.mine"))}</div>`
       : "";
-  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("quick.title")}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
+  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
     .books.map((book) => `<button data-action="quick-book" data-book="${esc(book.id)}" class="${quick.book === book.id ? "selected" : ""}" aria-pressed="${quick.book === book.id}">${coverHTML(book, ctx())}<span>${esc(book.title)}</span></button>`)
     .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t("quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
 }
 // Every record is a new page of today, in the chosen journal.
-function startPage(book) {
+function startPage(book, date = dateKey()) {
   try {
     localStorage.setItem(QUICK_BOOK_KEY, book);
   } catch {}
   if ($("#choose-dialog")?.open) $("#choose-dialog").close();
-  openStudio(dateKey());
+  openStudio(date);
   addMomentNow();
   changeTarget((m) => {
     if (m !== editor) m.bookId = book;
@@ -1386,13 +1426,13 @@ function startPage(book) {
   return state().books.find((b) => b.id === book)?.title || "";
 }
 async function startQuickRecord() {
-  const { book, way, photo } = quick;
+  const { book, way, photo, date } = quick;
   const scene = todayScene();
   try {
     localStorage.setItem(QUICK_WAY_KEY, way);
   } catch {}
   quick = null;
-  const name = startPage(book);
+  const name = startPage(book, date);
   if (way === "photo") {
     changeTarget((m) => {
       m.layoutTemplate = "line";
@@ -1409,8 +1449,9 @@ async function startQuickRecord() {
 }
 async function quickMore(kind) {
   const book = quick?.book || state().books[0]?.id || "daily";
+  const date = quick?.date || dateKey();
   quick = null;
-  startPage(book);
+  startPage(book, date);
   if (kind === "video") {
     studioTool = "media";
     render();
@@ -2144,15 +2185,16 @@ async function action(target) {
     pulledBook = null;
     render();
   }
-  if (actionName === "quick-open") openQuickRecord({ way: target.dataset.way || "", photo: target.dataset.photo || "" });
+  if (actionName === "quick-open") openQuickRecord({ way: target.dataset.way || "", photo: target.dataset.photo || "", date: target.dataset.date || "" });
   if (actionName === "quick-way" && quick) {
     quick.way = target.dataset.way;
     renderQuickRecord();
   }
   if (actionName === "quick-continue") {
+    const date = quick?.date || dateKey();
     quick = null;
     $("#choose-dialog").close();
-    openStudio(dateKey());
+    openStudio(date);
   }
   if (actionName === "quick-more" && quick) await quickMore(target.dataset.more);
   if (actionName === "draw-new") {
@@ -3656,6 +3698,22 @@ async function v31Action(target) {
     case "select-moment":
       selectMoment(momentId);
       return true;
+    case "pages-manage":
+      if (target.dataset.date) openStudio(target.dataset.date);
+      openPagesManage();
+      return true;
+    case "pages-open":
+      $("#choose-dialog").close();
+      selectMoment(momentId);
+      return true;
+    case "page-move":
+      changeEditor((entry) => moveMoment(entry, target.dataset.moment, Number(target.dataset.dir) || 0));
+      renderPagesManage();
+      return true;
+    case "page-remove":
+      await removePage(target.dataset.moment);
+      if ($("#choose-dialog").open) renderPagesManage();
+      return true;
     case "add-moment":
       addMomentNow();
       return true;
@@ -3709,6 +3767,7 @@ async function v31Action(target) {
       });
       selectedLayer = null;
       if (editor.moments.length) selectMoment(editor.moments[0].id);
+      if ($("#choose-dialog").open && $("#choose-dialog .pages-sheet")) renderPagesManage();
       toast(t("write.dayCleared"));
       return true;
     }

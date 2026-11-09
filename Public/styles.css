@@ -10995,3 +10995,203 @@ dialog h2,
   aspect-ratio: 4 / 3;
   border-radius: 14px;
 }
+
+/* ---------- A day = a cover (one line, optional) + pages ---------- */
+.page-strip {
+  align-items: stretch;
+  gap: 8px;
+}
+.page-strip .chapter-chip {
+  gap: 8px;
+  max-width: 168px;
+  min-height: 48px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 14px;
+  text-align: left;
+}
+.page-strip .chapter-chip.add,
+.page-strip .chapter-chip.manage {
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.page-strip .chapter-chip.manage {
+  border-style: solid;
+  color: var(--t-4a433c, #4a433c);
+}
+.chip-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.chip-text small {
+  font-size: 10px;
+  color: var(--t-a08d75, #a08d75);
+  white-space: nowrap;
+}
+.chip-text b {
+  max-width: 112px;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--t-2b2622, #2b2622);
+}
+.chapter-chip.active .chip-text small,
+.chapter-chip.active .chip-text b {
+  color: var(--t-ffffff, #ffffff);
+}
+.cover-chip.empty:not(.active) {
+  border-style: dashed;
+}
+.cover-chip.empty:not(.active) .chip-text b {
+  font-weight: 400;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.strip-divider {
+  flex: none;
+  width: 1px;
+  margin: 8px 0;
+  background: var(--c-e0d8ca, #e0d8ca);
+}
+.page-thumb {
+  flex: none;
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  width: 30px;
+  height: 38px;
+  padding: 0 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--c-e6dfd3, #e6dfd3);
+}
+.page-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.page-thumb.drawn img {
+  object-fit: contain;
+  padding: 3px;
+}
+.page-thumb.lines i {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--c-d8cfc0, #d8cfc0);
+}
+.page-thumb.lines i:first-child {
+  width: 70%;
+  background: var(--c-8d8274, #8d8274);
+}
+.page-thumb.cover {
+  background: var(--c-f6efe3, #f6efe3);
+}
+.cover-hint {
+  margin: -2px 2px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--t-8a8073, #8a8073);
+}
+/* 整理这一天 */
+.pages-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.pages-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--c-ffffff, #ffffff);
+  box-shadow: 0 0 0 1px var(--c-ece5d9, #ece5d9);
+}
+.pages-row.cover-row {
+  background: var(--c-fbf6ec, #fbf6ec);
+}
+.pages-row .page-thumb {
+  width: 38px;
+  height: 48px;
+}
+.pages-open {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.pages-open small {
+  font-size: 11px;
+  color: var(--t-a08d75, #a08d75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pages-open b {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t-2b2622, #2b2622);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pages-move {
+  display: flex;
+  gap: 4px;
+}
+.pages-move button {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 10px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 15px;
+  color: var(--t-4a433c, #4a433c);
+}
+.pages-move button:disabled {
+  opacity: 0.3;
+}
+.pages-del {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--c-efd3cf, #efd3cf);
+  border-radius: 10px;
+  background: var(--c-fff7f5, #fff7f5);
+  font-size: 12px;
+  color: var(--t-b0473d, #b0473d);
+}
+.day-pages-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 2px 6px;
+  font-size: 14px;
+}
+.strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 2px 4px;
+  font-size: 12px;
+  color: var(--t-8a8073, #8a8073);
+}
+.strip-head .text-button {
+  min-height: 28px;
+  font-size: 12px;
+  font-weight: 600;
+}

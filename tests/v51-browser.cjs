@@ -65,7 +65,8 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     assert.match(line.backdrop, /^photo:[a-z0-9-]+$/);
     assert.equal(line.title, "海风和一杯冰美式");
     assert.equal(await page.locator(".write-card").count(), 0, "the words are on the photo, no card below");
-    assert.equal(await page.locator('.chapter-chips [data-moment=""]').count(), 0, "no empty day page chip");
+    assert.equal(await page.locator('.chapter-chips .cover-chip.empty').count(), 1, "the cover is there, optional and empty");
+    assert.match(await page.locator(".strip-head").innerText(), /封面 \+ 1 页/);
     assert.equal(await page.locator('[data-action="page-mode"][data-mode="line"][aria-pressed="true"]').count(), 1);
     if (shots) await page.screenshot({ path: `${shots}/v51-line.png` });
     // The saved picture works for this page too.
@@ -196,9 +197,30 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await page.waitForFunction(() => !document.querySelector("#confirm-dialog[open]") || true);
     if (await page.locator("#confirm-dialog[open]").count()) await page.locator("#confirm-ok").tap();
     await page.waitForFunction(() => document.querySelectorAll(".chapter-chips .chapter-chip-wrap").length === 3);
-    assert.equal(await page.locator('.chapter-chips [data-moment=""]').count(), 0);
+    assert.equal(await page.locator('.chapter-chips .cover-chip.empty:not(.active)').count(), 1, "the empty cover is not opened");
     assert.equal(await page.locator('.page-bar [data-action="moment-delete"]').count(), 1, "a real page is open");
     passed.push("a day is its pages: deleting one opens another, no empty day page");
+
+    // 8b. 整理这一天: reorder and delete pages in one sheet; the cover is there too.
+    const order = async () => (await draft()).moments.map((m) => m.id);
+    await page.waitForTimeout(1300);
+    const before = await order();
+    await page.locator('.strip-head [data-action="pages-manage"]').tap();
+    await page.waitForSelector("#choose-dialog[open] .pages-sheet");
+    assert.equal(await page.locator(".pages-row.cover-row").count(), 1);
+    assert.equal(await page.locator(".pages-row:not(.cover-row)").count(), before.length);
+    assert.equal(await page.locator('.pages-row [data-action="page-move"][data-dir="-1"]').first().isDisabled(), true, "the first page cannot move up");
+    await page.locator('[data-action="page-move"][data-dir="1"]').first().tap();
+    await page.waitForTimeout(1300);
+    assert.deepEqual(await order(), [before[1], before[0], ...before.slice(2)]);
+    await page.locator(`[data-action="page-remove"][data-moment="${before[2]}"]`).tap();
+    if (await page.locator("#confirm-dialog[open]").count()) await page.locator("#confirm-ok").tap();
+    await page.waitForFunction((n) => document.querySelectorAll(".pages-row:not(.cover-row)").length === n, before.length - 1);
+    await page.locator('#choose-dialog [data-action="choose-close"]').tap();
+    await page.waitForTimeout(1300);
+    assert.deepEqual(await order(), [before[1], before[0]]);
+    assert.match(await page.locator(".strip-head").innerText(), /封面 \+ 2 页/);
+    passed.push("整理这一天: move a page, delete a page, the cover listed first");
 
     // 9. Decorate my space: a look, then a frame and a post layout.
     await menu(page, "books");

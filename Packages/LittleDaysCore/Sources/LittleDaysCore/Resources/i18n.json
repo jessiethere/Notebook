@@ -544,8 +544,8 @@
     "en": "A name for today"
   },
   "studio.titlePlaceholder": {
-    "zh": "今天的小美好",
-    "en": "Today’s little lovely"
+    "zh": "用一句话总结今天…",
+    "en": "Today in one line…"
   },
   "studio.bodyLabel": {
     "zh": "写点什么",
@@ -1184,8 +1184,8 @@
     "en": "Growth"
   },
   "calendar.markMoments": {
-    "zh": "个小故事",
-    "en": "Moments"
+    "zh": "页",
+    "en": "Pages"
   },
   "day.reading": {
     "zh": "回忆阅读",
@@ -1196,8 +1196,8 @@
     "en": "Edit"
   },
   "day.cover": {
-    "zh": "第一页",
-    "en": "First page"
+    "zh": "封面",
+    "en": "Cover"
   },
   "day.growth": {
     "zh": "当天的成长",
@@ -1212,8 +1212,8 @@
     "en": "View photo larger"
   },
   "day.statMoments": {
-    "zh": "{count} 个小故事",
-    "en": "{count} moments"
+    "zh": "{count} 页",
+    "en": "{count} pages"
   },
   "day.statPhotos": {
     "zh": "{count} 张照片",
@@ -1244,24 +1244,24 @@
     "en": "This is an unsaved draft."
   },
   "moment.title": {
-    "zh": "今日小故事",
-    "en": "Moments of the day"
+    "zh": "这一天的页",
+    "en": "Pages of the day"
   },
   "moment.caption": {
-    "zh": "一天里的每个片段，都可以是一章。",
-    "en": "Every part of the day can be its own chapter."
+    "zh": "封面用一句话总结这一天，每一页记录一件事。",
+    "en": "The cover sums up the day; each page keeps one thing."
   },
   "moment.add": {
-    "zh": "添加一个小故事",
-    "en": "Add a moment"
+    "zh": "再记一页",
+    "en": "Add a page"
   },
   "moment.added": {
-    "zh": "新的小故事已经翻开 ✿",
-    "en": "A new moment is ready ✿"
+    "zh": "新的一页已经翻开 ✿",
+    "en": "A new page is ready ✿"
   },
   "moment.untitled": {
-    "zh": "未命名的小故事",
-    "en": "Untitled moment"
+    "zh": "未命名的一页",
+    "en": "Untitled page"
   },
   "moment.empty": {
     "zh": "还没有内容",
@@ -1272,8 +1272,8 @@
     "en": "Title, main photo and notes for the day"
   },
   "moment.chapter": {
-    "zh": "第 {number} 章",
-    "en": "Chapter {number}"
+    "zh": "第 {number} 页",
+    "en": "Page {number}"
   },
   "moment.up": {
     "zh": "上移",
@@ -1320,24 +1320,24 @@
     "en": "Comma separated, e.g. weekend, walk"
   },
   "moment.save": {
-    "zh": "保存这个小故事",
-    "en": "Save this moment"
+    "zh": "保存这一页",
+    "en": "Save this page"
   },
   "moment.savedToast": {
-    "zh": "这个小故事已经单独保存 🌷",
-    "en": "This moment is saved on its own 🌷"
+    "zh": "这一页已经单独保存",
+    "en": "This page is saved on its own"
   },
   "moment.savedAt": {
     "zh": "已保存 {time}",
     "en": "Saved {time}"
   },
   "moment.deleteConfirm": {
-    "zh": "删除这个小故事？照片和录音文件仍保留在本机，可撤销。",
-    "en": "Delete this moment? Its media files stay on this device and you can undo."
+    "zh": "删除这一页？照片和录音文件仍保留在本机，可撤销。",
+    "en": "Delete this page? Its media files stay on this device and you can undo."
   },
   "moment.deleted": {
-    "zh": "小故事已删除，可以撤销。",
-    "en": "Moment deleted. You can undo."
+    "zh": "这一页已删除，可以撤销。",
+    "en": "Page deleted. You can undo."
   },
   "moment.canvasHint": {
     "zh": "点一下，添加照片、文字、视频或声音",
@@ -1752,8 +1752,8 @@
     "en": "Book & records"
   },
   "tool.chapters": {
-    "zh": "小故事目录",
-    "en": "Moments"
+    "zh": "这一天的页",
+    "en": "Pages"
   },
   "tool.none": {
     "zh": "还没有",
@@ -1792,8 +1792,8 @@
     "en": "New page"
   },
   "moment.none": {
-    "zh": "还没有小故事。",
-    "en": "No moments yet."
+    "zh": "还没有记录。",
+    "en": "Nothing yet."
   },
   "studio.previewSmall": {
     "zh": "缩小预览",
@@ -1984,8 +1984,8 @@
     "en": "Add a page"
   },
   "moment.ctaDay": {
-    "zh": "给这一天再写一个小故事",
-    "en": "Add a moment to this day"
+    "zh": "给这一天再记一页",
+    "en": "Add a page to this day"
   },
   "moment.ctaHint": {
     "zh": "照片 + 一句话、随手写，或者手绘",
@@ -3236,8 +3236,8 @@
     "en": "Tap the ＋ to start"
   },
   "tour.write.body": {
-    "zh": "可以从照片、一句话、视频或声音、或者一个模板开始。一天可以写好几个小故事。",
-    "en": "Start from photos, a sentence, a video or sound, or a template. A day can hold several little stories."
+    "zh": "点「＋」选怎么记：照片 + 一句话、随手写或手绘。一天可以有好几页；封面用一句话总结这一天，可以不写。",
+    "en": "Tap ＋ and choose: photo + a line, just write, or draw. A day can have several pages; the cover sums it up in one line (optional)."
   },
   "tour.photo.title": {
     "zh": "像修图一样编辑照片",
@@ -3896,8 +3896,8 @@
     "en": "A day page"
   },
   "level.rule.moment": {
-    "zh": "写一个小故事",
-    "en": "A little story"
+    "zh": "记一页",
+    "en": "A page"
   },
   "level.rule.photo": {
     "zh": "放一张照片（最多 300）",
@@ -4364,16 +4364,16 @@
     "en": "Delete this page"
   },
   "write.clearDay": {
-    "zh": "删除这一页",
-    "en": "Delete this page"
+    "zh": "清空封面",
+    "en": "Clear cover"
   },
   "write.clearDayConfirm": {
-    "zh": "删除这一页的标题、文字和照片？这一天的其他页都会保留，可以撤销。",
-    "en": "Delete this page's title, words and photos? The day's other pages stay, and you can undo."
+    "zh": "清空封面的一句话和照片？这一天的每一页都会保留，可以撤销。",
+    "en": "Clear the cover's line and photo? Every page of the day stays, and you can undo."
   },
   "write.dayCleared": {
-    "zh": "这一页已删除",
-    "en": "Page deleted"
+    "zh": "封面已清空",
+    "en": "Cover cleared"
   },
   "books.mine": {
     "zh": "我的书",
@@ -4638,5 +4638,61 @@
   "spaceLayout.list": {
     "zh": "大图",
     "en": "Large"
+  },
+  "cover.what": {
+    "zh": "一句话总结这一天",
+    "en": "The day in one line"
+  },
+  "cover.empty": {
+    "zh": "一句话总结（可选）",
+    "en": "One line (optional)"
+  },
+  "cover.hint": {
+    "zh": "封面：用一句话（和一张照片）总结这一天，可以不写。下面的「第 01 页」起记录发生了什么。",
+    "en": "Cover: the day in one line (and a photo) — optional. Pages 01, 02… keep what happened."
+  },
+  "day.pagesCount": {
+    "zh": "这一天的 {count} 页",
+    "en": "{count} pages this day"
+  },
+  "pages.manage": {
+    "zh": "整理",
+    "en": "Arrange"
+  },
+  "pages.title": {
+    "zh": "整理这一天",
+    "en": "Arrange this day"
+  },
+  "pages.help": {
+    "zh": "封面是这一天的一句话总结（可以不写）；下面每一页记录一件事，可以调整顺序或删除。",
+    "en": "The cover is the day in one line (optional); each page below keeps one thing — reorder or delete them here."
+  },
+  "pages.up": {
+    "zh": "上移",
+    "en": "Move up"
+  },
+  "pages.down": {
+    "zh": "下移",
+    "en": "Move down"
+  },
+  "pages.clearCover": {
+    "zh": "清空",
+    "en": "Clear"
+  },
+  "pages.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "quick.titleDate": {
+    "zh": "怎么记 {date}？",
+    "en": "How shall we keep {date}?"
+  },
+  "strip.summary": {
+    "zh": "这一天：封面 + {count} 页",
+    "en": "This day: cover + {count} pages"
+  },
+  "pages.manageLong": {
+    "zh": "整理顺序 / 删除",
+    "en": "Reorder / delete"
   }
 }
