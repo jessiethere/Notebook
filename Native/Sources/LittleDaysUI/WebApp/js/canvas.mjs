@@ -2,6 +2,7 @@
 // Calendar Day Detail (read-only) use the same markup so they never diverge.
 import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
+import { isShape } from "./shapes.mjs";
 
 const num = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -82,7 +83,7 @@ export function layerHTML(layer, ctx, options = {}) {
     // An empty frame from a template: shown while editing, hidden when reading.
     if (!layer.mediaRef && readOnly) return "";
     const empty = !layer.mediaRef;
-    classes += ` art-layer photo-layer frame-${frame}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
+    classes += ` art-layer photo-layer frame-${frame}${isShape(layer.shape) ? ` shape-${layer.shape}` : ""}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
     inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
@@ -95,7 +96,7 @@ export function layerHTML(layer, ctx, options = {}) {
         : `<span class="layer media-layer missing" data-layer="${esc(layer.id)}" style="${esc(layerGeometry(layer))}">${t("media.missing")}</span>`;
     const src = media.resolve(clip.source);
     const poster = media.resolve(clip.poster || "");
-    classes += ` media-layer ${layer.kind}-layer`;
+    classes += ` media-layer ${layer.kind}-layer${layer.kind === "video" && isShape(layer.shape) ? ` shape-${layer.shape}` : ""}`;
     const play = src
       ? `<button type="button" class="layer-play" data-action="layer-play" aria-label="${t("media.play")} ${esc(clip.name)}"><span class="ld-play-icon" aria-hidden="true"></span></button>`
       : `<span class="layer-loading">${t("media.loading")}</span>`;

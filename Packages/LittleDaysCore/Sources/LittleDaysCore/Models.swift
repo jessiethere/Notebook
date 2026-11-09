@@ -69,6 +69,9 @@ public struct JournalMedia: Codable, Identifiable, Equatable {
     public var poster: String?
     /// "recording" for microphone voice notes.
     public var origin: String?
+    /// V3.8: a video's own pixel size, so portrait clips land upright.
+    public var width: Double?
+    public var height: Double?
 }
 
 public struct JournalTextStyle: Codable, Equatable {
@@ -133,6 +136,8 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // sourceRef the untouched original, edit the settings to re-edit from it.
     public var sourceRef: String?
     public var edit: PhotoEdit?
+    // V3.8: landscape / portrait / square / circle / arch / heart / film.
+    public var shape: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString

@@ -245,7 +245,8 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.locator('[data-page="settings"]').click();
     await page.locator('[data-language="en"]').click();
     await nav("community");
-    assert.match(await page.locator(".demo-banner").innerText(), /Demo/);
+    // Sub-pages (an open chat) show the compact one-line label.
+    assert.match(await page.locator(".demo-banner, .demo-chip").first().innerText(), /Demo/);
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
       for (const tab of ["discover", "friends", "messages"]) {

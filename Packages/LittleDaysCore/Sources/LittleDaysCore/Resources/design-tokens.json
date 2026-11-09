@@ -12,6 +12,111 @@
     "line": "#E8E1D7",
     "paper": "#FFFDFA"
   },
-  "radius": { "card": 22, "button": 14 },
-  "fonts": { "body": "system", "heading": "serif", "playful": "rounded" }
+  "radius": {
+    "card": 22,
+    "button": 14
+  },
+  "fonts": {
+    "body": "system",
+    "heading": "serif",
+    "playful": "rounded"
+  },
+  "themes": [
+    {
+      "id": "soft",
+      "mode": "light",
+      "swatch": [
+        "#F8F5EF",
+        "#E8CFCF",
+        "#7D8D6D"
+      ]
+    },
+    {
+      "id": "minimal",
+      "mode": "light",
+      "hue": 220,
+      "saturation": 0.15,
+      "huePull": 1,
+      "neutral": 0.03,
+      "swatch": [
+        "#F6F6F4",
+        "#D9D9D6",
+        "#2E2E2E"
+      ],
+      "colors": {
+        "accent": "#2E2E2E",
+        "ink": "#1E1E1E"
+      },
+      "tint": 0.0
+    },
+    {
+      "id": "elegant",
+      "mode": "light",
+      "hue": 40,
+      "saturation": 0.6,
+      "huePull": 0.5,
+      "swatch": [
+        "#F6F1E6",
+        "#C9A96E",
+        "#2F3E5C"
+      ],
+      "colors": {
+        "accent": "#2F3E5C",
+        "ink": "#1F2433",
+        "line": "#E3DCCB",
+        "blush": "#E6D7BC",
+        "butter": "#E9D9AE",
+        "sage": "#C9CFDA"
+      },
+      "tint": 0.03
+    },
+    {
+      "id": "fresh",
+      "mode": "light",
+      "hue": 178,
+      "saturation": 0.95,
+      "huePull": 0.75,
+      "swatch": [
+        "#F2F7F6",
+        "#CFE6E2",
+        "#4E8C8A"
+      ],
+      "colors": {
+        "accent": "#4E8C8A"
+      },
+      "tint": 0.05
+    },
+    {
+      "id": "sakura",
+      "mode": "light",
+      "hue": 345,
+      "saturation": 1.05,
+      "huePull": 0.7,
+      "swatch": [
+        "#FBF3F4",
+        "#F2D3DA",
+        "#C27C8C"
+      ],
+      "colors": {
+        "accent": "#C27C8C"
+      },
+      "tint": 0.06
+    },
+    {
+      "id": "cool",
+      "mode": "dark",
+      "hue": 262,
+      "saturation": 1.35,
+      "huePull": 0.75,
+      "swatch": [
+        "#17151F",
+        "#3A2F5C",
+        "#9B7BFF"
+      ],
+      "colors": {
+        "accent": "#9B7BFF"
+      },
+      "tint": 0.06
+    }
+  ]
 }

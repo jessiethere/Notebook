@@ -96,6 +96,8 @@ const helpers = (page) => {
     // Studio settings live in a summary menu; open one row (if closed).
     tool: async (id) => {
       if (id === "text") return; // writing is always open (write card)
+      // Put the phone keyboard away first, as a person would (typing hides the tools).
+      await page.evaluate(() => document.activeElement?.blur?.());
       const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
       if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
     },

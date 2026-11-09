@@ -93,8 +93,10 @@ const shift = (key, days) => {
       assert.ok(rows.includes(id), `menu has ${id}`);
     assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
     const dock = await page.locator(".tool-dock").boundingBox();
-    const navBox = await page.locator("#navigation").boundingBox();
-    assert.ok(Math.abs(dock.y + dock.height - navBox.y) < 12, "dock sits right above the tab bar");
+    // Studio is full-screen: the tool row sits at the very bottom (no tab bar).
+    const screen = await page.locator("#app-scroll").boundingBox();
+    assert.equal(await page.locator("#navigation").isVisible(), false, "no tab bar in Studio");
+    assert.ok(Math.abs(dock.y + dock.height - (screen.y + screen.height)) < 12, "dock sits at the bottom");
     await tool("paper");
     await tool("font");
     assert.equal(await page.locator(".tool-body").count(), 1, "only one row open");

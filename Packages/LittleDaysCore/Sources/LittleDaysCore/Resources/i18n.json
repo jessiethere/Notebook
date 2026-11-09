@@ -188,12 +188,12 @@
     "en": "Back to today"
   },
   "calendar.memory": {
-    "zh": "Memory · 生活记忆",
-    "en": "Memory · little moments"
+    "zh": "生活记忆",
+    "en": "Little moments"
   },
   "calendar.growth": {
-    "zh": "Growth · 成长轨迹",
-    "en": "Growth · little steps"
+    "zh": "成长轨迹",
+    "en": "Little steps"
   },
   "calendar.prev": {
     "zh": "上个月",
@@ -592,8 +592,8 @@
     "en": "Export image"
   },
   "studio.help": {
-    "zh": "媒体保存在此浏览器的 IndexedDB，尚未同步到 iPhone。图片导出不包含可播放的视频或音频。",
-    "en": "Media stays in IndexedDB in this browser, without iPhone sync. Image exports do not include playable video or audio."
+    "zh": "照片、视频和声音只保存在这台设备上。导出的图片里，视频和声音不能播放；需要的话请导出视频。",
+    "en": "Photos, videos and sounds stay on this device. An exported picture can't play video or sound — export a video for that."
   },
   "studio.textBox": {
     "zh": "添加文字框",
@@ -772,24 +772,24 @@
     "en": "Local media & backup"
   },
   "settings.storageNote": {
-    "zh": "文字与引用保存在 LocalStorage；照片、视频和音频保存在 IndexedDB。更换浏览器或端口不会自动同步。",
-    "en": "Text and references use LocalStorage; photos, video and audio use IndexedDB. Browsers and ports do not sync automatically."
+    "zh": "你的文字、照片、视频和声音都只保存在这台设备上，不会上传。换手机或换浏览器前，请先导出备份。",
+    "en": "Your words, photos, videos and sounds stay on this device and are never uploaded. Before switching phones or browsers, export a backup."
   },
   "settings.backup": {
     "zh": "导出完整本机备份",
     "en": "Export full local backup"
   },
   "settings.backupNote": {
-    "zh": "备份含私人文字和媒体，导出媒体上限 100 MB、导入文件上限 150 MB。请妥善保存，不要提交到公开仓库。",
-    "en": "Backups include private words and media. Export: up to 100 MB of media; import: 150 MB per file. Keep them safe and off public repositories."
+    "zh": "备份文件里有你的私人文字和照片，请放在安全的地方，不要分享给别人。单次导出最多 100 MB 媒体，导入文件最大 150 MB。",
+    "en": "A backup holds your private words and photos — keep it somewhere safe and don't share it. Up to 100 MB of media per export; files up to 150 MB can be restored."
   },
   "settings.private": {
     "zh": "默认私人 · 无联网社交",
     "en": "Private by default · no online social features"
   },
   "settings.privateNote": {
-    "zh": "当前没有账号、公开社区、私信或多人协作。选择封面和主题不会公开你的内容。",
-    "en": "There are no accounts, public community, DMs or collaboration in this phase. Editing a cover or theme does not publish anything."
+    "zh": "手帐默认只有你自己能看。社区、好友、私信和共同创作目前是本机演示，不会把任何内容发出去；换封面或主题也不会公开内容。",
+    "en": "Your journal is private by default. Community, friends, messages and shared books are a local demo for now and send nothing anywhere; changing a cover or theme never publishes anything."
   },
   "settings.licenses": {
     "zh": "字体与素材许可证",
@@ -1000,8 +1000,8 @@
     "en": "One little step collected 🌱"
   },
   "草稿已保存，下次从 Studio 继续。": {
-    "zh": "草稿已保存，下次从 Studio 继续。",
-    "en": "Draft saved. Continue in Studio next time."
+    "zh": "草稿已保存，下次打开「创作」就能接着写。",
+    "en": "Draft saved — pick it up next time in Studio."
   },
   "先留下一张照片，或者写点什么吧。": {
     "zh": "先留下一张照片，或者写点什么吧。",
@@ -1252,8 +1252,8 @@
     "en": "Every part of the day can be its own chapter."
   },
   "moment.add": {
-    "zh": "添加一个小故事 · Add a Moment",
-    "en": "Add a Moment"
+    "zh": "添加一个小故事",
+    "en": "Add a moment"
   },
   "moment.added": {
     "zh": "新的小故事已经翻开 ✿",
@@ -1536,8 +1536,8 @@
     "en": "What you did"
   },
   "growth.detailPlaceholder": {
-    "zh": "例如：Lower Body / Spanish",
-    "en": "e.g. Lower Body / Spanish"
+    "zh": "例如：下肢训练 / 西班牙语",
+    "en": "e.g. Lower body / Spanish"
   },
   "growth.minutesOptional": {
     "zh": "时长（分钟，可选）",
@@ -2664,8 +2664,8 @@
     "en": "Recorded {now} of {total} — keep this page open"
   },
   "export.videoDone": {
-    "zh": "视频已导出（纸上的视频在播放，声音已混在一起）",
-    "en": "Video exported (clips play on the paper, sound mixed in)"
+    "zh": "视频已导出，纸上的视频和声音都在里面。",
+    "en": "Video exported with the clips and sound from the page."
   },
   "export.videoFailed": {
     "zh": "视频导出失败，请重试；这个浏览器可能不支持录制。",
@@ -3220,8 +3220,8 @@
     "en": "Start writing"
   },
   "tour.finished": {
-    "zh": "可以在 设置 里再看一次功能介绍",
-    "en": "You can replay the tour in Settings"
+    "zh": "想再看一次？在「设置」里可以重看介绍。",
+    "en": "Want to see it again? Replay the tour in Settings."
   },
   "tour.welcome.title": {
     "zh": "你好，{name} ✿",
@@ -3268,8 +3268,8 @@
     "en": "Private by default"
   },
   "tour.private.body": {
-    "zh": "所有手帐默认私人。社区、好友和共同创作目前是本机演示；在 设置 里可以备份到文件。",
-    "en": "Every journal is private by default. Community, friends and shared books are a local demo for now; back up to a file in Settings."
+    "zh": "所有手帐默认只有你能看。社区、好友和共同创作目前是本机演示；在「设置」里可以导出备份。",
+    "en": "Every journal is private by default. Community, friends and shared books are a local demo for now; export a backup in Settings."
   },
   "settings.back": {
     "zh": "返回",
@@ -3546,5 +3546,181 @@
   "add.audioFile": {
     "zh": "上传音频",
     "en": "Upload audio"
+  },
+  "shape.title": {
+    "zh": "形状",
+    "en": "Shape"
+  },
+  "shape.free": {
+    "zh": "自由",
+    "en": "Free"
+  },
+  "shape.landscape": {
+    "zh": "横版",
+    "en": "Wide"
+  },
+  "shape.portrait": {
+    "zh": "竖版",
+    "en": "Tall"
+  },
+  "shape.square": {
+    "zh": "方形",
+    "en": "Square"
+  },
+  "shape.circle": {
+    "zh": "圆形",
+    "en": "Round"
+  },
+  "shape.arch": {
+    "zh": "拱门",
+    "en": "Arch"
+  },
+  "shape.heart": {
+    "zh": "心形",
+    "en": "Heart"
+  },
+  "shape.film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "theme.title": {
+    "zh": "主题颜色",
+    "en": "App theme"
+  },
+  "theme.note": {
+    "zh": "只改变 App 的颜色；手帐的纸张、封面和照片保持原样。只保存在这台设备。",
+    "en": "Changes the app's colors only; your paper, covers and photos stay as they are. Saved on this device."
+  },
+  "theme.changed": {
+    "zh": "已换成「{name}」主题",
+    "en": "Switched to “{name}”"
+  },
+  "theme.soft": {
+    "zh": "温柔",
+    "en": "Soft"
+  },
+  "theme.softHint": {
+    "zh": "奶油与鼠尾草绿",
+    "en": "Cream & sage"
+  },
+  "theme.minimal": {
+    "zh": "简约",
+    "en": "Minimal"
+  },
+  "theme.minimalHint": {
+    "zh": "黑白灰，干干净净",
+    "en": "Black, white, quiet"
+  },
+  "theme.elegant": {
+    "zh": "优雅",
+    "en": "Elegant"
+  },
+  "theme.elegantHint": {
+    "zh": "象牙白、藏青与金",
+    "en": "Ivory, navy & gold"
+  },
+  "theme.fresh": {
+    "zh": "清新",
+    "en": "Fresh"
+  },
+  "theme.freshHint": {
+    "zh": "薄荷与湖水蓝",
+    "en": "Mint & lake blue"
+  },
+  "theme.sakura": {
+    "zh": "樱花",
+    "en": "Sakura"
+  },
+  "theme.sakuraHint": {
+    "zh": "粉色与玫瑰",
+    "en": "Blossom pink"
+  },
+  "theme.cool": {
+    "zh": "酷炫",
+    "en": "Neon night"
+  },
+  "theme.coolHint": {
+    "zh": "深色背景配霓虹紫",
+    "en": "Dark with neon violet"
+  },
+  "tour.theme.title": {
+    "zh": "选一个喜欢的颜色",
+    "en": "Pick your colors"
+  },
+  "tour.theme.body": {
+    "zh": "温柔、简约、优雅、清新、樱花，或者深色的酷炫。之后在「设置」里随时可以换。",
+    "en": "Soft, minimal, elegant, fresh, sakura — or the dark neon night. Change it any time in Settings."
+  },
+  "layer.gestureHelpTouch": {
+    "zh": "拖动移动，双指缩放和旋转。",
+    "en": "Drag to move; pinch to resize and rotate."
+  },
+  "tour.welcome.titleAnon": {
+    "zh": "你好呀 ✿",
+    "en": "Hello ✿"
+  },
+  "media.local": {
+    "zh": "只存在本机",
+    "en": "On this device"
+  },
+  "studio.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "theme.habit.Learning": {
+    "zh": "学习",
+    "en": "Learning"
+  },
+  "theme.habit.Fitness": {
+    "zh": "运动",
+    "en": "Fitness"
+  },
+  "theme.habit.Wellness": {
+    "zh": "身心",
+    "en": "Wellness"
+  },
+  "theme.habit.Creative Life": {
+    "zh": "创作",
+    "en": "Creative life"
+  },
+  "category.Daily Life": {
+    "zh": "日常",
+    "en": "Daily life"
+  },
+  "category.Travel": {
+    "zh": "旅行",
+    "en": "Travel"
+  },
+  "category.Food": {
+    "zh": "美食",
+    "en": "Food"
+  },
+  "category.Pet": {
+    "zh": "宠物",
+    "en": "Pet"
+  },
+  "category.Parenting": {
+    "zh": "亲子",
+    "en": "Parenting"
+  },
+  "category.Fitness": {
+    "zh": "运动",
+    "en": "Fitness"
+  },
+  "category.Learning": {
+    "zh": "学习",
+    "en": "Learning"
+  },
+  "category.Seasonal": {
+    "zh": "季节",
+    "en": "Seasonal"
+  },
+  "minutesShort": {
+    "zh": "{count} 分钟",
+    "en": "{count} min"
+  },
+  "photo.remove": {
+    "zh": "移除照片",
+    "en": "Remove photo"
   }
 }

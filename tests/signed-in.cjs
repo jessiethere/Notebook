@@ -29,6 +29,12 @@ module.exports = function signedIn(chromium) {
 // Older suites expect the editor, so they continue today's page (or start
 // with words on an empty day). tests/v36-browser.cjs tests the screen itself.
 module.exports.goTab = async (page, tab) => {
+  // Studio is full-screen: leave it with its own ‹ before using the menu.
+  if (await page.locator("#phone.in-studio").count()) {
+    const back = page.locator('[data-action="studio-back"], [data-action="start-close"]').first();
+    await back.click();
+    await page.waitForSelector("#phone:not(.in-studio)");
+  }
   await page.locator(`#navigation [data-page="${tab}"]`).click();
   if (tab === "studio") {
     await page.waitForSelector(".studio-start");
@@ -41,4 +47,13 @@ module.exports.skipPhotoEditor = async (page) => {
   await page.waitForSelector("#photo-editor[open] .pe-frame");
   await page.locator('#photo-editor [data-pe-action="cancel"]').click();
   await page.waitForSelector("#photo-editor:not([open])", { state: "attached" });
+};
+// Tap a bottom-menu tab as a person would (leaving full-screen Studio first),
+// without continuing past the Studio start screen.
+module.exports.menu = async (page, tab) => {
+  if (await page.locator("#phone.in-studio").count()) {
+    await page.locator('[data-action="studio-back"], [data-action="start-close"]').first().click();
+    await page.waitForSelector("#phone:not(.in-studio)");
+  }
+  await page.locator(`#navigation [data-page="${tab}"]`).click();
 };

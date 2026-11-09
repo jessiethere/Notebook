@@ -1,3 +1,4 @@
+import { presetLabel } from "./i18n.mjs";
 // Growth "journey": read one habit's check-ins like a little book.
 // Page 0 is the cover (totals, streaks); every later page is one check-in.
 import { escapeHTML as esc } from "./personal-ui.mjs";
@@ -21,7 +22,7 @@ function coverHTML(habit, journey, ctx, helpers) {
     const done = journey.checks.find((check) => check.date === date);
     return `<i class="${done ? (done.note ? "noted" : "done") : ""}" title="${date}"></i>`;
   }).join("");
-  return `<div class="journey-cover"><span class="journey-emblem">${themeIcon(habit.theme)}</span><p class="journey-eyebrow">${esc(habit.theme)} · ${t("journey.title")}</p><h2>${esc(habit.title)}</h2><p class="journey-since">${journey.since ? t("journey.since", { date: helpers.shortDate(journey.since) }) : t("journey.empty")}</p><div class="journey-stats">${stat(journey.total, "journey.total")}${stat(journey.minutes, "journey.minutes")}${stat(journey.currentStreak, "journey.current")}${stat(journey.longestStreak, "journey.longest")}${stat(journey.notes, "journey.notes")}</div><div class="journey-recent" aria-label="${t("journey.recent")}"><span>${t("journey.recent")}</span><div>${recent}</div></div>${journey.total ? `<p class="journey-hint">${t("journey.hint")}</p>` : ""}</div>`;
+  return `<div class="journey-cover"><span class="journey-emblem">${themeIcon(habit.theme)}</span><p class="journey-eyebrow">${esc(presetLabel("theme.habit", habit.theme))} · ${t("journey.title")}</p><h2>${esc(habit.title)}</h2><p class="journey-since">${journey.since ? t("journey.since", { date: helpers.shortDate(journey.since) }) : t("journey.empty")}</p><div class="journey-stats">${stat(journey.total, "journey.total")}${stat(journey.minutes, "journey.minutes")}${stat(journey.currentStreak, "journey.current")}${stat(journey.longestStreak, "journey.longest")}${stat(journey.notes, "journey.notes")}</div><div class="journey-recent" aria-label="${t("journey.recent")}"><span>${t("journey.recent")}</span><div>${recent}</div></div>${journey.total ? `<p class="journey-hint">${t("journey.hint")}</p>` : ""}</div>`;
 }
 
 function checkPageHTML(habit, check, number, ctx, helpers) {

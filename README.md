@@ -97,7 +97,7 @@ py -3 tools\preview.py --open
 
 ## 本轮测试
 
-最近一轮（2026-11-08）在 Linux 容器 + Chromium 验证：**54 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`collab` 十套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
+最近一轮（2026-11-09）在 Linux 容器 + Chromium 验证：**54 项 Node、12 项 Python 全部通过**；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`v37`、`v38`、`collab` 十一套浏览器 E2E 全部通过，详情见 agent.md。本轮环境没有 Swift 工具链，**Swift Core 与 Vapor 测试未运行**；也尚未在 Windows 实机、iOS SDK、Safari/Firefox 上验证。
 
 Python HTTP/启动测试：
 
@@ -121,6 +121,7 @@ npm run test:browser:collab
 npm run test:browser:v35
 npm run test:browser:v36
 npm run test:browser:v37
+npm run test:browser:v38
 ```
 
 测试使用合成媒体与虚拟麦克风、独立浏览器上下文，不读取真实用户手帐。Swift 环境运行根目录 `swift test --jobs 4`，以及 `swift test --package-path Packages/LittleDaysCore --jobs 4`。变更设计颜色/字体目录后运行 `python tools/sync_tokens.py` / `python tools/sync_library.py`。
@@ -138,6 +139,13 @@ npm run test:browser:v37
 开始任务先读 AGENTS.md、agent.md、README.md 与三个规范文档，再检查最新代码/提交。每次修改必须同步维护 **agent.md 与 README 日志，并随代码提交**。保留历史，禁止将私人内容、备份或密钥提交到公开 GitHub。
 
 ## 更新日志
+
+### 2026-11-09 — 竖视频与多种形状、打字不挡选项、主题颜色、体验打磨
+
+- 竖着拍的视频会竖着放到纸上；照片和视频都可以选形状：横版、竖版、方形、圆形、拱门、心形，视频还可以选胶片。导出图片时也是这个形状。
+- 在手机上打字时，底部菜单和工具图标会让开，正在用的面板移到键盘上方；点一下纸面就能收起键盘。
+- 设置里可以选主题颜色：温柔、简约、优雅、清新、樱花、酷炫（深色）。手帐纸张和封面保持原色。第一次登录后的介绍里也能直接选。
+- 创作页改成全屏，左上角“‹”返回；提示消息改在顶部。去掉了 IndexedDB 这类技术词；书本分类、习惯主题在中文界面下显示中文；日历、设置、社区私信等多处细节也修好了。
 
 ### 2026-11-09 — 照片、文字、视频、声音并列
 

@@ -218,7 +218,9 @@ export function communityHTML(demo, view, journal, ctx, helpers) {
   const unread = C.unreadCount(demo);
   const requests = C.visibleIncoming(demo).length;
   const me = author(demo, "me", ctx);
-  const header = `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="me-chip" data-action="open-profile" aria-label="${t("me.open")}">${avatar(me, "xs")}<span>${t("me.short")}</span></button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
+  // Sub-pages (a work, a chat) keep only a one-line demo label.
+  const sub = Boolean(view.workId || view.chatUser);
+  const header = sub ? `<p class="demo-chip">${t("community.demoLabel")}</p>` : `<header class="page-top"><div><h1 class="page-title">${t("community.title")}</h1><p class="page-subtitle">${t("community.subtitle")}</p></div><button class="me-chip" data-action="open-profile" aria-label="${t("me.open")}">${avatar(me, "xs")}<span>${t("me.short")}</span></button></header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("community.demoNote")}</div>`;
   if (view.publish) return header + `<div class="community-body">${publishHTML(demo, view, journal, ctx)}</div>`;
   if (view.workId) return header + workDetailHTML(demo, view, ctx, helpers);
   const badge = (n) => (n ? ` <i class="c-badge">${n}</i>` : "");

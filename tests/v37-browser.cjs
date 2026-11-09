@@ -2,6 +2,7 @@
 // empty paper), and iPhone-friendly fields. Synthetic media only.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 function wav(seconds = 1) {
@@ -32,15 +33,14 @@ function wav(seconds = 1) {
       });
 
     // 1. A new, empty story: the paper itself offers the four choices.
-    await page.locator('#navigation [data-page="studio"]').tap();
+    await menu(page, "studio");
     await page.locator('[data-action="start-words"]').tap();
     await page.waitForSelector("#journal-canvas .canvas-add-row");
     const onPaper = await page.$$eval("#journal-canvas .canvas-add-row button", (els) => els.map((el) => el.dataset.action));
     assert.deepEqual(onPaper, ["add-photos", "add-text-layer", "add-video", "add-sound"]);
-    const underPaper = await page.$$eval(".stage-bar .stage-add", (els) => els.map((el) => el.dataset.action));
-    assert.deepEqual(underPaper, onPaper, "same four choices under the paper");
+    assert.equal(await page.locator(".stage-bar .stage-add").count(), 0, "shown once: on the empty paper only");
     assert.equal(await page.locator(".write-card [data-action='add-text-layer']").count(), 0, "no hidden text-box link");
-    passed.push("empty paper and the bar under it offer photo / text / video / sound");
+    passed.push("empty paper offers photo / text / video / sound (once)");
 
     // 2. Text: one tap adds words to the paper with the typing box ready.
     await page.locator('#journal-canvas [data-action="add-text-layer"]').tap();
@@ -49,6 +49,8 @@ function wav(seconds = 1) {
     await page.keyboard.type("今天的风很温柔");
     await page.waitForFunction(() => document.querySelector("#journal-canvas").innerText.includes("今天的风很温柔"));
     assert.equal(await page.locator("#journal-canvas .canvas-add-row").count(), 0, "hint goes once the paper has something");
+    const underPaper = await page.$$eval(".stage-bar .stage-add", (els) => els.map((el) => el.dataset.action));
+    assert.deepEqual(underPaper, onPaper, "then the same four choices sit under the paper");
     passed.push("text: one tap, type straight away, shows on the paper");
 
     // 3. Sound: a small choice of record / upload; upload lands on the paper.
@@ -85,7 +87,7 @@ function wav(seconds = 1) {
     assert.deepEqual(small, []);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     // Start screen titles use a medium system weight, not heavy bold.
-    await page.locator('#navigation [data-page="studio"]').tap();
+    await menu(page, "studio");
     const weight = await page.locator(".start-card b").first().evaluate((el) => getComputedStyle(el).fontWeight);
     assert.equal(weight, "600");
     passed.push("iPhone: 16px fields (no auto-zoom), no sideways scroll, calm start-screen type");

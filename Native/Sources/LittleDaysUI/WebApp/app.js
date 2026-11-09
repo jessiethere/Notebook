@@ -5,6 +5,7 @@ import {
   locale,
   languageCode,
   setLanguage,
+  presetLabel,
 } from "./js/i18n.mjs";
 import {
   fontFamily,
@@ -38,6 +39,7 @@ import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
 import { openPhotoEditor } from "./js/photo-editor-ui.mjs";
 import { renderEdited, isIdentity } from "./js/photo-edit.mjs";
+import { SHAPES, shapeSize, shapeForSize } from "./js/shapes.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
 import {
   createMoment,
@@ -115,6 +117,7 @@ const paths = {
   download: "M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4",
   spark: "m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z",
   clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM12 7v5l3 2",
+  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z",
   users:
     "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6",
 };
@@ -170,6 +173,7 @@ let activeMomentId = null,
   bookFilter = { month: "", date: "" },
   journeyHabit = null,
   collabOpen = false,
+  studioReturn = "home",
   soundMenu = false,
   studioStart = false,
   account = null,
@@ -274,6 +278,7 @@ function navigate(target) {
   $("#app-scroll").scrollTop = 0;
 }
 function openStudio(date = dateKey()) {
+  if (page !== "studio" && page !== "settings") studioReturn = page;
   flushDraft();
   selectedDate = date;
   const existing =
@@ -350,7 +355,7 @@ function habitRow(habit, date) {
   const done = state().checks.find(
     (check) => check.habitId === habit.id && check.date === date,
   );
-  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(habit.theme)} · ${habit.kind === "duration" ? `${done?.minutes || habit.minutes} min` : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div>${done ? `<button class="note-button" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">✎</button>` : ""}<button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
+  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div>${done ? `<button class="note-button" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">✎</button>` : ""}<button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
 // One cover per day in a book: photos, date, mood and that day's Moments.
@@ -377,7 +382,7 @@ function dayCoverHTML(day) {
 }
 function bookCard(book) {
   const count = bookEntryCount(state(), book.id);
-  return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(book.category)} · ${t("entry.count", { count })}</small></button>`;
+  return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small></button>`;
 }
 
 function home() {
@@ -394,7 +399,7 @@ function home() {
   const preview = entry
     ? `<button class="today-preview" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<span class="today-preview-mood">${esc(entry.mood || "✿")}</span>`}<span class="today-preview-copy"><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").slice(0, 40))}</small>${moments.length ? `<i>${t("day.statMoments", { count: moments.length })}</i>` : ""}${entry.isDemo ? `<i>${t("home.sample")}</i>` : ""}</span><span class="today-preview-go" aria-hidden="true">›</span></button>`
     : `<p class="today-blank">${t("home.blankBody")}</p>`;
-  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">⚙</button></header>
+  return `<header class="home-top"><div class="brand-title"><span class="flower">✿</span>Little Days</div><button class="icon-button" data-action="nav" data-page="settings" aria-label="${t("settings")}">${icon("gear")}</button></header>
  <section class="hero today-card"><span class="date-label">${esc(date)}</span><h1 class="today-prompt">${t(entry ? "home.greeting" : "home.prompt")}</h1>${preview}<button class="moment-cta" data-action="quick-moment"><span>✎</span><span><b>${t("moment.cta")}</b><small>${t("moment.ctaHint")}</small></span><i>›</i></button></section>
  <section class="home-section"><div class="section-heading"><h2>${t("home.growth")}</h2><button data-action="nav" data-page="growth">${t("home.completed", { done: completed, total: state().habits.length })} ›</button></div><div class="habit-list">${state()
    .habits.map((habit) => habitRow(habit, dateKey()))
@@ -488,7 +493,7 @@ function calendarPage() {
           : "";
     return `<button class="day-cell ${key === selectedDate ? "selected" : ""} ${key === dateKey() ? "today" : ""} ${key > dateKey() ? "future" : ""}" data-action="select-date" data-date="${key}" data-has-content="${marks.hasContent}" aria-label="${key}${recorded ? " " + t("calendar.hasEntry") : ""}${marks.label ? " · " + marks.label : ""}" aria-pressed="${key === selectedDate}"><span>${new Intl.NumberFormat(locale()).format(i + 1)}</span><span class="day-mark">${mark}</span>${calendarMode === "memory" ? marks.html : ""}</button>`;
   }).join("");
-  return `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header><div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")} ↗</button></span></div>${
+  return `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header><div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button></div><div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -604,7 +609,7 @@ function shelfHTML() {
     ? (() => {
         const count = bookEntryCount(state(), pulled.id);
         const shown = Community.isShowcased(social(), pulled.id);
-        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(pulled.category || "")}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button></div></section>`;
+        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button></div></section>`;
       })()
     : `<p class="shelf-hint">${t("shelf.hint")}</p>`;
   return `${stage}<div class="bookshelf">${rows.map((row) => `<div class="shelf-row"><div class="shelf-books">${row.join("")}</div><div class="shelf-plank"></div></div>`).join("")}</div>`;
@@ -670,6 +675,15 @@ function layerControls() {
       layer.w ?? (layer.kind === "text" ? 65 : 62),
     ]);
   const crop = cropOf(layer);
+  const shapes =
+    layer.kind === "photo" || layer.kind === "video"
+      ? `<div class="shape-picker" role="group" aria-label="${t("shape.title")}"><span class="small-label">${t("shape.title")}</span><div class="shape-chips">${[...(layer.kind === "photo" ? ["free"] : []), ...SHAPES.filter((s) => layer.kind === "video" || s !== "film")]
+          .map((shape) => {
+            const current = (layer.shape || (layer.kind === "video" ? "landscape" : "free")) === shape;
+            return `<button data-action="layer-shape" data-shape="${shape}" class="${current ? "selected" : ""}" aria-pressed="${current}"><i class="shape-icon shape-icon-${shape}" aria-hidden="true"></i>${t("shape." + shape)}</button>`;
+          })
+          .join("")}</div></div>`
+      : "";
   const photoTools =
     layer.kind === "photo"
       ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="photo-edit" class="pe-open">✨ ${t("pe.open")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
@@ -691,7 +705,7 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls"><span>${t(layer.kind === "photo" ? "layer.photo" : layer.kind === "growth" ? "layer.growth" : "layer.selected")}</span>${textTools}<p class="gesture-help">${t("layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
+  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -1005,6 +1019,9 @@ async function studioStartAction(target) {
   return true;
 }
 // Photo, text, video and sound are equal ways to add something to the paper.
+function emptyPaper(page = activePage()) {
+  return !isDayPage() && !page.layers?.length && page.layoutTemplate !== "text";
+}
 function addChoicesHTML(className = "") {
   const item = (action, glyph, label) =>
     `<button class="${className}" data-action="${action}" ${action === "add-sound" ? `aria-expanded="${soundMenu}"` : ""}><span aria-hidden="true">${glyph}</span><b>${t(label)}</b></button>`;
@@ -1014,7 +1031,7 @@ function studioPage() {
   if (studioStart) return studioStartHTML();
   const dayPage = isDayPage();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div><div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 function updateCanvas() {
@@ -1087,6 +1104,9 @@ function render() {
   releaseLeftScope();
   const signedIn = Account.isSignedIn(account);
   $("#phone").classList.toggle("signed-out", !signedIn);
+  // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
+  $("#phone").classList.toggle("in-studio", signedIn && page === "studio");
+  const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
     $("#navigation").innerHTML = "";
@@ -1104,7 +1124,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML() }),
   }[page]();
   navigation();
   applyShellLanguage();
@@ -1120,7 +1140,39 @@ function render() {
   }
   if (page === "settings") showMediaUsage();
   pinStageForSheet();
+  const dock = $(".tool-dock");
+  if (dock) {
+    dock.scrollLeft = dockScroll;
+    dock.querySelector('[aria-expanded="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
   renderTour();
+}
+
+/* ---------- App color theme (this device) ---------- */
+const THEME_KEY = "little-days.theme";
+function loadTheme() {
+  try {
+    const id = localStorage.getItem(THEME_KEY);
+    return tokens?.themes?.some((theme) => theme.id === id) ? id : "soft";
+  } catch {
+    return "soft";
+  }
+}
+function applyTheme(id) {
+  const theme = tokens?.themes?.find((item) => item.id === id) || { id: "soft" };
+  if (theme.id === "soft") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme.id;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta && theme.swatch?.[0]) meta.content = theme.swatch[0];
+}
+function themePickerHTML() {
+  const current = loadTheme();
+  return `<section class="settings-card theme-card"><h2>${t("theme.title")}</h2><p>${t("theme.note")}</p><div class="theme-grid">${(tokens.themes || [])
+    .map(
+      (theme) =>
+        `<button data-action="theme" data-theme-id="${esc(theme.id)}" class="theme-option ${theme.id === current ? "selected" : ""}" aria-pressed="${theme.id === current}"><span class="theme-swatch ${theme.mode === "dark" ? "dark" : ""}" aria-hidden="true">${(theme.swatch || []).map((color) => `<i style="background:${esc(color)}"></i>`).join("")}</span><b>${t("theme." + theme.id)}</b><small>${t("theme." + theme.id + "Hint")}</small></button>`,
+    )
+    .join("")}</div></section>`;
 }
 
 /* ---------- Sign in (this device) and the welcome tour ---------- */
@@ -1142,7 +1194,7 @@ function renderTour() {
   const step = Math.max(0, Math.min(Account.TOUR.length - 1, tourStep));
   const item = Account.TOUR[step];
   const last = step === Account.TOUR.length - 1;
-  box.innerHTML = `<div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title"><button class="tour-skip text-button" data-action="tour-skip">${t("tour.skip")}</button><div class="tour-icon tour-${item.id}" aria-hidden="true">${item.icon}</div><span class="tour-count">${step + 1} / ${Account.TOUR.length}</span><h2 id="tour-title">${t(`tour.${item.id}.title`, { name: account.name || t("community.me") })}</h2><p>${t(`tour.${item.id}.body`)}</p><div class="tour-dots" aria-hidden="true">${Account.TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div><div class="tour-actions">${step ? `<button class="secondary" data-action="tour-prev">${t("tour.prev")}</button>` : "<span></span>"}<button class="primary" data-action="tour-next">${t(last ? "tour.done" : "tour.next")}</button></div></div>`;
+  box.innerHTML = `<div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title"><button class="tour-skip text-button" data-action="tour-skip">${t("tour.skip")}</button><div class="tour-icon tour-${item.id}" aria-hidden="true">${item.icon}</div><span class="tour-count">${step + 1} / ${Account.TOUR.length}</span><h2 id="tour-title">${item.id === "welcome" && !account.name ? t("tour.welcome.titleAnon") : t(`tour.${item.id}.title`, { name: account.name })}</h2><p>${t(`tour.${item.id}.body`)}</p>${item.id === "theme" ? `<div class="tour-themes">${(tokens.themes || []).map((theme) => `<button data-action="theme" data-theme-id="${esc(theme.id)}" class="${theme.id === loadTheme() ? "selected" : ""}" aria-pressed="${theme.id === loadTheme()}"><span class="theme-swatch" aria-hidden="true">${(theme.swatch || []).map((c) => `<i style="background:${esc(c)}"></i>`).join("")}</span>${t("theme." + theme.id)}</button>`).join("")}</div>` : ""}<div class="tour-dots" aria-hidden="true">${Account.TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div><div class="tour-actions">${step ? `<button class="secondary" data-action="tour-prev">${t("tour.prev")}</button>` : "<span></span>"}<button class="primary" data-action="tour-next">${t(last ? "tour.done" : "tour.next")}</button></div></div>`;
   if (!box.contains(document.activeElement)) box.querySelector('[data-action="tour-next"]')?.focus({ preventScroll: true });
 }
 function accountAction(target) {
@@ -1198,6 +1250,20 @@ function accountAction(target) {
       account = Account.replayTour(localStorage);
       tourStep = 0;
       renderTour();
+      return true;
+    case "theme": {
+      const id = target.dataset.themeId;
+      try {
+        localStorage.setItem(THEME_KEY, id);
+      } catch {}
+      applyTheme(id);
+      render();
+      toast(t("theme.changed", { name: t("theme." + id) }));
+      return true;
+    }
+    case "studio-back":
+      flushDraft();
+      navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
       return true;
     case "settings-back":
       navigate(settingsReturn && settingsReturn !== "settings" ? settingsReturn : "home");
@@ -1276,7 +1342,7 @@ function openCheckDialog(habitId, date) {
   dialogPayload = { habit, date, photo: check?.photo || "", isNew: !check };
   const photo = safePhoto(check?.photo || "");
   $("#dialog-form").innerHTML =
-    `<h2>${t(check ? "growth.noteTitle" : "dialog.durationTitle")}</h2><p class="dialog-description">${esc(habit.title)} · ${esc(shortDate(date))}</p><div class="dialog-fields note-paper"><label class="field">${t("growth.detail")}<input name="detail" maxlength="80" placeholder="${t("growth.detailPlaceholder")}" value="${esc(check?.detail || "")}"></label><label class="field">${t(habit.kind === "duration" ? "dialog.durationLabel" : "growth.minutesOptional")}<input name="minutes" type="number" min="${habit.kind === "duration" ? 1 : 0}" max="1440" ${habit.kind === "duration" ? "required" : ""} value="${check ? check.minutes || "" : habit.kind === "duration" ? habit.minutes || 20 : ""}"></label><label class="field">${t("growth.note")}<textarea name="note" maxlength="2000" placeholder="${t("growth.notePlaceholder")}">${esc(check?.note || "")}</textarea></label><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${["", ...features.moods].map((m) => `<label class="mood-radio"><input type="radio" name="mood" value="${m}" ${(check?.mood || "") === m ? "checked" : ""}><span>${m || "—"}</span></label>`).join("")}</div></div><div class="check-photo"><span id="check-photo-preview">${photo ? `<img src="${esc(photo)}" alt="">` : ""}</span><button type="button" class="secondary" data-action="check-photo">${t("growth.photo")}</button><button type="button" class="text-button" data-action="check-photo-remove">${t("books.removePhoto")}</button></div><label class="check-label"><input type="checkbox" name="shareNote" ${check?.shareNote ? "checked" : ""}> ${t("growth.shareNote")}</label><p class="save-help">${t("growth.privateNote")}</p></div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(check ? "save" : "dialog.record")}</button></div>`;
+    `<h2>${t(check ? "growth.noteTitle" : "dialog.durationTitle")}</h2><p class="dialog-description">${esc(habit.title)} · ${esc(shortDate(date))}</p><div class="dialog-fields note-paper"><label class="field">${t("growth.detail")}<input name="detail" maxlength="80" placeholder="${t("growth.detailPlaceholder")}" value="${esc(check?.detail || "")}"></label><label class="field">${t(habit.kind === "duration" ? "dialog.durationLabel" : "growth.minutesOptional")}<input name="minutes" type="number" min="${habit.kind === "duration" ? 1 : 0}" max="1440" ${habit.kind === "duration" ? "required" : ""} value="${check ? check.minutes || "" : habit.kind === "duration" ? habit.minutes || 20 : ""}"></label><label class="field">${t("growth.note")}<textarea name="note" maxlength="2000" placeholder="${t("growth.notePlaceholder")}">${esc(check?.note || "")}</textarea></label><div><span class="small-label">${t("studio.mood")}</span><div class="mood-list">${["", ...features.moods].map((m) => `<label class="mood-radio"><input type="radio" name="mood" value="${m}" ${(check?.mood || "") === m ? "checked" : ""}><span>${m || "—"}</span></label>`).join("")}</div></div><div class="check-photo"><span id="check-photo-preview">${photo ? `<img src="${esc(photo)}" alt="">` : ""}</span><button type="button" class="secondary" data-action="check-photo">${t("growth.photo")}</button><button type="button" class="text-button" data-action="check-photo-remove" ${photo ? "" : "hidden"}>${t("photo.remove")}</button></div><label class="check-label"><input type="checkbox" name="shareNote" ${check?.shareNote ? "checked" : ""}> ${t("growth.shareNote")}</label><p class="save-help">${t("growth.privateNote")}</p></div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(check ? "save" : "dialog.record")}</button></div>`;
   $("#form-dialog").showModal();
 }
 function openReflectionDialog(period, key) {
@@ -1382,7 +1448,11 @@ async function action(target) {
     selectedDate = target.dataset.date;
     if (calendarMode === "memory" && target.dataset.hasContent === "true")
       openDay(selectedDate);
-    else render();
+    else {
+      render();
+      // The day's panel is below the month; bring it into view.
+      $(".date-summary")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
   }
   if (actionName === "open-day")
     openDay(target.dataset.date, target.dataset.moment);
@@ -1426,6 +1496,20 @@ async function action(target) {
     $("#app-scroll").scrollTop = 0;
   }
   if (actionName === "photo-edit") await reEditPhotoLayer();
+  if (actionName === "layer-shape") {
+    const shape = target.dataset.shape;
+    changeTarget((page) => {
+      const layer = page.layers.find((item) => item.id === selectedLayer);
+      if (!layer) return;
+      if (shape === "free") {
+        delete layer.shape;
+        return;
+      }
+      layer.shape = shape;
+      // Keep roughly the same width; the height follows the shape.
+      Object.assign(layer, shapeSize(shape, Math.min(Number(layer.w) || 42, 60)));
+    });
+  }
   if (actionName === "pull-book") {
     // Tap a spine to pull the book out; tap the pulled one again to open it.
     if (pulledBook === target.dataset.book) {
@@ -1886,6 +1970,8 @@ $("#app").addEventListener("pointerdown", (event) => {
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
   if (event.target.closest(".layer-play, .canvas-add-row")) return;
+  // Touching the paper puts the keyboard away so the tools come back.
+  if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
   const element = event.target.closest("[data-layer]");
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   // A second finger anywhere on the canvas pinches the selected layer.
@@ -3092,7 +3178,7 @@ async function v3Action(target) {
         scale: 1,
         rotation: 0,
         fontId: "handwritten",
-        fontSize: 16,
+        fontSize: 18,
         color: "#6A7059",
         weight: 400,
         spacing: 0,
@@ -3402,6 +3488,7 @@ async function handleImageUpload(event, target) {
       const preview = $("#check-photo-preview");
       if (preview)
         preview.innerHTML = `<img src="${esc(safePhoto(reference))}" alt="">`;
+      $('[data-action="check-photo-remove"]')?.removeAttribute("hidden");
     } else if (target?.kind === "field") {
       changeEditor((entry) => {
         entry.fieldValues[target.field] = reference;
@@ -3516,8 +3603,9 @@ async function mediaMetadata(file, kind) {
       clearTimeout(timer);
       element.onloadedmetadata = null;
       element.onerror = null;
+      const size = kind === "video" ? { width: element.videoWidth || 0, height: element.videoHeight || 0 } : {};
       finish();
-      resolve({ duration });
+      resolve({ duration, ...size });
     };
     element.onerror = () => {
       element.onerror = null;
@@ -3541,10 +3629,17 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
       source: `media:${mediaId}`,
       poster: "",
       ...(options.origin ? { origin: options.origin } : {}),
+      ...(options.width && options.height ? { width: options.width, height: options.height } : {}),
     };
     page.media.push(clip);
-    // New clips go straight onto the paper, like photos.
-    page.layers.push(mediaLayer(clip, clipSpot(page, entry, clip)));
+    // New clips go straight onto the paper, like photos; a video keeps its
+    // own orientation (portrait phone videos stand upright).
+    const spot = clipSpot(page, entry, clip);
+    if (kind === "video") {
+      const shape = shapeForSize(clip.width, clip.height);
+      Object.assign(spot, { shape }, shapeSize(shape, shape === "landscape" ? spot.w : undefined));
+    }
+    page.layers.push(mediaLayer(clip, spot));
   });
   flushDraft();
 }
@@ -3564,7 +3659,7 @@ async function handleMediaUpload(event, kind) {
     )
       throw new Error("Invalid media");
     const metadata = await mediaMetadata(file, kind);
-    await attachClip(file, kind, file.name, metadata.duration);
+    await attachClip(file, kind, file.name, metadata.duration, { width: metadata.width, height: metadata.height });
     toast(t("media.saved"));
   } catch {
     toast(t("media.failed"));
@@ -3785,8 +3880,9 @@ async function start() {
   catalog = responses[3];
   configureI18n(responses[4], localStorage);
   document.documentElement.lang = languageCode();
-  for (const [name, color] of Object.entries(tokens.colors))
-    document.documentElement.style.setProperty(`--${name}`, color);
+  // Colors come from tokens.css / themes.css (generated from the shared
+  // design tokens); only the chosen theme is applied here.
+  applyTheme(loadTheme());
   store = new Store(localStorage, responses[2]);
   account = Account.loadAccount(localStorage);
   let warning = "";
@@ -3839,3 +3935,48 @@ for (const type of ["play", "pause", "ended"])
     },
     true,
   );
+
+// ---------- Typing on a phone: the keyboard must never cover the options ----------
+// While a text field has focus on a touch screen, the menu and tool icons step
+// aside and an open panel sits right above the keyboard (its height comes from
+// visualViewport where the browser reports it; otherwise the upper half).
+const TYPING_FIELD = 'textarea, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]):not([type="date"]):not([type="time"])';
+let typingTimer;
+function updateVisibleArea() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  if (!vv) return;
+  const keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  root.style.setProperty("--vv-top", `${Math.round(vv.offsetTop)}px`);
+  if (keyboard > 80) root.style.setProperty("--vv-h", `${Math.round(vv.height)}px`);
+  else root.style.removeProperty("--vv-h");
+}
+function keepFieldInView() {
+  const field = document.activeElement;
+  if (!field?.matches?.(TYPING_FIELD)) return;
+  updateVisibleArea();
+  requestAnimationFrame(() => {
+    // Inside a panel only the panel scrolls; the page behind stays put.
+    const sheet = field.closest(".tool-sheet");
+    if (!sheet) return field.scrollIntoView({ block: "center" });
+    const box = field.getBoundingClientRect(),
+      area = sheet.getBoundingClientRect();
+    if (box.top < area.top + 48 || box.bottom > area.bottom) sheet.scrollTop += box.top - area.top - 56;
+  });
+}
+document.addEventListener("focusin", (event) => {
+  if (!event.target.matches?.(TYPING_FIELD) || !matchMedia("(pointer: coarse)").matches) return;
+  clearTimeout(typingTimer);
+  document.body.classList.add("typing");
+  document.body.classList.toggle("typing-sheet", Boolean(event.target.closest(".tool-sheet")));
+  setTimeout(keepFieldInView, 250);
+});
+document.addEventListener("focusout", () => {
+  // Moving from one field to the next keeps typing mode on.
+  typingTimer = setTimeout(() => {
+    if (document.activeElement?.matches?.(TYPING_FIELD)) return;
+    document.body.classList.remove("typing", "typing-sheet");
+  }, 120);
+});
+window.visualViewport?.addEventListener("resize", keepFieldInView);
+window.visualViewport?.addEventListener("scroll", updateVisibleArea);

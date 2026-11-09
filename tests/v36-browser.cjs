@@ -2,6 +2,7 @@
 // start screen and the photo editor (filters / crop / adjust / title).
 // Synthetic and bundled sample images only.
 const { chromium } = require("playwright");
+const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -57,13 +58,13 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     passed.push(`welcome tour (${steps} cards) once; profile seeded from sign-in`);
 
     // 3. Settings: back and close return to where you were; replay; sign out keeps data.
-    await page.locator('#navigation [data-page="growth"]').click();
-    await page.locator('#navigation [data-page="home"]').click();
+    await menu(page, "growth");
+    await menu(page, "home");
     await page.locator('[data-action="nav"][data-page="settings"]').click();
     await page.locator(".settings-nav .back-button").click();
     await page.waitForSelector(".hero");
     await page.locator('[data-action="nav"][data-page="settings"]').click();
-    await page.locator(".settings-close").click();
+    await page.locator(".settings-nav .back-button").click();
     await page.waitForSelector(".hero");
     await page.locator('[data-action="nav"][data-page="settings"]').click();
     await page.locator('[data-action="tour-replay"]').click();
@@ -82,13 +83,13 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     passed.push("Settings back/close, replay tour, sign out and back in without losing data");
 
     // 4. Studio start screen: continue today's page or start something new.
-    await page.locator('#navigation [data-page="studio"]').click();
+    await menu(page, "studio");
     await page.waitForSelector(".studio-start");
     assert.equal(await page.locator(".start-card").count(), 6);
     assert.equal(await page.locator('[data-action="start-continue"]').count(), 1, "today already has a page");
     await page.locator('[data-action="start-close"]').click();
     await page.waitForSelector(".hero");
-    await page.locator('#navigation [data-page="studio"]').click();
+    await menu(page, "studio");
     await page.locator('[data-action="start-idea"][data-idea="happy"]').click();
     await page.waitForSelector('[data-moment-field="title"]');
     assert.equal(await page.locator('[data-moment-field="title"]').inputValue(), "让我开心的一件事");
@@ -101,7 +102,7 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     passed.push("Studio start: six ways in, continue, close, idea starts a new Moment");
 
     // 5. Start with photos → editor: filter, 1:1 crop, warmth, title; skip-free.
-    await page.locator('#navigation [data-page="studio"]').click();
+    await menu(page, "studio");
     await page.waitForSelector(".studio-start");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="start-photos"]').click();

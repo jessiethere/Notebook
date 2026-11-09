@@ -517,7 +517,7 @@ async function streamBytes(download) {
       await denied.locator('[data-action="stop-recording"]').count(),
       0,
     );
-    await denied.locator('#navigation [data-page="books"]').click();
+    await goTab(denied, "books");
     await deniedContext.close();
     console.log(
       "V3 E2E passed: custom books/8 fields/6 covers, real licensed fonts, original stickers/text boxes, Blob photos/video/audio/recording, playback after reload, backup cancel/restore, bilingual persistence, legacy migration, stale-tab protection, phone layouts. No page errors.",

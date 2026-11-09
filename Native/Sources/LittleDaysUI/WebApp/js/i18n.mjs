@@ -19,6 +19,12 @@ export function t(key, values = {}) {
     value = value.split(`{${name}}`).join(String(replacement));
   return value;
 }
+// Built-in labels (sample habit themes, book categories) are shown in the
+// interface language; anything a person typed has no key and stays as is.
+export function presetLabel(kind, value) {
+  const key = `${kind}.${value}`;
+  return messages[key] ? t(key) : value;
+}
 export function setLanguage(next) {
   if (!["zh-CN", "en"].includes(next)) throw new Error("Unsupported language");
   storage.setItem("little-days.language", next);

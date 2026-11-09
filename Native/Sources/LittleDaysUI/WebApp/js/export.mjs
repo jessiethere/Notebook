@@ -1,3 +1,4 @@
+import { MASK_SHAPES, shapePath } from "./shapes.mjs";
 const safePhoto = (photo) =>
   typeof photo !== "string"
     ? ""
@@ -30,9 +31,35 @@ function wrapText(ctx, text, x, y, width, lineHeight, maxLines) {
 }
 // Draws a photo layer with its relative size, crop (object-position + zoom)
 // and frame, matching the DOM canvas closely.
+// Shadow + cut-out for round / arch / heart pictures (no white border).
+function drawMasked(ctx, shape, w, h, draw) {
+  ctx.save();
+  ctx.shadowColor = "rgba(93,73,60,.22)";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#3F3A33";
+  shapePath(ctx, shape, -w / 2, -h / 2, w, h);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  shapePath(ctx, shape, -w / 2, -h / 2, w, h);
+  ctx.clip();
+  draw(-w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+function drawCover(ctx, source, sw, sh, x, y, w, h, px = 0.5, py = 0.5, zoom = 1) {
+  const cover = Math.max(w / sw, h / sh) * zoom;
+  ctx.drawImage(source, x + (w - sw * cover) * px, y + (h - sh * cover) * py, sw * cover, sh * cover);
+}
 function drawPhotoLayer(ctx, image, layer) {
   const w = ((Number(layer.w) || 42) / 100) * 1080,
     h = ((Number(layer.h) || 34) / 100) * 1350;
+  if (MASK_SHAPES.includes(layer.shape)) {
+    const crop = layer.crop || {};
+    drawMasked(ctx, layer.shape, w, h, (x, y, dw, dh) =>
+      drawCover(ctx, image, image.width, image.height, x, y, dw, dh, (Number(crop.x ?? 50) || 0) / 100, (Number(crop.y ?? 50) || 0) / 100, Math.max(1, Number(crop.zoom) || 1)),
+    );
+    return;
+  }
   const frame = layer.frame || "border";
   const pad =
     frame === "bare" || frame === "rounded"
@@ -363,6 +390,39 @@ function drawVideoLayer(ctx, source, layer) {
   const w = ((Number(layer.w) || 58) / 100) * 1080,
     h = ((Number(layer.h) || 30) / 100) * 1350,
     pad = 10;
+  const sw0 = source?.videoWidth || source?.width || 0,
+    sh0 = source?.videoHeight || source?.height || 0;
+  if (MASK_SHAPES.includes(layer.shape)) {
+    drawMasked(ctx, layer.shape, w, h, (x, y, dw, dh) => {
+      if (sw0 && sh0) drawCover(ctx, source, sw0, sh0, x, y, dw, dh);
+    });
+    return;
+  }
+  if (layer.shape === "film") {
+    // A strip of film: dark band with sprocket holes above and below.
+    const band = Math.max(18, h * 0.12);
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,.25)";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#26221E";
+    ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.restore();
+    ctx.fillStyle = "#F6F1E6";
+    const hole = band * 0.42;
+    for (let x = -w / 2 + hole; x < w / 2 - hole; x += hole * 2.2) {
+      ctx.fillRect(x, -h / 2 + (band - hole) / 2, hole, hole);
+      ctx.fillRect(x, h / 2 - band + (band - hole) / 2, hole, hole);
+    }
+    if (sw0 && sh0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-w / 2, -h / 2 + band, w, h - band * 2);
+      ctx.clip();
+      drawCover(ctx, source, sw0, sh0, -w / 2, -h / 2 + band, w, h - band * 2);
+      ctx.restore();
+    }
+    return;
+  }
   ctx.fillStyle = "#FFFDF8";
   ctx.shadowColor = "rgba(93,73,60,.2)";
   ctx.shadowBlur = 12;

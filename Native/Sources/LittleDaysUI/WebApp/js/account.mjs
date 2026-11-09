@@ -59,5 +59,6 @@ export const TOUR = [
   { id: "photo", icon: "📷" },
   { id: "growth", icon: "🌱" },
   { id: "shelf", icon: "📚" },
+  { id: "theme", icon: "🎨" },
   { id: "private", icon: "🔒" },
 ];
