@@ -604,7 +604,7 @@ function dayListItems(date) {
 function habitBookHTML() {
   const habits = state().habits;
   const week = state().checks.filter((c) => c.date >= weekStart(dateKey())).length;
-  return `<button class="habit-book" data-action="nav" data-page="growth"><span class="habit-book-cover" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19c9 0 14-6 14-14C10 5 5 10 5 19zM5 19c3-5 6-8 10-10"/></svg><i>My Habits</i></span><span class="habit-book-copy"><b>${t("habits.book")}</b><small>${t("habits.bookCount", { count: habits.length, week })}</small><small>${t("habits.bookHint")}</small></span><em>${t("habits.open")} ›</em></button>`;
+  return `<button class="habit-book shelf-habit-book" data-action="nav" data-page="growth"><span class="habit-book-cover" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19c9 0 14-6 14-14C10 5 5 10 5 19zM5 19c3-5 6-8 10-10"/></svg><i>My Habits</i></span><span class="habit-book-copy"><b>${t("habits.book")}</b><small>${t("habits.bookCount", { count: habits.length, week })}</small><small>${t("habits.bookHint")}</small></span><em>${t("habits.open")} ›</em></button>`;
 }
 function latestBook(bookId) {
   return (
@@ -765,7 +765,7 @@ function growthPage() {
     .map((h) => {
       const count = weeklyCount(state(), h.id, today),
         pages = state().checks.filter((c) => c.habitId === h.id).length;
-      return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="habit-more" data-action="edit-habit" data-habit="${esc(h.id)}" aria-label="${esc(t("habit.edit"))} · ${esc(h.title)}">⋯</button><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">${t("journey.chip", { count: pages })} ›</button></div></section>`;
+      return `<section class="growth-habit compact">${habitRow(h, today)}<div class="growth-habit-foot"><div class="week-dots" aria-label="${esc(t("growth.weekCount", { target: h.target, count }))}">${Array.from({ length: 7 }, (_, i) => `<span class="${state().checks.some((c) => c.habitId === h.id && c.date === addDays(start, i)) ? "complete" : ""}">${weekdays[i]}</span>`).join("")}</div><span class="growth-habit-count">${count}/${h.target}</span><button class="habit-more" data-action="habit-menu" data-habit="${esc(h.id)}" aria-label="${esc(t("habit.manage"))} · ${esc(h.title)}">✎ ${t("habit.manageShort")}</button><button class="journey-chip" data-action="habit-journey" data-habit="${esc(h.id)}" aria-label="${esc(t("journey.open"))} · ${esc(h.title)}">${t("journey.chip", { count: pages })} ›</button></div></section>`;
     })
     .join("");
   return `<header class="page-top"><div><button class="back-button" data-action="nav" data-page="books">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("habits.book")}</h1><p class="page-subtitle">${t("growth.subtitle")}</p></div><button class="icon-button" data-action="new-habit" aria-label="${t("growth.add")}">${icon("plus")}</button></header>${summary}${cards || `<div class="empty">${t("growth.none")}<br><button class="primary" data-action="new-habit">${t("growth.new")}</button></div>`}${reflectionsHTML(today)}${checkHistoryHTML()}`;
@@ -3471,7 +3471,17 @@ async function action(target) {
   if (actionName === "check")
     await handleCheck(target.dataset.habit, target.dataset.date);
   if (actionName === "new-habit") openDialog("habit");
+  if (actionName === "habit-menu") {
+    // One place for a habit: change it, or delete it (asked first).
+    const habit = state().habits.find((h) => h.id === target.dataset.habit);
+    if (!habit) return;
+    const dialog = $("#choose-dialog");
+    dialog.innerHTML = `<div class="choose-sheet habit-menu-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${esc(habit.title)}</h2><button class="contribute-option" data-action="edit-habit" data-habit="${esc(habit.id)}"><b>✎ ${t("habit.edit")}</b><small>${t("habit.editHint")}</small></button><button class="contribute-option danger-option" data-action="delete-habit" data-habit="${esc(habit.id)}"><b>${t("habit.delete")}</b><small>${t("habit.deleteHint")}</small></button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+    if (!dialog.open) dialog.showModal();
+    return;
+  }
   if (actionName === "edit-habit") {
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
     const habit = state().habits.find((h) => h.id === target.dataset.habit);
     if (habit) openDialog("habit", { habit });
   }
@@ -3480,6 +3490,7 @@ async function action(target) {
     if (!habit) return;
     const count = state().checks.filter((c) => c.habitId === habit.id).length;
     $("#form-dialog").close();
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
     if (!(await askConfirm(t("habit.deleteConfirm", { name: habit.title, count })))) return;
     // The habit and its check-ins go; check cards placed on pages are removed too.
     store.update((s) => {

@@ -48,9 +48,9 @@ const shots = process.env.SHOTS_DIR || "";
     assert.match(await page.locator(".page-title").innerText(), /我的习惯/);
     assert.equal(await page.locator('#navigation .nav-item.books[aria-current="page"]').count(), 1, "it belongs to My Books");
     await page.locator('.page-top [data-action="nav"][data-page="books"]').tap();
-    await page.waitForSelector(".habit-book");
-    assert.match(await page.locator(".habit-book").innerText(), /我的习惯[\s\S]*个习惯/);
-    await page.locator(".habit-book").tap();
+    await page.waitForSelector(".shelf-habit-book");
+    assert.match(await page.locator(".shelf-habit-book").innerText(), /我的习惯[\s\S]*个习惯/);
+    await page.locator(".shelf-habit-book").tap();
     await page.waitForFunction(() => /我的习惯/.test(document.querySelector(".page-title")?.textContent || ""));
     passed.push("“My habits” opens from Home and from the shelf, and goes back to the shelf");
 

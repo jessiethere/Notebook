@@ -32,7 +32,16 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').tap();
     await page.locator('[data-action="check"][data-habit="move"]').first().tap();
     await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.v1")).checks.some((c) => c.habitId === "move"));
-    await page.locator('[data-action="edit-habit"][data-habit="move"]').tap();
+    // V7.3: a labelled "Edit" button on each habit opens a small menu: change it, or delete it.
+    const menuBtn = page.locator('.habit-more[data-action="habit-menu"][data-habit="move"]');
+    assert.match(await menuBtn.innerText(), /编辑/);
+    const openMenu = async () => {
+      await menuBtn.tap();
+      await page.waitForSelector("#choose-dialog[open] .habit-menu-sheet");
+    };
+    await openMenu();
+    assert.match(await page.locator(".habit-menu-sheet").innerText(), /编辑习惯[\s\S]*删除这个习惯/);
+    await page.locator('.habit-menu-sheet [data-action="edit-habit"]').tap();
     await page.waitForSelector("#form-dialog[open]");
     assert.notEqual(await page.locator('#form-dialog input[name="title"]').inputValue(), "", "the habit's name is filled in");
     await page.locator('#form-dialog input[name="title"]').fill("每天走 8000 步");
@@ -42,20 +51,29 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     let s = await store();
     assert.equal(s.habits.find((h) => h.id === "move").target, 5);
     assert.ok(s.checks.some((c) => c.habitId === "move"), "editing keeps the check-ins");
-    await page.locator('[data-action="edit-habit"][data-habit="move"]').tap();
-    await page.locator('[data-action="delete-habit"]').tap();
+    // Delete straight from the menu (asked first) …
+    await openMenu();
+    await page.locator('.habit-menu-sheet [data-action="delete-habit"]').tap();
     await page.waitForSelector("#confirm-dialog[open]");
     assert.match(await page.locator("#confirm-message").innerText(), /每天走 8000 步[\s\S]*1 次打卡/);
     await page.locator("#confirm-cancel").tap();
     assert.ok((await store()).habits.some((h) => h.id === "move"), "Cancel keeps it");
-    await page.locator('[data-action="edit-habit"][data-habit="move"]').tap();
-    await page.locator('[data-action="delete-habit"]').tap();
+    // … and also from the edit form.
+    await openMenu();
+    await page.locator('.habit-menu-sheet [data-action="edit-habit"]').tap();
+    await page.locator('#form-dialog [data-action="delete-habit"]').tap();
     await page.locator("#confirm-ok").tap();
     await page.waitForFunction(() => !JSON.parse(localStorage.getItem("little-days.v1")).habits.some((h) => h.id === "move"));
     s = await store();
     assert.ok(!s.checks.some((c) => c.habitId === "move"));
-    assert.equal(await page.locator('[data-action="edit-habit"][data-habit="move"]').count(), 0);
-    passed.push("a habit: ⋯ → edit (name, goal; check-ins kept) → delete (asked first; its check-ins go)");
+    assert.equal(await page.locator('[data-action="habit-menu"][data-habit="move"]').count(), 0);
+    // The little book icon stays inside its card (no stray icon outside).
+    const inside = await page.evaluate(() => [...document.querySelectorAll(".growth-habit")].every((card) => {
+      const c = card.getBoundingClientRect(), i = card.querySelector(".habit-symbol").getBoundingClientRect();
+      return i.left >= c.left && i.right <= c.right;
+    }));
+    assert.ok(inside, "habit icons inside their cards");
+    passed.push("a habit: ✎ Edit → menu: change it (check-ins kept) or delete it (asked first; its check-ins go)");
 
     // 2. Colour themes without Labs.
     await menu(page, "home");

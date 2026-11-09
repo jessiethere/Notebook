@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-09 — V7.3 习惯「✎ 编辑」菜单（含删除）+ 修复图标跑出卡片
+
+- 需求（用户 iPhone 截图：「我的习惯」页，图标在卡片外面）：「没有删除习惯的地方」。V6.7 的删除藏在「⋯」→ 编辑对话框底部，不容易发现。
+- 发现的问题：V6.6 给书架「我的习惯」书写的 `.habit-book` 样式（grid、边框、内边距）和习惯行里原有的 `.habit-symbol.habit-book` 小书图标同名，导致小图标被挤出卡片、书本变空白。
+- 改动文件：Public/app.js（书架那本改为 `habit-book shelf-habit-book`；「⋯」改为「✎ 编辑」按钮 `data-action="habit-menu"`，打开底部菜单：编辑习惯 / 删除这个习惯（红色）；edit-habit / delete-habit 打开前关闭菜单）；styles.css（`.habit-book` 书架样式改为 `.shelf-habit-book`；`.habit-more` 改成带边框的小按钮；习惯卡底部换行：一周圆点一行，次数 · 编辑 · 成长书一行）；i18n.json（habit.manage / manageShort / deleteHint）；whats-new.mjs（V7.3）；tests/v65-browser.cjs（编辑按钮 → 菜单 → 编辑、菜单直接删除（取消保留）、编辑表单里删除、图标在卡片内）；tests/v63-browser.cjs（书架选择器 `.shelf-habit-book`）。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；375 宽截图检查习惯页与菜单。
+- 已知问题：未在 iPhone 真机验证。
+- 下一步：看用户反馈。
+
 ### 2026-11-09 — V7.2 隐私：今日清单默认不进导出、首页可隐藏今天、设置里写清楚
 
 - 需求：用户「还需要保护用户隐私」（上一轮刚把标着「私人」的今日清单画进了导出图片和给家人的 PDF）。

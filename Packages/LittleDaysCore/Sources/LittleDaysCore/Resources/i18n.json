@@ -5567,6 +5567,18 @@
     "zh": "替换",
     "en": "Replace"
   },
+  "habit.manage": {
+    "zh": "编辑或删除这个习惯",
+    "en": "Edit or delete this habit"
+  },
+  "habit.manageShort": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "habit.deleteHint": {
+    "zh": "会先问你；它的打卡记录也会一起删除",
+    "en": "You're asked first; its check-ins go too"
+  },
   "habit.edit": {
     "zh": "编辑习惯",
     "en": "Edit habit"

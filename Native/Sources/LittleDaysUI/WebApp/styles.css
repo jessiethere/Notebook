@@ -12979,7 +12979,8 @@ dialog h2,
   border-radius: 12px;
   background: var(--cream);
 }
-.habit-book {
+/* The shelf's "My habits" book (not the little book icon on a habit row). */
+.shelf-habit-book {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr) auto;
   align-items: center;
@@ -13024,7 +13025,7 @@ dialog h2,
   font-size: 12px;
   color: var(--t-6f675d, #6F675D);
 }
-.habit-book em {
+.shelf-habit-book em {
   font-style: normal;
   font-size: 13px;
   color: var(--t-5f6f52, #5F6F52);
@@ -13081,13 +13082,16 @@ dialog h2,
   filter: brightness(1.06);
 }
 .habit-more {
-  min-width: 40px;
-  min-height: 36px;
-  border: 0;
+  flex: none;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: none;
-  font-size: 18px;
-  color: var(--muted);
+  background: var(--paper);
+  font-size: 12px;
+  color: var(--ink);
+  white-space: nowrap;
 }
 .habit-delete {
   width: 100%;
@@ -13512,4 +13516,21 @@ dialog h2,
 }
 .home-mag .peek-private b {
   font-size: 21px;
+}
+
+/* V7.3 · Each habit: the week's dots on one line, then count · Edit · its book. */
+.growth-habit.compact .growth-habit-foot {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.growth-habit.compact .growth-habit-foot .week-dots {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+}
+.growth-habit.compact .growth-habit-foot .growth-habit-count {
+  margin-right: auto;
+}
+.growth-habit.compact .growth-habit-foot .journey-chip {
+  flex: none;
+  white-space: nowrap;
 }

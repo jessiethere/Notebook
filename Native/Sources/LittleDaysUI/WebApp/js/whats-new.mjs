@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.3",
+    date: "2026-11-09",
+    zh: {
+      title: "删除习惯更好找：每个习惯有「✎ 编辑」",
+      items: [
+        "「我的习惯」里每个习惯下面有「✎ 编辑」按钮（原来是不显眼的「⋯」）：点开可以「编辑习惯」或「删除这个习惯」（会先问你，它的打卡记录也一起删除）。",
+        "修好了习惯卡片左边的小图标跑到卡片外面的问题。",
+        "习惯卡片下面改成两行：一周的小圆点一行，次数、编辑、成长书一行，小屏手机上也不会被截掉。",
+      ],
+    },
+    en: {
+      title: "Deleting a habit is easy to find: “✎ Edit” on each habit",
+      items: [
+        "Each habit in My habits has a “✎ Edit” button (it was an easy-to-miss “⋯”): open it to edit the habit or delete it (you're asked first; its check-ins go too).",
+        "Fixed the little habit icons showing outside their cards.",
+        "Under each habit: the week's dots on one line, then count, Edit and its book — nothing is cut off on small phones.",
+      ],
+    },
+  },
+  {
     version: "7.2",
     date: "2026-11-09",
     zh: {
