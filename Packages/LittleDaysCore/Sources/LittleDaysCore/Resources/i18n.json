@@ -1296,8 +1296,8 @@
     "en": "Title"
   },
   "moment.titlePlaceholder": {
-    "zh": "例如：清晨的健身房",
-    "en": "e.g. Morning gym session"
+    "zh": "给这一刻起个名字",
+    "en": "Name this moment"
   },
   "moment.time": {
     "zh": "时间（可选）",
@@ -1316,8 +1316,8 @@
     "en": "Tags"
   },
   "moment.tagsPlaceholder": {
-    "zh": "用逗号分隔，例如：健身, 早晨",
-    "en": "Comma separated, e.g. gym, morning"
+    "zh": "用逗号分隔，例如：周末, 散步",
+    "en": "Comma separated, e.g. weekend, walk"
   },
   "moment.save": {
     "zh": "保存这个小故事",
@@ -1536,8 +1536,8 @@
     "en": "What you did"
   },
   "growth.detailPlaceholder": {
-    "zh": "例如：下肢训练 / 西班牙语",
-    "en": "e.g. Lower body / Spanish"
+    "zh": "简单写一句今天做了什么",
+    "en": "A few words about what you did"
   },
   "growth.minutesOptional": {
     "zh": "时长（分钟，可选）",

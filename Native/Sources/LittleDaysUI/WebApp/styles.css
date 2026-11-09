@@ -1137,6 +1137,14 @@ label.field {
   font-size: 10px;
   color: var(--t-938674, #938674);
 }
+/* A label above a group of choices: the same look as a field's label. */
+.small-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--t-938674, #938674);
+}
 .field input,
 .field textarea,
 .field select {
@@ -3708,7 +3716,7 @@ body {
 .book-filter-row input {
   flex: 1 1 130px;
   min-width: 0;
-  min-height: 38px;
+  min-height: 36px;
   padding: 6px 10px;
   border-radius: 11px;
   border: 1px solid var(--line);
@@ -5374,11 +5382,15 @@ details.check-history[open] > summary > span:first-child::after {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  margin-top: 16px;
+}
+.collab-sub-row .collab-sub {
+  margin: 0;
 }
 .collab-sub-row .secondary {
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 12px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .collab-members {
   list-style: none;
@@ -5432,10 +5444,18 @@ details.check-history[open] > summary > span:first-child::after {
 }
 .collab-invite select {
   min-width: 0;
-  font-size: 11px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--c-fffdf8, #fffdf8);
+  color: var(--ink);
+  font-size: 13px;
 }
 .collab-invite .primary {
+  min-height: 36px;
   padding: 0 14px;
+  font-size: 13px;
 }
 .collab-page {
   border: 1px solid var(--c-ece2cd, #ece2cd);
@@ -6655,11 +6675,27 @@ details.check-history[open] > summary > span:first-child::after {
 
 /* iPhone zooms into any field smaller than 16px and stays zoomed, which
    pushed pages off the screen; touch screens get 16px fields. */
+/* Phones: typing fields at 16px (comfortable to type in). Pickers that open
+   no keyboard (menus, dates) follow the page's type scale at 14px; the
+   viewport's maximum-scale=1 keeps iOS from zooming in when they are tapped. */
 @media (pointer: coarse) {
-  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
-  textarea,
-  select {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="date"]):not([type="time"]):not([type="month"]),
+  textarea {
     font-size: 16px !important;
+  }
+  select,
+  input[type="date"],
+  input[type="time"],
+  input[type="month"] {
+    font-size: 14px !important;
+  }
+  /* Compact rows (book filters, collaborators): same 13px as the buttons beside them. */
+  .book-filter-row select,
+  .book-filter-row input,
+  .collab-invite select,
+  .collab-member select {
+    font-size: 13px !important;
+    min-height: 36px;
   }
 }
 /* Start screen titles: the clean system face at a medium weight. */

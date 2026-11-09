@@ -83,17 +83,23 @@ function wav(seconds = 1) {
     assert.deepEqual(story.layers.map((l) => l.kind).sort(), ["audio", "text"]);
     passed.push("sound: record or upload (upload goes on the paper); video and photo pickers one tap away");
 
-    // 4. iPhone: fields are 16px so Safari never zooms the page sideways.
-    const small = await page.$$eval("input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]), textarea, select", (els) =>
+    // 4. iPhone: typing fields are 16px; menus and dates follow the 14px type
+    // scale; the viewport stops iOS from zooming in when any of them is tapped.
+    const small = await page.$$eval("input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=date]):not([type=time]):not([type=month]), textarea", (els) =>
       els.filter((el) => el.offsetParent && parseFloat(getComputedStyle(el).fontSize) < 16).map((el) => el.outerHTML.slice(0, 60)),
     );
     assert.deepEqual(small, []);
+    const pickers = await page.$$eval("select, input[type=date], input[type=time]", (els) =>
+      [...new Set(els.filter((el) => el.offsetParent).map((el) => getComputedStyle(el).fontSize))],
+    );
+    assert.ok(pickers.every((size) => size === "13px" || size === "14px"), pickers.join());
+    assert.match(await page.locator('meta[name="viewport"]').getAttribute("content"), /maximum-scale=1/);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     // Start screen titles use a medium system weight, not heavy bold.
     await menu(page, "studio");
     const weight = await page.locator(".start-card b").first().evaluate((el) => getComputedStyle(el).fontWeight);
     assert.equal(weight, "600");
-    passed.push("iPhone: 16px fields (no auto-zoom), no sideways scroll, calm start-screen type");
+    passed.push("iPhone: 16px typing fields, 14px menus/dates, no auto-zoom, no sideways scroll, calm start-screen type");
 
     assert.deepEqual(errors, []);
     console.log(`V3.7 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
