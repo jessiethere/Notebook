@@ -426,7 +426,8 @@ async function noOverflow(page, label) {
     await page.locator('#dialog-form [name="note"]').fill("今天左腿的发力感明显比之前好，深蹲更稳。");
     await page.locator('#dialog-form [type="submit"]').click();
     // Duration habit: the check-in dialog records minutes and a note at once.
-    await page.locator(`.check-button[data-habit="reading"][data-date="${today}"]`).first().click();
+    // ✎ before checking in: the dialog records minutes and a note at once.
+    await page.locator(`.note-button[data-habit="reading"][data-date="${today}"]`).first().click();
     await page.locator('#dialog-form [name="minutes"]').fill("15");
     await page.locator('#dialog-form [name="detail"]').fill("Spanish");
     await page.locator('#dialog-form [name="note"]').fill("终于理解了一个语法点。");

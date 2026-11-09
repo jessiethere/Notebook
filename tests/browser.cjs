@@ -50,7 +50,10 @@ const path = require("node:path");
     assert.equal((await savedState()).checks.length, 1);
     await page.locator('[data-action="check"][data-habit="move"]').click();
     assert.equal((await savedState()).checks.length, 0);
+    // A duration habit: ✓ records the usual minutes in one tap; ✎ edits them.
     await page.locator('[data-action="check"][data-habit="reading"]').click();
+    assert.equal((await savedState()).checks[0].minutes, 20);
+    await page.locator('[data-action="check-note"][data-habit="reading"]').first().click();
     await page.locator('#dialog-form [name="minutes"]').fill("35");
     await page.locator('#dialog-form [type="submit"]').click();
     assert.equal((await savedState()).checks[0].minutes, 35);

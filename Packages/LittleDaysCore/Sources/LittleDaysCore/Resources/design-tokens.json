@@ -114,7 +114,10 @@
         "#9B7BFF"
       ],
       "colors": {
-        "accent": "#9B7BFF"
+        "accent": "#9B7BFF",
+        "ink": "#F2EEF8",
+        "muted": "#B9B0CC",
+        "line": "#3A3150"
       },
       "tint": 0.06
     }

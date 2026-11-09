@@ -3774,5 +3774,17 @@
   "layer.barHint": {
     "zh": "复制、置顶、删除和编辑在纸上选中内容上方的小工具条里。",
     "en": "Copy, to front, delete and edit are in the small bar above the selected item."
+  },
+  "growth.checkedHint": {
+    "zh": "打卡啦 🌱 想写心得、加照片，点旁边的 ✎",
+    "en": "Checked in 🌱 Tap ✎ to add a note or photo"
+  },
+  "growth.addShort": {
+    "zh": "心得",
+    "en": "Note"
+  },
+  "growth.noteShort": {
+    "zh": "已写",
+    "en": "Noted"
   }
 }

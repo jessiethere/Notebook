@@ -356,7 +356,7 @@ function habitRow(habit, date) {
   const done = state().checks.find(
     (check) => check.habitId === habit.id && check.date === date,
   );
-  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div>${done ? `<button class="note-button" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">✎</button>` : ""}<button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
+  return `<div class="habit-row ${done?.note ? "has-note" : ""}"><span class="habit-symbol">${themeIcon(habit.theme)}</span><div class="habit-detail"><strong>${esc(habit.title)}</strong><small>${esc(presetLabel("theme.habit", habit.theme))} · ${habit.kind === "duration" ? t("minutesShort", { count: done?.minutes || habit.minutes }) : t("growth.encourage")}${done?.detail ? " · " + esc(done.detail) : ""}</small>${done?.note ? `<span class="habit-note">“${esc(done.note.slice(0, 60))}”</span>` : ""}</div><button class="note-button ${done?.note || done?.photo || done?.detail ? "has-note" : ""}" data-action="check-note" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done?.note ? "growth.editNote" : "growth.addNote")} ${esc(habit.title)}">${done?.photo ? "🖼" : "✎"}<span>${t(done?.note || done?.photo || done?.detail ? "growth.noteShort" : "growth.addShort")}</span></button><button class="check-button ${done ? "done" : ""}" data-action="check" data-habit="${esc(habit.id)}" data-date="${date}" aria-label="${t(done ? "habit.cancel" : "habit.complete")} ${esc(habit.title)}" aria-pressed="${Boolean(done)}">${done ? icon("check") : ""}</button></div>`;
 }
 
 // One cover per day in a book: photos, date, mood and that day's Moments.
@@ -1408,7 +1408,10 @@ async function handleCheck(habitId, date) {
   );
   const existing = Boolean(existingCheck);
   if (!existing && habit.kind === "duration") {
-    openCheckDialog(habitId, date);
+    // One tap records the usual minutes; ✎ changes them or adds a note.
+    store.update((s) => saveCheckReflection(s, habitId, date, { minutes: habit.minutes || 20 }));
+    render();
+    toast(t("growth.checkedHint"));
     return;
   }
   if (
@@ -1420,7 +1423,7 @@ async function handleCheck(habitId, date) {
 
   store.update((s) => toggleCheck(s, habitId, date));
   render();
-  toast(existing ? t("这次打卡已取消") : t("收集到一份小小的成长 🌱"));
+  toast(existing ? t("这次打卡已取消") : t("growth.checkedHint"));
 }
 async function action(target) {
   const actionName = target.dataset.action;
