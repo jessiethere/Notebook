@@ -6986,3 +6986,114 @@ html[data-shell="ios"] .phone.signed-out .app-scroll,
 html[data-shell="ios"] body.typing .phone .app-scroll {
   height: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
+
+/* V3.9 · Quick actions above the selected item. */
+.canvas-wrap {
+  position: relative;
+}
+.layer-bar {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--c-2f2a26f0, #2f2a26f0);
+  box-shadow: 0 6px 16px var(--c-2f2a2640, #2f2a2640);
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+}
+.layer-bar.below {
+  transform: translate(-50%, 0);
+}
+.layer-bar button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-fffdf8, #fffdf8);
+  font-size: 12px;
+}
+.layer-bar button:active {
+  background: var(--c-ffffff26, #ffffff26);
+}
+.layer-bar .danger {
+  color: var(--c-ffb4a8, #ffb4a8);
+}
+/* A picture that can't be shown: soft placeholder, not a broken icon. */
+.photo-crop.broken {
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(45deg, var(--c-efe9de, #efe9de) 0 8px, var(--c-e7e0d3, #e7e0d3) 8px 16px);
+}
+.photo-crop.broken img {
+  opacity: 0;
+}
+.photo-crop.broken::after {
+  content: "📷";
+  position: absolute;
+  font-size: 7cqw;
+  opacity: 0.55;
+}
+.photo-layer .photo-crop {
+  position: relative;
+}
+/* Video cover picker. */
+.poster-dialog {
+  width: min(400px, calc(100vw - 24px));
+  border: 0;
+  border-radius: 22px;
+  padding: 18px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.poster-dialog::backdrop {
+  background: var(--c-2f2a2699, #2f2a2699);
+}
+.poster-sheet {
+  display: grid;
+  gap: 10px;
+}
+.poster-sheet h2 {
+  font-size: 17px;
+}
+.poster-stage {
+  display: grid;
+  place-items: center;
+  background: var(--c-1f1c19, #1f1c19);
+  border-radius: 14px;
+  overflow: hidden;
+  max-height: 46dvh;
+}
+.poster-stage video {
+  max-width: 100%;
+  max-height: 46dvh;
+  display: block;
+}
+.poster-slider {
+  display: grid;
+  grid-template-columns: auto 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.poster-slider input {
+  accent-color: var(--accent);
+  min-height: 34px;
+}
+.poster-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.poster-cancel {
+  justify-self: center;
+}
+.poster-actions {
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}

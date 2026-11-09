@@ -3722,5 +3722,57 @@
   "photo.remove": {
     "zh": "移除照片",
     "en": "Remove photo"
+  },
+  "poster.title": {
+    "zh": "选择视频封面",
+    "en": "Choose a video cover"
+  },
+  "poster.help": {
+    "zh": "拖动滑块选一帧当封面，或者上传一张自己的图片。",
+    "en": "Slide to pick a frame, or upload a picture of your own."
+  },
+  "poster.frame": {
+    "zh": "画面",
+    "en": "Frame"
+  },
+  "poster.useFrame": {
+    "zh": "用这一帧",
+    "en": "Use this frame"
+  },
+  "poster.upload": {
+    "zh": "上传图片",
+    "en": "Upload a picture"
+  },
+  "poster.short": {
+    "zh": "封面",
+    "en": "Cover"
+  },
+  "poster.saved": {
+    "zh": "封面已更新",
+    "en": "Cover updated"
+  },
+  "poster.failed": {
+    "zh": "这一帧取不出来，换一帧或上传图片试试。",
+    "en": "Couldn't grab that frame — try another one or upload a picture."
+  },
+  "layer.frontShort": {
+    "zh": "置顶",
+    "en": "To front"
+  },
+  "media.tapAgain": {
+    "zh": "再轻点一次播放",
+    "en": "Tap again to play"
+  },
+  "media.unsupported": {
+    "zh": "这个视频格式在当前浏览器里不能播放，可以转成 MP4 后再上传。",
+    "en": "This video format can't play in this browser — convert it to MP4 and upload again."
+  },
+  "photo.broken": {
+    "zh": "这张照片在这台设备上无法显示，可以点“替换照片”重新选择。",
+    "en": "This photo can't be shown on this device — use “Replace photo” to pick it again."
+  },
+  "layer.barHint": {
+    "zh": "复制、置顶、删除和编辑在纸上选中内容上方的小工具条里。",
+    "en": "Copy, to front, delete and edit are in the small bar above the selected item."
   }
 }

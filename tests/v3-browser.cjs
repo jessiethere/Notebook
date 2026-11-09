@@ -253,10 +253,17 @@ async function streamBytes(download) {
       buffer: Buffer.from(video),
     });
     await page.waitForSelector(".media-card video");
+    // A cover is grabbed automatically; the picker can replace it with a picture.
+    await page.waitForFunction(() => document.querySelector(".media-card video")?.poster.startsWith("blob:"));
+    const autoPoster = await page.locator(".media-card video").getAttribute("poster");
     await page.locator('[data-action="video-poster"]').click();
-    await page.locator("#attachment-image-input").setInputFiles(image);
-    await page.waitForFunction(() =>
-      document.querySelector(".media-card video")?.poster.startsWith("blob:"),
+    await page.waitForSelector("#poster-dialog[open]");
+    const posterChooser = page.waitForEvent("filechooser");
+    await page.locator('[data-poster="upload"]').click();
+    await (await posterChooser).setFiles(image);
+    await page.waitForFunction(
+      (old) => { const p = document.querySelector(".media-card video")?.poster; return p?.startsWith("blob:") && p !== old; },
+      autoPoster,
     );
     await page.locator("#audio-input").setInputFiles({
       name: "Original test voice.wav",

@@ -40,6 +40,7 @@ import * as Account from "./js/account.mjs";
 import { openPhotoEditor } from "./js/photo-editor-ui.mjs";
 import { renderEdited, isIdentity } from "./js/photo-edit.mjs";
 import { SHAPES, shapeSize, shapeForSize } from "./js/shapes.mjs";
+import { frameAt, openPosterPicker } from "./js/poster-picker.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
 import {
   createMoment,
@@ -637,8 +638,37 @@ function changeTarget(change, redraw = true) {
 function selectedLayerOf(page = activePage()) {
   return page.layers.find((layer) => layer.id === selectedLayer);
 }
+// A small bar right above the selected item: the common actions in reach.
+function layerBarHTML() {
+  const layer = selectedLayerOf();
+  if (!layer || page !== "studio") return "";
+  const b = (action, label, extra = "") => `<button type="button" data-action="${action}" ${extra}>${label}</button>`;
+  const first =
+    layer.kind === "photo" && layer.mediaRef
+      ? b("photo-edit", `✨ ${t("pe.open")}`)
+      : layer.kind === "video"
+        ? b("video-cover", `🖼 ${t("poster.short")}`, `data-clip="${esc(layer.clipId)}"`)
+        : layer.kind === "text"
+          ? b("layer-edit-text", `✎ ${t("edit")}`)
+          : "";
+  return `<div class="layer-bar" role="toolbar" aria-label="${t("layer.selected")}">${first}${b("layer-copy", `⧉ ${t("copy")}`)}${b("layer-front", `⬆ ${t("layer.frontShort")}`)}${b("layer-delete", `🗑 ${t("delete")}`, 'class="danger"')}</div>`;
+}
+function placeLayerBar() {
+  const bar = document.querySelector("#canvas-wrap .layer-bar");
+  const element = selectedLayer && layerElement(selectedLayer);
+  const wrap = $("#canvas-wrap");
+  if (!bar || !element || !wrap) return;
+  const box = element.getBoundingClientRect(),
+    area = wrap.getBoundingClientRect();
+  const half = bar.offsetWidth / 2;
+  const left = Math.min(area.width - half - 4, Math.max(half + 4, box.left + box.width / 2 - area.left));
+  const above = box.top - area.top - 8;
+  bar.classList.toggle("below", above < bar.offsetHeight + 4);
+  bar.style.left = `${left}px`;
+  bar.style.top = `${above < bar.offsetHeight + 4 ? box.bottom - area.top + 8 : above}px`;
+}
 function canvasHTML() {
-  return sharedCanvasHTML(activePage(), ctx(), {
+  return layerBarHTML() + sharedCanvasHTML(activePage(), ctx(), {
     selectedId: selectedLayer,
     cropMode,
     dayPage: isDayPage(),
@@ -686,7 +716,7 @@ function layerControls() {
       : "";
   const photoTools =
     layer.kind === "photo"
-      ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="photo-edit" class="pe-open">✨ ${t("pe.open")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
+      ? `<div class="photo-tools"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label><button class="${cropMode ? "selected" : ""}" data-action="crop-mode" aria-pressed="${cropMode}">✂ ${t(cropMode ? "photo.cropDone" : "photo.crop")}</button><button data-action="replace-photo">${t("photo.replace")}</button></div>${
           cropMode
             ? `<p class="save-help">${t("photo.cropHelp")}</p><div class="crop-sliders">${[
                 ["zoom", 1, 4, 0.05, "photo.cropZoom"],
@@ -705,7 +735,7 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-front">${t("layer.front")}</button><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-delete">${t("delete")}</button></div></div>`;
+  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -1036,6 +1066,7 @@ function studioPage() {
 
 function updateCanvas() {
   if ($("#canvas-wrap")) $("#canvas-wrap").innerHTML = canvasHTML();
+  placeLayerBar();
   if ($(".font-preview"))
     $(".font-preview").style.fontFamily = fontFamily(activePage().font, catalog);
   const undo = document.querySelector('[data-action="undo"]');
@@ -1140,6 +1171,7 @@ function render() {
   }
   if (page === "settings") showMediaUsage();
   pinStageForSheet();
+  placeLayerBar();
   const dock = $(".tool-dock");
   if (dock) {
     dock.scrollLeft = dockScroll;
@@ -1585,7 +1617,12 @@ async function action(target) {
     });
   if (actionName === "layer-delete")
     changeTarget((e) => {
+      const removed = e.layers.find((l) => l.id === selectedLayer);
       e.layers = e.layers.filter((l) => l.id !== selectedLayer);
+      // A video/sound deleted from the paper goes with its file entry too
+      // (unless a copy is still on the page). Undo brings both back.
+      if (removed?.clipId && !e.layers.some((l) => l.clipId === removed.clipId))
+        e.media = e.media.filter((clip) => clip.id !== removed.clipId);
       selectedLayer = null;
       cropMode = false;
     });
@@ -1916,6 +1953,7 @@ function paintLayer(layer) {
   element.style.transform = layerGeometry(layer).match(/transform:(.*)$/)[1];
   const image = element.querySelector(".photo-crop img");
   if (image) image.setAttribute("style", cropStyle(layer));
+  placeLayerBar();
 }
 function gestureSnapshot(layer) {
   return {
@@ -1969,7 +2007,7 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
-  if (event.target.closest(".layer-play, .canvas-add-row")) return;
+  if (event.target.closest(".layer-play, .canvas-add-row, .layer-bar")) return;
   // Touching the paper puts the keyboard away so the tools come back.
   if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
   const element = event.target.closest("[data-layer]");
@@ -2858,7 +2896,13 @@ async function v31Action(target) {
     case "layer-play": {
       const element = target.closest(".media-layer")?.querySelector("video,audio");
       if (!element) return true;
-      if (element.paused) element.play().catch(() => toast(t("media.missing")));
+      if (element.paused)
+        element.play().catch((error) => {
+          if (error?.name === "NotAllowedError") return toast(t("media.tapAgain"));
+          // iPhones sometimes need the file reloaded before the first play.
+          element.load();
+          element.play().catch((again) => toast(t(again?.name === "NotSupportedError" ? "media.unsupported" : "media.missing")));
+        });
       else element.pause();
       return true;
     }
@@ -3204,8 +3248,16 @@ async function v3Action(target) {
     $("#audio-input").click();
     return true;
   }
-  if (name === "video-poster") {
-    chooseAttachment({ kind: "poster", clip: target.dataset.clip });
+  if (name === "video-poster" || name === "video-cover") {
+    await chooseVideoCover(target.dataset.clip);
+    return true;
+  }
+  if (name === "layer-edit-text") {
+    studioTool = "layer";
+    render();
+    const box = $('[data-layer-text="text"]');
+    box?.focus({ preventScroll: true });
+    box?.select();
     return true;
   }
   if (name === "remove-media") {
@@ -3614,8 +3666,42 @@ async function mediaMetadata(file, kind) {
     element.src = url;
   });
 }
+// Pick a frame (or upload a picture) as a video's cover.
+async function chooseVideoCover(clipId) {
+  const page = activePage();
+  const clip = page.media.find((item) => item.id === clipId);
+  if (!clip) return;
+  const src = media.resolve(clip.source);
+  if (!src) {
+    toast(t("media.loading"));
+    return;
+  }
+  const result = await openPosterPicker({ t, src, duration: clip.duration, poster: media.resolve(clip.poster || "") });
+  if (!result) return;
+  if (result.upload) return chooseAttachment({ kind: "poster", clip: clipId });
+  if (result.error) return toast(t("poster.failed"));
+  const posterId = await media.put(result.blob, { kind: "photo", name: `${clip.name} cover` });
+  changeTarget((entry) => {
+    const item = entry.media.find((c) => c.id === clipId);
+    if (item) item.poster = `media:${posterId}`;
+  });
+  flushDraft();
+  toast(t("poster.saved"));
+}
+async function autoCover(mediaId, duration) {
+  try {
+    const url = media.resolve(`media:${mediaId}`);
+    if (!url) return "";
+    const blob = await frameAt(url, Math.min(1, (duration || 2) * 0.25));
+    return `media:${await media.put(blob, { kind: "photo", name: "cover" })}`;
+  } catch {
+    return "";
+  }
+}
 async function attachClip(blob, kind, name, duration = 0, options = {}) {
   const mediaId = await media.put(blob, { kind, name, duration }, "studio");
+  // Videos get a first cover right away (changeable later).
+  const poster = kind === "video" ? await autoCover(mediaId, duration) : "";
   const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
     const page = (targetId && findMoment(entry, targetId)) || entry;
@@ -3627,7 +3713,7 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
       size: blob.size,
       duration,
       source: `media:${mediaId}`,
-      poster: "",
+      poster,
       ...(options.origin ? { origin: options.origin } : {}),
       ...(options.width && options.height ? { width: options.width, height: options.height } : {}),
     };
@@ -3980,3 +4066,14 @@ document.addEventListener("focusout", () => {
 });
 window.visualViewport?.addEventListener("resize", keepFieldInView);
 window.visualViewport?.addEventListener("scroll", updateVisibleArea);
+
+// A picture that can't be shown (file missing on this device or a format the
+// browser can't read) gets a soft placeholder instead of the broken-image icon.
+document.addEventListener(
+  "error",
+  (event) => {
+    const img = event.target;
+    if (img?.tagName === "IMG" && img.closest?.(".photo-crop")) img.closest(".photo-crop").classList.add("broken");
+  },
+  true,
+);
