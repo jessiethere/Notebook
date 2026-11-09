@@ -12395,3 +12395,40 @@ dialog h2,
   color: var(--paper);
   font-size: 13px;
 }
+
+/* ---------- Music volume and a book's music (V6.2) ---------- */
+.music-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 2px 2px;
+  font-size: 13px;
+}
+.music-volume input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.music-volume output {
+  min-width: 38px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.book-music {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 8px 10px 8px 12px;
+  border: 1px dashed var(--c-e3dccf, #e3dccf);
+  border-radius: 14px;
+}
+.book-music .book-music-label {
+  font-size: 13px;
+  color: var(--t-7a7166, #7a7166);
+}
+.book-music .text-button {
+  white-space: nowrap;
+  font-size: 13px;
+}

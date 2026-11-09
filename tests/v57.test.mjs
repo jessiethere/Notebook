@@ -3,16 +3,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, statSync } from "node:fs";
-import { musicTracks, findTrack, trackName, trackMood, clock, dayMusic, musicChipHTML, createMusicPlayer, MUSIC_DIR } from "../Public/js/music.mjs";
+import { musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, createMusicPlayer, loadVolume, saveVolume, MUSIC_DIR, MUSIC_VOLUME } from "../Public/js/music.mjs";
 
 const resources = new URL("../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/", import.meta.url);
 const catalog = JSON.parse(readFileSync(new URL("library.json", resources), "utf8"));
 const i18n = JSON.parse(readFileSync(new URL("i18n.json", resources), "utf8"));
 
-test("five original pieces, each with its file, notice and both languages", () => {
+test("eight original pieces, each with its file, notice and both languages", () => {
   const tracks = musicTracks(catalog);
-  assert.equal(tracks.length, 5);
-  assert.equal(new Set(tracks.map((t) => t.id)).size, 5);
+  assert.equal(tracks.length, 8);
+  assert.equal(new Set(tracks.map((t) => t.id)).size, 8);
+  assert.deepEqual(tracks.slice(5).map((t) => t.moodZh), ["钢琴", "欢快", "咖啡馆"], "piano, cheerful and café styles");
   for (const track of tracks) {
     const file = new URL(`Music/${track.file}`, resources);
     assert.ok(existsSync(file), track.file);
@@ -105,4 +106,31 @@ test("one shared player: plays from a blob, switches pieces, stops", async () =>
   assert.equal(player.current(), "");
   assert.equal(appended[0].getAttribute("src"), null);
   assert.ok(changes >= 4);
+});
+
+test("a book's music: used when the day or page has none of its own", () => {
+  const books = [{ id: "us", music: "sunny-day" }, { id: "daily" }];
+  assert.equal(bookMusic(books, "us"), "sunny-day");
+  assert.equal(bookMusic(books, "daily"), "");
+  assert.equal(dayMusic({ bookId: "us", moments: [] }, books), "sunny-day");
+  assert.equal(dayMusic({ bookId: "us", moments: [{ music: "seaside" }] }, books), "seaside", "the page's own first");
+  assert.equal(pageMusic({ bookId: "us" }, books), "sunny-day");
+  assert.equal(pageMusic({}, books, "us"), "sunny-day", "a page without a book uses the day's book");
+  assert.equal(pageMusic({ music: "cafe-corner", bookId: "us" }, books), "cafe-corner");
+});
+
+test("the music volume is remembered on this device and kept in range", () => {
+  const data = new Map();
+  const storage = { getItem: (k) => (data.has(k) ? data.get(k) : null), setItem: (k, v) => data.set(k, String(v)) };
+  assert.equal(loadVolume(storage), MUSIC_VOLUME);
+  assert.equal(saveVolume(0.35, storage), 0.35);
+  assert.equal(loadVolume(storage), 0.35);
+  assert.equal(saveVolume(4, storage), 1);
+  assert.equal(saveVolume(-1, storage), 0);
+  assert.equal(loadVolume({ getItem: () => { throw new Error("blocked"); } }), MUSIC_VOLUME);
+  const el = { dataset: {}, addEventListener() {}, getAttribute: () => null };
+  const player = createMusicPlayer({ doc: { createElement: () => el, body: { append() {} } }, fetcher: async () => ({ ok: false }), volume: 0.4 });
+  assert.equal(player.volume(), 0.4);
+  player.setVolume(0.9);
+  assert.equal(player.volume(), 0.9);
 });

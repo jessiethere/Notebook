@@ -32,7 +32,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('.stage-bar [data-action="add-sound"], #journal-canvas [data-action="add-sound"]').first().tap();
     await page.locator('.sound-menu [data-action="music-sheet"]').tap();
     await page.waitForSelector("#choose-dialog[open] .music-sheet");
-    assert.equal(await page.locator(".music-row").count(), 5);
+    assert.equal(await page.locator(".music-row").count(), 8);
     assert.match(await page.locator(".music-sheet").innerText(), /原创/);
     assert.match(await page.locator(".music-row").first().innerText(), /午后咖啡[\s\S]*轻松 · 0:49/);
     await page.locator('[data-action="music-preview"][data-music="rainy-window"]').tap();

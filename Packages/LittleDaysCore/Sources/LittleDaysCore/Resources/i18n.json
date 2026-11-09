@@ -5206,5 +5206,29 @@
   "music.toggle": {
     "zh": "播放 / 暂停「{name}」",
     "en": "Play / pause “{name}”"
+  },
+  "music.volume": {
+    "zh": "音乐音量",
+    "en": "Music volume"
+  },
+  "music.bookTitle": {
+    "zh": "这本书的音乐",
+    "en": "Music for this book"
+  },
+  "music.bookHint": {
+    "zh": "翻开《{name}》时轻轻循环播放；某一页自己选了音乐时，放那一页的。",
+    "en": "Plays softly while “{name}” is open; a page with its own music plays that instead."
+  },
+  "music.bookAdd": {
+    "zh": "给这本书配音乐",
+    "en": "Add music to this book"
+  },
+  "music.bookAdded": {
+    "zh": "这本书配上了「{name}」",
+    "en": "This book now plays “{name}”"
+  },
+  "music.bookRemoved": {
+    "zh": "这本书不放音乐了",
+    "en": "No music for this book"
   }
 }

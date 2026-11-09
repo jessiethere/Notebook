@@ -99,7 +99,7 @@ export function dayDetailHTML(date, ctx, helpers) {
       ? `<section class="day-page"><div class="chapter-head"><span class="chapter-no">${t("day.cover")}</span><span class="chapter-time">${t("cover.what")}</span>${entry.isDemo ? "" : `<button class="chapter-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="" aria-label="${t("read.edit")}">✎ ${t("day.edit")}</button>`}<button class="chapter-more" data-action="page-menu" data-date="${esc(date)}" data-moment="" aria-label="${t("read.more")}">⋯</button>${entry.mood ? `<span class="chapter-mood">${esc(entry.mood)}</span>` : ""}</div><div class="chapter-canvas">${canvasHTML(entry, ctx, { readOnly: true, dayPage: true })}</div>${(entry.body || "").length > 60 || (entry.body || "").includes("\n") ? pageBodyHTML(entry, ctx) : ""}${fieldsHTML(entry, ctx)}${mediaListHTML(entry, ctx)}<footer class="chapter-foot">${bookBadge(entry.bookId, ctx)}${entry.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`
       : "";
   // The day's music plays while it is read; a page with another piece has its own chip.
-  const music = findTrack(ctx.catalog, dayMusic(entry));
+  const music = findTrack(ctx.catalog, dayMusic(entry, state.books));
   const moments = (entry?.moments || [])
     .map((moment, index) => momentChapterHTML(moment, index, { ...ctx, dayMusic: music?.id || "" }, date))
     .join("");

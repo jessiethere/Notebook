@@ -1,4 +1,5 @@
-"""Compose the original Little Days background music: five soft lofi loops.
+"""Compose the original Little Days background music: eight soft loops
+(lofi, piano, upbeat ukulele and a jazzy café trio).
 
 Every note, drum and texture here is synthesised from code (FM electric
 piano, plucked strings, music box, pads, noise-based drums, rain, waves and
@@ -8,7 +9,8 @@ for this file. Run once; the MP3s are committed to
 Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Music together with
 LittleDays-Original-Music.txt, and listed in library.json ("music").
 
-    python3 tools/make_music.py          # needs numpy and ffmpeg (libmp3lame)
+    python3 tools/make_music.py              # all pieces; needs numpy and ffmpeg (libmp3lame)
+    python3 tools/make_music.py sunny-day    # only the named pieces
 
 The output is deterministic (fixed seeds) apart from encoder versions.
 """
@@ -97,6 +99,70 @@ def pluck(freq, held, vel=0.5, seed=0):
     return shape(sig * amp, hi=3500) * vel * 1.6
 
 
+def piano(freq, held, vel=0.5):
+    """Acoustic-ish piano: two slightly detuned strings, stretched partials
+    that fade faster the higher they are, a soft hammer knock."""
+    n = int((held + 2.4) * SR)
+    t = times(n)
+    sig = np.zeros(n)
+    for detune in (0.0, 0.7):
+        f0 = freq * 2 ** (detune / 1200)
+        for k in range(1, 10):
+            fk = f0 * k * np.sqrt(1 + 0.00035 * k * k)
+            if fk > 11000:
+                break
+            level = (1 / k**1.15) * (0.35 + vel) ** (k * 0.35)
+            rate = 0.55 + 0.32 * k + freq / 700
+            sig += level * np.sin(2 * np.pi * fk * t + k * 0.7) * (0.7 * np.exp(-t * rate) + 0.3 * np.exp(-t * rate * 0.22))
+    rng = np.random.default_rng(int(freq * 10))
+    knock = shape(rng.uniform(-1, 1, n), lo=600, hi=4000) * np.exp(-t * 90) * 0.04
+    amp = release(t, np.minimum(1, t / 0.0025), held, 8)
+    return (sig * 0.5 + knock) * amp * vel
+
+
+def glock(freq, vel=0.3):
+    n = int(1.8 * SR)
+    t = times(n)
+    sig = np.sin(2 * np.pi * freq * t) * np.exp(-t * 2.8) + 0.25 * np.sin(2 * np.pi * freq * 2.76 * t) * np.exp(-t * 7) + 0.1 * np.sin(2 * np.pi * freq * 5.4 * t) * np.exp(-t * 14)
+    return sig * np.minimum(1, t / 0.001) * vel
+
+
+def upright(freq, held, vel=0.5):
+    """Plucked upright bass: a short string pluck over a round sine body."""
+    n = int((held + 0.5) * SR)
+    t = times(n)
+    body = np.sin(2 * np.pi * freq * t) + 0.3 * np.sin(4 * np.pi * freq * t) * np.exp(-t * 6)
+    amp = release(t, np.exp(-t * 2.2) * np.minimum(1, t / 0.006), held, 12)
+    thump = shape(pluck(freq * 2, held, 0.4, seed=int(freq)), hi=900)[:n]
+    return shape(body * amp, hi=700) * vel + thump * vel * 0.5
+
+
+def clap(rng, vel=0.35):
+    n = int(0.2 * SR)
+    t = times(n)
+    noise = shape(rng.uniform(-1, 1, n), lo=900, hi=3500)
+    env = np.zeros(n)
+    for k, off in enumerate((0.0, 0.009, 0.018)):
+        i = int(off * SR)
+        env[i:] += np.exp(-(t[: n - i]) * (140 if k < 2 else 30)) * (0.7 if k < 2 else 1)
+    return noise * env * vel
+
+
+def brush(rng, vel=0.2, swirl=False):
+    n = int((0.35 if swirl else 0.12) * SR)
+    t = times(n)
+    env = (np.minimum(1, t / 0.04) * np.exp(-t * 9)) if swirl else np.exp(-t * 40)
+    return shape(rng.uniform(-1, 1, n), lo=2200, hi=9000) * env * vel
+
+
+def ride(rng, vel=0.12):
+    n = int(0.6 * SR)
+    t = times(n)
+    bell = sum(np.sin(2 * np.pi * f * t) for f in (3150, 4420, 5310)) / 3 * np.exp(-t * 7)
+    hiss = shape(rng.uniform(-1, 1, n), lo=6000, hi=12000) * np.exp(-t * 12)
+    return (bell * 0.5 + hiss) * vel
+
+
 def music_box(freq, vel=0.4):
     n = int(2.6 * SR)
     t = times(n)
@@ -182,6 +248,21 @@ def rain(n, rng, level=0.2):
     return (wash * 0.22 + drops) * level
 
 
+def cafe(n, rng, level=0.05):
+    """A quiet café: soft murmur and the odd cup."""
+    t = times(n)
+    length = n / SR
+    swell = 0.7 + 0.3 * np.sin(2 * np.pi * 4 * t / length) * np.sin(2 * np.pi * 7 * t / length + 2)
+    murmur = shape(rng.normal(0, 1, n), lo=250, hi=1600) * swell * 0.25
+    cups = np.zeros(n)
+    for at in rng.integers(0, n - SR, int(length / 6)):
+        k = int(0.5 * SR)
+        tt = times(k)
+        f = rng.uniform(2600, 3400)
+        cups[at : at + k] += (np.sin(2 * np.pi * f * tt) + 0.6 * np.sin(2 * np.pi * f * 1.48 * tt)) * np.exp(-tt * 18) * rng.uniform(0.15, 0.4)
+    return (murmur + cups) * level
+
+
 def waves(n, rng, level=0.07):
     t = times(n)
     length = n / SR
@@ -235,11 +316,22 @@ class Track:
         for bar, beat, note, length in notes:
             self.add(voice(hz(note), length * self.beat) * gain, self.at(bar, beat), pan=pan)
 
-    def master(self, beds=(), lowpass=9000, wobble_cents=3.0):
+    def master(self, beds=(), lowpass=9000, wobble_cents=3.0, reverb=0.0):
         n = self.length
         mix = self.buf[:, :n].copy()
         tail = self.buf.shape[1] - n
         mix[:, :tail] += self.buf[:, n:]  # wrap the ringing tails round: seamless loop
+        if reverb:
+            # A small room: decaying noise, convolved circularly (loops cleanly).
+            seconds = 1.8
+            k = int(seconds * SR)
+            for ch in range(2):
+                ir = np.zeros(n)
+                tt = times(k)
+                ir[:k] = shape(self.rng.normal(0, 1, k), lo=200, hi=6000) * np.exp(-tt * 6.9 / seconds)
+                ir /= np.sqrt(np.sum(ir**2))
+                wet = np.fft.irfft(np.fft.rfft(mix[ch]) * np.fft.rfft(ir), n)
+                mix[ch] = mix[ch] + wet * reverb
         for bed, pan in beds:
             angle = (pan + 1) * np.pi / 4
             mix[0] += bed[:n] * np.cos(angle) * np.sqrt(2)
@@ -351,12 +443,95 @@ def seaside():
     return tr.master([(waves(tr.length, tr.rng), 0.0), (vinyl(tr.length, tr.rng, 0.008), 0.0)], lowpass=8500)
 
 
+def morning_piano():
+    tr = Track(bpm=72, bars=16, seed=61)
+    arps = {
+        0: [48, 55, 64, 55, 60, 55, 64, 55],
+        1: [47, 55, 62, 55, 59, 55, 62, 55],
+        2: [45, 52, 60, 52, 57, 52, 60, 52],
+        3: [41, 48, 57, 48, 53, 48, 57, 48],
+    }
+    for bar in range(16):
+        for step, note in enumerate(arps[bar % 4]):
+            tr.add(piano(hz(note), 0.9 * tr.beat, tr.vel(0.3 if step % 2 else 0.36, 0.1)), tr.at(bar, step * 0.5), pan=-0.15)
+    a = [(0, 0, 76, 1.5), (0, 1.5, 74, 0.5), (0, 2, 72, 1), (0, 3, 74, 1), (1, 0, 74, 2), (1, 2, 71, 1), (1, 3, 67, 1),
+         (2, 0, 72, 1.5), (2, 1.5, 76, 0.5), (2, 2, 81, 2), (3, 0, 79, 1), (3, 1, 77, 1), (3, 2, 76, 2)]
+    b = [(0, 0, 79, 1), (0, 1, 76, 1), (0, 2, 79, 1), (0, 3, 84, 1), (1, 0, 83, 2), (1, 2, 79, 2),
+         (2, 0, 81, 1), (2, 1, 84, 1), (2, 2, 76, 2), (3, 0, 77, 1.5), (3, 1.5, 76, 0.5), (3, 2, 72, 2)]
+    voice = lambda f, h: piano(f, h, 0.52)
+    for start, phrase in ((4, a), (8, b), (12, a)):
+        tr.melody([(start + bar, beat, n, d) for bar, beat, n, d in phrase], voice, pan=0.12)
+    return tr.master([(vinyl(tr.length, tr.rng, 0.006), 0.0)], lowpass=11000, wobble_cents=1.0, reverb=0.32)
+
+
+def sunny_day():
+    tr = Track(bpm=108, bars=20, seed=71)
+    uke = {0: [67, 60, 64, 72], 1: [69, 60, 64, 69], 2: [69, 60, 65, 69], 3: [67, 62, 67, 71]}
+    roots = {0: 36, 1: 33, 2: 41, 3: 43}
+    strum = [(0, 1.0, 1), (1, 0.7, 1), (1.5, 0.55, -1), (2.5, 0.55, -1), (3, 0.75, 1), (3.5, 0.55, -1)]
+    for bar in range(20):
+        chord, root = uke[bar % 4], roots[bar % 4]
+        for beat, level, direction in strum:
+            notes = chord if direction > 0 else chord[::-1]
+            for j, note in enumerate(notes):
+                tr.add(pluck(hz(note), 0.45 * tr.beat, tr.vel(0.3 * level), seed=bar * 40 + int(beat * 8) + j), tr.at(bar, beat) + j * 0.009, pan=0.25)
+        for beat, note, length in ((0, root, 0.45), (1, root + 7, 0.4), (2, root + 12, 0.45), (2.5, root + 7, 0.3), (3, root + 4 if bar % 4 != 1 else root + 3, 0.4)):
+            tr.add(bass(hz(note), length * tr.beat, tr.vel(0.3)), tr.at(bar, beat))
+        if bar >= 4:
+            tr.add(kick(tr.vel(0.32)), tr.at(bar, 0))
+            tr.add(kick(tr.vel(0.26)), tr.at(bar, 2))
+            for beat in (1, 3):
+                tr.add(clap(tr.rng, tr.vel(0.3)), tr.at(bar, beat), pan=-0.05)
+            for step in range(8):
+                tr.add(shaker(tr.rng, tr.vel(0.26 if step % 2 else 0.18)), tr.at(bar, step * 0.5), pan=-0.35)
+    tune = [(0, 0, 72, 0.5), (0, 0.5, 76, 0.5), (0, 1, 79, 1), (0, 2, 76, 0.5), (0, 2.5, 79, 0.5), (0, 3, 81, 1),
+            (1, 0, 79, 1.5), (1, 1.5, 76, 0.5), (1, 2, 72, 2),
+            (2, 0, 77, 0.5), (2, 0.5, 76, 0.5), (2, 1, 77, 1), (2, 2, 81, 1), (2, 3, 79, 1),
+            (3, 0, 79, 1), (3, 1, 74, 1), (3, 2, 71, 1), (3, 3, 74, 1)]
+    for start in (4, 12):
+        tr.melody([(start + bar, beat, n + 12, d) for bar, beat, n, d in tune], lambda f, h: glock(f, 0.3), pan=0.15)
+    return tr.master([], lowpass=12000, wobble_cents=0.8, reverb=0.12)
+
+
+def cafe_corner():
+    tr = Track(bpm=100, bars=16, seed=83)
+    swing = 2 / 3
+    chords = [([58, 62, 65, 69], 43, "m"), ([58, 64, 69, 74], 36, "7"), ([57, 64, 67, 72], 41, "M"), ([60, 66, 71], 38, "7")]
+    for bar in range(16):
+        notes, root, kind = chords[bar % 4]
+        nxt = chords[(bar + 1) % 4][1]
+        for beat, length in ((0, 0.9), (1 + swing, 0.6)) if bar % 2 == 0 else ((0.0 + swing, 0.6), (2, 1.2)):
+            for j, note in enumerate(notes):
+                tr.add(epiano(hz(note), length * tr.beat, tr.vel(0.24)), tr.at(bar, beat) + j * 0.008, pan=-0.2 + j * 0.12)
+        third = 3 if kind == "m" else 4
+        walk = [root, root + third, root + 7, nxt + (1 if (bar % 2) else -1)]
+        for beat, note in enumerate(walk):
+            tr.add(upright(hz(note), 0.85 * tr.beat, tr.vel(0.36)), tr.at(bar, beat), pan=0.05)
+        if bar >= 2:
+            for beat in (0, 2):
+                tr.add(brush(tr.rng, tr.vel(0.16), swirl=True), tr.at(bar, beat), pan=-0.2)
+            for beat in (1, 3):
+                tr.add(brush(tr.rng, tr.vel(0.22)), tr.at(bar, beat), pan=-0.2)
+            for beat in (0, 1, 1 + swing, 2, 3, 3 + swing):
+                tr.add(ride(tr.rng, tr.vel(0.1 if beat % 1 else 0.13)), tr.at(bar, beat), pan=0.35)
+    line = [(0, 0, 74, 1), (0, 1, 77, 0.66), (0, 1.66, 81, 0.34), (0, 2, 79, 2),
+            (1, 0, 76, 1), (1, 1, 74, 0.66), (1, 1.66, 72, 0.34), (1, 2, 70, 2),
+            (2, 0, 69, 1.5), (2, 1.66, 72, 0.34), (2, 2, 76, 2),
+            (3, 0, 78, 1), (3, 1, 77, 0.66), (3, 1.66, 74, 0.34), (3, 2, 72, 2)]
+    for start in (4, 12):
+        tr.melody([(start + bar, beat, n, d) for bar, beat, n, d in line], lambda f, h: piano(f, h, 0.45), pan=0.2)
+    return tr.master([(cafe(tr.length, tr.rng), 0.15), (vinyl(tr.length, tr.rng, 0.01), 0.0)], lowpass=9500, wobble_cents=1.5, reverb=0.18)
+
+
 PIECES = [
     ('afternoon-coffee', afternoon_coffee, 78),
     ('rainy-window', rainy_window, 70),
     ('little-walk', little_walk, 90),
     ('good-night', good_night, 62),
     ('seaside', seaside, 74),
+    ('morning-piano', morning_piano, 72),
+    ('sunny-day', sunny_day, 108),
+    ('cafe-corner', cafe_corner, 100),
 ]
 
 
@@ -372,10 +547,12 @@ def encode(mix, target):
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-codec:a', 'libmp3lame', '-b:a', '96k', '-map_metadata', '-1', str(target)], check=True)
 
 
-def main():
+def main(only=()):
     OUT.mkdir(parents=True, exist_ok=True)
     report = {}
     for name, compose, bpm in PIECES:
+        if only and name not in only:
+            continue
         mix = compose()
         target = OUT / f'LD-music-{name}.mp3'
         encode(mix, target)
@@ -385,4 +562,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print(json.dumps(main(), indent=1))
+    import sys
+    print(json.dumps(main(sys.argv[1:]), indent=1))

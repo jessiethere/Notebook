@@ -26,7 +26,7 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
-import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, musicChipHTML } from "./js/music.mjs";
+import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
   canvasHTML as sharedCanvasHTML,
@@ -704,7 +704,7 @@ document.addEventListener(
 // ---------- Background music ----------
 // Original soft loops a page can keep. They play while a day is read or a
 // book is flipped (never while writing), one at a time.
-const music = createMusicPlayer();
+const music = createMusicPlayer({ volume: loadVolume() });
 let musicPaused = false,
   musicContext = "";
 music.onChange(syncMusicChips);
@@ -734,14 +734,19 @@ function syncMusic() {
   let wanted = "",
     keep = false,
     context = page;
+  const books = state().books;
   if (page === "day") {
     const entry = state().entries.find((e) => e.date === selectedDate) || state().drafts[selectedDate];
-    wanted = dayMusic(entry);
+    wanted = dayMusic(entry, books);
     context = `day:${selectedDate}`;
-  } else if (page === "books" && selectedBook && bookView === "flip") {
-    const turned = flipIndex > 0 ? flipPages(selectedBook)[flipIndex - 1] : null;
-    wanted = (turned?.moment || turned?.entry)?.music || "";
-    keep = true; // a page without music keeps the book's music going
+  } else if (page === "books" && selectedBook) {
+    // The book's own music; a page that has its own plays that instead.
+    wanted = bookMusic(books, selectedBook);
+    if (bookView === "flip" && flipIndex > 0) {
+      const turned = flipPages(selectedBook)[flipIndex - 1];
+      wanted = (turned?.moment || turned?.entry)?.music || wanted;
+      keep = true; // a page without music keeps what is playing going
+    }
     context = `book:${selectedBook}`;
   }
   if (context !== musicContext) {
@@ -766,9 +771,11 @@ function toggleMusic(id) {
     music.play(track);
   }
 }
-function openMusicSheet() {
+// target "page" (the page being written) or "book" (the open book).
+function openMusicSheet(target = "page") {
   const dialog = $("#choose-dialog");
-  const chosen = activePage()?.music || "";
+  const book = target === "book" ? state().books.find((b) => b.id === selectedBook) : null;
+  const chosen = (book ? book.music : activePage()?.music) || "";
   const rows = musicTracks(catalog)
     .map((track) => {
       const name = trackName(track, languageCode());
@@ -776,19 +783,35 @@ function openMusicSheet() {
       return `<li class="music-row ${on ? "chosen" : ""}"><button type="button" class="music-preview" data-action="music-preview" data-music="${esc(track.id)}" data-music-preview="${esc(track.id)}" aria-label="${t("music.preview")}">▶</button><span class="music-info"><b>${esc(name)}</b><small>${esc(trackMood(track, languageCode()))} · ${clock(track.seconds)}</small></span><button type="button" class="${on ? "secondary" : "primary"} music-pick" data-action="music-pick" data-music="${esc(track.id)}" ${on ? 'aria-current="true"' : ""}>${t(on ? "music.chosen" : "music.use")}</button></li>`;
     })
     .join("");
-  dialog.innerHTML = `<div class="choose-sheet music-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>♫ ${t("music.title")}</h2><p class="save-help">${t("music.hint")}</p><ul class="music-list">${rows}</ul><p class="music-note-line">${t("music.original")}</p>${chosen ? `<button class="text-button music-none" data-action="music-none">${t("music.none")}</button>` : ""}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  const volume = Math.round(music.volume() * 100);
+  dialog.innerHTML = `<div class="choose-sheet music-sheet" data-target="${target}"><div class="choose-grabber" aria-hidden="true"></div><h2>♫ ${t(book ? "music.bookTitle" : "music.title")}</h2><p class="save-help">${book ? t("music.bookHint", { name: esc(book.title) }) : t("music.hint")}</p><label class="music-volume"><span aria-hidden="true">🔈</span><input type="range" min="0" max="100" step="5" value="${volume}" data-music-volume aria-label="${t("music.volume")}"><span aria-hidden="true">🔊</span><output>${volume}%</output></label><ul class="music-list">${rows}</ul><p class="music-note-line">${t("music.original")}</p>${chosen ? `<button class="text-button music-none" data-action="music-none">${t("music.none")}</button>` : ""}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
   if (!dialog.open) dialog.showModal();
   syncMusicChips();
 }
 function chooseMusic(id) {
   const track = findTrack(catalog, id);
-  changeTarget((p) => {
-    if (track) p.music = track.id;
-    else delete p.music;
-  });
+  const forBook = document.querySelector(".music-sheet")?.dataset.target === "book";
+  if (forBook) {
+    store.update((next) => {
+      const book = next.books.find((b) => b.id === selectedBook);
+      if (!book) return;
+      if (track) book.music = track.id;
+      else delete book.music;
+    });
+    musicContext = ""; // play the new choice straight away
+  } else
+    changeTarget((p) => {
+      if (track) p.music = track.id;
+      else delete p.music;
+    });
   music.stop();
   if ($("#choose-dialog")?.open) $("#choose-dialog").close();
-  toast(track ? t("music.added", { name: trackName(track, languageCode()) }) : t("music.removed"));
+  if (forBook) render();
+  toast(track ? t(forBook ? "music.bookAdded" : "music.added", { name: trackName(track, languageCode()) }) : t(forBook ? "music.bookRemoved" : "music.removed"));
+}
+function bookMusicHTML(book) {
+  const track = findTrack(catalog, book.music);
+  return `<div class="book-music">${track ? musicChipHTML(track, ctx()) : `<span class="book-music-label">♫ ${t("music.bookTitle")}</span>`}<button type="button" class="text-button" data-action="music-sheet" data-target="book">${t(track ? "music.change" : "music.bookAdd")} ›</button></div>`;
 }
 function studioMusicHTML() {
   const track = findTrack(catalog, activePage()?.music);
@@ -826,7 +849,7 @@ function flipBookHTML(book) {
     const { date, entry, moment } = pages[flipIndex - 1];
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div><div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -865,7 +888,7 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p><div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
@@ -3228,7 +3251,7 @@ async function action(target) {
   if (actionName === "music-sheet") {
     soundMenu = false;
     if (page === "studio") render();
-    openMusicSheet();
+    openMusicSheet(target.dataset.target === "book" ? "book" : "page");
   }
   if (actionName === "music-preview") {
     const track = findTrack(catalog, target.dataset.music);
@@ -3308,6 +3331,13 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("input", (event) => {
   const target = event.target;
+  if (target.dataset?.musicVolume != null) {
+    const value = saveVolume(Number(target.value) / 100);
+    music.setVolume(value);
+    const out = target.parentElement?.querySelector("output");
+    if (out) out.textContent = `${Math.round(value * 100)}%`;
+    return;
+  }
   if (target.dataset?.inline || target.dataset?.inlineLayer) {
     inlineInput(target);
     return;
@@ -4526,10 +4556,11 @@ async function exportPageVideo() {
   try {
     document.querySelectorAll("#app audio, #app video").forEach((element) => element.pause());
     music.stop();
-    const track = findTrack(catalog, activePage().music);
+    const track = findTrack(catalog, pageMusic(activePage(), state().books, editor.bookId));
     await exportJournalVideo(activePage(), {
       ...exportOptions(),
       music: track ? await music.url(track) : "",
+      musicVolume: music.volume(),
       isCancelled: () => cancelled,
       onProgress: (seconds, total) => {
         $("#export-progress").style.width = `${Math.min(100, (seconds / total) * 100)}%`;

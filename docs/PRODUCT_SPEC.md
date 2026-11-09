@@ -88,7 +88,7 @@ Minimal Linen、Vintage Leather、Floral Notebook、Pastel Cute、Travel Album�
 - Audio：录制/上传、设计感播放器、进度/时长，语音转文字为可选后续能力。
 - Text：标题、正文、手写注释、多文字框，独立字体/大小/颜色/粗细/字距/对齐与位置。
 - 素材：原创/授权贴纸、便签、标签、胶带、相框、日期/地点/心情/天气/成长信息卡片；统一图层、撤销/重做。
-- Music：页或书本可选背景音乐，播放/暂停/音量/循环；与视频/录音协调降低音量或暂停。（V6.0 已实现每页一首原创音乐的选择、阅读/翻书循环播放与暂停、与录音视频互斥、导出视频混音；音量滑块与整本书音乐待做。）只使用原创、明确授权或用户有权使用的音频；不抓取 Spotify/Apple Music/YouTube 歌曲，公开传播需相应授权。
+- Music：页或书本可选背景音乐，播放/暂停/音量/循环；与视频/录音协调降低音量或暂停。（V6.0 已实现每页一首原创音乐的选择、阅读/翻书循环播放与暂停、与录音视频互斥、导出视频混音；V6.2 加了音量和整本书的音乐。）只使用原创、明确授权或用户有权使用的音频；不抓取 Spotify/Apple Music/YouTube 歌曲，公开传播需相应授权。
 
 字体类别包括 Elegant Serif、Handwritten、Cute Rounded、Vintage、Minimal Sans、Decorative、Chinese Fonts。每个文件的来源、商业使用与再分发许可证保留在共享资源和 [ASSETS.md](ASSETS.md)。
 

@@ -724,7 +724,8 @@ export async function exportJournalVideo(editor, options = {}) {
     if (music) {
       // Softer under voices and videos; fades out over the last 1.5 s.
       musicGain = audio.createGain();
-      const level = elements.length ? 0.35 : 0.8;
+      const loudness = Number.isFinite(options.musicVolume) ? options.musicVolume / 0.7 : 1;
+      const level = Math.min(1, (elements.length ? 0.35 : 0.8) * loudness);
       musicGain.gain.setValueAtTime(level, 0);
       audio.createMediaElementSource(music).connect(musicGain).connect(mix);
       musicGain.level = level;

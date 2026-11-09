@@ -2425,6 +2425,42 @@
       "file": "LD-music-seaside.mp3",
       "source": "original (tools/make_music.py)",
       "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "morning-piano",
+      "nameZh": "清晨钢琴",
+      "nameEn": "Morning piano",
+      "moodZh": "钢琴",
+      "moodEn": "Piano",
+      "bpm": 72,
+      "seconds": 53.4,
+      "file": "LD-music-morning-piano.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "sunny-day",
+      "nameZh": "晴天",
+      "nameEn": "Sunny day",
+      "moodZh": "欢快",
+      "moodEn": "Cheerful",
+      "bpm": 108,
+      "seconds": 44.5,
+      "file": "LD-music-sunny-day.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "cafe-corner",
+      "nameZh": "咖啡馆一角",
+      "nameEn": "Café corner",
+      "moodZh": "咖啡馆",
+      "moodEn": "Café",
+      "bpm": 100,
+      "seconds": 38.4,
+      "file": "LD-music-cafe-corner.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
     }
   ]
 }

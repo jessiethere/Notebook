@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "6.2",
+    date: "2026-11-09",
+    zh: {
+      title: "更多音乐风格；可以调音量；整本书配一首音乐",
+      items: [
+        "新增 3 首原创音乐：清晨钢琴（钢琴）、晴天（欢快的尤克里里）、咖啡馆一角（爵士小三重奏 + 咖啡馆背景声）。现在一共 8 首。",
+        "选音乐的面板最上面有音量条，这台设备会记住。",
+        "打开一本书，在「列表 / 翻页」上方可以「给这本书配音乐」：翻开这本书、看这本书里的某一天时都会轻轻播放；某一页自己选了音乐时，放那一页的。",
+        "导出视频时，没有自己音乐的页会带上这本书的音乐，音量跟你调的一样。",
+      ],
+    },
+    en: {
+      title: "More music styles, a volume control, and music for a whole book",
+      items: [
+        "Three new original pieces: Morning piano (piano), Sunny day (cheerful ukulele) and Café corner (a small jazz trio with café sounds) — eight in all.",
+        "The music sheet has a volume slider at the top, remembered on this device.",
+        "Open a book and choose “Add music to this book” above List / Flip: it plays while the book is open and when you read one of its days; a page with its own music plays that instead.",
+        "A page without its own music takes its book's music into its video, at your volume.",
+      ],
+    },
+  },
+  {
     version: "6.1",
     date: "2026-11-09",
     zh: {

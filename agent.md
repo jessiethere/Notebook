@@ -20,7 +20,7 @@
 - schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
 - 新媒体在 IndexedDB，LocalStorage 只存轻量数据；本机备份是用户主动下载文件，不上传服务器。
 - 原生 Core 支持 V3 Codable；SwiftUI 基础页面增加共享双语、字体注册/选择与 PNG 封面。原生音视频/完整封面字段编辑和画布未对齐 Web。
-- 没有真实账号、社区、好友、私信或协作。背景音乐（V6.0）只有 5 首原创合成曲（tools/make_music.py → Resources/Music，library.json `music`），不接音乐平台。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
+- 没有真实账号、社区、好友、私信或协作。背景音乐（V6.0 / V6.2）只有 8 首原创合成曲（tools/make_music.py → Resources/Music，library.json `music`），不接音乐平台。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
 
 ## 关键决策
 
@@ -47,6 +47,23 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-09 — V6.2 更多音乐风格、音量、整本书的音乐；成长合并与 planner 提案
+
+- 需求：用户觉得 5 首都不错，钢琴 / 更欢快 / 咖啡馆风格都想要；同意加音量和「整本书配一首音乐」；另外请从产品角度看 Little Growth 能否合并、planner（提前写今天要做的事再打勾）是否和核心冲突。
+- 改动文件：
+  - tools/make_music.py：新增钢琴（双弦失谐、拉伸泛音、琴槌声）、钢片琴、低音提琴、拍手、鼓刷、叮叮镲、咖啡馆背景声，循环卷积混响（保持无缝循环）；新增 morning-piano、sunny-day、cafe-corner 三首；可只生成指定曲目（旧 5 首未重新生成，文件不变）。
+  - Resources/Music 3 个新 mp3；library.json `music` 增至 8 首；许可声明补充乐器描述。
+  - Public/js/music.mjs：loadVolume / saveVolume（`little-days.music-volume`）、播放器 setVolume；bookMusic、pageMusic；dayMusic 回退到书的音乐。
+  - Public/app.js：选曲面板分「这一页 / 这本书」两种（data-target），面板顶部音量条；书的页面「♫ 给这本书配音乐 / 换一首」；syncMusic：书打开（列表或翻页）放书的音乐，翻到有自己音乐的页放那一页的；导出视频用页面或书的音乐和用户音量。
+  - Public/js/day-view.mjs、export.mjs（音量）、styles.css、i18n.json（music.volume / music.book*）、whats-new.mjs（V6.2）。
+  - Models.swift：JournalBook 新增可选 `music`；CoreTests（书的音乐、目录 8 首）。
+  - docs/STRATEGY.md 新增任务 G（成长合并 + planner 边界，待确认）；ASSETS、ROADMAP、PRODUCT_SPEC、ARCHITECTURE 更新。
+  - tests：v57.test.mjs（+2 项）、v57-browser（8 首）、v59-browser.cjs（新）、package.json。
+- 决策与原因：音量是「这台设备」的设置而不是每页一个（像系统音量一样直觉，也避免每页都要调）；书的音乐是兜底，页面自己的音乐优先。成长合并会改导航、属于较大改动，planner 牵涉定位，所以只写方案（任务 G）等用户确认，没有开发。
+- 验证：新 3 首 ffmpeg 响度 -17.2～-17.8 LUFS、峰值 ≤ -4.0 dBFS；「晴天」「咖啡馆一角」第一次低频过重，已调低贝斯和底鼓重新生成。101 项 Node、12 项 Python、32 套浏览器 E2E 全部通过（v59：书的页面选音乐 → 存在书上 → 打开书就播放；音量条 30% 生效并记住；翻页时没有自己音乐的页放书的音乐、有自己音乐的页放自己的；看这本书里的某一天放书的音乐；离开即停；可以去掉书的音乐）。仍未由人试听、未在 iPhone 上播放。
+- 已知问题：同 V6.0（循环点可能有极短 MP3 间隙；未真机验证）。
+- 下一步：等用户确认任务 G 后，再做「今天」卡片 / 我的习惯书 / 今日清单贴纸。
 
 ### 2026-11-09 — V6.1 在阅读的地方直接编辑
 

@@ -50,6 +50,8 @@ public struct JournalBook: Codable, Identifiable, Equatable {
     public var coverRestyled: Bool?
     public var visibility: String?
     public var fields: [BookField]?
+    /// V6.2: music that plays while this book is open (library.json "music" id).
+    public var music: String?
 }
 
 public struct BookField: Codable, Identifiable, Equatable {

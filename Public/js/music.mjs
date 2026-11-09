@@ -6,6 +6,25 @@
 
 export const MUSIC_DIR = "library/music/";
 export const MUSIC_VOLUME = 0.7;
+export const MUSIC_VOLUME_KEY = "little-days.music-volume";
+
+// How loud the music plays on this device (0–1), remembered.
+export function loadVolume(storage = globalThis.localStorage) {
+  try {
+    const raw = storage?.getItem(MUSIC_VOLUME_KEY);
+    const n = raw === null || raw === undefined ? NaN : Number(raw);
+    return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : MUSIC_VOLUME;
+  } catch {
+    return MUSIC_VOLUME;
+  }
+}
+export function saveVolume(value, storage = globalThis.localStorage) {
+  const n = Math.min(1, Math.max(0, Number(value) || 0));
+  try {
+    storage?.setItem(MUSIC_VOLUME_KEY, String(n));
+  } catch {}
+  return n;
+}
 
 const esc = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
@@ -26,10 +45,18 @@ export function clock(seconds) {
   const s = Math.max(0, Math.round(Number(seconds) || 0));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
-// The music a day plays when it is read: the cover's, else the first page's.
-export function dayMusic(entry) {
+// The music a day plays when it is read: the cover's, else the first page's,
+// else the music of the book the day is in.
+export function dayMusic(entry, books = []) {
   if (!entry) return "";
-  return entry.music || (entry.moments || []).find((moment) => moment.music)?.music || "";
+  return entry.music || (entry.moments || []).find((moment) => moment.music)?.music || bookMusic(books, entry.bookId);
+}
+export function bookMusic(books, bookId) {
+  return (bookId && (books || []).find((book) => book.id === bookId)?.music) || "";
+}
+// A page's own music, else its book's.
+export function pageMusic(page, books = [], fallbackBookId = "") {
+  return page?.music || bookMusic(books, page?.bookId || fallbackBookId);
 }
 
 // A small play / pause chip for a page that has music.
@@ -41,9 +68,10 @@ export function musicChipHTML(track, ctx, extra = "") {
 
 // The shared player. The file is fetched once and played from a blob URL, so
 // it also plays inside the iPhone shell (its custom scheme cannot stream).
-export function createMusicPlayer({ doc = globalThis.document, fetcher = globalThis.fetch?.bind(globalThis) } = {}) {
+export function createMusicPlayer({ doc = globalThis.document, fetcher = globalThis.fetch?.bind(globalThis), volume = MUSIC_VOLUME } = {}) {
   let audio = null,
-    current = "";
+    current = "",
+    level = volume;
   const urls = new Map();
   const listeners = new Set();
   const notify = () => listeners.forEach((fn) => fn());
@@ -54,7 +82,7 @@ export function createMusicPlayer({ doc = globalThis.document, fetcher = globalT
       audio.loop = true;
       audio.preload = "auto";
       audio.hidden = true;
-      audio.volume = MUSIC_VOLUME;
+      audio.volume = level;
       audio.dataset.music = "";
       for (const type of ["play", "playing", "pause", "ended"]) audio.addEventListener(type, notify);
       doc.body.append(audio);
@@ -110,6 +138,11 @@ export function createMusicPlayer({ doc = globalThis.document, fetcher = globalT
     stop,
     url,
     current: () => current,
+    volume: () => level,
+    setVolume(value) {
+      level = Math.min(1, Math.max(0, Number(value) || 0));
+      if (audio) audio.volume = level;
+    },
     playing: () => Boolean(audio && current && !audio.paused),
     onChange: (fn) => listeners.add(fn),
   };

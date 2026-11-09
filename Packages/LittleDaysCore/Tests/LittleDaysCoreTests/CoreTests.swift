@@ -32,7 +32,7 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try SharedResources.libraryData(category: "fonts", filename: "../../seed.json"))
         // Original background music (tools/make_music.py) and its notice.
         let music = try XCTUnwrap(catalog.music)
-        XCTAssertEqual(music.count, 5)
+        XCTAssertEqual(music.count, 8)
         let track = try SharedResources.libraryData(category: "music", filename: music[0].file)
         XCTAssertGreaterThan(track.count, 100_000)
         XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "music", filename: music[0].license), as: UTF8.self).contains("Original music"))
@@ -59,6 +59,7 @@ final class CoreTests: XCTestCase {
         books[0]["description"] = "我的植物"
         books[0]["visibility"] = "private"
         books[0]["coverTemplate"] = "floral-notebook"
+        books[0]["music"] = "morning-piano"
         books[0]["fields"] = [["id": "water", "label": "浇水", "type": "checkbox"]]
         object["books"] = books
         var entries = object["entries"] as! [[String: Any]]
@@ -76,6 +77,7 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].bodyFont, "chinese")
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
+        XCTAssertEqual(reloaded.books[0].music, "morning-piano")
     }
     func testV31MomentsFreeLayoutAndGrowthNotesRoundTrip() throws {
         let seed = try SharedResources.decode(Seed.self, named: "seed")
