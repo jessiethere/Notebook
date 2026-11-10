@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "9.2",
+    date: "2026-11-10",
+    zh: {
+      title: "换背景更好找了",
+      items: [
+        "写一页时，纸面下方多了一个「背景」按钮，点一下就能换页面背景（照片氛围、渐变、图案）和纸张。",
+        "底部工具栏里原来的「纸张」改名为「背景」。",
+        "修好：在 iPhone 上打完字、收起键盘后，底部那排工具（照片、版式、字体、背景、贴纸…）有时不再出现。现在键盘收起或点一下别处，它就回来。",
+      ],
+    },
+    en: {
+      title: "Changing the background is easier to find",
+      items: [
+        "While writing a page there is now a “Background” button right under the paper: page backgrounds (photo moods, gradients, patterns) and paper styles.",
+        "“Paper” in the bottom tool row is now called “Background”.",
+        "Fixed: on iPhone the bottom tool row sometimes stayed hidden after typing and closing the keyboard. It now returns when the keyboard closes or you tap elsewhere.",
+      ],
+    },
+  },
+  {
     version: "9.1",
     date: "2026-11-10",
     zh: {

@@ -2360,8 +2360,8 @@
     "en": "Font"
   },
   "tool.paper": {
-    "zh": "纸张",
-    "en": "Paper"
+    "zh": "背景与纸张",
+    "en": "Background & paper"
   },
   "tool.mood": {
     "zh": "心情",
@@ -3336,8 +3336,8 @@
     "en": "Font"
   },
   "dock.paper": {
-    "zh": "纸张",
-    "en": "Paper"
+    "zh": "背景",
+    "en": "Background"
   },
   "dock.mood": {
     "zh": "心情",
@@ -6254,5 +6254,13 @@
   "v9.todayEmpty": {
     "zh": "今天还没有记录",
     "en": "Nothing kept today yet"
+  },
+  "add.background": {
+    "zh": "背景",
+    "en": "Background"
+  },
+  "paper.title": {
+    "zh": "纸张",
+    "en": "Paper"
   }
 }

@@ -58,7 +58,18 @@ function wav(seconds = 1) {
     const underPaper = await page.$$eval(".stage-bar .stage-add", (els) => els.map((el) => el.dataset.action));
     // Draw sits in the bar above the paper, so under it are the other four.
     assert.deepEqual(underPaper, onPaper.filter((a) => a !== "draw-new"), "then the same choices sit under the paper");
-    passed.push("text: one tap, type straight away, shows on the paper");
+    // V9.2: after typing, a tap elsewhere brings the tool row back (on iPhone the caret
+    // could stay in the box and keep the tools hidden), and 背景 opens backgrounds.
+    await page.locator(".studio-stage").tap({ position: { x: 4, y: 4 } });
+    await page.waitForFunction(() => !document.body.classList.contains("typing") && getComputedStyle(document.querySelector(".tool-dock")).display !== "none");
+    assert.match(await page.locator('.stage-bar .stage-bg').innerText(), /背景/);
+    assert.match(await page.locator('.dock-btn[data-tool="paper"]').innerText(), /背景/);
+    await page.locator('.stage-bar .stage-bg').tap();
+    await page.waitForSelector('.tool-sheet[data-tool-row="paper"]');
+    assert.match(await page.locator('.tool-sheet[data-tool-row="paper"]').innerText(), /页面背景[\s\S]*纸张/);
+    await page.locator('.stage-bar .stage-bg').tap();
+    await page.waitForSelector('.tool-sheet[data-tool-row="paper"]', { state: "detached" });
+    passed.push("text: one tap, type straight away, shows on the paper; 背景 under the paper opens backgrounds");
 
     // 3. Sound: a small choice of background music (V6.0) / record / upload; upload lands on the paper.
     await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});

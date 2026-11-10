@@ -2390,7 +2390,7 @@ function studioTools() {
       label: "tool.paper",
       value: page.backdrop ? t("backdrop.on") : t("template." + (page.template || "minimal")),
       body: () =>
-        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("tool.paper")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
     },
     {
       id: "mood",
@@ -3325,7 +3325,7 @@ function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span>${keeperMiniHTML()}<button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span>${keeperMiniHTML()}<button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}<button class="stage-bg" data-action="open-background" aria-expanded="${studioTool === "paper"}"><span aria-hidden="true">▤</span><b>${t("add.background")}</b></button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -6135,6 +6135,10 @@ async function v31Action(target) {
     case "tool":
       openTool(target.dataset.tool);
       return true;
+    case "open-background":
+      // 背景 under the paper: the same panel as the dock's 背景 (tap again closes).
+      openTool(studioTool === "paper" ? null : "paper");
+      return true;
     case "tool-close":
       openTool(null);
       return true;
@@ -7447,6 +7451,35 @@ document.addEventListener("focusout", () => {
     document.body.classList.remove("typing", "typing-sheet");
   }, 120);
 });
+// iPhone: closing the keyboard (or tapping elsewhere) can leave the caret in
+// the field, which kept the tool row hidden for good. Leave typing mode when
+// the keyboard closes, and on a tap outside the field.
+let keyboardSeen = false;
+function leaveTyping() {
+  if (!document.body.classList.contains("typing")) return;
+  keyboardSeen = false;
+  const field = document.activeElement;
+  if (field?.matches?.(TYPING_FIELD)) field.blur();
+  clearTimeout(typingTimer);
+  document.body.classList.remove("typing", "typing-sheet");
+}
+window.visualViewport?.addEventListener("resize", () => {
+  const vv = window.visualViewport;
+  const keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  if (keyboard > 80) keyboardSeen = true;
+  else if (keyboardSeen) leaveTyping();
+});
+document.addEventListener(
+  "click",
+  (event) => {
+    if (!document.body.classList.contains("typing")) return;
+    // The text style bar and an open panel work on the caret: keep it.
+    // The paper places the caret itself (a tap on blank paper starts typing).
+    if (event.target.closest?.(`${TYPING_FIELD}, #journal-canvas, #type-bar, .type-bar, .tool-sheet, label`)) return;
+    leaveTyping();
+  },
+  true,
+);
 window.visualViewport?.addEventListener("resize", keepFieldInView);
 window.visualViewport?.addEventListener("scroll", updateVisibleArea);
 
