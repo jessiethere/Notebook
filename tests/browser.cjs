@@ -40,7 +40,7 @@ const path = require("node:path");
     assert.equal(await page.title(), "Little Days · 手帐文具店");
     assert.equal(
       await page
-        .locator(".hero img")
+        .locator(".hero img:not(.keeper-img)")
         .evaluate((img) => img.complete && img.naturalWidth > 0),
       true,
     );

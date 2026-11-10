@@ -260,3 +260,10 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 模块分离：资料与偏好 `normalizeKeeper`（`state.keeper`，可选字段，Swift `KeeperProfile`）；外观与动画 `keeper-art.mjs` + styles.css；成长 `growthPoints` / `stageFor`（配置 `features.json.keeper`）；回应服务 `createFeedbackService({remote})` + `localFeedback`；聊天 `localChat`；页面集成在 app.js（首页、Studio、翻书页、书架、设置）。
 - 隐私：正文只在本机读取用来选词，不存储、不发送；`remote` 为 null；`aiConsent` 在没有安全服务时 UI 禁用，服务层没有同意绝不调用 remote（单元测试覆盖）；聊天内容不保存；回忆与本周标题需要 `allowMemories`。
 - 首页问候：`greetingHTML` 读 `account.name`（本机账号），点按设置名字（`Account.signIn` 更新）。
+
+## 2026-11-10 V7.9 Little Keeper 使用 3D 角色图片
+
+- 素材：`Resources/Keepers/*.png`（20 张）+ `LD-keeper-LICENSE.txt`；`library.json` 新增 `keepers: [{ id, animal, outfit, mood, file, license }]`（Swift `AssetCatalog.keepers: [KeeperAsset]?`）。服务：`tools/preview.py` 允许 `/library/keepers/`，`tools/build_link.py` 复制到 `library/keepers/`，iOS 外壳走 `SharedResources.libraryData(category: "keepers")`（只允许清单里的文件）。裁切脚本 `tools/extract_keepers.py`（原图不进仓库）。
+- `Public/js/keeper-art.mjs` 不再画 SVG：`keeperAsset(catalog, { animal, outfit, mood })` 选图（造型不存在 → 默认造型；表情按 `FALLBACK` 顺序只找现有图片），`keeperImage()` 输出 `<img class="keeper-img" src="library/keepers/…" data-animal data-outfit data-mood>`，`keeperOutfits()` 列出造型，`DEFAULT_OUTFIT` = 兔 sprout / 猫 lemon / 西高地 sprout。
+- `keeper.mjs`：`ANIMALS` 加 `westie`；`normalizeKeeper` 新增可选 `outfit`（小写字母，"" = 默认；Swift `KeeperProfile.outfit`）；默认名字 兔 小团 / Pip、猫 Captain、西高地 小白 / Snowy。换动物时清空造型。
+- app.js：`keeperArt(mood)` 外层仍是 `.keeper.mood-<mood>`（测试与旧选择器不变）；首页 `peek`（22–6 点 `sleepy`，长大那次 `happy`）；点按 `keeperBounce` 短暂换成 happy / excited 图 1.6s；设置里 `keeperOutfitHTML` 换帽子。CSS 只做位置、大小、整体呼吸 / 弹跳 / 倾斜，没有任何角色部件动画。

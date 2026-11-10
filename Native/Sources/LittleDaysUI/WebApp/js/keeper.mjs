@@ -1,6 +1,6 @@
 // Little Keeper (V7.7): an optional little companion who lives in the journal.
 // "Your journal is the main character. Your little companion makes the
-// journey warmer." Pure functions, no DOM (art lives in keeper-art.mjs).
+// journey warmer." Pure functions, no DOM (the art pictures are picked in keeper-art.mjs).
 //
 // Separate parts: profile & preferences (normalizeKeeper), growth
 // (growthPoints / stageFor, thresholds from config), prompts (todayPrompt),
@@ -10,7 +10,7 @@
 // reply on the device, never stored or sent anywhere.
 import { hasDayPageContent } from "./day.mjs";
 
-export const ANIMALS = ["bunny", "cat"];
+export const ANIMALS = ["bunny", "cat", "westie"];
 export const MODES = ["quiet", "gentle", "interactive"];
 
 // Configurable thresholds and points (features.json "keeper" can override).
@@ -37,6 +37,8 @@ export function normalizeKeeper(raw = {}) {
   return {
     enabled: k.enabled === true,
     animal: ANIMALS.includes(k.animal) ? k.animal : "bunny",
+    // Which hat from the character art ("" = the animal's default outfit).
+    outfit: typeof k.outfit === "string" && /^[a-z]{1,20}$/.test(k.outfit) ? k.outfit : "",
     name: typeof k.name === "string" ? k.name.trim().slice(0, 12) : "",
     mode: MODES.includes(k.mode) ? k.mode : "gentle",
     // Separate, revocable permissions.
@@ -50,7 +52,9 @@ export function normalizeKeeper(raw = {}) {
     since: typeof k.since === "string" ? k.since : "",
   };
 }
-export const defaultName = (animal, language = "zh") => (language === "en" ? (animal === "cat" ? "Mochi" : "Pip") : animal === "cat" ? "小橘" : "小团");
+// Captain is the product owner's own grey cat, the model for Captain Cat.
+const NAMES = { bunny: { zh: "小团", en: "Pip" }, cat: { zh: "Captain", en: "Captain" }, westie: { zh: "小白", en: "Snowy" } };
+export const defaultName = (animal, language = "zh") => (NAMES[animal] || NAMES.bunny)[language === "en" ? "en" : "zh"];
 export const keeperName = (keeper, language) => keeper.name || defaultName(keeper.animal, language);
 // What each mode allows (one place, so the UI and tests agree).
 export function modeAllows(keeper, what) {
@@ -178,7 +182,7 @@ const LINES = {
       gentle: ["每一小步都算数。", "今天就到这里也很好。", "明天的事，明天再说。"],
       hard: ["今晚对自己好一点。", "不用急着变好，先休息。", "写下来就够了。"],
     },
-    tone: { bunny: "（轻轻点了点头）", cat: "（尾巴晃了晃）" },
+    tone: { bunny: "（轻轻点了点头）", cat: "（尾巴晃了晃）", westie: "（开心地摇尾巴）" },
   },
   en: {
     open: {
@@ -200,7 +204,7 @@ const LINES = {
       gentle: ["Every little step counts!", "That's enough for today.", "Tomorrow can wait."],
       hard: ["Be kind to yourself tonight.", "No need to feel better right away — rest first.", "Writing it down is enough."],
     },
-    tone: { bunny: "(nods softly)", cat: "(tail swishes)" },
+    tone: { bunny: "(nods softly)", cat: "(tail swishes)", westie: "(happy tail wag)" },
   },
 };
 const pick = (list, prefix, recent, seed) => {

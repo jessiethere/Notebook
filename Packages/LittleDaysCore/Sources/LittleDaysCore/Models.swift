@@ -355,8 +355,10 @@ public struct DayState: Codable {
 /// "On this day" memory was opened. All optional, so older journals decode.
 public struct KeeperProfile: Codable, Equatable {
     public var enabled: Bool?
-    /// "bunny" | "cat"
+    /// "bunny" | "cat" | "westie"
     public var animal: String?
+    /// A hat from the character art (library.json "keepers" outfit); nil = default.
+    public var outfit: String?
     public var name: String?
     /// "quiet" | "gentle" | "interactive"
     public var mode: String?

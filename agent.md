@@ -48,6 +48,30 @@
 
 ## 更新日志
 
+### 2026-11-10 — V7.9 Little Keeper 改用用户确认的 3D 角色图（不再用 SVG / CSS 画）
+
+- 需求：用户发来 Little Keeper 角色视觉设计规范（3 个角色 × 6 套造型 / 表情的 3D 角色表）、「参考图 1 · Captain 角色视觉标准」（Normal / Happy / Sleepy / Surprised / Peek，主色，关键特征）和「参考图 2 · 首页布局参考」，并明确：以上传图片为视觉目标；不要用扁平 SVG / Emoji / 普通二维卡通 / 简单几何形状代替；合理裁切，不把整张角色图当作单个资源；缺新角色 / 动作时说明需要额外美术；不要声称代码绘制的角色与参考图效果相同；「功能实现」≠「视觉达标」；展示实际 iPhone 首页并与参考图对比。随后再次要求：停止用 SVG 或 CSS 重画 Keeper，使用 3D 角色图作为图片资源，不重构页面，Keeper 是低调的陪伴而不是主内容。
+- 改动文件：
+  - 新增 tools/extract_keepers.py（从角色表逐个裁切 18 张；`--captain` 从参考图 1 裁切 Peek 与 Surprised；去奶油色底、脚下阴影变半透明、2px 柔边、统一 233×309 画布与底线）。原图不进仓库、不进 App。
+  - 新增 Resources/Keepers/（20 张 PNG，约 1.7 MB）+ LD-keeper-LICENSE.txt；library.json 新增 `keepers` 清单。
+  - tools/preview.py、tools/build_link.py：新增 `library/keepers/`；Swift Resources.swift：`KeeperAsset`、`AssetCatalog.keepers`、`libraryData(category: "keepers")`；Models.swift `KeeperProfile.outfit`（可选）；CoreTests 加清单 / PNG / outfit 解码断言；LittleDaysWebResources.swift 注释。
+  - Public/js/keeper-art.mjs：删除 SVG 角色，改为按动物 / 造型 / 表情选图（`keeperAsset` / `keeperImage` / `keeperOutfits` / `DEFAULT_OUTFIT`）。
+  - Public/js/keeper.mjs：`ANIMALS` 加 westie；`outfit` 字段；默认名字 小团 / Captain / 小白（Pip / Captain / Snowy）；西高地回应语气。
+  - Public/app.js：所有 Keeper 位置改用图片；首页默认 Peek（22–6 点 Sleepy，长大那次 Happy）；点按短暂换成 happy / excited 图；设置里「帽子」选择；换动物时重置造型。
+  - Public/styles.css：删除全部 SVG 部件动画（头、眼、耳、铅笔等）；只保留整张图呼吸、点按弹跳、跟随手指 ±3° 倾斜；首页 Captain 探头 96px，切线落在卡片上沿、爪子压边 4px；小兔 / 小西高地 84px，卡片挡住下半身；其他位置缩小（Studio 28、书架 46、面板 58 等）。
+  - i18n.json：小西高地、帽子名称、帽子说明；`keeper.animal.cat` 改为「Captain 猫」（同时合并了文件里重复的 `home.greeting` 键，生效值不变）。
+  - whats-new.mjs 7.9；docs/DESIGN_SYSTEM.md（角色视觉规范：素材、默认造型、状态→图片表、尺寸、动效、分辨率、缺失素材）；docs/ASSETS.md（来源与授权）；docs/ARCHITECTURE.md；README.md。
+  - 测试：新增 tests/v79.test.mjs；tests/v71-browser.cjs 改为检查 `img.keeper-img[data-animal="cat"]` 已加载、页面上没有 Keeper SVG；tests/v77.test.mjs 默认名字改为 Captain。
+- 决策与原因：
+  - 角色表里「柠檬帽、睁眼」那张与参考图 1 的「Normal / 默认」相同，所以命名为 neutral；参考图 1 的 Surprised 作为 Captain 的 excited。
+  - 只有 Captain 有真正的 Peek 图；小兔 / 小西高地暂时用站姿图，被卡片挡住下半身来近似，并在更新记录、文档里写明需要补图。
+  - 所有缺图的状态都用最接近的现有图片，不用代码画替身。
+  - 尺寸刻意比参考图 2 小，首页结构不变（按用户最后一条要求）。
+- 视觉对比：截图在 iPhone 14 Pro 尺寸（Chromium 设备模拟），对比图左边参考图 2、右边实际首页，下方 Peek 细节；已发给用户。差异：Keeper 比参考图小；首页仍是现有排版（没有照搬参考图 2 的 Habits / Mood 卡片）；深色背景上站姿图边缘有极轻微浅色描边（App 主要是浅色）。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 145 项全部通过（新增 v79 五项）；Python 12 项通过（含外壳同步一致性）；浏览器 E2E 全量 43 套：第一轮 40 套通过，`browser`、`v41` 失败——原因是 Keeper 邀请（在 `.hero` 卡片里）现在是 `<img>`，测试里的 `.hero img` 匹配到两个元素；改为 `.hero img:not(.keeper-img)` 后两套通过。`v54` 在第一轮失败一次（「打字工具条不移动页面」的位置断言），那时我同时在跑其他浏览器脚本；单独重跑两次都通过，该测试里 Keeper 未开启，判断为负载下的偶发，但没有在干净环境下再全量跑一轮。v71 更新后通过（检查首页图片已加载、没有 Keeper SVG）。截图：iPhone 14 Pro 尺寸首页（Captain / 小兔 / 小西高地）、选择小伙伴、设置里的帽子。Swift 未编译（无 Xcode / Swift 工具链），CoreTests 只改了源码。
+- 已知问题 / 未完成：缺 小兔 / 小西高地 Peek、三个角色的 Writing、小兔 Sleepy / Excited（小芽帽）、Captain / 小西高地 Encouraging、其他造型的更多表情；需要更高分辨率的单独渲染图才能更大尺寸使用。Swift 未编译（容器没有 Xcode / Swift 工具链），iOS 真机 / 模拟器未验证。
+- 下一步：请美术补上述姿势与高分辨率图，放进 Resources/Keepers 并在 library.json 登记即可生效（选图逻辑会自动优先用真图）。
+
 ### 2026-11-10 — V7.8 Little Keeper 毛绒新造型 + 首页「小本子」排版
 
 - 需求（用户发来一张设计图：戴柠檬毛线帽的灰色小猫从首页卡片上方探出头、爪子搭在卡片边上；卡片像带铁环的本子，顶部「Hi! 今天想记录什么？」+ 日期牌，四个带 3D 图标的入口，「今天 · My Day」带胶带的照片，习惯 / 心情小卡）：「小动物的话我喜欢这个风格，排版的话你可以参考一下你觉得好的地方，不一定要大改现在的」。

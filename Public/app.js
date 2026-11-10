@@ -31,7 +31,7 @@ import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
-import { keeperSVG } from "./js/keeper-art.mjs";
+import { keeperImage, keeperOutfits, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -974,7 +974,8 @@ function openNameSheet() {
 
 // ---------- Little Keeper (V7.7) ----------
 // An optional little companion who lives in the journal (js/keeper.mjs for
-// the rules, js/keeper-art.mjs for the look). Off until chosen; existing
+// the rules, js/keeper-art.mjs picks the picture: since V7.9 the approved
+// 3D character art, as image assets — never redrawn in SVG/CSS). Off until chosen; existing
 // journals only see one gentle invitation. Turning it off deletes nothing.
 // Replies are made on this device; no secure AI service is connected, so
 // nothing is ever sent (the service refuses a remote call without consent).
@@ -999,12 +1000,12 @@ function keeperGrowth() {
 function keeperArt(mood = "idle", { follow = true, cls = "" } = {}) {
   const k = keeperNow();
   const name = Keeper.keeperName(k, languageCode());
-  return `<span class="keeper ${cls}" ${follow ? "data-keeper-follow" : ""}>${keeperSVG({ animal: k.animal, stage: keeperGrowth().index, mood, label: name })}</span>`;
+  return `<span class="keeper mood-${mood} ${cls}" ${follow ? "data-keeper-follow" : ""}>${keeperImage(catalog, { animal: k.animal, outfit: k.outfit, mood, label: name })}</span>`;
 }
 function keeperInviteHTML() {
   const k = keeperNow();
   if (k.enabled || k.invite === "dismissed") return "";
-  return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperSVG({ animal: "cat", mood: "idle", label: "Little Keeper" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
+  return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperImage(catalog, { animal: "cat", mood: "happy", label: "" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
 }
 // Perched on the top edge of today's notebook card, paws over the edge.
 function keeperPerchHTML() {
@@ -1017,7 +1018,9 @@ function keeperPerchHTML() {
   const memory = Keeper.modeAllows(k, "proactive") && Keeper.modeAllows(k, "memories") ? onThisDay(state(), dateKey())[0] : null;
   const prompt = Keeper.todayPrompt({ hour: new Date().getHours(), keptToday: keptToday(), keeper: k, memory });
   const line = grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : keeperLine || (prompt ? t(prompt.key, { ...prompt.values, name }) : "");
-  return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(grew ? "happy" : "idle")}</button></div>`;
+  const hour = new Date().getHours();
+  const mood = grew ? "happy" : hour >= 22 || hour < 6 ? "sleepy" : "peek";
+  return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(mood)}</button></div>`;
 }
 // Small soft illustrations for Home's four ways to start.
 function tileArt(kind) {
@@ -1063,7 +1066,7 @@ function keeperStamp() {
 function keeperAskHTML(date, momentId) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "feedback")) return "";
-  return `<button class="keeper-ask" data-action="keeper-feedback" data-date="${esc(date)}" data-moment="${esc(momentId)}"><span class="keeper-ask-art" aria-hidden="true">${keeperArt("idle", { follow: false })}</span>${t("keeper.ask", { name: Keeper.keeperName(k, languageCode()) })}</button>`;
+  return `<button class="keeper-ask" data-action="keeper-feedback" data-date="${esc(date)}" data-moment="${esc(momentId)}"><span class="keeper-ask-art" aria-hidden="true">${keeperArt("encouraging", { follow: false })}</span>${t("keeper.ask", { name: Keeper.keeperName(k, languageCode()) })}</button>`;
 }
 function keeperShelfHTML(books) {
   const k = keeperNow();
@@ -1085,7 +1088,7 @@ async function openKeeperFeedback(date, momentId) {
   saveKeeper((x) => (x.recent = [...x.recent, ...(reply.used || [])].slice(-12)));
   logEvent("keeper_feedback", { kind: reply.source });
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("happy")}<b>${esc(name)}</b></div><p class="keeper-reply">${esc(reply.text)}${reply.tone ? ` <span class="keeper-tone">${esc(reply.tone)}</span>` : ""}</p><p class="save-help keeper-local">🔒 ${t("keeper.localNote")}</p><button class="choose-cancel" data-action="choose-close">${t("keeper.thanks")}</button></div>`;
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("encouraging")}<b>${esc(name)}</b></div><p class="keeper-reply">${esc(reply.text)}${reply.tone ? ` <span class="keeper-tone">${esc(reply.tone)}</span>` : ""}</p><p class="save-help keeper-local">🔒 ${t("keeper.localNote")}</p><button class="choose-cancel" data-action="choose-close">${t("keeper.thanks")}</button></div>`;
   if (!dialog.open) dialog.showModal();
 }
 function openKeeperChat() {
@@ -1114,11 +1117,19 @@ function openKeeperOnboarding() {
   const k = keeperNow();
   keeperDraft ||= { animal: k.animal, name: k.name, mode: k.mode };
   const d = keeperDraft;
-  const animals = Keeper.ANIMALS.map((a) => `<button class="keeper-choice ${d.animal === a ? "selected" : ""}" data-action="keeper-pick-animal" data-animal="${a}" aria-pressed="${d.animal === a}"><span class="keeper">${keeperSVG({ animal: a, mood: d.animal === a ? "happy" : "idle", label: t("keeper.animal." + a) })}</span><b>${t("keeper.animal." + a)}</b><small>${t("keeper.animal." + a + "Hint")}</small></button>`).join("");
+  const animals = Keeper.ANIMALS.map((a) => `<button class="keeper-choice ${d.animal === a ? "selected" : ""}" data-action="keeper-pick-animal" data-animal="${a}" aria-pressed="${d.animal === a}"><span class="keeper">${keeperImage(catalog, { animal: a, mood: d.animal === a ? "happy" : "idle", label: "" })}</span><b>${t("keeper.animal." + a)}</b><small>${t("keeper.animal." + a + "Hint")}</small></button>`).join("");
   const modes = Keeper.MODES.map((m) => `<button class="keeper-mode ${d.mode === m ? "selected" : ""}" data-action="keeper-pick-mode" data-mode="${m}" aria-pressed="${d.mode === m}"><b>${t("keeper.mode." + m)}</b><small>${t("keeper.mode." + m + "Hint")}</small></button>`).join("");
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p><h3>${t("keeper.onboard.animal")}</h3><div class="keeper-animals">${animals}</div><h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
   if (!dialog.open) dialog.showModal();
+}
+// Hats from the character art. Only the default hat has several expressions.
+function keeperOutfitHTML(k) {
+  const outfits = keeperOutfits(catalog, k.animal);
+  if (outfits.length < 2) return "";
+  const wearing = k.outfit || DEFAULT_OUTFIT[k.animal];
+  const items = outfits.map((o) => `<button data-action="keeper-set" data-key="outfit" data-value="${o}" class="${wearing === o ? "selected" : ""}" aria-pressed="${wearing === o}"><span class="keeper">${keeperImage(catalog, { animal: k.animal, outfit: o, mood: "idle", label: "" })}</span><small>${t("keeper.outfit." + o)}</small></button>`).join("");
+  return `<div class="keeper-seg"><span>${t("keeper.settings.outfit")}</span><div class="keeper-outfits">${items}</div><small class="keeper-mode-hint">${t("keeper.settings.outfitNote")}</small></div>`;
 }
 function keeperSettingsHTML() {
   const k = keeperNow();
@@ -1129,7 +1140,7 @@ function keeperSettingsHTML() {
   const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
   const row = (key, on, hint, enabled = true) => `<button class="privacy-row" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
   const interactive = k.mode === "interactive";
-  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.animal")}</span><div class="segmented">${Keeper.ANIMALS.map((a) => `<button data-action="keeper-set" data-key="animal" data-value="${a}" class="${k.animal === a ? "selected" : ""}" aria-pressed="${k.animal === a}">${t("keeper.animal." + a)}</button>`).join("")}</div></div><div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
+  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.animal")}</span><div class="segmented">${Keeper.ANIMALS.map((a) => `<button data-action="keeper-set" data-key="animal" data-value="${a}" class="${k.animal === a ? "selected" : ""}" aria-pressed="${k.animal === a}">${t("keeper.animal." + a)}</button>`).join("")}</div></div>${keeperOutfitHTML(k)}<div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
 }
 document.addEventListener("change", (event) => {
   if (!event.target.matches?.("[data-keeper-rename]")) return;
@@ -1147,7 +1158,7 @@ document.addEventListener("keydown", (event) => {
     $('[data-action="greeting-save"]')?.click();
   }
 });
-// Its head turns a little toward your finger or pointer.
+// The whole picture leans a little toward your finger or pointer.
 let keeperFollowFrame = 0;
 document.addEventListener("pointermove", (event) => {
   if (keeperFollowFrame) return;
@@ -1158,17 +1169,25 @@ document.addEventListener("pointermove", (event) => {
       if (!r.width) continue;
       const dx = event.clientX - (r.left + r.width / 2), dy = event.clientY - (r.top + r.height / 2);
       const near = Math.hypot(dx, dy) < 420;
-      el.style.setProperty("--tilt", near ? `${Math.max(-9, Math.min(9, dx / 18))}deg` : "0deg");
-      el.style.setProperty("--look", near ? `${Math.max(-2, Math.min(2, dy / 60))}px` : "0px");
+      el.style.setProperty("--tilt", near ? `${Math.max(-3, Math.min(3, dx / 40))}deg` : "0deg");
     }
   });
 });
+let keeperBack = 0;
 function keeperBounce(target) {
   const el = target.closest?.(".keeper-tap")?.querySelector(".keeper") || target.querySelector?.(".keeper");
   if (!el) return;
   el.classList.remove("boing");
   void el.offsetWidth;
   el.classList.add("boing");
+  // A short happy / excited face from the character art, then back.
+  const img = el.querySelector(".keeper-img");
+  if (!img || img.dataset.mood === "peek") return;
+  const k = keeperNow();
+  const before = img.outerHTML;
+  el.innerHTML = keeperImage(catalog, { animal: k.animal, outfit: k.outfit, mood: keeperTaps % 2 ? "excited" : "happy", label: img.alt });
+  clearTimeout(keeperBack);
+  keeperBack = setTimeout(() => el.isConnected && (el.innerHTML = before), 1600);
 }
 
 // ---------- Search and "On this day" (V7.6) ----------
@@ -4371,7 +4390,11 @@ async function action(target) {
   if (actionName === "keeper-set") {
     const { key, value } = target.dataset;
     saveKeeper((k) => {
-      if (key === "animal" && Keeper.ANIMALS.includes(value)) k.animal = value;
+      if (key === "animal" && Keeper.ANIMALS.includes(value) && value !== k.animal) {
+        k.animal = value;
+        k.outfit = "";
+      }
+      if (key === "outfit" && keeperOutfits(catalog, k.animal).includes(value)) k.outfit = value;
       if (key === "mode" && Keeper.MODES.includes(value)) k.mode = value;
     });
     return render();

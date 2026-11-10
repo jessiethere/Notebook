@@ -56,7 +56,12 @@ const shots = process.env.SHOTS_DIR || "";
     await page.reload();
     await page.waitForSelector(".keeper-home");
     assert.match(await page.locator(".keeper-home .keeper-bubble").innerText(), /糯米/);
-    assert.equal(await page.locator(".keeper-home svg.cat").count(), 1);
+    // V7.9: the approved character art as an image (Captain's Peek; Sleepy late at night), never SVG.
+    const art = page.locator('.keeper-home img.keeper-img[data-animal="cat"]');
+    assert.equal(await art.count(), 1);
+    assert.ok(["peek", "sleepy"].includes(await art.getAttribute("data-mood")));
+    await page.waitForFunction(() => document.querySelector(".keeper-home img.keeper-img")?.naturalWidth > 0);
+    assert.equal(await page.locator(".keeper svg").count(), 0);
     if (shots) await page.screenshot({ path: `${shots}/v71-home.png` });
     passed.push("onboarding: choose the cat, name it, choose Gentle — kept after a reload; on Today with a gentle invitation");
 

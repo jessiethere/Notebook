@@ -26,7 +26,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     let s = await state();
     const sample = s.entries.find((e) => e.isDemo && e.date === today);
     assert.equal(sample.photo, "/assets/coffee.jpg");
-    assert.equal(await page.locator(".hero img").evaluate((img) => img.complete && img.naturalWidth > 0), true);
+    assert.equal(await page.locator(".hero img:not(.keeper-img)").evaluate((img) => img.complete && img.naturalWidth > 0), true);
     passed.push("sample page keeps the coffee photo");
 
     // 2. Home: with nothing written today, the picture of the day invites writing.

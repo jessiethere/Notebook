@@ -143,6 +143,17 @@ public struct SceneCollection: Decodable, Identifiable {
     public let descEn: String
 }
 
+/// One cut-out of the approved Little Keeper character sheet (3D renders,
+/// provided by the product owner; see Keepers/LD-keeper-LICENSE.txt).
+public struct KeeperAsset: Decodable, Identifiable {
+    public let id: String
+    public let animal: String
+    public let outfit: String
+    public let mood: String
+    public let file: String
+    public let license: String
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
@@ -152,6 +163,7 @@ public struct AssetCatalog: Decodable {
     public let photos: [PhotoAsset]?
     public let photoCollections: [SceneCollection]?
     public let music: [MusicAsset]?
+    public let keepers: [KeeperAsset]?
     public let kits: [StoryKit]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
@@ -167,6 +179,7 @@ public enum SharedResources {
         case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
         case "photos": allowed = Set((catalog.photos ?? []).flatMap { [$0.file, $0.license] })
         case "music": allowed = Set((catalog.music ?? []).flatMap { [$0.file, $0.license] })
+        case "keepers": allowed = Set((catalog.keepers ?? []).flatMap { [$0.file, $0.license] })
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

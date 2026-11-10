@@ -2532,5 +2532,167 @@
       ],
       "playful": true
     }
+  ],
+  "keepers": [
+    {
+      "id": "bunny-sprout-neutral",
+      "animal": "bunny",
+      "outfit": "sprout",
+      "mood": "neutral",
+      "file": "LD-keeper-bunny-sprout-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "bunny-sprout-happy",
+      "animal": "bunny",
+      "outfit": "sprout",
+      "mood": "happy",
+      "file": "LD-keeper-bunny-sprout-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "bunny-sprout-encouraging",
+      "animal": "bunny",
+      "outfit": "sprout",
+      "mood": "encouraging",
+      "file": "LD-keeper-bunny-sprout-encouraging.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-neutral",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "neutral",
+      "file": "LD-keeper-cat-lemon-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-happy",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "happy",
+      "file": "LD-keeper-cat-lemon-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-sleepy",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "sleepy",
+      "file": "LD-keeper-cat-lemon-sleepy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-excited",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "excited",
+      "file": "LD-keeper-cat-lemon-excited.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-sprout-neutral",
+      "animal": "westie",
+      "outfit": "sprout",
+      "mood": "neutral",
+      "file": "LD-keeper-westie-sprout-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-sprout-happy",
+      "animal": "westie",
+      "outfit": "sprout",
+      "mood": "happy",
+      "file": "LD-keeper-westie-sprout-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-sprout-excited",
+      "animal": "westie",
+      "outfit": "sprout",
+      "mood": "excited",
+      "file": "LD-keeper-westie-sprout-excited.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "bunny-flower-neutral",
+      "animal": "bunny",
+      "outfit": "flower",
+      "mood": "neutral",
+      "file": "LD-keeper-bunny-flower-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "bunny-sleepy-happy",
+      "animal": "bunny",
+      "outfit": "sleepy",
+      "mood": "happy",
+      "file": "LD-keeper-bunny-sleepy-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "bunny-strawberry-encouraging",
+      "animal": "bunny",
+      "outfit": "strawberry",
+      "mood": "encouraging",
+      "file": "LD-keeper-bunny-strawberry-encouraging.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-beanie-neutral",
+      "animal": "cat",
+      "outfit": "beanie",
+      "mood": "neutral",
+      "file": "LD-keeper-cat-beanie-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-sleepy-happy",
+      "animal": "cat",
+      "outfit": "sleepy",
+      "mood": "happy",
+      "file": "LD-keeper-cat-sleepy-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-frog-excited",
+      "animal": "cat",
+      "outfit": "frog",
+      "mood": "excited",
+      "file": "LD-keeper-cat-frog-excited.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-beret-neutral",
+      "animal": "westie",
+      "outfit": "beret",
+      "mood": "neutral",
+      "file": "LD-keeper-westie-beret-neutral.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-aviator-happy",
+      "animal": "westie",
+      "outfit": "aviator",
+      "mood": "happy",
+      "file": "LD-keeper-westie-aviator-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "westie-bear-sleepy",
+      "animal": "westie",
+      "outfit": "bear",
+      "mood": "sleepy",
+      "file": "LD-keeper-westie-bear-sleepy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-peek",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "peek",
+      "file": "LD-keeper-cat-lemon-peek.png",
+      "license": "LD-keeper-LICENSE.txt"
+    }
   ]
 }

@@ -41,6 +41,14 @@ final class CoreTests: XCTestCase {
         XCTAssertGreaterThan(track.count, 100_000)
         XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "music", filename: music[0].license), as: UTF8.self).contains("Original music"))
         XCTAssertThrowsError(try SharedResources.libraryData(category: "music", filename: "LD-photo-latte-art.jpg"))
+        // Little Keeper: 18 cut-outs of the approved 3D character sheet + Captain's Surprised and Peek.
+        let keepers = try XCTUnwrap(catalog.keepers)
+        XCTAssertEqual(keepers.count, 20)
+        XCTAssertTrue(keepers.contains { $0.mood == "peek" && $0.animal == "cat" })
+        XCTAssertEqual(Set(keepers.map(\.animal)), ["bunny", "cat", "westie"])
+        let keeperPNG = try SharedResources.libraryData(category: "keepers", filename: keepers[0].file)
+        XCTAssertEqual(Array(keeperPNG.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
+        XCTAssertThrowsError(try SharedResources.libraryData(category: "keepers", filename: "LD-photo-latte-art.jpg"))
     }
 
     func testLegacyJournalWithoutV3FieldsStillDecodes() throws {
@@ -65,7 +73,7 @@ final class CoreTests: XCTestCase {
         books[0]["coverTemplate"] = "floral-notebook"
         books[0]["music"] = "morning-piano"
         books[0]["tags"] = ["阅读", "self awareness"]
-        object["keeper"] = ["enabled": true, "animal": "cat", "name": "糯米", "mode": "interactive", "allowMemories": false, "revisits": ["2026-11-10"]]
+        object["keeper"] = ["enabled": true, "animal": "westie", "outfit": "beret", "name": "糯米", "mode": "interactive", "allowMemories": false, "revisits": ["2026-11-10"]]
         books[0]["fields"] = [["id": "water", "label": "浇水", "type": "checkbox"]]
         object["books"] = books
         var entries = object["entries"] as! [[String: Any]]
@@ -85,7 +93,8 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
         XCTAssertEqual(reloaded.books[0].music, "morning-piano")
         XCTAssertEqual(reloaded.books[0].tags, ["阅读", "self awareness"])
-        XCTAssertEqual(reloaded.keeper?.animal, "cat")
+        XCTAssertEqual(reloaded.keeper?.animal, "westie")
+        XCTAssertEqual(reloaded.keeper?.outfit, "beret")
         XCTAssertEqual(reloaded.keeper?.mode, "interactive")
         XCTAssertEqual(reloaded.keeper?.allowMemories, false)
     }

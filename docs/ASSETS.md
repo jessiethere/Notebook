@@ -42,3 +42,12 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - 许可：Unsplash License（<https://unsplash.com/license>）允许免费商用、修改，不要求署名，但不允许把照片原样汇编成同类图库或壁纸服务。Little Days 只把它们作为写手帐时可选的配图；正式上架前仍应按上文完成全部资产的来源与授权审核。挑选时尽量避开可辨认的人脸和品牌标志。
 - **页面背景**：`Scenes/` 里的渐变、可爱图案、万花筒、光影丝带、星空（21 张）是项目原创，用作页面背景（`backdrop`）；12 张手绘“生活小景”标记为 `retired`，只为兼容已使用它们的页面而保留。
 - 2026-11-09 更新：万花筒、光影丝带、星空也标记为 `retired`（只为兼容保留）。照片素材中有 10 张标记 `backdrop: true`，可作为整页背景（“照片氛围”），`tone` 由 `tools/fetch_photos.py` 按画面下半部分亮度计算。
+
+## V7.9 Little Keeper 角色图（2026-11-10）
+
+- 来源：Little Days 产品负责人 2026-11-10 提供并明确授权在 Little Days 内使用的 3D 角色表，以及「参考图 1 · Captain 角色视觉标准」。不是从网上抓取的素材。
+- Captain 猫以产品负责人自己的猫 Captain 为原型。
+- 处理：`python3 tools/extract_keepers.py <角色表.png>`（18 张）和 `python3 tools/extract_keepers.py --captain <参考图1.png>`（探头 Peek + 惊喜 Surprised）。每个角色单独裁切、去底、保留柔和阴影；原图（整张角色表、参考图）不随 App 发布，也不提交到仓库。
+- 文件：`Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Keepers/`，清单在 `library.json` 的 `keepers`，说明在 `LD-keeper-LICENSE.txt`。服务路径 `library/keepers/<文件>`（`tools/preview.py`、`tools/build_link.py`、Swift `SharedResources.libraryData(category: "keepers")`）。
+- 限制：只限 Little Days 内使用，不另行分发或出售。
+- 缺少的姿势与更高分辨率图见 DESIGN_SYSTEM.md「V7.9 Little Keeper 角色视觉规范」。

@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.9",
+    date: "2026-11-10",
+    zh: {
+      title: "Little Keeper 换上你确认的 3D 角色图",
+      items: [
+        "Little Keeper 不再用代码画：现在直接使用你提供并授权的 3D 角色图，每个角色单独裁切成透明图片（不是整张角色表）。",
+        "首页：Captain 用参考图里真正的「探头」姿势，头和爪子搭在今天卡片的上边；尺寸比参考图小，只是陪在旁边。晚上 10 点后换成睡觉的样子。",
+        "三个小伙伴：小兔（小芽帽）、Captain 猫（柠檬帽，默认名字 Captain）、新加的小西高地（小芽帽）。设置里可以换帽子。",
+        "暂时没有对应图片的姿势会用最接近的那张，不用代码假装：小兔和小西高地还没有探头图（首页先让卡片挡住下半身）；所有图都抱着本子和铅笔，还没有单独的「写字」动作；小兔没有睡觉 / 兴奋，Captain 和小西高地没有鼓励。这些需要补美术素材。",
+      ],
+    },
+    en: {
+      title: "Little Keeper now uses your approved 3D character art",
+      items: [
+        "Little Keeper is no longer drawn in code: it now uses the 3D character art you provided and authorised, each character cut out as its own transparent picture (never the whole sheet).",
+        "Home: Captain uses the real Peek pose from your reference — head and paws over the top of today's card — smaller than in the reference, a companion beside the content. After 10 pm it shows the sleepy picture.",
+        "Three companions: Bunny (sprout hat), Captain Cat (lemon hat, named Captain by default) and the new Westie (sprout hat). You can change hats in Settings.",
+        "Poses without a picture yet use the closest real picture instead of a drawn stand-in: no Peek for Bunny and Westie (on Home the card hides their lower half for now); every picture holds the notebook and pencil, with no separate Writing pose; no Sleepy / Excited for Bunny, no Encouraging for Captain and Westie. These need more artwork.",
+      ],
+    },
+  },
+  {
     version: "7.8",
     date: "2026-11-10",
     zh: {
