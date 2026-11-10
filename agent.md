@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-10 — V7.4 App 锁（4 位密码 + iPhone App 面容 ID）
+
+- 需求：上一轮建议「App 锁」，用户回复「要」。
+- 改动文件：新增 Public/js/app-lock.mjs（纯 JS SHA-256——iOS 自定义 scheme 不一定是安全上下文、crypto.subtle 可能不可用；makeLock 只存 `{v, salt, hash, grace, biometric}`；checkPin、readLock / saveLock（`little-days.lock`）、shouldRelock、pauseLeft：连续 5 次错误暂停 30 秒）；Public/app.js（启动时、绘制任何个人内容之前若有锁就 showLock("unlock")；锁屏是顶层 `<dialog id="lock-screen">`，#phone 设为 inert，Esc 不能跳过；模式 unlock / set / confirm / off / change；数字键盘 + 实体键盘；错误次数存 `little-days.lock-tries`，刷新不能绕过暂停；visibilitychange：「立即」在离开时就锁，其他在回来时按离开时长判断；设置隐私卡加 App 锁开关、离开多久后锁（立即 / 1 / 5 分钟）、面容 ID 开关（仅 iPhone App）、修改密码；「忘记密码？」如实说明无法找回；与 iOS 外壳通信：postMessage `{type:"unlock"}`、`{type:"state", on}`，回调 `window.littleDaysBiometricResult(ok)`）；styles.css（锁屏、键盘、抖动、离开时长）；i18n.json（lock.*）；whats-new.mjs（V7.4）；Native/Sources/LittleDaysUI/WebShell/LittleDaysWebShellView.swift（LittleDaysLockBridge：WKScriptMessageHandler + LAContext `.deviceOwnerAuthenticationWithBiometrics`，不提供系统密码回退、由网页键盘回退；启动脚本注入 `window.littleDaysBiometry`；LittleDaysPrivacy 让 SwiftUI 在 scenePhase 非 active 且锁开启时盖上「Little Days」封面，App 切换器不显示内容）；Native/LittleDays.xcodeproj/project.pbxproj（两个配置加 INFOPLIST_KEY_NSFaceIDUsageDescription）；tests/v74.test.mjs（4 项：SHA-256 与 Node crypto 一致、只存加盐哈希、读取 / 损坏忽略、重锁时机与暂停）；tests/v67-browser.cjs（6 组）；package.json；docs。
+- 决策与原因：这是防止别人拿起手机随手翻看的「门锁」，不是对手帐数据加密（数据仍在本机 LocalStorage / IndexedDB，有设备访问和开发者工具的人仍能读取），已在文档中如实说明；忘记密码不提供绕过入口，否则锁形同虚设；面容 ID 默认随 App 锁一起打开（在 iPhone App 里）。
+- 运行 / 测试：Node 123 项（新增 4 项）、Python 12 项、39 套浏览器 E2E 全部通过（新增 v67 6 组：设置两次、打开即锁且页面 inert、错误 / 正确、立即重锁、5 次错误暂停且刷新不绕过、忘记密码说明、关闭需密码、模拟 iOS 桥接的面容 ID）。Linux 容器 + Chromium；Swift 未编译。
+- 已知问题：**Swift 代码未编译**（本容器没有 Swift / Xcode），面容 ID、App 切换器封面均未在 iPhone 上验证；网页版锁不加密数据；在线链接（Claude App 内）没有面容 ID，只有密码。
+- 下一步：在 Mac 上用 Xcode 构建并真机测试面容 ID；考虑对 IndexedDB 媒体和 LocalStorage 做真正的加密（需要设计密钥管理，较大改动，需用户确认）。
+
 ### 2026-11-09 — V7.3 习惯「✎ 编辑」菜单（含删除）+ 修复图标跑出卡片
 
 - 需求（用户 iPhone 截图：「我的习惯」页，图标在卡片外面）：「没有删除习惯的地方」。V6.7 的删除藏在「⋯」→ 编辑对话框底部，不容易发现。

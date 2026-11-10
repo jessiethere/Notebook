@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.4",
+    date: "2026-11-10",
+    zh: {
+      title: "App 锁：4 位密码，iPhone App 里可以用面容 ID",
+      items: [
+        "设置 →「隐私」→「App 锁」：设置 4 位密码（输入两次）。之后打开 Little Days 要先输入密码，锁着的时候下面的内容不能点也看不到。",
+        "可以选离开多久后再锁上：立即、1 分钟或 5 分钟。",
+        "密码只保存在这台设备上，而且只存加密后的校验值，不存密码本身。连续输错 5 次要等 30 秒再试（刷新页面也不能跳过）。",
+        "iPhone App 里可以用面容 ID（或触控 ID）解锁，由 iOS 验证，Little Days 拿不到你的面容或指纹；打开 App 锁后，切换 App 的预览里也只显示「Little Days」，不显示手帐内容。",
+        "关掉或修改密码都要先输入现在的密码。「忘记密码？」会如实说明：我们无法帮你找回，记得定期备份。",
+      ],
+    },
+    en: {
+      title: "App lock: a 4-digit passcode, Face ID in the iPhone app",
+      items: [
+        "Settings → Privacy → App lock: set a 4-digit passcode (twice). Little Days then asks for it when opened; while locked, nothing underneath can be seen or tapped.",
+        "Choose how long you can be away before it locks again: immediately, 1 minute or 5 minutes.",
+        "The passcode stays on this device, stored only as a salted hash — never the passcode itself. Five wrong tries in a row mean a 30-second wait (a reload doesn't skip it).",
+        "In the iPhone app, Face ID (or Touch ID) unlocks it — iOS checks it, Little Days never sees your face or fingerprint; with the lock on, the app switcher shows just “Little Days”, not your journal.",
+        "Turning it off or changing the passcode asks for the current one first. “Forgot passcode?” says honestly that we can't recover it — back up now and then.",
+      ],
+    },
+  },
+  {
     version: "7.3",
     date: "2026-11-09",
     zh: {

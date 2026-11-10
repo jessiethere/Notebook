@@ -13534,3 +13534,111 @@ dialog h2,
   flex: none;
   white-space: nowrap;
 }
+
+/* V7.4 · App lock: a full-screen paper page with a passcode keypad. */
+.lock-screen {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--c-f6f1e7, #F6F1E7);
+  color: var(--ink);
+}
+.lock-screen::backdrop {
+  background: var(--c-f6f1e7, #F6F1E7);
+}
+.lock-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 100%;
+  padding: 32px 24px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.lock-brand {
+  font-size: 34px;
+}
+.lock-inner:focus {
+  outline: none;
+}
+.lock-inner h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+.lock-dots {
+  display: flex;
+  gap: 16px;
+  margin: 6px 0 0;
+}
+.lock-dots i {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--c-5f6f52, #5F6F52);
+  border-radius: 999px;
+}
+.lock-dots i.on {
+  background: var(--c-5f6f52, #5F6F52);
+}
+.lock-dots.shake {
+  animation: lock-shake 0.35s ease;
+}
+@keyframes lock-shake {
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-4px); }
+}
+.lock-message {
+  min-height: 20px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--t-a0504f, #A0504F);
+}
+.lock-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 14px 22px;
+}
+.lock-keys button {
+  width: 72px;
+  height: 72px;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 26px;
+}
+.lock-keys button[data-lock-key="back"],
+.lock-keys button[data-lock-key="bio"] {
+  border-color: transparent;
+  background: none;
+  font-size: 15px;
+}
+.lock-keys button:disabled {
+  opacity: 0.45;
+}
+.lock-forgot {
+  max-width: 320px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--t-6f675d, #6F675D);
+}
+.lock-grace {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.lock-change {
+  display: block;
+  margin: 2px 0 10px;
+}

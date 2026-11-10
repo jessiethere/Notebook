@@ -783,6 +783,114 @@
     "zh": "备份文件里有你的私人文字和照片，请放在安全的地方，不要分享给别人。单次导出最多 100 MB 媒体，导入文件最大 150 MB。",
     "en": "A backup holds your private words and photos — keep it somewhere safe and don't share it. Up to 100 MB of media per export; files up to 150 MB can be restored."
   },
+  "lock.title": {
+    "zh": "App 锁",
+    "en": "App lock"
+  },
+  "lock.offHint": {
+    "zh": "打开后，进入 Little Days 要输入 4 位密码（iPhone App 里也可以用面容 ID）。",
+    "en": "When on, a 4-digit passcode opens Little Days (or Face ID in the iPhone app)."
+  },
+  "lock.onHint": {
+    "zh": "已打开。密码只保存在这台设备上（加密后的校验值，不存原密码）。关掉要先输入密码。",
+    "en": "On. The passcode stays on this device (stored only as a salted hash). Turning it off asks for it first."
+  },
+  "lock.after": {
+    "zh": "离开多久后锁上",
+    "en": "Lock after leaving for"
+  },
+  "lock.after0": {
+    "zh": "立即",
+    "en": "Immediately"
+  },
+  "lock.after60": {
+    "zh": "1 分钟",
+    "en": "1 minute"
+  },
+  "lock.after300": {
+    "zh": "5 分钟",
+    "en": "5 minutes"
+  },
+  "lock.faceID": {
+    "zh": "用面容 ID 解锁",
+    "en": "Unlock with Face ID"
+  },
+  "lock.touchID": {
+    "zh": "用触控 ID 解锁",
+    "en": "Unlock with Touch ID"
+  },
+  "lock.biometricHint": {
+    "zh": "只在 iPhone App 里可用；验证由 iOS 完成，Little Days 拿不到你的面容或指纹信息。",
+    "en": "iPhone app only; iOS checks it — Little Days never sees your face or fingerprint."
+  },
+  "lock.useBiometric": {
+    "zh": "面容 ID",
+    "en": "Face ID"
+  },
+  "lock.biometricReason": {
+    "zh": "解锁你的 Little Days 手帐",
+    "en": "Unlock your Little Days journal"
+  },
+  "lock.change": {
+    "zh": "修改密码",
+    "en": "Change passcode"
+  },
+  "lock.enter": {
+    "zh": "输入密码",
+    "en": "Enter passcode"
+  },
+  "lock.setNew": {
+    "zh": "设置 4 位密码",
+    "en": "Set a 4-digit passcode"
+  },
+  "lock.again": {
+    "zh": "再输入一次",
+    "en": "Enter it again"
+  },
+  "lock.enterToOff": {
+    "zh": "输入密码以关闭 App 锁",
+    "en": "Enter passcode to turn the lock off"
+  },
+  "lock.enterOld": {
+    "zh": "输入现在的密码",
+    "en": "Enter your current passcode"
+  },
+  "lock.wrong": {
+    "zh": "密码不对，再试一次",
+    "en": "Wrong passcode, try again"
+  },
+  "lock.mismatch": {
+    "zh": "两次不一样，请重新设置",
+    "en": "They didn't match — set it again"
+  },
+  "lock.pause": {
+    "zh": "试错太多次了，{seconds} 秒后再试",
+    "en": "Too many tries — wait {seconds} s"
+  },
+  "lock.delete": {
+    "zh": "删除",
+    "en": "Delete"
+  },
+  "lock.forgot": {
+    "zh": "忘记密码？",
+    "en": "Forgot passcode?"
+  },
+  "lock.forgotText": {
+    "zh": "密码只保存在这台设备上，我们也无法帮你找回。iPhone App 里打开了面容 ID 的话可以用它解锁；否则只能清除这台设备上 Little Days 的数据（记录会一起删除，所以记得定期在设置里备份）。",
+    "en": "The passcode lives only on this device, so we can't recover it. In the iPhone app, Face ID unlocks it if turned on; otherwise the only way is to clear Little Days' data on this device (which deletes the journal — so back up from Settings now and then)."
+  },
+  "lock.turnedOn": {
+    "zh": "App 锁已打开",
+    "en": "App lock is on"
+  },
+  "lock.turnedOff": {
+    "zh": "App 锁已关闭",
+    "en": "App lock is off"
+  },
+  "lock.changed": {
+    "zh": "密码已修改",
+    "en": "Passcode changed"
+  },
   "privacy.title": {
     "zh": "隐私",
     "en": "Privacy"

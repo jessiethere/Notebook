@@ -27,6 +27,7 @@ import {
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
 import { photoTime } from "./js/exif.mjs";
+import * as AppLock from "./js/app-lock.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -956,8 +957,185 @@ function privacySectionHTML() {
     const on = privacyOn(name);
     return `<button class="privacy-row" data-action="privacy-toggle" data-privacy="${name}" role="switch" aria-checked="${on}"><span><b>${t("privacy." + name)}</b><small>${t("privacy." + name + "Hint")}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
   };
-  return `<section class="settings-card privacy-card"><h2>${t("privacy.title")}</h2><ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>${row("hideToday")}${row("shareList")}</section>`;
+  return `<section class="settings-card privacy-card"><h2>${t("privacy.title")}</h2><ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>${lockRowsHTML()}${row("hideToday")}${row("shareList")}</section>`;
 }
+
+/* ---------- App lock (V7.4): passcode, Face ID in the iPhone app ---------- */
+// The passcode is kept only as a salted SHA-256 (js/app-lock.mjs). While
+// locked, the page underneath is inert and covered by a top-layer dialog.
+const LOCK_TRIES_KEY = "little-days.lock-tries"; // wrong tries survive a reload
+const savedTries = (() => {
+  try {
+    const x = JSON.parse(localStorage.getItem(LOCK_TRIES_KEY) || "{}");
+    return { failures: Number(x.failures) || 0, lastFailAt: Number(x.lastFailAt) || 0 };
+  } catch {
+    return { failures: 0, lastFailAt: 0 };
+  }
+})();
+let lockUI = { mode: "", entry: "", first: "", ...savedTries, message: "", forgot: false };
+function saveTries() {
+  try {
+    if (lockUI.failures) localStorage.setItem(LOCK_TRIES_KEY, JSON.stringify({ failures: lockUI.failures, lastFailAt: lockUI.lastFailAt }));
+    else localStorage.removeItem(LOCK_TRIES_KEY);
+  } catch {}
+}
+let hiddenAt = 0;
+// "faceID" / "touchID" in the iPhone app (set by the shell at start), else "".
+const shellBiometry = () => (window.webkit?.messageHandlers?.littleDaysLock ? window.littleDaysBiometry || document.documentElement.dataset.biometric || "" : "");
+function lockRowsHTML() {
+  const lock = AppLock.readLock();
+  const bio = shellBiometry();
+  const main = `<button class="privacy-row" data-action="lock-toggle" role="switch" aria-checked="${Boolean(lock)}"><span><b>${t("lock.title")}</b><small>${t(lock ? "lock.onHint" : "lock.offHint")}</small></span><i class="switch ${lock ? "on" : ""}" aria-hidden="true"></i></button>`;
+  if (!lock) return main;
+  const grace = `<div class="lock-grace"><span>${t("lock.after")}</span><div class="segmented">${AppLock.GRACE_CHOICES.map((sec) => `<button data-action="lock-grace" data-grace="${sec}" class="${lock.grace === sec ? "selected" : ""}" aria-pressed="${lock.grace === sec}">${t("lock.after" + sec)}</button>`).join("")}</div></div>`;
+  const face = bio
+    ? `<button class="privacy-row" data-action="lock-biometric" role="switch" aria-checked="${Boolean(lock.biometric)}"><span><b>${t(bio === "touchID" ? "lock.touchID" : "lock.faceID")}</b><small>${t("lock.biometricHint")}</small></span><i class="switch ${lock.biometric ? "on" : ""}" aria-hidden="true"></i></button>`
+    : "";
+  return `${main}${grace}${face}<button class="text-button lock-change" data-action="lock-change">${t("lock.change")}</button>`;
+}
+// Tell the iPhone app whether the lock is on (it then covers the app switcher).
+function tellShellLock() {
+  try {
+    window.webkit?.messageHandlers?.littleDaysLock?.postMessage({ type: "state", on: Boolean(AppLock.readLock()) });
+  } catch {}
+}
+function lockDialog() {
+  let dialog = $("#lock-screen");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "lock-screen";
+    dialog.className = "lock-screen";
+    dialog.setAttribute("aria-labelledby", "lock-title");
+    // Esc never skips the lock (only setting / changing it can be cancelled).
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      if (lockUI.mode !== "unlock") hideLock();
+    });
+    document.body.append(dialog);
+  }
+  return dialog;
+}
+// mode: unlock | set | confirm | off | change
+function showLock(mode) {
+  lockUI = { ...lockUI, mode, entry: "", first: mode === "confirm" ? lockUI.first : "", message: "", forgot: false };
+  const dialog = lockDialog();
+  renderLock();
+  if (!dialog.open) dialog.showModal();
+  $("#phone")?.setAttribute("inert", "");
+  if (mode === "unlock" && AppLock.readLock()?.biometric && shellBiometry()) askBiometric();
+}
+function hideLock() {
+  const dialog = $("#lock-screen");
+  if (dialog?.open) dialog.close();
+  $("#phone")?.removeAttribute("inert");
+  lockUI = { ...lockUI, mode: "", entry: "", first: "", message: "", forgot: false };
+}
+const isLocked = () => lockUI.mode === "unlock" && Boolean($("#lock-screen")?.open);
+function renderLock() {
+  const dialog = lockDialog();
+  const { mode, entry, message } = lockUI;
+  const title = { unlock: "lock.enter", set: "lock.setNew", confirm: "lock.again", off: "lock.enterToOff", change: "lock.enterOld" }[mode] || "lock.enter";
+  const pause = AppLock.pauseLeft(lockUI.failures, lockUI.lastFailAt);
+  const dots = Array.from({ length: AppLock.PIN_LENGTH }, (_, i) => `<i class="${i < entry.length ? "on" : ""}"></i>`).join("");
+  const bio = mode === "unlock" && AppLock.readLock()?.biometric && shellBiometry();
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", bio ? "bio" : "", "0", "back"]
+    .map((k) => (k ? `<button type="button" data-lock-key="${k}" ${pause && /\d/.test(k) ? "disabled" : ""} aria-label="${k === "back" ? t("lock.delete") : k === "bio" ? t(shellBiometry() === "touchID" ? "lock.touchID" : "lock.faceID") : k}">${k === "back" ? "⌫" : k === "bio" ? t("lock.useBiometric") : k}</button>` : `<span></span>`))
+    .join("");
+  const foot =
+    mode === "unlock"
+      ? `<button type="button" class="text-button" data-lock-key="forgot">${t("lock.forgot")}</button>${lockUI.forgot ? `<p class="lock-forgot">${t("lock.forgotText")}</p>` : ""}`
+      : `<button type="button" class="text-button" data-lock-key="cancel">${t("cancel")}</button>`;
+  dialog.innerHTML = `<div class="lock-inner" tabindex="-1" autofocus><div class="brand-title lock-brand">Little Days</div><h2 id="lock-title">${t(title)}</h2><div class="lock-dots ${message ? "shake" : ""}" aria-hidden="true">${dots}</div><p class="lock-message" role="status">${esc(pause ? t("lock.pause", { seconds: pause }) : message)}</p><div class="lock-keys">${keys}</div>${foot}</div>`;
+  if (pause) setTimeout(() => lockUI.mode && renderLock(), 1000);
+}
+function askBiometric() {
+  try {
+    window.webkit.messageHandlers.littleDaysLock.postMessage({ type: "unlock", reason: t("lock.biometricReason") });
+  } catch {}
+}
+// Called by the iPhone app after Face ID / Touch ID.
+window.littleDaysBiometricResult = (ok) => {
+  if (ok && lockUI.mode === "unlock") hideLock();
+};
+function lockDigit(key) {
+  if (AppLock.pauseLeft(lockUI.failures, lockUI.lastFailAt)) return;
+  if (key === "back") lockUI.entry = lockUI.entry.slice(0, -1);
+  else if (/^\d$/.test(key) && lockUI.entry.length < AppLock.PIN_LENGTH) lockUI.entry += key;
+  lockUI.message = "";
+  if (lockUI.entry.length < AppLock.PIN_LENGTH) return renderLock();
+  const pin = lockUI.entry;
+  const lock = AppLock.readLock();
+  const mode = lockUI.mode;
+  if (mode === "set") {
+    lockUI.first = pin;
+    return showLock("confirm");
+  }
+  if (mode === "confirm") {
+    if (pin !== lockUI.first) {
+      lockUI.first = "";
+      showLock("set");
+      lockUI.message = t("lock.mismatch");
+      return renderLock();
+    }
+    AppLock.saveLock(AppLock.makeLock(pin, { grace: lock?.grace ?? 60, biometric: Boolean(shellBiometry()) && (lock ? lock.biometric : true) }));
+    logEvent("lock_set", {});
+    tellShellLock();
+    hideLock();
+    toast(t(lock ? "lock.changed" : "lock.turnedOn"));
+    return render();
+  }
+  // unlock / off / change: the current passcode first.
+  if (!AppLock.checkPin(lock, pin)) {
+    // After a pause has run out, the next wrong try starts a fresh pause.
+    if (lockUI.failures >= AppLock.MAX_TRIES) lockUI.failures = AppLock.MAX_TRIES - 1;
+    lockUI.failures += 1;
+    lockUI.lastFailAt = Date.now();
+    saveTries();
+    lockUI.entry = "";
+    lockUI.message = t("lock.wrong");
+    return renderLock();
+  }
+  lockUI.failures = 0;
+  saveTries();
+  if (mode === "unlock") return hideLock();
+  if (mode === "change") return showLock("set");
+  if (mode === "off") {
+    AppLock.saveLock(null);
+    logEvent("lock_off", {});
+    tellShellLock();
+    hideLock();
+    toast(t("lock.turnedOff"));
+    render();
+  }
+}
+document.addEventListener("click", (event) => {
+  const key = event.target.closest?.("#lock-screen [data-lock-key]")?.dataset.lockKey;
+  if (!key) return;
+  if (key === "cancel") return hideLock();
+  if (key === "forgot") {
+    lockUI.forgot = !lockUI.forgot;
+    return renderLock();
+  }
+  if (key === "bio") return askBiometric();
+  lockDigit(key);
+});
+document.addEventListener("keydown", (event) => {
+  if (!$("#lock-screen")?.open) return;
+  if (/^\d$/.test(event.key)) lockDigit(event.key);
+  else if (event.key === "Backspace") lockDigit("back");
+  else return;
+  event.preventDefault();
+});
+// Away for a while (another app, the phone locked): lock again on return.
+document.addEventListener("visibilitychange", () => {
+  const lock = AppLock.readLock();
+  if (!lock) return;
+  if (document.visibilityState === "hidden") {
+    hiddenAt = Date.now();
+    // "Immediately": lock now, so the app switcher never shows the journal.
+    if (lock.grace === 0 && !isLocked()) showLock("unlock");
+  } else if (hiddenAt && !isLocked() && lockUI.mode !== "set" && lockUI.mode !== "confirm" && AppLock.shouldRelock(lock, (Date.now() - hiddenAt) / 1000)) showLock("unlock");
+});
 const chosenBookView = () => {
   try {
     return localStorage.getItem(BOOK_VIEW_KEY) === "flip" ? "flip" : "list";
@@ -3718,6 +3896,19 @@ async function action(target) {
     logEvent("contribute_interest", { kind: target.dataset.kind });
     $("#choose-dialog").close();
     toast(t("bookShare.thanks"));
+  }
+  if (actionName === "lock-toggle") return showLock(AppLock.readLock() ? "off" : "set");
+  if (actionName === "lock-change") return showLock("change");
+  if (actionName === "lock-grace") {
+    const lock = AppLock.readLock();
+    const grace = Number(target.dataset.grace);
+    if (lock && AppLock.GRACE_CHOICES.includes(grace)) AppLock.saveLock({ ...lock, grace });
+    return render();
+  }
+  if (actionName === "lock-biometric") {
+    const lock = AppLock.readLock();
+    if (lock) AppLock.saveLock({ ...lock, biometric: !lock.biometric });
+    return render();
   }
   if (actionName === "privacy-toggle") {
     const name = target.dataset.privacy;
@@ -6564,6 +6755,9 @@ async function start() {
   // Colors come from tokens.css / themes.css (generated from the shared
   // design tokens); only the chosen theme is applied here.
   applyTheme(loadTheme());
+  // App lock: before anything personal is drawn.
+  if (AppLock.readLock()) showLock("unlock");
+  tellShellLock();
   store = new Store(localStorage, responses[2]);
   account = Account.loadAccount(localStorage);
   // Without Labs there is no sign-in page or tour: open straight onto Home.
