@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.7",
+    date: "2026-11-10",
+    zh: {
+      title: "Little Keeper：一个可选的小伙伴；首页「Hi，今天是星期几」；标签更好找",
+      items: [
+        "首页上方改成「Hi，你的名字！今天是星期几」，点一下就能设置怎么称呼你。",
+        "新的可选小伙伴 Little Keeper：小兔或小猫，抱着本子和铅笔，软软的、会呼吸、眨眼、抖耳朵，头会跟着你的手指转一点，点它会弹一下。默认不开，首页只轻轻邀请一次。",
+        "三种陪伴方式：安静（只陪着，不说话）、温柔（轻轻邀请你记录；只有你点「听听它怎么说」才回应那一页）、互动（可以点它聊几句、一起回看和整理；翻看以前的页面、主动打招呼都要你另外打开）。",
+        "在纸上打字时它也安静地写；保存后会在本子上盖个章。它说的话都在这台设备上生成，你的日记不会被发送到任何地方；还没有接入 AI 服务，所以「允许发送给 AI」不能打开。",
+        "它会随你记录的日子慢慢长大（新朋友 → 一起长大中 → Little Keeper）：每天最多长一点点；难过和开心的日子一样算；没来也不会退步，不用喂、不会生病。",
+        "书架上也有它，点一下会聊聊你的手帐。随时可以在设置里换动物、改名字、换方式或关掉，关掉不会删除任何记录。",
+        "手帐本标签多的时候，书架上只显示最常用的 3 个，其余的点「更多」可以搜索。",
+      ],
+    },
+    en: {
+      title: "Little Keeper, an optional companion; “Hi, it's <weekday>” on Home; easier tags",
+      items: [
+        "Home now greets you: “Hi, <your name>! It's <weekday>.” Tap it to set what to call you.",
+        "Meet Little Keeper, an optional companion: a bunny or a cat with a notebook and pencil — soft, breathing, blinking, ears twitching, head turning a little toward your finger, bouncing when tapped. Off by default; Home invites you once.",
+        "Three ways to keep you company: Quiet (just there), Gentle (a soft invitation; replies to a page only when you ask), Interactive (tap to chat, revisit and tidy up; looking at earlier pages and speaking first each need your OK).",
+        "It writes quietly while you type and stamps the notebook after you save. Everything it says is made on this device; your journal is never sent anywhere. No AI service is connected, so “Allow sending to an AI service” stays off.",
+        "It grows with the days you keep (New Friend → Growing Companion → Little Keeper): a little at most each day; sad and happy days count the same; nothing is lost when you're away — no feeding, no illness.",
+        "It sits by your shelf in My Books too. Change the animal, name or mode, or turn it off, any time in Settings — turning it off deletes nothing.",
+        "With many journal tags, the shelf shows the 3 most used; the rest are under “More”, with a search.",
+      ],
+    },
+  },
+  {
     version: "7.6",
     date: "2026-11-10",
     zh: {

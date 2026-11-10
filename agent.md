@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-10 — V7.7 Little Keeper MVP（可选小伙伴）+ 首页问候 + 标签 Top 3
+
+- 需求：用户长文「Little Days — Little Keeper Feature Development」（Today 上的小伙伴、三种模式、选择动物 / 起名、主动请求的回应、成长、My Books、隐私与 AI 同意、分阶段、测试、文档），并说「你可以鼓励或者 challenge 我；动画希望 3D 可爱有质感，互动希望自然」。同一轮追加：「首页还希望加一个 Hi,XXX，今天是星期X」；「标签可能有很多可以显示 top3 然后有个搜索的地方」。这一条覆盖了上一条「只写文档、未经批准不实现」——用户这次明确要求实现。
+- 架构评估（实施前）：iOS = Swift WKWebView 外壳 + `Public/` 网页（vanilla ES modules，无框架）；数据 `little-days.v1`（V7.5 起 IndexedDB 为主、LocalStorage 镜像）+ Swift `Models.swift` 可选字段；导航 首页 / 日历 / ＋（Studio）/ 书架；没有独立 Growth tab（「我的习惯」可选页仍在）；无后端、无 AI 服务。决定：不换技术栈、不加后端；Little Keeper 作为独立模块接入现有页面。
+- 给用户的 challenge（已在回复中说明）：三种模式可能太细 → 每种一句话说明 + 「翻看以前的页面」「主动打招呼」单独开关；AI 回应与「只在本机」冲突 → 先做本机规则回应，外部 AI 只留接口且由代码强制同意；「完成 Growth 活动」与 Vision 2.0 冲突 → 只把「我的习惯」打卡当作「这一天照顾了自己」，一天最多一次；真 3D 需要美术模型、WebView 3D 耗电 → 先做 2.5D 黏土质感 SVG + CSS 动画。
+- 改动文件：新增 Public/js/keeper.mjs（纯函数：ANIMALS / MODES；`normalizeKeeper`（默认关闭、权限独立）；`modeAllows`（安静：不邀请、不回应；温柔：邀请 + 主动请求才回应；互动：聊天，回忆需 allowMemories，主动需 proactive）；`keeperConfig`（features.json `keeper` 可配置阈值与分值）；`growthPoints`（按天计：写页 2、有照片 1、打卡 1、打开那年今天 1，每天上限 4；有我页面的手帐本 2、有标签的手帐本 1；示例日不算；不看字数和情绪；没有扣分）；`stageFor`；`todayPrompt`；`localFeedback`（关键词线索 → 开头 / 中间 / 结尾三段，避开最近用过的句子，难过的日子不强行正能量，无诊断）；`createFeedbackService({remote})`（没有 aiConsent 时绝不调用 remote，没有 remote 时本机生成，安静模式返回 null）；`localChat`（回忆 / 本周 / 书架，回忆和标题需要 allowMemories）），新增 Public/js/keeper-art.mjs（原创 SVG 黏土角色：兔 / 猫，渐变光影、高光、腮红、柔和投影，抱本子拿铅笔；阶段配饰：小芽、围巾 + 徽章；心情：idle / quiet / happy），Public/app.js（首页问候 `greetingHTML` + 名字面板；Little Keeper：首页一次性邀请、首页气泡、Studio 小伙伴打字时变安静、保存后盖章、翻书页「听听它怎么说」、互动聊天面板（不保存）、书架上的它、介绍流程（动物 / 名字 / 方式）、设置卡片（形象、阶段叶子、名字、动物、方式、两个权限开关、禁用的 AI 同意开关、关闭）、头部跟随手指 / 点按弹跳、成长到新阶段时轻轻说一句；书架标签 Top 3 +「更多」搜索；关闭后不再邀请），personal-ui.mjs（extra.keeper），styles.css（角色动画：呼吸、眨眼、耳朵、铅笔、小芽、弹跳、盖章；prefers-reduced-motion 时全部停止），i18n.json（home.greeting*、keeper.*、books.tagsMore/Less/Search），features.json（keeper 配置），whats-new.mjs（V7.7），Models.swift（`DayState.keeper: KeeperProfile?`）+ CoreTests，tests/v77.test.mjs（7 项），tests/v71-browser.cjs（9 组），package.json，docs。
+- 运行 / 测试：Node 140 项（新增 v77 7 项：资料、模式、按天成长、可配置阶段、回应（含示例原句）、AI 同意强制、聊天权限）、Python 12 项、43 套浏览器 E2E 全部通过（新增 v71 9 组；本次全量里 v31 也通过）。Linux 容器 + Chromium；截图检查了角色、介绍、首页、回应面板。**Swift 未编译**（无 Xcode）。
+- 已知问题 / 限制：Swift 未编译；「3D」是 2.5D SVG + CSS，不是真 3D 模型；本机回应是规则组合，不是语言模型；聊天只支持三个话题 + 简单回应；没有真实 AI 后端（接口已留，同意开关在没有安全服务时禁用）；首页成长提示依赖重新渲染时间。
+- 下一步：美术：真 3D 模型（USDZ / glTF，或 Rive / Lottie 动画）与更多表情；考虑 iOS 端侧模型生成回应（需核实系统版本与机型要求）；故事小世界收藏品（docs/PRODUCT_VISION_2.md）；Xcode 构建与真机验证。
+
 ### 2026-11-10 — 产品方向 Vision 2.0 与 Little Keeper（只记录决策和方案，未实现）
 
 - 需求：用户两条消息。①「Additional Core Product Principle — Grow Through Living」：Little Keeper 随记录自然成长；伙伴成长 + 故事里的小世界（收藏品），MVP 设计可扩展数据模型、只做少量例子；不强制任务、不惩罚中断、可关闭、不需要把私人文字交给 AI。②「Product Vision 2.0 — Important Correction」：独立 Growth 模块已移除，不要重新引入；产品围绕 Today / Calendar / My Books / Journal Studio；成长只从已有的记录行为派生，不做习惯 / 健身 / 学习追踪器或成长仪表盘；核对仓库结构；保留代码和数据；更新 README、追加 agent.md；**未经批准不实现新功能、不改导航**。

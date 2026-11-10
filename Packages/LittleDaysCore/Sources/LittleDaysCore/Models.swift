@@ -312,6 +312,8 @@ public struct DayState: Codable {
     public var reflections: [GrowthReflection]?
     /// V6.6 (Labs): things to do, by day ("yyyy-MM-dd"), at most 5 each.
     public var plans: [String: [DayPlan]]?
+    /// V7.7: the optional Little Keeper companion (absent until chosen).
+    public var keeper: KeeperProfile?
 
     public init(seed: Seed, today: String = DayKey.string()) {
         habits = seed.habits
@@ -346,4 +348,29 @@ public struct DayState: Codable {
         let end = DayKey.adding(6, to: start)
         return checks.filter { $0.habitId == habitId && $0.date >= start && $0.date <= end }.count
     }
+}
+
+/// V7.7 Little Keeper: the companion's profile and permissions. Growth is
+/// derived from the journal (never stored); `revisits` only lists the days an
+/// "On this day" memory was opened. All optional, so older journals decode.
+public struct KeeperProfile: Codable, Equatable {
+    public var enabled: Bool?
+    /// "bunny" | "cat"
+    public var animal: String?
+    public var name: String?
+    /// "quiet" | "gentle" | "interactive"
+    public var mode: String?
+    /// May look at earlier pages (on the device), Interactive mode only.
+    public var allowMemories: Bool?
+    /// May speak first, Interactive mode only.
+    public var proactive: Bool?
+    /// May send a page to a secure AI service (none is connected yet).
+    public var aiConsent: Bool?
+    /// "shown" | "dismissed" — the one-time invitation on Today.
+    public var invite: String?
+    public var lastStage: Int?
+    public var revisits: [String]?
+    /// Ids of recently used reply phrases (to avoid repeating itself).
+    public var recent: [String]?
+    public var since: String?
 }

@@ -1027,6 +1027,338 @@
     "zh": "全部",
     "en": "All"
   },
+  "home.greeting": {
+    "zh": "Hi，{name}！今天是{weekday}",
+    "en": "Hi, {name}! It's {weekday}."
+  },
+  "home.greetingAnon": {
+    "zh": "Hi！今天是{weekday}",
+    "en": "Hi! It's {weekday}."
+  },
+  "home.greetingEdit": {
+    "zh": "设置我的称呼",
+    "en": "Set what to call me"
+  },
+  "home.nameTitle": {
+    "zh": "想让我怎么称呼你？",
+    "en": "What should I call you?"
+  },
+  "home.nameHint": {
+    "zh": "只用在首页的问候里，保存在这台设备上。",
+    "en": "Used only in Home's greeting, kept on this device."
+  },
+  "books.tagsMore": {
+    "zh": "更多 · {count}",
+    "en": "More · {count}"
+  },
+  "books.tagsLess": {
+    "zh": "收起",
+    "en": "Less"
+  },
+  "books.tagsSearch": {
+    "zh": "搜索标签",
+    "en": "Search tags"
+  },
+  "keeper.invite.title": {
+    "zh": "想要一个陪你记录的小伙伴吗？",
+    "en": "Would you like a little companion for your journal?"
+  },
+  "keeper.invite.body": {
+    "zh": "Little Keeper 会住在你的手帐里，随你记录的日子慢慢长大。完全可选，随时可以关掉。",
+    "en": "Little Keeper lives in your journal and grows as you keep your days. Entirely optional — turn it off any time."
+  },
+  "keeper.invite.yes": {
+    "zh": "认识一下",
+    "en": "Meet them"
+  },
+  "keeper.invite.later": {
+    "zh": "以后再说",
+    "en": "Maybe later"
+  },
+  "keeper.onboard.title": {
+    "zh": "认识 Little Keeper",
+    "en": "Meet Little Keeper"
+  },
+  "keeper.onboard.body": {
+    "zh": "你的手帐才是主角，它只是让这段路更温暖一点。不用喂、不用照顾，也不会因为你没来而难过。",
+    "en": "Your journal is the main character; your companion just makes the journey warmer. No feeding, no looking after, never sad when you're away."
+  },
+  "keeper.onboard.animal": {
+    "zh": "选一个小伙伴",
+    "en": "Choose a companion"
+  },
+  "keeper.onboard.name": {
+    "zh": "给它起个名字",
+    "en": "Give them a name"
+  },
+  "keeper.onboard.mode": {
+    "zh": "陪伴方式",
+    "en": "How they keep you company"
+  },
+  "keeper.onboard.privacy": {
+    "zh": "它说的话都在这台设备上生成，你的日记不会被发送到任何地方。",
+    "en": "Everything they say is made on this device; your journal is never sent anywhere."
+  },
+  "keeper.onboard.start": {
+    "zh": "就是它了",
+    "en": "That's the one"
+  },
+  "keeper.animal.bunny": {
+    "zh": "小兔",
+    "en": "Bunny"
+  },
+  "keeper.animal.bunnyHint": {
+    "zh": "温柔、安静地陪着你",
+    "en": "gentle and thoughtful"
+  },
+  "keeper.animal.cat": {
+    "zh": "小猫",
+    "en": "Cat"
+  },
+  "keeper.animal.catHint": {
+    "zh": "好奇、有点调皮",
+    "en": "curious and playful"
+  },
+  "keeper.mode.quiet": {
+    "zh": "安静",
+    "en": "Quiet"
+  },
+  "keeper.mode.quietHint": {
+    "zh": "只在旁边陪着，不说话、不打扰、不读你的日记。",
+    "en": "Just there beside you — no messages, no interruptions, never reads your journal."
+  },
+  "keeper.mode.gentle": {
+    "zh": "温柔",
+    "en": "Gentle"
+  },
+  "keeper.mode.gentleHint": {
+    "zh": "轻轻邀请你记录；只有你点「听听它怎么说」时才回应那一页。",
+    "en": "A soft invitation to write; replies to a page only when you ask."
+  },
+  "keeper.mode.interactive": {
+    "zh": "互动",
+    "en": "Interactive"
+  },
+  "keeper.mode.interactiveHint": {
+    "zh": "可以点它聊几句、一起回看和整理；翻看以前的页面、主动打招呼都要你另外打开。",
+    "en": "Tap to chat, revisit and tidy up together; looking at earlier pages and speaking first each need your OK."
+  },
+  "keeper.prompt.morning": {
+    "zh": "早上好～今天想先记下点什么吗？",
+    "en": "Good morning — anything you'd like to keep from today?"
+  },
+  "keeper.prompt.afternoon": {
+    "zh": "今天有什么想记住的吗？",
+    "en": "What would you like to remember about today?"
+  },
+  "keeper.prompt.evening": {
+    "zh": "今天过得怎么样？想写一句也可以。",
+    "en": "How was today? Even one line is lovely."
+  },
+  "keeper.prompt.night": {
+    "zh": "夜深了，想把今天收进本子里吗？",
+    "en": "It's late — shall we tuck today into the notebook?"
+  },
+  "keeper.prompt.kept": {
+    "zh": "今天的页面我收好了，谢谢你。",
+    "en": "I've tucked today's page away. Thank you."
+  },
+  "keeper.prompt.memory": {
+    "zh": "{years} 年前的今天，你写了「{title}」，要一起看看吗？",
+    "en": "{years} year(s) ago today you wrote “{title}” — want to look together?"
+  },
+  "keeper.grew": {
+    "zh": "我好像长大了一点点 —— {stage}。谢谢你记下的每一天。",
+    "en": "I think I've grown a little — {stage}. Thank you for every day you kept."
+  },
+  "keeper.tapLabel": {
+    "zh": "{name}",
+    "en": "{name}"
+  },
+  "keeper.tap.0": {
+    "zh": "嘿嘿，被你发现了。",
+    "en": "Hehe, you found me."
+  },
+  "keeper.tap.1": {
+    "zh": "我在帮你看着这些本子。",
+    "en": "I'm looking after your notebooks."
+  },
+  "keeper.tap.2": {
+    "zh": "今天不写也没关系哦。",
+    "en": "It's okay not to write today, too."
+  },
+  "keeper.tap.3": {
+    "zh": "你的手帐越来越好看了。",
+    "en": "Your journal keeps getting lovelier."
+  },
+  "keeper.stage.new": {
+    "zh": "新朋友",
+    "en": "New Friend"
+  },
+  "keeper.stage.growing": {
+    "zh": "一起长大中",
+    "en": "Growing Companion"
+  },
+  "keeper.stage.keeper": {
+    "zh": "Little Keeper",
+    "en": "Little Keeper"
+  },
+  "keeper.hello": {
+    "zh": "你好，我是{name}。",
+    "en": "Hi, I'm {name}."
+  },
+  "keeper.turnedOff": {
+    "zh": "Little Keeper 已关闭，你的记录都还在。",
+    "en": "Little Keeper is off — all your pages are still here."
+  },
+  "keeper.ask": {
+    "zh": "听听{name}怎么说",
+    "en": "What does {name} think?"
+  },
+  "keeper.thanks": {
+    "zh": "谢谢",
+    "en": "Thanks"
+  },
+  "keeper.localNote": {
+    "zh": "这句话是在这台设备上生成的，这一页没有被发送到任何地方。",
+    "en": "Made on this device — this page wasn't sent anywhere."
+  },
+  "keeper.shelf.count": {
+    "zh": "这里有你的 {count} 本手帐，我都帮你看着。",
+    "en": "{count} journals here — I'm keeping an eye on them all."
+  },
+  "keeper.shelf.latest": {
+    "zh": "最近收进来的是《{title}》。",
+    "en": "The newest one is “{title}”."
+  },
+  "keeper.shelf.tidy": {
+    "zh": "给手帐本加个标签，找起来会更快哦。",
+    "en": "Tags make journals quicker to find."
+  },
+  "keeper.shelf.find": {
+    "zh": "帮我找",
+    "en": "Help me find"
+  },
+  "keeper.chip.memory": {
+    "zh": "回看一个回忆",
+    "en": "Revisit a memory"
+  },
+  "keeper.chip.week": {
+    "zh": "这周我写了什么",
+    "en": "What did I write this week?"
+  },
+  "keeper.chip.shelf": {
+    "zh": "看看我的书架",
+    "en": "Look at my shelf"
+  },
+  "keeper.chat.hello": {
+    "zh": "我在呢。想一起回看，还是整理一下书架？",
+    "en": "I'm here. Shall we look back, or tidy the shelf?"
+  },
+  "keeper.chat.heard": {
+    "zh": "嗯，我听到了。想把它写进今天的一页吗？",
+    "en": "I hear you. Would you like to write it into today's page?"
+  },
+  "keeper.chat.placeholder": {
+    "zh": "和{name}说点什么",
+    "en": "Say something to {name}"
+  },
+  "keeper.chat.send": {
+    "zh": "说",
+    "en": "Send"
+  },
+  "keeper.chat.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "keeper.chat.needMemories": {
+    "zh": "我还没有翻看你以前页面的许可。如果愿意，可以在设置 → Little Keeper 里打开「翻看以前的页面」。",
+    "en": "I don't have permission to look at your earlier pages. If you'd like, turn on “Look at earlier pages” in Settings → Little Keeper."
+  },
+  "keeper.chat.noMemories": {
+    "zh": "以前的页面还不多，我们慢慢攒。",
+    "en": "Not many earlier pages yet — we'll collect them slowly."
+  },
+  "keeper.chat.memory": {
+    "zh": "我翻到了 {date} 的一页：「{title}」。",
+    "en": "I found a page from {date}: “{title}”."
+  },
+  "keeper.chat.weekNone": {
+    "zh": "这周还没有记录，没关系，想写的时候再写。",
+    "en": "Nothing kept this week yet — that's fine, write when you feel like it."
+  },
+  "keeper.chat.weekCount": {
+    "zh": "这周你记了 {count} 天。",
+    "en": "You kept {count} day(s) this week."
+  },
+  "keeper.chat.weekTitles": {
+    "zh": "这周你记了 {count} 天，有「{titles}」。",
+    "en": "You kept {count} day(s) this week, including “{titles}”."
+  },
+  "keeper.chat.shelfTags": {
+    "zh": "你有 {count} 本手帐，其中 {untagged} 本还没有标签。要不要给它们加几个？",
+    "en": "You have {count} journals; {untagged} have no tags yet. Want to add a few?"
+  },
+  "keeper.chat.shelfTidy": {
+    "zh": "你的 {count} 本手帐都有标签了，整整齐齐。",
+    "en": "All {count} of your journals have tags — neat and tidy."
+  },
+  "keeper.chat.privacyOn": {
+    "zh": "可以翻看你以前的页面（只在这台设备上）。随时可以在设置里关掉。",
+    "en": "May look at your earlier pages (on this device only). Turn it off any time in Settings."
+  },
+  "keeper.chat.privacyOff": {
+    "zh": "不会翻看你以前的页面；聊天不会被保存或发送。",
+    "en": "Doesn't look at your earlier pages; the chat isn't saved or sent."
+  },
+  "keeper.settings.offNote": {
+    "zh": "一个可选的小伙伴，随你记录的日子慢慢长大。关着的时候不会出现在任何地方。",
+    "en": "An optional little companion who grows as you keep your days. While off, it appears nowhere."
+  },
+  "keeper.settings.days": {
+    "zh": "一起记录了 {count} 天",
+    "en": "{count} day(s) kept together"
+  },
+  "keeper.settings.growthNote": {
+    "zh": "它随你记录的日子慢慢长大：写一页、放进照片、照顾自己、回看回忆、把记录收进手帐本。每天最多长一点点；难过的日子和开心的日子一样算；没来也不会退步。",
+    "en": "They grow with the days you keep: writing a page, adding photos, looking after yourself, revisiting memories, filling your journals. A little at most each day; sad and happy days count the same; nothing is lost when you're away."
+  },
+  "keeper.settings.allowMemories": {
+    "zh": "翻看以前的页面",
+    "en": "Look at earlier pages"
+  },
+  "keeper.settings.allowMemoriesHint": {
+    "zh": "让它在聊天里帮你回看以前的页面（只在这台设备上）。",
+    "en": "Lets them revisit earlier pages with you in chat (on this device only)."
+  },
+  "keeper.settings.proactive": {
+    "zh": "主动打招呼",
+    "en": "Speak first"
+  },
+  "keeper.settings.proactiveHint": {
+    "zh": "在首页偶尔主动提起「那年今天」。需要同时打开「翻看以前的页面」。",
+    "en": "Now and then mention “On this day” on Home. Needs “Look at earlier pages” too."
+  },
+  "keeper.settings.interactiveOnly": {
+    "zh": "只在「互动」方式里可用。",
+    "en": "Only in Interactive mode."
+  },
+  "keeper.settings.aiConsent": {
+    "zh": "允许发送给 AI 服务",
+    "en": "Allow sending to an AI service"
+  },
+  "keeper.settings.aiConsentHint": {
+    "zh": "还没有接入安全的 AI 服务，所以这里不能打开；现在的回应都在这台设备上生成，不会发送你的日记。",
+    "en": "No secure AI service is connected, so this stays off; replies are made on this device and your journal is never sent."
+  },
+  "keeper.settings.turnOff": {
+    "zh": "关闭 Little Keeper",
+    "en": "Turn off Little Keeper"
+  },
+  "keeper.settings.offKeeps": {
+    "zh": "关闭只会让它不再出现，你的记录、名字和设置都会保留。",
+    "en": "Turning off only hides them; your pages, its name and settings are kept."
+  },
   "privacy.title": {
     "zh": "隐私",
     "en": "Privacy"

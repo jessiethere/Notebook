@@ -254,3 +254,9 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - `Public/js/search.mjs`（纯函数，Node 测试）：`searchJournal(state, query)` → `{pages, books, total}`；`onThisDay(state, today)`。
 - 提醒：本机键 `little-days.reminder`；网页 → iOS：`littleDaysReminder.postMessage({type:"schedule"|"ready", …})`；iOS → 网页：`littleDaysReminderResult`、`littleDaysFromReminder`、`littleDaysReminderTurnedOff`。Swift `LittleDaysReminders`（UserNotifications，标识 `little-days.daily.0…13`，分类 `little-days.reminder`）。
 - 标签：`book.tags?: string[]`（JS `parseTags`，Swift `JournalBook.tags`）。
+
+## 2026-11-10 V7.7 Little Keeper
+
+- 模块分离：资料与偏好 `normalizeKeeper`（`state.keeper`，可选字段，Swift `KeeperProfile`）；外观与动画 `keeper-art.mjs` + styles.css；成长 `growthPoints` / `stageFor`（配置 `features.json.keeper`）；回应服务 `createFeedbackService({remote})` + `localFeedback`；聊天 `localChat`；页面集成在 app.js（首页、Studio、翻书页、书架、设置）。
+- 隐私：正文只在本机读取用来选词，不存储、不发送；`remote` 为 null；`aiConsent` 在没有安全服务时 UI 禁用，服务层没有同意绝不调用 remote（单元测试覆盖）；聊天内容不保存；回忆与本周标题需要 `allowMemories`。
+- 首页问候：`greetingHTML` 读 `account.name`（本机账号），点按设置名字（`Account.signIn` 更新）。

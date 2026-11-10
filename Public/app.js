@@ -30,6 +30,8 @@ import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
+import * as Keeper from "./js/keeper.mjs";
+import { keeperSVG } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -551,8 +553,8 @@ function home() {
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>${memoryHTML()}
+  return `<div class="home-mag"><header class="home-top"><div class="masthead">${greetingHTML(weekday, day)}<div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+ ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card">${keeperHomeHTML()}<h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>${memoryHTML()}
  ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -957,6 +959,205 @@ function setPrivacy(name, on) {
     localStorage.setItem(PRIVACY_KEYS[name], on ? "1" : "0");
   } catch {}
 }
+// ---------- Hi, name — today is … (V7.7) ----------
+function greetingHTML(weekday, day) {
+  const name = (account?.name || "").trim();
+  const text = name ? t("home.greeting", { name, weekday }) : t("home.greetingAnon", { weekday });
+  return `<button class="home-greeting" data-action="greeting-name" aria-label="${t("home.greetingEdit")}"><span>${esc(text)}</span><small>${esc(day)}</small></button>`;
+}
+function openNameSheet() {
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet name-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("home.nameTitle")}</h2><p class="save-help">${t("home.nameHint")}</p><input class="name-input" data-greeting-name maxlength="20" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"><button class="primary full-width" data-action="greeting-save">${t("save")}</button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.querySelector("[data-greeting-name]")?.focus();
+}
+
+// ---------- Little Keeper (V7.7) ----------
+// An optional little companion who lives in the journal (js/keeper.mjs for
+// the rules, js/keeper-art.mjs for the look). Off until chosen; existing
+// journals only see one gentle invitation. Turning it off deletes nothing.
+// Replies are made on this device; no secure AI service is connected, so
+// nothing is ever sent (the service refuses a remote call without consent).
+const keeperService = Keeper.createFeedbackService({ remote: null });
+let keeperDraft = null; // the onboarding choices
+let keeperLine = ""; // a line shown after a tap (not saved)
+let keeperTaps = 0;
+let keeperChat = []; // this sheet's lines only; never saved
+const keeperNow = () => Keeper.normalizeKeeper(state().keeper);
+function saveKeeper(change) {
+  store.update((s) => {
+    const k = Keeper.normalizeKeeper(s.keeper);
+    change(k);
+    s.keeper = k;
+  });
+}
+function keeperGrowth() {
+  const config = Keeper.keeperConfig(features);
+  const { total, reasons } = Keeper.growthPoints(state(), keeperNow(), config);
+  return { ...Keeper.stageFor(total, config), total, reasons };
+}
+function keeperArt(mood = "idle", { follow = true, cls = "" } = {}) {
+  const k = keeperNow();
+  const name = Keeper.keeperName(k, languageCode());
+  return `<span class="keeper ${cls}" ${follow ? "data-keeper-follow" : ""}>${keeperSVG({ animal: k.animal, stage: keeperGrowth().index, mood, label: name })}</span>`;
+}
+function keeperHomeHTML() {
+  const k = keeperNow();
+  if (!k.enabled) {
+    if (k.invite === "dismissed") return "";
+    return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperSVG({ animal: "bunny", mood: "idle", label: "Little Keeper" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
+  }
+  const name = Keeper.keeperName(k, languageCode());
+  const growth = keeperGrowth();
+  const grew = growth.index > k.lastStage;
+  if (grew) setTimeout(() => saveKeeper((x) => (x.lastStage = growth.index)), 0);
+  const memory = Keeper.modeAllows(k, "proactive") && Keeper.modeAllows(k, "memories") ? onThisDay(state(), dateKey())[0] : null;
+  const prompt = Keeper.todayPrompt({ hour: new Date().getHours(), keptToday: keptToday(), keeper: k, memory });
+  const line = grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : keeperLine || (prompt ? t(prompt.key, { ...prompt.values, name }) : "");
+  return `<div class="keeper-home"><button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(grew ? "happy" : "idle")}</button>${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}</div>`;
+}
+function keeperMiniHTML() {
+  const k = keeperNow();
+  return k.enabled ? `<span class="keeper-mini" aria-hidden="true">${keeperArt("idle", { follow: false })}</span>` : "";
+}
+// While typing on the paper, it writes quietly too.
+document.addEventListener("focusin", (event) => {
+  const mini = $(".keeper-mini");
+  if (!mini || !event.target.closest?.("#journal-canvas, .write-card")) return;
+  if (!mini.classList.contains("writing")) {
+    mini.classList.add("writing");
+    mini.innerHTML = keeperArt("quiet", { follow: false });
+  }
+});
+document.addEventListener("focusout", () => {
+  setTimeout(() => {
+    const mini = $(".keeper-mini");
+    if (!mini || document.activeElement?.closest?.("#journal-canvas, .write-card")) return;
+    mini.classList.remove("writing");
+    mini.innerHTML = keeperArt("idle", { follow: false });
+  }, 0);
+});
+// After Save: a little stamp on the notebook (never covers anything to tap).
+function keeperStamp() {
+  if (!keeperNow().enabled) return;
+  const stamp = document.createElement("div");
+  stamp.className = "keeper-stamp";
+  stamp.setAttribute("aria-hidden", "true");
+  stamp.innerHTML = `${keeperArt("happy", { follow: false })}<i class="keeper-stamp-mark">✓</i>`;
+  ($("#phone") || document.body).append(stamp);
+  setTimeout(() => stamp.remove(), 2400);
+}
+function keeperAskHTML(date, momentId) {
+  const k = keeperNow();
+  if (!Keeper.modeAllows(k, "feedback")) return "";
+  return `<button class="keeper-ask" data-action="keeper-feedback" data-date="${esc(date)}" data-moment="${esc(momentId)}"><span class="keeper-ask-art" aria-hidden="true">${keeperArt("idle", { follow: false })}</span>${t("keeper.ask", { name: Keeper.keeperName(k, languageCode()) })}</button>`;
+}
+function keeperShelfHTML(books) {
+  const k = keeperNow();
+  if (!k.enabled) return "";
+  const line = keeperLine && page === "books" ? keeperLine : "";
+  return `<div class="keeper-shelf"><button class="keeper-tap" data-action="keeper-shelf-tap" aria-label="${esc(t("keeper.tapLabel", { name: Keeper.keeperName(k, languageCode()) }))}">${keeperArt("idle")}</button>${line ? `<p class="keeper-bubble" role="status">${esc(line)}${Keeper.modeAllows(k, "chat") ? ` <button class="text-button" data-action="open-search">${t("keeper.shelf.find")} ›</button>` : ""}</p>` : ""}</div>`;
+}
+function pageWords(date, momentId) {
+  const entry = state().entries.find((e) => e.date === date) || state().drafts[date];
+  const page = momentId ? entry?.moments?.find((m) => m.id === momentId) : entry;
+  if (!page) return "";
+  return [page.title, page.body, ...(page.layers || []).filter((l) => l.kind === "text" && !l.gen).map((l) => l.text)].filter(Boolean).join("\n");
+}
+async function openKeeperFeedback(date, momentId) {
+  const k = keeperNow();
+  const name = Keeper.keeperName(k, languageCode());
+  const reply = await keeperService.respond({ text: pageWords(date, momentId), language: languageCode(), seed: Math.floor(Math.random() * 1000) }, k);
+  if (!reply) return;
+  saveKeeper((x) => (x.recent = [...x.recent, ...(reply.used || [])].slice(-12)));
+  logEvent("keeper_feedback", { kind: reply.source });
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("happy")}<b>${esc(name)}</b></div><p class="keeper-reply">${esc(reply.text)}${reply.tone ? ` <span class="keeper-tone">${esc(reply.tone)}</span>` : ""}</p><p class="save-help keeper-local">🔒 ${t("keeper.localNote")}</p><button class="choose-cancel" data-action="choose-close">${t("keeper.thanks")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+function openKeeperChat() {
+  const k = keeperNow();
+  const name = Keeper.keeperName(k, languageCode());
+  const growth = keeperGrowth();
+  if (!keeperChat.length) keeperChat = [{ who: "keeper", text: t("keeper.chat.hello", { name }) }];
+  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + growth.id))}</small></span></div><div class="keeper-msgs" aria-live="polite">${lines}</div><div class="keeper-chips"><button data-action="keeper-chat" data-intent="memory">${t("keeper.chip.memory")}</button><button data-action="keeper-chat" data-intent="week">${t("keeper.chip.week")}</button><button data-action="keeper-chat" data-intent="shelf">${t("keeper.chip.shelf")}</button></div><div class="keeper-say"><input data-keeper-say maxlength="120" placeholder="${esc(t("keeper.chat.placeholder", { name }))}"><button class="secondary" data-action="keeper-say">${t("keeper.chat.send")}</button></div><p class="save-help keeper-local">🔒 ${t(Keeper.modeAllows(k, "memories") ? "keeper.chat.privacyOn" : "keeper.chat.privacyOff")}</p><button class="choose-cancel" data-action="choose-close">${t("close")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.querySelector(".keeper-msgs")?.lastElementChild?.scrollIntoView({ block: "nearest" });
+}
+function keeperAnswer(intent, said = "") {
+  const k = keeperNow();
+  if (said) keeperChat.push({ who: "me", text: said });
+  else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
+  const answer = Keeper.localChat(said ? "hello" : intent, { state: state(), keeper: k, language: languageCode(), today: dateKey(), seed: Math.floor(Math.random() * 1000) });
+  const values = { ...(answer.values || {}), name: Keeper.keeperName(k, languageCode()) };
+  if (values.date) values.date = friendlyDate(values.date);
+  keeperChat.push({ who: "keeper", text: t(said ? "keeper.chat.heard" : answer.key, values), open: answer.open || null });
+  keeperChat = keeperChat.slice(-12);
+  openKeeperChat();
+}
+function openKeeperOnboarding() {
+  const k = keeperNow();
+  keeperDraft ||= { animal: k.animal, name: k.name, mode: k.mode };
+  const d = keeperDraft;
+  const animals = Keeper.ANIMALS.map((a) => `<button class="keeper-choice ${d.animal === a ? "selected" : ""}" data-action="keeper-pick-animal" data-animal="${a}" aria-pressed="${d.animal === a}"><span class="keeper">${keeperSVG({ animal: a, mood: d.animal === a ? "happy" : "idle", label: t("keeper.animal." + a) })}</span><b>${t("keeper.animal." + a)}</b><small>${t("keeper.animal." + a + "Hint")}</small></button>`).join("");
+  const modes = Keeper.MODES.map((m) => `<button class="keeper-mode ${d.mode === m ? "selected" : ""}" data-action="keeper-pick-mode" data-mode="${m}" aria-pressed="${d.mode === m}"><b>${t("keeper.mode." + m)}</b><small>${t("keeper.mode." + m + "Hint")}</small></button>`).join("");
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p><h3>${t("keeper.onboard.animal")}</h3><div class="keeper-animals">${animals}</div><h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+function keeperSettingsHTML() {
+  const k = keeperNow();
+  if (!k.enabled) return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><p>${t("keeper.settings.offNote")}</p><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button></section>`;
+  const name = Keeper.keeperName(k, languageCode());
+  const g = keeperGrowth();
+  const config = Keeper.keeperConfig(features);
+  const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
+  const row = (key, on, hint, enabled = true) => `<button class="privacy-row" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
+  const interactive = k.mode === "interactive";
+  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.animal")}</span><div class="segmented">${Keeper.ANIMALS.map((a) => `<button data-action="keeper-set" data-key="animal" data-value="${a}" class="${k.animal === a ? "selected" : ""}" aria-pressed="${k.animal === a}">${t("keeper.animal." + a)}</button>`).join("")}</div></div><div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
+}
+document.addEventListener("change", (event) => {
+  if (!event.target.matches?.("[data-keeper-rename]")) return;
+  saveKeeper((k) => (k.name = event.target.value.trim().slice(0, 12)));
+  render();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  if (event.target.matches?.("[data-keeper-say]")) {
+    event.preventDefault();
+    $('[data-action="keeper-say"]')?.click();
+  }
+  if (event.target.matches?.("[data-greeting-name]")) {
+    event.preventDefault();
+    $('[data-action="greeting-save"]')?.click();
+  }
+});
+// Its head turns a little toward your finger or pointer.
+let keeperFollowFrame = 0;
+document.addEventListener("pointermove", (event) => {
+  if (keeperFollowFrame) return;
+  keeperFollowFrame = requestAnimationFrame(() => {
+    keeperFollowFrame = 0;
+    for (const el of document.querySelectorAll("[data-keeper-follow]")) {
+      const r = el.getBoundingClientRect();
+      if (!r.width) continue;
+      const dx = event.clientX - (r.left + r.width / 2), dy = event.clientY - (r.top + r.height / 2);
+      const near = Math.hypot(dx, dy) < 420;
+      el.style.setProperty("--tilt", near ? `${Math.max(-9, Math.min(9, dx / 18))}deg` : "0deg");
+      el.style.setProperty("--look", near ? `${Math.max(-2, Math.min(2, dy / 60))}px` : "0px");
+    }
+  });
+});
+function keeperBounce(target) {
+  const el = target.closest?.(".keeper-tap")?.querySelector(".keeper") || target.querySelector?.(".keeper");
+  if (!el) return;
+  el.classList.remove("boing");
+  void el.offsetWidth;
+  el.classList.add("boing");
+}
+
 // ---------- Search and "On this day" (V7.6) ----------
 let searchQuery = "";
 let searchReturn = "home";
@@ -997,6 +1198,11 @@ function openSearch() {
   $("[data-search-input]")?.focus();
 }
 document.addEventListener("input", (event) => {
+  if (event.target.matches?.("[data-tag-search]")) {
+    const q = event.target.value.trim().toLocaleLowerCase();
+    for (const b of document.querySelectorAll(".shelf-tags-all button")) b.hidden = Boolean(q) && !b.dataset.tag.toLocaleLowerCase().includes(q);
+    return;
+  }
   if (!event.target.matches?.("[data-search-input]")) return;
   searchQuery = event.target.value;
   const box = $("#search-results");
@@ -1013,7 +1219,7 @@ function memoryHTML() {
   const label = first.years ? t("memory.yearsAgo", { count: first.years }) : t("memory.monthAgo");
   const src = first.photo ? safePhoto(first.photo) : "";
   const others = more.length ? `<div class="memory-more">${more.slice(0, 4).map((m) => `<button data-action="open-day" data-date="${esc(m.date)}">${t("memory.yearsAgo", { count: m.years })}</button>`).join("")}</div>` : "";
-  return `<section class="memory-card" aria-label="${esc(label)}"><div class="section-heading"><div><h2>${esc(label)}</h2><small>${esc(new Date(`${first.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" }))}</small></div><button class="memory-close" data-action="memory-dismiss" aria-label="${t("memory.dismiss")}">×</button></div><button class="memory-open ${src ? "has-photo" : ""}" data-action="open-day" data-date="${esc(first.date)}"${first.momentId ? ` data-moment="${esc(first.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : ""}<span><b>${esc(first.title || t("entry.untitled"))}</b>${first.words ? `<small>${esc(first.words)}</small>` : ""}<i>${t("memory.open", { count: first.pages })} ›</i></span></button>${others}</section>`;
+  return `<section class="memory-card" aria-label="${esc(label)}"><div class="section-heading"><div><h2>${esc(label)}</h2><small>${esc(new Date(`${first.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" }))}</small></div><button class="memory-close" data-action="memory-dismiss" aria-label="${t("memory.dismiss")}">×</button></div><button class="memory-open ${src ? "has-photo" : ""}" data-action="open-day" data-revisit="1" data-date="${esc(first.date)}"${first.momentId ? ` data-moment="${esc(first.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : ""}<span><b>${esc(first.title || t("entry.untitled"))}</b>${first.words ? `<small>${esc(first.words)}</small>` : ""}<i>${t("memory.open", { count: first.pages })} ›</i></span></button>${others}</section>`;
 }
 // ---------- A gentle daily reminder (V7.6) ----------
 // The iPhone app schedules local notifications (nothing goes online): the
@@ -1339,7 +1545,7 @@ function flipBookHTML(book) {
     const checklist = listed.length ? `<p class="flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</p>` : "";
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>${demo ? "" : keeperAskHTML(date, moment?.id || "")}`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -1393,13 +1599,23 @@ function booksPage() {
   const tags = [...new Map(all.flatMap((b) => b.tags || []).map((tag) => [tag.toLocaleLowerCase(), tag])).values()];
   if (shelfTag && !tags.some((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase())) shelfTag = "";
   const list = shelfTag ? all.filter((b) => (b.tags || []).some((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase())) : all;
-  const tagRow = tags.length ? `<div class="shelf-tags" role="group" aria-label="${t("books.tags")}"><button data-action="shelf-tag" data-tag="" aria-pressed="${!shelfTag}">${t("books.allTags")}</button>${tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}" aria-pressed="${shelfTag.toLocaleLowerCase() === tag.toLocaleLowerCase()}">#${esc(tag)}</button>`).join("")}</div>` : "";
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
+  // Many tags: the 3 most used (and the chosen one), the rest behind "More", with a search.
+  const used = (tag) => all.filter((b) => (b.tags || []).some((x) => x.toLocaleLowerCase() === tag.toLocaleLowerCase())).length;
+  const ranked = [...tags].sort((a, b) => used(b) - used(a) || tags.indexOf(a) - tags.indexOf(b));
+  const top = ranked.slice(0, 3);
+  if (shelfTag && !top.some((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase())) top.push(ranked.find((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase()));
+  const chip = (tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}" aria-pressed="${shelfTag.toLocaleLowerCase() === tag.toLocaleLowerCase()}">#${esc(tag)}</button>`;
+  const rest = ranked.filter((tag) => !top.includes(tag));
+  const more = rest.length ? `<button class="shelf-tags-more" data-action="shelf-tags-more" aria-expanded="${shelfTagsOpen}">${t(shelfTagsOpen ? "books.tagsLess" : "books.tagsMore", { count: rest.length })}</button>` : "";
+  const panel = rest.length && shelfTagsOpen ? `<div class="shelf-tags-panel"><input type="search" data-tag-search maxlength="20" placeholder="${t("books.tagsSearch")}" aria-label="${t("books.tagsSearch")}"><div class="shelf-tags-all">${rest.map(chip).join("")}</div></div>` : "";
+  const tagRow = tags.length ? `<div class="shelf-tags" role="group" aria-label="${t("books.tags")}"><button data-action="shelf-tag" data-tag="" aria-pressed="${!shelfTag}">${t("books.allTags")}</button>${top.map(chip).join("")}${more}</div>${panel}` : "";
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours ? "" : keeperShelfHTML(all)}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
 // friend has joined. Read only (nothing is created by asking).
 let shelfTag = "";
+let shelfTagsOpen = false;
 function isOurBook(book) {
   return (social().collab?.[book.id]?.members || []).some((member) => member.status === "active");
 }
@@ -2752,6 +2968,7 @@ function showSavedPage() {
   render();
   $("#app-scroll").scrollTop = 0;
   document.querySelector(".flip-book")?.scrollIntoView({ block: "start" });
+  keeperStamp();
   // Today's first page: the stamp moment, right here on the page just made.
   setTimeout(() => maybeCelebrate(true), 260);
 }
@@ -3078,7 +3295,7 @@ function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
   // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span><button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span>${keeperMiniHTML()}<button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -3189,7 +3406,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), reminder: reminderSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), keeper: keeperSettingsHTML(), news: newsSectionHTML(), reminder: reminderSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
     search: searchPageHTML,
   }[page]();
@@ -3873,8 +4090,11 @@ async function action(target) {
       $(".date-summary")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }
-  if (actionName === "open-day")
+  if (actionName === "open-day") {
+    if (target.dataset.revisit && keeperNow().enabled) saveKeeper((k) => !k.revisits.includes(dateKey()) && k.revisits.push(dateKey()));
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
     openDay(target.dataset.date, target.dataset.moment);
+  }
   if (actionName === "day-back") {
     page = "calendar";
     render();
@@ -4073,6 +4293,90 @@ async function action(target) {
     $("#choose-dialog").close();
     toast(t("bookShare.thanks"));
   }
+  if (actionName === "greeting-name") return openNameSheet();
+  if (actionName === "greeting-save") {
+    const name = ($("[data-greeting-name]")?.value || "").trim().slice(0, 20);
+    account = Account.signIn(localStorage, { name, avatar: account?.avatar });
+    $("#choose-dialog").close();
+    return render();
+  }
+  if (actionName === "keeper-onboard") {
+    keeperDraft = null;
+    return openKeeperOnboarding();
+  }
+  if (actionName === "keeper-invite-dismiss" || actionName === "keeper-onboard-later") {
+    if (!keeperNow().enabled) saveKeeper((k) => (k.invite = "dismissed"));
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+    return render();
+  }
+  if (actionName === "keeper-pick-animal" || actionName === "keeper-pick-mode") {
+    keeperDraft.name = $("[data-keeper-name]")?.value || keeperDraft.name;
+    if (actionName === "keeper-pick-animal") keeperDraft.animal = target.dataset.animal;
+    else keeperDraft.mode = target.dataset.mode;
+    return openKeeperOnboarding();
+  }
+  if (actionName === "keeper-start") {
+    const d = { ...keeperDraft, name: ($("[data-keeper-name]")?.value || "").trim() };
+    const index = keeperGrowth().index;
+    saveKeeper((k) => Object.assign(k, { enabled: true, animal: d.animal, name: d.name, mode: d.mode, invite: "shown", lastStage: index, since: k.since || dateKey() }));
+    keeperDraft = null;
+    keeperLine = "";
+    logEvent("keeper_on", { kind: d.mode });
+    $("#choose-dialog").close();
+    render();
+    return toast(t("keeper.hello", { name: Keeper.keeperName(keeperNow(), languageCode()) }));
+  }
+  if (actionName === "keeper-tap") {
+    keeperBounce(target);
+    const k = keeperNow();
+    if (Keeper.modeAllows(k, "chat")) return openKeeperChat();
+    if (!Keeper.modeAllows(k, "invite")) return; // Quiet: just a little bounce
+    keeperTaps++;
+    keeperLine = t(`keeper.tap.${keeperTaps % 4}`, { name: Keeper.keeperName(k, languageCode()) });
+    const bubble = $(".keeper-home .keeper-bubble");
+    if (bubble) bubble.lastChild.textContent = keeperLine;
+    else render();
+    return;
+  }
+  if (actionName === "keeper-shelf-tap") {
+    keeperBounce(target);
+    const k = keeperNow();
+    if (!Keeper.modeAllows(k, "invite")) return;
+    keeperTaps++;
+    const books = state().books;
+    const lines = [t("keeper.shelf.count", { count: books.length }), t("keeper.shelf.latest", { title: books.at(-1)?.title || "" }), t("keeper.shelf.tidy")];
+    keeperLine = lines[keeperTaps % lines.length];
+    return render();
+  }
+  if (actionName === "keeper-feedback") return openKeeperFeedback(target.dataset.date, target.dataset.moment || "");
+  if (actionName === "keeper-chat") return keeperAnswer(target.dataset.intent);
+  if (actionName === "keeper-say") {
+    const said = ($("[data-keeper-say]")?.value || "").trim();
+    if (said) keeperAnswer("hello", said);
+    return;
+  }
+  if (actionName === "keeper-set") {
+    const { key, value } = target.dataset;
+    saveKeeper((k) => {
+      if (key === "animal" && Keeper.ANIMALS.includes(value)) k.animal = value;
+      if (key === "mode" && Keeper.MODES.includes(value)) k.mode = value;
+    });
+    return render();
+  }
+  if (actionName === "keeper-toggle") {
+    const key = target.dataset.key;
+    if (!["allowMemories", "proactive"].includes(key)) return; // AI consent waits for a secure service
+    saveKeeper((k) => (k[key] = !k[key]));
+    return render();
+  }
+  if (actionName === "keeper-disable") {
+    // Off means off: no invitation on Today afterwards (Settings can bring it back).
+    saveKeeper((k) => Object.assign(k, { enabled: false, invite: "dismissed" }));
+    keeperLine = "";
+    logEvent("keeper_off", {});
+    toast(t("keeper.turnedOff"));
+    return render();
+  }
   if (actionName === "reminder-toggle") {
     const r = readReminder();
     saveReminder({ ...r, on: !r.on });
@@ -4080,8 +4384,15 @@ async function action(target) {
     toast(t(r.on ? "reminder.turnedOff" : "reminder.turnedOn", { time: r.time }));
     return render();
   }
+  if (actionName === "shelf-tags-more") {
+    shelfTagsOpen = !shelfTagsOpen;
+    render();
+    if (shelfTagsOpen) $("[data-tag-search]")?.focus();
+    return;
+  }
   if (actionName === "shelf-tag") {
     shelfTag = target.dataset.tag || "";
+    shelfTagsOpen = false;
     selectedBook = null;
     page = "books";
     return render();
