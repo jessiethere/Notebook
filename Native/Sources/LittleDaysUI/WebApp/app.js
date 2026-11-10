@@ -553,8 +553,8 @@ function home() {
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead">${greetingHTML(weekday, day)}<div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card">${keeperHomeHTML()}<h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>${memoryHTML()}
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg></div><p class="brand-tag">${t("home.tagline")}</p>${streakChipHTML()}</div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+ ${backupNudgeHTML()}<section class="hero today-card">${keeperPerchHTML()}<div class="story-start-card"><i class="nb-rings" aria-hidden="true"><b></b><b></b></i><div class="today-head">${greetingHTML(weekday, day)}<span class="today-date-chip">${icon("calendar")}${esc(new Date().toLocaleDateString(locale(), { month: "short", day: "numeric", weekday: "short" }))}</span></div>${keeperInviteHTML()}<h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><div class="story-start-row today-tiles"><button class="story-photos today-tile featured" data-action="today-photos">${tileArt("photo")}<b>${t("tile.photo")}</b></button><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${tileArt("write")}<b>${t("story.justWrite")}</b></button><button class="today-tile" data-action="today-draw">${tileArt("draw")}<b>${t("tile.draw")}</b></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${tileArt("more")}<b>${t("tile.more")}</b></button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>${memoryHTML()}
  ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -963,7 +963,7 @@ function setPrivacy(name, on) {
 function greetingHTML(weekday, day) {
   const name = (account?.name || "").trim();
   const text = name ? t("home.greeting", { name, weekday }) : t("home.greetingAnon", { weekday });
-  return `<button class="home-greeting" data-action="greeting-name" aria-label="${t("home.greetingEdit")}"><span>${esc(text)}</span><small>${esc(day)}</small></button>`;
+  return `<button class="home-greeting" data-action="greeting-name" aria-label="${t("home.greetingEdit")}"><span>${esc(text)}</span></button>`;
 }
 function openNameSheet() {
   const dialog = $("#choose-dialog");
@@ -1001,12 +1001,15 @@ function keeperArt(mood = "idle", { follow = true, cls = "" } = {}) {
   const name = Keeper.keeperName(k, languageCode());
   return `<span class="keeper ${cls}" ${follow ? "data-keeper-follow" : ""}>${keeperSVG({ animal: k.animal, stage: keeperGrowth().index, mood, label: name })}</span>`;
 }
-function keeperHomeHTML() {
+function keeperInviteHTML() {
   const k = keeperNow();
-  if (!k.enabled) {
-    if (k.invite === "dismissed") return "";
-    return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperSVG({ animal: "bunny", mood: "idle", label: "Little Keeper" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
-  }
+  if (k.enabled || k.invite === "dismissed") return "";
+  return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperSVG({ animal: "cat", mood: "idle", label: "Little Keeper" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
+}
+// Perched on the top edge of today's notebook card, paws over the edge.
+function keeperPerchHTML() {
+  const k = keeperNow();
+  if (!k.enabled) return "";
   const name = Keeper.keeperName(k, languageCode());
   const growth = keeperGrowth();
   const grew = growth.index > k.lastStage;
@@ -1014,7 +1017,17 @@ function keeperHomeHTML() {
   const memory = Keeper.modeAllows(k, "proactive") && Keeper.modeAllows(k, "memories") ? onThisDay(state(), dateKey())[0] : null;
   const prompt = Keeper.todayPrompt({ hour: new Date().getHours(), keptToday: keptToday(), keeper: k, memory });
   const line = grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : keeperLine || (prompt ? t(prompt.key, { ...prompt.values, name }) : "");
-  return `<div class="keeper-home"><button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(grew ? "happy" : "idle")}</button>${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}</div>`;
+  return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(grew ? "happy" : "idle")}</button></div>`;
+}
+// Small soft illustrations for Home's four ways to start.
+function tileArt(kind) {
+  const art = {
+    photo: `<rect x="9" y="11" width="30" height="27" rx="3" fill="#fff" stroke="#E2D6C3"/><rect x="12" y="14" width="24" height="17" rx="2" fill="#BFDCEB"/><circle cx="30" cy="19" r="3" fill="#F7D46A"/><path d="M12 31l7-8 6 6 4-3 7 5v0H12Z" fill="#8FB57E"/><rect x="18" y="8" width="12" height="5" rx="1" fill="#E9D9B8" opacity=".9"/>`,
+    write: `<path d="M8 14q8-4 16 0v24q-8-4-16 0Z" fill="#FBF3E2" stroke="#D9C7A8"/><path d="M24 14q8-4 16 0v24q-8-4-16 0Z" fill="#FFF9EE" stroke="#D9C7A8"/><path d="M12 20h8M12 25h8M28 20h8M28 25h6" stroke="#CBB89A" stroke-width="1.4" stroke-linecap="round"/><rect x="31" y="4" width="5" height="26" rx="2" transform="rotate(35 33 17)" fill="#F2CD5C"/><rect x="31" y="2" width="5" height="5" rx="1.5" transform="rotate(35 33 17)" fill="#F1A7B5"/>`,
+    draw: `<path d="M24 8c9 0 16 6 16 14 0 5-4 6-7 6-3 0-4 2-4 4 0 3-2 6-6 6-8 0-15-7-15-15S15 8 24 8Z" fill="#FFF1D6" stroke="#E2C9A0"/><circle cx="16" cy="18" r="3" fill="#F1A7B5"/><circle cx="24" cy="14" r="3" fill="#F7D46A"/><circle cx="32" cy="18" r="3" fill="#8FB57E"/><circle cx="17" cy="27" r="3" fill="#9EC6E0"/>`,
+    more: `<path d="M24 8l3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" fill="#F7D46A" stroke="#E5B93A"/><circle cx="36" cy="32" r="3.4" fill="#F1A7B5"/><circle cx="12" cy="34" r="2.6" fill="#8FB57E"/>`,
+  }[kind];
+  return `<svg class="tile-art" viewBox="0 0 48 44" aria-hidden="true">${art}</svg>`;
 }
 function keeperMiniHTML() {
   const k = keeperNow();
@@ -4620,11 +4633,11 @@ async function action(target) {
     const left = plansOf(addDays(dateKey(), -1)).filter((p) => !p.done);
     return savePlans(dateKey(), (list) => left.forEach((p) => list.length < MAX_PLANS && list.push({ id: id(), text: p.text, done: false })));
   }
-  if (actionName === "today-photos" || actionName === "today-write") {
+  if (actionName === "today-photos" || actionName === "today-write" || actionName === "today-draw") {
     // Home's "what's worth keeping today?": start straight away, no sheet.
     quickOpenedAt = Date.now();
     quickTaps = 1;
-    const way = actionName === "today-photos" ? "photo" : "write";
+    const way = actionName === "today-photos" ? "photo" : actionName === "today-draw" ? "draw" : "write";
     logEvent("quick_open", { way, from: "home" });
     quick = { date: dateKey(), book: lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily", way, photo: "mine", fromHome: true };
     quickSession = { started: quickOpenedAt, taps: 1, shuffles: 0 };
@@ -6579,7 +6592,10 @@ async function v3Action(target) {
     toast(t("settings.backupDone"));
     writeKey(BACKUP_AT_KEY, dateKey());
     logEvent("backup", {});
-    if (["home", "settings"].includes(page)) render();
+    if (["home", "settings"].includes(page)) {
+      render();
+      if (page === "settings") showMediaUsage();
+    }
     return true;
   }
   return false;

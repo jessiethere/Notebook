@@ -1359,6 +1359,22 @@
     "zh": "关闭只会让它不再出现，你的记录、名字和设置都会保留。",
     "en": "Turning off only hides them; your pages, its name and settings are kept."
   },
+  "home.tagline": {
+    "zh": "把日子，好好收藏",
+    "en": "Your life, beautifully collected."
+  },
+  "tile.photo": {
+    "zh": "照片手帐",
+    "en": "Photo journal"
+  },
+  "tile.draw": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "tile.more": {
+    "zh": "更多方式",
+    "en": "More ways"
+  },
   "privacy.title": {
     "zh": "隐私",
     "en": "Privacy"

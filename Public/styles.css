@@ -14475,3 +14475,227 @@ dialog h2,
   color: var(--t-5f6f52, #5F6F52);
   font-size: 12px;
 }
+
+/* ---------- V7.8 · Home: a little notebook with a companion on its edge ---------- */
+.home-mag .brand-title {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+.brand-sprout {
+  width: 22px;
+  height: 22px;
+  margin-top: -2px;
+  fill: #A9C79A;
+  stroke: #7D9A6A;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.brand-sprout path:first-child {
+  fill: none;
+}
+.home-mag .brand-tag {
+  margin: 2px 0 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t-6f675d, #6F675D);
+}
+.home-mag .today-card {
+  position: relative;
+}
+.keeper-perch {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0 18px -26px 0;
+  pointer-events: none;
+}
+.keeper-perch > * {
+  pointer-events: auto;
+}
+.keeper-perch .keeper {
+  width: 118px;
+  filter: drop-shadow(0 6px 8px rgba(60, 45, 30, 0.14));
+  animation: k-peek 0.7s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+.keeper-perch .keeper-bubble {
+  max-width: 190px;
+  margin: 0 0 46px;
+  border-radius: 16px 16px 4px 16px;
+}
+@keyframes k-peek {
+  from { opacity: 0; transform: translateY(26px); }
+}
+.story-start-card {
+  position: relative;
+  z-index: 1;
+  outline: 1.5px dashed var(--c-e2d6c3, #E2D6C3);
+  outline-offset: -9px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.7), transparent 55%),
+    var(--paper);
+}
+.nb-rings {
+  position: absolute;
+  left: -10px;
+  top: 58px;
+  display: grid;
+  gap: 34px;
+  pointer-events: none;
+}
+.nb-rings b {
+  display: block;
+  width: 22px;
+  height: 12px;
+  border: 3px solid #D2B26A;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(60, 45, 30, 0.2);
+}
+.today-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.today-head .home-greeting span {
+  font-size: 17px;
+}
+.today-date-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream);
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.today-date-chip svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.story-start-row.today-tiles {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.story-start-row.today-tiles .today-tile {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 86px;
+  padding: 8px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 2px 0 rgba(60, 45, 30, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  transition: transform 0.15s ease;
+}
+.story-start-row.today-tiles .today-tile:active {
+  transform: scale(0.96);
+}
+.story-start-row.today-tiles .today-tile b {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.story-start-row.today-tiles .today-tile.featured {
+  border-color: #EBCF7A;
+  background: linear-gradient(180deg, #FFF4C9, #FBE7A1);
+  min-height: 86px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.today-tile .tile-art {
+  width: 40px;
+  height: 36px;
+  filter: drop-shadow(0 2px 2px rgba(60, 45, 30, 0.12));
+}
+/* Washi tape on today's photo cards. */
+.home-mag .peek-slide:not(.peek-words)::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  z-index: 2;
+  width: 76px;
+  height: 18px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: repeating-linear-gradient(45deg, rgba(233, 217, 184, 0.92) 0 6px, rgba(244, 233, 210, 0.92) 6px 12px);
+  box-shadow: 0 1px 2px rgba(60, 45, 30, 0.15);
+}
+/* The companion's new plush look at other sizes. */
+.keeper-mini .keeper {
+  width: 40px;
+}
+.keeper-shelf .keeper {
+  width: 66px;
+}
+.keeper-sheet-head .keeper {
+  width: 92px;
+}
+
+.keeper .k-body {
+  transform-origin: 60px 110px;
+}
+.keeper .k-head {
+  transform-origin: 60px 96px;
+}
+.keeper .k-eyes {
+  transform-origin: 60px 64px;
+}
+.keeper .k-ear-l {
+  transform-origin: 40px 40px;
+}
+.keeper .k-ear-r {
+  transform-origin: 80px 40px;
+}
+.keeper .k-pencil {
+  transform-origin: 90px 102px;
+}
+.keeper .k-hat .k-flower,
+.keeper .k-hat .k-star {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.story-start-card .story-start-row.today-tiles .today-tile svg.tile-art {
+  width: 40px;
+  height: 36px;
+  flex: none;
+}
+.story-start-card .story-start-row.today-tiles .today-tile.moment-cta {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  flex-direction: column;
+}
+.story-start-card .story-start-row.today-tiles .today-tile.moment-cta {
+  grid-template-columns: 1fr;
+  gap: 4px;
+  min-height: 86px;
+  padding: 8px 4px 10px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+  box-shadow: 0 2px 0 rgba(60, 45, 30, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.home-mag .today-tile svg.tile-art {
+  fill: initial;
+  stroke: none;
+}
+.home-mag .today-tile b {
+  font-size: 12.5px;
+}

@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.8",
+    date: "2026-11-10",
+    zh: {
+      title: "Little Keeper 换上毛绒新造型；首页变成一本小本子",
+      items: [
+        "Little Keeper 换了新造型：毛茸茸、大眼睛，从本子上方探出头、爪子搭在本子边上。小猫是灰色英短，戴着带叶子的柠檬毛线帽；小兔戴着小雏菊花环。长大后帽子上会多一朵小花，再多一枚金色小星星。",
+        "首页「今天」卡片变成一本小本子：左边有铁环、四周一圈缝线；最上面是「Hi，名字！今天是星期几」和日期小牌子。",
+        "记录的入口改成四个带小插画的方块：照片手帐（高亮）、只写几句、手绘、更多方式。",
+        "品牌名旁边多了一颗小芽和一句「把日子，好好收藏」；首页「今天」的照片卡片上贴了一条纸胶带。",
+        "修好：在设置里备份之后，「本机媒体」那一行用量不会再变成空白。",
+      ],
+    },
+    en: {
+      title: "Little Keeper's new plush look; Home becomes a little notebook",
+      items: [
+        "Little Keeper has a new look: fluffy, big-eyed, peeking over the notebook with paws on its edge. The cat is a grey shorthair in a knitted lemon hat with a leaf; the bunny wears a daisy crown. As they grow, a little flower and then a gold star appear.",
+        "Home's “Today” card is now a little notebook: binder rings on the side, stitching all round, and “Hi, <name>! It's <weekday>” with a date tag at the top.",
+        "Ways to start are four illustrated tiles: Photo journal (highlighted), Just write, Draw, More ways.",
+        "A sprout beside the name and “Your life, beautifully collected.” underneath; washi tape on today's photo cards.",
+        "Fixed: after backing up in Settings, the media-usage line no longer goes blank.",
+      ],
+    },
+  },
+  {
     version: "7.7",
     date: "2026-11-10",
     zh: {

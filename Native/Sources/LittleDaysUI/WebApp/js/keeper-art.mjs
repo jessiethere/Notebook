@@ -1,56 +1,78 @@
-// Little Keeper's look (V7.7): a soft, clay-like 2.5D character drawn in SVG
-// — light from the top left, a gloss highlight, blush, a soft contact shadow —
-// holding a pencil and a little notebook. Parts are separate groups so CSS
-// can breathe, blink, twitch the ears, tilt the head and wiggle the pencil.
-// Growth stages add small keepsakes (a sprout, then a scarf and a badge).
-// Original artwork for Little Days (no external assets).
+// Little Keeper's look (V7.8): a plush, felt-textured little animal peeking
+// over the edge of the notebook — big glossy eyes, soft fuzzy edges (SVG
+// turbulence), head and paws resting on the edge, a pencil in one paw.
+// The cat is a grey shorthair in a knitted lemon hat; the bunny wears a
+// daisy crown. Growth stages add small keepsakes (a flower, then a gold
+// star pin). Parts are separate groups so CSS can breathe, blink, twitch
+// the ears, tilt the head and wiggle the pencil. Original artwork.
 
-const PALETTE = {
-  bunny: { fur: ["#FFFDF8", "#F3E8DD", "#D9C7B8"], ear: "#F6C9CF", nose: "#E89AA6", eye: "#3B302B" },
-  cat: { fur: ["#FFE3C2", "#F5B97F", "#D98E55"], ear: "#F7C5B5", nose: "#D9786B", eye: "#3B302B" },
+const LOOK = {
+  cat: {
+    fur: ["#D9D6D8", "#A9A5AA", "#77737A"],
+    inner: "#F2B7BE",
+    iris: ["#FFE9A3", "#F2B630", "#C98A12"],
+    nose: "#E7939D",
+    paw: ["#D3D0D2", "#9C989E"],
+  },
+  bunny: {
+    fur: ["#FFFFFF", "#F4EBE2", "#D8C8B9"],
+    inner: "#F6C5CD",
+    iris: ["#C79A72", "#8A5A3A", "#4E2E1B"],
+    nose: "#EC9AA8",
+    paw: ["#FFFDFA", "#E3D4C6"],
+  },
 };
 let uid = 0;
 export function keeperSVG({ animal = "bunny", stage = 0, mood = "idle", label = "" } = {}) {
-  const p = PALETTE[animal] || PALETTE.bunny;
+  const look = LOOK[animal] || LOOK.bunny;
   const id = `k${++uid}`;
-  const eyes =
+  const eye = (cx) =>
     mood === "quiet"
-      ? `<path d="M47 57q4 3 8 0M65 57q4 3 8 0" stroke="${p.eye}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+      ? `<path d="M${cx - 8} 66 q8 6 16 0" stroke="#3A2E2A" stroke-width="2.6" fill="none" stroke-linecap="round"/>`
       : mood === "happy"
-        ? `<path d="M47 58q4-5 8 0M65 58q4-5 8 0" stroke="${p.eye}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
-        : `<g class="k-eyes"><ellipse cx="51" cy="57" rx="3.6" ry="4.4" fill="${p.eye}"/><ellipse cx="69" cy="57" rx="3.6" ry="4.4" fill="${p.eye}"/><circle cx="52.3" cy="55.4" r="1.3" fill="#fff"/><circle cx="70.3" cy="55.4" r="1.3" fill="#fff"/></g>`;
+        ? `<path d="M${cx - 8} 68 q8 -9 16 0" stroke="#3A2E2A" stroke-width="2.8" fill="none" stroke-linecap="round"/>`
+        : `<circle cx="${cx}" cy="64" r="10.5" fill="#2B211E"/><circle cx="${cx}" cy="64" r="9" fill="url(#${id}i)"/><circle cx="${cx}" cy="64.6" r="6.4" fill="#1B1412"/><circle cx="${cx - 3}" cy="60.6" r="3" fill="#fff"/><circle cx="${cx + 3.2}" cy="67.6" r="1.4" fill="#fff" opacity=".85"/><path d="M${cx - 6} 70 a7 7 0 0 0 11 -1" stroke="#fff" stroke-width=".8" fill="none" opacity=".35"/>`;
+  const mouth =
+    mood === "happy"
+      ? `<path d="M55 79 q5 6 10 0 z" fill="#B65A63"/>`
+      : animal === "cat"
+        ? `<ellipse cx="60" cy="80.5" rx="2.6" ry="3" fill="#B65A63"/>`
+        : `<path d="M55.5 78 q2.2 2.6 4.5 0 q2.3 2.6 4.5 0" stroke="#5A3B33" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
   const ears =
     animal === "cat"
-      ? `<g class="k-ears"><path class="k-ear-l" d="M36 44 L40 20 Q42 17 45 20 L55 36 Z" fill="url(#${id}f)"/><path d="M40 39 L42 25 L50 35 Z" fill="${p.ear}" opacity=".85"/><path class="k-ear-r" d="M84 44 L80 20 Q78 17 75 20 L65 36 Z" fill="url(#${id}f)"/><path d="M80 39 L78 25 L70 35 Z" fill="${p.ear}" opacity=".85"/></g>`
-      : `<g class="k-ears"><g class="k-ear-l"><ellipse cx="47" cy="22" rx="7.5" ry="21" transform="rotate(-10 47 22)" fill="url(#${id}f)"/><ellipse cx="47" cy="24" rx="3.6" ry="14" transform="rotate(-10 47 24)" fill="${p.ear}"/></g><g class="k-ear-r"><ellipse cx="73" cy="22" rx="7.5" ry="21" transform="rotate(12 73 22)" fill="url(#${id}f)"/><ellipse cx="73" cy="24" rx="3.6" ry="14" transform="rotate(12 73 24)" fill="${p.ear}"/></g></g>`;
-  const whiskers = animal === "cat" ? `<path d="M38 64h-8M38 67l-7 2M82 64h8M82 67l7 2" stroke="#B98A6A" stroke-width="1" stroke-linecap="round" opacity=".7"/>` : "";
-  // Keepsakes of growth: a sprout (stage 1), then a scarf and a little badge (stage 2).
-  const sprout = stage >= 1 ? `<g class="k-sprout"><path d="M60 30 q0-8 0-10" stroke="#7D9A6A" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M60 22 q-8-6-10 1 q7 2 10-1Z" fill="#A9C79A"/><path d="M60 21 q8-7 11 0 q-7 3-11 0Z" fill="#8FB57E"/></g>` : "";
-  const scarf = stage >= 2 ? `<path d="M40 78 q20 9 40 0 l0 6 q-20 9-40 0z" fill="#C9D7C1"/><path d="M68 82 l5 12 l-7-1 z" fill="#B3C7A8"/><circle cx="46" cy="96" r="4" fill="#E7C66A" stroke="#C9A64A" stroke-width="1"/>` : "";
-  return `<svg class="keeper-svg ${animal} mood-${mood}" viewBox="0 0 120 120" role="img" aria-label="${label}"><defs>
-<radialGradient id="${id}f" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="${p.fur[0]}"/><stop offset=".55" stop-color="${p.fur[1]}"/><stop offset="1" stop-color="${p.fur[2]}"/></radialGradient>
-<radialGradient id="${id}b" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="${p.fur[0]}"/><stop offset=".6" stop-color="${p.fur[1]}"/><stop offset="1" stop-color="${p.fur[2]}"/></radialGradient>
-<linearGradient id="${id}n" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D0B0"/><stop offset="1" stop-color="#86A47A"/></linearGradient>
-<filter id="${id}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      ? `<g class="k-ears" filter="url(#${id}fz)"><g class="k-ear-l"><path d="M24 44 L28 14 Q30 10 34 13 L52 32 Z" fill="url(#${id}f)"/><path d="M29 38 L31 20 L45 32 Z" fill="${look.inner}"/></g><g class="k-ear-r"><path d="M96 44 L92 14 Q90 10 86 13 L68 32 Z" fill="url(#${id}f)"/><path d="M91 38 L89 20 L75 32 Z" fill="${look.inner}"/></g></g>`
+      : `<g class="k-ears" filter="url(#${id}fz)"><g class="k-ear-l"><ellipse cx="44" cy="18" rx="9.5" ry="24" transform="rotate(-12 44 18)" fill="url(#${id}f)"/><ellipse cx="44" cy="20" rx="4.6" ry="16" transform="rotate(-12 44 20)" fill="${look.inner}"/></g><g class="k-ear-r"><ellipse cx="76" cy="18" rx="9.5" ry="24" transform="rotate(14 76 18)" fill="url(#${id}f)"/><ellipse cx="76" cy="20" rx="4.6" ry="16" transform="rotate(14 76 20)" fill="${look.inner}"/></g></g>`;
+  // The cat's knitted lemon hat (with a leaf); the bunny's daisy crown.
+  const hat =
+    animal === "cat"
+      ? `<g class="k-hat"><path d="M22 52 Q20 18 60 14 Q100 18 98 52 Q60 40 22 52Z" fill="url(#${id}h)"/><path d="M22 52 Q20 18 60 14 Q100 18 98 52 Q60 40 22 52Z" fill="url(#${id}knit)" opacity=".5"/><path d="M21 51 Q60 37 99 51 L99 57 Q60 44 21 57Z" fill="#EDBE32"/><path d="M21 51 Q60 37 99 51 L99 57 Q60 44 21 57Z" fill="url(#${id}rib)" opacity=".55"/><circle cx="84" cy="34" r="8.5" fill="#FFF3B8" stroke="#F2C94C" stroke-width="2"/><path d="M84 26v16M76 34h16M78.5 28.5l11 11M89.5 28.5l-11 11" stroke="#F2C94C" stroke-width="1.2"/><path d="M60 15 q-1-6 2-9" stroke="#6F8F4E" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M62 8 q14-10 22 2 q-12 7-22-2Z" fill="url(#${id}leaf)"/><path d="M63 8 q9 0 17 2" stroke="#5E7F42" stroke-width=".8" fill="none"/>${stage >= 1 ? `<g class="k-flower"><circle cx="38" cy="30" r="3.4" fill="#fff"/><circle cx="33.5" cy="31" r="3" fill="#fff"/><circle cx="36" cy="26" r="3" fill="#fff"/><circle cx="40.5" cy="26.5" r="3" fill="#fff"/><circle cx="37" cy="29" r="2" fill="#F2B630"/></g>` : ""}${stage >= 2 ? `<path class="k-star" d="M52 30 l2.4 4.8 5.3 .8 -3.9 3.7 .9 5.3 -4.7-2.5 -4.7 2.5 .9-5.3 -3.9-3.7 5.3-.8z" fill="#F5CF5A" stroke="#D9A82C" stroke-width="1"/>` : ""}</g>`
+      : `<g class="k-hat">${[[38, 30], [50, 23], [62, 21], [74, 24], [84, 31]].map(([x, y], i) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="0" cy="-4" rx="2.4" ry="4" transform="rotate(${a})" fill="${i % 2 ? "#FFFFFF" : "#FDF1F4"}"/>`).join("")}<circle r="2.2" fill="#F2C94C"/></g>`).join("")}<path d="M34 34 q26 -16 54 0" stroke="#8FB57E" stroke-width="2" fill="none"/>${stage >= 1 ? `<path d="M44 26 q-6-8 2-10 q2 6-2 10Z" fill="#A9C79A"/>` : ""}${stage >= 2 ? `<path class="k-star" d="M60 10 l2.4 4.8 5.3 .8 -3.9 3.7 .9 5.3 -4.7-2.5 -4.7 2.5 .9-5.3 -3.9-3.7 5.3-.8z" fill="#F5CF5A" stroke="#D9A82C" stroke-width="1"/>` : ""}</g>`;
+  const whiskers =
+    animal === "cat" ? `<path d="M30 76h-14M30 80l-13 4M90 76h14M90 80l13 4" stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity=".85"/>` : "";
+  return `<svg class="keeper-svg ${animal} mood-${mood}" viewBox="0 0 120 112" role="img" aria-label="${label}"><defs>
+<radialGradient id="${id}f" cx="38%" cy="30%" r="78%"><stop offset="0" stop-color="${look.fur[0]}"/><stop offset=".55" stop-color="${look.fur[1]}"/><stop offset="1" stop-color="${look.fur[2]}"/></radialGradient>
+<radialGradient id="${id}p" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="${look.paw[0]}"/><stop offset="1" stop-color="${look.paw[1]}"/></radialGradient>
+<radialGradient id="${id}i" cx="50%" cy="70%" r="70%"><stop offset="0" stop-color="${look.iris[0]}"/><stop offset=".55" stop-color="${look.iris[1]}"/><stop offset="1" stop-color="${look.iris[2]}"/></radialGradient>
+<linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE987"/><stop offset="1" stop-color="#F3C83C"/></linearGradient>
+<linearGradient id="${id}leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9CC27A"/><stop offset="1" stop-color="#5E8A44"/></linearGradient>
+<pattern id="${id}knit" width="5" height="6" patternUnits="userSpaceOnUse"><path d="M0 0 l2.5 3 2.5 -3 M0 3 l2.5 3 2.5 -3" stroke="#D9A82C" stroke-width=".7" fill="none"/></pattern>
+<pattern id="${id}rib" width="3" height="8" patternUnits="userSpaceOnUse"><rect width="1.2" height="8" fill="#D39D1E"/></pattern>
+<filter id="${id}fz" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.5"/></filter>
+<filter id="${id}felt" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="7" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .22 0" result="w"/><feComposite in="w" in2="SourceGraphic" operator="in" result="tex"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="tex"/></feMerge></filter>
+<filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>
 </defs>
-<ellipse class="k-shadow" cx="60" cy="112" rx="30" ry="5" fill="#3C2D1E" opacity=".16" filter="url(#${id}s)"/>
 <g class="k-body">
-<ellipse cx="60" cy="88" rx="27" ry="24" fill="url(#${id}b)"/>
-<ellipse cx="50" cy="78" rx="10" ry="6" fill="#fff" opacity=".35"/>
-${scarf}
-<g class="k-head">${ears}${sprout}
-<circle cx="60" cy="58" r="25" fill="url(#${id}f)"/>
-<ellipse cx="48" cy="42" rx="7" ry="3.6" transform="rotate(-18 48 42)" fill="#fff" opacity=".32"/>
-${eyes}
-<ellipse cx="45" cy="65" rx="5" ry="3" fill="#F4A9B4" opacity=".55" filter="url(#${id}s)"/><ellipse cx="75" cy="65" rx="5" ry="3" fill="#F4A9B4" opacity=".55" filter="url(#${id}s)"/>
-<ellipse cx="60" cy="63" rx="2.6" ry="2" fill="${p.nose}"/>
-<path d="M56.5 66.5q3.5 3 3.5 0q0 3 3.5 0" stroke="${p.eye}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-${whiskers}
+<g class="k-head">${ears}
+<g filter="url(#${id}felt)"><g filter="url(#${id}fz)"><ellipse cx="60" cy="66" rx="41" ry="36" fill="url(#${id}f)"/></g></g>
+<ellipse cx="44" cy="46" rx="12" ry="6" transform="rotate(-16 44 46)" fill="#fff" opacity=".28"/>
+${mood === "quiet" || mood === "happy" ? eye(43) + eye(77) : `<g class="k-eyes">${eye(43)}${eye(77)}</g>`}
+<ellipse cx="33" cy="80" rx="7" ry="4" fill="#F4A9B4" opacity=".55" filter="url(#${id}s)"/><ellipse cx="87" cy="80" rx="7" ry="4" fill="#F4A9B4" opacity=".55" filter="url(#${id}s)"/>
+<path d="M57 74.5 h6 l-3 3.4z" fill="${look.nose}" stroke="${look.nose}" stroke-width="1.6" stroke-linejoin="round"/>
+${mouth}${whiskers}${hat}
 </g>
-<g class="k-book"><rect x="44" y="84" width="32" height="22" rx="3" fill="url(#${id}n)"/><rect x="44" y="84" width="4" height="22" rx="1.5" fill="#6F8C62"/><rect x="51" y="89" width="20" height="2" rx="1" fill="#fff" opacity=".7"/><rect x="51" y="94" width="14" height="2" rx="1" fill="#fff" opacity=".55"/></g>
-<ellipse cx="45" cy="93" rx="6" ry="5" fill="url(#${id}b)"/>
-<g class="k-pencil"><rect x="72" y="70" width="5" height="26" rx="2" transform="rotate(28 74 83)" fill="#F2CD5C"/><rect x="72" y="66" width="5" height="5" rx="1.5" transform="rotate(28 74 83)" fill="#F1A7B5"/><path d="M80.5 95.5 l4.5 5.5 l1-6.5z" fill="#E9D3B0"/></g>
-<ellipse cx="78" cy="88" rx="6" ry="5" fill="url(#${id}b)"/>
+<ellipse class="k-pawshadow" cx="40" cy="108" rx="13" ry="3" fill="#3C2D1E" opacity=".16" filter="url(#${id}s)"/><ellipse class="k-pawshadow" cx="80" cy="108" rx="13" ry="3" fill="#3C2D1E" opacity=".16" filter="url(#${id}s)"/>
+<g class="k-pencil"><rect x="86" y="74" width="5.4" height="30" rx="2.2" transform="rotate(24 88 89)" fill="#F2CD5C"/><rect x="86" y="70" width="5.4" height="5.5" rx="1.6" transform="rotate(24 88 89)" fill="#F1A7B5"/></g>
+<g class="k-paws" filter="url(#${id}felt)"><ellipse cx="40" cy="102" rx="13" ry="9.5" fill="url(#${id}p)"/><ellipse cx="80" cy="102" rx="13" ry="9.5" fill="url(#${id}p)"/><path d="M36 106 v-4M41 106.5 v-4.5M46 106 v-4M76 106 v-4M81 106.5 v-4.5M86 106 v-4" stroke="${look.fur[2]}" stroke-width="1.1" stroke-linecap="round" opacity=".7"/></g>
 </g>
 </svg>`;
 }
