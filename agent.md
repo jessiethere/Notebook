@@ -48,6 +48,18 @@
 
 ## 更新日志
 
+### 2026-11-10 — 设计探索（不改代码）：Visual Direction、首页快捷入口三方向、日历 / 书架、Keeper V2 角色系统
+
+- 需求：用户发来三段要求。① Little Keeper V2：三只角色各有性格（Captain 好奇调皮 / Bunny 温柔乐观 / Westie 热情忠诚），每只有 Natural 自然形象（默认）和 Dress-up 装扮，三只共用一套功能；② Visual Identity Reset：先建立整体视觉方向，再出 Home / Calendar / My Books 三张 iPhone 稿并和现在对比，用户确认后才写代码；③ 首页四个快捷入口太像普通按钮宫格，要 A（Hero + Secondary）/ B（Stationery Objects）/ C（Editorial Layout）三套方向。② 和 ③ 都明确「本轮先进行设计探索，不修改代码」，所以本轮只做设计，App 代码和数据没有任何改动。
+- 产出：Design 画布 https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG （私有）
+  - Visual Direction：Cozy Editorial × Collectible Stationery；四条原则；字体（Cormorant Garamond 品牌 / 日期数字、思源宋体标题、思源黑体正文、Caveat 手写点缀，每屏 ≤ 1 处）；配色与比例（Paper 60% / Sheet 20% / Ink 12% / Sage 5% / 点缀 ≤ 3%）；三层纸质表面；两种图标（线性工具图标 vs 收藏级文具物件）；间距；八个品牌组件；Keeper 融入规则。
+  - 首页：现在 vs A / B / C 三个方向（真实照片 + V8.0 Captain 探头素材）。
+  - 日历：现在 vs Memory Calendar（有照片的日子变成照片小方块，选中日以拍立得展开）；书架：现在 vs 数字手帐书架（正在写的封面 + 布面书脊 + Captain 小管理员）。
+  - Keeper V2：三只角色性格卡、统一状态 × 角色素材矩阵（有图 / 缺）、统一 Character Configuration、陪伴模式、事件→状态、素材目录结构、可做 / 需帧的动画；Keeper 设置页稿。
+- 美术资源核对（如实）：用户说的「无帽 Captain 抱粉色毛线球」图没有上传到本会话；三只角色都没有 Natural（无帽）素材；Bunny / Westie 只有 V7.9 角色表里的戴帽图（且需要用 V8.0 工具重新精细抠图）；所有角色都缺 Curious（Captain 参考图里有「惊喜」可裁）、Peek（Bunny / Westie）、Writing；快捷入口的 3D 文具物件需要美术渲染，稿中用真实照片和纸质结构占位。
+- 未改动：Public/、Native/、Packages/ 均未修改；在线链接仍是 V8.0（版本 57）。
+- 下一步：等用户在 A / B / C 中选一个方向（或组合）、确认视觉方向，并提供 Natural 素材后，再按确认的稿子实现，并同步 DESIGN_SYSTEM / PRODUCT_SPEC / README / agent.md。
+
 ### 2026-11-10 — V8.0 Captain Keeper V1：只保留 Captain，重新精细抠图，首页 Peek；修复聊天气泡
 
 - 需求：用户发来「参考图 1 · Captain 角色视觉标准」（唯一美术标准）和「参考图 2 · 首页布局参考」（氛围参考），要求本轮只做 Captain：毛发质感、金黄眼睛、柠檬帽与参考一致；抠图检查毛发边缘、无残留背景、无误删；先展示透明素材和 iPhone 首页截图，确认后再扩展其他角色；不重新设计首页其他功能；首页 Peek（自然遮挡 + 柔和阴影、不占大模块、不重复欢迎语、不挡按钮 / 照片、可隐藏、不照搬图 2 的旧模块、不加回 Growth）；状态 Normal / Happy / Sleepy；可有轻微呼吸，不用换表情图冒充动画，支持减少动态效果；只在用户主动互动时说短句；先说明美术资源能否直接用于开发。中途用户反馈「点开对话框非常奇怪」（截图：Captain 的回复一个词一行）。

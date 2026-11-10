@@ -179,6 +179,12 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-10 — 设计探索：新视觉方向与首页入口三方向（未改代码）
+
+- 本轮只做设计稿，App 没有改动。设计画布：https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG
+- 内容：整体视觉方向（Cozy Editorial × Collectible Stationery）、首页快捷入口 A / B / C 三个方向、新日历和新书架、Little Keeper V2 三角色统一系统和设置页。
+- 等确认方向并补齐 Natural 形象等美术素材后再实现。
+
 ### 2026-11-10 — Captain Keeper V1：只保留 Captain，重新精细抠图（V8.0）
 
 - 本轮只有 Captain（灰蓝小猫、柠檬帽）；小兔、小西高地和其他帽子先下架。
