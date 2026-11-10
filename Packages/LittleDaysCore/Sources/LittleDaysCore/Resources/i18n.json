@@ -6230,5 +6230,29 @@
   "quick.libFirst": {
     "zh": "先选一张照片",
     "en": "Pick a photo first"
+  },
+  "v9.pickPhotos": {
+    "zh": "选今天的照片",
+    "en": "Choose today's photos"
+  },
+  "v9.writeHint": {
+    "zh": "一句话也算一页",
+    "en": "One line is a page"
+  },
+  "v9.drawHint": {
+    "zh": "画下今天的颜色",
+    "en": "Draw today's colours"
+  },
+  "v9.moreHint": {
+    "zh": "模板 · 故事 · 声音",
+    "en": "Templates · stories · voice"
+  },
+  "v9.today": {
+    "zh": "今天的回忆",
+    "en": "Today's memories"
+  },
+  "v9.todayEmpty": {
+    "zh": "今天还没有记录",
+    "en": "Nothing kept today yet"
   }
 }

@@ -65,3 +65,8 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」，保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
 - 生成：`python3 tools/make_app_icon.py` → iOS `Native/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`；Web `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`（同步进 iOS 外壳 WebApp 与在线链接）。
 - 处理说明见 DESIGN_SYSTEM.md「V8.1 正式 App Icon」。只限 Little Days 使用。
+
+## 2026-11-10 Captain 自然形象原图（待集成）
+
+- 产品负责人 2026-11-10 上传的「无帽 Captain 抱粉色毛线球」原图，原样保存为 `docs/brand/LD-captain-natural-yarn-original.png`（941 × 1672）。
+- **尚未裁切、尚未进入 App**：按计划在 V9.0 Phase 4（Keeper 设置）用 `tools/extract_captain.py` 同样的方法单独抠图并检查毛发边缘后再集成；在那之前 App 里的 Natural 形象仍标为未完成。

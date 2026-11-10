@@ -48,6 +48,25 @@
 
 ## 更新日志
 
+### 2026-11-10 — V9.0 Phase 1：首页（方向 A · Hero + Secondary）
+
+- 需求：用户确认 V9.0 视觉方向 Tactile Stationery × Cozy Editorial，按 Phase 实施（1 Home → 2 Calendar → 3 My Books → 4 Keeper 设置 → 5 品牌一致性检查），每个 Phase 完成后给真实 iPhone 尺寸截图、对比设计稿、说明未达标细节、跑测试、更新文档、提交。首页正式采用方向 A：大日期 + 轻量问候、Captain 从主卡片探头、照片手帐唯一主入口、三个次入口、拍立得、今天的回忆（真实记录，不能把假照片当记录）、简约底部导航；次入口没有合格 3D 文具素材时先用协调的简约图标并记录待补资源；不加新功能、不重建、不恢复 Growth。同一条消息里用户上传了「无帽 Captain 抱粉色毛线球」原图（Phase 4 再集成）。
+- 改动文件：
+  - Public/app.js `home()`：`section.hero.today-card` 改为 `v9-home` 结构——大日期（LD-elegant 斜体）+ 月份·年份 kicker + `home-greeting` + `today-prompt`；`v9-hero-wrap`（Keeper 探头 + 照片手帐纸页：kicker、标题、说明、两张装饰拍立得〔CSS 背景图，不是 <img>，也不代表用户记录〕、唯一主按钮 `today-photos`）；`story-start-row today-tiles v9-secondary`（只写几句 / 手绘 / 更多方式，线性图标 `v9Icon()`）；补记昨天；`v9-today`（「今天的回忆 / 今天还没有记录」+ 连续记录小字 + 原有的今日预览 / 今日照片建议）；今天要做的事。去掉品牌标语、日期牌、本子铁环、「不用先选手帐本…」小字和旧的 `tileArt()` 插画。所有 data-action 与测试依赖的类名保留。
+  - Public/styles.css：文件末尾「V9.0 · Home」一整段（纸页、拍立得、网格布局保证照片不压文字 / 按钮、<390px 按钮独占一行、<360px 缩小品牌字和日期、今天的回忆改为大拍立得：照片在上、标题写在白边纸上）；`tools/sync_tokens.py` 已重新生成主题变量。
+  - design-tokens.json：新增 `sageDeep` #55684A、`kraft` #E6D9C4、`lemon` #F2C94C（Swift 以字典解码，兼容）。
+  - i18n：`v9.pickPhotos / writeHint / drawHint / moreHint / today / todayEmpty`（中英）。
+  - whats-new 9.0；docs/DESIGN_SYSTEM.md「V9.0 Visual Design System」；docs/PRODUCT_SPEC.md；README。
+  - tests/v31-browser.cjs：备份后的「MB」用量行原来是读完下载立刻断言，现在等待它异步填好（单独重跑确认会显示，只是比断言晚；属于测试时序问题，不是功能回归）。
+- 决策与原因：
+  - 中文标题继续用系统黑体（v47 测试记录的 V6 用户决定「无衬线标题」，也符合「清晰的中文字体」）；英文 kicker / 日期数字 / 品牌用 Cormorant Garamond。
+  - 设计稿 A 里拍立得压住了说明和按钮；实现改为网格（文字 | 124px 拍立得），并在窄屏把按钮移到下一行。
+  - 「今天的回忆」：起初做成小横条，v45（「今天的照片是首页主角」）失败；改为一张大拍立得（照片 4:3 + 白边纸上写标题），既是方向 A 的文具感，也让照片成为主角。
+- 视觉检查（Chromium 设备模拟截图）：393×852 开 / 关 Keeper、滚动后的回忆与书架、375×667、430×932、320×640、深色主题；脚本检查 Captain 不压任何按钮、拍立得与文字 / 按钮无重叠、无横向滚动。对比图：V8 首页 / 方向 A 设计稿 / V9.0 实际首页。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项通过；Python 16 项通过；浏览器 E2E 全量 43 套：最后一轮 42 套通过，v54（Studio 打字工具条不移动页面的位置断言，与首页无关）失败一次，单独连续重跑 3 次都通过——这个断言在 V7.9 时也偶发失败过，属于已知的偶发时序问题，尚未根治。前一轮发现并修好的：v45（今天的回忆要求大照片 → 改成大拍立得）、v31（MB 行的测试时序）。Swift / Xcode 未运行。
+- 未达到设计稿 / 未完成：次入口仍是线性图标（3D 迷你日记本、颜料盘、素材盒需要美术制作）；底部导航沿用原样式（「创作」按钮跟随主题色，不是设计稿里的墨色圆；社区入口仍在实验室打开时出现）；问候是两行（「Hi！今天是星期二」+「今天有什么值得记录？」），没有改成设计稿里的一句，以保留现有点按改名字的功能；首页下方「今天要做的事」和书架只做了纸页统一，书架会在 Phase 3 重做。Swift 未编译、未在真机验证。
+- 下一步：用户确认首页后进入 Phase 2 Memory Calendar。
+
 ### 2026-11-10 — V8.1 正式 App Icon 集成（iOS + Web）
 
 - 需求：用户确认上传的图片为「Little Days V1 Official App Icon」（Captain 柠檬帽探头、小花回形针、Little Days 棕色衬线字、小芽），要求直接使用原图（不重新生成、不重绘、不用 SVG/CSS 模仿）；iOS 做 1024 × 1024 不透明正方形、不预切圆角、更新 Asset Catalog、不改 Bundle ID；Web 更新 favicon（以及已有的 PWA 配置）；检查小尺寸可识别性；区分 App Icon / 文字 Logo / Keeper；只做图标，不改首页、导航、Keeper 等。

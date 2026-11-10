@@ -251,3 +251,28 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 - **Web**：`Public/icons/favicon-32.png`、`icon-192.png`（保留原图自己的圆角形状 + 透明背景，浏览器不会自动加圆角）；`apple-touch-icon.png` 180（不透明正方形，供 iPhone「添加到主屏幕」）。项目目前没有 PWA manifest，所以没有新增。
 - **小尺寸可识别性**（模拟检查）：60pt 主屏幕 / 40pt 搜索：脸、眼睛、柠檬帽和「Little Days」字样都清楚；29pt 设置：脸清楚，字样勉强；20pt 通知：只能认出 Captain 的脸和黄色帽子，文字看不清（所有带字图标在这个尺寸都会这样）。
 - **未验证**：没有在 Xcode / iPhone 真机或模拟器上看过实际图标（容器里没有 Xcode）。
+
+## 2026-11-10 V9.0 Visual Design System · Tactile Stationery × Cozy Editorial
+
+> 用户确认的方向（不再探索新方向）。按 Phase 实施：1 Home（本次）→ 2 Calendar → 3 My Books → 4 Keeper 设置 → 5 品牌一致性检查。设计稿画布：https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG
+
+### Tokens（design-tokens.json → tokens.css，`tools/sync_tokens.py` 生成主题变量）
+
+- 已有：`--cream` 页面底 #F8F5EF · `--paper` 纸页 #FFFDFA · `--ink` #2F2A26 · `--muted` #8D857B · `--line` #E8E1D7 · `--accent` #7D8D6D。
+- V9 新增：`--sageDeep` #55684A（唯一主操作色）· `--kraft` #E6D9C4（牛皮纸 / 书架）· `--lemon` #F2C94C（Captain 点缀）。粉色只用在胶带（rgba(232,169,163,.82)）。
+- 比例：纸色底 + 纸页 ≈ 80%，墨色文字，鼠尾草绿只给每屏一个主按钮；柠檬黄 / 粉 ≤ 3%。
+
+### Typography
+
+- 英文 kicker、大日期数字、品牌名：`LD-elegant`（Cormorant Garamond，本地字体）。大日期 78px 斜体。
+- 中文标题与正文：系统黑体 `--ui-sans`（PingFang SC），标题 600–700；不用中文衬线（清晰优先，也与 V6 用户确认的「无衬线标题」一致）。
+- 层级：大日期 78 · 问题 21 · 主卡片标题 27 · 正文 14–15 · 说明 12（最小，不再用 10–11px 灰字）。kicker 12px、字距 0.14em、大写。
+
+### Materials / Components（本次已在首页实现的部分）
+
+- **Paper Sheet**：`--paper`、圆角 20–26、`0 0 0 1px rgba(120,95,60,.05)` + 柔和长投影；不画虚线框、不套多层边框。
+- **Photo Journal Hero**：纸页 + 下方第二层纸（纸张厚度）+ 两张拍立得（白边 6 / 底边 24，±5–7° 旋转，一条粉色胶带）+ 唯一主按钮（`--sageDeep` 胶囊，48pt 高）。网格布局 `copy | 124px 拍立得`，<390px 时按钮独占一行，保证照片永远不压文字和按钮。拍立得是装饰性图库照片（CSS 背景，不是记录）。
+- **Stationery Strip（次入口）**：一张纸页三等分，发丝线分隔；每格 = 线性图标（鼠尾草绿 1.6px）+ 名称 15 + 说明 12。**3D 文具物件（迷你日记本、颜料盘、素材盒）需要美术制作**，到位后替换线性图标，不用 emoji / CSS 假 3D。
+- **Memory Preview**：纸页 + 拍立得缩略图（112px，白边）+ 标题 2 行 + 说明 2 行 + 「打开 ›」；多页时横向滑动、下一页露出一点。只显示真实记录，示例内容标「示例」；没有记录时是今日照片建议或一句轻空状态。
+- **Keeper Perch**：Captain 探头图 110pt，切线落在主卡片上沿，爪子压边 6px；不占独立区块，默认不说话。
+- 待后续 Phase：Book Cover、Bookshelf、Memory Calendar 日期格、Keeper Selection Card、统一的 Primary / Secondary 按钮样式。

@@ -525,7 +525,8 @@ async function noOverflow(page, label) {
     const backupDay = backup.state.entries.find((e) => e.date === D1);
     assert.equal(backupDay.moments.length, 3);
     assert.ok(backup.media.length >= 5 + 3 + 3, "photos, moment photos and clips are included");
-    assert.match(await page.locator("#media-usage").innerText(), /MB/);
+    // The usage line is filled in asynchronously after the backup render.
+    await page.waitForFunction(() => /MB/.test(document.querySelector("#media-usage")?.textContent || ""), null, { timeout: 8000 });
     const restore = await setup(browser);
     const r = helpers(restore.page);
     await restore.page.goto(base);

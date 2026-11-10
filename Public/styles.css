@@ -13155,7 +13155,7 @@ dialog h2,
   display: block;
 }
 .quick-library button.selected {
-  outline: 3px solid #5F6F52;
+  outline: 3px solid var(--c-5f6f52, #5F6F52);
   outline-offset: 2px;
 }
 
@@ -14467,8 +14467,8 @@ dialog h2,
   width: 22px;
   height: 22px;
   margin-top: -2px;
-  fill: #A9C79A;
-  stroke: #7D9A6A;
+  fill: var(--t-a9c79a, #A9C79A);
+  stroke: var(--t-7d9a6a, #7D9A6A);
   stroke-width: 1.4;
   stroke-linecap: round;
 }
@@ -14576,7 +14576,7 @@ dialog h2,
   display: block;
   width: 22px;
   height: 12px;
-  border: 3px solid #D2B26A;
+  border: 3px solid var(--c-d2b26a, #D2B26A);
   border-radius: 10px;
   background: transparent;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(60, 45, 30, 0.2);
@@ -14638,8 +14638,8 @@ dialog h2,
   white-space: nowrap;
 }
 .story-start-row.today-tiles .today-tile.featured {
-  border-color: #EBCF7A;
-  background: linear-gradient(180deg, #FFF4C9, #FBE7A1);
+  border-color: var(--c-ebcf7a, #EBCF7A);
+  background: linear-gradient(180deg, var(--c-fff4c9, #FFF4C9), var(--c-fbe7a1, #FBE7A1));
   min-height: 86px;
   font-size: 12.5px;
   color: var(--ink);
@@ -14703,4 +14703,609 @@ dialog h2,
 }
 .home-mag .today-tile b {
   font-size: 12.5px;
+}
+
+/* =====================================================================
+   V9.0 · Home — Tactile Stationery × Cozy Editorial (direction A)
+   Date masthead → Photo Journal hero (Captain peeks over it) → three
+   secondary stationery entries in one strip → Today's memories.
+   Colours: tokens (--cream page, --paper sheet, --ink, --line,
+   --sageDeep action, --kraft, --lemon); type: LD-elegant (Cormorant
+   Garamond) for numerals / English kickers, system sans for Chinese.
+   ===================================================================== */
+.home-mag .home-top {
+  align-items: center;
+  margin-bottom: 4px;
+}
+.home-mag .home-top .brand-title {
+  font-family: "LD-elegant", Georgia, serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+.home-mag .home-actions {
+  gap: 0;
+}
+.home-mag .home-actions .icon-button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.home-mag .v9-home {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.home-mag .v9-home .story-start-card {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+}
+.home-mag .v9-home .story-start-card::before,
+.home-mag .v9-home .story-start-card::after {
+  display: none;
+}
+.v9-kicker {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.v9-sage {
+  color: var(--sageDeep);
+}
+/* Date masthead: one greeting, one question. */
+.v9-masthead {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin: 6px 0 4px;
+}
+.v9-daynum {
+  flex: none;
+  font-family: "LD-elegant", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 78px;
+  line-height: 0.78;
+  color: var(--ink);
+  font-variant-numeric: lining-nums;
+}
+.v9-greet {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 1px;
+}
+.home-mag .v9-home .home-greeting {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: left;
+}
+.home-mag .v9-home .today-prompt {
+  margin: 0;
+  font-family: var(--ui-sans);
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+/* Photo Journal hero: a paper sheet with two polaroids. */
+.v9-hero-wrap {
+  position: relative;
+  margin-top: 22px;
+}
+.v9-hero-wrap:has(.keeper-perch) {
+  margin-top: 84px;
+}
+.v9-hero-wrap .keeper-perch {
+  position: absolute;
+  right: 24px;
+  bottom: 100%;
+  z-index: 3;
+  margin: 0;
+}
+.v9-hero-wrap .keeper-perch .keeper,
+.v9-hero-wrap .keeper-perch .keeper:has(.is-peek) {
+  margin: 0 0 -6px 0;
+}
+.v9-hero-wrap .keeper-perch .keeper-bubble {
+  right: 120px;
+  bottom: 18px;
+}
+.v9-hero {
+  position: relative;
+  min-height: 232px;
+  padding: 24px 22px 22px;
+  border-radius: 26px;
+  background: var(--paper);
+  box-shadow: 0 1px 0 var(--c-ffffff, #ffffff) inset, 0 0 0 1px rgba(120, 95, 60, 0.05), 0 22px 40px -26px rgba(70, 50, 30, 0.5);
+  box-sizing: border-box;
+}
+.v9-hero::before {
+  /* a second sheet just under the first: paper thickness */
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -6px;
+  height: 20px;
+  z-index: -1;
+  border-radius: 0 0 22px 22px;
+  background: var(--c-f3ece0, #F3ECE0);
+  box-shadow: 0 10px 18px -12px rgba(70, 50, 30, 0.45);
+}
+.v9-hero-copy {
+  position: relative;
+  z-index: 1;
+  width: 54%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.v9-hero-copy h2 {
+  margin: 0;
+  font-family: var(--ui-sans);
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.v9-hero-copy p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.v9-polaroids {
+  position: absolute;
+  right: 18px;
+  top: 30px;
+  width: 42%;
+  height: 160px;
+  pointer-events: none;
+}
+.v9-pol {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  border: 6px solid var(--c-ffffff, #ffffff);
+  border-bottom-width: 24px;
+  background: var(--c-e6d9c4, #E6D9C4) center / cover no-repeat;
+  box-shadow: 0 16px 24px -14px rgba(50, 35, 20, 0.6);
+}
+.v9-pol-back {
+  right: 0;
+  top: 0;
+  width: 66%;
+  height: 112px;
+  transform: rotate(7deg);
+}
+.v9-pol-front {
+  left: 0;
+  top: 22px;
+  width: 72%;
+  height: 128px;
+  transform: rotate(-5deg);
+}
+.v9-pol em {
+  position: absolute;
+  left: 2px;
+  bottom: -21px;
+  font-family: "LD-elegant", Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+}
+.v9-tape {
+  position: absolute;
+  left: 30%;
+  top: 14px;
+  width: 46px;
+  height: 14px;
+  transform: rotate(-14deg);
+  background: rgba(232, 169, 163, 0.82);
+}
+.home-mag .v9-home .v9-cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-top: 18px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 10px 20px -12px rgba(50, 70, 40, 0.85);
+}
+/* Three secondary entries: one quiet strip, not three equal buttons. */
+.home-mag .v9-home .v9-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(120, 95, 60, 0.05), 0 14px 30px -24px rgba(70, 50, 30, 0.5);
+}
+.home-mag .v9-home .v9-secondary .today-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 5px;
+  min-height: 96px;
+  margin: 0;
+  padding: 14px 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  color: var(--ink);
+}
+.home-mag .v9-home .v9-secondary .today-tile + .today-tile {
+  box-shadow: inset 1px 0 0 var(--line);
+}
+.home-mag .v9-home .v9-secondary .v9-icon {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 4px;
+  fill: none;
+  stroke: var(--sageDeep);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.home-mag .v9-home .v9-secondary b {
+  font-size: 15px;
+  font-weight: 600;
+}
+.home-mag .v9-home .v9-secondary small {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.home-mag .v9-home .backfill-link {
+  display: block;
+  margin: 10px auto 0;
+  min-height: 36px;
+  font-size: 13px;
+}
+/* Today's memories: real pages only (or a light empty state). */
+.v9-today {
+  margin-top: 22px;
+}
+.v9-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.home-mag .v9-home .streak-chip {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+.home-mag .v9-home .hero-photo {
+  position: relative;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 14px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(120, 95, 60, 0.05), 0 16px 32px -26px rgba(70, 50, 30, 0.55);
+  overflow: visible;
+  text-align: left;
+  color: var(--ink);
+  aspect-ratio: auto;
+}
+.home-mag .v9-home .hero-photo img {
+  position: static;
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  box-sizing: border-box;
+  border: 5px solid var(--c-ffffff, #ffffff);
+  border-bottom-width: 16px;
+  border-radius: 2px;
+  transform: rotate(-2.5deg);
+  box-shadow: 0 12px 18px -12px rgba(50, 35, 20, 0.55);
+  inset: auto;
+}
+.home-mag .v9-home .hero-photo .hero-shade,
+.home-mag .v9-home .hero-photo .peek-paper {
+  display: none;
+}
+.home-mag .v9-home .hero-photo.peek-words {
+  grid-template-columns: minmax(0, 1fr);
+}
+.home-mag .v9-home .today-preview-copy,
+.home-mag .v9-home .hero-copy-block {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  text-shadow: none;
+  inset: auto;
+}
+.home-mag .v9-home .today-preview-copy b,
+.home-mag .v9-home .hero-copy-block b {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.home-mag .v9-home .today-preview-copy small,
+.home-mag .v9-home .hero-kicker,
+.home-mag .v9-home .hero-copy-block em {
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--muted);
+  text-shadow: none;
+}
+.home-mag .v9-home .hero-copy-block em {
+  color: var(--sageDeep);
+  font-weight: 600;
+}
+.home-mag .v9-home .today-preview-go {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  padding: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--sageDeep);
+}
+.home-mag .v9-home .today-peek {
+  gap: 10px;
+}
+.home-mag .v9-home .today-peek .peek-slide {
+  flex: 0 0 100%;
+}
+.home-mag .v9-home .today-blank {
+  margin: 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--paper);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  white-space: pre-line;
+}
+/* V9.0 Home · fixes after the first real screenshots */
+.home-mag .v9-home .story-start-row.today-tiles .today-tile.moment-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 5px;
+  min-height: 96px;
+  padding: 14px 12px;
+  border: 0;
+  background: none;
+  box-shadow: inset 1px 0 0 var(--line);
+  text-align: left;
+}
+.home-mag .v9-home .today-preview-copy {
+  min-width: 0;
+  padding-bottom: 18px;
+}
+.home-mag .v9-home .today-preview-copy b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: none;
+}
+.home-mag .v9-home .today-preview-copy small:not(.hero-kicker) {
+  color: var(--muted);
+  -webkit-line-clamp: 2;
+}
+.home-mag .v9-home .hero-kicker {
+  font-size: 12px !important;
+  letter-spacing: 0.06em;
+  color: var(--muted) !important;
+}
+.home-mag .v9-home .today-preview-go {
+  top: auto;
+  left: auto;
+  right: 16px;
+  bottom: 12px;
+}
+.home-mag .v9-home .peek-slide:not(.peek-words)::before {
+  left: 70px;
+  top: 4px;
+  width: 54px;
+  height: 15px;
+  transform: translateX(-50%) rotate(-8deg);
+}
+.home-mag .v9-home .keeper-invite {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(120, 95, 60, 0.05), 0 14px 30px -24px rgba(70, 50, 30, 0.5);
+}
+.home-mag .v9-home .keeper-invite small {
+  color: var(--muted);
+}
+.home-mag .v9-home .today-list-card {
+  border: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(120, 95, 60, 0.05), 0 16px 32px -26px rgba(70, 50, 30, 0.55);
+}
+/* V9.0 Home · the hero is a grid, so the polaroids never sit on the copy
+   or the button at any width. */
+.v9-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 124px;
+  grid-template-areas: "copy pol" "cta pol";
+  column-gap: 12px;
+  align-items: start;
+}
+.v9-hero-copy {
+  grid-area: copy;
+  width: auto;
+}
+.v9-polaroids {
+  grid-area: pol;
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 124px;
+  height: 168px;
+  margin-top: 10px;
+}
+.v9-pol-back {
+  width: 84px;
+  height: 98px;
+}
+.v9-pol-front {
+  top: 30px;
+  width: 96px;
+  height: 116px;
+}
+.v9-tape {
+  left: 22px;
+  top: 22px;
+}
+.home-mag .v9-home .v9-cta {
+  grid-area: cta;
+  justify-self: start;
+}
+@media (max-width: 359px) {
+  .v9-hero {
+    grid-template-columns: minmax(0, 1fr) 104px;
+    grid-template-areas: "copy pol" "cta cta";
+  }
+  .v9-polaroids {
+    width: 104px;
+    height: 140px;
+  }
+  .v9-pol-back { width: 70px; height: 84px; }
+  .v9-pol-front { width: 82px; height: 100px; top: 24px; }
+  .home-mag .v9-home .v9-cta {
+    justify-self: stretch;
+    justify-content: center;
+    margin-top: 12px;
+  }
+}
+.home-mag .v9-home .v9-cta {
+  white-space: nowrap;
+}
+.home-mag .home-top .brand-title {
+  white-space: nowrap;
+}
+@media (max-width: 389px) {
+  .v9-hero {
+    grid-template-areas: "copy pol" "cta cta";
+  }
+  .home-mag .v9-home .v9-cta {
+    margin-top: 12px;
+  }
+}
+@media (max-width: 359px) {
+  .home-mag .home-top .brand-title {
+    font-size: 25px;
+  }
+  .v9-daynum {
+    font-size: 64px;
+  }
+}
+/* V9.0 Home · Today's memories: one large polaroid — the photo first,
+   the page's title written on the white paper under it. */
+.home-mag .v9-home .hero-photo {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 10px 18px;
+  border-radius: 6px;
+  background: var(--c-ffffff, #ffffff);
+  box-shadow: 0 0 0 1px rgba(120, 95, 60, 0.06), 0 22px 36px -24px rgba(50, 35, 20, 0.55);
+}
+.home-mag .v9-home .hero-photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border: 0;
+  border-radius: 2px;
+  transform: none;
+  box-shadow: none;
+}
+.home-mag .v9-home .today-preview-copy,
+.home-mag .v9-home .hero-copy-block {
+  padding: 2px 8px 18px;
+}
+.home-mag .v9-home .today-preview-copy b,
+.home-mag .v9-home .hero-copy-block b {
+  font-size: 18px;
+}
+.home-mag .v9-home .hero-photo.peek-words {
+  min-height: 200px;
+  padding: 22px 18px 34px;
+  border-radius: 22px;
+  background: var(--paper);
+  align-content: center;
+}
+.home-mag .v9-home .peek-slide:not(.peek-words)::before {
+  left: 50%;
+  top: -4px;
+  width: 64px;
+  height: 16px;
+  transform: translateX(-50%) rotate(-4deg);
+}
+.home-mag .v9-home .today-peek {
+  padding: 6px 0 10px;
+  border-radius: 0;
 }

@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "9.0",
+    date: "2026-11-10",
+    zh: {
+      title: "首页 V9.0：照片手帐成为主入口",
+      items: [
+        "首页换成新的「文具店」排版：左边是大大的日期，旁边一句问候和「今天有什么值得记录？」。",
+        "「照片手帐」变成一张有纸张厚度的大卡片，里面有两张拍立得，Captain 从卡片上沿探头；「选今天的照片」是唯一的主按钮。",
+        "「只写几句 / 手绘 / 更多方式」收进下面一条安静的文具栏，不再是四个一样大的按钮。",
+        "「今天的回忆」只显示你今天真正写的页（示例会标出「示例」）；还没写时是轻轻的空状态。",
+        "小屏幕上照片不会压住文字或按钮。其他页面（日历、书架、Keeper 设置）会按顺序接着更新。",
+      ],
+    },
+    en: {
+      title: "Home V9.0: the photo journal leads",
+      items: [
+        "Home has a new stationery-shop layout: a large date, one greeting and “What's worth keeping today?”.",
+        "The Photo Journal is now one paper card with two polaroids, Captain peeking over its top edge, and a single main button: “Choose today's photos”.",
+        "Just write / Draw / More ways sit in one quiet stationery strip below — no more four equal buttons.",
+        "“Today's memories” shows only pages you really kept today (samples are marked); before that, a light empty state.",
+        "On small screens the photos never cover the text or the button. Calendar, My Books and Keeper settings follow next.",
+      ],
+    },
+  },
+  {
     version: "8.1",
     date: "2026-11-10",
     zh: {
