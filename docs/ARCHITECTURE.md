@@ -243,3 +243,8 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `Public/js/app-lock.mjs`：纯函数（SHA-256、makeLock / checkPin / readLock / saveLock / shouldRelock / pauseLeft）。本机键 `little-days.lock`（`{v:1, salt, hash, grace, biometric}`）、`little-days.lock-tries`。不进 `little-days.v1`、不进备份，因此不需要 Swift 模型字段。
 - 网页 ↔ iOS：`window.webkit.messageHandlers.littleDaysLock.postMessage({type:"unlock"|"state"})`；iOS 回调 `window.littleDaysBiometricResult(ok)`；启动时注入 `window.littleDaysBiometry = "faceID"|"touchID"|""`。Swift：`LittleDaysLockBridge`（LocalAuthentication）、`LittleDaysPrivacy`（App 切换器封面）。Info.plist：`NSFaceIDUsageDescription`。
+
+## 2026-11-10 V7.5 记录存储：IndexedDB 为主、LocalStorage 镜像
+
+- `little-days.v1` 的 JSON 存在 IndexedDB `little-days-meta` 数据库 `kv` 仓库（`MetaStore`，写入排队合并）。`Store` 每次保存：先写 LocalStorage 镜像（放得下时），再异步写 IndexedDB。启动：LocalStorage 有副本就用它，否则用 IndexedDB。LocalStorage 写满时删除镜像并设 `little-days.v1-mirror=off`。媒体仍在 `little-days-media`。
+- 本机键：`little-days.last-backup`、`little-days.backup-snooze`。

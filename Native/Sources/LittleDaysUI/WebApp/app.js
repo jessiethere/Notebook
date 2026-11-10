@@ -28,6 +28,7 @@ import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJo
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
 import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
+import { MetaStore } from "./js/meta-store.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -547,7 +548,7 @@ function home() {
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- <section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>
+ ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>
  ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -951,6 +952,49 @@ function setPrivacy(name, on) {
   try {
     localStorage.setItem(PRIVACY_KEYS[name], on ? "1" : "0");
   } catch {}
+}
+// ---------- Backup reminder (V7.5) ----------
+// Everything lives only on this device, so a backup is the only copy that
+// survives a lost phone or a deleted app. A quiet nudge on Home once there is
+// something worth keeping and no backup for two weeks; "later" waits a week.
+const BACKUP_AT_KEY = "little-days.last-backup";
+const BACKUP_SNOOZE_KEY = "little-days.backup-snooze";
+const readKey = (key) => {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch {
+    return "";
+  }
+};
+const writeKey = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+};
+const daysBetween = (a, b) => Math.round((new Date(`${b}T12:00:00`) - new Date(`${a}T12:00:00`)) / 86400000);
+function ownDays() {
+  return state().entries.filter((e) => !e.isDemo && (hasDayPageContent(e) || e.moments?.some((m) => !m.isDemo))).length;
+}
+function backupDue() {
+  const last = readKey(BACKUP_AT_KEY).slice(0, 10);
+  const snooze = readKey(BACKUP_SNOOZE_KEY).slice(0, 10);
+  if (snooze && snooze > dateKey()) return null;
+  if (ownDays() < 3) return null;
+  if (!last) return { days: null };
+  const days = daysBetween(last, dateKey());
+  return days >= 14 ? { days } : null;
+}
+function backupNudgeHTML() {
+  const due = backupDue();
+  if (!due) return "";
+  const text = due.days == null ? t("backup.never", { count: ownDays() }) : t("backup.since", { days: due.days });
+  return `<div class="backup-nudge" role="status"><span class="backup-nudge-text">${esc(text)}</span><button class="backup-nudge-go" data-action="backup">${t("backup.now")} ›</button><button class="backup-nudge-later" data-action="backup-later" aria-label="${t("backup.later")}">×</button></div>`;
+}
+function backupWhenHTML() {
+  const last = readKey(BACKUP_AT_KEY).slice(0, 10);
+  if (!last) return `<p class="backup-when">${t("backup.whenNever")}</p>`;
+  const days = daysBetween(last, dateKey());
+  return `<p class="backup-when">${t("backup.when", { date: friendlyDate(last), days })}</p>`;
 }
 function privacySectionHTML() {
   const row = (name) => {
@@ -3014,7 +3058,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), privacy: privacySectionHTML(), labs: labsCardHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
   }[page]();
   navigation();
@@ -3896,6 +3940,10 @@ async function action(target) {
     logEvent("contribute_interest", { kind: target.dataset.kind });
     $("#choose-dialog").close();
     toast(t("bookShare.thanks"));
+  }
+  if (actionName === "backup-later") {
+    writeKey(BACKUP_SNOOZE_KEY, addDays(dateKey(), 7));
+    return render();
   }
   if (actionName === "lock-toggle") return showLock(AppLock.readLock() ? "off" : "set");
   if (actionName === "lock-change") return showLock("change");
@@ -6062,6 +6110,9 @@ async function v3Action(target) {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     toast(t("settings.backupDone"));
+    writeKey(BACKUP_AT_KEY, dateKey());
+    logEvent("backup", {});
+    if (["home", "settings"].includes(page)) render();
     return true;
   }
   return false;
@@ -6758,7 +6809,22 @@ async function start() {
   // App lock: before anything personal is drawn.
   if (AppLock.readLock()) showLock("unlock");
   tellShellLock();
-  store = new Store(localStorage, responses[2]);
+  // V7.5: the journal itself lives in IndexedDB (room for years of pages);
+  // LocalStorage keeps a mirror while it fits.
+  const meta = new MetaStore();
+  let durableRaw = null;
+  try {
+    durableRaw = await meta.read();
+  } catch (error) {
+    console.warn("Journal database unavailable", error?.name);
+  }
+  store = new Store(localStorage, responses[2], undefined, {
+    durableRaw,
+    persist: (raw) => meta.write(raw),
+    onPersistError: () => toast(t("storage.saveFailed")),
+  });
+  // Ask the browser / iOS not to clear this app's storage when space runs low.
+  navigator.storage?.persist?.().catch(() => {});
   account = Account.loadAccount(localStorage);
   // Without Labs there is no sign-in page or tour: open straight onto Home.
   if (!labsOn() && !Account.isSignedIn(account)) {

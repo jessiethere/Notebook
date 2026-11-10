@@ -891,6 +891,34 @@
     "zh": "密码已修改",
     "en": "Passcode changed"
   },
+  "storage.saveFailed": {
+    "zh": "这次没能存进本机数据库，请检查手机存储空间，并尽快备份。",
+    "en": "Couldn't save to this device's database — check free space and back up soon."
+  },
+  "backup.never": {
+    "zh": "记了 {count} 天，还没备份过 · 记录只在这台手机上",
+    "en": "{count} days kept, no backup yet · it's all only on this phone"
+  },
+  "backup.since": {
+    "zh": "已经 {days} 天没备份了",
+    "en": "No backup for {days} days"
+  },
+  "backup.now": {
+    "zh": "现在备份",
+    "en": "Back up"
+  },
+  "backup.later": {
+    "zh": "一周后再提醒",
+    "en": "Remind me in a week"
+  },
+  "backup.when": {
+    "zh": "上次备份：{date}（{days} 天前）",
+    "en": "Last backup: {date} ({days} days ago)"
+  },
+  "backup.whenNever": {
+    "zh": "还没备份过。在 iPhone 上可以把备份文件存到「文件」或 iCloud 云盘。",
+    "en": "No backup yet. On iPhone you can save the file to Files or iCloud Drive."
+  },
   "privacy.title": {
     "zh": "隐私",
     "en": "Privacy"

@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-10 — V7.5 备份提醒 + 记录存储升级到 IndexedDB
+
+- 需求：用户确认顺序「第 2 条的备份提醒和第 3 条存储升级先做，接着做第 4、5 条搜索和『那年今天』，然后每天的温柔提醒（iOS 本地通知），然后给自己的书做 tag 标签」。本条为前两项。
+- 改动文件：新增 Public/js/meta-store.mjs（IndexedDB `little-days-meta` / `kv`，写入排队合并，只写最新值）；Public/js/model.mjs（Store 接受 `{durableRaw, persist, onPersistError}`：LocalStorage 有副本时以它为准（每次保存先写它），没有时用 IndexedDB 副本；首次启动把 LocalStorage 的记录复制进 IndexedDB；LocalStorage 写满（QuotaExceeded）时移除镜像、设置 `little-days.v1-mirror = off`，之后只写 IndexedDB；没有 IndexedDB 时仍抛错，不会静默丢失）；Public/app.js（启动时读 IndexedDB 再建 Store；`navigator.storage.persist()`；备份提醒：自己的记录 ≥ 3 天且从未备份或 ≥ 14 天未备份时首页一行提醒，「现在备份」走原备份流程，× 推迟 7 天（`little-days.backup-snooze`）；备份成功记录 `little-days.last-backup`；设置「本机媒体与备份」显示上次备份）；personal-ui.mjs（extra.backupWhen）；styles.css；i18n.json（backup.*、storage.saveFailed）；whats-new.mjs（V7.5）；tests/v75.test.mjs（5 项）；tests/v68-browser.cjs（4 组，包括真正写满 LocalStorage 后保存、刷新后从 IndexedDB 读回）；package.json；docs。
+- 决策与原因：保留 LocalStorage 镜像（在放得下时），这样旧代码、跨标签页冲突检测和现有测试都不受影响；只在写满时才切到只用 IndexedDB。备份仍是手动导出（自动 iCloud 备份需要原生实现，列入下一步）。
+- 运行 / 测试：Node 128 项（新增 5 项）、Python 12 项；40 套浏览器 E2E：全量跑 37 套通过，v31 / v67 单独重跑通过（时序抖动），browser.cjs 失败原因与本次改动无关——示例日按今天日期生成，日期变成 11-10 后示例日落在测试挑的 11-01（stash 掉改动也一样），测试改为挑一个空日期后通过。新增 v68 4 组通过。Linux 容器 + Chromium。
+- 已知问题：镜像关闭后不再做跨标签页冲突检测；IndexedDB 写入是异步的，写失败只能事后提示（toast）；未在 iPhone WKWebView 实测 IndexedDB 容量与 persist()。
+- 下一步：搜索、那年今天（本轮继续）。
+
 ### 2026-11-10 — V7.4 App 锁（4 位密码 + iPhone App 面容 ID）
 
 - 需求：上一轮建议「App 锁」，用户回复「要」。

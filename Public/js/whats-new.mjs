@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.5",
+    date: "2026-11-10",
+    zh: {
+      title: "备份提醒；记录改存进本机数据库，写多少年都放得下",
+      items: [
+        "记录只在这台手机上，所以备份很重要：自己记了 3 天以上、还没备份过（或已经 14 天没备份）时，首页会出现一行小提醒，点「现在备份」就行；点 × 一周后再提醒。",
+        "设置里能看到「上次备份：哪天（几天前）」。iPhone 上可以把备份文件存到「文件」或 iCloud 云盘。",
+        "文字和页面改存进本机数据库（IndexedDB，和照片放在一起），比原来的浏览器小仓库大得多；就算原来的地方满了，也照样能保存，不会丢。",
+        "第一次打开会自动把以前的记录搬过去，不用做任何事；还会请求浏览器 / iPhone 不要在空间不够时自动清掉这些数据。",
+      ],
+    },
+    en: {
+      title: "Backup reminders; your journal now lives in the device's database, room for years",
+      items: [
+        "Everything is only on this phone, so backups matter: once you've kept 3+ days with no backup (or none for 14 days), Home shows a one-line reminder — tap “Back up”; × waits a week.",
+        "Settings shows when you last backed up. On iPhone, save the file to Files or iCloud Drive.",
+        "Words and pages now live in the device's database (IndexedDB, next to your photos) — far roomier than before; even if the old store is full, saving still works and nothing is lost.",
+        "The first start moves earlier pages over by itself; the app also asks the browser / iPhone not to clear this data when space runs low.",
+      ],
+    },
+  },
+  {
     version: "7.4",
     date: "2026-11-10",
     zh: {

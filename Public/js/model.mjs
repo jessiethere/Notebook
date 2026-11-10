@@ -382,11 +382,21 @@ export function validateStateSnapshot(value) {
   checkKeys(value);
   return value;
 }
+export const MIRROR_OFF_KEY = "little-days.v1-mirror"; // "off": LocalStorage was full
 export class Store {
-  constructor(storage, seed, today = dateKey()) {
+  // options.durableRaw: the copy read from IndexedDB at start (V7.5);
+  // options.persist(raw): writes a new copy there (returns a promise);
+  // options.onPersistError(error): that write failed.
+  constructor(storage, seed, today = dateKey(), options = {}) {
     this.storage = storage;
-    const raw = storage.getItem("little-days.v1");
-    this.baselineRaw = raw;
+    this.persist = options.persist || null;
+    this.onPersistError = options.onPersistError || (() => {});
+    this.mirror = storage.getItem(MIRROR_OFF_KEY) !== "off";
+    const local = this.mirror ? storage.getItem("little-days.v1") : null;
+    // LocalStorage is written first on every save, so while it has a copy it
+    // is the newest; without one, the IndexedDB copy is the journal.
+    const raw = local || options.durableRaw || null;
+    this.baselineRaw = local;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (
@@ -400,11 +410,21 @@ export class Store {
       )
         throw new Error("本地记录格式不兼容，请先备份浏览器数据。");
       this.state = normalizeState(validateStateSnapshot(parsed));
+      // First start after the upgrade: copy the journal into IndexedDB.
+      if (this.persist && raw !== options.durableRaw) this.save(raw);
     } else this.state = createInitialState(seed, today);
     if (addSampleDays(this.state, seed, today)) this.state = normalizeState(this.state);
   }
+  save(encoded) {
+    if (!this.persist) return;
+    try {
+      Promise.resolve(this.persist(encoded)).catch((error) => this.onPersistError(error));
+    } catch (error) {
+      this.onPersistError(error);
+    }
+  }
   update(change) {
-    if (this.storage.getItem("little-days.v1") !== this.baselineRaw) {
+    if (this.mirror && this.storage.getItem("little-days.v1") !== this.baselineRaw) {
       const error = new Error("error.conflict");
       error.code = "stale-state";
       throw error;
@@ -414,8 +434,22 @@ export class Store {
     validateStateSnapshot(next);
     // Write first: a storage failure must not be reported as a successful save.
     const encoded = JSON.stringify(next);
-    this.storage.setItem("little-days.v1", encoded);
-    this.baselineRaw = encoded;
+    if (this.mirror) {
+      try {
+        this.storage.setItem("little-days.v1", encoded);
+        this.baselineRaw = encoded;
+      } catch (error) {
+        // LocalStorage is full: with IndexedDB the journal carries on there.
+        if (!this.persist) throw error;
+        this.mirror = false;
+        this.baselineRaw = null;
+        try {
+          this.storage.removeItem("little-days.v1");
+          this.storage.setItem(MIRROR_OFF_KEY, "off");
+        } catch {}
+      }
+    }
+    this.save(encoded);
     this.state = next;
   }
 }

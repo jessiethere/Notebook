@@ -13642,3 +13642,47 @@ dialog h2,
   display: block;
   margin: 2px 0 10px;
 }
+
+/* V7.5 · A quiet backup reminder on Home (one line, can wait a week). */
+.home-mag .backup-nudge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 8px 10px 14px;
+  border: 1px solid var(--c-e6d6b8, #E6D6B8);
+  border-radius: 16px;
+  background: var(--c-fbf3e2, #FBF3E2);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--t-5c5048, #5C5048);
+}
+.backup-nudge-text {
+  flex: 1;
+  min-width: 0;
+}
+.backup-nudge-go {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-5f6f52, #5F6F52);
+  color: var(--t-ffffff, #FFFFFF);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.backup-nudge-later {
+  flex: none;
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--t-8d857b, #8D857B);
+  font-size: 18px;
+}
+.backup-when {
+  font-size: 13px;
+  color: var(--t-5f6f52, #5F6F52);
+}

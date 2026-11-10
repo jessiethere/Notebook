@@ -77,10 +77,12 @@ const path = require("node:path");
 
     // Backfill a date, edit title/body/mood/template/font and put it in that book.
     await nav("calendar");
-    const historical = await page
-      .locator('[data-action="select-date"]')
-      .first()
-      .getAttribute("data-date");
+    // An empty date (sample days move with today's date, so skip those).
+    const historical = await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1") || "{}");
+      const used = new Set([...(s.entries || []).map((e) => e.date), ...Object.keys(s.drafts || {})]);
+      return [...document.querySelectorAll('[data-action="select-date"]')].map((el) => el.dataset.date).find((d) => !used.has(d));
+    });
     await page
       .locator(`[data-action="select-date"][data-date="${historical}"]`)
       .click();
