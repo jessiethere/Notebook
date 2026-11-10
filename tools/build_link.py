@@ -38,7 +38,7 @@ def main():
     (OUT / 'index.html').write_text(page_html(), encoding='utf-8')
     files = []
     for path in sorted(PUBLIC.rglob('*')):
-        if path.is_file() and path.name != 'index.html' and path.suffix in {'.css', '.js', '.mjs'}:
+        if path.is_file() and path.name != 'index.html' and path.suffix in {'.css', '.js', '.mjs', '.png'}:
             files.append((path, path.relative_to(PUBLIC)))
     for name in ['design-tokens', 'features', 'seed', 'library', 'i18n']:
         files.append((SHARED / f'{name}.json', Path('shared') / f'{name}.json'))

@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "8.1",
+    date: "2026-11-10",
+    zh: {
+      title: "正式 App 图标：探头的 Captain",
+      items: [
+        "Little Days 用上了你确认的正式 App 图标：戴柠檬帽的 Captain 从奶油色手帐边探头，旁边是小花回形针、Little Days 字样和小芽。",
+        "iPhone App 的图标资源已经换好（1024 × 1024，不透明正方形，圆角由 iOS 自己加）。浏览器标签页的小图标、加到 iPhone 主屏幕时的图标也一起换了。",
+        "图标直接使用原图，没有重画；只是去掉了原图外面一圈的空白和阴影，让图标铺满。",
+      ],
+    },
+    en: {
+      title: "Official app icon: Captain peeking",
+      items: [
+        "Little Days now uses your approved official app icon: Captain in the lemon hat peeking over a cream journal plaque, with the flower paper clip, the Little Days wordmark and the sprout.",
+        "The iPhone app icon is in place (1024 × 1024, an opaque square; iOS adds the rounded shape). The browser tab icon and the “Add to Home Screen” icon changed too.",
+        "The artwork is used as it is, never redrawn — only the empty margin and shadow around the original picture were left out so the icon fills its square.",
+      ],
+    },
+  },
+  {
     version: "8.0",
     date: "2026-11-10",
     zh: {

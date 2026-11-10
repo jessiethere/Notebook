@@ -236,3 +236,18 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 | 减少动态效果 | 已实现 | 以上全部关闭 |
 | 眨眼、说话、伸懒腰等 | **未实现** | 需要美术提供连贯的动画帧（同一角度、同一光照的序列），不用表情图片突然切换冒充动画 |
 | 写字 | **未实现** | 没有写字动作素材，写字时用 Normal |
+
+## 2026-11-10 V8.1 正式 App Icon（Little Days V1 Official App Icon）
+
+> 产品负责人 2026-11-10 确认的最终图标，本轮不再探索其他方案。原图：`docs/brand/LD-app-icon-original.png`（1254 × 1254）。**直接使用原图，不重新生成、不重绘、不用 SVG / CSS 模仿。**
+
+- **必须保留的元素**：Captain 灰蓝毛发和金黄大眼睛；柠檬黄帽子、绿叶、柠檬片；从奶油色手帐边探头的姿势和两只毛茸茸的爪子；左下角金色小花回形针；温暖柔和的奶油色背景；棕色衬线「Little Days」；下方绿色小芽；3D 毛绒公仔与文具质感。
+- **三者的区别**：
+  - Official App Icon = 这整张图（含背景、回形针、字样），只用于系统图标、网页 favicon / 主屏幕图标。
+  - Brand Wordmark = 页面里现有的「Little Days」文字 Logo（Cormorant Garamond + 小芽），页面标题不放整张图标。
+  - Little Keeper = 首页、书架里独立的角色素材（Resources/Keepers），不能拿 App Icon 当角色图。
+- **iOS**：`Native/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`，1024 × 1024，不透明 RGB 正方形，不预先切圆角（iOS 自己加形状）；单尺寸 universal 格式，Xcode 生成其他尺寸。工程设置 `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`，Bundle ID 不变。
+- **制作方式**（`python3 tools/make_app_icon.py`）：原图是「圆角图块 + 外圈空白和阴影」。取整个图块（约 992 × 1056，不裁掉任何元素），补成 1056 正方形：左右各约 32px 窄条、图块四角外侧，以及图块 22px 宽的高光 / 阴影边，用图块内 28px 处的颜色延展、柔化后填充（羽化 6px）；再用 Lanczos 一次缩放到各尺寸。约 79% 的像素与原图逐像素一致；改动的只是边缘背景和手帐边缘，大多会被 iOS 的圆角遮住。原因：图块自身的圆角比 iOS 更圆，如果不处理，四角会露出原图外圈的米色和阴影。
+- **Web**：`Public/icons/favicon-32.png`、`icon-192.png`（保留原图自己的圆角形状 + 透明背景，浏览器不会自动加圆角）；`apple-touch-icon.png` 180（不透明正方形，供 iPhone「添加到主屏幕」）。项目目前没有 PWA manifest，所以没有新增。
+- **小尺寸可识别性**（模拟检查）：60pt 主屏幕 / 40pt 搜索：脸、眼睛、柠檬帽和「Little Days」字样都清楚；29pt 设置：脸清楚，字样勉强；20pt 通知：只能认出 Captain 的脸和黄色帽子，文字看不清（所有带字图标在这个尺寸都会这样）。
+- **未验证**：没有在 Xcode / iPhone 真机或模拟器上看过实际图标（容器里没有 Xcode）。

@@ -59,3 +59,9 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - 处理：`tools/extract_captain.py`（只用参考图里的像素，不重画）。参考图本身不进仓库、不随 App 发布。
 - V7.9 的小兔、小西高地和其他帽子素材已从 App 包中移除（仍在 git 历史里）；`tools/extract_keepers.py` 一并删除。等这些角色的美术确认后再重新加入。
 - 限制：只限 Little Days 内使用。分辨率受参考图限制，正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG 和动画帧。
+
+## V8.1 正式 App Icon（2026-11-10）
+
+- 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」，保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
+- 生成：`python3 tools/make_app_icon.py` → iOS `Native/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`；Web `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`（同步进 iOS 外壳 WebApp 与在线链接）。
+- 处理说明见 DESIGN_SYSTEM.md「V8.1 正式 App Icon」。只限 Little Days 使用。

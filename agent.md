@@ -48,6 +48,23 @@
 
 ## 更新日志
 
+### 2026-11-10 — V8.1 正式 App Icon 集成（iOS + Web）
+
+- 需求：用户确认上传的图片为「Little Days V1 Official App Icon」（Captain 柠檬帽探头、小花回形针、Little Days 棕色衬线字、小芽），要求直接使用原图（不重新生成、不重绘、不用 SVG/CSS 模仿）；iOS 做 1024 × 1024 不透明正方形、不预切圆角、更新 Asset Catalog、不改 Bundle ID；Web 更新 favicon（以及已有的 PWA 配置）；检查小尺寸可识别性；区分 App Icon / 文字 Logo / Keeper；只做图标，不改首页、导航、Keeper 等。
+- 改动文件：
+  - 新增 `docs/brand/LD-app-icon-original.png`（原图 1254 × 1254，原样保存）与 `tools/make_app_icon.py`（可重复生成）。
+  - 新增 `Native/App/Assets.xcassets/`（`Contents.json`、`AppIcon.appiconset/Contents.json`、`AppIcon-1024.png`，单尺寸 universal iOS 格式）。
+  - `Native/LittleDays.xcodeproj/project.pbxproj`：Assets.xcassets 文件引用、加入 App 组和 Resources 阶段；Debug / Release 加 `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`。Bundle ID（com.jessiethere.littledays）和其他设置不变。
+  - 新增 `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`；`Public/index.html` 用它们替换原来的 🌷 emoji favicon。
+  - `tools/build_link.py`、`tools/sync_native_web.py`：复制 `.png`（Public 里只有这三个图标是 PNG）。iOS 外壳 WebApp 已同步。
+  - `Public/js/whats-new.mjs` 8.1；docs/DESIGN_SYSTEM.md（正式 App Icon 规范）、docs/ASSETS.md；README。
+  - 新增 `tests/test_app_icon.py`（1024 不透明 RGB、Contents.json、pbxproj 引用与 AppIcon 设置、Bundle ID 未变、括号平衡、Web 图标尺寸与链接、原图保留）。
+- 决策与原因：原图是「圆角图块 + 外圈空白和阴影」，图块本身约 992 × 1056、圆角约 290px（比 iOS 圆）。直接整张用会变成「图标里套图标」，元素也更小；只裁成图块高度会让叶子和缝线贴边。所以取整个图块（不裁掉任何元素），左右窄条、四角外侧和 22px 的边缘高光 / 阴影用图块内部颜色延展、柔化填充，再一次 Lanczos 缩放。检查：保留区域与原图逐像素一致（最大差 0），约占 79%；第一版的径向条纹和白色弧线已去掉。
+- 视觉检查：原图 vs 集成图对比；180 / 120 / 87 / 80 / 58 / 40 像素在浅色和深色背景上；浏览器里按 iPhone 尺寸画的模拟主屏幕、搜索结果、设置、通知（用实际图标文件，22.37% 圆角近似 iOS 形状），已发给用户。60pt / 40pt 下脸、眼睛、帽子、字样都清楚；29pt 字样勉强；20pt 只能认出脸和帽子。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项通过；Python 16 项通过（新增 test_app_icon 4 项，含外壳同步一致性）；浏览器 E2E 全量 43 套一轮全部通过；localhost 上 /icons/*.png 返回 200 image/png。Swift / Xcode 未运行。
+- 未验证 / 已知问题：没有 Xcode / iOS 模拟器 / 真机，所以 Asset Catalog 编译和真机主屏幕效果都没有验证；pbxproj 只做了文本和括号检查。项目没有 PWA manifest，未新增。在线链接（claude.ai Artifact）的浏览器标签图标由 claude.ai 决定，网页里的 favicon 在 localhost 和 iOS「添加到主屏幕」时生效。
+- 下一步：在 Mac 上用 Xcode 打开 Native/LittleDays.xcodeproj，确认 AppIcon 显示、真机主屏幕效果；如需更锐利的小尺寸，可请美术出一版字样更大的小尺寸专用图（不替换正式图标）。
+
 ### 2026-11-10 — 设计探索（不改代码）：Visual Direction、首页快捷入口三方向、日历 / 书架、Keeper V2 角色系统
 
 - 需求：用户发来三段要求。① Little Keeper V2：三只角色各有性格（Captain 好奇调皮 / Bunny 温柔乐观 / Westie 热情忠诚），每只有 Natural 自然形象（默认）和 Dress-up 装扮，三只共用一套功能；② Visual Identity Reset：先建立整体视觉方向，再出 Home / Calendar / My Books 三张 iPhone 稿并和现在对比，用户确认后才写代码；③ 首页四个快捷入口太像普通按钮宫格，要 A（Hero + Secondary）/ B（Stationery Objects）/ C（Editorial Layout）三套方向。② 和 ③ 都明确「本轮先进行设计探索，不修改代码」，所以本轮只做设计，App 代码和数据没有任何改动。

@@ -179,6 +179,13 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-10 — 正式 App Icon（V8.1）
+
+- iPhone App 换上确认的正式图标（戴柠檬帽探头的 Captain、小花回形针、Little Days 字样）：1024 × 1024 不透明正方形，直接用原图，iOS 自己加圆角。
+- 网页 favicon 和「添加到主屏幕」图标也换成同一张图。
+- 原图保存在 docs/brand/，`python3 tools/make_app_icon.py` 可重新生成全部尺寸。
+- 还没有在 Xcode / 真机上验证。
+
 ### 2026-11-10 — 设计探索：新视觉方向与首页入口三方向（未改代码）
 
 - 本轮只做设计稿，App 没有改动。设计画布：https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG
