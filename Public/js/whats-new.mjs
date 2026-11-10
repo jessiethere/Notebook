@@ -4,6 +4,24 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "9.1",
+    date: "2026-11-10",
+    zh: {
+      title: "Captain 的对话泡泡；面板字号统一",
+      items: [
+        "修好：在首页点 Captain 时，它说的话被挤成一个字一行。现在是一个正常的对话泡泡，带小尾巴指向 Captain；书架上的泡泡也一样。",
+        "「认识 Little Keeper」和改名字的面板统一了字号：说明文字不再小到看不清，「就是它了」和「以后再说」两个按钮一样大。",
+      ],
+    },
+    en: {
+      title: "A speech bubble for Captain; consistent sheet type",
+      items: [
+        "Fixed: tapping Captain on Home squeezed its line to one character per row. It is now a proper speech bubble with a little tail pointing at Captain; the shelf bubble matches.",
+        "The “Meet Little Keeper” and name sheets use one type scale: notes are readable, and the two buttons are the same size.",
+      ],
+    },
+  },
+  {
     version: "9.0",
     date: "2026-11-10",
     zh: {

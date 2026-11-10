@@ -66,6 +66,9 @@ const shots = process.env.SHOTS_DIR || "";
     // A tap: one short line, which goes away by itself.
     await page.locator('.keeper-home [data-action="keeper-tap"]').click();
     await page.waitForSelector(".keeper-home .keeper-bubble");
+    // V9.1: a real speech bubble — wide enough to read (it once collapsed to one character per line).
+    const bubbleBox = await page.locator(".keeper-home .keeper-bubble").boundingBox();
+    assert.ok(bubbleBox.width > 100 && bubbleBox.height < 100, `bubble ${bubbleBox.width}×${bubbleBox.height}`);
     await page.waitForSelector(".keeper-home .keeper-bubble", { state: "detached", timeout: 8000 });
     await page.waitForFunction(() => document.querySelector(".keeper-home img.keeper-img")?.naturalWidth > 0);
     assert.equal(await page.locator(".keeper svg").count(), 0);

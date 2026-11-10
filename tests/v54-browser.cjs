@@ -98,13 +98,24 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await mobile.waitForSelector('#journal-canvas [data-inline="title"]');
     await mobile.keyboard.type("昨天给他过生日了");
     await mobile.waitForSelector("#type-bar:not([hidden])");
-    const stageBefore = await mobile.locator("#journal-canvas").boundingBox();
+    // Measure once the page has settled (the caret scroll can still be easing in).
+    const settledBox = async () => {
+      let last = await mobile.locator("#journal-canvas").boundingBox();
+      for (let i = 0; i < 20; i++) {
+        await mobile.waitForTimeout(120);
+        const next = await mobile.locator("#journal-canvas").boundingBox();
+        if (JSON.stringify(next) === JSON.stringify(last)) return next;
+        last = next;
+      }
+      return last;
+    };
+    const stageBefore = await settledBox();
     await mobile.locator('[data-type-font="zh-kuaile"]').click();
     await mobile.locator('[data-type-size="2"]').click();
     await mobile.locator('[data-type-color="#B5838D"]').click();
     assert.equal(await mobile.evaluate(() => document.activeElement?.dataset.inline), "title", "still typing in the title");
     await mobile.keyboard.type("！");
-    assert.deepEqual(await mobile.locator("#journal-canvas").boundingBox(), stageBefore, "the bar never moves the page");
+    assert.deepEqual(await settledBox(), stageBefore, "the bar never moves the page");
     await mobile.locator('#journal-canvas [data-inline="body"]').click();
     await mobile.locator('[data-type-color="#7D8E66"]').click();
     await mobile.waitForTimeout(1300);
