@@ -93,6 +93,7 @@ const shots = process.env.SHOTS_DIR || "";
     const text = await page.locator(".today-peek").innerText();
     assert.match(text, /图库里的一张[\s\S]*下午的咖啡[\s\S]*早点睡/, "photos with their page's line, then the words");
     assert.equal((text.match(/下午的咖啡/g) || []).length, 3, "each of the three photos");
+    assert.ok(await page.locator(".today-peek .peek-slide b").first().evaluate((el) => el.style.fontFamily.length > 0), "the card uses the page's own font");
     await strip.evaluate((el) => el.scrollTo({ left: el.children[2].offsetLeft, behavior: "instant" }));
     await page.waitForFunction(() => document.querySelectorAll(".peek-dots i")[2]?.classList.contains("on"));
     if (shots) await page.screenshot({ path: `${shots}/v66-peek.png` });

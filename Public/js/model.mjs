@@ -199,9 +199,35 @@ export function stepBook(state, bookId, delta) {
   [books[from], books[to]] = [books[to], books[from]];
   return true;
 }
+// V7.6 book tags. Spaces separate tags ("阅读 感恩 健身"); a tag after "#"
+// keeps its spaces ("#self awareness"); with commas (and no "#") commas
+// separate and spaces stay ("self awareness, 健身"). No repeats (any case);
+// at most 8 tags of at most 16 characters.
+export function parseTags(text) {
+  const input = String(text || "");
+  const commas = /[,，、;；]/.test(input) && !/[#＃]/.test(input);
+  const pieces = [];
+  for (const [, hashed, plain] of input.matchAll(/[#＃]([^#＃,，、;；]+)|([^#＃,，、;；]+)/g)) {
+    if (hashed) pieces.push(hashed);
+    else if (commas) pieces.push(plain);
+    else pieces.push(...plain.split(/\s+/));
+  }
+  const seen = new Set();
+  const tags = [];
+  for (const raw of pieces) {
+    const tag = raw.replace(/\s+/g, " ").trim().slice(0, 16).trim();
+    const key = tag.toLocaleLowerCase();
+    if (!tag || seen.has(key)) continue;
+    seen.add(key);
+    tags.push(tag);
+    if (tags.length >= 8) break;
+  }
+  return tags;
+}
 export function saveBook(state, book) {
   if (!book.title.trim() || !book.category.trim())
     throw new Error("error.bookRequired");
+  if (book.tags != null) book = { ...book, tags: Array.isArray(book.tags) ? parseTags(book.tags.map((tag) => `#${tag}`).join("")) : parseTags(book.tags) };
   const index = state.books.findIndex((item) => item.id === book.id);
   const saved = { ...structuredClone(book), visibility: "private" };
   if (index < 0) state.books.push(saved);
@@ -253,7 +279,8 @@ export function validateStateSnapshot(value) {
     if (
       !object(book) ||
       ![book.id, book.title, book.category].every(text) ||
-      (book.fields != null && !Array.isArray(book.fields))
+      (book.fields != null && !Array.isArray(book.fields)) ||
+      (book.tags != null && (!Array.isArray(book.tags) || !book.tags.every(text)))
     )
       throw new Error("error.invalidData");
   }

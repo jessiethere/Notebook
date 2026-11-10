@@ -64,6 +64,7 @@ final class CoreTests: XCTestCase {
         books[0]["visibility"] = "private"
         books[0]["coverTemplate"] = "floral-notebook"
         books[0]["music"] = "morning-piano"
+        books[0]["tags"] = ["阅读", "self awareness"]
         books[0]["fields"] = [["id": "water", "label": "浇水", "type": "checkbox"]]
         object["books"] = books
         var entries = object["entries"] as! [[String: Any]]
@@ -82,6 +83,7 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
         XCTAssertEqual(reloaded.books[0].music, "morning-piano")
+        XCTAssertEqual(reloaded.books[0].tags, ["阅读", "self awareness"])
     }
     func testV31MomentsFreeLayoutAndGrowthNotesRoundTrip() throws {
         let seed = try SharedResources.decode(Seed.self, named: "seed")

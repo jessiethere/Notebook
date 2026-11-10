@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "7.6",
+    date: "2026-11-10",
+    zh: {
+      title: "搜索写过的东西、「那年今天」、每天的温柔提醒、给手帐本加标签",
+      items: [
+        "首页和日历右上角有放大镜：搜索标题、正文、纸上的字、#标签、习惯感想和做完的事；几个词用空格隔开就会都匹配，找到的字会标出来，点一下打开那一页。只在这台设备上搜索。",
+        "「那年今天」：如果往年的今天记过，首页会出现「1 年前的今天」，带那天的照片和一句话；还没满一年时显示「一个月前的今天」。点 × 今天就不再显示；打开「首页隐藏今天的内容」时也不显示。",
+        "设置里新增「每天的提醒」：选一个时间（默认晚上 9 点），iPhone 会轻轻问一句「今天有什么值得记的？」。用的是 iPhone 本地通知，不联网；今天已经记过了就不打扰；通知上可以直接「关闭每日提醒」，点通知会打开「今天怎么记？」。（网页里没法提醒，只在 iPhone App 里有效。）",
+        "手帐本可以加标签：编辑手帐本时填「标签」（空格分开，带空格的标签前面加 #，例如 #self awareness）；书架上方可以按标签筛选，打开手帐本能看到它的标签，搜索也能搜到。",
+        "首页「今天」卡片里的字用那一页自己的字体（以前总是默认字体，和页面里看起来不一样）。",
+      ],
+    },
+    en: {
+      title: "Search what you wrote, On this day, a gentle daily reminder, tags for your journals",
+      items: [
+        "A magnifier on Home and Calendar: search titles, words, text on the paper, #tags, habit notes and things done; several words must all match; matches are highlighted and a tap opens that page. Searching happens only on this device.",
+        "On this day: if you kept this date in an earlier year, Home shows “1 year ago today” with that day's photo and a line; before a year has passed, “A month ago today”. × hides it for today; it also stays hidden with “Hide today on Home”.",
+        "Settings → Daily reminder: pick a time (9 pm by default) and your iPhone gently asks “Anything worth keeping today?”. A local notification, nothing online; skipped once today is kept; “Turn off daily reminder” right on the notification, and tapping it opens “How shall we keep today?”. (The Web can't notify — iPhone app only.)",
+        "Tags for journals: add “Tags” when editing a journal (spaces between; # before a tag with spaces, e.g. #self awareness); filter the shelf by tag, see them on the journal's page, and find them by search.",
+        "Home's “Today” card now shows each page's words in that page's own fonts (it used to fall back to the default font).",
+      ],
+    },
+  },
+  {
     version: "7.5",
     date: "2026-11-10",
     zh: {

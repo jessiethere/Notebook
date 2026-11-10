@@ -59,6 +59,8 @@ public struct JournalBook: Codable, Identifiable, Equatable {
     public var fields: [BookField]?
     /// V6.2: music that plays while this book is open (library.json "music" id).
     public var music: String?
+    /// V7.6: my own tags for this book ("阅读", "健身", …), for the shelf filter and search.
+    public var tags: [String]?
 }
 
 public struct BookField: Codable, Identifiable, Equatable {

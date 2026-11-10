@@ -29,6 +29,7 @@ import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share
 import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
+import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -102,6 +103,7 @@ import {
   toggleCheck,
   saveEntry,
   saveBook,
+  parseTags,
   moveBookTo,
   removeSamples,
   stepBook,
@@ -146,6 +148,7 @@ const paths = {
   pulse: "M3 12h4l2-6 4 12 2-6h6",
   cloud: "M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.6 4.2 4.2 0 0 0 7 18Z",
   palette: "M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.6 0-1.4 1-2.4 2.4-2.4H18a3 3 0 0 0 3-3c0-5-4-9-9-9ZM7.5 12h.01M10 8h.01M15 8h.01",
+  search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4",
 };
 const icon = (name) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.spark}"/></svg>`;
@@ -486,7 +489,8 @@ function todayPeekHTML(entry) {
       ...(p === entry && entry.photo ? [entry.photo] : []),
       ...layers.filter((l) => l.kind === "photo" && l.mediaRef && !l.drawing && !l.gen).map((l) => l.mediaRef),
     ].filter((ref) => ref && !seen.has(ref) && seen.add(ref));
-    const base = { page: p, title, time: p === entry ? "" : p.time || "" };
+    // The page's own fonts, so the card reads like the page (V7.6).
+    const base = { page: p, title, time: p === entry ? "" : p.time || "", titleFont: fontFamily(p.font || "serif", catalog), bodyFont: fontFamily(p.bodyFont || p.font || "serif", catalog) };
     if (refs.length) refs.forEach((ref, i) => slides.push({ ...base, ref, words: i ? "" : words }));
     else if (title || words) slides.push({ ...base, ref: "", words });
   }
@@ -498,7 +502,7 @@ function todayPeekHTML(entry) {
     const kicker = [t("home.today"), n > 1 ? `${i + 1} / ${n}` : "", slide.time, entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
     const cls = `${i === 0 ? "today-preview " : ""}hero-photo peek-slide${src ? "" : " peek-words"}`;
     const moment = slide.page === entry ? "" : ` data-moment="${esc(slide.page.id)}"`;
-    return `<button class="${cls}" data-action="open-day" data-date="${esc(date)}"${moment} aria-label="${t("home.readToday")} ${i + 1}/${n}">${src ? `<img src="${esc(src)}" alt="${t("photo.alt")}" loading="${i ? "lazy" : "eager"}"><span class="hero-shade" aria-hidden="true"></span>` : `<span class="peek-paper" aria-hidden="true"></span>`}<span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(slide.title || t("entry.untitled"))}</b>${slide.words ? `<small>${esc(slide.words.slice(0, src ? 60 : 140))}</small>` : ""}</span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
+    return `<button class="${cls}" data-action="open-day" data-date="${esc(date)}"${moment} aria-label="${t("home.readToday")} ${i + 1}/${n}">${src ? `<img src="${esc(src)}" alt="${t("photo.alt")}" loading="${i ? "lazy" : "eager"}"><span class="hero-shade" aria-hidden="true"></span>` : `<span class="peek-paper" aria-hidden="true"></span>`}<span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b style="font-family:${esc(slide.titleFont)}">${esc(slide.title || t("entry.untitled"))}</b>${slide.words ? `<small class="peek-words-text" style="font-family:${esc(slide.bodyFont)}">${esc(slide.words.slice(0, src ? 60 : 140))}</small>` : ""}</span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
   });
   const dots = n > 1 ? `<div class="peek-dots" aria-hidden="true">${shown.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : "";
   return `<div class="today-peek-wrap"><div class="today-peek" role="group" aria-label="${t("home.readToday")}">${html.join("")}</div>${dots}</div>`;
@@ -547,8 +551,8 @@ function home() {
       return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
     })
     .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions">${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><span class="masthead-date">${esc(weekday)} · ${esc(day)}</span><div class="brand-title">Little Days</div>${streakChipHTML()}</div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+ ${backupNudgeHTML()}<section class="hero today-card"><div class="story-start-card"><h1 class="today-prompt">${t("story.prompt")}</h1><p>${t("story.promptHint")}</p><button class="primary story-photos" data-action="today-photos">${icon("photo")} ${t("story.pickPhotos")}</button><div class="story-start-row"><button data-action="today-write" title="${t("story.justWriteHint")}">${t("story.justWrite")}</button><button class="moment-cta" data-action="quick-open" data-photo="">${t("story.moreWays")}</button></div><small>${t("story.noSetup")}</small><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayListHTML()}${hero}</section>${memoryHTML()}
  ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -733,7 +737,7 @@ function calendarPage() {
           : "";
     return `<button class="day-cell ${key === selectedDate ? "selected" : ""} ${key === dateKey() ? "today" : ""} ${key > dateKey() ? "future" : ""}" data-action="select-date" data-date="${key}" data-has-content="${marks.hasContent}" aria-label="${key}${recorded ? " " + t("calendar.hasEntry") : ""}${marks.label ? " · " + marks.label : ""}" aria-pressed="${key === selectedDate}"><span>${new Intl.NumberFormat(locale()).format(i + 1)}</span><span class="day-mark">${mark}</span>${calendarMode === "memory" ? marks.html : ""}</button>`;
   }).join("");
-  const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></header>`;
+  const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><span class="page-top-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></span></header>`;
   if (calendarMode === "wall")
     return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
   return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
@@ -953,6 +957,126 @@ function setPrivacy(name, on) {
     localStorage.setItem(PRIVACY_KEYS[name], on ? "1" : "0");
   } catch {}
 }
+// ---------- Search and "On this day" (V7.6) ----------
+let searchQuery = "";
+let searchReturn = "home";
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Escaped text with the searched words marked.
+function marked(text, words) {
+  const safe = esc(text || "");
+  if (!words.length) return safe;
+  const pattern = new RegExp(`(${words.map((w) => escapeRegExp(esc(w))).join("|")})`, "gi");
+  return safe.replace(pattern, "<mark>$1</mark>");
+}
+function searchResultsHTML() {
+  const words = searchTerms(searchQuery);
+  if (!words.length) return `<p class="search-hint">${t("search.hint")}</p>`;
+  const { pages, books, total } = searchJournal(state(), searchQuery);
+  if (!pages.length && !books.length) return `<p class="search-empty">${t("search.none", { query: esc(searchQuery.trim()) })}</p>`;
+  const bookRows = books.length
+    ? `<h3 class="search-group">${t("search.books")}</h3><div class="search-books">${books.map((book) => `<button data-action="book" data-book="${esc(book.id)}"><span class="search-book-cover">${coverHTML(book, ctx())}</span><span><b>${marked(book.title, words)}</b>${book.tags?.length ? `<small>${marked(book.tags.map((x) => "#" + x).join(" "), words)}</small>` : ""}</span></button>`).join("")}</div>`
+    : "";
+  const bookName = (id) => state().books.find((b) => b.id === id)?.title || "";
+  const rows = pages
+    .map((hit) => {
+      const src = hit.photo ? safePhoto(hit.photo) : "";
+      const when = [new Date(`${hit.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "short", day: "numeric" }), hit.time, hit.kind === "list" ? "" : bookName(hit.bookId)].filter(Boolean).join(" · ");
+      return `<button class="search-hit" data-action="open-day" data-date="${esc(hit.date)}"${hit.momentId ? ` data-moment="${esc(hit.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : `<span class="search-hit-mark" aria-hidden="true">${hit.kind === "list" ? "✓" : "Aa"}</span>`}<span><small>${esc(when)}</small><b>${hit.title ? marked(hit.title, words) : esc(t(hit.kind === "list" ? "day.checklist" : "entry.untitled"))}</b>${hit.snippet && hit.snippet !== hit.title ? `<em>${marked(hit.snippet, words)}</em>` : ""}</span></button>`;
+    })
+    .join("");
+  return `${bookRows}${pages.length ? `<h3 class="search-group">${t("search.pages", { count: total })}</h3>${rows}` : ""}`;
+}
+function searchPageHTML() {
+  return `<section class="search-page"><header class="search-top"><button class="back-button" data-action="search-back">${icon("back")} ${t("back")}</button></header><label class="search-box">${icon("search")}<input type="search" data-search-input enterkeyhint="search" autocomplete="off" maxlength="60" placeholder="${t("search.placeholder")}" value="${esc(searchQuery)}" aria-label="${t("search.open")}"></label><div id="search-results" aria-live="polite">${searchResultsHTML()}</div></section>`;
+}
+function openSearch() {
+  if (page !== "search") searchReturn = page;
+  page = "search";
+  render();
+  $("#app-scroll").scrollTop = 0;
+  $("[data-search-input]")?.focus();
+}
+document.addEventListener("input", (event) => {
+  if (!event.target.matches?.("[data-search-input]")) return;
+  searchQuery = event.target.value;
+  const box = $("#search-results");
+  if (box) box.innerHTML = searchResultsHTML();
+});
+// "On this day": a day kept on this date in an earlier year (or, for a young
+// journal, the same day last month). Hidden for today with ×, and with
+// "Hide today on Home" on.
+const MEMORY_DISMISS_KEY = "little-days.memory-dismissed";
+function memoryHTML() {
+  if (privacyOn("hideToday") || readKey(MEMORY_DISMISS_KEY) === dateKey()) return "";
+  const [first, ...more] = onThisDay(state(), dateKey());
+  if (!first) return "";
+  const label = first.years ? t("memory.yearsAgo", { count: first.years }) : t("memory.monthAgo");
+  const src = first.photo ? safePhoto(first.photo) : "";
+  const others = more.length ? `<div class="memory-more">${more.slice(0, 4).map((m) => `<button data-action="open-day" data-date="${esc(m.date)}">${t("memory.yearsAgo", { count: m.years })}</button>`).join("")}</div>` : "";
+  return `<section class="memory-card" aria-label="${esc(label)}"><div class="section-heading"><div><h2>${esc(label)}</h2><small>${esc(new Date(`${first.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" }))}</small></div><button class="memory-close" data-action="memory-dismiss" aria-label="${t("memory.dismiss")}">×</button></div><button class="memory-open ${src ? "has-photo" : ""}" data-action="open-day" data-date="${esc(first.date)}"${first.momentId ? ` data-moment="${esc(first.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : ""}<span><b>${esc(first.title || t("entry.untitled"))}</b>${first.words ? `<small>${esc(first.words)}</small>` : ""}<i>${t("memory.open", { count: first.pages })} ›</i></span></button>${others}</section>`;
+}
+// ---------- A gentle daily reminder (V7.6) ----------
+// The iPhone app schedules local notifications (nothing goes online): the
+// next 14 days at the chosen time, skipping today once something is kept;
+// refreshed whenever the app opens or a page is saved. Off in one tap, here
+// or from the notification itself.
+const REMINDER_KEY = "little-days.reminder";
+const reminderBridge = () => window.webkit?.messageHandlers?.littleDaysReminder || null;
+function readReminder() {
+  try {
+    const r = JSON.parse(localStorage.getItem(REMINDER_KEY) || "null");
+    return { on: Boolean(r?.on), time: /^\d{2}:\d{2}$/.test(r?.time || "") ? r.time : "21:00" };
+  } catch {
+    return { on: false, time: "21:00" };
+  }
+}
+let reminderNote = "";
+function saveReminder(next) {
+  writeKey(REMINDER_KEY, JSON.stringify(next));
+  syncReminder();
+}
+function keptToday() {
+  const today = state().entries.find((e) => e.date === dateKey()) || state().drafts[dateKey()];
+  return Boolean(today && !today.isDemo && (hasDayPageContent(today) || today.moments?.some((m) => !m.isDemo)));
+}
+// Tell the iPhone app what to schedule (it does nothing on the Web).
+function syncReminder() {
+  const bridge = reminderBridge();
+  if (!bridge) return;
+  const { on, time } = readReminder();
+  const [hour, minute] = time.split(":").map(Number);
+  try {
+    bridge.postMessage({ type: "schedule", on, hour, minute, skipToday: keptToday(), title: "Little Days", body: t("reminder.body"), offTitle: t("reminder.offAction") });
+  } catch {}
+}
+// From the iPhone app: scheduling result, a tap on a reminder, or "turn off".
+window.littleDaysReminderResult = (result) => {
+  reminderNote = result?.ok === false ? t(result.reason === "denied" ? "reminder.denied" : "reminder.failed") : "";
+  if (page === "settings") render();
+};
+window.littleDaysFromReminder = () => {
+  if (isLocked()) return; // after unlocking, the sheet is one tap away
+  if (page === "studio" || page === "story") return;
+  openQuickRecord({});
+};
+window.littleDaysReminderTurnedOff = () => {
+  saveReminder({ ...readReminder(), on: false });
+  toast(t("reminder.turnedOff"));
+  if (page === "settings") render();
+};
+function reminderSectionHTML() {
+  const { on, time } = readReminder();
+  const app = Boolean(reminderBridge());
+  return `<section class="settings-card reminder-card"><h2>${t("reminder.title")}</h2><p>${t("reminder.note")}</p><button class="privacy-row" data-action="reminder-toggle" role="switch" aria-checked="${on && app}" ${app ? "" : "disabled"}><span><b>${t("reminder.toggle")}</b><small>${esc(t("reminder.preview", { body: t("reminder.body") }))}</small></span><i class="switch ${on && app ? "on" : ""}" aria-hidden="true"></i></button>${on && app ? `<label class="reminder-time">${t("reminder.at")}<input type="time" data-reminder-time value="${esc(time)}"></label>` : ""}${app ? "" : `<p class="reminder-web">${t("reminder.appOnly")}</p>`}${reminderNote ? `<p class="reminder-warn" role="status">${esc(reminderNote)}</p>` : ""}</section>`;
+}
+document.addEventListener("change", (event) => {
+  if (!event.target.matches?.("[data-reminder-time]")) return;
+  const time = event.target.value;
+  if (/^\d{2}:\d{2}$/.test(time)) {
+    saveReminder({ ...readReminder(), time });
+    toast(t("reminder.setAt", { time }));
+  }
+});
 // ---------- Backup reminder (V7.5) ----------
 // Everything lives only on this device, so a backup is the only copy that
 // survives a lost phone or a deleted app. A quiet nudge on Home once there is
@@ -1254,7 +1378,7 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p><span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p>${book.tags?.length ? `<div class="book-tags">${book.tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}">#${esc(tag)}</button>`).join("")}</div>` : ""}<span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
@@ -1264,12 +1388,18 @@ function booksPage() {
     return `<header class="page-top"><div><button class="back-button" data-action="books-view" data-view="shelf">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bell()}</header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
   const ours = booksView === "our";
   const switcher = `<div class="shelf-switch" role="tablist" aria-label="${t("books.title")}"><button role="tab" data-action="books-view" data-view="shelf" aria-selected="${!ours}">${t("books.mine")}</button><button role="tab" data-action="books-view" data-view="our" aria-selected="${ours}">${t("books.ours")}</button></div>`;
-  const list = ours ? state().books.filter(isOurBook) : state().books;
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
+  const all = ours ? state().books.filter(isOurBook) : state().books;
+  // V7.6 book tags: filter the shelf by a tag.
+  const tags = [...new Map(all.flatMap((b) => b.tags || []).map((tag) => [tag.toLocaleLowerCase(), tag])).values()];
+  if (shelfTag && !tags.some((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase())) shelfTag = "";
+  const list = shelfTag ? all.filter((b) => (b.tags || []).some((tag) => tag.toLocaleLowerCase() === shelfTag.toLocaleLowerCase())) : all;
+  const tagRow = tags.length ? `<div class="shelf-tags" role="group" aria-label="${t("books.tags")}"><button data-action="shelf-tag" data-tag="" aria-pressed="${!shelfTag}">${t("books.allTags")}</button>${tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}" aria-pressed="${shelfTag.toLocaleLowerCase() === tag.toLocaleLowerCase()}">#${esc(tag)}</button>`).join("")}</div>` : "";
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
 // friend has joined. Read only (nothing is created by asking).
+let shelfTag = "";
 function isOurBook(book) {
   return (social().collab?.[book.id]?.members || []).some((member) => member.status === "active");
 }
@@ -2569,6 +2699,7 @@ function finishStory() {
   clearTimeout(draftTimer);
   store.update((s) => saveEntry(s, editor));
   draftDirty = false;
+  syncReminder();
   logEvent("story_saved", { moments: story.made?.ids.length || 0, style: story.style });
   // The same "page done" record as before, for the 30-day test (no content).
   if (quickSession) {
@@ -3058,8 +3189,9 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
+    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), news: newsSectionHTML(), reminder: reminderSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
+    search: searchPageHTML,
   }[page]();
   navigation();
   applyShellLanguage();
@@ -3941,6 +4073,28 @@ async function action(target) {
     $("#choose-dialog").close();
     toast(t("bookShare.thanks"));
   }
+  if (actionName === "reminder-toggle") {
+    const r = readReminder();
+    saveReminder({ ...r, on: !r.on });
+    logEvent("reminder_toggle", { kind: r.on ? "off" : "on" });
+    toast(t(r.on ? "reminder.turnedOff" : "reminder.turnedOn", { time: r.time }));
+    return render();
+  }
+  if (actionName === "shelf-tag") {
+    shelfTag = target.dataset.tag || "";
+    selectedBook = null;
+    page = "books";
+    return render();
+  }
+  if (actionName === "open-search") return openSearch();
+  if (actionName === "search-back") {
+    page = searchReturn && searchReturn !== "search" ? searchReturn : "home";
+    return render();
+  }
+  if (actionName === "memory-dismiss") {
+    writeKey(MEMORY_DISMISS_KEY, dateKey());
+    return render();
+  }
   if (actionName === "backup-later") {
     writeKey(BACKUP_SNOOZE_KEY, addDays(dateKey(), 7));
     return render();
@@ -4221,6 +4375,7 @@ async function action(target) {
     clearTimeout(draftTimer);
     store.update((s) => saveEntry(s, editor));
     draftDirty = false;
+    syncReminder();
     toast(t("这一天，已经好好收藏。🌷"));
     if (readReturn?.page === "story" && story) {
       readReturn = null;
@@ -5027,6 +5182,7 @@ function readBookForm() {
     ...values,
     title: values.title?.trim() || "",
     category: values.category?.trim() || "",
+    tags: parseTags(values.tags || ""),
     fields,
     visibility: "private",
   };
@@ -6849,6 +7005,11 @@ async function start() {
   });
   render();
   if (warning) toast(warning);
+  // The iPhone app: refresh the reminders, and hear about a tapped one.
+  syncReminder();
+  try {
+    reminderBridge()?.postMessage({ type: "ready" });
+  } catch {}
 }
 start().catch((error) => {
   $("#app").innerHTML =

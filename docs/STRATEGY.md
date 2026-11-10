@@ -415,3 +415,5 @@
 - Shuffles：[TechCrunch：公开上线（2022-11）](https://techcrunch.com/2022/11/10/pinterest-launches-its-collage-making-app-shuffles-to-the-general-public/)、[Modern Retail](https://www.modernretail.co/?p=46943)
 
 > 2026-11-09 更新（V6.8，用户决定）：首页「今天」卡片改为「今天要做的事」planner（从实验室拿出、人人可用），习惯不再在首页打卡，只留一行入口到「我的习惯」。
+
+> 2026-11-10 更新（Vision 2.0）：产品围绕 Today / Calendar / My Books / Journal Studio；独立 Growth 模块不再回归；Little Keeper 作为可选伙伴，成长只从已有记录行为派生（见 docs/PRODUCT_VISION_2.md，待批准）。

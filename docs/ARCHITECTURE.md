@@ -248,3 +248,9 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `little-days.v1` 的 JSON 存在 IndexedDB `little-days-meta` 数据库 `kv` 仓库（`MetaStore`，写入排队合并）。`Store` 每次保存：先写 LocalStorage 镜像（放得下时），再异步写 IndexedDB。启动：LocalStorage 有副本就用它，否则用 IndexedDB。LocalStorage 写满时删除镜像并设 `little-days.v1-mirror=off`。媒体仍在 `little-days-media`。
 - 本机键：`little-days.last-backup`、`little-days.backup-snooze`。
+
+## 2026-11-10 V7.6 搜索 / 回忆 / 提醒 / 标签
+
+- `Public/js/search.mjs`（纯函数，Node 测试）：`searchJournal(state, query)` → `{pages, books, total}`；`onThisDay(state, today)`。
+- 提醒：本机键 `little-days.reminder`；网页 → iOS：`littleDaysReminder.postMessage({type:"schedule"|"ready", …})`；iOS → 网页：`littleDaysReminderResult`、`littleDaysFromReminder`、`littleDaysReminderTurnedOff`。Swift `LittleDaysReminders`（UserNotifications，标识 `little-days.daily.0…13`，分类 `little-days.reminder`）。
+- 标签：`book.tags?: string[]`（JS `parseTags`，Swift `JournalBook.tags`）。

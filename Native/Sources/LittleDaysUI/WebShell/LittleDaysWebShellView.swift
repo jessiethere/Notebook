@@ -95,9 +95,12 @@ struct LittleDaysWebView: UIViewRepresentable {
         // App lock: Face ID / Touch ID and the app switcher cover.
         let lockBridge = LittleDaysLockBridge()
         configuration.userContentController.add(lockBridge, name: LittleDaysLockBridge.name)
+        // Daily reminder: local notifications (V7.6).
+        configuration.userContentController.add(LittleDaysReminders.shared, name: LittleDaysReminders.name)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         lockBridge.webView = webView
+        LittleDaysReminders.shared.webView = webView
         webView.uiDelegate = context.coordinator
         webView.navigationDelegate = context.coordinator
         webView.isOpaque = false

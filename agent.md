@@ -48,6 +48,23 @@
 
 ## 更新日志
 
+### 2026-11-10 — 产品方向 Vision 2.0 与 Little Keeper（只记录决策和方案，未实现）
+
+- 需求：用户两条消息。①「Additional Core Product Principle — Grow Through Living」：Little Keeper 随记录自然成长；伙伴成长 + 故事里的小世界（收藏品），MVP 设计可扩展数据模型、只做少量例子；不强制任务、不惩罚中断、可关闭、不需要把私人文字交给 AI。②「Product Vision 2.0 — Important Correction」：独立 Growth 模块已移除，不要重新引入；产品围绕 Today / Calendar / My Books / Journal Studio；成长只从已有的记录行为派生，不做习惯 / 健身 / 学习追踪器或成长仪表盘；核对仓库结构；保留代码和数据；更新 README、追加 agent.md；**未经批准不实现新功能、不改导航**。
+- 处理：两条冲突处以更正为准——本轮**只写文档**：新增 docs/PRODUCT_VISION_2.md（核对后的实际结构、架构、Grow Through Living 原则、以天计的公平规则、只用元数据的收藏品规则与 4 个 MVP 例子、可扩展数据模型提案（library.json `keeperCollectibles` + 可选 `keeper` 字段 + 纯函数 keeperState）、体验位置、不做的事、待批准事项）；README 新增「产品方向」一节；ROADMAP 追加 Little Keeper 阶段（待批准）与「Growth 模块已退役」说明；STRATEGY 追加一条说明。没有改任何代码、导航或数据。
+- 核对结果（如实）：导航为 首页 / 日历 / ＋（Studio 入口）/ 书架（实验室时加社区）；Growth tab 已在 V6.6 去掉；但「我的习惯」（打卡、成长之书、回顾）仍作为可选页面存在于书架与首页一行入口（2026-11-09 用户选择保留），实验室里仍有旧的文具等级 / 经验值——两者与新原则有张力，已列入待确认，未擅自删除。
+- 下一步：等用户批准 MVP 以及「我的习惯」、旧等级、默认开关、美术方向四个决定。
+
+### 2026-11-10 — V7.6 搜索、那年今天、每日提醒（iOS 本地通知）、手帐本标签
+
+- 需求：同上一条（用户确认的顺序）的第 4–7 项：搜索、「那年今天」、每天的温柔提醒（用户自选时间，「今天有什么值得记的？」，一键关掉，iOS 本地通知、不联网）、给自己的书做 tag 标签。
+- 改动文件：新增 Public/js/search.mjs（searchJournal：自己的页面（含草稿，不含示例日）的标题 / 正文 / #标签 / 纸上文字（不含跨页副本 gen 与绑定文字）/ 自定义字段 / 所属手帐本名与标签、当天清单（习惯名、细节、感想、做完的事）、手帐本（名、简介、标签）；多词 AND、忽略大小写；snippet；onThisDay：往年同月同日（最多 20 年，新的在前），没有时用「一个月前的今天」（不跨月末））；Public/app.js（放大镜图标；首页与日历页头搜索入口；`search` 页：输入即搜、`<mark>` 高亮、手帐本结果、点开当天并定位；首页 memoryHTML（照片 + 一句话 + 其他年份小按钮，× 今天隐藏 `little-days.memory-dismissed`，隐私「首页隐藏今天」时不显示）；每日提醒：`little-days.reminder` {on,time}，设置「每天的提醒」卡片（网页里开关禁用并说明只在 iPhone App 有效），syncReminder 在启动、开关、改时间、保存后通知外壳（skipToday），回调 littleDaysReminderResult / littleDaysFromReminder（打开「今天怎么记？」）/ littleDaysReminderTurnedOff；手帐本标签：表单「标签」字段、书架标签筛选 `shelf-tag`、手帐本页显示标签）；Public/js/model.mjs（parseTags：空格分隔，# 后保留空格，只有逗号时按逗号；最多 8 个、每个 ≤ 16 字、去重；saveBook 规范化；validateStateSnapshot 校验 tags）；personal-ui.mjs（标签字段、extra.reminder）；styles.css；i18n.json（search.* / memory.* / reminder.* / books.tags*）；whats-new.mjs（V7.6）；新增 Native/Sources/LittleDaysUI/WebShell/LittleDaysReminders.swift（WKScriptMessageHandler `littleDaysReminder` + UNUserNotificationCenterDelegate：逐日排 14 个本地通知、今天已记则跳过、「关闭每日提醒」动作（立即移除并在页面就绪后通知页面）、点击通知打开记录面板、前台不弹横幅）；LittleDaysWebShellView.swift（注册桥接）；Native/App/LittleDaysApp.swift（启动时 install 设置通知代理）；Models.swift（JournalBook.tags）+ CoreTests；tests/v76.test.mjs（5 项）；tests/v69-browser.cjs（3 组）、tests/v70-browser.cjs（3 组）；package.json；docs。
+- 决策与原因：提醒逐日排 14 天而不是一个重复通知，这样今天已经记过就能跳过；代价是 14 天不打开 App 后提醒会停（也算不打扰）。「那年今天」在应用还年轻时退而求其次显示一个月前，让用户更早感受到回看的价值。示例日不参与搜索和回忆。
+- 同一轮追加：用户截图「卡片和主页显示字体排版不一样」——首页「今天」卡片的标题和文字改用那一页自己的 `font` / `bodyFont`（字重 500），v66 加断言。
+- 运行 / 测试：Node 133 项、Python 12 项通过；浏览器 E2E 全量 42 套中 41 套通过（新增 v69 3 组、v70 3 组）。**v31 不稳定**：它写死的日期 2026-11-10 变成了今天，在 V7.5 代码上同样失败，与本次改动无关；已改为 20 天前的空日期，并让方向键微调步骤先确认焦点、最多重试 3 次；之后单独跑 3 次中 1 次通过，另外 2 次在更早的「媒体用量显示 MB」处偶发失败（存储估算是异步的，环境相关），未继续深挖，如实记录。Linux 容器 + Chromium；Swift 未编译。
+- 已知问题：**Swift 通知代码未编译**（无 Xcode），未在 iPhone 上验证通知权限、时间、动作；网页版没有提醒；搜索为全量线性扫描（几千页以内足够快，未做索引）。
+- 下一步：Xcode 构建 + 真机验证（App 锁、面容 ID、提醒）；自动 iCloud 备份；搜索结果按手帐本筛选。
+
 ### 2026-11-10 — V7.5 备份提醒 + 记录存储升级到 IndexedDB
 
 - 需求：用户确认顺序「第 2 条的备份提醒和第 3 条存储升级先做，接着做第 4、5 条搜索和『那年今天』，然后每天的温柔提醒（iOS 本地通知），然后给自己的书做 tag 标签」。本条为前两项。

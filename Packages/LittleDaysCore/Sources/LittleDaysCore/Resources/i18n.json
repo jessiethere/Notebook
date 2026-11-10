@@ -919,6 +919,114 @@
     "zh": "还没备份过。在 iPhone 上可以把备份文件存到「文件」或 iCloud 云盘。",
     "en": "No backup yet. On iPhone you can save the file to Files or iCloud Drive."
   },
+  "search.open": {
+    "zh": "搜索我的手帐",
+    "en": "Search my journal"
+  },
+  "search.placeholder": {
+    "zh": "搜索写过的字、#标签、手帐本…",
+    "en": "Search words, #tags, journals…"
+  },
+  "search.hint": {
+    "zh": "可以搜标题、正文、纸上的字、#标签、习惯感想和做完的事；几个词用空格隔开就会都匹配。只在这台设备上搜索。",
+    "en": "Search titles, words, text on the paper, #tags, habit notes and things done; several words separated by spaces must all match. Searching happens only on this device."
+  },
+  "search.none": {
+    "zh": "没有找到「{query}」",
+    "en": "Nothing found for “{query}”"
+  },
+  "search.books": {
+    "zh": "手帐本",
+    "en": "Journals"
+  },
+  "search.pages": {
+    "zh": "页面 · {count}",
+    "en": "Pages · {count}"
+  },
+  "memory.yearsAgo": {
+    "zh": "{count} 年前的今天",
+    "en": "{count} year(s) ago today"
+  },
+  "memory.monthAgo": {
+    "zh": "一个月前的今天",
+    "en": "A month ago today"
+  },
+  "memory.dismiss": {
+    "zh": "今天不再显示",
+    "en": "Hide for today"
+  },
+  "memory.open": {
+    "zh": "打开那一天 · {count} 页",
+    "en": "Open that day · {count} page(s)"
+  },
+  "reminder.title": {
+    "zh": "每天的提醒",
+    "en": "Daily reminder"
+  },
+  "reminder.note": {
+    "zh": "在你选的时间轻轻问一句。用 iPhone 本地通知，不联网；今天已经记过了就不打扰。",
+    "en": "A gentle nudge at your time — a local iPhone notification, nothing online; skipped once today is kept."
+  },
+  "reminder.toggle": {
+    "zh": "每天提醒我记录",
+    "en": "Remind me every day"
+  },
+  "reminder.body": {
+    "zh": "今天有什么值得记的？",
+    "en": "Anything worth keeping today?"
+  },
+  "reminder.preview": {
+    "zh": "通知会说：「{body}」",
+    "en": "It says: “{body}”"
+  },
+  "reminder.at": {
+    "zh": "提醒时间",
+    "en": "Time"
+  },
+  "reminder.offAction": {
+    "zh": "关闭每日提醒",
+    "en": "Turn off daily reminder"
+  },
+  "reminder.turnedOn": {
+    "zh": "每天 {time} 提醒你",
+    "en": "Reminding you daily at {time}"
+  },
+  "reminder.turnedOff": {
+    "zh": "每日提醒已关闭",
+    "en": "Daily reminder off"
+  },
+  "reminder.setAt": {
+    "zh": "改成每天 {time}",
+    "en": "Now daily at {time}"
+  },
+  "reminder.appOnly": {
+    "zh": "提醒只在 iPhone App 里有效：网页关掉后没法发通知。",
+    "en": "Reminders work in the iPhone app only — a closed web page can't notify you."
+  },
+  "reminder.denied": {
+    "zh": "iPhone 没有允许 Little Days 发通知：请到「设置 → 通知 → Little Days」打开。",
+    "en": "Notifications are off for Little Days: turn them on in Settings → Notifications → Little Days."
+  },
+  "reminder.failed": {
+    "zh": "提醒没能设置好，请稍后再试。",
+    "en": "The reminder couldn't be set — try again later."
+  },
+  "books.tags": {
+    "zh": "标签",
+    "en": "Tags"
+  },
+  "books.tagsPlaceholder": {
+    "zh": "例如：阅读 感恩 健身",
+    "en": "e.g. reading gratitude fitness"
+  },
+  "books.tagsHint": {
+    "zh": "用空格分开，最多 8 个；带空格的标签前面加 #（例如 #self awareness）。书架上可以按标签找书，搜索也能搜到。",
+    "en": "Separate with spaces, up to 8; put # before a tag with spaces (e.g. #self awareness). Filter the shelf by tag; search finds them too."
+  },
+  "books.allTags": {
+    "zh": "全部",
+    "en": "All"
+  },
   "privacy.title": {
     "zh": "隐私",
     "en": "Privacy"

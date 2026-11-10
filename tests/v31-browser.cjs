@@ -591,13 +591,16 @@ async function noOverflow(page, label) {
     const d = helpers(desk.page);
     await desk.page.goto(base);
     await desk.page.waitForSelector(".hero");
-    await openStudioDate(desk.page, d.nav, "2026-11-10");
+    // An empty past date (was a fixed deskDate, which became today):
+    // 20 days ago is never today and never a sample day.
+    const deskDate = await desk.page.evaluate(() => { const x = new Date(); x.setDate(x.getDate() - 20); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; });
+    await openStudioDate(desk.page, d.nav, deskDate);
     await desk.page.locator("#photos-input").setInputFiles(photos(2, "desk"));
     await skipPhotoEditor(desk.page);
-    await d.waitDay("2026-11-10", (e) => e.layers.filter((l) => l.kind === "photo").length === 2);
-    const deskIds = (await d.day("2026-11-10")).layers.map((l) => l.id);
+    await d.waitDay(deskDate, (e) => e.layers.filter((l) => l.kind === "photo").length === 2);
+    const deskIds = (await d.day(deskDate)).layers.map((l) => l.id);
     await selectLayer(desk.page, deskIds[1]);
-    const before = (await d.day("2026-11-10")).layers.find((l) => l.id === deskIds[1]);
+    const before = (await d.day(deskDate)).layers.find((l) => l.id === deskIds[1]);
     await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"]`), -40, 30);
     await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-resize`), 40, 30);
     await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-rotate`), 60, 40);
@@ -607,14 +610,30 @@ async function noOverflow(page, label) {
     await desk.page.keyboard.down("Shift");
     await desk.page.mouse.wheel(0, -120);
     await desk.page.keyboard.up("Shift");
-    await d.waitDay("2026-11-10", (e, a) => {
+    await d.waitDay(deskDate, (e, a) => {
       const l = e.layers.find((x) => x.id === a.id);
       return l.x < a.x && l.w > a.w && l.scale > a.scale && l.rotation !== a.rotation;
     }, { id: deskIds[1], x: before.x, w: before.w, scale: before.scale, rotation: before.rotation });
-    await desk.page.locator(`[data-layer="${deskIds[1]}"]`).focus();
-    const nudged = (await d.day("2026-11-10")).layers.find((l) => l.id === deskIds[1]).x;
-    await desk.page.keyboard.press("ArrowRight");
-    await d.waitDay("2026-11-10", (e, a) => e.layers.find((x) => x.id === a.id).x === a.x + 1, { id: deskIds[1], x: nudged });
+    // Arrow keys nudge the focused, selected layer by 1. (Focus is checked
+    // before each try: a late draft-save re-render can take it away.)
+    let nudgedOk = false;
+    for (let attempt = 0; attempt < 3 && !nudgedOk; attempt++) {
+      await desk.page.waitForTimeout(800);
+      await selectLayer(desk.page, deskIds[1]);
+      await desk.page.locator(`[data-layer="${deskIds[1]}"]`).focus();
+      const focused = await desk.page.evaluate((id) => document.activeElement?.dataset?.layer === id, deskIds[1]);
+      if (!focused) continue;
+      const x0 = (await d.day(deskDate)).layers.find((l) => l.id === deskIds[1]).x;
+      await desk.page.keyboard.press("ArrowRight");
+      nudgedOk = await desk.page
+        .waitForFunction(([date, id, x]) => {
+          const s = JSON.parse(localStorage.getItem("little-days.v1"));
+          const e = s.drafts[date] || s.entries.find((x) => x.date === date);
+          return Math.abs(e.layers.find((l) => l.id === id).x - (x + 1)) < 1e-6;
+        }, [deskDate, deskIds[1], x0], { timeout: 4000 })
+        .then(() => true, () => false);
+    }
+    assert.ok(nudgedOk, "ArrowRight nudges the selected layer by 1");
     await noOverflow(desk.page, "desktop studio");
     assert.deepEqual(desk.errors, []);
     await desk.context.close();

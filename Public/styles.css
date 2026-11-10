@@ -13686,3 +13686,307 @@ dialog h2,
   font-size: 13px;
   color: var(--t-5f6f52, #5F6F52);
 }
+
+/* V7.6 · Search my journal. */
+.page-top-actions {
+  display: flex;
+  gap: 8px;
+}
+.search-page {
+  padding-bottom: 24px;
+}
+.search-top {
+  margin-bottom: 10px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+.search-box svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--t-8d857b, #8D857B);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: none;
+  font-size: 16px;
+  box-shadow: none;
+  outline: none;
+}
+.search-hint,
+.search-empty {
+  margin: 18px 4px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--t-8d857b, #8D857B);
+}
+.search-group {
+  margin: 18px 2px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-6f675d, #6F675D);
+}
+.search-hit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 0;
+  margin: 0 0 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+.search-hit img,
+.search-hit-mark {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.search-hit-mark {
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  color: var(--t-8d857b, #8D857B);
+  font-size: 15px;
+}
+.search-hit > span:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.search-hit small {
+  font-size: 11px;
+  color: var(--t-8d857b, #8D857B);
+}
+.search-hit b {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-hit em {
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--t-5c5048, #5C5048);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.search-page mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: var(--c-f3e2b3, #F3E2B3);
+  color: inherit;
+}
+.search-books {
+  display: grid;
+  gap: 8px;
+}
+.search-books button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+.search-book-cover {
+  flex: none;
+  width: 40px;
+}
+.search-books b {
+  display: block;
+  font-size: 14px;
+}
+.search-books small {
+  font-size: 12px;
+  color: var(--t-5f6f52, #5F6F52);
+}
+
+/* V7.6 · On this day. */
+.home-mag .memory-card {
+  display: block;
+  margin: 14px 0;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+}
+.memory-card .section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.memory-card .section-heading h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.memory-card .section-heading small {
+  font-size: 12px;
+  color: var(--t-8d857b, #8D857B);
+}
+.memory-close {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 18px;
+  color: var(--t-8d857b, #8D857B);
+}
+.memory-open {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  min-height: 0;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--cream);
+  color: var(--ink);
+  text-align: left;
+  overflow: hidden;
+}
+.memory-open img {
+  flex: none;
+  width: 108px;
+  height: 108px;
+  object-fit: cover;
+}
+.memory-open > span {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 12px 12px 0;
+}
+.memory-open:not(.has-photo) > span {
+  padding-left: 14px;
+}
+.memory-open b {
+  font-size: 15px;
+}
+.memory-open small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--t-6f675d, #6F675D);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.memory-open i {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--t-5f6f52, #5F6F52);
+}
+.memory-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.memory-more button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 12px;
+}
+
+/* V7.6 · Daily reminder card. */
+.reminder-card .privacy-row:disabled {
+  opacity: 0.55;
+}
+.reminder-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.reminder-time input {
+  width: auto;
+  min-height: 40px;
+  font-size: 16px;
+}
+.reminder-web,
+.reminder-warn {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--t-8d857b, #8D857B);
+}
+.reminder-warn {
+  color: var(--t-a0504f, #A0504F);
+}
+
+/* V7.6 · Book tags: filter chips on the shelf, tags on a book's page. */
+.shelf-tags,
+.book-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+.shelf-tags button,
+.book-tags button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--t-5f6f52, #5F6F52);
+  font-size: 12px;
+}
+.shelf-tags button[aria-pressed="true"] {
+  border-color: var(--c-5f6f52, #5F6F52);
+  background: var(--c-5f6f52, #5F6F52);
+  color: var(--t-ffffff, #FFFFFF);
+}
+.book-tags {
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--t-8d857b, #8D857B);
+}
+/* The today card uses each page's own fonts; titles keep the page's weight. */
+.home-mag .peek-slide b {
+  font-weight: 500;
+}
