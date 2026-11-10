@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "8.0",
+    date: "2026-11-10",
+    zh: {
+      title: "Captain 正式版：只保留 Captain，重新精细抠图；首页更安静",
+      items: [
+        "这一轮只有 Captain（灰蓝色小猫，柠檬帽）。小兔、小西高地和其他帽子先下架，等确认好美术再加。",
+        "Captain 的四张图（默认、开心、睡觉、探头）全部从你的「Captain 角色视觉标准」重新抠图：毛发边缘保留柔和的毛尖、去掉了奶油色白边；不再带闪光线、zZ 字样和原图的阴影；三张站姿图同一尺寸、同一底线。",
+        "首页：Captain 从「今天」卡片上沿探出头，两只爪子搭在卡片边上，带一点柔和阴影。它不再自己说欢迎语（首页已经有「Hi，今天是星期几」）；点它才说一句短话，5 秒后自己消失，不会把页面往下推。",
+        "保存一页后，开心的 Captain 出现在那一页右上角的空白处，不再挡住「打开这一天」。点它不再换图假装动画，只是轻轻弹一下；平时只有很轻的呼吸，系统「减少动态效果」时完全不动。",
+        "修好：和 Captain 聊天时，它的话被挤成一个字一行。现在气泡是正常宽度，输入框也换成了圆角样式。",
+      ],
+    },
+    en: {
+      title: "Captain, properly: Captain only, re-cut with care; a quieter Home",
+      items: [
+        "This round has Captain only (the grey-blue cat in the lemon hat). Bunny, Westie and the other hats are off until their art is approved.",
+        "All four Captain pictures (Normal, Happy, Sleepy, Peek) are freshly cut from your Captain Character Reference: soft fur tips kept, no cream fringe, no sparkles, “zZ” or baked shadow; the three standing pictures share one size and baseline.",
+        "Home: Captain peeks over the top of today's card with both paws on its edge and a soft shadow. It no longer adds its own greeting (Home already says hi); tap it for one short line that fades after 5 seconds without moving the page.",
+        "After saving a page, a happy Captain appears in the page's empty top corner instead of over “Open this day”. A tap no longer swaps pictures to fake an animation — just a gentle bounce; otherwise only a very light breath, and nothing moves with Reduce Motion.",
+        "Fixed: in the chat with Captain its replies were squeezed to one word per line. Bubbles are normal width now, with a rounded input.",
+      ],
+    },
+  },
+  {
     version: "7.9",
     date: "2026-11-10",
     zh: {

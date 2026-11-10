@@ -31,7 +31,7 @@ import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
-import { keeperImage, keeperOutfits, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
+import { keeperImage } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -1017,9 +1017,11 @@ function keeperPerchHTML() {
   if (grew) setTimeout(() => saveKeeper((x) => (x.lastStage = growth.index)), 0);
   const memory = Keeper.modeAllows(k, "proactive") && Keeper.modeAllows(k, "memories") ? onThisDay(state(), dateKey())[0] : null;
   const prompt = Keeper.todayPrompt({ hour: new Date().getHours(), keptToday: keptToday(), keeper: k, memory });
-  const line = grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : keeperLine || (prompt ? t(prompt.key, { ...prompt.values, name }) : "");
-  const hour = new Date().getHours();
-  const mood = grew ? "happy" : hour >= 22 || hour < 6 ? "sleepy" : "peek";
+  // Home already greets ("Hi! It's …"), so Captain stays quiet unless tapped,
+  // it just grew, or the person turned on "speak first" (Interactive).
+  const spoken = Keeper.modeAllows(k, "proactive") && prompt ? t(prompt.key, { ...prompt.values, name }) : "";
+  const line = keeperLine || (grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : spoken);
+  const mood = "peek";
   return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(mood)}</button></div>`;
 }
 // Small soft illustrations for Home's four ways to start.
@@ -1072,7 +1074,7 @@ function keeperShelfHTML(books) {
   const k = keeperNow();
   if (!k.enabled) return "";
   const line = keeperLine && page === "books" ? keeperLine : "";
-  return `<div class="keeper-shelf"><button class="keeper-tap" data-action="keeper-shelf-tap" aria-label="${esc(t("keeper.tapLabel", { name: Keeper.keeperName(k, languageCode()) }))}">${keeperArt("idle")}</button>${line ? `<p class="keeper-bubble" role="status">${esc(line)}${Keeper.modeAllows(k, "chat") ? ` <button class="text-button" data-action="open-search">${t("keeper.shelf.find")} ›</button>` : ""}</p>` : ""}</div>`;
+  return `<div class="keeper-shelf"><button class="keeper-tap" data-action="keeper-shelf-tap" aria-label="${esc(t("keeper.tapLabel", { name: Keeper.keeperName(k, languageCode()) }))}">${keeperArt(new Date().getHours() >= 22 || new Date().getHours() < 6 ? "sleepy" : "idle")}</button>${line ? `<p class="keeper-bubble" role="status">${esc(line)}${Keeper.modeAllows(k, "chat") ? ` <button class="text-button" data-action="open-search">${t("keeper.shelf.find")} ›</button>` : ""}</p>` : ""}</div>`;
 }
 function pageWords(date, momentId) {
   const entry = state().entries.find((e) => e.date === date) || state().drafts[date];
@@ -1096,7 +1098,7 @@ function openKeeperChat() {
   const name = Keeper.keeperName(k, languageCode());
   const growth = keeperGrowth();
   if (!keeperChat.length) keeperChat = [{ who: "keeper", text: t("keeper.chat.hello", { name }) }];
-  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + growth.id))}</small></span></div><div class="keeper-msgs" aria-live="polite">${lines}</div><div class="keeper-chips"><button data-action="keeper-chat" data-intent="memory">${t("keeper.chip.memory")}</button><button data-action="keeper-chat" data-intent="week">${t("keeper.chip.week")}</button><button data-action="keeper-chat" data-intent="shelf">${t("keeper.chip.shelf")}</button></div><div class="keeper-say"><input data-keeper-say maxlength="120" placeholder="${esc(t("keeper.chat.placeholder", { name }))}"><button class="secondary" data-action="keeper-say">${t("keeper.chat.send")}</button></div><p class="save-help keeper-local">🔒 ${t(Keeper.modeAllows(k, "memories") ? "keeper.chat.privacyOn" : "keeper.chat.privacyOff")}</p><button class="choose-cancel" data-action="choose-close">${t("close")}</button></div>`;
   if (!dialog.open) dialog.showModal();
@@ -1117,19 +1119,11 @@ function openKeeperOnboarding() {
   const k = keeperNow();
   keeperDraft ||= { animal: k.animal, name: k.name, mode: k.mode };
   const d = keeperDraft;
-  const animals = Keeper.ANIMALS.map((a) => `<button class="keeper-choice ${d.animal === a ? "selected" : ""}" data-action="keeper-pick-animal" data-animal="${a}" aria-pressed="${d.animal === a}"><span class="keeper">${keeperImage(catalog, { animal: a, mood: d.animal === a ? "happy" : "idle", label: "" })}</span><b>${t("keeper.animal." + a)}</b><small>${t("keeper.animal." + a + "Hint")}</small></button>`).join("");
+  const intro = `<div class="keeper-intro"><span class="keeper">${keeperImage(catalog, { animal: "cat", mood: "idle", label: "" })}</span><span><b>${t("keeper.animal.cat")}</b><small>${t("keeper.animal.catHint")}</small></span></div>`;
   const modes = Keeper.MODES.map((m) => `<button class="keeper-mode ${d.mode === m ? "selected" : ""}" data-action="keeper-pick-mode" data-mode="${m}" aria-pressed="${d.mode === m}"><b>${t("keeper.mode." + m)}</b><small>${t("keeper.mode." + m + "Hint")}</small></button>`).join("");
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p><h3>${t("keeper.onboard.animal")}</h3><div class="keeper-animals">${animals}</div><h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
+  dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p>${intro}<h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
   if (!dialog.open) dialog.showModal();
-}
-// Hats from the character art. Only the default hat has several expressions.
-function keeperOutfitHTML(k) {
-  const outfits = keeperOutfits(catalog, k.animal);
-  if (outfits.length < 2) return "";
-  const wearing = k.outfit || DEFAULT_OUTFIT[k.animal];
-  const items = outfits.map((o) => `<button data-action="keeper-set" data-key="outfit" data-value="${o}" class="${wearing === o ? "selected" : ""}" aria-pressed="${wearing === o}"><span class="keeper">${keeperImage(catalog, { animal: k.animal, outfit: o, mood: "idle", label: "" })}</span><small>${t("keeper.outfit." + o)}</small></button>`).join("");
-  return `<div class="keeper-seg"><span>${t("keeper.settings.outfit")}</span><div class="keeper-outfits">${items}</div><small class="keeper-mode-hint">${t("keeper.settings.outfitNote")}</small></div>`;
 }
 function keeperSettingsHTML() {
   const k = keeperNow();
@@ -1140,7 +1134,7 @@ function keeperSettingsHTML() {
   const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
   const row = (key, on, hint, enabled = true) => `<button class="privacy-row" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
   const interactive = k.mode === "interactive";
-  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.animal")}</span><div class="segmented">${Keeper.ANIMALS.map((a) => `<button data-action="keeper-set" data-key="animal" data-value="${a}" class="${k.animal === a ? "selected" : ""}" aria-pressed="${k.animal === a}">${t("keeper.animal." + a)}</button>`).join("")}</div></div>${keeperOutfitHTML(k)}<div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
+  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
 }
 document.addEventListener("change", (event) => {
   if (!event.target.matches?.("[data-keeper-rename]")) return;
@@ -1180,14 +1174,17 @@ function keeperBounce(target) {
   el.classList.remove("boing");
   void el.offsetWidth;
   el.classList.add("boing");
-  // A short happy / excited face from the character art, then back.
-  const img = el.querySelector(".keeper-img");
-  if (!img || img.dataset.mood === "peek") return;
-  const k = keeperNow();
-  const before = img.outerHTML;
-  el.innerHTML = keeperImage(catalog, { animal: k.animal, outfit: k.outfit, mood: keeperTaps % 2 ? "excited" : "happy", label: img.alt });
+}
+// A line said after a tap fades away by itself.
+function keeperLineLater() {
   clearTimeout(keeperBack);
-  keeperBack = setTimeout(() => el.isConnected && (el.innerHTML = before), 1600);
+  keeperBack = setTimeout(() => {
+    keeperLine = "";
+    const bubble = $(".keeper-home .keeper-bubble, .keeper-shelf .keeper-bubble");
+    if (!bubble) return;
+    bubble.classList.add("fading");
+    setTimeout(() => bubble.remove(), 400);
+  }, 5000);
 }
 
 // ---------- Search and "On this day" (V7.6) ----------
@@ -4368,6 +4365,7 @@ async function action(target) {
     const bubble = $(".keeper-home .keeper-bubble");
     if (bubble) bubble.lastChild.textContent = keeperLine;
     else render();
+    keeperLineLater();
     return;
   }
   if (actionName === "keeper-shelf-tap") {
@@ -4378,7 +4376,9 @@ async function action(target) {
     const books = state().books;
     const lines = [t("keeper.shelf.count", { count: books.length }), t("keeper.shelf.latest", { title: books.at(-1)?.title || "" }), t("keeper.shelf.tidy")];
     keeperLine = lines[keeperTaps % lines.length];
-    return render();
+    render();
+    keeperLineLater();
+    return;
   }
   if (actionName === "keeper-feedback") return openKeeperFeedback(target.dataset.date, target.dataset.moment || "");
   if (actionName === "keeper-chat") return keeperAnswer(target.dataset.intent);
@@ -4394,7 +4394,6 @@ async function action(target) {
         k.animal = value;
         k.outfit = "";
       }
-      if (key === "outfit" && keeperOutfits(catalog, k.animal).includes(value)) k.outfit = value;
       if (key === "mode" && Keeper.MODES.includes(value)) k.mode = value;
     });
     return render();

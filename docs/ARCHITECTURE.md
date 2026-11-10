@@ -267,3 +267,11 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - `Public/js/keeper-art.mjs` 不再画 SVG：`keeperAsset(catalog, { animal, outfit, mood })` 选图（造型不存在 → 默认造型；表情按 `FALLBACK` 顺序只找现有图片），`keeperImage()` 输出 `<img class="keeper-img" src="library/keepers/…" data-animal data-outfit data-mood>`，`keeperOutfits()` 列出造型，`DEFAULT_OUTFIT` = 兔 sprout / 猫 lemon / 西高地 sprout。
 - `keeper.mjs`：`ANIMALS` 加 `westie`；`normalizeKeeper` 新增可选 `outfit`（小写字母，"" = 默认；Swift `KeeperProfile.outfit`）；默认名字 兔 小团 / Pip、猫 Captain、西高地 小白 / Snowy。换动物时清空造型。
 - app.js：`keeperArt(mood)` 外层仍是 `.keeper.mood-<mood>`（测试与旧选择器不变）；首页 `peek`（22–6 点 `sleepy`，长大那次 `happy`）；点按 `keeperBounce` 短暂换成 happy / excited 图 1.6s；设置里 `keeperOutfitHTML` 换帽子。CSS 只做位置、大小、整体呼吸 / 弹跳 / 倾斜，没有任何角色部件动画。
+
+## 2026-11-10 V8.0 Captain Keeper V1
+
+- 素材：`library.json` `keepers` 只剩 Captain 4 张（mood: normal / happy / sleepy / peek）；`tools/extract_captain.py` 生成（背景洪泛 + 暖色投影识别、最大连通块去装饰、2px 带内 α 估计与去色、小块浅色碎片清理）。
+- `keeper-art.mjs`：`FALLBACK` 只映射到这 4 张；未知动物 / 造型一律显示 Captain。`keeper.mjs`：`ANIMALS = ["cat"]`，`normalizeKeeper` 把旧的 bunny / westie 读成 cat（字段与 schema 不变；Swift `KeeperProfile` 不变）。
+- app.js：首页固定 Peek；默认不显示气泡（只有点按、成长一步、或互动 + 主动打招呼时）；点按后的一句话 `keeperLineLater()` 5 秒后淡出；`keeperBounce` 不再换图；新手引导只介绍 Captain（`.keeper-intro`），设置里去掉动物和帽子选择；书架夜间用 Sleepy。
+- 修复：聊天气泡 class 原为 `keeper-msg keeper`，与角色图片外层 `.keeper`（64px 宽、可旋转）同名，导致回复被压成 64px 宽；改为 `keeper-msg them`。
+- CSS：Peek 110px（= 原图分辨率），切线对齐卡片上沿、爪子压边 6px、两层 drop-shadow；气泡绝对定位；保存印章移到页面右上角空白处（原位置会挡住「打开这一天」）。

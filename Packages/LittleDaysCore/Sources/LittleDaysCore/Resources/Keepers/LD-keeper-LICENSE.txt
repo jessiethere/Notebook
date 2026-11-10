@@ -1,23 +1,21 @@
-Little Keeper character artwork (Bunny Keeper, Captain Cat, Westie Keeper)
+Little Keeper — Captain (character artwork)
 
-Source: a character sheet provided by the Little Days product owner on
-2026-11-10 as the approved visual reference and authorised for use in
-Little Days ("请将我上传的图片作为视觉目标 ... 可以先使用我提供的、明确授权的图片资源").
-Each character was cut out separately (tools/extract_keepers.py: crop, remove
-the flat cream background, keep a soft transparent shadow). The sheet itself
-is not shipped.
+Source: "参考图 1 · Captain 角色视觉标准" (Captain Character Reference), provided
+by the Little Days product owner on 2026-11-10 as the only art standard for
+Captain and authorised for use in Little Days. Captain is based on the owner's
+own grey cat, Captain.
 
-Captain, from the Captain visual-standard reference (参考图 1 · Captain 角色视觉标准),
-provided by the product owner on 2026-11-10 (tools/extract_keepers.py --captain):
-- LD-keeper-cat-lemon-peek.png: "Peek / 探头（首页推荐）". The reference card under
-  the paws is removed so the app's own card takes its place.
-- LD-keeper-cat-lemon-excited.png: "Surprised / 惊喜".
-- The sheet's open-eyed lemon pose is the one this reference calls "Normal / 默认",
-  so it is LD-keeper-cat-lemon-neutral.png.
+Files (cut out with tools/extract_captain.py; nothing redrawn, every pixel is
+from the reference; the reference itself is not shipped):
+- LD-keeper-cat-lemon-normal.png  "Normal / 默认"   197x251 canvas (shared)
+- LD-keeper-cat-lemon-happy.png   "Happy / 开心"    (sparkles removed)
+- LD-keeper-cat-lemon-sleepy.png  "Sleepy / 睡觉"   ("zZ" removed)
+- LD-keeper-cat-lemon-peek.png    "Peek / 探头"     339x290 (reference card removed)
+The flat background and the baked drop shadow are removed; the app adds its
+own soft shadow.
 
-Captain Cat is based on the owner's grey cat, Captain.
+Usage: inside Little Days only. Not for redistribution or resale.
 
-Usage: inside Little Days only. Not for redistribution or resale. Higher
-resolution, per-character renders (and the poses not provided yet: Peek for
-Bunny and Westie, a dedicated Writing pose, Bunny Sleepy / Excited, Captain and
-Westie Encouraging) are still to be provided by the product owner / artist.
+Still needed from the artist: higher-resolution renders of each state
+(the reference figures are only ~190 px wide, the Peek ~340 px), and
+consistent animation frames if blinking or other motion is wanted.

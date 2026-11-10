@@ -41,11 +41,10 @@ final class CoreTests: XCTestCase {
         XCTAssertGreaterThan(track.count, 100_000)
         XCTAssertTrue(String(decoding: try SharedResources.libraryData(category: "music", filename: music[0].license), as: UTF8.self).contains("Original music"))
         XCTAssertThrowsError(try SharedResources.libraryData(category: "music", filename: "LD-photo-latte-art.jpg"))
-        // Little Keeper: 18 cut-outs of the approved 3D character sheet + Captain's Surprised and Peek.
+        // Little Keeper V8.0: Captain only (Normal, Happy, Sleepy, Peek), cut out of the approved reference.
         let keepers = try XCTUnwrap(catalog.keepers)
-        XCTAssertEqual(keepers.count, 20)
-        XCTAssertTrue(keepers.contains { $0.mood == "peek" && $0.animal == "cat" })
-        XCTAssertEqual(Set(keepers.map(\.animal)), ["bunny", "cat", "westie"])
+        XCTAssertEqual(keepers.map(\.mood), ["normal", "happy", "sleepy", "peek"])
+        XCTAssertEqual(Set(keepers.map(\.animal)), ["cat"])
         let keeperPNG = try SharedResources.libraryData(category: "keepers", filename: keepers[0].file)
         XCTAssertEqual(Array(keeperPNG.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
         XCTAssertThrowsError(try SharedResources.libraryData(category: "keepers", filename: "LD-photo-latte-art.jpg"))

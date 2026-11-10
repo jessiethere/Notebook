@@ -1112,8 +1112,8 @@
     "en": "Captain Cat"
   },
   "keeper.animal.catHint": {
-    "zh": "好奇、有点调皮的灰猫",
-    "en": "curious, a little cheeky"
+    "zh": "灰蓝色的小猫，戴着柠檬帽，安静地帮你看管日记和书架",
+    "en": "a little grey-blue cat in a lemon hat who quietly looks after your journals"
   },
   "keeper.mode.quiet": {
     "zh": "安静",
@@ -1176,8 +1176,8 @@
     "en": "Hehe, you found me."
   },
   "keeper.tap.1": {
-    "zh": "我在帮你看着这些本子。",
-    "en": "I'm looking after your notebooks."
+    "zh": "今天有什么想记录的吗？",
+    "en": "Anything you'd like to keep from today?"
   },
   "keeper.tap.2": {
     "zh": "今天不写也没关系哦。",
@@ -6230,61 +6230,5 @@
   "quick.libFirst": {
     "zh": "先选一张照片",
     "en": "Pick a photo first"
-  },
-  "keeper.animal.westie": {
-    "zh": "小西高地",
-    "en": "Westie"
-  },
-  "keeper.animal.westieHint": {
-    "zh": "活泼、忠诚地陪着你",
-    "en": "cheerful and loyal"
-  },
-  "keeper.settings.outfit": {
-    "zh": "帽子",
-    "en": "Hat"
-  },
-  "keeper.settings.outfitNote": {
-    "zh": "换帽子后，只有默认帽子有好几种表情；其他帽子目前各只有一张图。",
-    "en": "Only the default hat has several expressions; the other hats have one picture each for now."
-  },
-  "keeper.outfit.sprout": {
-    "zh": "小芽",
-    "en": "Sprout"
-  },
-  "keeper.outfit.flower": {
-    "zh": "小花",
-    "en": "Flower"
-  },
-  "keeper.outfit.strawberry": {
-    "zh": "草莓",
-    "en": "Strawberry"
-  },
-  "keeper.outfit.sleepy": {
-    "zh": "睡帽",
-    "en": "Nightcap"
-  },
-  "keeper.outfit.lemon": {
-    "zh": "柠檬",
-    "en": "Lemon"
-  },
-  "keeper.outfit.beanie": {
-    "zh": "毛线帽",
-    "en": "Beanie"
-  },
-  "keeper.outfit.frog": {
-    "zh": "青蛙",
-    "en": "Frog"
-  },
-  "keeper.outfit.beret": {
-    "zh": "贝雷帽",
-    "en": "Beret"
-  },
-  "keeper.outfit.aviator": {
-    "zh": "飞行帽",
-    "en": "Aviator"
-  },
-  "keeper.outfit.bear": {
-    "zh": "小熊",
-    "en": "Bear"
   }
 }

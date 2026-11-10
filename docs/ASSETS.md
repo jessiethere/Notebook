@@ -51,3 +51,11 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - 文件：`Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Keepers/`，清单在 `library.json` 的 `keepers`，说明在 `LD-keeper-LICENSE.txt`。服务路径 `library/keepers/<文件>`（`tools/preview.py`、`tools/build_link.py`、Swift `SharedResources.libraryData(category: "keepers")`）。
 - 限制：只限 Little Days 内使用，不另行分发或出售。
 - 缺少的姿势与更高分辨率图见 DESIGN_SYSTEM.md「V7.9 Little Keeper 角色视觉规范」。
+
+## V8.0 Captain 素材（2026-11-10，取代 V7.9 的 20 张多角色素材）
+
+- 来源：产品负责人 2026-11-10 提供并授权的「参考图 1 · Captain 角色视觉标准」，是 Captain 唯一的美术标准；Captain 以产品负责人自己的猫为原型。
+- 文件：Resources/Keepers 下 4 张透明 PNG（Normal / Happy / Sleepy 197×251，Peek 339×290）+ `LD-keeper-LICENSE.txt`；清单在 `library.json` 的 `keepers`。
+- 处理：`tools/extract_captain.py`（只用参考图里的像素，不重画）。参考图本身不进仓库、不随 App 发布。
+- V7.9 的小兔、小西高地和其他帽子素材已从 App 包中移除（仍在 git 历史里）；`tools/extract_keepers.py` 一并删除。等这些角色的美术确认后再重新加入。
+- 限制：只限 Little Days 内使用。分辨率受参考图限制，正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG 和动画帧。

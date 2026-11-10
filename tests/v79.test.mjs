@@ -1,67 +1,60 @@
-// V7.9 Little Keeper art: the approved 3D character pictures (library.json
-// "keepers") are used as images; every mood maps to a real picture, and the
-// files, catalog and licence agree.
+// V8.0 Little Keeper art: Captain only, as image assets cut out of the
+// approved Captain Character Reference (library.json "keepers"); every mood
+// maps to a real picture, and the files, catalog and licence agree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import * as K from "../Public/js/keeper.mjs";
-import { keeperAsset, keeperImage, keeperOutfits, DEFAULT_OUTFIT } from "../Public/js/keeper-art.mjs";
+import { keeperAsset, keeperImage, DEFAULT_OUTFIT } from "../Public/js/keeper-art.mjs";
 
 const root = new URL("../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/", import.meta.url);
 const catalog = JSON.parse(readFileSync(new URL("library.json", root), "utf8"));
+const png = (file) => {
+  const b = readFileSync(new URL(`Keepers/${file}`, root));
+  return { sig: b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), w: b.readUInt32BE(16), h: b.readUInt32BE(20), colorType: b[25] };
+};
 
-test("catalog: 20 cut-outs of three characters, every file and its licence exist", () => {
-  assert.equal(catalog.keepers.length, 20);
-  assert.deepEqual([...new Set(catalog.keepers.map((k) => k.animal))].sort(), ["bunny", "cat", "westie"]);
+test("catalog: Captain only — Normal, Happy, Sleepy, Peek; files, sizes, alpha and licence", () => {
+  assert.deepEqual(catalog.keepers.map((k) => k.id), ["cat-lemon-normal", "cat-lemon-happy", "cat-lemon-sleepy", "cat-lemon-peek"]);
   for (const k of catalog.keepers) {
+    assert.equal(k.animal, "cat");
+    assert.equal(k.outfit, "lemon");
     assert.ok(existsSync(new URL(`Keepers/${k.file}`, root)), k.file);
-    assert.equal(k.license, "LD-keeper-LICENSE.txt");
-    assert.ok(readFileSync(new URL(`Keepers/${k.file}`, root)).subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])), "PNG");
+    const info = png(k.file);
+    assert.ok(info.sig, "PNG");
+    assert.equal(info.colorType, 6, "RGBA (transparent)");
   }
-  assert.match(readFileSync(new URL("Keepers/LD-keeper-LICENSE.txt", root), "utf8"), /product owner/);
+  // the three standing states share one canvas (no layout jumps)
+  const sizes = ["normal", "happy", "sleepy"].map((m) => png(`LD-keeper-cat-lemon-${m}.png`)).map((i) => `${i.w}x${i.h}`);
+  assert.equal(new Set(sizes).size, 1, sizes.join(" "));
+  assert.match(readFileSync(new URL("Keepers/LD-keeper-LICENSE.txt", root), "utf8"), /Captain Character Reference/);
 });
 
-test("default outfits: Bunny and Westie in the sprout hat, Captain in the lemon hat", () => {
-  assert.deepEqual(DEFAULT_OUTFIT, { bunny: "sprout", cat: "lemon", westie: "sprout" });
-  assert.equal(keeperAsset(catalog, { animal: "cat", mood: "idle" }).id, "cat-lemon-neutral");
-  assert.equal(keeperAsset(catalog, { animal: "bunny", mood: "idle" }).id, "bunny-sprout-neutral");
-  assert.equal(keeperAsset(catalog, { animal: "westie", mood: "idle" }).id, "westie-sprout-neutral");
-  assert.deepEqual(keeperOutfits(catalog, "cat"), ["lemon", "beanie", "sleepy", "frog"]);
-});
-
-test("moods: real pictures first, the closest existing picture otherwise (never a drawn stand-in)", () => {
-  const pick = (animal, mood, outfit = "") => keeperAsset(catalog, { animal, mood, outfit }).id;
-  assert.equal(pick("cat", "peek"), "cat-lemon-peek");
-  assert.equal(pick("cat", "excited"), "cat-lemon-excited");
-  assert.equal(pick("cat", "sleepy"), "cat-lemon-sleepy");
-  assert.equal(pick("cat", "encouraging"), "cat-lemon-happy", "no Captain Encouraging art yet");
-  assert.equal(pick("bunny", "encouraging"), "bunny-sprout-encouraging");
-  assert.equal(pick("bunny", "sleepy"), "bunny-sleepy-happy", "borrows the nightcap picture");
-  assert.equal(pick("bunny", "peek"), "bunny-sprout-neutral", "no Bunny Peek art yet");
-  assert.equal(pick("westie", "sleepy"), "westie-bear-sleepy");
-  assert.equal(pick("westie", "excited"), "westie-sprout-excited");
-  assert.equal(pick("westie", "quiet"), "westie-sprout-neutral", "writing: the calm pose (all hold the notebook)");
-  // An outfit with one picture always shows that picture.
-  assert.equal(pick("cat", "happy", "frog"), "cat-frog-excited");
-  assert.equal(pick("westie", "sleepy", "beret"), "westie-beret-neutral");
-  // Unknown outfit falls back to the default.
-  assert.equal(pick("cat", "idle", "crown"), "cat-lemon-neutral");
-  for (const animal of K.ANIMALS) for (const mood of ["idle", "quiet", "happy", "excited", "encouraging", "sleepy", "peek"]) assert.ok(keeperAsset(catalog, { animal, mood }), `${animal}/${mood}`);
+test("moods: real pictures only; anything else falls back to one of them", () => {
+  assert.deepEqual(DEFAULT_OUTFIT, { cat: "lemon" });
+  const pick = (mood, animal = "cat") => keeperAsset(catalog, { animal, mood }).id;
+  assert.equal(pick("idle"), "cat-lemon-normal");
+  assert.equal(pick("quiet"), "cat-lemon-normal", "writing: the calm pose (no Writing art yet)");
+  assert.equal(pick("happy"), "cat-lemon-happy");
+  assert.equal(pick("sleepy"), "cat-lemon-sleepy");
+  assert.equal(pick("peek"), "cat-lemon-peek");
+  assert.equal(pick("encouraging"), "cat-lemon-happy");
+  assert.equal(pick("excited"), "cat-lemon-happy");
+  assert.equal(pick("idle", "bunny"), "cat-lemon-normal", "an earlier Bunny choice shows Captain");
 });
 
 test("markup: a plain image with a relative path, escaped alt, no SVG", () => {
-  const html = keeperImage(catalog, { animal: "cat", mood: "peek", label: 'Cap"tain<' });
+  const html = keeperImage(catalog, { mood: "peek", label: 'Cap"tain<' });
   assert.match(html, /^<img class="keeper-img is-peek" src="library\/keepers\/LD-keeper-cat-lemon-peek\.png"/);
   assert.match(html, /alt="Cap&quot;tain&lt;"/);
   assert.doesNotMatch(html, /<svg/);
-  assert.equal(keeperImage({ keepers: [] }, { animal: "cat" }), "");
+  assert.equal(keeperImage({ keepers: [] }, {}), "");
 });
 
-test("profile: Westie and an outfit are kept; bad outfits are dropped", () => {
-  assert.ok(K.ANIMALS.includes("westie"));
-  assert.equal(K.normalizeKeeper({ animal: "westie", outfit: "beret" }).outfit, "beret");
-  assert.equal(K.normalizeKeeper({ outfit: "<b>" }).outfit, "");
-  assert.equal(K.normalizeKeeper({}).outfit, "");
-  assert.equal(K.keeperName({ animal: "westie", name: "" }, "en"), "Snowy");
+test("profile: Captain is the only companion this round; old choices are read as Captain", () => {
+  assert.deepEqual(K.ANIMALS, ["cat"]);
+  assert.equal(K.normalizeKeeper({ animal: "bunny" }).animal, "cat");
+  assert.equal(K.normalizeKeeper({}).animal, "cat");
   assert.equal(K.keeperName({ animal: "cat", name: "" }, "en"), "Captain");
+  assert.equal(K.normalizeKeeper({ outfit: "<b>" }).outfit, "");
 });

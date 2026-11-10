@@ -48,6 +48,25 @@
 
 ## 更新日志
 
+### 2026-11-10 — V8.0 Captain Keeper V1：只保留 Captain，重新精细抠图，首页 Peek；修复聊天气泡
+
+- 需求：用户发来「参考图 1 · Captain 角色视觉标准」（唯一美术标准）和「参考图 2 · 首页布局参考」（氛围参考），要求本轮只做 Captain：毛发质感、金黄眼睛、柠檬帽与参考一致；抠图检查毛发边缘、无残留背景、无误删；先展示透明素材和 iPhone 首页截图，确认后再扩展其他角色；不重新设计首页其他功能；首页 Peek（自然遮挡 + 柔和阴影、不占大模块、不重复欢迎语、不挡按钮 / 照片、可隐藏、不照搬图 2 的旧模块、不加回 Growth）；状态 Normal / Happy / Sleepy；可有轻微呼吸，不用换表情图冒充动画，支持减少动态效果；只在用户主动互动时说短句；先说明美术资源能否直接用于开发。中途用户反馈「点开对话框非常奇怪」（截图：Captain 的回复一个词一行）。
+- 美术资源评估（如实）：参考图 1 是一张排版好的说明图，不是透明素材；但背景是平涂奶油色（±2 级），可以用算法抠出、不需要重画。限制是分辨率：站姿每个约 190px 宽，Peek 约 340px，只够小尺寸使用；参考图 2 和最早的设计图背后有杂物，无法干净抠出。正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG，以及眨眼等动画需要的连贯帧。
+- 改动文件：
+  - 新增 tools/extract_captain.py（从参考图 1 抠 Normal / Happy / Sleepy / Peek：背景洪泛 + 暖色投影识别；只留最大连通块，去掉闪光线和 zZ；2px 边缘带 α 估计 + 去奶油色；清理小块浅色碎片和叶柄旁的背景口袋；站姿统一 197×251 画布与底线）。删除 tools/extract_keepers.py 和 V7.9 的 20 张多角色图（git 历史保留）。
+  - Resources/Keepers：4 张 Captain PNG + 新的 LD-keeper-LICENSE.txt；library.json `keepers` 只剩 4 条；i18n：Captain 介绍、点按短句「今天有什么想记录的吗？」，删除小西高地和帽子相关文案。
+  - Public/js/keeper-art.mjs（只映射到 4 张图）、keeper.mjs（`ANIMALS = ["cat"]`，旧的 bunny / westie 读成 Captain，数据字段不变）。
+  - Public/app.js：首页固定 Peek；默认不说话（首页已有问候）；点按后一句话 5 秒淡出；不再换图冒充动画；新手引导只介绍 Captain；设置去掉动物和帽子选择；书架夜间 Sleepy；聊天气泡 class 改为 `them`。
+  - Public/styles.css：Peek 110px（= 原图分辨率）、切线对齐卡片上沿、爪子压边 6px、两层柔和阴影；气泡绝对定位不推页面；保存印章移到页面右上角（原来挡住「打开这一天」）；聊天气泡正常宽度、隐藏内部滚动条、圆角输入框；删除帽子选择和非 Peek 裁切样式。
+  - Swift：Resources.swift 注释、Models.swift `KeeperProfile.animal` 注释；CoreTests 断言 Captain 4 张图。
+  - 测试：tests/v79.test.mjs 改为 Captain 版（清单、RGBA、站姿同尺寸、状态映射、旧选择读成 Captain）；v71 改为只有 Captain、首页不说欢迎语、点按一句话会自动消失、聊天气泡宽度 > 150px；v77 默认动物改为 cat。
+  - 文档：DESIGN_SYSTEM.md「V8.0 Captain 角色规范」（角色特征、主色、素材表、制作与质检、分辨率限制、首页 Peek 规则、动画已实现 / 未实现）；ASSETS.md；ARCHITECTURE.md；whats-new 8.0；README。
+- 发现并修复：聊天回复的 class `keeper-msg keeper` 与角色图片外层 `.keeper`（64px 宽）同名，所以回复被压成 64px（用户截图的问题）。
+- 视觉检查：素材在棋盘格 / 页面色 / 深色 / 灰 / 绿背景 1×–4× 检查；首页在 320、375、393、430 宽下截图，脚本检查 Captain 不与任何按钮、日期牌重叠、无横向滚动；开启 / 关闭 / 首次邀请 / 点按 / 保存后均截图；与参考图 1、2 做了对比图并发给用户。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项全部通过；Python 12 项通过（含外壳同步一致性）；浏览器 E2E 全量 43 套一轮全部通过（这次没有同时跑其他浏览器脚本）。Swift 未编译（无 Xcode / Swift 工具链），CoreTests 只改了源码；iOS 真机 / 模拟器未验证。
+- 已知问题 / 未完成：分辨率受参考图限制（首页 Peek 110pt 已是不放大的上限）；深色背景放大 2 倍时 Peek 叶柄旁仍有 1–2 个极淡像素；眨眼等动画、写字动作没有素材所以未实现；Captain 在首页比参考图 2 小（按「陪伴而非主内容」）；Swift 未编译、iOS 真机未验证。
+- 下一步：等用户确认 Captain 视觉；如需更大更清晰，请美术出高分辨率透明 PNG（放进 Resources/Keepers、在 library.json 登记即可替换）；确认后再按同样流程加入其他角色。
+
 ### 2026-11-10 — V7.9 Little Keeper 改用用户确认的 3D 角色图（不再用 SVG / CSS 画）
 
 - 需求：用户发来 Little Keeper 角色视觉设计规范（3 个角色 × 6 套造型 / 表情的 3D 角色表）、「参考图 1 · Captain 角色视觉标准」（Normal / Happy / Sleepy / Surprised / Peek，主色，关键特征）和「参考图 2 · 首页布局参考」，并明确：以上传图片为视觉目标；不要用扁平 SVG / Emoji / 普通二维卡通 / 简单几何形状代替；合理裁切，不把整张角色图当作单个资源；缺新角色 / 动作时说明需要额外美术；不要声称代码绘制的角色与参考图效果相同；「功能实现」≠「视觉达标」；展示实际 iPhone 首页并与参考图对比。随后再次要求：停止用 SVG 或 CSS 重画 Keeper，使用 3D 角色图作为图片资源，不重构页面，Keeper 是低调的陪伴而不是主内容。

@@ -12,7 +12,7 @@ test("profile: off by default, old journals have none, bad values fall back", ()
   assert.equal(k.enabled, false);
   assert.equal(k.mode, "gentle");
   assert.equal(k.aiConsent, false);
-  assert.equal(K.normalizeKeeper({ animal: "dragon", mode: "loud", name: "x".repeat(40) }).animal, "bunny");
+  assert.equal(K.normalizeKeeper({ animal: "dragon", mode: "loud", name: "x".repeat(40) }).animal, "cat");
   assert.equal(K.normalizeKeeper({ mode: "loud" }).mode, "gentle");
   assert.equal(K.normalizeKeeper({ name: "x".repeat(40) }).name.length, 12);
   assert.equal(K.keeperName({ animal: "cat", name: "" }, "zh"), "Captain");

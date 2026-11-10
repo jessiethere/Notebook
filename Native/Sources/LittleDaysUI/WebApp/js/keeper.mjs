@@ -10,7 +10,9 @@
 // reply on the device, never stored or sent anywhere.
 import { hasDayPageContent } from "./day.mjs";
 
-export const ANIMALS = ["bunny", "cat", "westie"];
+// V8.0: Captain only (other animals wait for approved artwork). A journal
+// that chose another animal earlier simply shows Captain.
+export const ANIMALS = ["cat"];
 export const MODES = ["quiet", "gentle", "interactive"];
 
 // Configurable thresholds and points (features.json "keeper" can override).
@@ -36,7 +38,7 @@ export function normalizeKeeper(raw = {}) {
   const k = raw && typeof raw === "object" ? raw : {};
   return {
     enabled: k.enabled === true,
-    animal: ANIMALS.includes(k.animal) ? k.animal : "bunny",
+    animal: ANIMALS.includes(k.animal) ? k.animal : "cat",
     // Which hat from the character art ("" = the animal's default outfit).
     outfit: typeof k.outfit === "string" && /^[a-z]{1,20}$/.test(k.outfit) ? k.outfit : "",
     name: typeof k.name === "string" ? k.name.trim().slice(0, 12) : "",

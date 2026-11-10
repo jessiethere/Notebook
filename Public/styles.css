@@ -14142,10 +14142,11 @@ dialog h2,
 }
 .keeper-stamp {
   position: absolute;
-  right: 18px;
-  bottom: 104px;
+  /* the empty top corner of the saved page, clear of links and buttons */
+  top: 92px;
+  right: 24px;
   z-index: 40;
-  width: 88px;
+  width: 64px;
   pointer-events: none;
   animation: k-stamp-in 2.4s ease forwards;
 }
@@ -14241,21 +14242,30 @@ dialog h2,
 .keeper-msgs {
   display: grid;
   gap: 8px;
-  max-height: 38vh;
+  max-height: 42vh;
   overflow-y: auto;
   padding: 4px 2px;
+  scrollbar-width: none; /* the list scrolls by touch; no desktop scrollbar box */
+}
+.keeper-msgs::-webkit-scrollbar {
+  display: none;
 }
 .keeper-msg {
-  max-width: 85%;
+  justify-self: start;
+  max-width: 82%;
+  width: fit-content;
+  overflow-wrap: anywhere;
   margin: 0;
   padding: 9px 12px;
+  border: 1px solid var(--line);
   border-radius: 16px 16px 16px 4px;
-  background: var(--cream);
+  background: var(--paper);
   font-size: 14px;
   line-height: 1.55;
 }
 .keeper-msg.me {
   justify-self: end;
+  border-color: transparent;
   border-radius: 16px 16px 4px 16px;
   background: var(--c-e3ebdc, #E3EBDC);
 }
@@ -14280,6 +14290,22 @@ dialog h2,
 .keeper-say input {
   flex: 1;
   min-width: 0;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+}
+.keeper-say input:focus {
+  outline: 2px solid var(--c-a8c866, #A8C866);
+  outline-offset: 1px;
+}
+.keeper-say button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
 }
 .keeper-onboard h3 {
   margin: 14px 0 8px;
@@ -14482,25 +14508,48 @@ dialog h2,
 /* Captain's real Peek picture: head and paws over the card's top edge (the
    picture's cut line sits on the edge; the paws hang over it). */
 .keeper-perch .keeper:has(.is-peek) {
-  width: 96px;
-  margin-bottom: 8px; /* the paws (bottom 4px of the picture) hang over the edge */
+  /* 110pt = the Peek picture's own 339px on a 3x screen (no upscaling) */
+  width: 110px;
+  margin-bottom: 6px; /* the paws (bottom ~6px of the picture) hang over the edge */
 }
 .keeper-perch .keeper:has(.is-peek) .keeper-img {
-  filter: drop-shadow(0 3px 3px rgba(60, 45, 30, 0.12));
+  /* a soft shadow where the head and paws rest on the card */
+  filter: drop-shadow(0 2px 2px rgba(60, 45, 30, 0.16)) drop-shadow(0 6px 10px rgba(60, 45, 30, 0.08));
 }
-/* No Peek picture for this animal yet: the standing picture, its lower part
-   hidden behind the card's edge (an approximation until Peek art exists). */
-.keeper-perch .keeper:not(:has(.is-peek)) {
-  width: 84px;
-  height: 80px; /* head, paws and the top of the notebook */
-  overflow: hidden;
+.keeper-bubble {
+  transition: opacity 0.4s ease;
 }
-.keeper-perch .keeper:has([data-animal="bunny"]) {
-  height: 86px; /* the ears are tall */
+.keeper-bubble.fading {
+  opacity: 0;
+}
+/* V8.0 onboarding: Captain only */
+.keeper-intro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+}
+.keeper-intro .keeper {
+  width: 64px;
+}
+.keeper-intro span:last-child {
+  display: grid;
+  gap: 2px;
+}
+.keeper-intro small {
+  color: var(--t-6f675d, #6F675D);
 }
 .keeper-perch .keeper-bubble {
-  max-width: 190px;
-  margin: 0 0 46px;
+  /* floats beside Captain: showing or hiding it never moves the page */
+  position: absolute;
+  right: 118px;
+  bottom: 22px;
+  max-width: min(200px, calc(100% - 130px));
+  margin: 0;
   border-radius: 16px 16px 4px 16px;
 }
 @keyframes k-peek {
@@ -14622,36 +14671,10 @@ dialog h2,
   width: 46px;
 }
 .keeper-sheet-head .keeper {
-  width: 58px;
+  width: 52px;
 }
 .keeper-profile .keeper {
   width: 50px;
-}
-.keeper-outfits {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
-.keeper-outfits button {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-height: 0;
-  padding: 6px 2px 4px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--paper);
-  color: var(--ink);
-}
-.keeper-outfits button.selected {
-  border-color: var(--c-5f6f52, #5F6F52);
-  background: var(--c-f1f5ec, #F1F5EC);
-}
-.keeper-outfits .keeper {
-  width: 40px;
-}
-.keeper-outfits small {
-  font-size: 11px;
 }
 
 .story-start-card .story-start-row.today-tiles .today-tile svg.tile-art {

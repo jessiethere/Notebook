@@ -46,7 +46,9 @@ const shots = process.env.SHOTS_DIR || "";
     await settings();
     await page.locator('.keeper-card [data-action="keeper-onboard"]').click();
     await page.waitForSelector(".keeper-onboard");
-    await page.locator('[data-action="keeper-pick-animal"][data-animal="cat"]').click();
+    // V8.0: Captain only — no animal choice, just Captain's picture.
+    assert.equal(await page.locator('[data-action="keeper-pick-animal"]').count(), 0);
+    assert.equal(await page.locator('.keeper-intro img.keeper-img[data-animal="cat"]').count(), 1);
     await page.locator("[data-keeper-name]").fill("糯米");
     await page.locator('[data-action="keeper-pick-mode"][data-mode="gentle"]').click();
     assert.equal(await page.locator("[data-keeper-name]").inputValue(), "糯米", "the name survives picking a mode");
@@ -55,15 +57,20 @@ const shots = process.env.SHOTS_DIR || "";
     assert.deepEqual([k.enabled, k.animal, k.name, k.mode, k.aiConsent], [true, "cat", "糯米", "gentle", false]);
     await page.reload();
     await page.waitForSelector(".keeper-home");
-    assert.match(await page.locator(".keeper-home .keeper-bubble").innerText(), /糯米/);
-    // V7.9: the approved character art as an image (Captain's Peek; Sleepy late at night), never SVG.
+    // V8.0: Home already greets, so Captain doesn't add a second greeting.
+    assert.equal(await page.locator(".keeper-home .keeper-bubble").count(), 0, "no extra welcome line");
+    // The approved character art as an image (Captain's Peek), never SVG.
     const art = page.locator('.keeper-home img.keeper-img[data-animal="cat"]');
     assert.equal(await art.count(), 1);
-    assert.ok(["peek", "sleepy"].includes(await art.getAttribute("data-mood")));
+    assert.equal(await art.getAttribute("data-mood"), "peek");
+    // A tap: one short line, which goes away by itself.
+    await page.locator('.keeper-home [data-action="keeper-tap"]').click();
+    await page.waitForSelector(".keeper-home .keeper-bubble");
+    await page.waitForSelector(".keeper-home .keeper-bubble", { state: "detached", timeout: 8000 });
     await page.waitForFunction(() => document.querySelector(".keeper-home img.keeper-img")?.naturalWidth > 0);
     assert.equal(await page.locator(".keeper svg").count(), 0);
     if (shots) await page.screenshot({ path: `${shots}/v71-home.png` });
-    passed.push("onboarding: choose the cat, name it, choose Gentle — kept after a reload; on Today with a gentle invitation");
+    passed.push("onboarding: Captain only, name it, choose Gentle — kept after a reload; on Today a quiet Peek (no extra greeting); a tap says one line that fades");
 
     // 4. Writing: quiet while typing; a stamp after Save; a reply only when asked, made on the device.
     await page.locator('[data-action="today-write"]').tap();
@@ -108,6 +115,8 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator("[data-keeper-say]").fill("今天想吃蛋糕");
     await page.locator("[data-keeper-say]").press("Enter");
     await page.waitForFunction(() => /我听到了/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
+    // Replies are normal-width bubbles (they once shared the art's 64px class).
+    assert.ok(await page.locator(".keeper-msg.them").last().evaluate((m) => m.getBoundingClientRect().width > 150));
     await page.locator('.keeper-chat [data-action="choose-close"]').click();
     await settings();
     await page.locator('[data-action="keeper-toggle"][data-key="allowMemories"]').click();

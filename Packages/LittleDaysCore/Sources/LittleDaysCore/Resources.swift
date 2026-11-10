@@ -143,8 +143,8 @@ public struct SceneCollection: Decodable, Identifiable {
     public let descEn: String
 }
 
-/// One cut-out of the approved Little Keeper character sheet (3D renders,
-/// provided by the product owner; see Keepers/LD-keeper-LICENSE.txt).
+/// One cut-out of the approved Captain Character Reference (provided by the
+/// product owner; see Keepers/LD-keeper-LICENSE.txt).
 public struct KeeperAsset: Decodable, Identifiable {
     public let id: String
     public let animal: String
