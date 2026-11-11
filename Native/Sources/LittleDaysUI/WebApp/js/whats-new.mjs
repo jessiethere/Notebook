@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.3",
+    date: "2026-11-11",
+    zh: {
+      title: "Captain 会看情况说话了（不用 AI）",
+      items: [
+        "首页 Captain 旁边多了一个小标签「找 Captain」。点它或点 Captain，都会打开同一个面板。",
+        "Captain 的第一句话会看今天的情况：今天写了几页、放了几张照片、最后一页叫什么、是不是很晚、是不是好几天没写。同一句话一周内不重复，也不会在你已经写过之后还问「今天有什么想记录的吗」。",
+        "面板里可以和它说几句。它现在只会几件简单的事；不会的会直接说「这个我还不会」，不再对什么都回同一句。",
+        "「整理今天的故事」：把今天的页面按时间排给你看，点哪一页就打开哪一页（只是展示，不改动手帐）。",
+        "「回顾以前的回忆」：第一次会先问你能不能翻看以前的页面；同意后在这台设备上翻一页你自己的旧手帐。",
+        "保存一页后「听听 Captain 怎么说」：会说这一页本身的事（几张照片、有没有声音、是不是今天的第一页）；去掉了每次都有的「（尾巴晃了晃）」。难过或很累的日子，仍然先回应你的心情。",
+        "「帮我写一句话」需要 AI 小管家，现在还没有，面板里如实标着。这一版没有任何 AI，也不会发送你的手帐。",
+      ],
+    },
+    en: {
+      title: "Captain now speaks to the situation (no AI)",
+      items: [
+        "A small tag beside Captain on Home, “Ask Captain”. The tag and a tap on Captain open the same panel.",
+        "Captain's first line fits the day: how many pages and photos today, the last page's name, whether it is late, whether it has been a few days. A line is not repeated within a week, and it no longer asks “anything to record today?” after you already wrote.",
+        "You can say a few things to it. It only knows a few simple things for now; when it cannot help it says so instead of giving the same sentence to everything.",
+        "“Sort out today's story”: today's pages in time order, each opening its own page (it only shows them; the journal is not changed).",
+        "“Look back at a memory”: it asks first whether it may look at earlier pages; then it opens one of your own old pages, on this device.",
+        "After saving a page, “Hear what Captain says” talks about the page itself (photos, sound, the first page today); the “(tail swishes)” after every reply is gone. Hard or tiring days are still met first.",
+        "“Help me write a line” needs the AI keeper, which is not here yet — the panel says so. This version has no AI and sends nothing.",
+      ],
+    },
+  },
+  {
     version: "10.2",
     date: "2026-11-11",
     zh: {

@@ -48,7 +48,8 @@
     "test:browser:v71": "node tests/v71-browser.cjs",
     "test:browser:v100": "node tests/v100-browser.cjs",
     "test:browser:v101": "node tests/v101-browser.cjs",
-    "test:browser:v102": "node tests/v102-browser.cjs"
+    "test:browser:v102": "node tests/v102-browser.cjs",
+    "test:browser:v103": "node tests/v103-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

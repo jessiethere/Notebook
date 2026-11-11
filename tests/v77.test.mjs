@@ -62,7 +62,9 @@ test("stages come from config, not from the UI", () => {
 
 test("feedback: the example; hard days met gently; ordinary days; no diagnosis; no repeats when possible", () => {
   const r = K.localFeedback({ text: "Today was exhausting, but I still managed to work out. I'm proud that I didn't give up.", language: "en", seed: 0 });
-  assert.equal(r.text, "That sounds like a long day. I'm glad you made some time for yourself. Every little step counts!");
+  // V10.3: two sentences that answer the page — no fixed third "closing" line, no stage direction.
+  assert.equal(r.text, "That sounds like a long day. I'm glad you made some time for yourself.");
+  assert.equal(r.tone, "");
   const sad = K.localFeedback({ text: "今天很难过，一个人哭了。", language: "zh", seed: 0 });
   assert.match(sad.text, /不太容易|已经很好了|慢慢来/);
   assert.doesNotMatch(sad.text, /开心|加油|振作/, "no forced positivity");

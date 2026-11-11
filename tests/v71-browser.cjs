@@ -65,16 +65,18 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(await art.count(), 1);
     assert.equal(await art.getAttribute("data-mood"), "peek");
     // A tap: one short line, which goes away by itself.
+    // V10.3: a tap (Gentle too) opens Captain's panel with a line that fits the day; a small tag beside it does the same.
+    assert.equal(await page.locator('.keeper-home [data-action="keeper-panel"]').count(), 1);
     await page.locator('.keeper-home [data-action="keeper-tap"]').click();
-    await page.waitForSelector(".keeper-home .keeper-bubble");
-    // V9.1: a real speech bubble — wide enough to read (it once collapsed to one character per line).
-    const bubbleBox = await page.locator(".keeper-home .keeper-bubble").boundingBox();
-    assert.ok(bubbleBox.width > 100 && bubbleBox.height < 100, `bubble ${bubbleBox.width}×${bubbleBox.height}`);
-    await page.waitForSelector(".keeper-home .keeper-bubble", { state: "detached", timeout: 8000 });
+    await page.waitForSelector(".keeper-chat.kp");
+    // A normal-width speech bubble (V9.1: it once collapsed to one character per line).
+    const bubbleBox = await page.locator(".kp .keeper-msg.them").first().boundingBox();
+    assert.ok(bubbleBox.width > 100 && bubbleBox.height < 120, `bubble ${bubbleBox.width}×${bubbleBox.height}`);
+    await page.locator('.kp [data-action="choose-close"]').click();
     await page.waitForFunction(() => document.querySelector(".keeper-home img.keeper-img")?.naturalWidth > 0);
     assert.equal(await page.locator(".keeper svg").count(), 0);
     if (shots) await page.screenshot({ path: `${shots}/v71-home.png` });
-    passed.push("onboarding: Captain only, name it, choose Gentle — kept after a reload; on Today a quiet Peek (no extra greeting); a tap says one line that fades");
+    passed.push("onboarding: Captain only, name it, choose Gentle — kept after a reload; on Today a quiet Peek (no extra greeting); a tap opens the panel");
 
     // 4. Writing: quiet while typing; a stamp after Save; a reply only when asked, made on the device.
     await page.locator('[data-action="today-write"]').tap();
@@ -115,18 +117,22 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#navigation [data-page="home"]').click();
     await page.locator('.keeper-home [data-action="keeper-tap"]').click();
     await page.waitForSelector(".keeper-chat");
-    await page.locator('[data-action="keeper-chat"][data-intent="memory"]').click();
-    await page.waitForFunction(() => /还没有翻看你以前页面的许可/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
+    // "Look back at a memory" asks before it may look at earlier pages.
+    await page.locator('[data-action="keeper-do"][data-do="memory"]').click();
+    await page.waitForSelector('.kp[data-view="memory"] [data-action="keeper-allow-memories"]');
+    assert.match(await page.locator(".kp").innerText(), /翻看以前的页面吗/);
+    await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().click();
+    // Free text it cannot handle gets an honest answer (not the same sentence for everything).
     await page.locator("[data-keeper-say]").fill("今天想吃蛋糕");
     await page.locator("[data-keeper-say]").press("Enter");
-    await page.waitForFunction(() => /我听到了/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
+    await page.waitForFunction(() => /还不会|没听懂/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
     // Replies are normal-width bubbles (they once shared the art's 64px class).
     assert.ok(await page.locator(".keeper-msg.them").last().evaluate((m) => m.getBoundingClientRect().width > 150));
-    await page.locator('.keeper-chat [data-action="choose-close"]').click();
+    await page.locator('.keeper-chat [data-action="choose-close"]').first().click();
     await settings();
     await page.locator('[data-action="keeper-toggle"][data-key="allowMemories"]').click();
     await page.waitForSelector('[data-key="allowMemories"][aria-checked="true"]');
-    passed.push("Interactive: tap to chat; “Revisit a memory” asks for permission first; free text gets a gentle answer; permission is a separate switch");
+    passed.push("Interactive: tap opens the panel; “Look back at a memory” asks for permission first; free text gets an honest answer; permission is a separate switch");
 
     // 7. My Books: on the shelf; a tap says something about my journals.
     await page.locator('#navigation [data-page="books"]').click();

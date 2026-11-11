@@ -48,6 +48,22 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.3 Captain 的无 AI 互动优化（Keeper Step 1）
+
+- 需求：用户批准 Keeper Step 1 立即开发——按状态和页面事件选择自然回复；去掉固定、奇怪的动作后缀和重复问候；本机简单聊天识别；首页点击 Captain 和「找 Captain」快捷入口；Captain 互动面板；两条不用 AI 的真实流程。只有 Captain，不开发其他 Keeper。Step 2（真实 Qwen 测试）和 Step 3（正式接入）暂缓：等用户买了 MacBook 后先研究本机 Ollama / Qwen；现在不开通阿里云 API、不定地域、不做收费调用，正式 App 不加 API Key、云服务或任何真实 AI 调用，但保留替换 Provider 的扩展能力；可先准备合成测试集和评测标准。
+- 改动文件：
+  - Public/js/keeper.mjs：新增 `dayFacts()`（今天几页 / 几张照片 / 最后一页标题 / 距上次记录几天 / 是否深夜，不读正文）、`LINE_COUNTS`、`contextLine()`（按情况选句、避开最近用过的）、`localIntent()`（整理 / 回忆 / 这周 / 书架 / 代写 / 问候 / 道谢 / 累或难过 / 其余 unknown）、`pickMemory()`（只取用户自己的旧页面）；`localFeedback()` 在正文没有情绪信号时改说这一页的事实，去掉固定第三句和动作后缀（`tone` 恒为空）；`modeAllows("memories")` 从「仅互动」改为「非安静 + 用户同意」。`createFeedbackService({ remote })` 不变（`remote = null`）。
+  - Public/app.js：`openKeeperPanel()`（首页 / 整理 / 回忆三个视图，取代旧聊天面板）、`keeperOrganizeHTML()`、`keeperMemoryHTML()`、`keeperSay()` + 本机最近用句记录（`little-days.keeperLines`，7 天）、`keeperAnswer()` 改用意图识别；`keeperPerchHTML()` 增加 `.keeper-entry`「找 Captain」；点击 Captain（温柔 / 互动）打开面板；新动作 `keeper-panel` / `keeper-view` / `keeper-do` / `keeper-memory-next` / `keeper-allow-memories`；书架提示改用 `contextLine("shelf")`；保存后回应传入页面事实并不再显示动作括号。
+  - Resources/i18n.json：`kc.*` 54 句 × 中英文 + `kp.*` 面板文案 33 条。Public/styles.css：V10.3 块。whats-new 10.3。
+  - tests：新增 tests/v103.test.mjs（7 项）、tests/v103-browser.cjs（5 组）、`test:browser:v103`；更新 v71（点击打开面板、回忆先询问、不会的如实说）、v77（两句回应、无动作后缀）。
+  - 文档：docs/KEEPER_AI_PLAN.md 第 10 节（用户决定与实施状态）、docs/keeper-eval/（14 条合成用例 + 评分标准 + 将来用 Ollama 的跑法；未做任何调用）、DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.3 小节、README。
+- 决策与原因：先用本机事实解决「不知道今天发生了什么」；句子按情况分组（今天没写 / 深夜 / 隔了几天 / 第一次 / 一页 / 多页 / 照片多…），所以不会在已写之后再问「今天有什么想记录的吗」；最近用句记在本机而不是手帐数据里，避免每点一次都写一次日记存储；聊天不假装理解——不会的直说并列出会的事；「帮我写一句话」保留在面板里但如实标为需要 AI、尚未开放（不做假的代写）；回忆许可改成在面板里当场询问一次（原来藏在设置里且仅限互动方式，默认用户永远用不到）。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153 项、Python 16 项通过；浏览器 E2E 全量 47 套全部通过（46 套旧 + v103）。v103 覆盖：标签位置与 44px 点击区、标签和点击打开同一面板、连续三次打开三句不同且都知道今天有一页、聊天四种输入得到四种不同回答、整理今天不改数据且可打开页面、回忆先询问 → 示例日不算 → 找到自己的旧页并打开、安静模式无标签无面板、全程没有任何发往本机以外的请求、`aiConsent` 仍为 false。
+- 真实截图：393×852 八个画面（入口、面板、聊天、整理、回忆询问、回忆页、代写说明、点击打开），汇总图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 65，V10.3；上传 app.js、styles.css、themes.css、js/keeper.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 未做：未在 iPhone 真机验证；聊天的意图识别只是关键词规则，覆盖有限；「整理今天」只展示、不提供一键重排；保存后回应的情绪判断仍是原来的关键词规则；Bunny / Westie 未开发（用户确认目前只做 Captain）。
+- 下一步：Settings V2（用户已同意四项修改），随后等用户真机查看；AI 相关只保留测试准备。
+
 ### 2026-11-11 — 评估与设计（不改 App 代码、不接入模型）：Little Keeper 互动审查 + AI 小管家方案 + Settings V2
 
 - 需求（三份合在一轮）：① Keeper 互动「鸡肋」——回复重复、缺上下文、问候时机不自然；要求先审查现有文案与触发，设计三层陪伴（Natural / Contextual / AI），评估 Qwen API（架构、中英文、性格 Prompt、延迟与成本、上下文、Key 安全、隐私、离线降级、可换供应商），做 Captain 三个场景的固定 vs AI 对比；不要立即接入模型。② 增加「找小管家 / Ask Keeper」快捷入口和 My Little Keeper 快捷面板（四个推荐操作），不加 Tab、不做悬浮按钮、不动首页 Hero；明确何时预设 / 何时 AI / 发送什么 / 授权 / 失败 / 成本。③ Settings V2：重新设计视觉与信息架构（个人资料区、Keeper 预览、外观与偏好、数据与隐私、次要设置下移），核实「退出登录」的真实行为，给出功能映射；先不改代码。

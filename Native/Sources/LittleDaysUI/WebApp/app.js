@@ -1129,7 +1129,9 @@ function keeperPerchHTML() {
   const spoken = Keeper.modeAllows(k, "proactive") && prompt ? t(prompt.key, { ...prompt.values, name }) : "";
   const line = keeperLine || (grew ? t("keeper.grew", { stage: t("keeper.stage." + growth.id) }) : spoken);
   const mood = "peek";
-  return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(mood)}</button></div>`;
+  // A small tag beside it opens the same panel as tapping it (not in Quiet mode).
+  const entry = Keeper.modeAllows(k, "invite") && !line ? `<button class="keeper-entry" data-action="keeper-panel">${keeperPanelIcon("chat")}${esc(tk("kp.entry", k))}</button>` : "";
+  return `<div class="keeper-home keeper-perch">${line ? `<p class="keeper-bubble" role="status"><b>${esc(name)}</b>${esc(line)}</p>` : ""}${entry}<button class="keeper-tap" data-action="keeper-tap" aria-label="${esc(t("keeper.tapLabel", { name }))}">${keeperArt(mood)}</button></div>`;
 }
 // V9.0 Home: the three secondary ways to start use the same quiet line
 // icons as the rest of the app (stationery 3D art is still to be made; no
@@ -1193,35 +1195,146 @@ function pageWords(date, momentId) {
 async function openKeeperFeedback(date, momentId) {
   const k = keeperNow();
   const name = Keeper.keeperName(k, languageCode());
-  const reply = await keeperService.respond({ text: pageWords(date, momentId), language: languageCode(), seed: Math.floor(Math.random() * 1000) }, k);
+  const entry = state().entries.find((e) => e.date === date) || state().drafts[date];
+  const shown = entry ? storyPagesOf(entry) : [];
+  const pg = shown.find((x) => x.id === (momentId || "")) || shown[0];
+  const facts = { pages: shown.length, pagePhotos: pg?.refs.length || 0, pageMedia: Boolean(pg && (pg.videos.length || pg.audios.length)), pageWordsOnly: Boolean(pg && !pg.refs.length && !pg.videos.length && !pg.audios.length), title: pg?.title || "" };
+  const reply = await keeperService.respond({ text: pageWords(date, momentId), language: languageCode(), seed: Math.floor(Math.random() * 1000), facts, say: (key, values) => t(key, values), recentLines: recentKeeperLines().map((x) => x.id) }, k);
   if (!reply) return;
+  if (reply.line) rememberKeeperLine(reply.line);
   saveKeeper((x) => (x.recent = [...x.recent, ...(reply.used || [])].slice(-12)));
   logEvent("keeper_feedback", { kind: reply.source });
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("encouraging")}<b>${esc(name)}</b></div><p class="keeper-reply">${esc(reply.text)}${reply.tone ? ` <span class="keeper-tone">${esc(reply.tone)}</span>` : ""}</p><p class="save-help keeper-local">🔒 ${t("keeper.localNote")}</p><button class="choose-cancel" data-action="choose-close">${t("keeper.thanks")}</button></div>`;
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("encouraging")}<b>${esc(name)}</b></div><p class="keeper-reply">${esc(reply.text)}</p><p class="save-help keeper-local">🔒 ${t("keeper.localNote")}</p><button class="choose-cancel" data-action="choose-close">${t("keeper.thanks")}</button></div>`;
   if (!dialog.open) dialog.showModal();
 }
-function openKeeperChat() {
+// ---------- Captain's panel (V10.3) ----------
+// Opened by tapping Captain or the small "找 Captain" tag beside it. Everything
+// here runs on this device: a line that fits the day, a small chat that only
+// knows a few things (and says so), and two real flows — sorting out today's
+// pages and looking back at an earlier page. No AI, nothing sent anywhere.
+let keeperView = "home"; // home | organize | memory
+let keeperMemory = null; // the page being shown in the memory view
+let keeperSeen = []; // memory pages shown in this sheet (not repeated)
+const KEEPER_LINES_KEY = "little-days.keeperLines";
+function recentKeeperLines() {
+  try {
+    const week = Date.now() - 7 * 86400000;
+    return (JSON.parse(localStorage.getItem(KEEPER_LINES_KEY)) || []).filter((x) => x && x.at > week);
+  } catch {
+    return [];
+  }
+}
+// A line for this moment, not one it used in the last week (while others remain).
+function keeperSay(event, facts) {
   const k = keeperNow();
+  const recent = recentKeeperLines();
+  const line = Keeper.contextLine(event, facts, { recent: recent.map((x) => x.id), seed: Math.floor(Math.random() * 1000) });
+  if (!line) return "";
+  rememberKeeperLine(line.id);
+  return t(line.key, { ...line.values, name: Keeper.keeperName(k, languageCode()) });
+}
+function rememberKeeperLine(id) {
+  try {
+    localStorage.setItem(KEEPER_LINES_KEY, JSON.stringify([...recentKeeperLines().filter((x) => x.id !== id), { id, at: Date.now() }].slice(-40)));
+  } catch {}
+}
+const keeperFacts = () => Keeper.dayFacts(state(), dateKey(), new Date().getHours());
+// "找 Captain" reads better than "找Captain"; a Chinese name needs no gaps.
+const keeperNameIn = (k) => {
   const name = Keeper.keeperName(k, languageCode());
-  const growth = keeperGrowth();
-  if (!keeperChat.length) keeperChat = [{ who: "keeper", text: t("keeper.chat.hello", { name }) }];
-  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  return languageCode() !== "en" && /^[\x20-\x7e]+$/.test(name) ? ` ${name} ` : name;
+};
+const tk = (key, k, values = {}) => t(key, { ...values, name: keeperNameIn(k) }).trim();
+function keeperShelfFacts() {
+  const mine = state().books.filter((bk) => !isOurBook(bk));
+  const latest = [...mine].map((bk) => ({ bk, last: bookLastWritten(bk.id) })).sort((x, y) => (x.last < y.last ? 1 : -1))[0];
+  return { count: mine.length, untagged: mine.filter((bk) => !(bk.tags || []).length).length, latest: latest?.last ? latest.bk.title : "", title: latest?.last ? latest.bk.title : "" };
+}
+function keeperPanelIcon(kind) {
+  const paths = { organize: '<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>', memory: '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 5v4h4"/><path d="M12 8v4l3 2"/>', write: '<path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="m13 7 4 4"/>', chat: '<path d="M5 6h14v9H10l-4 3v-3H5Z"/>' };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[kind]}</svg>`;
+}
+function openKeeperPanel(view = keeperView) {
+  const k = keeperNow();
+  if (!Keeper.modeAllows(k, "invite")) return;
+  keeperView = view;
+  const name = Keeper.keeperName(k, languageCode());
+  if (!keeperChat.length) keeperChat = [{ who: "keeper", text: keeperSay("tap", keeperFacts()) }];
+  const top = (title) => `<div class="kp-title"><button class="kp-back" data-action="keeper-view" data-view="home" aria-label="${t("kp.back")}">${icon("back")}</button><b>${title}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
+  let body;
+  if (view === "organize") body = top(t("kp.org.title")) + keeperOrganizeHTML();
+  else if (view === "memory") body = top(t("kp.mem.title")) + keeperMemoryHTML();
+  else {
+    const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+    const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
+    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${lines}</div><div class="keeper-say kp-input"><input data-keeper-say maxlength="120" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}"><button data-action="keeper-say" aria-label="${t("keeper.chat.send")}">↑</button></div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul><p class="save-help keeper-local">${t("kp.local")}</p>`;
+  }
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat"><div class="choose-grabber" aria-hidden="true"></div><div class="keeper-sheet-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + growth.id))}</small></span></div><div class="keeper-msgs" aria-live="polite">${lines}</div><div class="keeper-chips"><button data-action="keeper-chat" data-intent="memory">${t("keeper.chip.memory")}</button><button data-action="keeper-chat" data-intent="week">${t("keeper.chip.week")}</button><button data-action="keeper-chat" data-intent="shelf">${t("keeper.chip.shelf")}</button></div><div class="keeper-say"><input data-keeper-say maxlength="120" placeholder="${esc(t("keeper.chat.placeholder", { name }))}"><button class="secondary" data-action="keeper-say">${t("keeper.chat.send")}</button></div><p class="save-help keeper-local">🔒 ${t(Keeper.modeAllows(k, "memories") ? "keeper.chat.privacyOn" : "keeper.chat.privacyOff")}</p><button class="choose-cancel" data-action="choose-close">${t("close")}</button></div>`;
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp" data-view="${view}"><div class="choose-grabber" aria-hidden="true"></div>${body}</div>`;
   if (!dialog.open) dialog.showModal();
   dialog.querySelector(".keeper-msgs")?.lastElementChild?.scrollIntoView({ block: "nearest" });
 }
+const openKeeperChat = () => openKeeperPanel("home");
+// Sorting out today: the pages in time order with a few plain observations.
+// It only shows them; the journal is not changed.
+function keeperOrganizeHTML() {
+  const entry = todayEntry();
+  const pages = entry && !entry.isDemo ? storyPagesOf(entry) : [];
+  if (!pages.length) return `<div class="kp-note">${keeperArt("idle")}<p>${t("kp.org.none")}</p></div><button class="kp-main" data-action="today-photos">${t("kp.org.start")} →</button>`;
+  const sorted = [...pages].sort((x, y) => (x.time && y.time ? (x.time < y.time ? -1 : x.time > y.time ? 1 : 0) : 0));
+  const photos = pages.reduce((n, x) => n + x.refs.length, 0);
+  const media = pages.some((x) => x.videos.length || x.audios.length);
+  const most = [...pages].sort((x, y) => y.refs.length - x.refs.length)[0];
+  const untitled = pages.filter((x) => !x.title).length;
+  const notes = [sorted.some((x, i) => x !== pages[i]) ? t("kp.org.order") : "", most.refs.length >= 2 && most !== sorted[0] ? t("kp.org.cover", { title: most.title || t("kp.untitled"), photos: most.refs.length }) : "", untitled ? t("kp.org.untitled", { count: untitled }) : ""].filter(Boolean);
+  const rows = sorted
+    .map((pg, i) => {
+      const bk = state().books.find((x) => x.id === pg.bookId);
+      return `<li><button data-action="open-day" data-date="${esc(entry.date)}"${pg.id ? ` data-moment="${esc(pg.id)}"` : ""}><i class="ts-num">${String(i + 1).padStart(2, "0")}</i><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b>${esc(pg.title || t("kp.untitled"))}</b><small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${pg.videos.length ? " ▶" : ""}${pg.audios.length ? " ♪" : ""}</small></span></button></li>`;
+    })
+    .join("");
+  return `<p class="kp-sum">${t(media ? "kp.org.sumMedia" : "kp.org.sum", { count: pages.length, photos })}</p><ul class="kp-pages">${rows}</ul>${notes.length ? `<div class="kp-note">${keeperArt("idle")}<p>${notes.map(esc).join("<br>")}</p></div>` : ""}<button class="kp-main" data-action="open-day" data-date="${esc(entry.date)}">${t("kp.org.open")} →</button><p class="save-help keeper-local">${t("kp.local")}</p>`;
+}
+// Looking back: one earlier page, found on this device. It asks once before
+// it may look at earlier pages; the choice is kept in Settings.
+function keeperMemoryHTML() {
+  const k = keeperNow();
+  const name = Keeper.keeperName(k, languageCode());
+  if (!Keeper.modeAllows(k, "memories")) return `<div class="kp-note">${keeperArt("idle")}<p><b>${esc(tk("kp.mem.ask", k))}</b><br>${t("kp.mem.askBody")}</p></div><button class="kp-main" data-action="keeper-allow-memories">${t("kp.mem.allow")}</button><button class="kp-quiet" data-action="keeper-view" data-view="home">${t("kp.mem.no")}</button>`;
+  keeperMemory ||= Keeper.pickMemory(state(), dateKey(), { exclude: keeperSeen, seed: Math.floor(Math.random() * 1000) });
+  const m = keeperMemory;
+  if (!m) return `<div class="kp-note">${keeperArt("idle")}<p>${t("kp.mem.none")}</p></div>`;
+  if (!keeperSeen.includes(m.key)) keeperSeen.push(m.key);
+  const bk = state().books.find((x) => x.id === m.bookId);
+  const src = m.photo ? safePhoto(m.photo) : "";
+  return `<div class="kp-note">${keeperArt("idle")}<p>${t("kp.mem.found")}</p></div><button class="kp-memory" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${src ? `<span class="ts-thumb"><img src="${esc(src)}" alt="" width="80" height="96"></span>` : ""}<span><small>${esc([friendlyDate(m.date), bk?.title].filter(Boolean).join(" · "))}</small><b>${esc(m.title || t("kp.untitled"))}</b>${m.words ? `<em>${esc(m.words)}</em>` : ""}</span></button><button class="kp-main" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${t("kp.mem.open")} →</button>${m.more ? `<button class="kp-quiet" data-action="keeper-memory-next">${t("kp.mem.next")}</button>` : ""}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+}
+// The small chat: a few things it really can do; anything else is answered
+// honestly instead of with the same sentence every time.
 function keeperAnswer(intent, said = "") {
   const k = keeperNow();
-  if (said) keeperChat.push({ who: "me", text: said });
-  else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
-  const answer = Keeper.localChat(said ? "hello" : intent, { state: state(), keeper: k, language: languageCode(), today: dateKey(), seed: Math.floor(Math.random() * 1000) });
-  const values = { ...(answer.values || {}), name: Keeper.keeperName(k, languageCode()) };
-  if (values.date) values.date = friendlyDate(values.date);
-  keeperChat.push({ who: "keeper", text: t(said ? "keeper.chat.heard" : answer.key, values), open: answer.open || null });
+  const name = Keeper.keeperName(k, languageCode());
+  if (said) {
+    keeperChat.push({ who: "me", text: said });
+    intent = Keeper.localIntent(said);
+  } else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
+  if (intent === "organize" || (intent === "memory" && !said)) {
+    keeperChat = keeperChat.slice(-12);
+    if (intent === "memory") keeperMemory = null;
+    return openKeeperPanel(intent);
+  }
+  let reply;
+  if (["memory", "week", "shelf"].includes(intent)) {
+    const answer = Keeper.localChat(intent, { state: state(), keeper: k, language: languageCode(), today: dateKey(), seed: Math.floor(Math.random() * 1000) });
+    const values = { ...(answer.values || {}), name };
+    if (values.date) values.date = friendlyDate(values.date);
+    reply = { who: "keeper", text: t(answer.key, values), open: answer.open || null };
+  } else if (intent === "write") reply = { who: "keeper", text: t("kp.writeLater") };
+  else reply = { who: "keeper", text: keeperSay(`chat.${["greet", "thanks", "feel"].includes(intent) ? intent : "unknown"}`, {}) };
+  keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);
-  openKeeperChat();
+  openKeeperPanel("home");
 }
 function openKeeperOnboarding() {
   const k = keeperNow();
@@ -4642,24 +4755,43 @@ async function action(target) {
   if (actionName === "keeper-tap") {
     keeperBounce(target);
     const k = keeperNow();
-    if (Keeper.modeAllows(k, "chat")) return openKeeperChat();
     if (!Keeper.modeAllows(k, "invite")) return; // Quiet: just a little bounce
-    keeperTaps++;
-    keeperLine = t(`keeper.tap.${keeperTaps % 4}`, { name: Keeper.keeperName(k, languageCode()) });
-    const bubble = $(".keeper-home .keeper-bubble");
-    if (bubble) bubble.lastChild.textContent = keeperLine;
-    else render();
-    keeperLineLater();
+    keeperChat = [];
+    return openKeeperPanel("home");
+  }
+  if (actionName === "keeper-panel") {
+    keeperChat = [];
+    return openKeeperPanel("home");
+  }
+  if (actionName === "keeper-view") return openKeeperPanel(target.dataset.view || "home");
+  if (actionName === "keeper-do") {
+    const what = target.dataset.do;
+    if (what === "organize") return openKeeperPanel("organize");
+    if (what === "memory") {
+      keeperMemory = null;
+      return openKeeperPanel("memory");
+    }
+    if (what === "write") {
+      keeperChat.push({ who: "keeper", text: t("kp.writeLater") });
+      return openKeeperPanel("home");
+    }
+    $("[data-keeper-say]")?.focus();
     return;
+  }
+  if (actionName === "keeper-memory-next") {
+    keeperMemory = null;
+    return openKeeperPanel("memory");
+  }
+  if (actionName === "keeper-allow-memories") {
+    saveKeeper((x) => (x.allowMemories = true));
+    keeperMemory = null;
+    return openKeeperPanel("memory");
   }
   if (actionName === "keeper-shelf-tap") {
     keeperBounce(target);
     const k = keeperNow();
     if (!Keeper.modeAllows(k, "invite")) return;
-    keeperTaps++;
-    const books = state().books;
-    const lines = [t("keeper.shelf.count", { count: books.length }), t("keeper.shelf.latest", { title: books.at(-1)?.title || "" }), t("keeper.shelf.tidy")];
-    keeperLine = lines[keeperTaps % lines.length];
+    keeperLine = keeperSay("shelf", keeperShelfFacts());
     render();
     keeperLineLater();
     return;
@@ -4668,7 +4800,7 @@ async function action(target) {
   if (actionName === "keeper-chat") return keeperAnswer(target.dataset.intent);
   if (actionName === "keeper-say") {
     const said = ($("[data-keeper-say]")?.value || "").trim();
-    if (said) keeperAnswer("hello", said);
+    if (said) keeperAnswer("unknown", said);
     return;
   }
   if (actionName === "keeper-set") {

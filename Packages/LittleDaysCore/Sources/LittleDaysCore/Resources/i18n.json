@@ -6562,5 +6562,353 @@
   "lib.emptyGo": {
     "zh": "新建一本手帐",
     "en": "Create a journal"
+  },
+  "kc.tap.none.0": {
+    "zh": "今天还没开张。有什么小事值得收一下吗？",
+    "en": "Nothing kept yet today. Any small thing worth saving?"
+  },
+  "kc.tap.none.1": {
+    "zh": "我在。今天要是只有一张照片，也算一页。",
+    "en": "I'm here. One photo counts as a page too."
+  },
+  "kc.tap.none.2": {
+    "zh": "本子今天还是空的，不急。",
+    "en": "Today's page is still blank. No hurry."
+  },
+  "kc.tap.none.3": {
+    "zh": "我刚数了一遍胶带。你那边今天怎么样？",
+    "en": "I just counted the tape again. How is your day going?"
+  },
+  "kc.tap.none.4": {
+    "zh": "想写的时候点上面那张卡片就行，我帮你收着。",
+    "en": "When you feel like it, tap the card above — I'll keep it safe."
+  },
+  "kc.tap.noneNight.0": {
+    "zh": "这么晚了。今天不写也没关系，明天再说。",
+    "en": "It's late. Skipping today is fine — tomorrow will do."
+  },
+  "kc.tap.noneNight.1": {
+    "zh": "我有点困了……要记的话，一句就够。",
+    "en": "I'm getting sleepy… if you want to keep something, one line is enough."
+  },
+  "kc.tap.noneNight.2": {
+    "zh": "夜里的小事也可以收进来，不过先睡也行。",
+    "en": "Night-time things can go in too. Or sleep first."
+  },
+  "kc.tap.back.0": {
+    "zh": "有 {days} 天没见到新页面了。不用补，想写的时候再写。",
+    "en": "No new pages for {days} days. Nothing to catch up on — write when you feel like it."
+  },
+  "kc.tap.back.1": {
+    "zh": "你来啦。这几天的事不记也没关系，从今天开始就好。",
+    "en": "You're here. The last few days don't need filling in — start from today."
+  },
+  "kc.tap.back.2": {
+    "zh": "我把书架看得好好的，一本都没少。",
+    "en": "I kept an eye on the shelf. Nothing is missing."
+  },
+  "kc.tap.first.0": {
+    "zh": "我是新来的，帮你看管这些本子。第一页想记点什么？",
+    "en": "I'm new here, looking after these journals. What goes on the first page?"
+  },
+  "kc.tap.first.1": {
+    "zh": "还没有页面呢。从一张照片开始怎么样？",
+    "en": "No pages yet. How about starting with one photo?"
+  },
+  "kc.tap.first.2": {
+    "zh": "第一页不用写得很好，写了就行。",
+    "en": "The first page doesn't have to be good. It just has to exist."
+  },
+  "kc.tap.one.0": {
+    "zh": "今天收了一页：「{title}」。我已经放好了。",
+    "en": "One page today: “{title}”. I've put it away safely."
+  },
+  "kc.tap.one.1": {
+    "zh": "今天那页我看到了，不错。",
+    "en": "I saw today's page. Not bad at all."
+  },
+  "kc.tap.one.2": {
+    "zh": "今天有一页了。再来一页也行，不来也行。",
+    "en": "One page today. Another would be nice; none is fine too."
+  },
+  "kc.tap.one.3": {
+    "zh": "「{title}」——这个名字我喜欢。",
+    "en": "“{title}” — I like that name."
+  },
+  "kc.tap.many.0": {
+    "zh": "今天收了 {count} 页。「{title}」那页，我偷偷多看了两眼。",
+    "en": "{count} pages today. I sneaked a second look at “{title}”."
+  },
+  "kc.tap.many.1": {
+    "zh": "今天 {count} 页，本子厚了一点点。",
+    "en": "{count} pages today. The journal got a little thicker."
+  },
+  "kc.tap.many.2": {
+    "zh": "{count} 页了。今天好像发生了不少事。",
+    "en": "{count} pages. Looks like a lot happened today."
+  },
+  "kc.tap.many.3": {
+    "zh": "今天的页面都放好了，一共 {count} 页，我数过。",
+    "en": "Today's pages are all in place — {count} of them. I counted."
+  },
+  "kc.tap.photos.0": {
+    "zh": "今天放进来 {photos} 张照片，我每张都看了。",
+    "en": "{photos} photos came in today. I looked at every one."
+  },
+  "kc.tap.photos.1": {
+    "zh": "{photos} 张照片——今天很上镜。",
+    "en": "{photos} photos — today was photogenic."
+  },
+  "kc.tap.photos.2": {
+    "zh": "照片有 {photos} 张，胶带差点不够用。",
+    "en": "{photos} photos. I nearly ran out of tape."
+  },
+  "kc.saved.photos.0": {
+    "zh": "这页有 {photos} 张照片——今天很上镜。",
+    "en": "{photos} photos on this page — today was photogenic."
+  },
+  "kc.saved.photos.1": {
+    "zh": "{photos} 张照片都贴好了，一张没歪……大概。",
+    "en": "All {photos} photos are in. None crooked… probably."
+  },
+  "kc.saved.photos.2": {
+    "zh": "这页照片多，以后翻到会很热闹。",
+    "en": "Lots of photos here. It'll be lively to look back on."
+  },
+  "kc.saved.media.0": {
+    "zh": "这页会动、会响，我听了一小段。",
+    "en": "This page moves and makes sound. I listened to a little."
+  },
+  "kc.saved.media.1": {
+    "zh": "声音也收进来了，以后可以再听。",
+    "en": "The sound is saved too. You can hear it again later."
+  },
+  "kc.saved.first.0": {
+    "zh": "今天的第一页，收好了。",
+    "en": "Today's first page is put away."
+  },
+  "kc.saved.first.1": {
+    "zh": "收到。今天开张了。",
+    "en": "Got it. Today is open for business."
+  },
+  "kc.saved.more.0": {
+    "zh": "今天第 {count} 页了，本子又厚了一点。",
+    "en": "Page {count} today. The journal is a little thicker."
+  },
+  "kc.saved.more.1": {
+    "zh": "又一页。今天的事还真不少。",
+    "en": "Another page. Quite a day."
+  },
+  "kc.saved.words.0": {
+    "zh": "这页只有字，安安静静的，我喜欢。",
+    "en": "Only words on this page. Quiet. I like it."
+  },
+  "kc.saved.words.1": {
+    "zh": "字我一个没动，原样收好了。",
+    "en": "I didn't touch a word. It's kept as written."
+  },
+  "kc.saved.words.2": {
+    "zh": "有时候几行字就够了。",
+    "en": "Sometimes a few lines are enough."
+  },
+  "kc.shelf.count.0": {
+    "zh": "这里有你的 {count} 本手帐，我都看着。",
+    "en": "Your {count} journals are here. I'm watching them all."
+  },
+  "kc.shelf.count.1": {
+    "zh": "{count} 本，一本都没乱跑。",
+    "en": "{count} journals. None of them wandered off."
+  },
+  "kc.shelf.latest.0": {
+    "zh": "最近写的是《{title}》。",
+    "en": "The one you wrote in most recently is “{title}”."
+  },
+  "kc.shelf.latest.1": {
+    "zh": "《{title}》最近常被翻开。",
+    "en": "“{title}” has been opened a lot lately."
+  },
+  "kc.shelf.untagged.0": {
+    "zh": "有 {untagged} 本还没有标签。加一个，找起来会快一点。",
+    "en": "{untagged} journals have no tags yet. One tag makes them quicker to find."
+  },
+  "kc.shelf.tidy.0": {
+    "zh": "每本都有标签，整整齐齐。",
+    "en": "Every journal has its tags. Very tidy."
+  },
+  "kc.shelf.tidy.1": {
+    "zh": "书架今天很整齐，不是我弄的，是你。",
+    "en": "The shelf is tidy today. That was you, not me."
+  },
+  "kc.chat.greet.0": {
+    "zh": "在呢。想翻翻以前的，还是理一理今天的？",
+    "en": "I'm here. Look back at something, or sort out today?"
+  },
+  "kc.chat.greet.1": {
+    "zh": "嗨。我刚在数页码。",
+    "en": "Hi. I was just counting pages."
+  },
+  "kc.chat.greet.2": {
+    "zh": "我在。你说。",
+    "en": "Here. Go on."
+  },
+  "kc.chat.thanks.0": {
+    "zh": "不客气，我就是看本子的。",
+    "en": "Any time. Looking after journals is my job."
+  },
+  "kc.chat.thanks.1": {
+    "zh": "嗯，收到。",
+    "en": "Got it."
+  },
+  "kc.chat.feel.0": {
+    "zh": "听起来今天不太轻松。不用写很多——要不要只记一件还不错的小事？",
+    "en": "Sounds like today wasn't easy. No need to write much — maybe just one small good thing?"
+  },
+  "kc.chat.feel.1": {
+    "zh": "辛苦了。今天不写也没关系，我在这儿。",
+    "en": "That sounds tiring. Skipping today is fine. I'm here."
+  },
+  "kc.chat.feel.2": {
+    "zh": "嗯。这样的日子，写一句就很好了。",
+    "en": "Mm. On a day like this, one line is plenty."
+  },
+  "kc.chat.unknown.0": {
+    "zh": "这个我还不会。我现在会的是：理一理今天的页面、翻一页以前的回忆、看看这周写了什么、看看书架。",
+    "en": "I can't do that yet. What I can do now: sort out today's pages, look back at an old page, see what you wrote this week, check the shelf."
+  },
+  "kc.chat.unknown.1": {
+    "zh": "这句我没听懂——我不是很聪明的那种猫。下面这几件事我可以帮忙。",
+    "en": "I didn't get that — I'm not that clever a cat. I can help with the things below."
+  },
+  "kp.entry": {
+    "zh": "找{name}",
+    "en": "Ask {name}"
+  },
+  "kp.sub": {
+    "zh": "My Little Keeper · {mode}",
+    "en": "My Little Keeper · {mode}"
+  },
+  "kp.say": {
+    "zh": "和{name}说点什么…",
+    "en": "Say something to {name}…"
+  },
+  "kp.do.organize": {
+    "zh": "整理今天的故事",
+    "en": "Sort out today's story"
+  },
+  "kp.do.organizeHint": {
+    "zh": "把今天的页面按时间理一理",
+    "en": "Put today's pages in order"
+  },
+  "kp.do.memory": {
+    "zh": "回顾以前的回忆",
+    "en": "Look back at a memory"
+  },
+  "kp.do.memoryHint": {
+    "zh": "在这台设备上翻一页旧手帐",
+    "en": "Open an old page, on this device"
+  },
+  "kp.do.write": {
+    "zh": "帮我写一句话",
+    "en": "Help me write a line"
+  },
+  "kp.do.writeHint": {
+    "zh": "需要 AI 小管家，还没有开放",
+    "en": "Needs the AI keeper, not available yet"
+  },
+  "kp.do.chat": {
+    "zh": "和{name}聊聊",
+    "en": "Chat with {name}"
+  },
+  "kp.do.chatHint": {
+    "zh": "它现在只会几件简单的事",
+    "en": "It only knows a few simple things for now"
+  },
+  "kp.local": {
+    "zh": "这些回应都在这台设备上生成，不会发送你的手帐。",
+    "en": "These replies are made on this device. Your journal is not sent anywhere."
+  },
+  "kp.writeLater": {
+    "zh": "代写要等 AI 小管家，现在还没有。我不想假装会——你写，我来收。",
+    "en": "Writing for you needs the AI keeper, which isn't here yet. I won't pretend — you write, I'll keep it."
+  },
+  "kp.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "kp.org.title": {
+    "zh": "今天的故事",
+    "en": "Today's story"
+  },
+  "kp.org.none": {
+    "zh": "今天还没有页面。等有了第一页，我再来理。",
+    "en": "No pages yet today. I'll sort them once the first one is in."
+  },
+  "kp.org.start": {
+    "zh": "选一张照片开始",
+    "en": "Start with a photo"
+  },
+  "kp.org.sum": {
+    "zh": "今天 {count} 页 · {photos} 张照片",
+    "en": "{count} pages today · {photos} photos"
+  },
+  "kp.org.sumMedia": {
+    "zh": "今天 {count} 页 · {photos} 张照片 · 有视频或声音",
+    "en": "{count} pages today · {photos} photos · with video or sound"
+  },
+  "kp.org.cover": {
+    "zh": "「{title}」有 {photos} 张照片，适合放在前面当今天的封面。",
+    "en": "“{title}” has {photos} photos — a good one to lead the day."
+  },
+  "kp.org.untitled": {
+    "zh": "有 {count} 页还没有名字，起一个以后好找。",
+    "en": "{count} pages have no name yet. A name makes them easier to find."
+  },
+  "kp.org.order": {
+    "zh": "我按时间排了一下（只是给你看，没有改动手帐）。",
+    "en": "I put them in time order (just for you to see — nothing in the journal was changed)."
+  },
+  "kp.org.open": {
+    "zh": "翻开今天",
+    "en": "Open today"
+  },
+  "kp.mem.title": {
+    "zh": "以前的一页",
+    "en": "A page from before"
+  },
+  "kp.mem.ask": {
+    "zh": "要让{name}翻看以前的页面吗？",
+    "en": "Let {name} look at earlier pages?"
+  },
+  "kp.mem.askBody": {
+    "zh": "只在这台设备上翻，不会发送到任何地方。随时可以在设置 → 角色与装扮里关掉。",
+    "en": "Only on this device; nothing is sent anywhere. You can turn it off in Settings → Character & look."
+  },
+  "kp.mem.allow": {
+    "zh": "可以，翻一页给我看",
+    "en": "Yes, show me a page"
+  },
+  "kp.mem.no": {
+    "zh": "先不用",
+    "en": "Not now"
+  },
+  "kp.mem.none": {
+    "zh": "以前的页面还不多，我们慢慢攒。",
+    "en": "There aren't many earlier pages yet. We'll build them up."
+  },
+  "kp.mem.found": {
+    "zh": "我翻到了这一页。",
+    "en": "I found this page."
+  },
+  "kp.mem.open": {
+    "zh": "翻开这一页",
+    "en": "Open this page"
+  },
+  "kp.mem.next": {
+    "zh": "换一页",
+    "en": "Another one"
+  },
+  "kp.untitled": {
+    "zh": "没有名字的一页",
+    "en": "A page with no name"
   }
 }

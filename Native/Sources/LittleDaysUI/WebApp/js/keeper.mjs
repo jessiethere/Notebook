@@ -66,7 +66,8 @@ export function modeAllows(keeper, what) {
   if (what === "feedback") return mode !== "quiet"; // a reply when asked
   if (what === "chat") return mode === "interactive";
   if (what === "proactive") return mode === "interactive" && keeper.proactive;
-  if (what === "memories") return mode === "interactive" && keeper.allowMemories;
+  // Earlier pages: only with the person's own "may look at earlier pages" (V10.3: Gentle too — it is asked for in the panel).
+  if (what === "memories") return mode !== "quiet" && Boolean(keeper.allowMemories);
   return false;
 }
 
@@ -218,18 +219,26 @@ const pick = (list, prefix, recent, seed) => {
 export function readCues(text) {
   return Object.keys(CUES).filter((key) => CUES[key].test(String(text || "")));
 }
-export function localFeedback({ text = "", language = "zh", animal = "bunny", recent = [], seed = 0 } = {}) {
+export function localFeedback({ text = "", language = "zh", animal = "bunny", recent = [], seed = 0, facts = null, say = null } = {}) {
   const words = LINES[language === "en" ? "en" : "zh"];
   const cues = readCues(text);
   // A tired day with something done is met warmly; a sad or plainly hard day gently.
   const hard = cues.includes("sad") || (cues.includes("tired") && !cues.includes("proud") && !cues.includes("workout"));
   const openKey = cues.includes("sad") ? "sad" : cues.includes("tired") ? "tired" : cues.includes("happy") ? "happy" : cues.includes("ordinary") || !String(text).trim() ? "ordinary" : "plain";
+  const sep = language === "en" ? " " : "";
+  // V10.3: when the words carry no feeling to answer, say something true about
+  // the page itself (its photos, sound, being the first today) instead of a
+  // general thank-you. `say(key, values)` turns a line key into words.
+  const plain = openKey === "plain" || openKey === "ordinary";
+  const fact = plain && facts && say ? contextLine("saved", facts, { recent, seed }) : null;
+  if (fact) return { source: "local", text: say(fact.key, fact.values), tone: "", used: [fact.id], cues, line: fact.id };
   const parts = [pick(words.open[openKey], `o-${openKey}-`, recent, seed)];
   const midKey = ["workout", "proud", "people", "learn", "travel", "food"].find((key) => cues.includes(key));
   if (midKey) parts.push(pick(words.mid[midKey], `m-${midKey}-`, recent, seed));
-  parts.push(pick(words.close[hard ? "hard" : "gentle"], `c-${hard ? "h" : "g"}-`, recent, seed));
-  const sep = language === "en" ? " " : "";
-  return { source: "local", text: parts.map((p) => p.text).join(sep), tone: words.tone[animal] || "", used: parts.map((p) => p.id), cues };
+  // A closing line only for a hard day, or when there is nothing else to say (no three-part formula).
+  if (hard || parts.length < 2) parts.push(pick(words.close[hard ? "hard" : "gentle"], `c-${hard ? "h" : "g"}-`, recent, seed));
+  // No stage direction after the words: how Captain moves is shown, not written.
+  return { source: "local", text: parts.map((p) => p.text).join(sep), tone: "", used: parts.map((p) => p.id), cues };
 }
 
 // The AI service interface. `remote` is a future secure backend
@@ -247,7 +256,7 @@ export function createFeedbackService({ remote = null } = {}) {
           // fall back to the local reply below
         }
       }
-      return localFeedback({ ...request, animal: keeper.animal, recent: keeper.recent || [] });
+      return localFeedback({ ...request, animal: keeper.animal, recent: [...(keeper.recent || []), ...(request.recentLines || [])] });
     },
   };
 }
@@ -283,4 +292,91 @@ export function localChat(intent, { state, keeper, language = "zh", today, seed 
     return untagged.length ? { key: "keeper.chat.shelfTags", values: { count: books.length, untagged: untagged.length } } : { key: "keeper.chat.shelfTidy", values: { count: books.length } };
   }
   return { key: "keeper.chat.hello" };
+}
+
+// ---------- Contextual companion (V10.3): lines chosen from what happened ----------
+// No AI: Captain looks at simple facts kept on this device (how many pages
+// today, photos, the last title, how long since the last page, the hour) and
+// picks a line that fits, avoiding the ones it used recently. Nothing here
+// reads the words of a page except its title.
+const photoCount = (page) => (isPhoto(page.backdrop) ? 1 : 0) + (isPhoto(page.photo) ? 1 : 0) + (page.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing).length;
+const dayDiff = (a, b) => Math.round((new Date(`${a}T12:00:00`) - new Date(`${b}T12:00:00`)) / 86400000);
+export function dayFacts(state, today, hour = 12) {
+  const days = ownDays(state);
+  const entry = days.get(today);
+  const pages = entry && keptDay(entry) ? pagesOf(entry) : [];
+  const earlier = [...days.entries()].filter(([date, e]) => date < today && keptDay(e)).map(([date]) => date).sort();
+  const lastDay = earlier.at(-1) || "";
+  const titled = pages.filter((p) => String(p.title || "").trim());
+  return {
+    pages: pages.length,
+    photos: pages.reduce((n, p) => n + photoCount(p), 0),
+    videos: pages.reduce((n, p) => n + (p.layers || []).filter((l) => l.kind === "video").length, 0),
+    audios: pages.reduce((n, p) => n + (p.layers || []).filter((l) => l.kind === "audio").length, 0),
+    title: String(titled.at(-1)?.title || "").trim().slice(0, 24),
+    gap: lastDay ? dayDiff(today, lastDay) : null,
+    keptDays: earlier.length + (pages.length ? 1 : 0),
+    night: hour >= 22 || hour < 5,
+  };
+}
+// How many lines each situation has (the words are in i18n: kc.<event>.<situation>.<n>).
+export const LINE_COUNTS = {
+  "tap.none": 5, "tap.noneNight": 3, "tap.back": 3, "tap.first": 3, "tap.one": 4, "tap.many": 4, "tap.photos": 3,
+  "saved.photos": 3, "saved.media": 2, "saved.first": 2, "saved.more": 2, "saved.words": 3,
+  "shelf.count": 2, "shelf.latest": 2, "shelf.untagged": 1, "shelf.tidy": 2,
+  "chat.greet": 3, "chat.thanks": 2, "chat.feel": 3, "chat.unknown": 2,
+};
+function situationsFor(event, facts) {
+  if (event === "tap") {
+    if (!facts.pages) return [facts.keptDays === 0 ? "first" : facts.gap != null && facts.gap >= 3 ? "back" : facts.night ? "noneNight" : "none"];
+    return [...(facts.photos >= 3 ? ["photos"] : []), facts.pages > 1 ? "many" : "one"];
+  }
+  if (event === "saved") {
+    // `facts` here describes the page just saved (and how many pages today).
+    return [...(facts.pagePhotos >= 2 ? ["photos"] : []), ...(facts.pageMedia ? ["media"] : []), ...(facts.pageWordsOnly ? ["words"] : []), facts.pages > 1 ? "more" : "first"];
+  }
+  if (event === "shelf") return [...(facts.untagged ? ["untagged"] : ["tidy"]), "count", ...(facts.latest ? ["latest"] : [])];
+  return [event.split(".")[1] || "unknown"];
+}
+// → { id, key, values } — `recent` is a list of ids used lately (not repeated while others remain).
+export function contextLine(event, facts = {}, { recent = [], seed = 0 } = {}) {
+  const root = event.split(".")[0];
+  const options = situationsFor(event, facts).flatMap((situation) => Array.from({ length: LINE_COUNTS[`${root}.${situation}`] || 0 }, (_, i) => `${root}.${situation}.${i}`));
+  if (!options.length) return null;
+  const fresh = options.filter((id) => !recent.includes(id));
+  const pool = fresh.length ? fresh : options;
+  const id = pool[Math.abs(seed) % pool.length];
+  return { id, key: `kc.${id}`, values: { count: facts.pages ?? facts.count ?? 0, photos: facts.pagePhotos ?? facts.photos ?? 0, title: facts.title || "", days: facts.gap ?? 0, untagged: facts.untagged ?? 0 } };
+}
+// What a typed line is about, read on this device with a few plain patterns
+// (it is not understanding: anything else is answered honestly as "I can't do that yet").
+const INTENTS = [
+  ["organize", /整理|今天的故事|小结|总结|理一理|organi[sz]e|today'?s story|summar/i],
+  ["memory", /回忆|以前|那年|旧的|翻一页|回看|memor|look back|old page|revisit/i],
+  ["week", /这周|本周|最近写|这个星期|this week|lately/i],
+  ["shelf", /书架|手帐本|标签|shelf|journals\b|tags?\b/i],
+  ["write", /帮我写|写一句|润色|怎么写|代写|help me write|rewrite|polish|write (a|one) line/i],
+  ["thanks", /谢谢|多谢|thank/i],
+  ["greet", /^(你好|嗨|哈喽|在吗|在不在|hello|hi|hey)[\s!！。.,，~～?？]*$/i],
+];
+export function localIntent(text) {
+  const said = String(text || "").trim();
+  if (!said) return "unknown";
+  const hit = INTENTS.find(([, pattern]) => pattern.test(said));
+  if (hit) return hit[0];
+  return readCues(said).some((cue) => ["tired", "sad"].includes(cue)) ? "feel" : "unknown";
+}
+// One earlier page to look back at (never a sample day), skipping the ones just shown.
+export function pickMemory(state, today, { exclude = [], seed = 0 } = {}) {
+  const pages = [...ownDays(state).entries()]
+    .filter(([date, entry]) => date < today && keptDay(entry))
+    .flatMap(([date, entry]) => pagesOf(entry).map((page) => ({ date, entry, page })))
+    .filter(({ page }) => String(page.title || page.body || "").trim() || hasPhoto(page));
+  if (!pages.length) return null;
+  const keyOf = (x) => `${x.date}|${x.page === x.entry ? "" : x.page.id}`;
+  const fresh = pages.filter((x) => !exclude.includes(keyOf(x)));
+  const pool = fresh.length ? fresh : pages;
+  const pick = pool[Math.abs(seed) % pool.length];
+  const photo = isPhoto(pick.page.backdrop) ? pick.page.backdrop : isPhoto(pick.page.photo) ? pick.page.photo : (pick.page.layers || []).find((l) => l.kind === "photo" && l.mediaRef && !l.gen)?.mediaRef || "";
+  return { key: keyOf(pick), date: pick.date, momentId: pick.page === pick.entry ? "" : pick.page.id, title: String(pick.page.title || "").trim(), words: String(pick.page.body || "").replace(/\s+/g, " ").trim().slice(0, 90), bookId: pick.page.bookId || pick.entry.bookId || "", photo, more: pool.length > 1 };
 }
