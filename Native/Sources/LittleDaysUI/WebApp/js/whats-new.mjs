@@ -4,6 +4,38 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.7",
+    date: "2026-11-11",
+    zh: {
+      title: "离开编辑器时：完成手帐、保存草稿，或继续编辑",
+      items: [
+        "编辑时点左上角返回，会问一句「要先收好这一页吗？」，三个选择：完成手帐、保存草稿、继续编辑。",
+        "完成手帐：全部内容保存，这一天标记为「已完成」。以后还能再打开修改；不会发布或分享。和右上角的「完成」是同一个操作。",
+        "保存草稿：封面、每一页、照片位置、文字格式都原样留着，这一天标记为「草稿」，下次从离开的那一页继续。",
+        "继续编辑：关掉提示，纸面和选中的东西都不变。",
+        "顶部现在同时显示两件事：「已保存」是内容已经存在这台设备上；下面一行小字「草稿 / 已完成」是这篇手帐做没做完。自动保存照常工作。",
+        "草稿带一个低调的「草稿」标签：首页的故事卡片、书本里的页面列表、翻页、当天页面上都能看到；当天页面上有「继续编辑」。",
+        "什么都没写就返回，直接离开，不留空草稿；只是打开看看已完成的手帐，返回时也不会问。",
+        "如果保存失败，不会提示成功，也不会离开编辑器，内容留在页面上。",
+        "以前用返回离开、没有点过「完成」的日子，现在会显示「草稿」；打开点一次「完成」即可。",
+      ],
+    },
+    en: {
+      title: "Leaving the editor: finish the entry, keep a draft, or keep editing",
+      items: [
+        "Tapping back while editing now asks “Put this away first?” with three choices: Finish entry, Keep as draft, Keep editing.",
+        "Finish entry: everything is saved and the day is marked Completed. You can open and change it later; nothing is published or shared. It is the same step as Done at the top right.",
+        "Keep as draft: the cover, every page, photo positions and text formatting stay as they are; the day is marked Draft and reopens on the page you left.",
+        "Keep editing: the question closes; the paper and the selected item are unchanged.",
+        "The top now shows two things: “Saved” means the content is stored on this device; the small line under it, Draft / Completed, says whether the entry is finished. Autosave works as before.",
+        "A draft carries a quiet “Draft” tag: on Home's story card, in a book's page list, in the page reader and on the day page, which also has “Continue editing”.",
+        "Going back with nothing written simply leaves (no empty draft); looking at a finished entry without changing it does not ask either.",
+        "If saving fails, it never says it worked and the editor stays open with your work on the page.",
+        "Days you left with back and never finished with Done now show “Draft”; open one and tap Done once.",
+      ],
+    },
+  },
+  {
     version: "10.6",
     date: "2026-11-11",
     action: "rich-demo",

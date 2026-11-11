@@ -1864,16 +1864,16 @@
     "en": "{count} check-ins"
   },
   "day.draftPending": {
-    "zh": "这一天还有尚未正式保存的草稿。",
-    "en": "This day also has an unsaved draft."
+    "zh": "这一天还有没收好的修改。",
+    "en": "This day has changes that were not put away."
   },
   "day.continueDraft": {
     "zh": "继续编辑",
     "en": "Continue editing"
   },
   "day.draftOnly": {
-    "zh": "以下是尚未正式保存的草稿内容。",
-    "en": "This is an unsaved draft."
+    "zh": "这一天还是草稿。",
+    "en": "This day is still a draft."
   },
   "moment.title": {
     "zh": "这一天的页",
@@ -7086,5 +7086,53 @@
   "rich.demoAdded": {
     "zh": "示例页已放进今天，可以随便改，也可以删掉。",
     "en": "The example page is in today — change it freely, or delete it."
+  },
+  "status.draft": {
+    "zh": "草稿",
+    "en": "Draft"
+  },
+  "status.completed": {
+    "zh": "已完成",
+    "en": "Completed"
+  },
+  "exit.title": {
+    "zh": "要先收好这一页吗？",
+    "en": "Put this away first?"
+  },
+  "exit.note": {
+    "zh": "内容已经自动保存在这台设备（共 {count} 页）。现在可以把它收进手帐本，或者先留作草稿、下次接着做。",
+    "en": "Everything is already saved on this device ({count} page(s)). Finish it into your journal, or keep it as a draft to carry on later."
+  },
+  "exit.noteCompleted": {
+    "zh": "这篇手帐已经完成过。刚才的修改已自动保存在这台设备（共 {count} 页）。",
+    "en": "This entry was finished before. Your changes are already saved on this device ({count} page(s))."
+  },
+  "exit.complete": {
+    "zh": "完成手帐",
+    "en": "Finish entry"
+  },
+  "exit.completeHint": {
+    "zh": "收进手帐本；以后还可以再打开修改。不会发布或分享。",
+    "en": "Into your journal; you can open and change it later. Nothing is published or shared."
+  },
+  "exit.draft": {
+    "zh": "保存草稿",
+    "en": "Keep as draft"
+  },
+  "exit.draftHint": {
+    "zh": "封面、每一页、照片位置和文字格式都原样留着，下次从这里继续。",
+    "en": "The cover, every page, photo positions and text formatting stay as they are; carry on from here next time."
+  },
+  "exit.keepEditing": {
+    "zh": "继续编辑",
+    "en": "Keep editing"
+  },
+  "exit.draftKept": {
+    "zh": "草稿收好了，随时回来继续。",
+    "en": "Draft kept — come back to it any time."
+  },
+  "exit.draftFailed": {
+    "zh": "没能保存草稿。内容还在这一页上，请再试一次。",
+    "en": "The draft could not be saved. Your work is still on this page — please try again."
   }
 }

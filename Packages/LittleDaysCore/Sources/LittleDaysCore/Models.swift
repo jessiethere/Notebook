@@ -313,6 +313,11 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     /// V10.6: formatting on parts of `title` / `body`; nil = plain.
     public var titleMarks: [TextMark]?
     public var bodyMarks: [TextMark]?
+    /// V10.7: "draft" (still being made) or "completed" (finished). It belongs
+    /// to the whole record — the cover and all its pages — never to one page.
+    /// nil (records saved before V10.7) means completed. Being saved on the
+    /// device is a separate matter: a draft is saved too.
+    public var status: String?
     /// V6.0: background music for the day's cover page (library.json "music" id).
     public var music: String?
     public var visibility: String?
@@ -344,6 +349,11 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
         self.fieldValues = [:]
         self.visibility = "private"
     }
+}
+
+public extension JournalEntry {
+    /// V10.7: true while the record is still being made.
+    var isDraft: Bool { status == "draft" }
 }
 
 public struct DayState: Codable {

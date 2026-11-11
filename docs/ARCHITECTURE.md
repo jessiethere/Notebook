@@ -294,3 +294,20 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - Swift：`TextMark`（含 `nsRange(in:)`）；`StickerLayer.marks`、`JournalEntry` / `JournalMoment` 的 `titleMarks` / `bodyMarks`，全部可选；CoreTests 增加解码与范围断言（本环境无 Swift 工具链，未编译运行）。原生界面目前是 WKWebView 外壳，显示的就是 Web 这一份；将来做原生渲染时用同一份范围生成 `AttributedString`。
 - 字体：界面全局 `font-synthesis: none`；`.rt` 片段单独设为 `weight style`，所以没有粗体 / 斜体字形的字体（多数中文字体、手写体）由浏览器加粗 / 倾斜。中文没有真正的斜体，显示为倾斜。
 - 限制：一条绑定了时间前缀或被截短显示的标题不能做部分格式（按钮禁用）；颜色、字号、字体仍是整段级别；只在 Chromium 验证，Safari / WKWebView 的 `plaintext-only` 行为与选区保持未实测。
+
+## 2026-11-11 V10.7 草稿 / 已完成，与离开编辑器
+
+**审查结论**：编辑器编辑的对象是「一天」这条记录（`Entry`：日期容器 = 封面页 + 有序的 `moments`）。此前已有两处存放：`state.entries`（点过「完成」的记录）和 `state.drafts[date]`（编辑器的自动保存副本）。用返回离开时只写 `drafts`，所以同一天可能同时有「已保存的旧版本」和「没收好的新版本」，而且没有任何地方表示「这篇做没做完」。
+
+**状态归属**：Draft / Completed 属于整条记录（一天：封面 + 所有内页），不属于某一页或封面本身。封面不是一篇独立的手帐。
+
+- 数据：`Entry.status?: "draft" | "completed"`（可选；V10.7 之前保存的记录没有这个字段 = 已完成）。`model.mjs`：`saveEntry(state, entry, status = "completed")` 写入状态；`entryStatus(state, date)` → `"draft"`（`status === "draft"`，或只存在于 `drafts`）/ `"completed"` / `null`；`normalizeState` 丢弃其他取值。Swift：`JournalEntry.status: String?` 与 `isDraft`（未编译）。
+- 三个概念分开：**Saved** = 内容已写到本机（`draftState`: saved / saving / failed，自动保存，450ms 防抖，机制不变）；**Draft / Completed** = 记录状态（上面的字段）。顶部状态按钮同时显示两行。
+- 自动保存不变：编辑中仍写 `drafts[date]`（崩溃 / 被系统关闭时可恢复）。**离开时只留一份**：「完成手帐」和「保存草稿」都调用 `saveEntry()` 写入 `entries` 并删除 `drafts[date]`，区别只是 `status`。所以离开后各处（首页、日历、书本、搜索）看到的都是最新内容。
+- 离开流程（`studio-back`）：先把自动保存写完；失败 → 状态「保存失败」+ 原有的确认（保存不了时才会出现，避免把人困在编辑器里）。成功后：记录上什么都没有且从未保存过 → 删除空的自动保存副本并离开；已完成且本次没有改动（`studioTouched` 为假）→ 直接离开；其余 → `openExitSheet()`。
+- 「完成手帐」= 右上角「完成」：同一个 `save-entry` 动作（同一段代码），保存、标记 Completed、显示刚收好的那一页（或回到进入编辑前的阅读位置）。
+- 「保存草稿」（`studio-draft-exit`）：`saveEntry(…, "draft")`，记住离开时所在的页（`little-days.draft-page`，仅本机），回到进入编辑器之前的页面。保存抛错时：状态「保存失败」、提示、留在编辑器，不显示成功。
+- 「继续编辑」/ × / 下拉：只关闭面板，不重绘，纸面、选中项、光标不变。
+- 重新进入草稿（`draft-continue`）：`openStudio(date)` 后回到记住的那一页。
+- 标签：`draftTagHTML(date)`（首页故事卡片、书本页面列表、翻页页眉）与当天页面的 `.draft-banner.is-draft`。
+- 兼容：旧记录不迁移。只存在于 `drafts` 的旧日子（以前用返回离开、从未点「完成」）现在显示为草稿——这与它们的真实状态一致。

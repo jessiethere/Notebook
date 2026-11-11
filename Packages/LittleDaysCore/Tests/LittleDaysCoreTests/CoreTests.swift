@@ -88,6 +88,8 @@ final class CoreTests: XCTestCase {
         entries[0]["body"] = "今天在思考要不要买电脑。"
         entries[0]["bodyMarks"] = [["start": 8, "end": 11, "bold": true, "underline": true]]
         entries[0]["titleMarks"] = [["start": 0, "end": 2, "italic": true]]
+        // V10.7: the record's status (optional; absent = completed).
+        entries[0]["status"] = "draft"
         object["entries"] = entries
         var decoded = try JSONDecoder().decode(DayState.self, from: JSONSerialization.data(withJSONObject: object))
         decoded.save(decoded.entries[0])
@@ -104,6 +106,8 @@ final class CoreTests: XCTestCase {
         let marked = (reloaded.entries[0].body as NSString).substring(with: reloaded.entries[0].bodyMarks![0].nsRange(in: reloaded.entries[0].body))
         XCTAssertEqual(marked, "买电脑")
         XCTAssertNil(reloaded.entries[0].layers[0].marks)
+        XCTAssertEqual(reloaded.entries[0].status, "draft")
+        XCTAssertTrue(reloaded.entries[0].isDraft)
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
         XCTAssertEqual(reloaded.books[0].music, "morning-piano")

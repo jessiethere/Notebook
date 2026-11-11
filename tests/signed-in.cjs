@@ -38,13 +38,21 @@ module.exports = function signedIn(chromium) {
 // today's page, so they open today's pages (or, on an empty day, today's
 // page editor directly — the same editor the calendar opens for a date).
 // tests/v36-browser.cjs and v51 test the sheet itself.
+// ‹ out of the editor. Since V10.7 a page with something on it asks first
+// (finish / keep as draft / keep editing): older suites keep it as a draft,
+// which is what leaving did before.
+async function leaveStudio(page) {
+  await page.locator('[data-action="studio-back"], [data-action="start-close"]').first().click();
+  await page.waitForFunction(() => !document.querySelector("#phone.in-studio") || document.querySelector("#choose-dialog[open] .exit-sheet"));
+  if (await page.locator("#choose-dialog[open] .exit-sheet").count()) await page.locator('.exit-sheet [data-action="studio-draft-exit"]').click();
+  await page.waitForSelector("#phone:not(.in-studio)");
+}
+module.exports.leaveStudio = leaveStudio;
 module.exports.goTab = async (page, tab) => {
   // Studio is full-screen: leave it with its own ‹ before using the menu.
   if (await page.locator("#phone.in-studio").count()) {
     await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
-    const back = page.locator('[data-action="studio-back"], [data-action="start-close"]').first();
-    await back.click();
-    await page.waitForSelector("#phone:not(.in-studio)");
+    await leaveStudio(page);
   }
   // Growth has no tab since V6.6: open "My habits" from Home's today card.
   if (tab === "growth") {
@@ -82,8 +90,7 @@ module.exports.skipPhotoEditor = async (page) => {
 module.exports.menu = async (page, tab) => {
   if (await page.locator("#phone.in-studio").count()) {
     await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
-    await page.locator('[data-action="studio-back"], [data-action="start-close"]').first().click();
-    await page.waitForSelector("#phone:not(.in-studio)");
+    await leaveStudio(page);
   }
   if (tab === "growth") {
     await page.locator('#navigation [data-page="home"]').click();

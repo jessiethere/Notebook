@@ -48,6 +48,25 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.7 离开 Journal Studio：完成手帐 / 保存草稿 / 继续编辑
+
+- 需求：点左上角返回、准备离开编辑器时三选一（完成手帐并退出 / 保存草稿并退出 / 继续编辑）；区分 Saved（已存到本机）、Draft（没做完）、Completed（做完了）；自动保存保留；保存失败不显示成功、不直接退出；草稿可在 My Books 等列表找到，带低调的「草稿」标签，重新进入恢复内容与编辑状态；先确认 Draft / Completed 属于整条记录还是当前编辑对象，不能把单张封面当成独立完成的手帐；面板用 Little Days 风格，文案「要先收好这一页吗？」，不用吓人的「放弃修改」；切换封面 / 内页、选文字、开工具不触发；右上角「完成」与面板里的「完成手帐」逻辑一致。
+- 审查结论与方案：见 docs/ARCHITECTURE.md「V10.7」。状态属于「一天」这条完整记录（封面 + 所有内页）；新增可选字段 `Entry.status`；编辑中的自动保存副本（`drafts[date]`）不变，离开时无论完成还是草稿都只留一份（写入 `entries`）。
+- 改动文件：
+  - Public/js/model.mjs：`saveEntry(state, entry, status)`、`entryStatus()`、`normalizeState` 清理非法状态。
+  - Public/app.js：`studio-back` 重写（先写完自动保存；空记录 / 未改动的已完成记录直接离开；从「今日故事」编辑页返回不询问；其余打开面板）、`openExitSheet()`、`studio-draft-exit`、`draft-continue`、`leaveStudio()`、`editorStatus()`、`editorHasNothing()`、`studioTouched`、`rememberDraftPage()` / `draftPageFor()`、`draftTagHTML()`；`save-entry` 改为显式写 `completed` 并先关闭面板；顶部状态两行（已保存 + 草稿 / 已完成）。
+  - Public/js/day-view.mjs：草稿提示条（标签 + 继续编辑）。
+  - Public/styles.css：V10.7 块。i18n：`status.*`、`exit.*`，改写 `day.draftOnly` / `day.draftPending`。whats-new 10.7。
+  - Swift：`JournalEntry.status`、`isDraft`；CoreTests 断言（未编译）。
+  - tests：新增 tests/v107-browser.cjs（10 组）与 `test:browser:v107`；signed-in.cjs 新增 `leaveStudio()`（旧用例离开编辑器时遇到面板就选「保存草稿」，等同以前的行为），`goTab` / `menu` 改用它；v33（快照取在离开编辑器之后）、v54（用 `leaveStudio`）适配。
+  - 文档：ARCHITECTURE / DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.7 小节、STUDIO_UX_PLAN、README。
+- 决策与原因：① 「完成手帐」直接复用右上角「完成」的同一个动作，保证两处结果永远一致；完成后的去向保持原样（先看到刚收好的这一页；从阅读页进入的回到原位置）——这与需求里「返回之前的页面」的字面不完全相同，已在回复里向用户说明，等阅读器改版时一并定去向。② 只在「有东西要决定」时询问：空记录、未改动的已完成记录不问。③ 保存失败时不离开；只有保存确实不可用、再次返回时才出现原有的离开确认，避免把人困在编辑器里。④ 草稿页码记在 localStorage，不进手帐数据。
+- 影响旧数据：以前用返回离开、从未点「完成」的日子（只在 `drafts` 里）现在显示「草稿」标签。数据本身没有迁移或改动。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 161、Python 16 通过；浏览器 E2E 全量 51 套全部通过（50 套旧 + v107）。v107 覆盖：空页直接离开且不留空草稿；自动保存与「已保存 ≠ 草稿」；切页 / 工具 / 预览不询问；面板文案与三个选择、44px、无吓人字样；继续编辑 / × 后纸面与选中项不变；保存草稿后两页、文字格式、照片与文本框位置逐字段一致、状态 draft、只留一份；首页 / 书本列表 / 当天页面的草稿标签（刷新后仍在）；从草稿回到离开时的那一页并再次保存草稿；草稿 → 完成；已完成只看不问、改动后「完成」与面板「完成手帐」落点一致、完成 → 改动 → 再存草稿；保存失败时不提示成功、状态为保存失败、留在编辑器；375×667 英文面板不超出屏幕。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 69，V10.7）。截图一张（四个画面）已发给用户。
+- 已知问题 / 未做：没有单页级状态；没有草稿汇总列表；日历格子上没有草稿标记；iPhone 真机未验证；Swift 未编译。
+- 下一步：Captain 轻装扮（V10.8）。
+
 ### 2026-11-11 — V10.6 Journal Studio 富文本：部分文字的加粗 / 斜体 / 下划线 / 删除线
 
 - 需求：参考 iPhone 备忘录，增加 B / I / U / S；必须支持「只给选中的几个字」加格式、同一段文字混合格式；没有选区时尽量支持「接下来输入的字」；格式键放在现有字体 Bottom Sheet 里、显示启用状态、可组合、不丢选区、不遮挡、不新增常驻工具栏；先审查文字模型再开发；旧纯文本无损、保存刷新重编辑保留、预览一致、撤销重做、中英文、中文斜体兼容、粘贴净化、与 SwiftUI 数据含义一致；完成后提供一个真实可编辑的示例页。

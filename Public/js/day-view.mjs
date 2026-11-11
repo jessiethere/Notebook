@@ -113,11 +113,13 @@ export function dayDetailHTML(date, ctx, helpers) {
     .map((moment, index) => momentChapterHTML(moment, index, { ...ctx, dayMusic: music?.id || "" }, date))
     .join("");
   const growth = growthHTML(date, ctx);
+  // V10.7: a record still being made says so, quietly, with a way back in.
+  const resume = `<button class="text-button" data-action="draft-continue" data-date="${date}">${t("day.continueDraft")} ›</button>`;
   const banner =
     draft && saved
-      ? `<div class="draft-banner">${t("day.draftPending")} <button class="text-button" data-action="edit-date" data-date="${date}">${t("day.continueDraft")}</button></div>`
-      : draft
-        ? `<div class="draft-banner">${t("day.draftOnly")}</div>`
+      ? `<div class="draft-banner">${t("day.draftPending")} ${resume}</div>`
+      : draft || saved?.status === "draft"
+        ? `<div class="draft-banner is-draft"><span class="draft-tag">${t("status.draft")}</span>${t("day.draftOnly")} ${resume}</div>`
         : "";
   const contents = (entry?.moments || []).length
     ? `<div class="day-pages-head"><b>${t("day.pagesCount", { count: entry.moments.length })}</b><button class="text-button" data-action="pages-manage" data-date="${date}">${t("pages.manage")}</button></div><nav class="day-contents" aria-label="${t("day.contents")}">${entry.moments.map((moment, index) => `<button type="button" data-action="jump-moment" data-moment="${esc(moment.id)}"><span>${String(index + 1).padStart(2, "0")}</span>${esc(moment.time ? moment.time + " · " : "")}${esc(moment.title || t("moment.untitled"))}</button>`).join("")}</nav>`

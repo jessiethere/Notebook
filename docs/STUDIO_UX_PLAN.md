@@ -90,3 +90,4 @@
 ## 7. 后续增强（2026-11-11）
 
 - V10.6：文字格式 B / I / U / S（部分文字）。位置：打字时的文字条第二行、选中文本框时的「字体」面板；说明见 docs/ARCHITECTURE.md 与 docs/DESIGN_SYSTEM.md 的 V10.6 小节。
+- V10.7：离开编辑器时的三选一（完成手帐 / 保存草稿 / 继续编辑）与 Draft / Completed 状态；见 docs/ARCHITECTURE.md 与 docs/PRODUCT_SPEC.md 的 V10.7 小节。

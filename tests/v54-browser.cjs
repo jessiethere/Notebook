@@ -146,7 +146,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     passed.push("type bar: tap the title or words → font / size / colour, caret stays, page never moves; 加文字框 is clearly an add");
 
     // 5. Sample days to look through, marked and removable.
-    await mobile.locator('[data-action="studio-back"]').click();
+    await require("./signed-in.cjs").leaveStudio(mobile);
     await mobile.locator('#navigation [data-page="home"]').click();
     const samples = await mobile.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "null")?.entries.filter((e) => e.isDemo).length);
     assert.ok(samples >= 6, `sample days (${samples})`);

@@ -104,6 +104,7 @@ import {
   weeklyCount,
   toggleCheck,
   saveEntry,
+  entryStatus,
   saveBook,
   parseTags,
   moveBookTo,
@@ -273,6 +274,7 @@ function flushDraft() {
 }
 function scheduleDraft() {
   draftDirty = true;
+  studioTouched = true;
   setDraftState("saving");
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
@@ -291,9 +293,24 @@ function scheduleDraft() {
 // The save state at the top of the editor: saved / saving / not saved (tap to
 // retry). The long wording stays for screen readers.
 let draftState = "saved";
-const DRAFT_LONG = { saved: "草稿已保存在本机", saving: "正在保存草稿…", failed: "草稿未保存，请勿关闭页面" };
+const DRAFT_LONG = { saved: "已保存在本机", saving: "正在保存…", failed: "还没保存下来，请勿关闭页面" };
+// Saved is about the device (the words are stored); Draft / Completed is
+// about the record (still being made, or finished). Both show at the top.
+let studioTouched = false; // something changed since the editor was opened
+function editorStatus() {
+  const saved = state().entries.find((entry) => entry.date === editor?.date && !entry.isDemo);
+  return saved && saved.status !== "draft" ? "completed" : "draft";
+}
+function editorIsEmpty() {
+  return !editor.title.trim() && !editor.body.trim() && !editor.photo && !editor.media.length && !editor.layers.length && !editor.moments.length;
+}
+// Nothing worth asking about: no cover content and only blank pages.
+function editorHasNothing() {
+  return !hasDayPageContent(editor) && !editor.moments.some((moment) => hasMomentContent(moment) || moment.backdrop);
+}
 function draftStatusInner(state = draftState) {
-  return `<i aria-hidden="true"></i><span>${t("draft." + state)}</span><span class="visually-hidden">${t(DRAFT_LONG[state])}</span>`;
+  const status = editor ? editorStatus() : "draft";
+  return `<i aria-hidden="true"></i><span class="ds-lines"><span>${t("draft." + state)}</span><small class="ds-status" data-status="${status}">${t("status." + status)}</small></span><span class="visually-hidden">${t(DRAFT_LONG[state])}</span>`;
 }
 function setDraftState(next) {
   draftState = next;
@@ -406,6 +423,7 @@ function returnToReading() {
 function openStudio(date = dateKey()) {
   readReturn = null;
   studioPreview = false;
+  studioTouched = false;
   draftState = "saved";
   if (page !== "studio" && page !== "settings") studioReturn = page;
   flushDraft();
@@ -515,7 +533,7 @@ function dayCoverHTML(day) {
     clips.some((c) => c.kind === "video") ? "◈" : "",
     clips.some((c) => c.kind === "audio") ? "♫" : "",
   ].filter(Boolean);
-  return `<button class="day-cover" data-action="open-day" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
+  return `<button class="day-cover" data-action="open-day" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
     .slice(1, 4)
     .map((title) => `<li>${esc(title)}</li>`)
     .join("")}</ul>` : ""}${extras.length ? `<small>${esc(extras.join(" · "))}</small>` : ""}</span></button>`;
@@ -585,7 +603,7 @@ function storyCardHTML(entry, { recent = false } = {}) {
     : "";
   const d = new Date(`${date}T12:00:00`);
   const dayLabel = `${d.toLocaleDateString(locale(), { month: "short", day: "numeric" })} · ${d.toLocaleDateString(locale(), { weekday: "short" })}`;
-  const meta = `<span class="ts-meta"><span>${esc(dayLabel)}${entry.isDemo ? ` · ${t("ts.sample")}` : ""}</span><b>${esc(lead.time)}</b></span>`;
+  const meta = `<span class="ts-meta"><span>${esc(dayLabel)}${entry.isDemo ? ` · ${t("ts.sample")}` : ""}${entry.isDemo ? "" : draftTagHTML(entry.date)}</span><b>${esc(lead.time)}</b></span>`;
   const chips = storyMediaChips(lead);
   const book = state().books.find((bk) => bk.id === lead.bookId);
   const count = pages.length;
@@ -1901,7 +1919,7 @@ function flipBookHTML(book) {
     const checklist = listed.length ? `<p class="flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</p>` : "";
     const page = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : ""}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>${demo ? "" : keeperAskHTML(date, moment?.id || "")}`;
+    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : draftTagHTML(date)}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>${demo ? "" : keeperAskHTML(date, moment?.id || "")}`;
   }
   const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
   flipTurn = 0;
@@ -4717,21 +4735,66 @@ function accountAction(target) {
       return true;
     }
     case "studio-back": {
-      const leave = () => {
-        studioPreview = false;
-        if (readReturn) returnToReading();
-        else navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
-      };
+      // Leaving the editor (never asked when switching pages, selecting
+      // words or opening a tool — only here).
       try {
         draftDirty = draftDirty || draftState === "failed";
         flushDraft();
       } catch {
         // The changes could not be stored: stay, unless the user chooses to go.
         setDraftState("failed");
-        askConfirm(t("studio.leaveUnsaved")).then((ok) => ok && leave());
+        askConfirm(t("studio.leaveUnsaved")).then((ok) => ok && leaveStudio());
         return true;
       }
-      leave();
+      // Back to the story being put together (it has its own finishing step): no question here.
+      if (readReturn?.page === "story" && story) {
+        leaveStudio();
+        return true;
+      }
+      // A finished record that was only looked at: just go.
+      // Nothing written on a new record: go, and leave no empty draft behind.
+      const kept = state().entries.some((entry) => entry.date === editor.date && !entry.isDemo);
+      if (editorHasNothing() && !kept) {
+        if (state().drafts[editor.date]) {
+          try {
+            store.update((s) => void delete s.drafts[editor.date]);
+          } catch {}
+        }
+        draftDirty = false;
+        leaveStudio();
+      } else if (editorStatus() === "completed" && !studioTouched) leaveStudio();
+      else openExitSheet();
+      return true;
+    }
+    case "studio-draft-exit": {
+      // 保存草稿: the whole record (cover + every page) is kept as it is and
+      // marked Draft; then the editor closes. A failed save never leaves.
+      if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+      clearTimeout(draftTimer);
+      setDraftState("saving");
+      try {
+        store.update((s) => saveEntry(s, editor, "draft"));
+      } catch (error) {
+        setDraftState("failed");
+        toast(t(error?.code === "stale-state" ? "error.conflict" : "exit.draftFailed"));
+        return true;
+      }
+      draftDirty = false;
+      setDraftState("saved");
+      rememberDraftPage();
+      logEvent("draft_kept", { pages: editor.moments.length });
+      toast(t("exit.draftKept"));
+      leaveStudio();
+      return true;
+    }
+    case "draft-continue": {
+      // Back into a draft where it was left: the same page of the same record.
+      const date = target.dataset.date;
+      const from = { page, book: selectedBook, date: selectedDate };
+      openStudio(date);
+      const last = draftPageFor(date);
+      selectMoment(last && editor.moments.some((moment) => moment.id === last) ? last : activeMomentId);
+      if (from.page === "day" || from.page === "books") readReturn = { ...from, moment: "", date: from.page === "day" ? date : from.date };
       return true;
     }
     case "settings-back":
@@ -4751,6 +4814,39 @@ function accountAction(target) {
   return false;
 }
 
+function leaveStudio() {
+  studioPreview = false;
+  if (readReturn) returnToReading();
+  else navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
+}
+// The question asked on the way out. Closing it (继续编辑, ×, pulling it
+// down) changes nothing: the paper, the selected item and the caret stay.
+function openExitSheet() {
+  const status = editorStatus();
+  const pages = (hasDayPageContent(editor) ? 1 : 0) + editor.moments.length;
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp exit-sheet" data-status="${status}"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("exit.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("exit.keepEditing")}">×</button></div><p class="exit-note">${t(status === "completed" ? "exit.noteCompleted" : "exit.note", { count: pages })}</p><button class="exit-choice primary" data-action="save-entry"><b>${t("exit.complete")}</b><small>${t("exit.completeHint")}</small></button><button class="exit-choice" data-action="studio-draft-exit"><b>${t("exit.draft")}</b><small>${t("exit.draftHint")}</small></button><button class="exit-stay" data-action="choose-close">${t("exit.keepEditing")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+// Which page of a draft was open when it was put away (this device only).
+const DRAFT_PAGE_KEY = "little-days.draft-page";
+function rememberDraftPage() {
+  try {
+    localStorage.setItem(DRAFT_PAGE_KEY, JSON.stringify({ date: editor.date, moment: activeMomentId || "" }));
+  } catch {}
+}
+function draftPageFor(date) {
+  try {
+    const last = JSON.parse(localStorage.getItem(DRAFT_PAGE_KEY));
+    return last?.date === date ? last.moment || null : null;
+  } catch {
+    return null;
+  }
+}
+// A quiet tag for a day still being made (lists, cards, the page reader).
+function draftTagHTML(date) {
+  return entryStatus(state(), date) === "draft" ? `<span class="draft-tag">${t("status.draft")}</span>` : "";
+}
 function openDay(date, momentId = null) {
   flushDraft();
   selectedDate = date;
@@ -5593,21 +5689,17 @@ async function action(target) {
     toast(t("草稿已保存，下次从 Studio 继续。"));
   }
   if (actionName === "save-entry" || actionName === "save-float") {
-    if (
-      !editor.title.trim() &&
-      !editor.body.trim() &&
-      !editor.photo &&
-      !editor.media.length &&
-      !editor.layers.length &&
-      !editor.moments.length
-    ) {
+    // 完成 at the top right and 完成手帐 in the leaving sheet are this one
+    // step: save everything, mark the record Completed, show the finished page.
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+    if (editorIsEmpty()) {
       toast(t("先留下一张照片，或者写点什么吧。"));
       return;
     }
     clearTimeout(draftTimer);
     setDraftState("saving");
     try {
-      store.update((s) => saveEntry(s, editor));
+      store.update((s) => saveEntry(s, editor, "completed"));
     } catch (error) {
       // Nothing is lost: the page stays open, and Done can be tried again.
       setDraftState("failed");

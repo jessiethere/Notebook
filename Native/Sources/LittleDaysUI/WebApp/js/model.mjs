@@ -158,6 +158,8 @@ export function normalizeState(value) {
     entry.moments ||= [];
     for (const moment of entry.moments) normalizeMoment(moment, entry);
     tidyMarks(entry);
+    // Only "draft" and "completed" are statuses; anything else is dropped (= completed).
+    if (entry.status != null && entry.status !== "draft" && entry.status !== "completed") delete entry.status;
   }
   result.reflections ||= [];
   for (const check of result.checks) {
@@ -257,13 +259,24 @@ export function toggleCheck(state, habitId, date, minutes = 0) {
       minutes: Math.max(0, Math.round(Number(minutes) || 0)),
     });
 }
-export function saveEntry(state, entry) {
+// V10.7: a day's record is either still being made ("draft") or finished
+// ("completed"). The status belongs to the whole record — the cover and all
+// its pages together — never to one page. Records saved before V10.7 have no
+// status and count as completed; a day that only exists in `drafts` (the
+// autosave copy of a record never finished) counts as a draft.
+export function entryStatus(state, date) {
+  const saved = (state.entries || []).find((entry) => entry.date === date);
+  if (saved) return saved.status === "draft" ? "draft" : "completed";
+  return state.drafts?.[date] ? "draft" : null;
+}
+export function saveEntry(state, entry, status = "completed") {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.date))
     throw new Error("日期格式不正确");
   const saved = {
     ...structuredClone(entry),
     isDemo: false,
     visibility: "private",
+    status: status === "draft" ? "draft" : "completed",
     updatedAt: new Date().toISOString(),
   };
   for (const moment of saved.moments || []) moment.visibility = "private";

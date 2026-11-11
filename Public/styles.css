@@ -18230,3 +18230,75 @@ html[data-shell="ios"] .phone.sv ~ .toast {
   min-width: 0;
   margin-left: 0;
 }
+
+/* =====================================================================
+   V10.7 · Leaving the editor — finish the entry, keep it as a draft, or
+   carry on. A quiet "草稿" tag marks a day still being made.
+   ===================================================================== */
+.exit-sheet .exit-note {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--t-675d54, #675d54);
+}
+.exit-choice {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 18px;
+  border: 1px solid var(--c-d9cfbe, #d9cfbe);
+  border-radius: 18px;
+  background: var(--c-ffffff, #ffffff);
+  text-align: left;
+  color: var(--ink);
+}
+.exit-choice b {
+  font: 600 16px var(--ui-sans);
+}
+.exit-choice small {
+  font: 400 13px/1.45 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.exit-choice.primary {
+  border-color: var(--sageDeep);
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.exit-choice.primary small {
+  color: var(--t-ffffffd9, #ffffffd9);
+}
+.exit-stay {
+  min-height: 48px;
+  border: 0;
+  background: none;
+  font: 600 15px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.draft-tag {
+  display: inline-block;
+  margin: 0 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--c-cdbfa8, #cdbfa8);
+  border-radius: 999px;
+  background: var(--c-fffcf6, #fffcf6);
+  font: 500 11px/1.5 var(--ui-sans);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  color: var(--t-675d54, #675d54);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.draft-banner.is-draft .draft-tag {
+  margin-left: 0;
+}
+/* Saved (on this device) + Draft / Completed (the record), stacked small. */
+.draft-status .ds-lines {
+  display: inline-grid;
+  justify-items: start;
+  line-height: 1.15;
+}
+.draft-status .ds-status {
+  font: 400 10px var(--ui-sans);
+  color: var(--t-8a8177, #8a8177);
+}

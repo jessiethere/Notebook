@@ -113,10 +113,11 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     passed.push("templates by photo count with empty frames, text-only page, add-moment from Day Detail");
 
     // 3. Community demo: clearly labelled, separate storage.
-    const journalBefore = JSON.stringify((await read()).entries);
     // Community is in the bottom menu.
     await nav("community");
     await page.waitForSelector(".demo-banner");
+    // (Taken after leaving the editor: since V10.7 leaving puts the day away as a draft.)
+    const journalBefore = JSON.stringify((await read()).entries);
     assert.equal(await page.locator("#navigation [data-page='community'].active").count(), 1);
     assert.deepEqual(await page.$$eval(".community-tabs.main [data-action='community-tab']", (els) => els.map((el) => el.dataset.tab)), ["discover", "friends", "messages"]);
     assert.match(await page.locator(".demo-banner").innerText(), /演示/);
