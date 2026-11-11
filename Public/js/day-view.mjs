@@ -1,4 +1,5 @@
 // Calendar "Day Detail": a read-only, magazine-like view of a finished day.
+import { richHTML } from "./rich-text.mjs";
 import { findTrack, musicChipHTML, dayMusic } from "./music.mjs";
 import { canvasHTML, mediaCardHTML, growthCardInner } from "./canvas.mjs";
 import { escapeHTML as esc, fieldLabel } from "./personal-ui.mjs";
@@ -39,7 +40,7 @@ function bookBadge(bookId, ctx) {
 
 function pageBodyHTML(page, ctx) {
   return page.body?.trim()
-    ? `<p class="day-body" style="font-family:${esc(fontFamily(page.bodyFont || page.font, ctx.catalog))}">${esc(page.body)}</p>`
+    ? `<p class="day-body" style="font-family:${esc(fontFamily(page.bodyFont || page.font, ctx.catalog))}">${richHTML(page.body, page.bodyMarks, esc)}</p>`
     : "";
 }
 

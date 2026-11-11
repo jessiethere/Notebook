@@ -1,4 +1,5 @@
 import { smartLayout } from "./smart-layout.mjs";
+import { storeMarks } from "./rich-text.mjs";
 export function dateKey(value = new Date()) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
@@ -156,6 +157,7 @@ export function normalizeState(value) {
     // V3.1: a saved day is the date container for ordered Moments.
     entry.moments ||= [];
     for (const moment of entry.moments) normalizeMoment(moment, entry);
+    tidyMarks(entry);
   }
   result.reflections ||= [];
   for (const check of result.checks) {
@@ -163,6 +165,13 @@ export function normalizeState(value) {
     if (check.note != null || check.detail != null) check.shareNote ??= false;
   }
   return result;
+}
+// V10.6: formatting ranges are optional and never trusted — anything that
+// does not fit the words is dropped; the words themselves are not touched.
+function tidyMarks(page) {
+  if (page.titleMarks != null) storeMarks(page, "titleMarks", page.titleMarks, String(page.title ?? "").length);
+  if (page.bodyMarks != null) storeMarks(page, "bodyMarks", page.bodyMarks, String(page.body ?? "").length);
+  for (const layer of page.layers || []) if (layer && layer.marks != null) storeMarks(layer, "marks", layer.marks, String(layer.text ?? "").length);
 }
 export function normalizeMoment(moment, entry = {}) {
   moment.title ??= "";
@@ -177,6 +186,7 @@ export function normalizeMoment(moment, entry = {}) {
   moment.media ||= [];
   moment.collapsed ??= false;
   moment.visibility = "private";
+  tidyMarks(moment);
   return moment;
 }
 // The shelf order is the order of state.books (Home shows the same order).

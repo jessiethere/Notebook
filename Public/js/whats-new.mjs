@@ -4,6 +4,39 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.6",
+    date: "2026-11-11",
+    action: "rich-demo",
+    zh: {
+      title: "文字可以只给几个字加粗、斜体、下划线了",
+      action: "放一页格式示例到今天，试试看",
+      items: [
+        "在纸上打字时，文字工具条里多了 B / I / U / S：加粗、斜体、下划线、删除线。",
+        "先选中几个字再点，只有这几个字变；同一段话里可以有普通、加粗、斜体、下划线，也可以叠加（比如又粗又带下划线）。",
+        "没有选中文字、只有光标时点一下，接下来打的字就带这个格式；再点一下关掉。",
+        "选中一个文本框（没有在打字）时，在「字体」面板里点 B / I / U / S 是给整个文本框加格式。",
+        "按钮会亮起表示当前文字的格式；点按钮不会丢掉选中的文字。撤销 / 重做对格式同样有效。",
+        "保存、刷新、再次编辑后格式都在；预览、翻页、导出的图片里样子一致。以前的纯文字手帐不受影响。",
+        "中文字体没有真正的斜体，显示为向右倾斜的字。从别处粘贴进来的文字只保留文字本身，不带外面的字体、颜色和链接。",
+        "顺便修了一个老问题：在文本框里打空格会被当成「打开图层面板」。",
+      ],
+    },
+    en: {
+      title: "Bold, italic and underline on just a few words",
+      action: "Put an example page in today to try it",
+      items: [
+        "While typing on the paper, the text bar now has B / I / U / S: bold, italic, underline, strikethrough.",
+        "Select a few words first and only they change; one paragraph can mix plain, bold, italic and underlined words, and looks can be combined (bold and underlined, say).",
+        "With only a caret, tap one and the words you type next take that look; tap again to switch it off.",
+        "With a text box selected (not being typed in), B / I / U / S in the Font panel format the whole box.",
+        "The buttons light up to show the current look; tapping them does not lose the selected words. Undo / redo work for formatting too.",
+        "The look stays after saving, reloading and editing again, and is the same in the preview, the page reader and exported pictures. Older plain-text pages are untouched.",
+        "Chinese fonts have no true italic, so those words are shown slanted. Text pasted from elsewhere keeps only the words — no outside fonts, colours or links.",
+        "Also fixed: a space typed inside a text box used to open the layer panel instead.",
+      ],
+    },
+  },
+  {
     version: "10.5",
     date: "2026-11-11",
     zh: {

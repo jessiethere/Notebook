@@ -1,6 +1,7 @@
 import { MASK_SHAPES, shapePath } from "./shapes.mjs";
 import { captionFit } from "./story-style.mjs";
-import { boundText } from "./scrapbook-layout.mjs";
+import { boundText, boundMarks } from "./scrapbook-layout.mjs";
+import { runsOf } from "./rich-text.mjs";
 const safePhoto = (photo) =>
   typeof photo !== "string"
     ? ""
@@ -38,6 +39,61 @@ function wrapText(ctx, text, x, y, width, lineHeight, maxLines) {
     if (char !== "\n") line += char;
   }
   if (row < maxLines) ctx.fillText(line, x, y + row * lineHeight);
+}
+// The same wrapping for words with bold / italic / underline / strikethrough
+// on parts of them (V10.6). Without marks it is exactly wrapText. Each piece
+// is measured and drawn in its own face; lines are placed by ctx.textAlign.
+function wrapRich(ctx, text, marks, x, y, width, lineHeight, maxLines) {
+  if (!Array.isArray(marks) || !marks.length) return wrapText(ctx, text, x, y, width, lineHeight, maxLines);
+  const base = ctx.font;
+  const match = /^(?:(italic|oblique)\s+)?(?:(\d{3}|bold|normal)\s+)?(\d+(?:\.\d+)?)px\s+(.+)$/.exec(base.trim());
+  if (!match) return wrapText(ctx, text, x, y, width, lineHeight, maxLines);
+  const size = Number(match[3]);
+  const fontOf = (run) => `${run.italic || match[1] ? "italic " : ""}${run.bold ? 700 : match[2] || 400} ${size}px ${match[4]}`;
+  // Characters with their look, cut into lines.
+  const lines = [[]];
+  let lineWidth = 0;
+  for (const run of runsOf(text, marks)) {
+    ctx.font = fontOf(run);
+    for (const char of run.text) {
+      const w = char === "\n" ? 0 : ctx.measureText(char).width;
+      if (char === "\n" || (lineWidth + w > width && lines[lines.length - 1].length)) {
+        lines.push([]);
+        lineWidth = 0;
+      }
+      if (char !== "\n") {
+        lines[lines.length - 1].push({ char, run, w });
+        lineWidth += w;
+      }
+    }
+  }
+  const align = ctx.textAlign;
+  const baseline = ctx.textBaseline;
+  // Where the underline / strike sit, from the text's baseline setting.
+  const middle = baseline === "middle" ? 0 : baseline === "top" || baseline === "hanging" ? size * 0.5 : -size * 0.32;
+  const thick = Math.max(2, size * 0.06);
+  ctx.textAlign = "left";
+  lines.slice(0, maxLines).forEach((line, row) => {
+    const total = line.reduce((sum, item) => sum + item.w, 0);
+    let cx = align === "center" ? x - total / 2 : align === "right" || align === "end" ? x - total : x;
+    const cy = y + row * lineHeight;
+    let k = 0;
+    while (k < line.length) {
+      let end = k + 1;
+      while (end < line.length && line[end].run === line[k].run) end++;
+      const piece = line.slice(k, end);
+      const w = piece.reduce((sum, item) => sum + item.w, 0);
+      const run = piece[0].run;
+      ctx.font = fontOf(run);
+      ctx.fillText(piece.map((item) => item.char).join(""), cx, cy);
+      if (run.underline) ctx.fillRect(cx, cy + middle + size * 0.52, w, thick);
+      if (run.strike) ctx.fillRect(cx, cy + middle - thick / 2 + size * 0.04, w, thick);
+      cx += w;
+      k = end;
+    }
+  });
+  ctx.font = base;
+  ctx.textAlign = align;
 }
 // Draws a photo layer with its relative size, crop (object-position + zoom)
 // and frame, matching the DOM canvas closely.
@@ -289,12 +345,12 @@ export async function renderJournalCanvas(editor, options = {}) {
     const lineColor = /^#[0-9a-f]{6}$/i.test(editor.textStyle?.color || "") ? editor.textStyle.color : null;
     ctx.fillStyle = darkBackdrop ? "#FFFFFF" : lineColor || "#2F2A26";
     ctx.font = `500 ${Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 54}px ${font}`;
-    wrapText(ctx, editor.title || "", alignIn(ctx, editor.textStyle, 110, 860, 540), editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
+    wrapRich(ctx, editor.title || "", editor.titleMarks, alignIn(ctx, editor.textStyle, 110, 860, 540), editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
     if (editor.body) {
       ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#8D857B";
       ctx.font = `34px ${options.fontFamily ? options.fontFamily(editor.bodyFont || editor.font, options.catalog) : font}`;
       ctx.textAlign = "center";
-      wrapText(ctx, editor.body, alignIn(ctx, editor.bodyStyle, 110, 860, 540), 1218, 860, 44, 1);
+      wrapRich(ctx, editor.body, editor.bodyMarks, alignIn(ctx, editor.bodyStyle, 110, 860, 540), 1218, 860, 44, 1);
     }
     ctx.restore();
   }
@@ -304,7 +360,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
     ctx.save();
-    wrapText(ctx, editor.title || "今天的小美好", alignIn(ctx, editor.textStyle, 129, 820, 129), 910, 820, 78, 2);
+    wrapRich(ctx, editor.title || "今天的小美好", editor.title ? editor.titleMarks : null, alignIn(ctx, editor.textStyle, 129, 820, 129), 910, 820, 78, 2);
     ctx.restore();
     const bodyColor = /^#[0-9a-f]{6}$/i.test(editor.bodyStyle?.color || "") ? editor.bodyStyle.color : null;
     ctx.fillStyle = bodyColor || (darkBackdrop ? "#E9E4F5" : "#998C7A");
@@ -314,7 +370,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     const bodySize = Number(editor.bodyStyle?.size) >= 10 ? Math.min(60, Number(editor.bodyStyle.size)) * 3.375 : 34;
     ctx.font = `${bodySize}px ${bodyFont}`;
     ctx.save();
-    wrapText(ctx, editor.body || "", alignIn(ctx, editor.bodyStyle, 129, 820, 129), 1110, 820, 58, 3);
+    wrapRich(ctx, editor.body || "", editor.bodyMarks, alignIn(ctx, editor.bodyStyle, 129, 820, 129), 1110, 820, 58, 3);
     ctx.restore();
     ctx.font = "125px sans-serif";
     ctx.fillText(editor.mood || "", 875, 820);
@@ -437,7 +493,7 @@ export async function renderJournalCanvas(editor, options = {}) {
         ctx.fill();
         ctx.fillStyle = color;
       }
-      wrapText(ctx, words, align === "left" ? -width / 2 : align === "right" ? width / 2 : 0, layer.w != null ? -((lines - 1) * lineHeight) / 2 : -40, width, lineHeight, 6);
+      wrapRich(ctx, words, layer.bind ? boundMarks(layer, editor, words) : layer.marks, align === "left" ? -width / 2 : align === "right" ? width / 2 : 0, layer.w != null ? -((lines - 1) * lineHeight) / 2 : -40, width, lineHeight, 6);
       ctx.restore();
       continue;
     }
@@ -464,7 +520,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     const fit = captionFit(editor.title);
     const base = Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 52;
     ctx.font = `500 ${Math.round(base * fit.factor)}px ${font}`;
-    wrapText(ctx, editor.title, alignIn(ctx, editor.textStyle, 110, 860, 540), fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
+    wrapRich(ctx, editor.title, editor.titleMarks, alignIn(ctx, editor.textStyle, 110, 860, 540), fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
     ctx.restore();
   }
   return options.dayList?.length ? withDayList(canvas, options.dayList, options.dayListTitle) : canvas;

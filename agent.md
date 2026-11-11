@@ -48,6 +48,29 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.6 Journal Studio 富文本：部分文字的加粗 / 斜体 / 下划线 / 删除线
+
+- 需求：参考 iPhone 备忘录，增加 B / I / U / S；必须支持「只给选中的几个字」加格式、同一段文字混合格式；没有选区时尽量支持「接下来输入的字」；格式键放在现有字体 Bottom Sheet 里、显示启用状态、可组合、不丢选区、不遮挡、不新增常驻工具栏；先审查文字模型再开发；旧纯文本无损、保存刷新重编辑保留、预览一致、撤销重做、中英文、中文斜体兼容、粘贴净化、与 SwiftUI 数据含义一致；完成后提供一个真实可编辑的示例页。
+- 审查结论与方案：见 docs/ARCHITECTURE.md「V10.6 富文本」。要点：此前全部是普通字符串 + 整段样式；方案是「文字不变 + 可选的范围表（marks）」，不改 schemaVersion。
+- 改动文件：
+  - 新增 Public/js/rich-text.mjs（纯函数）。
+  - Public/js/canvas.mjs、day-view.mjs：标题 / 正文 / 文本框用 `richHTML` 渲染；scrapbook-layout.mjs 新增 `boundMarks()`。
+  - Public/js/export.mjs：`wrapRich()`（无 marks 时等同原 `wrapText()`）。
+  - Public/js/model.mjs：`tidyMarks()`（读取时清理 marks，不合法的丢弃）。
+  - Public/app.js：文字工具加 `.type-marks`（打字条与「字体」面板）；`applyTypeMark()`、`richField()`、`selectionIn()` / `selectOffsets()`、`drawRich()`、`typedMarks()`、`inlineInput()` 改为读回 marks；`selectionchange` 记选区、`typingLook`（光标处的待用格式）、输入法 composition 处理、`paste` / `drop` 只收纯文本；`changeEditor()` 末尾 `reconcileMarks()`；`noteToLayout()` 把 marks 带到文本框；`addRichDemoPage()` 与更新记录里的「放一页格式示例」按钮。
+  - 修掉的旧问题：在文本框里打空格 / 回车 / 方向键会被图层快捷键截走（空格丢失并弹出图层面板）——正在编辑文字时不再拦截。
+  - Public/styles.css：V10.6 块（`.rt-*`、`.type-marks`、`.news-action`；打字条不再被第二行撑宽）。i18n：`type.marks`、`type.mark.*`、`type.markNotHere`、`rich.demoTitle`、`rich.demoAdded`。whats-new 10.6（带 `action: "rich-demo"`）。
+  - Swift：Models.swift 新增 `TextMark`、`StickerLayer.marks`、`JournalEntry` / `JournalMoment` 的 `titleMarks` / `bodyMarks`（全部可选）；CoreTests 增加断言（未编译、未运行）。
+  - tests：新增 tests/v106.test.mjs（8 项）、tests/v106-browser.cjs（9 组）、`test:browser:v106`。
+  - 文档：ARCHITECTURE / DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.6 小节、STUDIO_UX_PLAN 第 7 节、README。
+- 关键决定与原因：① 范围表而不是「片段数组」——旧代码（搜索、摘要、Captain 的本机事实、导出、备份）继续读普通字符串，零迁移；偏移用 UTF-16，与 Swift 的 NSRange 同单位。② 继续用 `plaintext-only` 编辑而不是 `contenteditable=true` + execCommand——浏览器不会自己插入富文本结构，格式只来自我们自己的 span 和模型。③ 应用格式时按偏移重画并恢复选区，不依赖浏览器命令。④ 「接下来输入的格式」真实实现了（不是假装）：在下一次输入的差异范围上套用；输入法组合结束后才套用。⑤ 示例页只在用户点按钮时添加，是今天的一页普通页面（示例日是只读样例，不适合做「可编辑示例」）。
+- 过程中发现并修掉：界面全局 `font-synthesis: none` 让没有粗体字形的字体「加粗」看不出来（计算样式是 700，但画面没变）——`.rt` 单独打开合成；文字条第二行变宽后把整页横向挤偏（旧测试 v54 抓到）——限制网格列宽、颜色条内部滚动。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 161 项、Python 16 项通过；浏览器 E2E 全量 50 套全部通过（49 套旧 + v106），这一轮是在最后一处样式修改之后跑的。v106 覆盖：只选中「买电脑」加粗、选区与光标保留、按钮状态、组合与取消、混合选区；光标处开关格式后输入；合成的输入法事件；粘贴富文本只留文字且无外来标签；文本框（打字条 + 字体面板 44px 键、空格可输入）；撤销 / 重做；转为自由文字框保留格式；预览 = 编辑；保存的数据是「普通文字 + 范围」；刷新后阅读与再次编辑一致；导出 Canvas 有格式时墨迹更多、无格式时与原来完全一致；旧示例页没有 marks；更新记录里的示例页可编辑；375 宽文字条不溢出。
+- 没法在这里验证的：iPhone / Safari / WKWebView 里点格式键是否保持选区（代码按 Chromium 行为 + 保存选区兜底写的）、真实中文输入法、软键盘弹出时文字条的位置（375×667 无键盘时文字条第二行本来就在屏幕下方，这是原有布局，未在本次处理）；Swift 未编译。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 68，V10.6）。截图一张（四个画面）已发给用户。
+- 同一提交还加入了 docs/BOOK_READER_PLAN.md（全屏阅读器设计，等待用户确认，未改 App）。
+- 下一步：退出确认与草稿 / 完成状态（V10.7）。
+
 ### 2026-11-11 — V10.5 Captain 面板：发送、关闭与未发送文字
 
 - 需求：用户实际使用时常把底部巨大的「关闭」当成「发送」。要求：去掉底部大关闭按钮，右上角低调的 ×，保留下滑关闭；明显的「发送」按钮（鼠尾草绿 + 向上箭头，紧邻输入框，空时禁用，发送中有处理状态，输入法选字时不误发）；保护未发送内容（关闭不丢、不自动发送、成功发送后才清空）；键盘不遮挡、可多行、换行不等于发送；不改美术、陪伴方式和本机回复逻辑；不接入 AI。

@@ -30,6 +30,7 @@ import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
+import * as Rich from "./js/rich-text.mjs";
 import { keeperImage } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
@@ -324,9 +325,34 @@ function changeEditor(change, redraw = true) {
   if (history.length > 30) history.shift();
   future = [];
   change(editor);
+  reconcileMarks(history[history.length - 1], editor);
   scheduleDraft();
   if (redraw) render();
   else updateCanvas();
+}
+// Words changed through a plain field, a template or a tool (not typed on the
+// paper): the formatting stays on the characters it belonged to.
+function reconcileMarks(before, after) {
+  if (!before || !after) return;
+  const pages = (entry) => [entry, ...(entry.moments || [])];
+  const fix = (now, was, textKey, marksKey) => {
+    const marks = now[marksKey];
+    if (!Array.isArray(marks) || !marks.length) return;
+    const text = String(now[textKey] ?? ""),
+      old = String(was?.[textKey] ?? "");
+    // The change set the marks itself (or the words are the same): just keep them tidy.
+    if (text === old || JSON.stringify(marks) !== JSON.stringify(was?.[marksKey] || [])) return void Rich.storeMarks(now, marksKey, marks, text.length);
+    Rich.storeMarks(now, marksKey, Rich.editMarks(marks, old, text), text.length);
+  };
+  const old = new Map(pages(before).map((pg, i) => [i === 0 ? "" : pg.id, pg]));
+  pages(after).forEach((pg, i) => {
+    const was = old.get(i === 0 ? "" : pg.id);
+    if (!was) return;
+    fix(pg, was, "title", "titleMarks");
+    fix(pg, was, "body", "bodyMarks");
+    const layers = new Map((was.layers || []).map((layer) => [layer.id, layer]));
+    for (const layer of pg.layers || []) if (layer.kind === "text" && layers.has(layer.id)) fix(layer, layers.get(layer.id), "text", "marks");
+  });
 }
 // Labs: modules paused while we test the core (community, messages, levels,
 // decorating, shared books, colour themes, sign-in page). The code and data
@@ -2336,11 +2362,18 @@ function noteToLayout(page) {
     color: /^#[0-9a-f]{6}$/i.test(style?.color || "") ? style.color : color,
     align: ["left", "center", "right"].includes(style?.align) ? style.align : "left",
   });
-  const box = (text, y, fontId, look) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: fontId || "serif", ...look, weight: 400, spacing: 0 });
+  // Bold / italic / underline on parts of the words come along too.
+  const marksFor = (raw, text, marks) => {
+    const lead = String(raw || "").length - String(raw || "").trimStart().length;
+    const kept = Rich.sliceMarks(marks, lead, lead + Math.min(500, text.length));
+    return kept.length ? { marks: kept } : {};
+  };
+  const box = (text, y, fontId, look, marks) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: fontId || "serif", ...look, weight: 400, spacing: 0, ...marks });
   // Where the note had them, so nothing jumps.
-  if (title) page.layers.push(box(title, 27, page.font, pick(page.textStyle, 24, "#2F2A26")));
-  if (words) page.layers.push(box(words, title ? 52 : 40, page.bodyFont || page.font, pick(page.bodyStyle, 15, "#5D554B")));
+  if (title) page.layers.push(box(title, 27, page.font, pick(page.textStyle, 24, "#2F2A26"), marksFor(page.title, title, page.titleMarks)));
+  if (words) page.layers.push(box(words, title ? 52 : 40, page.bodyFont || page.font, pick(page.bodyStyle, 15, "#5D554B"), marksFor(page.body, words, page.bodyMarks)));
   page.body = "";
+  delete page.bodyMarks;
 }
 function setPageMode(mode, { quiet = false } = {}) {
   if (isDayPage()) return;
@@ -2474,6 +2507,24 @@ function syncTypeBar() {
         b.setAttribute("aria-label", `${t("ctx.align")} · ${t("type.align." + shown)}`);
       } else b.setAttribute("aria-pressed", String(b.dataset.typeAlign === shown));
     });
+    // B / I / U / S show the look of the selection (or of what will be typed next).
+    const markButtons = bar.querySelectorAll("[data-type-mark]");
+    if (markButtons.length) {
+      const field = richField(target);
+      let look = {};
+      if (field && el) {
+        const text = String(field.owner[field.textKey] ?? ""),
+          marks = field.owner[field.marksKey] || [];
+        const live = el.isContentEditable && document.activeElement === el && richSel?.el === el ? richSel : null;
+        if (typingLook?.el === el) look = typingLook.look;
+        else if (live) look = Rich.lookAt(marks, Math.min(live.start, text.length), Math.min(live.end, text.length), text.length);
+        else if (text.length) look = Rich.lookAt(marks, 0, text.length, text.length);
+      }
+      markButtons.forEach((b) => {
+        b.setAttribute("aria-pressed", String(Boolean(look[b.dataset.typeMark])));
+        b.disabled = !field;
+      });
+    }
     // A note's title / words stay where the page puts them; this makes them a free text box.
     const toBox = bar.querySelector(".type-to-box");
     if (toBox) toBox.hidden = target.kind === "layer" || isDayPage() || !["note", "line"].includes(pageModeOf());
@@ -2500,7 +2551,11 @@ document.addEventListener("focusout", (event) => {
   }, 0);
 });
 document.addEventListener("pointerdown", (event) => {
-  if (event.target.closest?.("#type-bar")) event.preventDefault();
+  // The bar — and B / I / U / S in the text sheet — must not take the caret or the selection.
+  if (event.target.closest?.("#type-bar, .type-sheet [data-type-mark]")) event.preventDefault();
+});
+document.addEventListener("mousedown", (event) => {
+  if (event.target.closest?.(".type-controls [data-type-mark]")) event.preventDefault();
 });
 document.addEventListener("click", (event) => {
   const button = event.target.closest?.(".type-controls button");
@@ -2516,6 +2571,11 @@ document.addEventListener("click", (event) => {
   const layerEl = typeTarget.kind === "layer" ? canvas?.querySelector(`[data-layer="${CSS.escape(typeTarget.id)}"]`) : null;
   const textEl = typeTarget.kind === "layer" ? layerEl : canvas?.querySelector(`[data-inline="${typeTarget.kind}"]`);
   if (!textEl) return;
+  if (button.dataset.typeMark) {
+    applyTypeMark(typeTarget, button.dataset.typeMark);
+    syncTypeBar();
+    return; // it puts the selection back itself
+  }
   if (button.dataset.typeFont) {
     const id = button.dataset.typeFont;
     inlineChange(() => {
@@ -2587,31 +2647,191 @@ function inlineChange(change) {
   change(editor);
   scheduleDraft();
 }
-function inlineInput(target) {
+// ---------- Rich text on the paper (V10.6) ----------
+// The words are edited where they are (plain-text editing, as before); a
+// formatted piece is a <span data-m> inside them, so what is typed next to
+// bold words stays bold. The model keeps the plain text plus ranges
+// (js/rich-text.mjs); nothing else in a pasted or dropped text is kept.
+let richSel = null; // the last selection inside words on the paper: { el, start, end }
+let typingLook = null; // B / I / U / S chosen with only a caret: { el, look, offset }
+let richBlur = null; // a text box that just lost the caret: { el, at }
+let composeBase = null; // the words when the input method started choosing: { el, text }
+const RICH_FIELD = "#journal-canvas [data-inline], #journal-canvas [data-inline-layer]";
+// Where a target's words and their marks live.
+function richField(target, page = activePage()) {
+  if (!target) return null;
+  if (target.kind === "layer") {
+    const layer = page.layers.find((l) => l.id === target.id);
+    if (!layer || layer.kind !== "text") return null;
+    if (layer.bind) {
+      // Shown with a time in front or cut short: the ranges would not fit.
+      if (layer.bind !== "title" || layer.prefix || layer.excerpt) return null;
+      const source = layer.of ? findMoment(editor, layer.of) : page;
+      return source ? { owner: source, textKey: "title", marksKey: "titleMarks" } : null;
+    }
+    return { owner: layer, textKey: "text", marksKey: "marks" };
+  }
+  if (target.kind !== "title" && target.kind !== "body") return null;
+  return { owner: page, textKey: target.kind, marksKey: target.kind === "title" ? "titleMarks" : "bodyMarks" };
+}
+function richElement(target) {
+  if (!target) return null;
+  return target.kind === "layer" ? document.querySelector(`#journal-canvas [data-inline-layer="${CSS.escape(target.id || "")}"]`) : $(`#journal-canvas [data-inline="${target.kind}"]`);
+}
+function selectionIn(el) {
+  const selection = getSelection();
+  if (!selection.rangeCount) return null;
+  const range = selection.getRangeAt(0);
+  if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return null;
+  const before = document.createRange();
+  before.selectNodeContents(el);
+  before.setEnd(range.startContainer, range.startOffset);
+  const start = before.toString().length;
+  before.setEnd(range.endContainer, range.endOffset);
+  return { start, end: before.toString().length };
+}
+function selectOffsets(el, start, end) {
+  // (Same rule as placeCaret: at a border between two pieces, the piece before.)
+  const point = (offset) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let left = offset;
+    let node = walker.nextNode();
+    while (node && left > node.length) {
+      left -= node.length;
+      node = walker.nextNode();
+    }
+    return node ? [node, Math.min(left, node.length)] : null;
+  };
+  const from = point(start),
+    to = point(end);
+  const range = document.createRange();
+  if (!from || !to) {
+    range.selectNodeContents(el);
+    range.collapse(false);
+  } else {
+    range.setStart(from[0], from[1]);
+    range.setEnd(to[0], to[1]);
+  }
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+// Draws the words with their marks into an element on the paper. While
+// typing, a last empty line needs one more line break to show its caret.
+function drawRich(el, text, marks) {
+  el.innerHTML = Rich.richHTML(text, marks, esc) + (el.isContentEditable && text.endsWith("\n") ? "\n" : "");
+}
+function applyTypeMark(target, key) {
+  const field = richField(target);
+  const el = richElement(target);
+  if (!field || !el) return toast(t("type.markNotHere"));
+  const text = String(field.owner[field.textKey] ?? "");
+  const marks = field.owner[field.marksKey] || [];
+  // A tap on the sheet can take the caret out of a text box a moment before this runs.
+  const justLeft = richBlur?.el === el && performance.now() - richBlur.at < 800;
+  const editing = el.isContentEditable || justLeft;
+  let sel = editing ? (el.isContentEditable && selectionIn(el)) || (richSel?.el === el ? { start: richSel.start, end: richSel.end } : null) : null;
+  if (sel) sel = { start: Math.min(sel.start, sel.end, text.length), end: Math.min(Math.max(sel.start, sel.end), text.length) };
+  const backToWords = (from, to) => {
+    if (!el.isContentEditable && target.kind === "layer") editTextLayer(target.id);
+    if (document.activeElement !== el) el.focus({ preventScroll: true });
+    selectOffsets(el, from, to);
+    richSel = { el, start: from, end: to };
+  };
+  if (sel && sel.start === sel.end) {
+    // Only a caret: the look is for the words typed next. Nothing changes yet.
+    const now = typingLook?.el === el ? typingLook.look : Rich.lookAt(marks, sel.start, sel.end, text.length);
+    backToWords(sel.start, sel.end);
+    typingLook = { el, look: { ...now, [key]: !now[key] }, offset: sel.start };
+    return;
+  }
+  const [from, to] = sel ? [sel.start, sel.end] : [0, text.length];
+  if (to <= from) return;
+  const next = Rich.toggleMark(marks, from, to, key, text.length);
+  inlineTyping = false; // each tap is its own undo step
+  inlineChange(() => {
+    const now = richField(target);
+    if (now) Rich.storeMarks(now.owner, now.marksKey, next, text.length);
+  });
+  inlineTyping = false;
+  typingLook = null;
+  drawRich(el, text, next);
+  if (sel) backToWords(from, to);
+}
+// The marks after words were typed on the paper: read from the spans on
+// screen; with B / I / U / S switched on or off at the caret, the new words
+// get exactly that look. Returns { marks, caret } (caret set when the words
+// have to be drawn again).
+function typedMarks(target, field, value, composing) {
+  const before = String(field.owner[field.textKey] ?? "");
+  const old = field.owner[field.marksKey] || [];
+  const look = typingLook?.el === target ? typingLook : null;
+  if (!old.length && !look && !target.querySelector("[data-m]")) return { marks: [] };
+  const read = Rich.readMarks(target);
+  let marks = read.text.replace(/\n$/, "").slice(0, value.length) === value ? Rich.normalizeMarks(read.marks, value.length) : Rich.editMarks(old, before, value);
+  let caret = null;
+  if (look && !composing) {
+    const change = Rich.textChange(before, value);
+    if (change.added > 0) {
+      const wanted = Rich.applyLook(marks, change.at, change.at + change.added, look.look, value.length);
+      if (JSON.stringify(wanted) !== JSON.stringify(marks)) {
+        marks = wanted;
+        caret = change.at + change.added;
+      }
+    }
+  }
+  return { marks, caret };
+}
+function inlineInput(target, event) {
   const text = target.innerText.replace(/\n$/, "");
+  const composing = Boolean(event?.isComposing) || composeBase?.el === target;
+  const redraw = (value, result) => {
+    if (result.caret != null) {
+      drawRich(target, value, result.marks);
+      placeCaret(target, result.caret);
+    }
+    if (typingLook?.el === target) typingLook.offset = selectionIn(target)?.end ?? typingLook.offset;
+  };
   if (target.dataset.inlineLayer) {
     const layerId = target.dataset.inlineLayer;
+    let result = null,
+      shown = text;
     inlineChange(() => {
       const page = activePage();
       const layer = page.layers.find((l) => l.id === layerId);
       if (!layer) return;
+      const field = richField({ kind: "layer", id: layerId }, page);
       if (layer.bind) {
         // Words bound to a Moment: edit the Moment itself (one source of truth).
         const source = layer.of ? findMoment(editor, layer.of) : page;
-        if (source) source[layer.bind === "time" ? "time" : "title"] = text.slice(0, layer.bind === "time" ? 12 : 70);
-      } else layer.text = text.slice(0, 500);
+        shown = text.slice(0, layer.bind === "time" ? 12 : 70);
+        if (field) result = typedMarks(target, field, shown, composing);
+        if (source) source[layer.bind === "time" ? "time" : "title"] = shown;
+      } else {
+        shown = text.slice(0, 500);
+        if (field) result = typedMarks(target, field, shown, composing);
+        layer.text = shown;
+      }
+      if (field && result) Rich.storeMarks(field.owner, field.marksKey, result.marks, shown.length);
     });
+    if (result) redraw(shown, result);
     const box = $('[data-layer-text="text"]');
     if (box && document.activeElement !== box) box.value = text;
+    syncTypeBar();
     return;
   }
   const field = target.dataset.inline;
   const value = text.slice(0, Number(target.dataset.max) || 4000);
+  let result = null;
   inlineChange(() => {
     const page = activePage();
+    const rich = richField({ kind: field }, page);
+    if (rich) result = typedMarks(target, rich, value, composing);
     page[field] = value;
+    if (rich && result) Rich.storeMarks(rich.owner, rich.marksKey, result.marks, value.length);
     if (page !== editor) page.updatedAt = new Date().toISOString();
   });
+  if (result) redraw(value, result);
   if (isDayPage()) {
     const mirror = $(field === "title" ? "#entry-title" : "#entry-body");
     if (mirror) mirror.value = value;
@@ -2621,11 +2841,75 @@ function inlineInput(target) {
     if (label) label.textContent = moment.title || t("moment.untitled");
     refreshStudioTitle();
   }
+  syncTypeBar();
 }
+// The selection inside words on the paper is remembered (a tap on a button
+// may take it away for a moment), and the B / I / U / S buttons follow it.
+let richSync = 0;
+document.addEventListener("selectionchange", () => {
+  const selection = getSelection();
+  const node = selection.rangeCount ? selection.anchorNode : null;
+  const el = (node?.nodeType === 1 ? node : node?.parentElement)?.closest?.(RICH_FIELD);
+  if (!el || !el.isContentEditable) return;
+  const at = selectionIn(el);
+  if (!at) return;
+  richSel = { el, ...at };
+  // The caret went somewhere else: the look chosen for "what I type next" ends.
+  if (typingLook && (typingLook.el !== el || at.start !== at.end || at.end !== typingLook.offset)) typingLook = null;
+  cancelAnimationFrame(richSync);
+  richSync = requestAnimationFrame(syncTypeBar);
+});
+// Input methods (Chinese, Japanese…): the words are not redrawn while
+// characters are being chosen; the look is applied once they are in.
+document.addEventListener("compositionstart", (event) => {
+  const el = event.target.closest?.(RICH_FIELD);
+  if (!el) return;
+  const field = richField(typeTargetOf(el));
+  composeBase = { el, text: field ? String(field.owner[field.textKey] ?? "") : "" };
+});
+document.addEventListener("compositionend", (event) => {
+  const el = event.target.closest?.(RICH_FIELD);
+  const base = composeBase;
+  composeBase = null;
+  if (!el || base?.el !== el) return;
+  setTimeout(() => {
+    const target = typeTargetOf(el);
+    const field = richField(target);
+    if (!field || typingLook?.el !== el || !el.isConnected) return;
+    const value = String(field.owner[field.textKey] ?? "");
+    const marks = field.owner[field.marksKey] || [];
+    const change = Rich.textChange(base.text, value);
+    if (change.added <= 0) return;
+    const wanted = Rich.applyLook(marks, change.at, change.at + change.added, typingLook.look, value.length);
+    if (JSON.stringify(wanted) === JSON.stringify(marks)) return;
+    inlineChange(() => {
+      const now = richField(target);
+      if (now) Rich.storeMarks(now.owner, now.marksKey, wanted, value.length);
+    });
+    drawRich(el, value, wanted);
+    placeCaret(el, change.at + change.added);
+    typingLook.offset = change.at + change.added;
+  }, 0);
+});
+// Pasted or dropped text comes in as plain words only: no outside fonts,
+// sizes, colours, links or pictures. It takes the look of where it lands.
+for (const type of ["paste", "drop"])
+  document.addEventListener(type, (event) => {
+    const el = event.target.closest?.(RICH_FIELD);
+    if (!el || !el.isContentEditable) return;
+    event.preventDefault();
+    const data = type === "paste" ? event.clipboardData : event.dataTransfer;
+    const plain = String(data?.getData("text/plain") || "").replace(/\r\n?/g, "\n");
+    if (!plain) return;
+    if (document.activeElement !== el) el.focus({ preventScroll: true });
+    document.execCommand("insertText", false, plain);
+  });
 document.addEventListener("focusout", (event) => {
   const el = event.target;
   if (!el?.dataset || !(el.dataset.inline || el.dataset.inlineLayer)) return;
   inlineTyping = false;
+  richBlur = { el, at: performance.now() };
+  if (typingLook?.el === el) typingLook = null;
   if (el.dataset.inlineLayer) {
     el.contentEditable = "false";
     el.closest("[data-layer]")?.classList.remove("editing");
@@ -2835,14 +3119,18 @@ function typeControlsHTML(only) {
   const size = `<button type="button" data-type-size="-2" aria-label="${t("type.smaller")}">A−</button><button type="button" data-type-size="2" aria-label="${t("type.bigger")}">A+</button>`;
   const colors = `<span class="type-colors">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-label="${c}"></button>`).join("")}</span>`;
   const align = `<span class="type-align" role="group" aria-label="${t("ctx.align")}">${["left", "center", "right"].map((a) => `<button type="button" data-type-align="${a}" aria-label="${t("type.align." + a)}"><i class="align-glyph ${a}" aria-hidden="true"></i></button>`).join("")}</span>`;
-  if (only === "font") return `${fonts}<div class="type-row">${size}</div>`;
+  // B / I / U / S: on the selected words; with only a caret, on what is typed
+  // next; on a text box that is selected but not being typed in, on all of it.
+  const mark = (key, glyph) => `<button type="button" data-type-mark="${key}" aria-pressed="false" aria-label="${t("type.mark." + key)}"><span class="mark-glyph ${key}" aria-hidden="true">${glyph}</span></button>`;
+  const marks = `<span class="type-marks" role="group" aria-label="${t("type.marks")}">${mark("bold", "B")}${mark("italic", "I")}${mark("underline", "U")}${mark("strike", "S")}</span>`;
+  if (only === "font") return `${fonts}<div class="type-row">${size}${marks}</div>`;
   if (only === "color") return `<div class="type-row">${colors}</div>`;
   if (only === "align") return `<div class="type-row">${align}</div>`;
   // While typing the bar stays two rows: 转为自由文字框 leads the font row (a
   // note's title / words only) and one button steps through the alignments.
   const toBox = `<button type="button" class="type-to-box" data-action="text-to-box" hidden>${t("type.toBox")}</button>`;
   const cycle = `<button type="button" class="type-align-cycle" data-type-align="cycle" aria-label="${t("ctx.align")}"><i class="align-glyph left" aria-hidden="true"></i></button>`;
-  return `${fonts.replace('<div class="type-fonts">', '<div class="type-fonts">' + toBox)}<div class="type-row">${size}${cycle}${colors}</div>`;
+  return `${fonts.replace('<div class="type-fonts">', '<div class="type-fonts">' + toBox)}<div class="type-row">${size}${marks}${cycle}${colors}</div>`;
 }
 function textStyleSheetHTML() {
   return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
@@ -4177,7 +4465,9 @@ function openWhatsNew() {
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet news-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("news.title")}</h2>${UPDATES.map((update) => {
     const note = noteFor(update, en ? "en" : "zh");
-    return `<section class="news-entry"><header><span class="news-version">V${esc(update.version)}</span><time>${esc(update.date)}</time></header><h3>${esc(note.title)}</h3><ul>${note.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section>`;
+    // A few notes come with something to try (only actions known here).
+    const tryIt = update.action === "rich-demo" && note.action ? `<button class="news-action" data-action="rich-demo">${esc(note.action)} ›</button>` : "";
+    return `<section class="news-entry"><header><span class="news-version">V${esc(update.version)}</span><time>${esc(update.date)}</time></header><h3>${esc(note.title)}</h3><ul>${note.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>${tryIt}</section>`;
   }).join("")}<button class="primary full-width" data-action="choose-close">${t("news.ok")}</button></div>`;
   if (!dialog.open) dialog.showModal();
   markSeen();
@@ -4868,6 +5158,7 @@ async function action(target) {
     $("#choose-dialog").close();
     await deleteReadPage(target.dataset.date, target.dataset.moment || "");
   }
+  if (actionName === "rich-demo") return addRichDemoPage();
   if (actionName === "samples-remove") {
     if (!(await askConfirm(t("samples.confirm")))) return;
     let removed = 0;
@@ -5379,7 +5670,7 @@ document.addEventListener("input", (event) => {
     return;
   }
   if (target.dataset?.inline || target.dataset?.inlineLayer) {
-    inlineInput(target);
+    inlineInput(target, event);
     return;
   }
   if (target.dataset?.dayBook != null) {
@@ -5994,6 +6285,8 @@ $("#app").addEventListener("keydown", (event) => {
     }
     return;
   }
+  // Typing inside a text box: Space, Return and the arrows belong to the words.
+  if (event.target.isContentEditable) return;
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     selectedLayer = element.dataset.layer;
@@ -6195,6 +6488,36 @@ function addMomentNow() {
   selectMoment(created.id); // a new page starts with nothing to undo
   $('[data-moment-field="title"]')?.focus();
   toast(t("moment.added"));
+}
+// V10.6: a real page to try the text formatting on — one text box with
+// plain, bold, italic and underlined words. Only added when asked for (from
+// the update notes); it is an ordinary page of today, editable and deletable.
+function addRichDemoPage() {
+  if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+  openStudio(dateKey());
+  const en = languageCode() === "en";
+  const text = en
+    ? "Thinking about whether to buy a laptop today.\nPlain words, bold words, italic words and underlined words can share one text box — even bold and underlined together."
+    : "今天在思考要不要买电脑。\n普通的字、加粗的字、斜体的字、带下划线的字，可以放在同一个文本框里——也可以又粗又带下划线。";
+  const looks = en
+    ? [["buy a laptop", { bold: true }], ["bold words", { bold: true }], ["italic words", { italic: true }], ["underlined words", { underline: true }], ["bold and underlined together", { bold: true, underline: true }]]
+    : [["买电脑", { bold: true }], ["加粗的字", { bold: true }], ["斜体的字", { italic: true }], ["带下划线的字", { underline: true }], ["又粗又带下划线", { bold: true, underline: true }]];
+  const marks = Rich.normalizeMarks(
+    looks.map(([words, look]) => ({ start: text.indexOf(words), end: text.indexOf(words) + words.length, ...look })).filter((mark) => mark.start >= 0),
+    text.length,
+  );
+  const how = en ? "Tap the text twice, select a few words, then B / I / U / S." : "双击上面的文字，选中几个字，再点 B / I / U / S。";
+  let created;
+  changeEditor((entry) => {
+    const now = new Date();
+    created = createMoment(entry, { time: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`, title: t("rich.demoTitle") });
+    const box = (words, y, size, color, extra = {}) => ({ id: id(), kind: "text", text: words, x: 50, y, w: 82, scale: 1, rotation: 0, fontId: "hei", fontSize: size, color, align: "left", weight: 400, spacing: 0, ...extra });
+    created.layers.push(box(text, 42, 17, "#2B2622", { marks }), box(how, 74, 12, "#6F675D"));
+    entry.moments.push(created);
+  }, false);
+  studioTool = null;
+  selectMoment(created.id);
+  toast(t("rich.demoAdded"));
 }
 // ---------- Community (local demo, separate storage) ----------
 function social() {

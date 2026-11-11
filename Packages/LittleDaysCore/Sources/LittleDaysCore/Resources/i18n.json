@@ -7054,5 +7054,37 @@
   "kp.thinking": {
     "zh": "正在想…",
     "en": "Thinking…"
+  },
+  "type.marks": {
+    "zh": "文字格式",
+    "en": "Text format"
+  },
+  "type.mark.bold": {
+    "zh": "加粗",
+    "en": "Bold"
+  },
+  "type.mark.italic": {
+    "zh": "斜体",
+    "en": "Italic"
+  },
+  "type.mark.underline": {
+    "zh": "下划线",
+    "en": "Underline"
+  },
+  "type.mark.strike": {
+    "zh": "删除线",
+    "en": "Strikethrough"
+  },
+  "type.markNotHere": {
+    "zh": "这一行带时间或被截短显示，暂时不能只给一部分加格式。",
+    "en": "This line is shown with a time or cut short, so part of it cannot be formatted yet."
+  },
+  "rich.demoTitle": {
+    "zh": "文字格式示例",
+    "en": "Text format example"
+  },
+  "rich.demoAdded": {
+    "zh": "示例页已放进今天，可以随便改，也可以删掉。",
+    "en": "The example page is in today — change it freely, or delete it."
   }
 }

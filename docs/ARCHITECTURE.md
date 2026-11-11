@@ -275,3 +275,22 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - app.js：首页固定 Peek；默认不显示气泡（只有点按、成长一步、或互动 + 主动打招呼时）；点按后的一句话 `keeperLineLater()` 5 秒后淡出；`keeperBounce` 不再换图；新手引导只介绍 Captain（`.keeper-intro`），设置里去掉动物和帽子选择；书架夜间用 Sleepy。
 - 修复：聊天气泡 class 原为 `keeper-msg keeper`，与角色图片外层 `.keeper`（64px 宽、可旋转）同名，导致回复被压成 64px 宽；改为 `keeper-msg them`。
 - CSS：Peek 110px（= 原图分辨率），切线对齐卡片上沿、爪子压边 6px、两层 drop-shadow；气泡绝对定位；保存印章移到页面右上角空白处（原位置会挡住「打开这一天」）。
+
+## 2026-11-11 V10.6 富文本（部分文字的加粗 / 斜体 / 下划线 / 删除线）
+
+**审查结论**：此前所有文字都是普通字符串——页面的 `title` / `body`（Entry 与 Moment）、文本框图层的 `layer.text`，样式只有「整段」级别（`textStyle` / `bodyStyle` / 图层的 `fontId`、`fontSize`、`color`、`align`）。编辑用 `contenteditable="plaintext-only"`，每次输入读 `innerText` 写回模型；阅读与预览用 `canvas.mjs` 输出 `esc(text)`；导出用 `export.mjs` 的 `wrapText()` 逐字换行画到 Canvas。没有任何「片段」概念。
+
+**升级方案（已实现）**：文字仍然是原来的普通字符串，格式是旁边一份可选的范围表（marks），不改 schemaVersion。
+
+- 数据：`{ start, end, bold?, italic?, underline?, strike? }`，`start` / `end` 是 UTF-16 偏移（end 不含）——与 JS 字符串下标、Swift 的 `NSString` / `NSRange` 同一单位。字段：图层 `layer.marks`，页面 `titleMarks` / `bodyMarks`（Entry 与 Moment）。存储的列表已排序、不重叠、相邻同格式合并、不越界；没有格式就没有这个键。旧手帐没有这些键，读取与显示完全不变。
+- `Public/js/rich-text.mjs`（纯函数，Node 可测）：`normalizeMarks`、`toggleMark`、`applyLook`、`lookAt`、`textChange`、`editMarks`、`sliceMarks`、`runsOf`、`richHTML`、`readMarks`、`storeMarks`。
+- 渲染（一处实现，处处一致）：`canvas.mjs` 的 `rich(text, marks)` → 普通文字仍是裸文本节点，带格式的片段是 `<span class="rt rt-b rt-i rt-u rt-s" data-m="biux">`。编辑、预览、Day Detail、翻页、时间线都走 `canvasHTML`；`day-view.mjs` 的正文同样处理。绑定到 Moment 标题的文字图层用 `boundMarks()`（带时间前缀或被截短时不套格式）。
+- 编辑：仍是 `plaintext-only`（Chromium 里带格式的 span 会被保留，紧挨着打的字留在同一个 span 里）。`inlineInput()` 读回文字后用 `Rich.readMarks()` 从 DOM 的 span 取范围（只认我们自己的 `data-m`）；DOM 文字与 `innerText` 对不上时退回 `Rich.editMarks()`（按前后缀差异平移范围）。选区：`selectionchange` 记下纸上文字里的最后一次选区（`richSel`），B / I / U / S 用 `pointerdown` / `mousedown` 的 `preventDefault` 不抢焦点，应用后按偏移恢复选区。只有光标时记为「接下来输入的格式」（`typingLook`），在下一次输入的差异范围上精确套用并重画；输入法组合期间不重画，`compositionend` 后再套用。
+- 其他修改路径：`changeEditor()` 结束时 `reconcileMarks(改动前快照, editor)`——文字被普通输入框、模板、工具改动而 marks 没被同时改时，自动按差异平移；「转为自由文字框」把 `titleMarks` / `bodyMarks` 带到新的文本框。
+- 撤销 / 重做：格式变化经 `inlineChange()` 进入现有的页面历史，每点一次是一步。
+- 导出：`export.mjs` 的 `wrapRich()`——没有 marks 时直接调用原 `wrapText()`（旧页面逐像素不变）；有 marks 时逐片段量宽、换行、绘制，下划线 / 删除线用矩形画。
+- 粘贴 / 拖入：`paste` / `drop` 一律 `preventDefault`，只取 `text/plain` 用 `insertText` 插入；保存时也只从自己的 span 读格式，所以外来的字体、字号、颜色、链接、图片进不了数据。
+- 读取保护：`model.mjs` 的 `tidyMarks()` 在 `normalizeState` / `normalizeMoment` 里清理 marks（不合法的丢弃，文字不动，永不因此加载失败）。
+- Swift：`TextMark`（含 `nsRange(in:)`）；`StickerLayer.marks`、`JournalEntry` / `JournalMoment` 的 `titleMarks` / `bodyMarks`，全部可选；CoreTests 增加解码与范围断言（本环境无 Swift 工具链，未编译运行）。原生界面目前是 WKWebView 外壳，显示的就是 Web 这一份；将来做原生渲染时用同一份范围生成 `AttributedString`。
+- 字体：界面全局 `font-synthesis: none`；`.rt` 片段单独设为 `weight style`，所以没有粗体 / 斜体字形的字体（多数中文字体、手写体）由浏览器加粗 / 倾斜。中文没有真正的斜体，显示为倾斜。
+- 限制：一条绑定了时间前缀或被截短显示的标题不能做部分格式（按钮禁用）；颜色、字号、字体仍是整段级别；只在 Chromium 验证，Safari / WKWebView 的 `plaintext-only` 行为与选区保持未实测。

@@ -423,6 +423,13 @@ export function partWord(time) {
   if (!Number.isFinite(h)) return "";
   return h < 5 ? "NIGHT" : h < 12 ? "MORNING" : h < 18 ? "AFTERNOON" : h < 22 ? "EVENING" : "NIGHT";
 }
+// Formatting of words bound to a Moment's title: only when the title is
+// shown as it is (no time in front, not cut short), so the ranges still fit.
+export function boundMarks(layer, page, shown) {
+  if (layer?.bind !== "title" || layer.prefix || layer.excerpt) return null;
+  const source = layer.of ? (page?.moments || []).find((m) => m.id === layer.of) : page;
+  return source && Array.isArray(source.titleMarks) && source.title === shown ? source.titleMarks : null;
+}
 export function boundText(layer, page) {
   if (!layer?.bind) return layer?.text ?? "";
   const source = layer.of ? (page?.moments || []).find((m) => m.id === layer.of) : page;

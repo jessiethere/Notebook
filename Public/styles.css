@@ -18103,3 +18103,130 @@ html[data-shell="ios"] .phone.sv ~ .toast {
     animation: none;
   }
 }
+
+/* =====================================================================
+   V10.6 · Rich text — bold / italic / underline / strikethrough on part
+   of the words. A formatted piece is a span inside the text; the look is
+   the same on the paper while typing, when reading, and in the preview.
+   ===================================================================== */
+/* The app switches faux bold / italic off for its interface; words the
+   writer marked need them when the chosen font has no bold or italic face
+   (most Chinese and handwriting fonts): the browser thickens / slants it. */
+.rt {
+  font-synthesis: weight style;
+}
+.rt-b {
+  /* A fixed heavy weight ("bolder" is only 400 on a light page font). */
+  font-weight: 700;
+}
+.rt-i {
+  font-style: italic;
+}
+.rt-u {
+  text-decoration-line: underline;
+  text-decoration-thickness: max(1px, 0.06em);
+  text-underline-offset: 0.16em;
+}
+.rt-s {
+  text-decoration-line: line-through;
+  text-decoration-thickness: max(1px, 0.06em);
+}
+.rt-u.rt-s {
+  text-decoration-line: underline line-through;
+}
+/* B / I / U / S: one compact group beside the size buttons. */
+.type-marks {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--c-e3dccf, #e3dccf);
+  border-radius: 10px;
+  background: var(--c-ffffff, #ffffff);
+  overflow: hidden;
+}
+.type-marks button {
+  width: 30px;
+  min-width: 30px;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--c-eee8dc, #eee8dc);
+  border-radius: 0;
+  background: none;
+  color: var(--t-2b2622, #2b2622);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.type-marks button:first-child {
+  border-left: 0;
+}
+.type-marks button[aria-pressed="true"] {
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.type-marks button:disabled {
+  opacity: 0.35;
+}
+.mark-glyph {
+  font: 400 16px/1 Georgia, "Times New Roman", serif;
+}
+.mark-glyph.bold {
+  font-weight: 700;
+}
+.mark-glyph.italic {
+  font-style: italic;
+}
+.mark-glyph.underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mark-glyph.strike {
+  text-decoration: line-through;
+}
+/* While typing the row is tight: narrower size buttons, colours scroll. */
+.type-bar .type-row > button[data-type-size],
+.type-bar .type-row > .type-align-cycle {
+  min-width: 34px;
+}
+.type-bar .type-row > .type-marks {
+  margin: 0 1px;
+}
+/* The text sheet has room for full 44px keys. */
+.type-sheet .type-marks {
+  border-color: var(--line);
+  border-radius: 14px;
+}
+.type-sheet .type-marks button {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.type-sheet .mark-glyph {
+  font-size: 18px;
+}
+.news-action {
+  margin-top: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--sageDeep);
+  border-radius: 999px;
+  background: none;
+  font: 600 14px var(--ui-sans);
+  color: var(--sageDeep);
+}
+/* The typing bar never grows wider than the paper: its rows shrink and the
+   colours scroll inside their own strip. */
+.type-bar {
+  grid-template-columns: minmax(0, 1fr);
+}
+.type-bar .type-row {
+  min-width: 0;
+}
+.type-bar .type-row > * {
+  flex: none;
+}
+.type-bar .type-row > .type-colors {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: 0;
+}

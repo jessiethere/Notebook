@@ -4,7 +4,11 @@ import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
 import { isShape } from "./shapes.mjs";
 import { captionFit } from "./story-style.mjs";
-import { boundText } from "./scrapbook-layout.mjs";
+import { boundText, boundMarks } from "./scrapbook-layout.mjs";
+import { richHTML } from "./rich-text.mjs";
+// Words with their formatting (bold / italic / underline / strikethrough on
+// parts of the text); plain text when a page has none.
+const rich = (text, marks) => richHTML(text, marks, esc);
 
 // A long one-line caption gets smaller (and may wrap to two lines).
 const captionClass = (text) => {
@@ -144,7 +148,7 @@ export function layerHTML(layer, ctx, options = {}) {
       if (layer.bind && !words && readOnly) return "";
       classes += ` text-layer${layer.bind ? " bound-text" : ""}${layer.chip ? " chip-text" : ""}`;
       extraStyle = `;${textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || defaultFont, 16, catalog)};text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}${/^#[0-9a-f]{6}$/i.test(layer.chip || "") ? `;--chip:${layer.chip}` : ""}`;
-      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${layer.bind && !words ? ` data-placeholder="${esc(t("story.linePlaceholder"))}"` : ""}>${esc(words)}</span>`;
+      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${layer.bind && !words ? ` data-placeholder="${esc(t("story.linePlaceholder"))}"` : ""}>${rich(words, layer.bind ? boundMarks(layer, options.page, words) : layer.marks)}</span>`;
     } else inner = esc(layer.text);
   }
   if (selected) {
@@ -200,18 +204,18 @@ export function canvasHTML(page, ctx, options = {}) {
     const photo = media.resolve(page.photo);
     const showPhoto = photo || (!readOnly && page.layoutTemplate !== "text");
     const titleText = readOnly
-      ? `<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body || "")}</div>`
-      : `<div class="canvas-title" ${inline("title", t("studio.titlePlaceholder"), 70)} style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${esc(page.title || "")}</div><div class="canvas-body" ${inline("body", t("studio.bodyPlaceholder"), 2000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}${esc(styleExtra(page.bodyStyle))}">${esc(page.body || "")}</div>`;
+      ? `<div class="canvas-title" style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${rich(page.title || "", page.titleMarks)}</div><div class="canvas-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${rich(page.body || "", page.bodyMarks)}</div>`
+      : `<div class="canvas-title" ${inline("title", t("studio.titlePlaceholder"), 70)} style="${esc(textCSS(backdrop?.dark && /^#2f2a26$/i.test(textStyle.color || "") ? { ...textStyle, color: "" } : textStyle, font, 20, catalog, backdrop?.dark ? "#FFFFFF" : "#2F2A26"))}">${rich(page.title || "", page.titleMarks)}</div><div class="canvas-body" ${inline("body", t("studio.bodyPlaceholder"), 2000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}${esc(styleExtra(page.bodyStyle))}">${rich(page.body || "", page.bodyMarks)}</div>`;
     fixed = `${showPhoto ? `<div class="canvas-photo"${readOnly && photo ? ` data-action="zoom-photo" data-src="${esc(photo)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"` : ""}>${photo ? `<img src="${esc(photo)}" alt="${t("photo.alt")}">` : `<div class="photo-placeholder"${readOnly ? "" : ` data-action="photo-chooser" data-target="main" role="button" tabindex="0"`}>📷<span>${t(page.layers?.some((l) => l.kind === "photo") ? "photo.mainOptional" : "photo.add")}</span></div>`}</div><div class="canvas-tape"></div>` : ""}${veil}${titleText}<span class="canvas-mood">${esc(page.mood || "")}</span>`;
   } else if (page.layoutTemplate === "text")
     // Text-only Moment: the title and words are set on the paper itself.
-    fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}${esc(styleExtra(page.bodyStyle))}">${esc(page.body || "")}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
+    fixed = `${veil}<div class="canvas-title" ${readOnly ? "" : inline("title", t("moment.titlePlaceholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${rich(page.title || "", page.titleMarks)}</div><div class="canvas-body" ${readOnly ? "" : inline("body", t("note.bodyPlaceholder"), 4000)} style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}${esc(styleExtra(page.bodyStyle))}">${rich(page.body || "", page.bodyMarks)}</div>${page.mood ? `<span class="canvas-mood">${esc(page.mood)}</span>` : ""}`;
   else if (!dayPage && page.layoutTemplate === "smart")
     // Photos in their own shapes, one line underneath (on a frosted label).
-    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title ${captionClass(page.title)}" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div></div>`;
+    fixed = readOnly && !page.title ? "" : `<div class="line-strip smart-caption ${page.title ? "" : "empty"}"><div class="line-title ${captionClass(page.title)}" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${rich(page.title || "", page.titleMarks)}</div></div>`;
   else if (!dayPage && page.layoutTemplate === "line")
     // Photo + one line: the photo is the page, one sentence on a frosted strip.
-    fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div>${page.body ? `<div class="line-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body)}</div>` : ""}</div>`;
+    fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${rich(page.title || "", page.titleMarks)}</div>${page.body ? `<div class="line-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${rich(page.body, page.bodyMarks)}</div>` : ""}</div>`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
     fixed = `<div class="canvas-empty-hint canvas-add">${options.addChoices ? "" : `<span>✿</span><p>${t("moment.canvasHint")}</p>`}${options.addChoices ? options.addChoices : ""}</div>`;

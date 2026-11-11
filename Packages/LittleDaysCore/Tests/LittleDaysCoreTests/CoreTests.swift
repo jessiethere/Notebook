@@ -84,6 +84,10 @@ final class CoreTests: XCTestCase {
         entries[0]["textStyle"] = ["size": 24, "color": "#2F2A26", "align": "center"]
         entries[0]["bodyStyle"] = ["align": "right"]
         entries[0]["layers"] = [["id": "art", "kind": "sticker", "text": "Little bear", "assetId": "bear", "x": 20, "y": 40, "scale": 1.2, "rotation": 15]]
+        // V10.6: bold / italic / underline / strikethrough on part of the words (optional ranges over the plain text).
+        entries[0]["body"] = "今天在思考要不要买电脑。"
+        entries[0]["bodyMarks"] = [["start": 8, "end": 11, "bold": true, "underline": true]]
+        entries[0]["titleMarks"] = [["start": 0, "end": 2, "italic": true]]
         object["entries"] = entries
         var decoded = try JSONDecoder().decode(DayState.self, from: JSONSerialization.data(withJSONObject: object))
         decoded.save(decoded.entries[0])
@@ -93,6 +97,13 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].bodyFont, "chinese")
         XCTAssertEqual(reloaded.entries[0].textStyle?.align, "center")
         XCTAssertEqual(reloaded.entries[0].bodyStyle?.align, "right")
+        XCTAssertEqual(reloaded.entries[0].bodyMarks, [TextMark(start: 8, end: 11, bold: true, underline: true)])
+        XCTAssertEqual(reloaded.entries[0].titleMarks?[0].italic, true)
+        XCTAssertNil(reloaded.entries[0].bodyMarks?[0].strike)
+        // The range names the same characters as in the Web app (UTF-16 offsets).
+        let marked = (reloaded.entries[0].body as NSString).substring(with: reloaded.entries[0].bodyMarks![0].nsRange(in: reloaded.entries[0].body))
+        XCTAssertEqual(marked, "买电脑")
+        XCTAssertNil(reloaded.entries[0].layers[0].marks)
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
         XCTAssertEqual(reloaded.books[0].music, "morning-piano")

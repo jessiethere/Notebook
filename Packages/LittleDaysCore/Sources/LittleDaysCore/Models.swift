@@ -97,6 +97,40 @@ public struct JournalTextStyle: Codable, Equatable {
     public var align: String?
 }
 
+/// V10.6 rich text: bold / italic / underline / strikethrough on part of a
+/// text. The words stay a plain `String` (`title`, `body`, a text box's
+/// `text`); a mark is a range over that string. `start` / `end` are UTF-16
+/// offsets (end exclusive) — the same unit as a JavaScript string index in
+/// the Web app and as `NSRange` over `NSString` here, so
+/// `NSRange(location: start, length: end - start)` names the same characters
+/// on both sides. Stored lists are sorted and do not overlap; a page without
+/// formatting has no list at all. Absent flags mean "off".
+public struct TextMark: Codable, Equatable {
+    public var start: Int
+    public var end: Int
+    public var bold: Bool?
+    public var italic: Bool?
+    public var underline: Bool?
+    public var strike: Bool?
+
+    public init(start: Int, end: Int, bold: Bool? = nil, italic: Bool? = nil, underline: Bool? = nil, strike: Bool? = nil) {
+        self.start = start
+        self.end = end
+        self.bold = bold
+        self.italic = italic
+        self.underline = underline
+        self.strike = strike
+    }
+
+    /// The range in an `NSString` / `NSAttributedString` of `text`, clipped to it.
+    public func nsRange(in text: String) -> NSRange {
+        let length = (text as NSString).length
+        let from = max(0, min(start, length))
+        let to = max(from, min(end, length))
+        return NSRange(location: from, length: to - from)
+    }
+}
+
 public enum JSONValue: Codable, Equatable {
     case string(String), number(Double), bool(Bool), object([String: JSONValue]), array([JSONValue]), null
     public init(from decoder: Decoder) throws {
@@ -137,6 +171,8 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var weight: Int?
     public var spacing: Double?
     public var align: String?
+    /// V10.6: formatting on parts of `text` (kind == "text"); nil = plain.
+    public var marks: [TextMark]?
     // V3.1 free layout. x/y are the centre in % of the canvas, w is % of canvas width, h % of canvas height.
     public var w: Double?
     public var h: Double?
@@ -229,6 +265,9 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     // V5.5: the look of this page's title and words (type bar).
     public var textStyle: JournalTextStyle?
     public var bodyStyle: JournalTextStyle?
+    /// V10.6: formatting on parts of `title` / `body`; nil = plain.
+    public var titleMarks: [TextMark]?
+    public var bodyMarks: [TextMark]?
     public var layers: [StickerLayer]?
     public var media: [JournalMedia]?
     public var collapsed: Bool?
@@ -271,6 +310,9 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     // V5.5: size / colour chosen for the page's words in the type bar.
     public var bodyStyle: JournalTextStyle?
     public var bodyFont: String?
+    /// V10.6: formatting on parts of `title` / `body`; nil = plain.
+    public var titleMarks: [TextMark]?
+    public var bodyMarks: [TextMark]?
     /// V6.0: background music for the day's cover page (library.json "music" id).
     public var music: String?
     public var visibility: String?
