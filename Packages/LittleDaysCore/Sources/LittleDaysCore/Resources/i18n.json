@@ -7618,5 +7618,77 @@
   "kp.localAI": {
     "zh": "本机模型 · 开发",
     "en": "Local model · dev"
+  },
+  "pf.title": {
+    "zh": "属于你的小世界",
+    "en": "A little world of your own"
+  },
+  "pf.sub": {
+    "zh": "一个名字，一枚专属的标记。",
+    "en": "A name, and a mark that is yours."
+  },
+  "pf.nameLabel": {
+    "zh": "名字",
+    "en": "Name"
+  },
+  "pf.namePlaceholder": {
+    "zh": "给自己起个喜欢的名字",
+    "en": "A name you like"
+  },
+  "pf.marks": {
+    "zh": "标记",
+    "en": "Your mark"
+  },
+  "pf.current": {
+    "zh": "现在的头像",
+    "en": "Current avatar"
+  },
+  "pf.monograms": {
+    "zh": "字母印记 · 用名字的第一个字",
+    "en": "Monogram · the first letter of your name"
+  },
+  "pf.local": {
+    "zh": "只保存在这台设备。",
+    "en": "Kept on this device only."
+  },
+  "pf.saveFailed": {
+    "zh": "没能保存资料。名字和标记还在这里，请再试一次。",
+    "en": "Your profile couldn't be saved. Your name and mark are still here — please try again."
+  },
+  "pf.style.paper": {
+    "zh": "字母印记 · 纸片",
+    "en": "Monogram · Paper"
+  },
+  "pf.style.seal": {
+    "zh": "字母印记 · 朱印",
+    "en": "Monogram · Seal"
+  },
+  "pf.style.kraft": {
+    "zh": "字母印记 · 牛皮纸",
+    "en": "Monogram · Kraft"
+  },
+  "pf.style.sage": {
+    "zh": "字母印记 · 鼠尾草",
+    "en": "Monogram · Sage"
+  },
+  "pf.style.script": {
+    "zh": "字母印记 · 手写",
+    "en": "Monogram · Script"
+  },
+  "login.markLater": {
+    "zh": "头像之后可以在「设置 → 编辑资料」里挑选。",
+    "en": "Choose your mark later in Settings → Edit profile."
+  },
+  "pf.sproutDefault": {
+    "zh": "小芽 · 默认",
+    "en": "Sprout · default"
+  },
+  "day.pagesOf": {
+    "zh": "{date} 的每一页",
+    "en": "The pages of {date}"
+  },
+  "reader.pageShort": {
+    "zh": "第 {n} 页",
+    "en": "p. {n}"
   }
 }

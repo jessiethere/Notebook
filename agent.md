@@ -48,6 +48,60 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.16 iOS 17 部署目标统一；个人标记（5 种字母印记 + 小芽）；日详情音乐默认静音；同一天多页可直达；Captain 缺失美术清单
+
+- 需求：用户确认 Settings / Reader / Captain 的待定决策，并要求先修好原生 iOS 构建问题（P0），然后是个人资料头像（P1）、Reader 剩余问题（P2）、Captain 本地 Qwen 继续测试（P3）。
+- **P0：iOS 部署目标**
+  - 报错原文：`The package product 'LittleDaysCore-product' requires minimum platform version 17.0 for the iOS platform, but this target supports 15.0`。
+  - 在用户 Mac 上复现（Xcode 27.2 / Build 27B52，模拟器运行时 iOS 27.2）：在项目根目录对 scheme「Notebook」用 iPhone 18 Pro 模拟器构建，报错出现在 `NotebookApp` 和 `NotebookServer-product`。
+  - 真实来源：根目录的 `Package.swift`。它是本机 Vapor 服务端，只声明了 `.macOS(.v13)`。在 Xcode 里打开项目根文件夹会加载这个包；选 iPhone 目标时，SwiftPM 给它用默认的 iOS 15，而它依赖的 LittleDaysCore 要求 iOS 17。
+  - 其余各处原本都是 17：iPhone App 工程 `Native/LittleDays.xcodeproj` 的 `IPHONEOS_DEPLOYMENT_TARGET = 17.0`、`Native/Package.swift`、`Packages/LittleDaysCore`（含 LittleDaysCoreTests）。
+  - 修复（提交 81279ab）：
+    - 根目录 `Package.swift` 加 `.iOS(.v17)`；没有降低 LittleDaysCore 的版本。
+    - 新增根目录 `LittleDays.xcworkspace`，双击直接打开 iPhone App 工程；`.gitignore` 为它加了例外。
+    - `tools/mac/dev.sh open`。
+    - `tests/test_native_shell.py` 新增两项：所有 `IPHONEOS_DEPLOYMENT_TARGET` 与 `.iOS(...)` 都必须是 17；workspace 指向 iPhone App。
+  - **未在 Mac 上验证**：本会话不能改用户 Mac 上的文件（自动权限检查拒绝了在 /tmp 副本里验证），要等用户同意合并后再构建。
+- **P1：个人标记**
+  - 新增 `Public/js/profile-mark.mjs`：
+    - 可选的标记：`mono:paper` / `mono:seal` / `mono:kraft` / `mono:sage` / `mono:script` 加上 `mark:sprout`。
+    - 存储字段不变，仍是 `little-days.account.avatar`。
+    - `"🌷"`（没选）显示小芽，有没有名字都一样。这是 2026-11-11 用户的决定，取代 V10.10 的「有名字显示首字」。
+    - 以前选的 Emoji 原样显示。
+    - 首字取法：有大小写的字母转成大写，汉字取第一个字。
+    - `markHTML()` 在设置页顶部、编辑面板和欢迎页共用。
+  - `account.mjs`：`acceptsAvatar()` 接受旧 Emoji 和新标记；其他值保留原来的头像。
+  - 编辑资料（标题「属于你的小世界」）：
+    - 带纸胶带的名字卡，名字和首字随输入实时变化。
+    - 「小芽 · 默认」和「现在的头像」两个胶囊，加 5 种字母印记；不再提供系统 Emoji。
+    - 手机上输入名字时，标记区暂时收起。
+    - 保存按钮固定在面板底部。
+    - 保存失败时提示「没能保存资料……」，面板不关，已输入的名字保留。
+  - 欢迎页（实验室）：只保留名字输入框和当前标记的预览，没有选择器；社区演示只在账号头像是 Emoji 时才同步头像。
+  - 视觉：同一种圆形纸片（高光、细边、小投影），只换纸色、墨色和字体：
+    - 纸片：象牙白，Cormorant；
+    - 朱印：浅粉纸，朱红双圈，Baskerville；
+    - 牛皮纸：牛皮纸色，虚线缝边，DM Sans；
+    - 鼠尾草：深绿底，象牙白字；
+    - 手写：雾蓝纸，Caveat，赤陶色短线。
+    - 中文首字用系统宋体或楷体，不为一个字额外加载几 MB 的中文字体。
+- **P2：Reader 剩余问题**
+  - 日详情页的背景音乐与书本、阅读器一致：进入时静音，点音乐按钮才播放，可以暂停和继续；换到另一天或另一本书又是静音（`syncMusic` 的 `day:` 情境）。
+  - 书本详情里，同一天有多页时，卡片下方显示这一天的每一页缩略图，缩略图下有「第 N 页」和时间，点哪一张就在全屏阅读器打开那一页（`reader-open` 新增 `data-key`）。点那天的卡片仍然打开第一页；只有一页的日子不变。页面来自阅读器自己的页面列表，不复制，也不改数据结构。
+- **P3**：在 `docs/ASSETS.md` 记录 Captain 已有的 5 张素材，以及缺少的正式美术资源（摸摸头、挠肚皮、玩毛线球、换帽子、换衣服），附交付规格；拿到素材前不实现这些动画。本轮没有跑 v3 正式评测：上次在用户 Mac 上启动的评测被用户打断，没有产出结果。
+- 测试：
+  - Node 190 通过（新增 tests/v116.test.mjs 4 项）；Python 18 通过（新增部署目标 2 项）。
+  - 新增 tests/v116-browser.cjs，连跑 2 次通过，覆盖：
+    - 默认小芽，只提供 5 种字母印记和小芽；名字卡和首字随输入变化；375×667 下「保存」可见；
+    - 旧的 🐱 保留并显示为「现在的头像」；
+    - 保存失败时面板保留，再保存能成功；
+    - 欢迎页没有选择器，使用同一条资料；
+    - 日详情静音、播放、暂停、回来后仍是静音；
+    - 同一天两页的缩略图分别打开对应页；
+    - 手帐数据不变，没有外部请求。
+  - 迁移的旧测试：v104、v110（头像）；v36（欢迎页）；v38（暗色主题读 `.pmark`）；v57、v59（日详情点了才播放）。全量浏览器回归 58 套全部通过。
+- 未完成：P0 要在用户 Mac 上构建验证（合并后跑 `xcodebuild` 两个 scheme，并在模拟器里截图）；6 个小图案仍在等设计师；v3 正式评测。
+
 ### 2026-11-11 — V10.15（仅开发）Captain 提示词第 3 版和语言拦截；模拟器里确认引导圆环已对准
 
 - 在用户 Mac 上实际运行（Remote Control，提交 d9fd94c 已在用户确认后 fast-forward 合并到 Mac 副本）：

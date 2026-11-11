@@ -87,10 +87,14 @@ const shots = process.env.SHOTS_DIR || "";
     if (!(await page.locator(`[data-action="select-date"][data-date="${d1}"]`).count())) await page.locator('[data-action="month"][data-delta="-1"]').tap();
     await page.locator(`[data-action="select-date"][data-date="${d1}"]`).first().tap();
     await page.waitForSelector(".day-detail .day-music .music-chip");
+    // V10.16: silent until the chip is tapped.
+    await page.waitForTimeout(500);
+    assert.equal(await page.evaluate(() => document.querySelector("#background-music")?.paused ?? true), true, "no music by itself");
+    await page.locator(".day-music .music-chip").tap();
     await playing("cafe-corner");
     await menu(page, "home");
     await page.waitForFunction(() => document.querySelector("#background-music").paused);
-    passed.push("reading a day of that book plays the book's music; leaving stops it");
+    passed.push("reading a day of that book: the chip plays the book's music (silent until tapped); leaving stops it");
 
     // 4. The volume is remembered; the book's music can be taken off again.
     await page.reload();

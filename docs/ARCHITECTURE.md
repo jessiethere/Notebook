@@ -344,3 +344,11 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 启用条件：本机偏好 `little-days.dev.local-ai = { on, endpoint, model }`，并且页面地址和模型地址都是 localhost 或 127.0.0.1。在线链接和 iPhone 外壳的地址都不是本机，所以永远不会启用。
 - 发送内容：系统提示词（包含 Captain 的名字和当前装扮名）、最近最多 6 行聊天（只含用户打的字和之前的模型回复）、新的一句。不发送手帐数据。
 - 开发工具：`tools/mac/doctor.sh`（只读检查）、`tools/mac/dev.sh`（预览、模拟器、评测、测试、停止）、`tools/captain-eval.mjs`（与 App 共用提示词和参数）。
+
+
+## 2026-11-11 V10.16
+
+- `Public/js/profile-mark.mjs`：标记的取值、首字、渲染。账号记录不变（`little-days.account.avatar` 字符串），不迁移数据。
+- `syncMusic()`：`day:` 和 `book:` 情境都需要点按（`musicAsked`）才会出声。
+- 书本详情的 `dayCoverHTML()`：多页的日子渲染 `.day-group` 和 `.day-page-thumb`（`data-key = Reader.keyOf(item)`），`reader-open` 收到 `data-key` 时直接用这个位置打开。
+- 构建：根目录 `Package.swift` 声明 `.iOS(.v17)`；`LittleDays.xcworkspace` 指向 `Native/LittleDays.xcodeproj`。

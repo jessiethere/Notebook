@@ -70,3 +70,31 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 
 - 产品负责人 2026-11-10 上传的「无帽 Captain 抱粉色毛线球」原图，原样保存为 `docs/brand/LD-captain-natural-yarn-original.png`（941 × 1672）。
 - **尚未裁切、尚未进入 App**：按计划在 V9.0 Phase 4（Keeper 设置）用 `tools/extract_captain.py` 同样的方法单独抠图并检查毛发边缘后再集成；在那之前 App 里的 Natural 形象仍标为未完成。
+
+## 2026-11-11 Captain：已有素材与待补的正式美术资源（V10.16 记录）
+
+用户决定（2026-11-11）：Play Mode 和 Dress Up 的动画必须用正式美术资源。不用粗糙 SVG、拉伸现有 PNG 或低质量临时素材代替。已有的合格素材照常使用。
+
+**已有、正在使用**（`Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/library.json` → `keepers` / `keeperLooks`）：
+
+| 文件 | 内容 | 用在哪里 |
+|---|---|---|
+| LD-keeper-cat-lemon-normal.png | 戴柠檬帽，平常 | 首页、Captain 小角落、设置 |
+| LD-keeper-cat-lemon-happy.png | 戴柠檬帽，开心 | 被夸 / 保存后 |
+| LD-keeper-cat-lemon-sleepy.png | 戴柠檬帽，困 | 夜里 |
+| LD-keeper-cat-lemon-peek.png | 戴柠檬帽，探头 | 首页探头 |
+| LD-keeper-cat-yarn-happy.png | 抱毛线球，不戴帽子（静态） | 装扮「毛线球」 |
+
+**缺失，等正式美术**（在拿到素材之前不实现对应的互动）：
+
+| 互动 | 需要的素材 | 现在的处理 |
+|---|---|---|
+| 摸摸头 | 被摸时的表情和动作：至少 3 帧（伸头 → 眯眼 → 回位），或一段 Lottie / 序列帧；两种帽子状态各一套 | 只用文字回应（「呼噜呼噜……再往左边一点」），没有动画 |
+| 挠肚皮 | 翻身露肚皮的姿势，加 2–3 帧反应（开心或害羞躲开） | 没有入口 |
+| 玩毛线球 | 拨毛线球、追毛线球的序列帧（现有的抱毛线球是一张静态图，不能当动画） | 「和 Captain 玩一会儿」页如实写着「正在准备」 |
+| 换帽子 | 每顶新帽子都要配齐平常 / 开心 / 困 / 探头 4 张，与柠檬帽同样的光照和描边 | 只有柠檬帽 |
+| 换衣服 | 衣服或配件的全套姿势（同上 4 张），要能和帽子组合，或者单独成套 | 没有衣服 |
+
+交付规格（与现有 Captain 一致）：PNG 透明背景，原画 ≥ 1024px，统一的光源与描边；动画用序列帧（每帧单独的 PNG）或 Lottie JSON，标明帧率；附原创或授权说明，写入 `library/stickers/LittleDays-Original-Assets.txt`。
+
+不做：不新增 Bunny、Westie 或其他 Keeper；不用 SVG 线稿或拉伸现有 PNG 拼动画。

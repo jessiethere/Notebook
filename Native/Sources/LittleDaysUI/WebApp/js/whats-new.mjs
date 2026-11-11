@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.16",
+    date: "2026-11-11",
+    zh: {
+      title: "你的个人标记；日记音乐点了才响；同一天的每一页都能直接打开",
+      items: [
+        "编辑资料换成「属于你的小世界」：五种字母印记（纸片、朱印、牛皮纸、鼠尾草、手写）用你名字的第一个字，另外还有小芽。没选的时候显示小芽。",
+        "以前选的表情头像会一直保留，在编辑资料里显示为「现在的头像」，只是不再提供新的表情选项。",
+        "欢迎页只留名字和你现在的头像，挑头像在「设置 → 编辑资料」。",
+        "看某一天的手帐时，背景音乐默认不响，点音乐按钮才播放，可以暂停；换到另一天也不会突然响。",
+        "书本页里，同一天有好几页时，会显示这一天的每一页，点哪页就在阅读器打开哪页。",
+      ],
+    },
+    en: {
+      title: "Your own mark; a day's music plays only when tapped; every page of a day one tap away",
+      items: [
+        "Edit profile is now “A little world of your own”: five monograms of your name's first letter (Paper, Seal, Kraft, Sage, Script) and the sprout, which also shows when nothing is chosen.",
+        "An emoji avatar you chose before stays, shown as “Current avatar”; new emoji are no longer offered.",
+        "The welcome page keeps just your name and current mark — choose a mark in Settings → Edit profile.",
+        "Reading a day, its music is silent until you tap it, and can be paused; moving to another day never starts it by surprise.",
+        "In a book, a day with several pages shows each of them — tap one to open the reader right there.",
+      ],
+    },
+  },
+  {
     version: "10.15",
     date: "2026-11-11",
     zh: {

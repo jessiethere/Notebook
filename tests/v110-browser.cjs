@@ -35,7 +35,7 @@ const shots = process.env.SHOTS || "";
     const me = page.locator(".s2-me");
     assert.match(await me.innerText(), /我的小世界[\s\S]*给这个世界起个名字吧/);
     assert.doesNotMatch(await page.locator(".s2").innerText(), /还没有名字/);
-    assert.equal(await page.locator(".s2-avatar.sprout svg.sprout-mark").count(), 1);
+    assert.equal(await page.locator(".s2-avatar .pm-sprout-chip svg.pm-sprout").count(), 1);
     assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "", "no letter and no emoji before a name");
     await shot(page, "01-unnamed");
     await page.locator('.s2-me [data-action="settings-sheet"][data-sheet="profile"]').tap();
@@ -43,14 +43,15 @@ const shots = process.env.SHOTS || "";
     await page.locator("[data-profile-name]").fill("小满");
     await page.locator('[data-action="profile-save"]').tap();
     await page.waitForFunction(() => /小满/.test(document.querySelector(".s2-name")?.textContent || ""));
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "小");
+    // V10.16: still the sprout until a mark is chosen; a monogram then shows 小.
+    assert.equal(await page.locator(".s2-avatar .pm-sprout-chip").count(), 1);
     assert.match(await me.innerText(), /编辑资料/);
     await SS.settingsSheet(page, "profile");
-    await page.locator('[data-action="profile-avatar"][data-avatar="🌙"]').tap();
+    await page.locator('[data-action="profile-avatar"][data-avatar="mono:paper"]').tap();
     await page.locator('[data-action="profile-save"]').tap();
-    await page.waitForSelector(".s2-avatar.emoji");
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "🌙", "a chosen avatar is kept");
-    passed.push("profile: unnamed shows 我的小世界 + 给这个世界起个名字吧 with a sprout mark (no “还没有名字”); a name shows its first letter; a chosen avatar is kept");
+    await page.waitForSelector(".s2-avatar .pm-paper");
+    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "小", "a monogram of the name");
+    passed.push("profile: unnamed shows 我的小世界 + 给这个世界起个名字吧 with a sprout mark (no “还没有名字”); a chosen monogram shows the name's first letter");
 
     // 2. Captain is more present; settings stay here, playing opens Captain's Corner.
     await page.locator('#navigation [data-page="home"]').tap();

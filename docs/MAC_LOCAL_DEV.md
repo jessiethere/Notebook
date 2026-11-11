@@ -99,6 +99,8 @@ Captain 聊天 → 规则判断意图（keeper-chat.mjs）
 
 ## 7. Xcode 和 iPhone 模拟器
 
+> **打开哪个文件**：双击仓库根目录的 `LittleDays.xcworkspace`（或运行 `bash tools/mac/dev.sh open`），它会打开 iPhone App 工程 `Native/LittleDays.xcodeproj`。**不要直接打开项目根文件夹**：那样加载的是本机 Vapor 服务端的 `Package.swift`（scheme「Notebook」），它是跑在 Mac 上的服务，不是 iPhone App。2026-11-11 出现的「LittleDaysCore-product requires minimum platform version 17.0 … supports 15.0」就是用 iPhone 目标构建这个服务端包导致的；现在它也声明了 iOS 17，所有地方统一为 iOS 17。
+
 ```bash
 bash tools/mac/dev.sh sim                       # 同步 Web 文件 → xcodebuild → 启动模拟器 → 安装并运行
 bash tools/mac/dev.sh sim "iPhone 16 Pro"       # 指定机型（名字以 xcrun simctl list 为准）

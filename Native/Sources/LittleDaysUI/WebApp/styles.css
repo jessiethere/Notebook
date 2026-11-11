@@ -19597,8 +19597,383 @@ button.book-detail-showcase {
   margin-top: 3px;
   font-size: 11px;
   letter-spacing: 0.02em;
-  color: var(--c-8a8178, #8a8178);
+  color: var(--t-8a8178, #8a8178);
 }
 .sg-card.at-bottom.over-dock {
   bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+/* =====================================================================
+   V10.16 · The personal mark: five monograms on five papers and the sprout
+   (Tactile Stationery × Cozy Editorial). One language for all of them: a
+   round piece of paper with a soft sheen, a hairline edge and a small
+   shadow; the letter set large and optically centred. Only the paper, the
+   ink and the type change.
+   ===================================================================== */
+.pmark {
+  --pm: 48px;
+  --pm-paper: var(--c-fbf6ec, #fbf6ec);
+  --pm-ink: var(--sageDeep);
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--pm);
+  height: var(--pm);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 24%, var(--c-ffffff8c, #ffffff8c), transparent 58%),
+    radial-gradient(circle at 70% 82%, var(--c-5a46320f, #5a46320f), transparent 60%),
+    var(--pm-paper);
+  box-shadow:
+    inset 0 0 0 1px var(--c-5a463217, #5a463217),
+    0 1px 1.5px var(--c-3c2d1e1f, #3c2d1e1f),
+    0 calc(var(--pm) * 0.12) calc(var(--pm) * 0.22) calc(var(--pm) * -0.12) var(--c-3c2d1e40, #3c2d1e40);
+  color: var(--pm-ink);
+  overflow: hidden;
+  user-select: none;
+}
+.pm-letter {
+  display: block;
+  /* Cap height sits a touch high in most faces: nudge down to look centred. */
+  transform: translateY(calc(var(--pm) * 0.03));
+  font: 600 calc(var(--pm) * 0.5) / 1 "LD-elegant", Georgia, serif;
+  letter-spacing: 0;
+}
+.pmark.pm-wide .pm-letter {
+  transform: none;
+  font: 500 calc(var(--pm) * 0.42) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+}
+/* 1 · Paper: ivory, sage ink, Cormorant. */
+.pm-paper .pm-letter {
+  font-size: calc(var(--pm) * 0.54);
+}
+/* 2 · Seal: blush paper, a vermilion double ring, Baskerville. */
+.pm-seal {
+  --pm-paper: var(--c-f6e7df, #f6e7df);
+  --pm-ink: var(--c-a9483a, #a9483a);
+}
+.pm-seal::before,
+.pm-seal::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: max(1px, calc(var(--pm) * 0.028)) solid var(--pm-ink);
+  opacity: 0.85;
+}
+.pm-seal::before {
+  inset: calc(var(--pm) * 0.1);
+}
+.pm-seal::after {
+  inset: calc(var(--pm) * 0.155);
+  border-width: max(0.5px, calc(var(--pm) * 0.012));
+  opacity: 0.6;
+}
+.pm-seal .pm-letter {
+  font: 700 calc(var(--pm) * 0.36) / 1 "LD-vintage-serif", Georgia, serif;
+  transform: translateY(calc(var(--pm) * 0.02));
+}
+.pm-seal.pm-wide .pm-letter {
+  font: 700 calc(var(--pm) * 0.34) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+}
+/* 3 · Kraft: a kraft tag with a stitched edge, DM Sans capitals. */
+.pm-kraft {
+  --pm-paper: var(--c-e8d8bd, #e8d8bd);
+  --pm-ink: var(--c-4a3b2e, #4a3b2e);
+}
+.pm-kraft::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--pm) * 0.085);
+  border-radius: 50%;
+  border: max(1px, calc(var(--pm) * 0.022)) dashed var(--c-4a3b2e59, #4a3b2e59);
+}
+.pm-kraft .pm-letter {
+  font: 600 calc(var(--pm) * 0.38) / 1 "LD-minimal-sans", var(--ui-sans);
+  transform: none;
+}
+.pm-kraft.pm-wide .pm-letter {
+  font: 600 calc(var(--pm) * 0.36) / 1 var(--ui-sans);
+}
+/* 4 · Sage: sage paper, ivory letter. */
+.pm-sage {
+  --pm-paper: var(--sageDeep);
+  --pm-ink: var(--c-fbf6ec, #fbf6ec);
+  background:
+    radial-gradient(circle at 32% 24%, var(--c-ffffff2e, #ffffff2e), transparent 58%),
+    var(--pm-paper);
+}
+.pm-sage .pm-letter {
+  font-size: calc(var(--pm) * 0.52);
+}
+/* 5 · Script: mist paper, navy ink, Caveat and a terracotta stroke. */
+.pm-script {
+  --pm-paper: var(--c-e6ecee, #e6ecee);
+  --pm-ink: var(--c-3c4a5b, #3c4a5b);
+}
+.pm-script .pm-letter {
+  font: 600 calc(var(--pm) * 0.6) / 1 "LD-handwritten", cursive;
+  transform: translateY(calc(var(--pm) * -0.02)) rotate(-4deg);
+}
+.pm-script.pm-wide .pm-letter {
+  font: 400 calc(var(--pm) * 0.44) / 1 "Kaiti SC", "STKaiti", "KaiTi", serif;
+}
+.pm-script::after {
+  content: "";
+  position: absolute;
+  left: 32%;
+  right: 30%;
+  bottom: 21%;
+  height: max(1px, calc(var(--pm) * 0.03));
+  border-radius: 99px;
+  background: var(--c-b8734f, #b8734f);
+  transform: rotate(-4deg);
+  opacity: 0.85;
+}
+/* No name yet: the letter is a faint sample. */
+.pmark.pm-sample .pm-letter {
+  opacity: 0.38;
+}
+/* The sprout (the mark beside the Little Days wordmark), on ivory paper. */
+.pm-sprout-chip .pm-sprout {
+  width: 56%;
+  height: 56%;
+  fill: none;
+  stroke: var(--sageDeep);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pm-sprout-chip .pm-sprout .pm-ground {
+  stroke: var(--t-b8734f, #b8734f);
+}
+/* An emoji chosen before V10.16: kept, on the same paper. */
+.pm-emoji .pm-glyph {
+  font: 400 calc(var(--pm) * 0.46) / 1 var(--ui-sans);
+}
+
+/* Settings header: the mark is the avatar itself. */
+.s2-avatar.pm-host {
+  background: none;
+  box-shadow: none;
+}
+
+/* ---------- The editor (Settings → 编辑资料) ---------- */
+.s2-sheet[data-sheet="profile"] {
+  padding-bottom: 0;
+}
+.pf-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(272px, 100%);
+  margin: 6px auto 10px;
+  padding: 16px 18px 15px;
+  border-radius: 6px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--c-5a463214, #5a463214), 0 12px 22px -16px var(--c-3c2d1e66, #3c2d1e66);
+  transform: rotate(-1.2deg);
+}
+.pf-tape {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 64px;
+  height: 16px;
+  margin-left: -32px;
+  background: var(--c-e7c3bfb3, #e7c3bfb3);
+  transform: rotate(2deg);
+}
+.pf-card-copy {
+  min-width: 0;
+  flex: 1;
+}
+.pf-card-copy small {
+  display: block;
+  font: 600 10px/1 var(--ui-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t-8a8178, #8a8178);
+}
+.pf-card-name {
+  display: block;
+  margin: 6px 0 7px;
+  font: 500 26px/1.05 "LD-elegant", Georgia, serif;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-card-name.zh {
+  font: 600 21px/1.2 var(--ui-sans);
+}
+.pf-card-name.empty {
+  color: var(--t-a39a90, #a39a90);
+}
+.pf-rule {
+  display: block;
+  height: 1px;
+  background: var(--line);
+}
+.pf-sub {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--t-675d54, #675d54);
+}
+.pf-name input {
+  min-height: 48px;
+  font-size: 16px;
+}
+.pf-group-label {
+  margin: 12px 0 8px;
+  font: 500 12px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.pf-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pf-choice {
+  display: inline-grid;
+  place-items: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transition: transform 0.15s ease;
+}
+.pf-choice[aria-pressed="true"] .pmark {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 3px;
+}
+.pf-choice:active {
+  transform: scale(0.96);
+}
+.pf-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.pf-pill {
+  display: inline-flex;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line);
+  font: 500 14px var(--ui-sans);
+  color: var(--ink);
+}
+.pf-pill[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--sageDeep);
+}
+.pf-pill[aria-pressed="true"] .pmark {
+  outline: none;
+}
+.pf-foot {
+  position: sticky;
+  bottom: 0;
+  margin: 16px -20px 0;
+  padding: 10px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--paper) 14px);
+}
+.pf-foot .s2-hint {
+  margin: 0 0 8px;
+  text-align: center;
+}
+@media (max-height: 700px) {
+  .pf-card {
+    padding: 12px 14px;
+  }
+  .pf-card-mark .pmark {
+    --pm: 48px !important;
+  }
+  .pf-foot .s2-hint {
+    display: none;
+  }
+}
+/* Typing the name on a phone: only the card, the field and Save stay. */
+@media (pointer: coarse) {
+  body.typing .s2-sheet[data-sheet="profile"] .pf-marks,
+  body.typing .s2-sheet[data-sheet="profile"] .pf-sub {
+    display: none;
+  }
+}
+
+/* ---------- The welcome page: the mark there is now, no picker ---------- */
+.login-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.login-me small {
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+
+/* ---------- V10.16 · A day with several pages in the book detail ---------- */
+.day-group {
+  display: grid;
+  gap: 0;
+  border-radius: 18px;
+  background: var(--c-fffdf8, #fffdf8);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px var(--c-5d493c0f, #5d493c0f);
+}
+.day-group > .day-cover {
+  border: 0;
+  box-shadow: none;
+  background: none;
+}
+.day-pages {
+  display: flex;
+  gap: 10px;
+  margin: 0 10px;
+  padding: 2px 0 12px;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.day-pages::-webkit-scrollbar {
+  display: none;
+}
+.day-page-thumb {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  width: 84px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  color: var(--ink);
+}
+.day-page-thumb small {
+  display: grid;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--t-675d54, #675d54);
+}
+.day-page-thumb small b {
+  font-weight: 600;
+  color: var(--ink);
+}
+.day-page-thumb small i {
+  font-style: normal;
+}
+.day-page-thumb:focus-visible {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.day-page-thumb:active .reader-thumb-paper {
+  transform: scale(0.97);
 }

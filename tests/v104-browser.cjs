@@ -39,8 +39,8 @@ const shots = process.env.SHOTS || "";
     const me = page.locator(".s2-me");
     // V10.10: no name yet → 我的小世界 and a sprout mark (not “还没有名字”, not a letter, not an emoji).
     assert.match(await me.innerText(), /MY LITTLE DAYS[\s\S]*我的小世界[\s\S]*本机个人空间[\s\S]*没有云端账号[\s\S]*给这个世界起个名字吧/);
-    assert.equal(await page.locator(".s2-avatar.sprout svg").count(), 1, "no name yet: the sprout mark");
-    assert.equal(await page.locator(".s2-avatar.emoji").count(), 0);
+    assert.equal(await page.locator(".s2-avatar .pm-sprout-chip svg").count(), 1, "no name yet: the sprout mark");
+    assert.equal(await page.locator(".s2-avatar .pm-emoji").count(), 0);
     assert.equal(await page.locator(".settings-card").count(), 0, "no stack of big cards");
     assert.doesNotMatch(await page.locator(".s2").innerText(), /退出登录|Sign out/, "no “sign out”: there is no account to sign out of");
     await noOverflow("zh 390");
@@ -52,28 +52,29 @@ const shots = process.env.SHOTS || "";
     await page.locator("[data-profile-name]").fill("Jess");
     await page.locator('[data-action="profile-save"]').tap();
     await page.waitForFunction(() => /Jess/.test(document.querySelector(".s2-name")?.textContent || ""));
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "J", "the first letter of the name");
+    // V10.16: nothing chosen → the sprout, with or without a name.
+    assert.equal(await page.locator(".s2-avatar .pm-sprout-chip").count(), 1, "nothing chosen: the sprout");
     assert.deepEqual([(await accountNow()).name, (await accountNow()).avatar, (await accountNow()).signedIn], ["Jess", "🌷", true]);
     await SS.settingsSheet(page, "profile");
     assert.equal(await page.locator("[data-profile-name]").inputValue(), "Jess");
-    await page.locator('[data-action="profile-avatar"][data-avatar="🐱"]').tap();
-    await page.waitForSelector('[data-action="profile-avatar"][data-avatar="🐱"][aria-pressed="true"]');
-    assert.equal(await page.locator("[data-profile-name]").inputValue(), "Jess", "the name survives picking an avatar");
+    await page.locator('[data-action="profile-avatar"][data-avatar="mono:seal"]').tap();
+    await page.waitForSelector('[data-action="profile-avatar"][data-avatar="mono:seal"][aria-pressed="true"]');
+    assert.equal(await page.locator("[data-profile-name]").inputValue(), "Jess", "the name survives picking a mark");
     await page.locator('[data-action="profile-save"]').tap();
-    await page.waitForSelector(".s2-avatar.emoji");
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "🐱");
+    await page.waitForSelector(".s2-avatar .pm-seal");
+    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "J", "the seal monogram shows the first letter");
     await page.reload();
     await page.waitForSelector(".hero");
     await settings();
     assert.match(await page.locator(".s2-me").innerText(), /Jess/);
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "🐱", "a chosen avatar is kept after a reload");
-    // Back to the letter.
+    assert.equal(await page.locator(".s2-avatar .pm-seal").count(), 1, "a chosen mark is kept after a reload");
+    // Back to the sprout.
     await SS.settingsSheet(page, "profile");
-    await page.locator('[data-action="profile-avatar"][data-avatar=""]').tap();
+    await page.locator('[data-action="profile-avatar"][data-avatar="mark:sprout"]').tap();
     await page.locator('[data-action="profile-save"]').tap();
-    await page.waitForSelector(".s2-avatar:not(.emoji)");
+    await page.waitForSelector(".s2-avatar .pm-sprout-chip");
     assert.equal(JSON.stringify((await stored()).entries), journalBefore, "journals untouched by profile edits");
-    passed.push("edit profile: name + avatar saved on this device (kept after reload); a custom avatar stays until I choose the letter again; journals untouched");
+    passed.push("edit profile: name + mark saved on this device (kept after reload); a monogram follows the name; back to the sprout; journals untouched");
 
     // 3. Little Keeper: an invitation while off; then a preview, the mode in one line, details in its sheet.
     assert.equal(await page.locator('.keeper-card [data-action="keeper-onboard"]').count(), 1);
