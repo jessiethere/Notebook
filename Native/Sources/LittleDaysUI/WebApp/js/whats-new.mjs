@@ -4,6 +4,36 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.4",
+    date: "2026-11-11",
+    zh: {
+      title: "设置页重新整理：My Little Days · 本机个人空间",
+      items: [
+        "设置页不再是 12 张大卡片，改成五组：个人资料、Little Keeper、外观与偏好、数据与隐私、关于与更多。整页长度不到原来的一半。",
+        "最上面是「My Little Days · 本机个人空间」：如实写明资料和手帐只保存在这台设备、没有云端账号。点「编辑资料」可以改名字和头像。",
+        "默认头像改成名字首字的圆形纸片；你选过的头像会继续保留。",
+        "Little Keeper 只留预览和一行陪伴方式（安静 / 温柔 / 互动 / 关闭）；改名、翻看以前的页面、主动打招呼收进「角色与装扮」。",
+        "主题颜色变成一行圆形色板；界面语言和每天提醒放在一起。",
+        "数据与隐私：本机存储、备份与恢复、App 锁、两个隐私开关、隐私说明。「AI 小管家」标着「尚未接入」，开关不能打开——现在没有任何 AI。",
+        "更新记录、功能介绍、许可证、示例内容、测试记录、实验室移到页面最下方，点开才显示。",
+        "「退出登录」改名为「回到欢迎页（数据保留）」，只在实验室的登录页开启时出现——Little Days 没有云端账号，谈不上退出。",
+      ],
+    },
+    en: {
+      title: "Settings, tidied: My Little Days · your space on this device",
+      items: [
+        "Settings is no longer twelve large cards but five groups: profile, Little Keeper, look & preferences, data & privacy, about & more. The page is less than half as long.",
+        "At the top, “My Little Days · your space on this device”: it says plainly that profile and journals stay on this device and there is no cloud account. “Edit profile” changes the name and avatar.",
+        "The default avatar is now a round paper chip with the first letter of your name; an avatar you chose is kept.",
+        "Little Keeper keeps a preview and one line for the companion mode (Quiet / Gentle / Interactive / Off); renaming, looking back at earlier pages and greeting first moved into “Character & look”.",
+        "Colour themes are a single row of round swatches; interface language and the daily reminder sit with them.",
+        "Data & privacy: storage on this device, backup & restore, app lock, two privacy switches, privacy notes. “AI Keeper” is marked “Not available yet” and cannot be switched on — there is no AI at present.",
+        "Update notes, feature tour, licences, sample content, test log and Labs moved to the bottom and open when tapped.",
+        "“Sign out” is now “Back to the welcome page (data kept)”, shown only when the Labs sign-in page is on — Little Days has no cloud account to sign out of.",
+      ],
+    },
+  },
+  {
     version: "10.3",
     date: "2026-11-11",
     zh: {

@@ -151,6 +151,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const samples = await mobile.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "null")?.entries.filter((e) => e.isDemo).length);
     assert.ok(samples >= 6, `sample days (${samples})`);
     await mobile.locator('[data-action="nav"][data-page="settings"]').click();
+    await require("./signed-in.cjs").settingsSheet(mobile, "samples");
     await mobile.locator('[data-action="samples-remove"]').click();
     await mobile.locator("#confirm-ok").click();
     await mobile.waitForFunction(() => !JSON.parse(localStorage.getItem("little-days.v1")).entries.some((e) => e.isDemo));

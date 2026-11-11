@@ -130,8 +130,11 @@ const shots = process.env.SHOTS_DIR || "";
     assert.ok(await page.locator(".keeper-msg.them").last().evaluate((m) => m.getBoundingClientRect().width > 150));
     await page.locator('.keeper-chat [data-action="choose-close"]').first().click();
     await settings();
-    await page.locator('[data-action="keeper-toggle"][data-key="allowMemories"]').click();
-    await page.waitForSelector('[data-key="allowMemories"][aria-checked="true"]');
+    // V10.4: the companion's details live in the “character & look” sheet.
+    await require("./signed-in.cjs").settingsSheet(page, "keeper");
+    await page.locator('.s2-sheet [data-action="keeper-toggle"][data-key="allowMemories"]').click();
+    await page.waitForSelector('.s2-sheet [data-key="allowMemories"][aria-checked="true"]');
+    await require("./signed-in.cjs").closeSheet(page);
     passed.push("Interactive: tap opens the panel; “Look back at a memory” asks for permission first; free text gets an honest answer; permission is a separate switch");
 
     // 7. My Books: on the shelf; a tap says something about my journals.
@@ -144,7 +147,7 @@ const shots = process.env.SHOTS_DIR || "";
     // 8. Turn off: gone everywhere, nothing deleted, name kept.
     const before = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")).entries.length);
     await settings();
-    await page.locator('[data-action="keeper-disable"]').click();
+    await page.locator('.s2-seg [data-action="keeper-disable"]').click();
     await page.locator('#navigation [data-page="home"]').click();
     assert.equal(await page.locator(".keeper-home, .keeper-invite").count(), 0);
     k = await keeper();

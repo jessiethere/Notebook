@@ -3832,8 +3832,8 @@
     "en": "Welcome back, {name} ✿"
   },
   "login.signOutConfirm": {
-    "zh": "退出登录？会回到登录页，你的手帐、照片和录音仍保存在这台设备上。",
-    "en": "Sign out? You'll return to the sign-in page; your journal, photos and recordings stay on this device."
+    "zh": "回到欢迎页？这不是退出账号——Little Days 没有云端账号。你的手帐、照片和录音都保留在这台设备上。",
+    "en": "Go back to the welcome page? This is not signing out of an account — Little Days has no cloud account. Your journal, photos and recordings stay on this device."
   },
   "tour.skip": {
     "zh": "跳过",
@@ -6910,5 +6910,137 @@
   "kp.untitled": {
     "zh": "没有名字的一页",
     "en": "A page with no name"
+  },
+  "s2.kicker": {
+    "zh": "设置",
+    "en": "Settings"
+  },
+  "s2.noName": {
+    "zh": "还没有名字",
+    "en": "No name yet"
+  },
+  "s2.localSpace": {
+    "zh": "本机个人空间 · 资料和手帐只保存在这台设备，没有云端账号",
+    "en": "Your space on this device · profile and journals stay here; there is no cloud account"
+  },
+  "s2.editProfile": {
+    "zh": "编辑资料",
+    "en": "Edit profile"
+  },
+  "s2.nameLabel": {
+    "zh": "名字",
+    "en": "Name"
+  },
+  "s2.namePlaceholder": {
+    "zh": "想让 Little Days 怎么称呼你",
+    "en": "What should Little Days call you?"
+  },
+  "s2.avatarLabel": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "s2.profileNote": {
+    "zh": "只保存在这台设备。第一个是名字的首字。",
+    "en": "Kept on this device only. The first one is the first letter of your name."
+  },
+  "s2.save": {
+    "zh": "保存",
+    "en": "Save"
+  },
+  "s2.profileSaved": {
+    "zh": "资料已保存在这台设备。",
+    "en": "Profile saved on this device."
+  },
+  "s2.keeper": {
+    "zh": "Little Keeper",
+    "en": "Little Keeper"
+  },
+  "s2.keeperLine": {
+    "zh": "{mode}陪伴 · {stage}",
+    "en": "{mode} · {stage}"
+  },
+  "s2.keeperManage": {
+    "zh": "角色与装扮",
+    "en": "Character & look"
+  },
+  "s2.keeperOff": {
+    "zh": "关闭",
+    "en": "Off"
+  },
+  "s2.keeperWhere": {
+    "zh": "和它互动在首页，这里只做设置。",
+    "en": "Talk to it on Home; this page is only for settings."
+  },
+  "s2.notInQuiet": {
+    "zh": "安静方式下不可用。",
+    "en": "Not available in Quiet mode."
+  },
+  "s2.look": {
+    "zh": "外观与偏好",
+    "en": "Look & Preferences"
+  },
+  "s2.data": {
+    "zh": "数据与隐私",
+    "en": "Data & Privacy"
+  },
+  "s2.storage": {
+    "zh": "本机存储",
+    "en": "On this device"
+  },
+  "s2.storageNote": {
+    "zh": "手帐、照片、视频和声音都只在这台设备上，不会上传。换手机或清理浏览器前请先备份。",
+    "en": "Journals, photos, video and sound stay on this device and are not uploaded. Back up before changing phones or clearing the browser."
+  },
+  "s2.backup": {
+    "zh": "备份与恢复",
+    "en": "Backup & restore"
+  },
+  "s2.ai": {
+    "zh": "AI 小管家",
+    "en": "AI Keeper"
+  },
+  "s2.aiNot": {
+    "zh": "尚未接入",
+    "en": "Not available yet"
+  },
+  "s2.aiNote": {
+    "zh": "现在没有任何 AI：Captain 的回应都在这台设备上生成，不会发送你的手帐。将来如果加入，会先单独征得你的同意。",
+    "en": "There is no AI at present: Captain's replies are made on this device and your journal is not sent anywhere. If it is added later, it will ask for your consent first."
+  },
+  "s2.privacyNotes": {
+    "zh": "隐私说明",
+    "en": "Privacy notes"
+  },
+  "s2.about": {
+    "zh": "关于与更多",
+    "en": "About & More"
+  },
+  "s2.tour": {
+    "zh": "功能介绍",
+    "en": "Feature tour"
+  },
+  "s2.tourAgain": {
+    "zh": "再看一次",
+    "en": "Replay"
+  },
+  "s2.sampleDays": {
+    "zh": "{count} 天示例",
+    "en": "{count} sample days"
+  },
+  "s2.on": {
+    "zh": "已开启",
+    "en": "On"
+  },
+  "s2.off": {
+    "zh": "未开启",
+    "en": "Off"
+  },
+  "s2.welcome": {
+    "zh": "回到欢迎页",
+    "en": "Back to the welcome page"
+  },
+  "s2.dataKept": {
+    "zh": "数据保留",
+    "en": "Data kept"
   }
 }

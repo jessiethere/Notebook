@@ -19,7 +19,7 @@ const shots = process.env.SHOTS_DIR || "";
     await web.waitForSelector(".hero");
     await web.locator(".settings-gear").click();
     await web.waitForSelector(".reminder-card");
-    assert.match(await web.locator(".reminder-card").innerText(), /每天的提醒[\s\S]*只在 iPhone App 里有效/);
+    assert.match(await web.locator(".reminder-card").innerText(), /每天提醒[\s\S]*只在 iPhone App 里有效/);
     assert.equal(await web.locator('[data-action="reminder-toggle"]').isDisabled(), true);
     passed.push("Web: the reminder card explains it works in the iPhone app (switch disabled)");
 

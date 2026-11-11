@@ -201,3 +201,21 @@ module.exports.studioDeselect = async (target) => {
     await target.locator(".tool-dock:not(.ctx)").waitFor();
   }
 };
+
+// ---------- Settings V2 (V10.4) ----------
+// Details (profile, Keeper, privacy notes, licences, samples, test log, labs)
+// open in a bottom sheet from their row on the Settings page.
+module.exports.settingsSheet = async (page, kind) => {
+  // (A closed sheet's markup stays in the dialog, so only an open one counts.)
+  const sheet = page.locator(`#choose-dialog[open] .s2-sheet[data-sheet="${kind}"]`);
+  if (await sheet.count()) return sheet;
+  const row = page.locator(`.s2 [data-action="settings-sheet"][data-sheet="${kind}"]`).first();
+  await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await row.click();
+  await sheet.waitFor();
+  return sheet;
+};
+module.exports.closeSheet = async (page) => {
+  if (await page.locator("#choose-dialog[open]").count()) await page.locator('#choose-dialog [data-action="choose-close"]').first().click();
+  await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
+};

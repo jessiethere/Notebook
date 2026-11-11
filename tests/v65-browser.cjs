@@ -83,7 +83,9 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     assert.ok((await page.locator('[data-action="theme"]').count()) > 1, "themes in Settings without Labs");
     await page.locator('[data-action="theme"]').nth(1).tap();
     await page.waitForFunction(() => Boolean(document.documentElement.dataset.theme));
-    assert.match(await page.locator(".settings-card").filter({ hasText: /许可证|Licen/ }).innerText(), /黑体、宋体、楷体/);
+    // V10.4: licences open from their row under "About & more".
+    assert.match(await (await require("./signed-in.cjs").settingsSheet(page, "licenses")).innerText(), /黑体、宋体、楷体/);
+    await require("./signed-in.cjs").closeSheet(page);
     passed.push("colour themes for everyone; the licence card explains the device fonts");
 
     // 3. 黑体 / 宋体 / 楷体 in the type bar.

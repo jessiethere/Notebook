@@ -39,9 +39,10 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     assert.equal(await first.locator(".whats-new").count(), 0, "no update card on Home");
     assert.equal(await first.locator(".settings-gear .news-dot").count(), 1, "a dot on the gear");
     await first.locator(".settings-gear").tap();
-    await first.waitForSelector(".news-card .news-new");
-    assert.equal(await first.locator(".news-card details.news-latest[open]").count(), 1, "the newest notes, open");
-    await first.locator('.news-card [data-action="whats-new"]').tap();
+    // V10.4: update notes are a row under "About & more" (with a dot while unread); opening them marks them read.
+    await first.waitForSelector('.s2-about [data-action="whats-new"] .s2-dot');
+    await first.locator('.s2-about [data-action="whats-new"]').evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await first.locator('.s2-about [data-action="whats-new"]').tap();
     await first.waitForSelector("#choose-dialog[open] .news-sheet");
     const latest = await first.locator(".news-entry .news-version").first().innerText();
     assert.match(latest, /^V\d+\.\d+$/);
@@ -56,12 +57,17 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.locator('#navigation [data-page="home"]').tap();
     await first.locator('[data-action="nav"][data-page="settings"]').tap();
     assert.ok((await first.locator(".theme-picker, [data-action='theme']").count()) > 0, "colour themes for everyone (V6.7), not only in Labs");
-    assert.equal(await first.locator('.news-card [data-action="whats-new"]').count(), 1, "update history in Settings");
+    assert.equal(await first.locator('.s2-about [data-action="whats-new"]').count(), 1, "update history in Settings");
+    assert.equal(await first.locator('.s2-about [data-action="whats-new"] .s2-dot').count(), 0, "read: no dot on the row");
+    assert.equal(await first.locator('.s2 [data-action="sign-out"]').count(), 0, "no “back to the welcome page” without the Labs sign-in page");
+    await require("./signed-in.cjs").settingsSheet(first, "labs");
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForSelector('[data-action="labs-toggle"][aria-pressed="true"]');
     assert.equal(await first.locator('#navigation [data-page="community"]').count(), 1);
+    assert.equal(await first.locator('.s2 [data-action="sign-out"]').count(), 1, "with Labs on: back to the welcome page (data kept)");
     await first.locator('[data-action="labs-toggle"]').tap();
     await first.waitForFunction(() => !document.querySelector('#navigation [data-page="community"]'));
+    await require("./signed-in.cjs").closeSheet(first);
     await fresh.close();
     passed.push("new install: straight to Home with a what's-new card; community, profile, shared books and sign-in wait in Labs (themes for everyone)");
 
@@ -150,10 +156,12 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     assert.doesNotMatch(JSON.stringify(events), /咖啡|coffee|media:/);
     await menu(page, "home");
     await page.locator('[data-action="nav"][data-page="settings"]').tap();
+    await require("./signed-in.cjs").settingsSheet(page, "testlog");
     const logFile = page.waitForEvent("download");
     await page.locator('[data-action="export-events"]').tap();
     const log = JSON.parse(fs.readFileSync(await (await logFile).path(), "utf8"));
     assert.equal(log.summary.quickPages, 1);
+    await require("./signed-in.cjs").closeSheet(page);
     passed.push("local test log: steps, time and taps of the quick page, no words or photos; exportable from Settings");
 
     // 5. The shape-aware layout is also a choice in the layout tool.

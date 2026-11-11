@@ -145,9 +145,9 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     const paperBefore = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--c-fffdf8"));
     await page.locator('[data-action="theme"][data-theme-id="cool"]').tap();
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "cool");
-    const bg = await page.evaluate(() => getComputedStyle(document.querySelector(".settings-card")).backgroundColor);
+    const bg = await page.evaluate(() => getComputedStyle(document.querySelector(".s2-avatar")).backgroundColor);
     const lum = (rgb) => { const [r, g, b] = rgb.match(/\d+/g).map(Number); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
-    assert.ok(lum(bg) < 0.3, `dark cards in the dark theme (${bg})`);
+    assert.ok(lum(bg) < 0.3, `dark paper in the dark theme (${bg})`);
     const ink = await page.evaluate(() => getComputedStyle(document.querySelector(".page-title")).color);
     assert.ok(lum(ink) > 0.6, "light text on dark");
     assert.equal(paperBefore, "", "default theme uses the original literal colors");

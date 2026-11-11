@@ -150,7 +150,9 @@ const shots = process.env.SHOTS_DIR || "";
     await menu(page, "home");
     await page.locator(".settings-gear").tap();
     await page.waitForSelector(".privacy-card");
-    assert.match(await page.locator(".privacy-card").innerText(), /只存在这台设备上[\s\S]*GPS/);
+    // V10.4: the privacy notes open from their row under Data & privacy.
+    assert.match(await (await require("./signed-in.cjs").settingsSheet(page, "privacy")).innerText(), /只存在这台设备上[\s\S]*GPS/);
+    await require("./signed-in.cjs").closeSheet(page);
     await page.locator('[data-action="privacy-toggle"][data-privacy="shareList"]').tap();
     await page.waitForSelector('[data-privacy="shareList"][aria-checked="true"]');
     const tall = await exportHeight();

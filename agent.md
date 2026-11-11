@@ -48,6 +48,23 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.4 Settings V2（My Little Days · 本机个人空间）
+
+- 需求：用户同意 docs/SETTINGS_V2_PLAN.md 的四项修改（「退出登录」改为「回到欢迎页（数据保留）」且只在实验室登录页开启时显示；默认头像用名字首字的圆形纸片、已有头像保留；Keeper 细项收进「角色与装扮」；更新记录 / 许可证 / 示例内容 / 实验室改为二级页），并要求把顶部账号区域重新设计为「My Little Days · 本机个人空间」、减少大型卡片堆叠（Tactile Stationery × Cozy Editorial）。顺序在 Captain 无 AI 互动（V10.3）之后。
+- 改动文件：
+  - Public/app.js：新增 `settingsPageHTML()`（返回栏、个人资料、Little Keeper、外观与偏好、数据与隐私、关于与更多、页尾）、`settingsSheetHTML(kind)`（profile / keeper / privacy / licenses / samples / testlog / labs）、`openSettingsSheet()`；新动作 `settings-sheet`、`profile-avatar`、`profile-save`；`whats-new` 点开即记为已读；`tour-replay` 先关面板；删除不再使用的 `themePickerHTML` / `keeperSettingsHTML` / `newsSectionHTML` / `reminderSectionHTML` / `privacySectionHTML` / `labsCardHTML`。所有原有 `data-action`（theme、language、reminder-toggle、backup、restore-backup、lock-toggle、privacy-toggle、keeper-set / keeper-toggle / keeper-disable / keeper-onboard、samples-remove、export-events、labs-toggle、sign-out、tour-replay、settings-back）不变。
+  - Public/js/personal-ui.mjs：删除旧的 `settingsHTML()`（已无引用）。
+  - Public/styles.css：追加 V10.4 块（`.s2*`、`.s2-sheet`）；tokens / themes 重新生成。
+  - Resources/i18n.json：33 个 `s2.*` 键；`login.signOutConfirm` 改为「回到欢迎页？这不是退出账号——Little Days 没有云端账号…」。Public/js/whats-new.mjs：10.4。
+  - tests：新增 tests/v104-browser.cjs（8 组）与 `test:browser:v104`；signed-in.cjs 新增 `settingsSheet(page, kind)` / `closeSheet(page)`；迁移 v38（深色主题取 `.s2-avatar`）、v52（更新记录行 + 小红点、实验室和测试记录在面板里、无实验室时没有「回到欢迎页」）、v54（示例内容面板）、v63（隐私说明面板）、v65（许可证面板）、v70（提醒文案）、v71（「翻看以前的页面」在角色与装扮里）。
+  - 文档：docs/SETTINGS_V2_PLAN.md 第 8 节（用户决定、实施状态、与设计稿的差别）、DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.4 小节、README。
+- 决策与原因：二级页统一用 Bottom Sheet（内容短、关闭后保留滚动位置，且与 Captain 面板同一套样式）；数据不动——「账号」仍是 `little-days.account` 这一条本机记录，默认头像沿用旧的占位值 `🌷`（显示时换成首字），所以旧数据不需要迁移，用户选过的头像原样显示；「本机存储」显示真实的媒体用量而不是设计稿里的示意数字；AI 行保留但禁用，`aiConsent` 无法被打开；「功能介绍」直接重播，不另开面板。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153 项、Python 16 项通过；浏览器 E2E 全量 48 套全部通过（47 套旧 + v104）。发布前追加了一处纯样式修改（「角色与装扮」里名字输入框改为整行宽），之后把 Node、Python 和浏览器 48 套又完整跑了一遍，全部通过。v104 覆盖：个人空间文案（没有云端账号、没有「退出登录」字样）、默认首字头像、改名和换头像（刷新后保留、手帐不变）、Keeper 邀请 / 预览 / 陪伴方式 / 细项在面板、色板选择刷新后保留、语言切换不翻译用户名字和 Keeper 名字、数据与隐私各行（AI 行禁用且 `aiConsent` 为 false）、各二级面板、更新记录读后红点消失、最后一行不被底部导航遮挡且 ≥ 44px、「回到欢迎页」仅实验室开启时出现且不删除任何数据、375×667 与 430×932 中英文无横向溢出、无外部网络请求、无页面错误。
+- 实测：393 宽时设置页整页 4883px → 2208px。真实截图：新旧整页对比 + 8 个画面（首屏、页底、编辑资料、保存后、角色与装扮、隐私说明、English、375×667），已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 66，V10.4；上传 app.js、styles.css、themes.css、js/personal-ui.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 未做：未在 iPhone 真机 / Safari 验证；Swift 外壳只做了文件同步，未编译；头像只能从内置的一组里选，不能上传照片；没有真实账号、登录或同步（界面已如实说明）；Design 画布上的 Settings V2 一板仍是设计稿，没有换成实现后的截图。
+- 下一步：等用户在固定链接 / 真机上查看 V10.0–V10.4。AI 相关（本地 Qwen / Ollama 评测、正式接入）按用户决定暂缓，只保留 docs/keeper-eval/ 的测试准备；Calendar Phase 2、My Books Phase 3 等待用户安排。
+
 ### 2026-11-11 — V10.3 Captain 的无 AI 互动优化（Keeper Step 1）
 
 - 需求：用户批准 Keeper Step 1 立即开发——按状态和页面事件选择自然回复；去掉固定、奇怪的动作后缀和重复问候；本机简单聊天识别；首页点击 Captain 和「找 Captain」快捷入口；Captain 互动面板；两条不用 AI 的真实流程。只有 Captain，不开发其他 Keeper。Step 2（真实 Qwen 测试）和 Step 3（正式接入）暂缓：等用户买了 MacBook 后先研究本机 Ollama / Qwen；现在不开通阿里云 API、不定地域、不做收费调用，正式 App 不加 API Key、云服务或任何真实 AI 调用，但保留替换 Provider 的扩展能力；可先准备合成测试集和评测标准。

@@ -21,7 +21,6 @@ import {
   fieldDefinitionHTML,
   customFieldsHTML,
   mediaPanelHTML,
-  settingsHTML,
   fieldLabel,
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
@@ -1346,17 +1345,6 @@ function openKeeperOnboarding() {
   dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p>${intro}<h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
   if (!dialog.open) dialog.showModal();
 }
-function keeperSettingsHTML() {
-  const k = keeperNow();
-  if (!k.enabled) return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><p>${t("keeper.settings.offNote")}</p><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button></section>`;
-  const name = Keeper.keeperName(k, languageCode());
-  const g = keeperGrowth();
-  const config = Keeper.keeperConfig(features);
-  const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
-  const row = (key, on, hint, enabled = true) => `<button class="privacy-row" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
-  const interactive = k.mode === "interactive";
-  return `<section class="settings-card keeper-card"><h2>Little Keeper</h2><div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><p class="save-help">${t("keeper.settings.growthNote")}</p><label class="keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label><div class="keeper-seg"><span>${t("keeper.onboard.mode")}</span><div class="segmented">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}</div><small class="keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")}</small></div>${row("allowMemories", k.allowMemories, interactive ? t("keeper.settings.allowMemoriesHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}${row("aiConsent", false, t("keeper.settings.aiConsentHint"), false)}<button class="secondary keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="save-help">${t("keeper.settings.offKeeps")}</p></section>`;
-}
 document.addEventListener("change", (event) => {
   if (!event.target.matches?.("[data-keeper-rename]")) return;
   saveKeeper((k) => (k.name = event.target.value.trim().slice(0, 12)));
@@ -1520,11 +1508,6 @@ window.littleDaysReminderTurnedOff = () => {
   toast(t("reminder.turnedOff"));
   if (page === "settings") render();
 };
-function reminderSectionHTML() {
-  const { on, time } = readReminder();
-  const app = Boolean(reminderBridge());
-  return `<section class="settings-card reminder-card"><h2>${t("reminder.title")}</h2><p>${t("reminder.note")}</p><button class="privacy-row" data-action="reminder-toggle" role="switch" aria-checked="${on && app}" ${app ? "" : "disabled"}><span><b>${t("reminder.toggle")}</b><small>${esc(t("reminder.preview", { body: t("reminder.body") }))}</small></span><i class="switch ${on && app ? "on" : ""}" aria-hidden="true"></i></button>${on && app ? `<label class="reminder-time">${t("reminder.at")}<input type="time" data-reminder-time value="${esc(time)}"></label>` : ""}${app ? "" : `<p class="reminder-web">${t("reminder.appOnly")}</p>`}${reminderNote ? `<p class="reminder-warn" role="status">${esc(reminderNote)}</p>` : ""}</section>`;
-}
 document.addEventListener("change", (event) => {
   if (!event.target.matches?.("[data-reminder-time]")) return;
   const time = event.target.value;
@@ -1575,13 +1558,6 @@ function backupWhenHTML() {
   if (!last) return `<p class="backup-when">${t("backup.whenNever")}</p>`;
   const days = daysBetween(last, dateKey());
   return `<p class="backup-when">${t("backup.when", { date: friendlyDate(last), days })}</p>`;
-}
-function privacySectionHTML() {
-  const row = (name) => {
-    const on = privacyOn(name);
-    return `<button class="privacy-row" data-action="privacy-toggle" data-privacy="${name}" role="switch" aria-checked="${on}"><span><b>${t("privacy." + name)}</b><small>${t("privacy." + name + "Hint")}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
-  };
-  return `<section class="settings-card privacy-card"><h2>${t("privacy.title")}</h2><ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>${lockRowsHTML()}${row("hideToday")}${row("shareList")}</section>`;
 }
 
 /* ---------- App lock (V7.4): passcode, Face ID in the iPhone app ---------- */
@@ -3796,6 +3772,10 @@ function render() {
   $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "story"));
   // The Studio shell sizes the paper from the room it really has.
   $("#phone").classList.toggle("sv", signedIn && page === "studio" && !quickResultActive());
+  if (settingsSheet && page === "settings" && $("#choose-dialog").open && $("#choose-dialog .s2-sheet")) {
+    const field = document.activeElement?.matches?.("[data-profile-name], [data-keeper-rename]") ? document.activeElement : null;
+    if (!field) $("#choose-dialog .s2-sheet").innerHTML = `<div class="choose-grabber" aria-hidden="true"></div>${settingsSheetHTML(settingsSheet)}`;
+  }
   $("#phone").style.setProperty("--studio-h", $("#app-scroll").clientHeight + "px");
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
@@ -3816,7 +3796,7 @@ function render() {
       habitJourneyHTML(journeyHabit, journeyPage, ctx(), journeyHelpers()),
     community: () =>
       communityHTML(social(), communityView, state(), ctx(), { icon }),
-    settings: () => settingsHTML(ctx(), { back: settingsReturn, account, themes: themePickerHTML(), keeper: keeperSettingsHTML(), news: newsSectionHTML(), reminder: reminderSectionHTML(), privacy: privacySectionHTML(), backupWhen: backupWhenHTML(), labs: labsCardHTML() }),
+    settings: settingsPageHTML,
     inbox: () => inboxHTML(social(), inboxFilter, ctx(), { icon }),
     search: searchPageHTML,
   }[page]();
@@ -4088,16 +4068,6 @@ async function deleteReadPage(date, momentId) {
   render();
   toast(t(momentId ? "moment.deleted" : "write.dayCleared"));
 }
-// ---------- What's new (update notes inside the app) ----------
-// Settings: the update history (the newest notes shown, the rest a tap away).
-// Opening Settings counts as seen, so the dot on the gear goes away.
-function newsSectionHTML() {
-  const fresh = hasUnseen();
-  markSeen();
-  const latest = UPDATES[0];
-  const note = noteFor(latest, languageCode());
-  return `<section class="settings-card news-card"><h2>${t("news.title")}${fresh ? ` <span class="news-new">${t("news.new")}</span>` : ""}</h2><p>${t("news.current", { version: LATEST })}</p><details class="news-latest"${fresh ? " open" : ""}><summary><span class="news-version">V${esc(latest.version)}</span><time>${esc(latest.date)}</time><b>${esc(note.title)}</b></summary><ul>${note.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></details><button class="secondary" data-action="whats-new">${t("news.all")}</button></section>`;
-}
 function openWhatsNew() {
   const en = languageCode() === "en";
   const dialog = $("#choose-dialog");
@@ -4108,21 +4078,95 @@ function openWhatsNew() {
   if (!dialog.open) dialog.showModal();
   markSeen();
 }
-function labsCardHTML() {
-  const on = labsOn();
-  const samples = state().entries.filter((e) => e.isDemo).length;
-  const samplesCard = samples ? `<section class="settings-card samples-card"><h2>${t("samples.title")}</h2><p>${t("samples.note", { count: samples })}</p><button class="secondary" data-action="samples-remove">${t("samples.remove")}</button></section>` : "";
-  return `${samplesCard}<section class="settings-card labs-card"><h2>${t("labs.title")}</h2><p>${t("labs.note")}</p><button class="${on ? "secondary" : "primary"}" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></section>`;
-}
-function themePickerHTML() {
+// ---------- Settings V2 (V10.4): the last pages of the journal ----------
+// A personal space, the Keeper, look & preferences, data & privacy, then
+// about & more. Groups are titles, air and hairlines — no stack of cards.
+// Every control keeps its old data-action; details open in a bottom sheet.
+let settingsSheet = ""; // which detail sheet is open (re-drawn after a change)
+function settingsPageHTML() {
+  const en = languageCode() === "en";
+  const title = (key, aside = "") => `<div class="s2-h"><h2 class="${en ? "en" : "zh"}">${t(key)}</h2>${aside}</div>`;
+  const toggle = (attrs, on, name, hint, disabled = false) => `<button class="privacy-row s2-toggle" ${attrs} role="switch" aria-checked="${Boolean(on)}" ${disabled ? "disabled" : ""}><span><b>${name}</b>${hint ? `<small>${hint}</small>` : ""}</span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
+  const more = (attrs, name, value = "", dot = false) => `<button class="s2-more-row" ${attrs}><span><b>${name}</b>${dot ? '<i class="s2-dot" aria-hidden="true"></i>' : ""}</span><span class="v">${value}<i class="s2-chev" aria-hidden="true">›</i></span></button>`;
+  // -- My Little Days: this device's own space (there is no cloud account).
+  const name = String(account?.name || "").trim();
+  const custom = Boolean(account?.avatar && account.avatar !== "🌷");
+  const initial = (name || "L").slice(0, 1).toUpperCase();
+  const me = `<section class="s2-me account-card"><span class="s2-avatar ${custom ? "emoji" : ""}" aria-hidden="true">${esc(custom ? account.avatar : initial)}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.noName"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t("s2.editProfile")} ›</button></div></section>`;
+  // -- Little Keeper: a preview and the companion mode; the rest is in its sheet.
+  const k = keeperNow();
+  let keeper;
+  if (!k.enabled) keeper = `<section class="s2-sec keeper-card">${title("s2.keeper")}<div class="s2-row"><span><b>${t("keeper.invite.title")}</b><small>${t("keeper.settings.offNote")}</small></span><button class="s2-link" data-action="keeper-onboard">${t("keeper.invite.yes")} ›</button></div></section>`;
+  else {
+    const g = keeperGrowth();
+    keeper = `<section class="s2-sec keeper-card">${title("s2.keeper", `<small>${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small>`)}<div class="s2-keeper">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("s2.keeperLine", { mode: t("keeper.mode." + k.mode), stage: t("keeper.stage." + g.id) }))}</small></span><button class="s2-link" data-action="settings-sheet" data-sheet="keeper">${t("s2.keeperManage")} ›</button></div><div class="s2-seg" role="group" aria-label="${t("keeper.onboard.mode")}">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}<button data-action="keeper-disable" aria-pressed="false">${t("s2.keeperOff")}</button></div><p class="s2-hint keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")} ${t("s2.keeperWhere")}</p></section>`;
+  }
+  // -- Look & preferences.
   const current = loadTheme();
-  return `<section class="settings-card theme-card"><h2>${t("theme.title")}</h2><p>${t("theme.note")}</p><div class="theme-grid">${(tokens.themes || [])
-    .map(
-      (theme) =>
-        `<button data-action="theme" data-theme-id="${esc(theme.id)}" class="theme-option ${theme.id === current ? "selected" : ""}" aria-pressed="${theme.id === current}"><span class="theme-swatch ${theme.mode === "dark" ? "dark" : ""}" aria-hidden="true">${(theme.swatch || []).map((color) => `<i style="background:${esc(color)}"></i>`).join("")}</span><b>${t("theme." + theme.id)}</b><small>${t("theme." + theme.id + "Hint")}</small></button>`,
-    )
-    .join("")}</div></section>`;
+  const palette = `<div class="theme-grid s2-pal" role="group" aria-label="${t("theme.title")}">${(tokens.themes || []).map((theme) => `<button data-action="theme" data-theme-id="${esc(theme.id)}" class="theme-option ${theme.id === current ? "selected" : ""}" aria-pressed="${theme.id === current}"><span class="theme-swatch ${theme.mode === "dark" ? "dark" : ""}" aria-hidden="true">${(theme.swatch || []).map((color) => `<i style="background:${esc(color)}"></i>`).join("")}</span><b>${t("theme." + theme.id)}</b></button>`).join("")}</div>`;
+  const language = languageCode() === "en" ? "en" : "zh-CN";
+  const reminder = readReminder();
+  const app = Boolean(reminderBridge());
+  const look = `<section class="s2-sec theme-card">${title("s2.look")}<div class="s2-row stack"><span><b>${t("theme.title")}</b><small>${t("theme.note")}</small></span>${palette}</div><div class="s2-row"><span><b>${t("language")}</b><small>${t("settings.contentNote")}</small></span><div class="s2-seg s2-lang"><button data-action="language" data-language="zh-CN" class="${language === "zh-CN" ? "selected" : ""}" aria-pressed="${language === "zh-CN"}">中文</button><button data-action="language" data-language="en" class="${language === "en" ? "selected" : ""}" aria-pressed="${language === "en"}">English</button></div></div><div class="reminder-card">${toggle('data-action="reminder-toggle"', reminder.on && app, t("reminder.toggle"), app ? t("reminder.note") : t("reminder.appOnly"), !app)}${reminder.on && app ? `<label class="reminder-time s2-row">${t("reminder.at")}<input type="time" data-reminder-time value="${esc(reminder.time)}"></label>` : ""}${reminderNote ? `<p class="reminder-warn" role="status">${esc(reminderNote)}</p>` : ""}</div></section>`;
+  // -- Data & privacy.
+  const privacyRow = (id) => toggle(`data-action="privacy-toggle" data-privacy="${id}"`, privacyOn(id), t("privacy." + id), t("privacy." + id + "Hint"));
+  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack"><span><b>${t("s2.storage")}</b><small>${t("s2.storageNote")}</small></span><p id="media-usage" class="s2-usage" role="status"></p></div><div class="s2-row stack"><span><b>${t("s2.backup")}</b><small>${t("settings.backupNote")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div></div>${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiNote"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
+  // -- About & more.
+  const samples = state().entries.filter((e) => e.isDemo).length;
+  const about = `<section class="s2-sec s2-about">${title("s2.about")}${more('data-action="whats-new"', t("news.title"), `V${esc(LATEST)}`, hasUnseen())}${more('data-action="tour-replay"', t("s2.tour"), t("s2.tourAgain"))}${more('data-action="settings-sheet" data-sheet="licenses"', t("settings.licenses"))}${samples ? more('data-action="settings-sheet" data-sheet="samples"', t("samples.title"), t("s2.sampleDays", { count: samples })) : ""}${more('data-action="settings-sheet" data-sheet="testlog"', t("testlog.title"))}${more('data-action="settings-sheet" data-sheet="labs"', t("labs.title"), t(labsOn() ? "s2.on" : "s2.off"))}${labsOn() && account ? more('data-action="sign-out"', t("s2.welcome"), t("s2.dataKept")) : ""}</section>`;
+  return `<div class="s2"><div class="settings-nav s2-nav"><button class="back-button" data-action="settings-back">‹ ${t("settings.back")}</button><span>${t("s2.kicker")}</span><i aria-hidden="true"></i></div><h1 class="page-title visually-hidden">${t("settings.title")}</h1>${me}${keeper}${look}${data}${about}<p class="s2-foot">Little Days<small>V${esc(LATEST)} · ${t("settings.subtitle")}</small></p></div>`;
 }
+// The detail sheets: profile, Keeper details, privacy notes, licences, samples, test log, labs.
+function settingsSheetHTML(kind) {
+  const head = (key) => `<div class="kp-title"><span></span><b>${t(key)}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
+  if (kind === "profile") {
+    const picked = profileDraft?.avatar ?? (account?.avatar && account.avatar !== "🌷" ? account.avatar : "");
+    const name = profileDraft?.name ?? account?.name ?? "";
+    return `${head("s2.editProfile")}<label class="s2-field">${t("s2.nameLabel")}<input data-profile-name maxlength="30" value="${esc(name)}" placeholder="${esc(t("s2.namePlaceholder"))}"></label><p class="s2-field-label">${t("s2.avatarLabel")}</p><div class="s2-avatars" role="group" aria-label="${t("s2.avatarLabel")}"><button data-action="profile-avatar" data-avatar="" class="letter" aria-pressed="${!picked}">${esc((name || "L").trim().slice(0, 1).toUpperCase() || "L")}</button>${Account.AVATARS.filter((a) => a !== "🌷").map((a) => `<button data-action="profile-avatar" data-avatar="${esc(a)}" aria-pressed="${picked === a}">${esc(a)}</button>`).join("")}</div><p class="s2-hint">${t("s2.profileNote")}</p><button class="kp-main" data-action="profile-save">${t("s2.save")}</button>`;
+  }
+  if (kind === "keeper") {
+    const k = keeperNow();
+    if (!k.enabled) return `${head("s2.keeperManage")}<p class="s2-hint">${t("keeper.settings.offNote")}</p>`;
+    const g = keeperGrowth();
+    const config = Keeper.keeperConfig(features);
+    const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
+    const row = (key, on, hint, enabled = true) => `<button class="privacy-row s2-toggle" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
+    const quiet = k.mode === "quiet", interactive = k.mode === "interactive";
+    return `${head("s2.keeperManage")}<div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><label class="s2-field keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label>${row("allowMemories", k.allowMemories, quiet ? t("s2.notInQuiet") : t("keeper.settings.allowMemoriesHint"), !quiet)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}<p class="s2-hint">${t("keeper.settings.growthNote")}</p><button class="kp-quiet keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="s2-hint">${t("keeper.settings.offKeeps")}</p>`;
+  }
+  if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>`;
+  if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></div>`;
+  if (kind === "samples") {
+    const samples = state().entries.filter((e) => e.isDemo).length;
+    return `${head("samples.title")}<div class="samples-card"><p class="s2-hint">${t("samples.note", { count: samples })}</p>${samples ? `<button class="kp-main" data-action="samples-remove">${t("samples.remove")}</button>` : ""}</div>`;
+  }
+  if (kind === "testlog") return `${head("testlog.title")}<div class="test-log"><p class="s2-hint">${t("testlog.note")}</p><button class="kp-main" data-action="export-events">${t("testlog.export")}</button></div>`;
+  if (kind === "labs") {
+    const on = labsOn();
+    return `${head("labs.title")}<div class="labs-card"><p class="s2-hint">${t("labs.note")}</p><button class="kp-main" data-action="labs-toggle" aria-pressed="${on}">${t(on ? "labs.turnOff" : "labs.turnOn")}</button></div>`;
+  }
+  return "";
+}
+let profileDraft = null; // name / avatar being edited in the profile sheet
+function openSettingsSheet(kind) {
+  const body = settingsSheetHTML(kind);
+  if (!body) return;
+  settingsSheet = kind;
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp s2-sheet" data-sheet="${esc(kind)}"><div class="choose-grabber" aria-hidden="true"></div>${body}</div>`;
+  if (!dialog.open) dialog.showModal();
+}
+// The sheet closes (button, backdrop or Esc): forget which one it was.
+document.addEventListener(
+  "close",
+  (event) => {
+    if (event.target?.id === "choose-dialog") {
+      settingsSheet = "";
+      profileDraft = null;
+    }
+  },
+  true,
+);
 
 /* ---------- Sign in (this device) and the welcome tour ---------- */
 
@@ -4195,7 +4239,27 @@ function accountAction(target) {
       account = Account.finishTour(localStorage);
       renderTour();
       return true;
+    case "settings-sheet":
+      profileDraft = null;
+      openSettingsSheet(target.dataset.sheet);
+      return true;
+    case "profile-avatar":
+      profileDraft = { name: $("[data-profile-name]")?.value ?? account?.name ?? "", avatar: target.dataset.avatar || "" };
+      openSettingsSheet("profile");
+      return true;
+    case "profile-save": {
+      // Only this device's record changes (name, avatar); journals are untouched.
+      const name = ($("[data-profile-name]")?.value ?? "").trim().slice(0, 30);
+      const avatar = profileDraft ? profileDraft.avatar || "🌷" : account?.avatar || "🌷";
+      account = Account.signIn(localStorage, { name, avatar });
+      profileDraft = null;
+      $("#choose-dialog").close();
+      render();
+      toast(t("s2.profileSaved"));
+      return true;
+    }
     case "tour-replay":
+      if ($("#choose-dialog").open) $("#choose-dialog").close();
       account = Account.replayTour(localStorage);
       tourStep = 0;
       renderTour();
@@ -4883,6 +4947,10 @@ async function action(target) {
     return;
   }
   if (actionName === "whats-new") {
+    // Opening the notes is what marks them read (the dots on the row and on Home's gear go).
+    const fresh = hasUnseen();
+    markSeen();
+    if (fresh && page === "settings") render();
     openWhatsNew();
   }
   if (actionName === "share-story") {
