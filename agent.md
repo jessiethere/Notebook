@@ -118,6 +118,43 @@
   - 迁移的旧测试：v104、v110（头像）；v36（欢迎页）；v38（暗色主题读 `.pmark`）；v57、v59（日详情点了才播放）。全量浏览器回归 58 套全部通过。
 - 未完成：P0 要在用户 Mac 上构建验证（合并后跑 `xcodebuild` 两个 scheme，并在模拟器里截图）；6 个小图案仍在等设计师；v3 正式评测。
 
+### 2026-11-11 — 模拟器「空白页 / 启动慢」查清：是模拟器刚开机，不是 App；Debug 构建加 JS 报错与启动计时日志
+
+- 需求：用户在 Xcode 里遇到 `LittleDaysCore-product requires minimum platform version 17.0 … but this target supports 15.0`，之后要求调试 iPhone 17 模拟器里的空白页，并查清启动为什么慢。
+- 报错原因（另一个会话在 81279ab 里已经修好：根目录 Package.swift 也声明了 iOS 17，并新增 `LittleDays.xcworkspace`；这里记录的是修复前我独立复现的结果）：
+  - 在 Xcode 里打开的是仓库根目录的 `Package.swift`（Vapor 预览服务器，scheme「Notebook」，当时只声明 macOS）。选 iPhone 时 Xcode 27 默认 iOS 15.0，而它依赖的 `LittleDaysCore` 要求 iOS 17。
+  - 用 `xcodebuild -scheme Notebook -destination 'generic/platform=iOS Simulator'` 复现了一样的报错。
+  - `Native/LittleDays.xcodeproj` 不需要任何修改，Debug 和 Release 都能构建成功。
+  - rebase 到 81279ab 之后，本条的文档措辞已改成「打开 `LittleDays.xcworkspace`」，并说明根目录的报错已修复。
+  - 打开根目录让 Xcode 改写了根目录的 `Package.resolved`（swift-async-algorithms 1.1.7→1.1.5，新增 swift-configuration）。这个修改没提交，也没有还原，等用户决定。
+- 空白页：不是错误。App 能到首页，整个过程没有任何 JS 报错。它只是在模拟器刚开机后启动得特别慢。
+- 启动计时（iPhone 17，iOS 27.2，Debug；时间从 `simctl launch` 算起，括号里从进程启动算起）：
+  - 热启动、重新安装后启动：首页 1.1–1.9 秒。
+  - 模拟器刚开机：
+    - `simctl launch` 被拒（`Busy … failed preflight checks`），或者要等 15–18 秒才被接受。
+    - document start 在 +5.8 到 +9.5 秒（WebKit 进程启动）。
+    - 有两次在 +26 到 +30 秒才出现 home rendered，有一次在 +9.9 秒。
+- 定位方法：
+  - 在 `Native/Sources/LittleDaysUI/WebApp/app.js`（Public 的副本）的 `start()` 里临时加计时点，测完已按原样还原，`Public/` 没有改过。
+  - 结果：开机后读手帐、两次 IndexedDB open（7–18 ms）、hydrate、迁移、首次 `render()` 在 +6.0 秒就全部完成。但我每 50 ms 跑一次的检查计时器到 +26.2 秒才执行。说明这段时间 WebKit 把页面暂停了（系统还没把 App 放到前台）。
+  - 所以慢的原因是模拟器开机时的系统状态，不是 App 代码。V10.14 记录的「冷启动约 15–20 秒，原因未查」也是这个原因。
+- 改动（只在 Debug 构建生效）：
+  - `LittleDaysWebShellView.swift` 新增 `LittleDaysDebugConsole`：把页面报错（error / unhandledrejection / console.error / console.warn / 资源加载失败）和启动节点（web view created、document start、DOMContentLoaded、home rendered）以 `[LittleDays JS] +<进程启动后毫秒>` 写进 NSLog。
+  - `LittleDaysWebResources.swift` 新增 `launchedAt`（用 sysctl 读进程启动时间）。
+  - 已确认 Release 二进制里没有 `littleDaysDebug`。
+  - 排查时用过的「逐个文件计时」和「IndexedDB 计时」已删掉，没有保留。
+- 文档：`docs/MAC_LOCAL_DEV.md` 第 7 节补充了三点：打开哪个工程、刚开机启动慢的原因、怎么看 Debug JS 日志。
+- 测试：
+  - `xcodebuild` LittleDays Debug 和 Release 都成功；根目录 Notebook 对 iOS 构建复现了报错。
+  - 模拟器热启动计时 1.8–1.9 秒到首页。
+  - `npm test` 186/186；Python unittest 全部通过。
+  - 没有在真机上测过。
+- 协作说明：另一个会话（Mac 本地开发与 Qwen 集成，云端）同时在这个文件夹里提交了 V10.14 和 V10.15。开始改 Swift 前已经发消息告诉它，请它不要改这两个 Swift 文件，但它没有确认收到。它的 `prompt-v2` 结果文件（未跟踪）没有动。
+- 未完成 / 下一步：
+  - `Package.resolved` 由用户决定还原还是保留。
+  - 真机上的冷启动时间还没测。
+  - 如果真机冷启动也慢，再看 WebKit 进程启动和首屏资源（styles.css 419 KB、app.js 490 KB、i18n.json 208 KB）。
+
 ### 2026-11-11 — V10.15（仅开发）Captain 提示词第 3 版和语言拦截；模拟器里确认引导圆环已对准
 
 - 在用户 Mac 上实际运行（Remote Control，提交 d9fd94c 已在用户确认后 fast-forward 合并到 Mac 副本）：

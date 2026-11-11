@@ -111,6 +111,13 @@ open Native/LittleDays.xcodeproj                # 也可以在 Xcode 里选模�
 - 在模拟器里可以测试 Home、日历、书架、Journal Studio、阅读器和 Captain：这些都是 Web 界面，在 WKWebView 里运行。修改 `Public/` 后运行 `python3 tools/sync_native_web.py` 再重新运行；修改 Swift 外壳代码后直接 ⌘R。
 - 「SwiftUI 预览」（Xcode Canvas）只适用于原生 SwiftUI 视图。现在 App 的主要界面是 WebView，所以界面改动请在模拟器里看。
 - **模拟器不等于真机**：触摸手感、键盘、性能和相机都和真机不同。
+- 如果不小心打开过仓库根文件夹，Xcode 会改写根目录的 `Package.resolved`（2026-11-11 实际遇到：swift-async-algorithms 被降级，并新增了 swift-configuration）。不是有意改的就用 `git checkout Package.resolved` 还原。
+- **模拟器刚开机时启动 App 会很慢，这不是 App 的问题**（2026-11-11 在 iPhone 17 上实测）：
+  - 平常启动（热启动、重新安装后启动）约 1–2 秒到首页。
+  - 模拟器刚开机就启动时：先等系统接受启动请求（会报 `Busy … failed preflight checks`，或者 `simctl launch` 等 15–18 秒）；接着 WebKit 进程启动要 5–7 秒；然后页面在系统把 App 放到前台之前一直暂停，计时器和绘制都停着，大约 20 秒。这段时间屏幕是空白或「正在打开你的文具店…」，总共 26–45 秒。
+  - 用 Debug 日志确认过：App 自己的启动代码（读手帐、打开媒体库 IndexedDB、首次绘制首页）在开机后也只要几十到一百多毫秒。
+  - 所以看到空白页时，先等一会儿，或者开机后等 30 秒再按 ⌘R。
+- **Debug 构建的 JS 日志**：页面报错（未捕获异常、Promise 拒绝、`console.error/warn`、脚本或样式加载失败）和启动节点（web view created / document start / DOMContentLoaded / home rendered，单位是启动后的毫秒）会以 `[LittleDays JS]` 开头出现在 Xcode 控制台。在命令行看：`xcrun simctl spawn booted log show --last 5m --predicate 'eventMessage CONTAINS "[LittleDays JS]"'`。Release 构建里没有这段代码。
 
 ### 安装到你自己的 iPhone（以后）
 

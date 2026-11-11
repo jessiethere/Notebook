@@ -192,6 +192,12 @@ npm run test:browser:v65
 - 书本页里，同一天有好几页时，下面会显示这一天的每一页，点哪页就在阅读器里打开哪页。
 - Captain 的「摸摸头、挠肚皮、玩毛线球、换帽子、换衣服」都要等正式美术，缺少的素材记录在 docs/ASSETS.md。
 
+### 2026-11-11 — 模拟器里的「空白页」查清了（仅开发用，在线链接里看不到变化）
+
+- 在 Xcode 里请打开仓库根目录的 `LittleDays.xcworkspace`（或 `Native/LittleDays.xcodeproj`）。之前打开仓库根目录会报「requires minimum platform version 17.0 … supports 15.0」，那是本机预览服务器的工程；这个报错已经在上面的 V10.16 修好了。
+- 空白页不是坏了：模拟器刚开机时 App 要等系统准备好，可能需要半分钟以上；平常打开约 1–2 秒到首页。
+- 开发用的 Debug 构建现在会把网页报错和启动用时写进 Xcode 控制台，方便排查。正式（Release）版本里没有这段代码。
+
 ### 2026-11-11 — 开发用 Captain 本地对话第 3 版（V10.15，在线链接里看不到变化）
 
 - 在你的 Mac 上用本机 Qwen 跑了三版对比：第 3 版不再「喵」，也不反复提帽子、尾巴和阳光，夸它时知道是在夸自己。对比和评分见 [docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md](docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md)。

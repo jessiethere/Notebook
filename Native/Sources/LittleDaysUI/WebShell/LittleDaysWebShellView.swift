@@ -31,6 +31,53 @@ public struct LittleDaysWebShellView: View {
     }
 }
 
+#if DEBUG
+/// Debug builds only: page errors (uncaught exceptions, rejected promises,
+/// console.error/warn, failed script/style loads) and four startup milestones
+/// (web view created, document start, DOMContentLoaded, home rendered) go to
+/// the Xcode console and the system log as "[LittleDays JS] +<ms since launch> …",
+/// so a blank or slow start can be diagnosed without Safari's Web Inspector.
+/// Read them from the Simulator with:
+///   xcrun simctl spawn booted log show --last 5m --predicate 'eventMessage CONTAINS "[LittleDays JS]"'
+/// Release builds don't include it.
+final class LittleDaysDebugConsole: NSObject, WKScriptMessageHandler {
+    static let name = "littleDaysDebug"
+
+    static func install(in controller: WKUserContentController) {
+        let source = """
+        (() => {
+          const post = (kind, parts) => {
+            try {
+              const text = parts.map((p) => p instanceof Error ? (p.stack || p.message) : typeof p === "string" ? p : JSON.stringify(p)).join(" ");
+              window.webkit.messageHandlers.littleDaysDebug.postMessage(kind + ": " + text);
+            } catch (_) {}
+          };
+          addEventListener("error", (e) => {
+            if (e.target && e.target !== window && (e.target.src || e.target.href)) post("load failed", [e.target.src || e.target.href]);
+            else post("error", [e.message + " @ " + e.filename + ":" + e.lineno + ":" + e.colno, e.error || ""]);
+          }, true);
+          addEventListener("unhandledrejection", (e) => post("unhandled rejection", [e.reason]));
+          post("milestone", ["document start"]);
+          addEventListener("DOMContentLoaded", () => post("milestone", ["DOMContentLoaded"]));
+          const waitHome = setInterval(() => {
+            if (document.querySelector("#navigation [data-page]")) { clearInterval(waitHome); post("milestone", ["home rendered"]); }
+          }, 50);
+          for (const level of ["error", "warn"]) {
+            const original = console[level].bind(console);
+            console[level] = (...args) => { post(level, args); original(...args); };
+          }
+        })();
+        """
+        controller.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        controller.add(LittleDaysDebugConsole(), name: name)
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        NSLog("[LittleDays JS] +%.0f ms %@", (Date().timeIntervalSince1970 - LittleDaysWebResources.launchedAt) * 1000, String(describing: message.body))
+    }
+}
+#endif
+
 /// Whether the Web app's lock is on (told by the page through the bridge;
 /// only ever changed on the main thread).
 final class LittleDaysPrivacy: ObservableObject {
@@ -110,6 +157,8 @@ struct LittleDaysWebView: UIViewRepresentable {
         webView.allowsBackForwardNavigationGestures = false
         #if DEBUG
         if #available(iOS 16.4, *) { webView.isInspectable = true }
+        LittleDaysDebugConsole.install(in: configuration.userContentController)
+        NSLog("[LittleDays JS] +%.0f ms native: web view created, loading %@", (Date().timeIntervalSince1970 - LittleDaysWebResources.launchedAt) * 1000, LittleDaysWebResources.launchURL.absoluteString)
         #endif
         webView.load(URLRequest(url: LittleDaysWebResources.launchURL))
         return webView
