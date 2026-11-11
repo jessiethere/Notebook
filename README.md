@@ -179,6 +179,13 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — 在你的 Mac 上跑通了环境和本地 Qwen（仅开发用，在线链接里看不到变化）
+
+- 环境检查全部 ✅：M5 / 24 GB、Xcode 27.2、iOS 27.2 模拟器、Ollama 和 `qwen3.5:4b`。经你同意后装了 Homebrew 和 Node.js，并把 Xcode 设回默认开发工具（Homebrew 安装时会改掉它）。
+- 本地 Qwen 能用：Captain 每句回复约 0.5–2 秒，模型大约占 5–9 GB 内存。
+- Captain 的 12 句测试每句跑了 3 次，人工评分 86%。最明显的问题是太爱说「喵」，偶尔说出没根据的话（如「今天的小日子还空着」）。结果见 [docs/captain-ai/results/2026-11-11-qwen3.5_4b.md](docs/captain-ai/results/2026-11-11-qwen3.5_4b.md)。
+- **还没有做的**：在浏览器里打开本地 AI 聊天、第一次用 Xcode 构建 iPhone App、调整 Captain 的提示词。
+
 ### 2026-11-11 — 预览服务常驻
 
 - 云端会话里的预览服务（8080，名称「Little Days」）启动后会一直开着，可以在 App 会话的 environment / 预览里直接打开。容器重启后由 Claude 重新启动。

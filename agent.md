@@ -48,6 +48,45 @@
 
 ## 更新日志
 
+### 2026-11-11 — Mac 上实际运行：环境检查、安装 Homebrew / Node、qwen3.5:4b 实测与 Captain 评测
+
+- 需求：用户在 Mac 上的 Claude Code 会话里要求按 docs/MAC_LOCAL_DEV.md 执行：第一步运行 doctor.sh，缺什么只装什么，装之前先问。
+- 环境（`bash tools/mac/doctor.sh`）：Apple M5 / 24 GB / macOS 26.6；Xcode 27.2；iOS 27.2 模拟器（iPhone 18 Pro 等）；Ollama 0.40.16 在 127.0.0.1:11434，只监听本机，`qwen3.5:4b` 已下载（4.0 GB）。缺 brew、node、npm。
+- 安装（用户逐项同意）：
+  - Homebrew 7.0.13：官方脚本，用户自己在终端里输入密码。
+  - Node 26.13.0 / npm 11.20.0：`brew install node`。
+  - Homebrew 安装时把 `xcode-select` 切到了 Command Line Tools，已用 `sudo xcode-select -s /Applications/Xcode.app` 切回（用户输入密码）。
+  - 想在 `~/.zprofile` 加 `brew shellenv`，被会话权限拦下，没有加；`/etc/paths.d/homebrew` 已能让新终端找到 brew。
+  - 第二次运行 doctor：全部 ✅。
+- 整理：仓库里多出一个完整的嵌套副本 `Notebook/Notebook/`（只比本仓库多一个 PR #4 的合并提交，已在 GitHub 上，没有未提交修改和 stash）。按用户选择，通过 Finder 移到了废纸篓（可以恢复）。
+- Qwen 实测（第 3 节）：
+  - 中英文自我介绍都正常。`ollama run` 默认开启思考，中文那句 36 秒、英文那句 3 分 35 秒；API 加 `think:false` 时「你好」0.5 秒。
+  - 内存：`ollama ps` 第一次加载后 4.8 GB；评测后 Ollama 报告 6.0–9.1 GB；MLX runner，100% GPU。
+- Captain 评测（第 4 节）：
+  - 跑了 `bash tools/mac/dev.sh eval`（每句 1 次）和 `node tools/captain-eval.mjs --runs 3`。
+  - 结果文件 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md` / `.json` 保存的是 3 次跑的结果，并附上人工 7 项评分（评分人 Claude，待用户复核）。
+  - 得分：145/168（86%），App 里真正走模型的 10 句 125/140。
+  - 速度：每句 0.4–1.9 秒，约 32 tok/s，中位数 570 ms。
+  - 主要问题：
+    1. 「喵」成了口头禅：3 次跑的 27 条中文回复里有 16 条带「喵」。
+    2. 偶尔编造手帐状态（「今天的小日子还空着」）。
+    3. 夸奖和难过时轻微推销「记录」。
+    4. 被问功能时编按钮名（App 里这两句走规则）。
+    5. 第一次跑的注入指令那句用英文回答并跳出角色；3 次跑里都是简短中文。
+- 文件：`docs/captain-ai/results/2026-11-11-qwen3.5_4b.{md,json}`（新增）；`docs/MAC_LOCAL_DEV.md`（状态表改成实际结果，加上 Homebrew / xcode-select 的坑和 think 的耗时对比）；agent.md；README.md。没有改代码，没有改 `Public/`，所以没有发布在线链接。
+- 测试：
+  - 第一次运行 `npm test`：157/160 通过。失败的 3 个（media、v31、v75）都是因为 Mac 上还没装 npm 开发依赖（没有 `node_modules`，缺 `fake-indexeddb`），不是代码问题。
+  - 用户同意后运行了 `npm ci`：装了 4 个包，0 个漏洞。npm 没有运行 `fsevents` 的安装脚本（可选的文件监听依赖，测试不需要）。
+  - 再次运行 `npm test`：**184/184 通过**。
+  - Python `unittest`：16/16 通过。
+  - 浏览器测试需要 playwright 的浏览器（`npx playwright install`，要另外下载），本轮没有运行。
+- 未完成：
+  - 第 5 节：在浏览器里用 `dev.sh web-ai` 实际打开本地 AI 聊天。
+  - 第 7 节：Xcode 第一次构建和模拟器运行。
+  - 根据共性问题调 Captain 提示词，然后重跑评测。
+  - 评估 9B。
+- 下一步：先用 `bash tools/mac/dev.sh sim` 第一次构建（可能要修工程），或者先调提示词，减少「喵」和编造，再跑 `--runs 3` 对比。
+
 ### 2026-11-11 — 约定：预览服务在会话里一直开着
 
 - 用户希望在 App 的 environment 下面直接看到预览服务。本会话已用 `python3 tools/preview.py --host 0.0.0.0 --port 8080` 在后台启动，并以「Little Days」为名报告 8080 端口。

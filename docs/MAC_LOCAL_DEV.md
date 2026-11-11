@@ -1,6 +1,6 @@
 # Little Days · Mac 本地开发、本地 Qwen 与 iPhone 模拟器（2026-11-11）
 
-> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。这个会话**连不到你的 MacBook**，下面所有要在 Mac 上执行的步骤（Ollama、Qwen、Xcode、模拟器）**都还没有运行过**。表格里写「未在 Mac 上验证」的地方，等你在 Mac 上跑完后再改成实际结果。
+> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 5 节（App 里的本地 AI）和第 7 节（Xcode / 模拟器）还没在 Mac 上运行。
 
 ## 0. 怎样让 Claude 直接在你的 Mac 上操作
 
@@ -17,12 +17,12 @@
 |---|---|---|
 | 仓库里的原生工程 | **已存在，从未编译** | `Native/LittleDays.xcodeproj`：iOS 17，App target「LittleDays」，Bundle ID `com.jessiethere.littledays`，自动签名，`DEVELOPMENT_TEAM` 为空。依赖本地 Swift Package `Native/Package.swift`（LittleDaysUI）和 `Packages/LittleDaysCore`。至今只做过 Linux 上的语法和资源检查，没有用 Xcode 构建过。 |
 | App 的界面 | Swift 外壳 + 同一套 Web 界面 | `LittleDaysApp` → `LittleDaysWebShellView`（WKWebView），加载打包进 App 的 `Public/` 副本（`tools/sync_native_web.py` 同步到 `Native/Sources/LittleDaysUI/WebApp/`）。Home、日历、书架、Journal Studio、阅读器、Captain 都是这套 Web 界面；原生 Swift 的部分是外壳、每日提醒（`LittleDaysReminders`）、资源加载。早期的 SwiftUI 原型视图（`HomeView`、`CalendarView`、`BooksView`、`StudioView` 等）还在，但 App 不用它们，功能落后于 Web。 |
-| 环境检查脚本 | 已写好，未在 Mac 上运行 | `bash tools/mac/doctor.sh`：只读，不安装任何东西。 |
+| 环境检查脚本 | **2026-11-11 已在 Mac 上运行，全部 ✅** | `bash tools/mac/doctor.sh`：只读。机器：Apple M5 / 24 GB / macOS 26.6；Xcode 27.2、iOS 27.2 模拟器；Ollama 0.40.16 只监听 127.0.0.1。当时缺 Homebrew 和 Node，经用户同意后装了 Homebrew 7.0.13 和 Node 26.13.0。 |
 | 日常命令 | 已写好，未在 Mac 上运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop` |
 | Captain 测试集 | 已写好 | `docs/captain-ai/chat-cases.json`：12 句合成输入，包括你指定的 7 句。 |
-| Captain × Qwen 评测脚本 | 已写好，**未运行（容器里没有 Ollama 和模型）** | `node tools/captain-eval.mjs`：只连 127.0.0.1；结果写到 `docs/captain-ai/results/`。 |
+| Captain × Qwen 评测脚本 | **2026-11-11 已在 Mac 上运行（qwen3.5:4b，每句 3 次）** | 结果和人工评分在 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md`：145/168（86%），每句约 0.4–1.9 秒，约 32 tokens/s。主要问题是「喵」成了口头禅、偶尔编造手帐状态。 |
 | App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试） | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
-| `qwen3.5:4b` 这个标签 | **未确认** | 从这个容器打不开 ollama.com，无法核对官方模型库里的标签。在 Mac 上运行 `ollama pull qwen3.5:4b`：成功就说明标签存在；失败就到 ollama.com/library 查当前 Qwen 小模型的实际标签，然后用 `LD_MODEL=<标签>` 运行。 |
+| `qwen3.5:4b` 这个标签 | **已确认存在**（2026-11-11） | 已经下载到 Mac 上（4.0 GB，ID `7f3251fa6878`），用 Ollama 的 MLX runner 运行，100% 在 GPU 上。 |
 
 ## 2. 第一步：检查 Mac（只读）
 
@@ -39,6 +39,8 @@ bash tools/mac/doctor.sh
 - **Node.js**（用于测试和评测脚本）：`brew install node`（先确认没有通过其他方式装过）。
 - **Xcode**：从 Mac App Store 安装（M5 和新版 macOS 用 App Store 里的当前版本即可）。第一次打开时同意许可、安装组件，然后运行 `sudo xcode-select -s /Applications/Xcode.app`。iOS 模拟器运行时在 Xcode → Settings → Components 里下载。
 - **Ollama**：你说已经下载了。打开 Ollama App 就会在 127.0.0.1:11434 启动服务。
+- **注意（2026-11-11 实际遇到）**：Homebrew 的安装程序会顺带装 Command Line Tools，并把 `xcode-select` 切到 `/Library/Developer/CommandLineTools`，之后 `xcodebuild` 就用不了了。装完 Homebrew 后要运行 `sudo xcode-select -s /Applications/Xcode.app`，再用 `xcode-select -p` 确认。
+- Homebrew 安装程序会写 `/etc/paths.d/homebrew`，所以新开的终端就能找到 `brew` 和 `node`；它提示的在 `~/.zprofile` 里加 `brew shellenv` 可加可不加。
 
 ## 3. 本地 Qwen：下载和第一次实测
 
@@ -50,6 +52,7 @@ curl -s http://127.0.0.1:11434/api/chat -d '{"model":"qwen3.5:4b","stream":false
 ollama ps                        # 看模型占了多少内存
 ```
 
+- **实测（2026-11-11，M5 / 24 GB）**：`ollama run` 默认开启思考，「用一句话介绍你自己」要 36 秒，英文那句要 3 分 35 秒（模型一直在和自己来回讨论）。用 API 加 `"think":false` 时「你好」只要 0.5 秒。Captain 和评测脚本都用 `think:false`。内存方面，`ollama ps` 第一次加载后显示 4.8 GB，跑完评测后显示 9.1 GB。
 - 不需要 API Key，也不连云端：模型文件在 `~/.ollama/models`，不在仓库里（`.gitignore` 已排除 `*.gguf` / `*.safetensors`）。
 - 4B 合格后再试 9B（`LD_MODEL=qwen3.5:9b`）。在 24GB 内存的 Mac 上，9B 的量化版一般可以运行；同时开 Xcode 和模拟器时，留意 `ollama ps` 和「活动监视器 → 内存压力」。**暂不下载 27B 或更大的模型。**
 - 不做 LoRA 或任何权重微调。调 temperature、top-p、输出长度只是推理参数。
