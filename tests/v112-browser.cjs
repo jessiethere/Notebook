@@ -111,9 +111,10 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       const ringOff = await page.evaluate(() => {
         const ring = document.querySelector(".sg-ring").getBoundingClientRect(), card = document.querySelector(".sg-card").getBoundingClientRect();
         const paper = document.querySelector("#journal-canvas").getBoundingClientRect();
-        return { overlap: !(card.bottom <= paper.top + 1 || card.top >= paper.bottom - 1) && false, ringAroundPaper: ring.left <= paper.left && ring.right >= paper.right, cardInside: card.left >= 0 && card.right <= innerWidth };
+        return { overlap: Math.max(0, paper.bottom - card.top), ringAroundPaper: ring.left <= paper.left && ring.right >= paper.right, cardInside: card.left >= 0 && card.right <= innerWidth && card.bottom <= innerHeight };
       });
       assert.ok(ringOff.ringAroundPaper && ringOff.cardInside, JSON.stringify(ringOff));
+      assert.ok(ringOff.overlap <= 48, `pointing at the whole (empty) paper, the card sits over the tool row and covers at most its bottom edge (${ringOff.overlap}px)`);
       if (shots) await page.screenshot({ path: `${shots}/01-guide-step1.png` });
       await page.locator('[data-action="guide-next"]').tap();
       s = await step();

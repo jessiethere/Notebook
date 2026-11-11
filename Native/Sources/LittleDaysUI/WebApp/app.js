@@ -5265,6 +5265,8 @@ function placeGuide() {
     const below = target.kind === "paper" || middle < phone.height * 0.5;
     card.classList.toggle("at-bottom", below);
     card.classList.toggle("at-top", !below);
+    // Pointing at the whole paper: the card sits over the tool row, not on the paper.
+    card.classList.toggle("over-dock", target.kind === "paper");
   } else ring.hidden = true;
   if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
 }
