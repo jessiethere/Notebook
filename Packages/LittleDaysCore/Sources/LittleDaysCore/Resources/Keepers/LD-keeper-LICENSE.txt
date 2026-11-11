@@ -34,3 +34,12 @@ also Happy, Sleepy and Peek, in the same style and scale as the reference.
 Still needed from the artist: higher-resolution renders of each state
 (the reference figures are only ~190 px wide, the Peek ~340 px), and
 consistent animation frames if blinking or other motion is wanted.
+
+Play stage (2026-11-11): Captain's own animations, provided by the product
+owner (docs/brand/captain-anim/: LD-captain-lemon-yarn-sit.webp,
+LD-captain-lemon-hug.gif, LD-captain-lemon-play.gif). Not cut out and not
+redrawn: tools/make_captain_anim.py only resizes the frames to 400 px and lays
+them side by side (JPEG, each frame keeps its own cream backdrop).
+- LD-keeper-cat-lemon-sit.jpg       still: lemon hat, sitting by the yarn
+- LD-keeper-cat-lemon-hug-anim.jpg  6 frames × 180 ms: hugging the yarn, giggling
+- LD-keeper-cat-lemon-play-anim.jpg 9 frames × 150 ms: batting the yarn (with a green bandana)

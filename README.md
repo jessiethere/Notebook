@@ -179,6 +179,11 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — Captain's Playroom 设计预览（等你确认）
+
+- 「玩耍」页的新设计：Captain 大大地在中间，气泡邀请你陪它玩毛线球，按钮在下面；还没画好的摸摸头和挠肚皮只占两个浅色小按钮，界面上不再写开发说明。方案见 [docs/CAPTAIN_PLAYROOM_PLAN.md](docs/CAPTAIN_PLAYROOM_PLAN.md)，里面有 5 个问题等你确认。
+- 你给的两段 Captain 动画已经存进项目（docs/brand/captain-anim/），确认设计后再接进 App。
+
 ### 2026-11-11 — 头像换成个人标记；日详情音乐默认静音；同一天多页可直接打开（V10.16）
 
 - iPhone App 构建报错（LittleDaysCore 要求 iOS 17，某个目标却是 15.0）找到了原因：在 Xcode 里打开项目根文件夹时，加载的是本机服务端的包，它没写 iOS 版本。现在所有地方统一为 iOS 17。另外新增 `LittleDays.xcworkspace`，双击就能打开 iPhone App 工程。这个修复还要在你的 Mac 上实际构建确认。

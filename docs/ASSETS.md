@@ -98,3 +98,8 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 交付规格（与现有 Captain 一致）：PNG 透明背景，原画 ≥ 1024px，统一的光源与描边；动画用序列帧（每帧单独的 PNG）或 Lottie JSON，标明帧率；附原创或授权说明，写入 `library/stickers/LittleDays-Original-Assets.txt`。
 
 不做：不新增 Bunny、Westie 或其他 Keeper；不用 SVG 线稿或拉伸现有 PNG 拼动画。
+
+### 2026-11-11 补充：用户提供的动画（已存为文件的部分）
+
+- 已存入 `docs/brand/captain-anim/`：柠檬帽坐姿静态图、柠檬帽「抱毛线球大笑」（6 帧）、柠檬帽加绿领巾「玩毛线球」（9 帧）。`tools/make_captain_anim.py` 生成 JPEG 雪碧图，放在 `Resources/Keepers/`。**还没有登记进 library.json，也没有接到界面**，要等 Playroom 设计确认（docs/CAPTAIN_PLAYROOM_PLAN.md）。
+- 上表中「玩毛线球」的柠檬帽版本现在有了。摸摸头、挠肚皮、换衣服仍然缺失；无帽版的所有动画也缺失（对话里的无帽图没有存成文件）。
