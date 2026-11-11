@@ -4,6 +4,32 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.10",
+    date: "2026-11-11",
+    zh: {
+      title: "设置页的小打磨",
+      items: [
+        "还没起名字时，顶部显示「我的小世界」和「给这个世界起个名字吧」，头像是一株小嫩芽，不再显示「还没有名字」。起了名字显示名字的首字；选过的头像照旧保留。",
+        "Little Keeper 区域的 Captain 变大了一些，旁边多了「和 Captain 玩一会儿」，打开 Captain 的小角落（聊天、装扮都在那里）；设置页本身只管设置。",
+        "数据与隐私更简洁：「备份与恢复」放在最前面，导出按钮更醒目；每一行只留一句说明。完整的隐私说明（备份文件的注意事项、大小限制、两个开关的细节、AI 的说明）都在「隐私说明」里，一条没少。",
+        "检查了 iPhone 375 / 393 宽的屏幕：文字不小于 12px、多行文字有足够行距、开关和按钮至少 44px、最后一行不被底部导航挡住。顺手把「尚未接入」小标签调大了一点。",
+        "六款主题颜色、中英文设置和你的偏好都没变。",
+        "Captain 的小角落：键盘收起后，对话会停在最新一条。",
+      ],
+    },
+    en: {
+      title: "Small Settings polish",
+      items: [
+        "Before you choose a name, the top now reads “My little world” with “Give this world a name”, and a small sprout instead of “No name yet”. With a name it shows the first letter; an avatar you chose is kept.",
+        "Captain is a little larger under Little Keeper, with a new “Spend a moment with Captain” that opens Captain's Corner (chat and looks live there); Settings itself stays for settings.",
+        "Data & Privacy is calmer: Backup & restore comes first with a clearer export button, and each row has one line. The full privacy notes (backup safety, size limits, both switches in detail, AI) are all in Privacy notes.",
+        "Checked on 375- and 393-wide iPhones: no text under 12px, enough room between lines, switches and buttons at least 44px, and the last row clear of the bottom bar. The “Not available yet” tag is slightly larger.",
+        "The six colour themes, language and your preferences are unchanged.",
+        "Captain's Corner: after the keyboard closes, the chat stays on the newest line.",
+      ],
+    },
+  },
+  {
     version: "10.9",
     date: "2026-11-11",
     zh: {

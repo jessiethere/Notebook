@@ -89,6 +89,9 @@ const transcript = [];
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.waitForTimeout(450);
     assert.equal(await page.locator(".kp-acts.compact .kp-chip").count(), 3);
+    // V10.10: once the keyboard closes and the shortcuts come back, the newest line is still in view.
+    const after = await page.locator(".kp .keeper-msgs").evaluate((box) => box.scrollHeight - box.scrollTop - box.clientHeight);
+    assert.ok(after <= 2, `still at the newest line after the keyboard closes (${after})`);
     assert.equal(await page.locator(".kp-acts:not(.compact)").count(), 0);
     await shot("01-chat");
     const reply8 = await say("帮我整理今天的故事");

@@ -1543,7 +1543,10 @@ document.addEventListener("focusout", (event) => {
   if (!event.target.matches?.("[data-keeper-say]")) return;
   const sheet = event.target.closest(".kp");
   keeperFieldTimer = setTimeout(() => {
-    if (!sheet?.contains(document.activeElement) || !document.activeElement.matches("[data-keeper-say]")) sheet?.classList.remove("composing");
+    if (!sheet?.contains(document.activeElement) || !document.activeElement.matches("[data-keeper-say]")) {
+      sheet?.classList.remove("composing");
+      scrollKeeperChat(); // the shortcuts came back: keep the newest line in view
+    }
   }, 350);
 });
 document.addEventListener("compositionstart", (event) => {
@@ -4560,6 +4563,9 @@ function openWhatsNew() {
 // about & more. Groups are titles, air and hairlines — no stack of cards.
 // Every control keeps its old data-action; details open in a bottom sheet.
 let settingsSheet = ""; // which detail sheet is open (re-drawn after a change)
+// The default personal mark before a name is chosen: a small sprout in sage
+// line art (the same sprout as on the Little Days wordmark). Not an emoji.
+const SPROUT_MARK = '<svg class="sprout-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27V15"/><path d="M16 17c0-4.5-3.2-7.5-8-7.5 0 4.6 3.4 7.5 8 7.5Z"/><path d="M16 14.5c0-4.3 3-7.2 7.6-7.2 0 4.4-3.1 7.2-7.6 7.2Z"/><path d="M11 27h10"/></svg>';
 function settingsPageHTML() {
   const en = languageCode() === "en";
   const title = (key, aside = "") => `<div class="s2-h"><h2 class="${en ? "en" : "zh"}">${t(key)}</h2>${aside}</div>`;
@@ -4568,15 +4574,18 @@ function settingsPageHTML() {
   // -- My Little Days: this device's own space (there is no cloud account).
   const name = String(account?.name || "").trim();
   const custom = Boolean(account?.avatar && account.avatar !== "🌷");
-  const initial = (name || "L").slice(0, 1).toUpperCase();
-  const me = `<section class="s2-me account-card"><span class="s2-avatar ${custom ? "emoji" : ""}" aria-hidden="true">${esc(custom ? account.avatar : initial)}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.noName"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t("s2.editProfile")} ›</button></div></section>`;
+  // V10.10: no name yet → "my little world" and a quiet sprout mark (the one
+  // beside the Little Days wordmark); a name → its first letter; a chosen
+  // avatar is always kept as it is.
+  const mark = custom ? esc(account.avatar) : name ? esc(name.slice(0, 1).toUpperCase()) : SPROUT_MARK;
+  const me = `<section class="s2-me account-card"><span class="s2-avatar ${custom ? "emoji" : name ? "" : "sprout"}" aria-hidden="true">${mark}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.myWorld"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t(name ? "s2.editProfile" : "s2.nameWorld")} ›</button></div></section>`;
   // -- Little Keeper: a preview and the companion mode; the rest is in its sheet.
   const k = keeperNow();
   let keeper;
   if (!k.enabled) keeper = `<section class="s2-sec keeper-card">${title("s2.keeper")}<div class="s2-row"><span><b>${t("keeper.invite.title")}</b><small>${t("keeper.settings.offNote")}</small></span><button class="s2-link" data-action="keeper-onboard">${t("keeper.invite.yes")} ›</button></div></section>`;
   else {
     const g = keeperGrowth();
-    keeper = `<section class="s2-sec keeper-card">${title("s2.keeper", `<small>${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small>`)}<div class="s2-keeper">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("s2.keeperLine", { mode: t("keeper.mode." + k.mode), stage: t("keeper.stage." + g.id) }))}</small></span><button class="s2-link" data-action="settings-sheet" data-sheet="keeper">${t("s2.keeperManage")} ›</button></div><div class="s2-seg" role="group" aria-label="${t("keeper.onboard.mode")}">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}<button data-action="keeper-disable" aria-pressed="false">${t("s2.keeperOff")}</button></div><p class="s2-hint keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")} ${t("s2.keeperWhere")}</p></section>`;
+    keeper = `<section class="s2-sec keeper-card">${title("s2.keeper", `<small>${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small>`)}<div class="s2-keeper">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("s2.keeperLine", { mode: t("keeper.mode." + k.mode), stage: t("keeper.stage." + g.id) }))}</small></span><span class="s2-keeper-links"><button class="s2-link" data-action="settings-sheet" data-sheet="keeper">${t("s2.keeperManage")} ›</button>${Keeper.modeAllows(k, "invite") ? `<button class="s2-link s2-play" data-action="keeper-panel">${esc(tk("s2.keeperPlay", k))} ›</button>` : ""}</span></div><div class="s2-seg" role="group" aria-label="${t("keeper.onboard.mode")}">${Keeper.MODES.map((m) => `<button data-action="keeper-set" data-key="mode" data-value="${m}" class="${k.mode === m ? "selected" : ""}" aria-pressed="${k.mode === m}">${t("keeper.mode." + m)}</button>`).join("")}<button data-action="keeper-disable" aria-pressed="false">${t("s2.keeperOff")}</button></div><p class="s2-hint keeper-mode-hint">${t("keeper.mode." + k.mode + "Hint")} ${t("s2.keeperWhere")}</p></section>`;
   }
   // -- Look & preferences.
   const current = loadTheme();
@@ -4586,8 +4595,10 @@ function settingsPageHTML() {
   const app = Boolean(reminderBridge());
   const look = `<section class="s2-sec theme-card">${title("s2.look")}<div class="s2-row stack"><span><b>${t("theme.title")}</b><small>${t("theme.note")}</small></span>${palette}</div><div class="s2-row"><span><b>${t("language")}</b><small>${t("settings.contentNote")}</small></span><div class="s2-seg s2-lang"><button data-action="language" data-language="zh-CN" class="${language === "zh-CN" ? "selected" : ""}" aria-pressed="${language === "zh-CN"}">中文</button><button data-action="language" data-language="en" class="${language === "en" ? "selected" : ""}" aria-pressed="${language === "en"}">English</button></div></div><div class="reminder-card">${toggle('data-action="reminder-toggle"', reminder.on && app, t("reminder.toggle"), app ? t("reminder.note") : t("reminder.appOnly"), !app)}${reminder.on && app ? `<label class="reminder-time s2-row">${t("reminder.at")}<input type="time" data-reminder-time value="${esc(reminder.time)}"></label>` : ""}${reminderNote ? `<p class="reminder-warn" role="status">${esc(reminderNote)}</p>` : ""}</div></section>`;
   // -- Data & privacy.
-  const privacyRow = (id) => toggle(`data-action="privacy-toggle" data-privacy="${id}"`, privacyOn(id), t("privacy." + id), t("privacy." + id + "Hint"));
-  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack"><span><b>${t("s2.storage")}</b><small>${t("s2.storageNote")}</small></span><p id="media-usage" class="s2-usage" role="status"></p></div><div class="s2-row stack"><span><b>${t("s2.backup")}</b><small>${t("settings.backupNote")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div></div>${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiNote"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
+  const privacyRow = (id) => toggle(`data-action="privacy-toggle" data-privacy="${id}"`, privacyOn(id), t("privacy." + id), t("s2." + id + "Short"));
+  // V10.10: backup first and easy to find; one short line each; the full
+  // notes (what a backup holds, size limits) stay in 隐私说明.
+  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack s2-backup"><span><b>${t("s2.backup")}</b><small>${t("s2.backupShort")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button class="primary-outline" data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div><p id="media-usage" class="s2-usage" role="status"></p></div>${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiShort"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
   // -- About & more.
   const samples = state().entries.filter((e) => e.isDemo).length;
   const about = `<section class="s2-sec s2-about">${title("s2.about")}${more('data-action="whats-new"', t("news.title"), `V${esc(LATEST)}`, hasUnseen())}${more('data-action="tour-replay"', t("s2.tour"), t("s2.tourAgain"))}${more('data-action="settings-sheet" data-sheet="licenses"', t("settings.licenses"))}${samples ? more('data-action="settings-sheet" data-sheet="samples"', t("samples.title"), t("s2.sampleDays", { count: samples })) : ""}${more('data-action="settings-sheet" data-sheet="testlog"', t("testlog.title"))}${more('data-action="settings-sheet" data-sheet="labs"', t("labs.title"), t(labsOn() ? "s2.on" : "s2.off"))}${labsOn() && account ? more('data-action="sign-out"', t("s2.welcome"), t("s2.dataKept")) : ""}</section>`;
@@ -4611,7 +4622,7 @@ function settingsSheetHTML(kind) {
     const quiet = k.mode === "quiet", interactive = k.mode === "interactive";
     return `${head("s2.keeperManage")}<div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div>${keeperLooksHTML()}<label class="s2-field keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label>${row("allowMemories", k.allowMemories, quiet ? t("s2.notInQuiet") : t("keeper.settings.allowMemoriesHint"), !quiet)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}<p class="s2-hint">${t("keeper.settings.growthNote")}</p><button class="kp-quiet keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="s2-hint">${t("keeper.settings.offKeeps")}</p>`;
   }
-  if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>`;
+  if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li><li>${t("settings.backupNote")}</li><li>${t("privacy.hideTodayHint")}</li><li>${t("privacy.shareListHint")}</li><li>${t("s2.aiNote")}</li></ul>`;
   if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></div>`;
   if (kind === "samples") {
     const samples = state().entries.filter((e) => e.isDemo).length;

@@ -6928,8 +6928,8 @@
     "en": "Off"
   },
   "s2.keeperWhere": {
-    "zh": "和它互动在首页，这里只做设置。",
-    "en": "Talk to it on Home; this page is only for settings."
+    "zh": "聊天、装扮在 Captain 的小角落里；这里只管设置。",
+    "en": "Chat and looks are in Captain's Corner; this page is only for settings."
   },
   "s2.notInQuiet": {
     "zh": "安静方式下不可用。",
@@ -7402,5 +7402,33 @@
   "kc.tap.one.5": {
     "zh": "有一页了。我把它摆在书架最前面。",
     "en": "One page in. I've put it at the front of the shelf."
+  },
+  "s2.myWorld": {
+    "zh": "我的小世界",
+    "en": "My little world"
+  },
+  "s2.nameWorld": {
+    "zh": "给这个世界起个名字吧",
+    "en": "Give this world a name"
+  },
+  "s2.keeperPlay": {
+    "zh": "和{name}玩一会儿",
+    "en": "Spend a moment with {name}"
+  },
+  "s2.backupShort": {
+    "zh": "手帐和照片只在这台设备上。换手机或清理浏览器前，先备份到文件。",
+    "en": "Journals and photos live only on this device. Back up to a file before changing phones or clearing the browser."
+  },
+  "s2.hideTodayShort": {
+    "zh": "首页「今天」只显示页数，不显示照片和文字。",
+    "en": "Home’s “Today” shows only the page count — no photos or words."
+  },
+  "s2.shareListShort": {
+    "zh": "默认关闭。打开后，导出的图片和 PDF 会带上当天清单。",
+    "en": "Off by default. When on, exported pictures and PDFs include the day’s list."
+  },
+  "s2.aiShort": {
+    "zh": "现在没有 AI，不会发送你的手帐。",
+    "en": "There is no AI now; your journal is never sent."
   }
 }

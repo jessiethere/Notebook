@@ -84,7 +84,10 @@ test("what's new: newest first, both languages, one entry per version", async ()
   assert.equal(LATEST, UPDATES[0].version);
   const versions = UPDATES.map((u) => u.version);
   assert.equal(new Set(versions).size, versions.length);
-  assert.deepEqual([...versions].sort((a, b) => Number(b) - Number(a)), versions, "newest first");
+  // Dotted versions compare part by part (10.10 comes after 10.9).
+  const parts = (v) => String(v).split(".").map(Number);
+  const newer = (a, b) => { const [x, y] = [parts(a), parts(b)]; for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (y[i] || 0) - (x[i] || 0); return 0; };
+  assert.deepEqual([...versions].sort(newer), versions, "newest first");
   for (const u of UPDATES) for (const lang of ["zh", "en"]) assert.ok(u[lang].title && u[lang].items.length, `${u.version} ${lang}`);
   const storage = memory();
   assert.equal(hasUnseen(storage), true);

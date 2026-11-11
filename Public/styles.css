@@ -18564,3 +18564,93 @@ html[data-shell="ios"] .phone.sv ~ .toast {
   margin-top: 6px;
   font-size: 13px;
 }
+
+/* =====================================================================
+   V10.10 · Settings polish — a warmer unnamed profile, a more present
+   Captain, a calmer Data & Privacy. Same information architecture.
+   ===================================================================== */
+.s2-avatar.sprout .sprout-mark {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: var(--sageDeep);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.s2-keeper {
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 14px;
+  padding: 6px 0 12px;
+}
+.s2-keeper .keeper-img,
+.s2-keeper img {
+  width: 92px;
+  height: 92px;
+}
+.s2-keeper > span {
+  display: grid;
+  gap: 2px;
+}
+.s2-keeper-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin-top: 2px;
+}
+.s2-keeper-links .s2-link {
+  min-height: 40px;
+}
+.s2-keeper .s2-play {
+  color: var(--t-675d54, #675d54);
+  font-weight: 500;
+}
+/* Backup: the first thing under Data & Privacy, with a clear main button. */
+.s2-backup .s2-btns .primary-outline {
+  border-color: var(--sageDeep);
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.s2-backup .backup-when,
+.s2-backup .s2-usage {
+  font-size: 13px;
+}
+.s2-backup .s2-usage:empty {
+  display: none;
+}
+/* Readable rows: hints never below 13px, comfortable line height. */
+.s2 .privacy-row small,
+.s2-row > span > small {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.s2 .privacy-row {
+  min-height: 60px;
+}
+.s2-keeper > .keeper {
+  grid-row: span 2;
+  align-self: center;
+}
+.s2-keeper > .s2-keeper-links {
+  grid-column: 2;
+  justify-content: flex-start;
+  align-self: start;
+}
+.s2-keeper > .s2-keeper-links {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+.s2-keeper-links .s2-link {
+  width: auto;
+  flex: none;
+  padding: 0;
+  text-align: left;
+}
+.s2-keeper > .keeper {
+  width: 92px;
+  height: 92px;
+}
+.s2-tag {
+  font-size: 12px;
+}

@@ -37,14 +37,15 @@ const shots = process.env.SHOTS || "";
     // 1. The profile area says what it is: this device's own space, no cloud account; default avatar = a letter.
     await settings();
     const me = page.locator(".s2-me");
-    assert.match(await me.innerText(), /MY LITTLE DAYS[\s\S]*还没有名字[\s\S]*本机个人空间[\s\S]*没有云端账号/);
-    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "L", "no name yet: the brand's first letter, not an emoji");
+    // V10.10: no name yet → 我的小世界 and a sprout mark (not “还没有名字”, not a letter, not an emoji).
+    assert.match(await me.innerText(), /MY LITTLE DAYS[\s\S]*我的小世界[\s\S]*本机个人空间[\s\S]*没有云端账号[\s\S]*给这个世界起个名字吧/);
+    assert.equal(await page.locator(".s2-avatar.sprout svg").count(), 1, "no name yet: the sprout mark");
     assert.equal(await page.locator(".s2-avatar.emoji").count(), 0);
     assert.equal(await page.locator(".settings-card").count(), 0, "no stack of big cards");
     assert.doesNotMatch(await page.locator(".s2").innerText(), /退出登录|Sign out/, "no “sign out”: there is no account to sign out of");
     await noOverflow("zh 390");
     await shot("01-top");
-    passed.push("profile area: “My Little Days · your space on this device — no cloud account”; default avatar is a letter chip; no card stack");
+    passed.push("profile area: “My Little Days · your space on this device — no cloud account”; unnamed: 我的小世界 + sprout mark; no card stack");
 
     // 2. Edit profile: a name and an avatar, saved on this device only; journals untouched.
     await SS.settingsSheet(page, "profile");
@@ -127,7 +128,7 @@ const shots = process.env.SHOTS || "";
 
     // 5. Data & privacy: storage, backup + restore, lock, two switches, AI not available (cannot be turned on), privacy notes.
     const data = page.locator(".privacy-card");
-    assert.match(await data.innerText(), /本机存储[\s\S]*备份与恢复[\s\S]*AI 小管家[\s\S]*尚未接入[\s\S]*隐私说明/);
+    assert.match(await data.innerText(), /备份与恢复[\s\S]*只在这台设备上[\s\S]*AI 小管家[\s\S]*尚未接入[\s\S]*隐私说明/);
     assert.equal(await data.locator('[data-action="backup"]').count(), 1);
     assert.equal(await data.locator('[data-action="restore-backup"]').count(), 1);
     assert.equal(await data.locator('[data-action="lock-toggle"]').count(), 1);
