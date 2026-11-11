@@ -6,6 +6,7 @@
 // yesterday's unfinished only moved when asked.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu, openToday } = require("./signed-in.cjs");
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
@@ -129,9 +130,11 @@ const shots = process.env.SHOTS_DIR || "";
     const exportHeight = async () => {
       await menu(page, "studio");
       await openToday(page);
+      await studioPreview(page);
       const download = page.waitForEvent("download");
       await page.locator('[data-action="export"]').click();
       const png = fs.readFileSync(await (await download).path());
+      await studioEdit(page);
       await page.locator('[data-action="studio-back"]').click();
       assert.equal(png.readUInt32BE(16), 1080);
       if (shots) fs.writeFileSync(`${shots}/v63-export.png`, png);

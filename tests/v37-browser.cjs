@@ -2,6 +2,7 @@
 // empty paper), and iPhone-friendly fields. Synthetic media only.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -37,59 +38,66 @@ function wav(seconds = 1) {
     await menu(page, "studio");
     await page.locator('[data-action="quick-way"][data-way="write"]').tap();
     await page.locator('[data-action="quick-start"]').tap();
-    await page.waitForSelector('[data-action="page-mode"][data-mode="note"][aria-pressed="true"]');
+    await page.waitForSelector('#journal-canvas [data-inline="title"]');
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
     await page.evaluate(() => document.activeElement.blur());
-    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
-    await page.waitForSelector("#journal-canvas .canvas-add-row");
-    const onPaper = await page.$$eval("#journal-canvas .canvas-add-row button", (els) => els.map((el) => el.dataset.action));
-    assert.deepEqual(onPaper, ["add-photos", "add-text-layer", "draw-new", "add-video", "add-sound"]);
-    assert.equal(await page.locator(".stage-bar .stage-add").count(), 0, "shown once: on the empty paper only");
+    // V10.0: the mode is chosen in More; an empty paper offers one thing —
+    // the first photo — and the four tools sit in the row at the bottom.
+    await studioMore(page);
+    assert.equal(await page.locator('[data-action="page-mode"][data-mode="note"]').getAttribute("aria-pressed"), "true");
+    const inMore = await page.$$eval(".more-grid .more-tile", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    for (const need of ["paper", "layout", "font", "draw-new", "add-video", "add-sound", "open-pages", "details"]) assert.ok(inMore.includes(need), `More offers ${need}`);
+    await studioMode(page, "layout");
+    await page.waitForSelector('#journal-canvas [data-action="first-photo"]');
+    const tools = await page.$$eval(".tool-dock.sv-tools .sv-tool", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    assert.deepEqual(tools, ["add-photos", "add-text-layer", "stickers", "more"], "four tools at the bottom");
+    assert.equal(await page.locator(".stage-bar .stage-add").count(), 0, "no second row of add buttons under the paper");
     assert.equal(await page.locator(".write-card [data-action='add-text-layer']").count(), 0, "no hidden text-box link");
-    passed.push("empty paper offers photo / text / draw / video / sound (once)");
+    passed.push("empty paper offers the first photo; photo / text / stickers / more at the bottom; the rest in More");
 
     // 2. Text: one tap adds words to the paper with the typing box ready.
-    await page.locator('#journal-canvas [data-action="add-text-layer"]').tap();
+    await page.locator('.tool-dock [data-action="add-text-layer"]').tap();
     await page.waitForSelector("#journal-canvas .text-layer, #journal-canvas [data-layer]");
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("layer-text")), true, "typing right in the box on the paper");
     await page.keyboard.type("今天的风很温柔");
     await page.waitForFunction(() => document.querySelector("#journal-canvas").innerText.includes("今天的风很温柔"));
-    assert.equal(await page.locator("#journal-canvas .canvas-add-row").count(), 0, "hint goes once the paper has something");
-    const underPaper = await page.$$eval(".stage-bar .stage-add", (els) => els.map((el) => el.dataset.action));
-    // Draw sits in the bar above the paper, so under it are the other four.
-    assert.deepEqual(underPaper, onPaper.filter((a) => a !== "draw-new"), "then the same choices sit under the paper");
+    assert.equal(await page.locator("#journal-canvas .canvas-first-photo").count(), 0, "hint goes once the paper has something");
     // V9.2: after typing, a tap elsewhere brings the tool row back (on iPhone the caret
-    // could stay in the box and keep the tools hidden), and 背景 opens backgrounds.
+    // could stay in the box and keep the tools hidden); 背景 opens backgrounds (now from More).
     await page.locator(".studio-stage").tap({ position: { x: 4, y: 4 } });
     await page.waitForFunction(() => !document.body.classList.contains("typing") && getComputedStyle(document.querySelector(".tool-dock")).display !== "none");
-    assert.match(await page.locator('.stage-bar .stage-bg').innerText(), /背景/);
-    assert.match(await page.locator('.dock-btn[data-tool="paper"]').innerText(), /背景/);
-    await page.locator('.stage-bar .stage-bg').tap();
+    await studioMore(page);
+    assert.match(await page.locator('.more-grid .dock-btn[data-tool="paper"]').innerText(), /背景/);
+    await page.locator('.more-grid .dock-btn[data-tool="paper"]').tap();
     await page.waitForSelector('.tool-sheet[data-tool-row="paper"]');
     assert.match(await page.locator('.tool-sheet[data-tool-row="paper"]').innerText(), /页面背景[\s\S]*纸张/);
-    await page.locator('.stage-bar .stage-bg').tap();
-    await page.waitForSelector('.tool-sheet[data-tool-row="paper"]', { state: "detached" });
-    passed.push("text: one tap, type straight away, shows on the paper; 背景 under the paper opens backgrounds");
+    // ‹ goes back to More; × closes the sheet.
+    await page.locator('.tool-sheet .sheet-back').tap();
+    await page.waitForSelector('.tool-sheet[data-tool-row="more"]');
+    await studioClose(page);
+    passed.push("text: one tap, type straight away, shows on the paper; 背景 opens from More");
 
     // 3. Sound: a small choice of background music (V6.0) / record / upload; upload lands on the paper.
-    await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
-    await page.locator('.stage-bar [data-action="add-sound"]').tap();
+    await studioMoreAction(page, "add-sound");
     assert.equal(await page.locator(".sound-menu button").count(), 3);
-    assert.equal(await page.locator('.stage-bar [data-action="add-sound"]').getAttribute("aria-expanded"), "true");
+    assert.equal(await page.locator('.more-grid [data-action="add-sound"]').getAttribute("aria-expanded"), "true");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-action="add-audio-file"]').tap();
     await (await chooser).setFiles({ name: "wind.wav", mimeType: "audio/wav", buffer: wav(1) });
     await page.waitForSelector("#journal-canvas .audio-layer", { state: "attached" });
     assert.equal(await page.locator(".sound-menu").count(), 0, "menu closes");
     // Video opens the video picker directly.
+    await studioClose(page);
+    await studioMore(page);
     const videoChooser = page.waitForEvent("filechooser");
-    await page.locator('.stage-bar [data-action="add-video"]').tap();
+    await page.locator('.more-grid [data-action="add-video"]').tap();
     const picker = await videoChooser;
     assert.equal(await picker.element().evaluate((el) => el.id), "video-input");
     await picker.setFiles([]);
+    assert.equal(await page.locator('.tool-sheet[data-tool-row="more"]').count(), 0, "More steps aside once a tile starts something");
     // Photos open the photo picker (multiple).
     // Photos first offer: album, today's picks and the scene library.
-    await page.locator('.stage-bar [data-action="add-photos"]').tap();
+    await page.locator('.tool-dock [data-action="add-photos"]').tap();
     await page.waitForSelector("#choose-dialog[open]");
     const photoChooser = page.waitForEvent("filechooser");
     await page.locator('#choose-dialog [data-action="choose-album"]').tap();

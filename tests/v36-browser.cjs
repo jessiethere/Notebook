@@ -3,6 +3,7 @@
 // Synthetic and bundled sample images only.
 const { chromium } = require("playwright");
 const { menu, openToday } = require("./signed-in.cjs");
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -108,7 +109,7 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     // 5. Photos on a free layout page → editor: filter, 1:1 crop, warmth, title.
     await menu(page, "studio");
     await page.locator('[data-action="quick-more"][data-more="layout"]').click();
-    await page.locator('#journal-canvas [data-action="add-photos"]').click();
+    await page.locator('#journal-canvas [data-action="first-photo"]').click();
     await page.waitForSelector("#choose-dialog[open]");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('#choose-dialog [data-action="choose-album"]').click();
@@ -200,8 +201,7 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     // 7. Re-edit from the original; resetting everything restores the original file.
     await page.locator(`[data-layer="${edited[1].id}"]`).focus();
     await page.keyboard.press("Enter");
-    const layerTool = page.locator('[data-action="tool"][data-tool="layer"]');
-    if ((await layerTool.getAttribute("aria-expanded")) !== "true") await layerTool.click();
+    await studioTool(page, "layer");
     await page.locator('[data-action="photo-edit"]').click();
     await page.waitForSelector("#photo-editor[open] .pe-frame");
     assert.equal(await page.locator('[data-pe-action="filter"][data-filter="mono"][aria-pressed="true"]').count(), 1, "re-opens with the saved settings");

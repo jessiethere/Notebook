@@ -3,6 +3,7 @@
 // Uses synthetic media only (repo sample JPEGs, generated WAV/WebM, fake mic).
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -98,8 +99,7 @@ const helpers = (page) => {
       if (id === "text") return; // writing is always open (write card)
       // Put the phone keyboard away first, as a person would (typing hides the tools).
       await page.evaluate(() => document.activeElement?.blur?.());
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      await studioTool(page, id);
     },
     // Waits until the stored draft/entry for a date satisfies a predicate.
     waitDay: (date, predicate, arg) =>
@@ -115,8 +115,11 @@ const helpers = (page) => {
 };
 async function openStudioDate(page, nav, date) {
   await nav("studio");
+  // The date sits in 页面信息 (More → Page details).
+  await studioDetails(page);
   await page.locator("#editor-date").fill(date);
   await page.waitForFunction((d) => document.querySelector("#editor-date")?.value === d, date);
+  await studioClose(page);
 }
 const photoGeometry = (layers) =>
   layers
@@ -196,8 +199,10 @@ async function noOverflow(page, label) {
       }, id);
       const before = (await day(D1)).layers.find((l) => l.id === id);
       const point = await center(page, `[data-layer="${id}"]`);
-      const dx = (index % 2 ? 1 : -1) * (14 + index * 3),
-        dy = index % 2 ? -12 : 12;
+      // The same share of the paper as before the larger V10.0 paper (290px wide then).
+      const unit = (await page.locator("#journal-canvas").boundingBox()).width / 290;
+      const dx = (index % 2 ? 1 : -1) * (14 + index * 3) * unit,
+        dy = (index % 2 ? -12 : 12) * unit;
       await mouseDrag(page, point, dx, dy);
       await page.mouse.move(point.x + dx, point.y + dy);
       await page.mouse.wheel(0, -120);
@@ -214,7 +219,9 @@ async function noOverflow(page, label) {
     // Resize and rotate handles (mouse) on one photo, crop on another.
     await selectLayer(page, ids[0]);
     const g0 = (await day(D1)).layers.find((l) => l.id === ids[0]);
-    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-resize`), 30, 24);
+    // Drags keep the share of the paper they had on the smaller pre-V10.0 paper.
+    const paperW = (await page.locator("#journal-canvas").boundingBox()).width;
+    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-resize`), (20 * paperW) / 186, (16 * paperW) / 186);
     await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-rotate`), 40, 25);
     await waitDay(D1, (e, a) => {
       const l = e.layers.find((x) => x.id === a.id);
@@ -293,21 +300,21 @@ async function noOverflow(page, label) {
     const addMoment = async (title, time) => {
       await page.locator('[data-action="add-moment"]').first().click();
       await tool("text");
-      await page.locator('[data-moment-field="title"]').fill(title);
-      await page.locator('[data-moment-field="time"]').fill(time);
+      await (await momentField(page, "title")).fill(title);
+      await (await momentField(page, "time")).fill(time);
     };
     await addMoment("Gym Session", "08:00");
-    await page.locator('[data-moment-field="body"]').fill("今天的训练计划：深蹲 4 组。");
-    await page.locator('[data-moment-field="tags"]').fill("fitness, morning");
+    await (await momentField(page, "body")).fill("今天的训练计划：深蹲 4 组。");
+    await (await momentField(page, "tags")).fill("fitness, morning");
     await page.locator("#photos-input").setInputFiles(photos(3, "gym"));
     await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('.moment-canvas .photo-layer img[src^="blob:"]').length === 3);
     await addMoment("Coffee Time", "14:30");
-    await page.locator('[data-moment-field="body"]').fill("一杯燕麦拿铁。");
+    await (await momentField(page, "body")).fill("一杯燕麦拿铁。");
     await tool("mood");
     await page.locator('[data-action="moment-mood"][data-mood="☁️"]').click();
     await addMoment("Home Cooking", "19:00");
-    await page.locator('[data-moment-field="body"]').fill("番茄牛腩食谱");
+    await (await momentField(page, "body")).fill("番茄牛腩食谱");
     // Video goes in with 视频 under the paper; its list is then in the dock.
     await page.locator("#video-input").setInputFiles({ name: "cooking.webm", mimeType: "video/webm", buffer: await syntheticVideo(page) });
     await tool("media");
@@ -328,7 +335,7 @@ async function noOverflow(page, label) {
     // Edit only Coffee Time.
     await page.locator(`[data-action="select-moment"][data-moment="${coffeeId}"]`).first().click();
     await tool("text");
-    await page.locator('[data-moment-field="title"]').fill("Afternoon Coffee Time");
+    await (await momentField(page, "title")).fill("Afternoon Coffee Time");
     await waitDay(D1, (e, id) => e.moments.find((m) => m.id === id).title === "Afternoon Coffee Time", coffeeId);
     entry = await day(D1);
     assert.equal(entry.moments.find((m) => m.id === gymId).title, "Gym Session");
@@ -406,7 +413,7 @@ async function noOverflow(page, label) {
     // Edit from Day Detail opens the Studio.
     await cell.click();
     await page.locator('.day-detail-top [data-action="edit-date"]').click();
-    await page.waitForSelector("#editor-date");
+    await studioDetails(page);
     assert.equal(await page.locator("#editor-date").inputValue(), D1);
     passed.push("6 Day Detail lists all Moments", "7 uploaded audio + recording play in Calendar", "8 video plays in Calendar; URLs revoked on leave");
 
@@ -461,7 +468,7 @@ async function noOverflow(page, label) {
     assert.equal(await page.locator('[data-action="insert-growth"][data-habit="move"]').isDisabled(), true, "no duplicate card");
     await page.locator('[data-action="add-moment"]').first().click();
     await tool("text");
-    await page.locator('[data-moment-field="title"]').fill("Temporary");
+    await (await momentField(page, "title")).fill("Temporary");
     await tool("growth");
     await page.locator('[data-action="insert-growth"][data-habit="reading"]').click();
     await page.waitForSelector(".growth-layer");

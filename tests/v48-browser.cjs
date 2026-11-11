@@ -2,6 +2,7 @@
 // picked photo large, the collections as tabs and a two-column waterfall.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 const shots = process.env.SHOTS_DIR || "";
@@ -23,8 +24,8 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector("#journal-canvas");
     await page.evaluate(() => document.activeElement?.blur());
-    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
-    await page.locator('#journal-canvas [data-action="add-photos"]').tap();
+    await studioMode(page, "layout");
+    await page.locator('#journal-canvas [data-action="first-photo"]').tap();
     await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="food"]').tap();
     await page.waitForSelector("#scene-dialog[open] .pb-grid .pb-tile");
     await page.waitForFunction(() => [...document.querySelectorAll("#scene-dialog .pb-tile img")].every((img) => img.complete && img.naturalWidth > 0));

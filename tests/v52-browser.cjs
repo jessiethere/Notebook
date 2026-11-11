@@ -4,6 +4,7 @@
 // layout tool; the Story-size share picture; the local test log.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -122,8 +123,10 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     // Share: a Story-size picture from the page (no share sheet here → saved).
     await page.locator(".flip-edit").tap();
     await page.waitForSelector("#journal-canvas");
+    // Sharing lives in the preview.
+    await studioPreview(page);
     const download = page.waitForEvent("download");
-    await page.locator('.studio-footer [data-action="share-story"]').tap();
+    await page.locator('.sv-export [data-action="share-story"]').tap();
     const file = await download;
     assert.match(file.suggestedFilename(), /story\.png$/);
     const size = await page.evaluate(async (url) => {
@@ -133,6 +136,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
       return [img.naturalWidth, img.naturalHeight];
     }, `data:image/png;base64,${fs.readFileSync(await file.path()).toString("base64")}`);
     assert.deepEqual(size, [1080, 1920]);
+    await studioEdit(page);
     await page.locator('[data-action="studio-back"]').tap();
     await page.waitForSelector(".flip-page");
     passed.push("re-layout, a line written in the preview, saved into the book; Story-size share picture (1080×1920)");
@@ -157,13 +161,12 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await menu(page, "studio");
     await page.locator('[data-action="quick-more"][data-more="layout"]').tap();
     const add = page.waitForEvent("filechooser");
-    await page.locator('#journal-canvas [data-action="add-photos"]').tap();
+    await page.locator('#journal-canvas [data-action="first-photo"]').tap();
     await page.locator('#choose-dialog [data-action="choose-album"]').tap();
     await (await add).setFiles(pics.slice(0, 3));
     await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll("#journal-canvas .photo-layer img").length === 3);
-    const dock = page.locator('.dock-btn[data-tool="layout"]');
-    if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
+    await studioTool(page, "layout");
     await page.locator('[data-action="apply-smart"]').tap();
     await page.waitForTimeout(1300);
     s = await story();

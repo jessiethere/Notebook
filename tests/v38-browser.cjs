@@ -2,6 +2,7 @@
 // Synthetic media only; iPhone 13 emulation.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -61,9 +62,9 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     passed.push("video keeps its own orientation (portrait upright, landscape flat)");
 
     // 2. Shapes for videos and photos: round, heart, film… with true proportions.
-    await page.locator(`[data-layer="${wide.id}"]`).tap({ position: { x: 6, y: 6 } });
-    const layerTool = page.locator('[data-action="tool"][data-tool="layer"]');
-    if ((await layerTool.getAttribute("aria-expanded")) !== "true") await layerTool.tap();
+    // Near its lower edge: on the larger V10.0 paper the note's text box crosses the clip's top corner.
+    await page.locator(`[data-layer="${wide.id}"]`).tap({ position: { x: 6, y: wideBox.height - 10 } });
+    await studioTool(page, "layer");
     const videoShapes = await page.$$eval('[data-action="layer-shape"]', (els) => els.map((el) => el.dataset.shape));
     assert.deepEqual(videoShapes, ["landscape", "portrait", "square", "circle", "arch", "heart", "film"]);
     await page.locator('[data-action="layer-shape"][data-shape="circle"]').tap();
@@ -80,7 +81,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     s = await story();
     const photo = s.layers.find((l) => l.kind === "photo");
     await page.locator(`[data-layer="${photo.id}"]`).tap();
-    if ((await layerTool.getAttribute("aria-expanded")) !== "true") await layerTool.tap();
+    await studioTool(page, "layer");
     const photoShapes = await page.$$eval('[data-action="layer-shape"]', (els) => els.map((el) => el.dataset.shape));
     assert.ok(photoShapes[0] === "free" && !photoShapes.includes("film"));
     await page.locator('[data-action="layer-shape"][data-shape="heart"]').tap();
@@ -95,8 +96,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     assert.deepEqual(s.layers.map((l) => l.shape).filter(Boolean).sort(), ["film", "heart", "portrait"]);
     // The exported picture is drawn with the shapes (no errors, real PNG).
     await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
-    // The paper stays pinned at the top; scroll the buttons under it into view.
-    await page.locator(".studio-footer").evaluate((el) => el.scrollIntoView({ block: "end" }));
+    await studioPreview(page);
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
@@ -104,7 +104,8 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
 
     // 3. A new text box is typed into right on the paper (menu and icons step
     // aside); its font/colour panel is one tap away under 编辑, above the keyboard.
-    await page.locator('.stage-bar [data-action="add-text-layer"]').tap();
+    await studioEdit(page);
+    await page.locator('.tool-dock [data-action="add-text-layer"]').tap();
     await page.waitForFunction(() => document.activeElement?.classList.contains("layer-text") && document.body.classList.contains("typing"));
     await page.evaluate(() => document.activeElement.blur());
     await page.locator('.layer-bar [data-action="layer-edit-text"]').tap();

@@ -3,6 +3,7 @@
 // freely; text boxes are typed into on the paper too).
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -30,7 +31,7 @@ const shots = process.env.SHOTS_DIR || "";
     // 1. 写一个小故事 → a note: type the title and words right on the paper.
     await page.locator('.home-mag .moment-cta').tap();
     await page.locator('#choose-dialog [data-action="quick-start"]').tap();
-    await page.waitForSelector('[data-action="page-mode"][data-mode="note"][aria-pressed="true"]');
+    await page.waitForSelector("#journal-canvas"); // mode note (chosen in More)
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title");
     await page.keyboard.type("窗边的下午");
     // Tapping blank paper starts typing the words.
@@ -58,15 +59,17 @@ const shots = process.env.SHOTS_DIR || "";
     passed.push("undo / redo: one step per stretch of typing");
 
     // 3. 自由排版: what was written stays on the paper as text boxes.
-    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
-    await page.waitForSelector('[data-action="page-mode"][data-mode="layout"][aria-pressed="true"]');
+    await studioMode(page, "layout");
+    await page.waitForSelector("#journal-canvas"); // mode layout (chosen in More)
     await settle();
     s = await story();
     assert.notEqual(s.layoutTemplate, "text");
     assert.deepEqual(s.layers.filter((l) => l.kind === "text").map((l) => l.text), ["窗边的下午", "读了几页书，\n风很温柔。"]);
     assert.equal(s.title, "窗边的下午", "still the page's name");
     assert.equal(s.body, "");
+    await studioDetails(page);
     assert.match(await page.locator(".write-card.moment").innerText(), /这一页的名字[\s\S]*页面下方的说明/);
+    await studioClose(page);
     passed.push("自由排版: the words become text boxes on the paper; the boxes below are labelled name / caption");
 
     // 4. Tap a text box twice and type into it on the paper.
@@ -85,7 +88,7 @@ const shots = process.env.SHOTS_DIR || "";
     passed.push("text box: second tap types into it right on the paper");
 
     // 5. Back to 随手写: the paper's title/words are typed there again.
-    await page.locator('[data-action="page-mode"][data-mode="note"]').tap();
+    await studioMode(page, "note");
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     await settle();
     assert.equal((await story()).layoutTemplate, "text");

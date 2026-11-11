@@ -48,6 +48,29 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.0 Journal Studio Phase A：编辑器外壳重构（用户「正式开发确认」）
+
+- 需求：用户确认 Journal Studio 三状态方案（Creative Freedom Without Complexity），要求先做 Studio、Calendar Phase 2 顺延；按 Phase A（外壳）→ 回归 → Phase B（上下文工具）→ 回归推进。用户的决定：撤销 / 重做放纸张左下方、画布外、位置稳定、不可用时禁用、各类修改都进历史、切页后不能改到其他页面、顶部不放；「完成」= 保存成功并离开编辑、显示刚保存页的只读视图，编辑中自动存草稿，顶部显示 已保存 / 保存中 / 保存失败，失败留在编辑器可重试，不自动发布；Quick Create 标题 / 正文可改样式但不可拖，并提供「转换为自由文字框」（Phase B）；视觉沿用 Tactile Stationery × Cozy Editorial；每阶段交付真实截图、交互测试、与设计稿对照、完成 / 未完成清单、问题与修复；不得丢失现有手帐、图片、视频、音频、字体设置。
+- 改动文件：
+  - Public/app.js：`studioPage()` 重写为新外壳（`.studio-bar.sv-top`：返回 · `.sv-title` 页面名（`pages-manage`）· `#draft-status`（`draft-retry`）· 预览 · 完成；`.studio-stage`：纸 + `typeBarHTML()` + `.stage-bar`（撤销 / 重做 + `chapterChipsHTML()` 页面切换）；`#tool-menu`）；新增 `studioPreview` 预览模式（分享 / 导出图片 / 导出视频）；`toolMenuHTML()` 改为「面板 + 四个工具」，新增合成面板 `more`（`moreSheetHTML`：各工具格子、手绘、视频、音频菜单、页面音乐、目录、页面管理、页面信息、「换一种写法」）与 `details`（`detailsSheetHTML`：日期 `#editor-date` + `pageBarHTML()` + `writeCardHTML()`），非「更多 / 贴纸」面板带 ‹ 回到更多；`SV_ICONS` 线性图标。新动作：`first-photo`、`studio-preview`、`open-pages`、`pages-add`、`pages-details`、`draft-retry`。保存状态：`draftState` + `setDraftState()` + `retryDraft()`；`scheduleDraft` → saving，`flushDraft` → saved，出错 → failed；`save-entry` 用 try/catch，失败不离开；`studio-back` 在草稿存不下时先询问；IndexedDB 写入失败（`onPersistError`）也标记失败。撤销按页面隔离：`selectMoment(id, keepStep)` 切页清空历史（删除页面 / 清空封面保留这一步），`resetHistory()` 用于刚建好的页面；`placeLayerBar()` 把浮动菜单限制在纸内。从「更多」启动动作（手绘、视频、页面管理、上传音频、背景音乐、换写法）后面板自动收起。纸面空白提示改为「添加第一张照片」。不再渲染：顶部日期、Keeper 小图标、悬浮保存、纸下一排添加 / 背景按钮、放大预览按钮、studio-footer（功能都有新位置）。
+  - Public/js/canvas.mjs：空白纸提示只渲染传入的 `addChoices`。
+  - Public/styles.css（追加 V10.0 块）+ tokens/themes 重新生成；`.phone.sv` 作用域，`--studio-h` 由 render 写入。
+  - Resources/i18n.json：27 个新键（draft.*、studio.*、tool.more / details、more.*、canvas.first*、sv.text 等）。
+  - Public/js/whats-new.mjs：10.0。
+  - tests：新增 tests/v100-browser.cjs（9 组）与 `test:browser:v100`；tests/signed-in.cjs 新增 `studioTool / studioMore / studioDetails / studioMode / studioMoreAction / studioPreview / studioEdit / studioClose / momentField`，`goTab` / `menu` 先退出预览；迁移 22 套旧用例到新结构（browser、v3、v31–v34、v36–v38、v40、v41、v43、v44、v46、v48、v50–v52、v54、v55、v57、v63、v71）。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.0 小节）、docs/STUDIO_UX_PLAN.md 第 6 节（用户决定与实现状态）、README。
+- 决策与原因：
+  - 旧面板内容原样搬进新面板，`data-action` 与数据逻辑不变，降低回归风险（用户允许 Phase A 这样做）。
+  - 撤销历史保存的是整天的快照，所以用「切页清空历史」保证不会改到别的页面；新建 / 复制页面不留撤销步（可在页面信息 / 页面管理里删除），删除页面保留一步可撤销。
+  - 「目录」面板（单页保存、复制、折叠、排序）新外壳里原本没有入口，补进「更多」，避免功能丢失。
+  - Keeper 不常驻编辑器（方案第 5 条）；v71 用例相应更新。
+  - 短屏：面板最高不超过让纸张保留约 170px 高，面板内部滚动。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Xcode）：Node 144 项、Python 16 项通过；浏览器 E2E 全量 44 套通过（43 套旧 + v100）。v100 覆盖：外壳结构与位置（撤销 / 重做在纸下左侧、44px、不压纸、不压工具）、更多 / 页面信息、撤销重做（照片、文字、贴纸、位置、图层顺序逐步撤销 / 重做，禁用状态）、切页后撤销不影响另一页、页面管理、预览、保存失败（另一窗口改了记录 → 保存失败、留在编辑器、离开先询问、重试成功）、完成 → 只读页 → 再编辑（照片与音频仍在、无 base64、社区存储未变）、375×667 / 390×844 / 430×932 不滚动不重叠。真实截图：393×852（iPhone 14 Pro 模拟，2x）10 张 + 与设计稿对照图，已发给用户。
+- 迁移中发现并处理的问题：纸张变大后两处旧用例的像素拖动距离不再成立（照片互换 / 手柄出纸）——改为按纸宽比例；随手写模式下正文框会盖住视频左上角（原有行为）——用例改点下缘；短屏打开「更多」时纸张被压到约 120px——加最小高度；刚进入编辑器撤销就可用（建页步骤）——`resetHistory()`；浮动菜单在高照片下盖住撤销 / 重做——限制在纸内。
+- 发布：`python3 tools/sync_native_web.py`、`python3 tools/build_link.py` 后发布到同一固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 62，V10.0；本次上传 app.js、styles.css、themes.css、js/canvas.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 与设计稿的差异：页面管理仍是原来的列表样式（设计稿是缩略图网格 + 拖动排序），页面信息沿用旧表单样式；选中对象仍是黑色浮动菜单（Phase B 取代）；有音视频的页面切过去时仍自动打开「本页音视频」面板（原有行为）；未在 iPhone 真机 / Xcode 验证。
+- 未完成 / 下一步：Phase B（选中照片 / 文字 / 贴纸的底部上下文工具、直接编辑文字、字体 / 字号 / 颜色 / 对齐、Quick Create 标题正文样式与「转换为自由文字框」、图层操作），之后再回归；Calendar Phase 2 及后续按用户安排顺延。
+
 ### 2026-11-11 — 设计探索（不改代码）：Journal Studio 交互重设计方案
 
 - 需求：用户看了编辑器真机截图，认为最大问题是信息架构和交互层次混乱：顶部写法条、画布添加入口、底部工具栏功能重复；手帐本 / 时间 / 删除等管理操作占着编辑区；选中元素的浮动菜单挡内容；保存按钮位置不自然；画布周围 UI 太多；工具没有统一逻辑。要求三种状态（A 默认画布 / B 选中对象的上下文编辑 / C 更多工具面板）、页面信息集中到 Page Details、可靠的自动保存 + 顶部状态 + 「完成」、所有现有功能保留。**本轮先不改代码**，先交付：默认页（空白 / 有内容）、选中照片、选中文字、更多面板、多页面管理、新旧路径比较，并说明哪些工具被合并 / 移动。

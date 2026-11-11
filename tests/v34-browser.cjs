@@ -2,6 +2,7 @@
 // view), PNG export and video export. Synthetic media only.
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -48,8 +49,8 @@ async function size(download) {
     await page.waitForSelector(".hero");
     const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing happens on the paper
+      await studioTool(page, id);
     };
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     const draft = () => page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d], today);
@@ -128,12 +129,14 @@ async function size(download) {
     passed.push("video + audio on the paper: play, resize, take off/put back");
 
     // 3. Export as photo or as video.
+    await studioPreview(page);
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();
     const pngFile = await png;
     assert.match(pngFile.suggestedFilename(), /\.png$/);
     assert.ok((await size(pngFile)) > 20000);
     const vid = page.waitForEvent("download", { timeout: 60000 });
+    await studioPreview(page);
     await page.locator('[data-action="export-video"]').click();
     await page.waitForSelector("#export-dialog[open]");
     await page.waitForFunction(() => /已录制/.test(document.querySelector("#export-time").textContent));
@@ -169,6 +172,7 @@ async function size(download) {
     let extra = 0;
     const onDownload = () => extra++;
     page.on("download", onDownload);
+    await studioPreview(page);
     await page.locator('[data-action="export-video"]').click();
     await page.waitForFunction(() => /已录制/.test(document.querySelector("#export-time").textContent));
     await page.locator("#export-cancel").click();

@@ -41,6 +41,7 @@ module.exports = function signedIn(chromium) {
 module.exports.goTab = async (page, tab) => {
   // Studio is full-screen: leave it with its own ‹ before using the menu.
   if (await page.locator("#phone.in-studio").count()) {
+    await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
     const back = page.locator('[data-action="studio-back"], [data-action="start-close"]').first();
     await back.click();
     await page.waitForSelector("#phone:not(.in-studio)");
@@ -79,6 +80,7 @@ module.exports.skipPhotoEditor = async (page) => {
 // without continuing past the Studio start screen.
 module.exports.menu = async (page, tab) => {
   if (await page.locator("#phone.in-studio").count()) {
+    await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
     await page.locator('[data-action="studio-back"], [data-action="start-close"]').first().click();
     await page.waitForSelector("#phone:not(.in-studio)");
   }
@@ -108,4 +110,66 @@ module.exports.touchStore = async (page) => {
 module.exports.openHabits = async (page) => {
   await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
   await page.waitForSelector(".growth-habit");
+};
+
+// ---------- Journal Studio shell (V10.0) ----------
+// The editor keeps four tools at the bottom (photo · text · stickers · more);
+// every other tool, the page mode and the page's details live in the More
+// sheet. Older suites reach them through these helpers.
+const dockReady = async (target) => {
+  const dock = target.locator(".tool-dock.sv-tools");
+  if (await dock.isVisible()) return;
+  // A phone hides the tools while typing: put the keyboard away first.
+  await target.evaluate(() => document.activeElement?.blur?.());
+  await dock.waitFor({ state: "visible", timeout: 5000 }).catch(async () => {
+    await target.locator(".studio-stage").click({ position: { x: 3, y: 3 } });
+    await dock.waitFor({ state: "visible" });
+  });
+};
+module.exports.studioTool = async (target, id) => {
+  const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
+  if (await sheet.count()) return sheet;
+  await dockReady(target);
+  if (id === "stickers" || id === "more") await target.locator(`.tool-dock [data-tool="${id}"]`).click();
+  else {
+    if (!(await target.locator('.tool-sheet[data-tool-row="more"]').count())) await target.locator('.tool-dock [data-tool="more"]').click();
+    await target.locator(`.more-grid [data-tool="${id}"]`).click();
+  }
+  await sheet.waitFor();
+  return sheet;
+};
+module.exports.studioMore = (target) => module.exports.studioTool(target, "more");
+// Date · journal · time · name · caption · tags · delete.
+module.exports.studioDetails = (target) => module.exports.studioTool(target, "details");
+module.exports.studioClose = async (target) => {
+  if (await target.locator(".tool-sheet").count()) await target.locator('[data-action="tool-close"]').click();
+  await target.locator(".tool-sheet").waitFor({ state: "detached" });
+};
+// 照片+一句 / 随手写 / 自由排版 (More closes itself after the choice).
+module.exports.studioMode = async (target, mode) => {
+  await module.exports.studioMore(target);
+  await target.locator(`[data-action="page-mode"][data-mode="${mode}"]`).click();
+  await target.locator('.tool-sheet[data-tool-row="more"]').waitFor({ state: "detached" });
+};
+// A tile in More that starts something (draw-new, add-video, add-sound…).
+module.exports.studioMoreAction = async (target, action) => {
+  await module.exports.studioMore(target);
+  await target.locator(`.more-grid [data-action="${action}"]`).click();
+};
+// 预览: sharing and export live here.
+module.exports.studioPreview = async (target) => {
+  if (await target.locator(".studio-stage.previewing").count()) return;
+  await dockReady(target);
+  await target.locator('.sv-top [data-action="studio-preview"]').click();
+  await target.locator(".studio-stage.previewing").waitFor();
+};
+module.exports.studioEdit = async (target) => {
+  if (!(await target.locator(".studio-stage.previewing").count())) return;
+  await target.locator('.sv-top [data-action="studio-preview"]').click();
+  await target.locator(".studio-stage:not(.previewing)").waitFor();
+};
+// A field of the page (name · time · caption · tags): in 页面信息.
+module.exports.momentField = async (target, name) => {
+  await module.exports.studioDetails(target);
+  return target.locator(`[data-moment-field="${name}"]`);
 };

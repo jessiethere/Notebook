@@ -2,6 +2,7 @@
 // points, and the offline Community / Friends / Messages demo.
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -28,8 +29,8 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
       await page.waitForSelector(".ig-head");
     };
     const tool = async (id) => {
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing happens on the paper
+      await studioTool(page, id);
     };
     const read = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
@@ -63,7 +64,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     });
     assert.ok(order);
     assert.equal(await page.locator('[data-tool-row="text"]').count(), 0);
-    assert.equal(await page.locator(".tool-dock .dock-btn").count() >= 7, true, "decoration tools are icons in the bottom dock");
+    assert.equal(await page.locator(".tool-dock.sv-tools .sv-tool").count(), 4, "photo / text / stickers / more at the bottom");
     passed.push("home → write a moment in one tap; writing first, decoration second");
 
     // 2. Templates: pick the number of photos first, then a layout.
@@ -86,6 +87,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.equal(await page.locator('[data-action="template-count"][data-count="0"]').isDisabled(), false);
     // A words-only Moment sets its title on the paper.
     await page.locator('.chapter-chip.add').click();
+    await studioDetails(page);
     await page.locator(".write-card .write-title").fill("只有文字的一刻");
     await page.locator(".write-card .write-body").fill("今天没有拍照。");
     await tool("layout");
@@ -105,6 +107,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     await page.waitForSelector("#choose-dialog[open] .quick-sheet");
     await page.locator('[data-action="quick-way"][data-way="write"]').click();
     await page.locator('[data-action="quick-start"]').click();
+    await studioDetails(page);
     await page.waitForSelector('.page-bar [data-action="moment-delete"]');
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[d]?.moments?.length === 3, today);
     passed.push("templates by photo count with empty frames, text-only page, add-moment from Day Detail");

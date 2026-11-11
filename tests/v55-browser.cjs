@@ -3,6 +3,7 @@
 // a "Day N" stamp moment after today's first page (once a day).
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -119,7 +120,7 @@ const shots = process.env.SHOTS_DIR || "";
     const path = require("node:path");
     const portrait = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Photos/LD-photo-latte-art.jpg");
     await fresh.locator('[data-action="add-moment"]').first().tap();
-    await fresh.locator('[data-action="page-mode"][data-mode="line"]').tap();
+    await studioMode(fresh, "line");
     const chooser = fresh.waitForEvent("filechooser");
     await fresh.locator('#choose-dialog [data-action="choose-album"]').tap();
     await (await chooser).setFiles(portrait);
@@ -127,17 +128,25 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(await fresh.locator("#journal-canvas .backdrop-whole").evaluate((img) => getComputedStyle(img).objectFit), "contain", "shown whole, not cropped");
     await fresh.keyboard.type("整张照片都在");
     await fresh.evaluate(() => document.activeElement.blur());
-    // Scroll the top bar away: the floating Save appears and saves the day.
-    await fresh.evaluate(() => (document.querySelector("#app-scroll").scrollTop = 600));
-    await fresh.waitForSelector(".float-save:not([hidden])");
-    await fresh.locator(".float-save").tap();
+    // V10.0: the editor fits the screen, so 完成 in the top bar is always in
+    // reach (no floating Save needed) and saves the day.
+    await fresh.waitForFunction(() => !document.body.classList.contains("typing"));
+    const fits = await fresh.evaluate(() => {
+      const scroller = document.querySelector("#app-scroll");
+      const done = document.querySelector('.sv-top [data-action="save-entry"]').getBoundingClientRect();
+      return { scroll: scroller.scrollHeight - scroller.clientHeight, top: done.top, bottom: done.bottom, h: innerHeight };
+    });
+    assert.ok(fits.scroll <= 2, `the editor does not scroll (${fits.scroll}px)`);
+    assert.ok(fits.top >= 0 && fits.bottom <= fits.h, "完成 is on screen");
+    assert.equal(await fresh.locator(".float-save").count(), 0);
+    await fresh.locator('.sv-top [data-action="save-entry"]').tap();
     await fresh.waitForSelector(".flip-page:not(.is-cover)"); // V6.7: the page just made
     const saved = await fresh.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);
     assert.equal(saved.isDemo, false);
     assert.notEqual(saved.title, "把日子过成喜欢的样子", "no sample words on my day");
     assert.notEqual(saved.photo, "/assets/coffee.jpg", "no sample photo on my day");
     assert.ok(saved.moments.some((m) => /^media:/.test(m.backdrop || "")));
-    passed.push("writing on the sample day starts my own page; my own photo is shown whole; floating Save when the top bar is away");
+    passed.push("writing on the sample day starts my own page; my own photo is shown whole; 完成 always in reach (the editor fits the screen)");
 
     assert.deepEqual(errors, []);
     console.log(`V5.7 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

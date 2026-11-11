@@ -269,12 +269,11 @@ function flushDraft() {
     s.drafts[editor.date] = structuredClone(editor);
   });
   draftDirty = false;
-  if ($("#draft-status"))
-    $("#draft-status").textContent = t("草稿已保存在本机");
+  setDraftState("saved");
 }
 function scheduleDraft() {
   draftDirty = true;
-  if ($("#draft-status")) $("#draft-status").textContent = t("正在保存草稿…");
+  setDraftState("saving");
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
     try {
@@ -285,10 +284,41 @@ function scheduleDraft() {
           ? t("error.conflict")
           : t("保存失败：浏览器空间不足，请先导出图片或备份记录。"),
       );
-      if ($("#draft-status"))
-        $("#draft-status").textContent = t("草稿未保存，请勿关闭页面");
+      setDraftState("failed");
     }
   }, 450);
+}
+// The save state at the top of the editor: saved / saving / not saved (tap to
+// retry). The long wording stays for screen readers.
+let draftState = "saved";
+const DRAFT_LONG = { saved: "草稿已保存在本机", saving: "正在保存草稿…", failed: "草稿未保存，请勿关闭页面" };
+function draftStatusInner(state = draftState) {
+  return `<i aria-hidden="true"></i><span>${t("draft." + state)}</span><span class="visually-hidden">${t(DRAFT_LONG[state])}</span>`;
+}
+function setDraftState(next) {
+  draftState = next;
+  const el = $("#draft-status");
+  if (!el) return;
+  el.dataset.state = next;
+  el.disabled = next !== "failed";
+  el.innerHTML = draftStatusInner(next);
+}
+// Try once more to keep the draft; true when it is safely stored.
+function retryDraft() {
+  try {
+    draftDirty = true;
+    flushDraft();
+    return true;
+  } catch {
+    setDraftState("failed");
+    return false;
+  }
+}
+// A page that has just been opened or set up has nothing to undo.
+function resetHistory() {
+  history = [];
+  future = [];
+  document.querySelectorAll('[data-action="undo"], [data-action="redo"]').forEach((button) => (button.disabled = true));
 }
 function changeEditor(change, redraw = true) {
   history.push(structuredClone(editor));
@@ -350,6 +380,8 @@ function returnToReading() {
 }
 function openStudio(date = dateKey()) {
   readReturn = null;
+  studioPreview = false;
+  draftState = "saved";
   if (page !== "studio" && page !== "settings") studioReturn = page;
   flushDraft();
   selectedDate = date;
@@ -1825,16 +1857,18 @@ function placeLayerBar() {
   const half = bar.offsetWidth / 2;
   const left = Math.min(area.width - half - 4, Math.max(half + 4, box.left + box.width / 2 - area.left));
   const above = box.top - area.top - 8;
-  bar.classList.toggle("below", above < bar.offsetHeight + 4);
+  const below = above < bar.offsetHeight + 4;
+  bar.classList.toggle("below", below);
   bar.style.left = `${left}px`;
-  bar.style.top = `${above < bar.offsetHeight + 4 ? box.bottom - area.top + 8 : above}px`;
+  // Under a tall item the menu stays on the paper, clear of undo / redo.
+  bar.style.top = `${below ? Math.min(box.bottom - area.top + 8, area.height - bar.offsetHeight - 6) : above}px`;
 }
 function canvasHTML() {
   return layerBarHTML() + sharedCanvasHTML(activePage(), ctx(), {
     selectedId: selectedLayer,
     cropMode,
     dayPage: isDayPage(),
-    addChoices: addChoicesHTML("canvas-add-choice"),
+    addChoices: `<button class="canvas-first-photo" data-action="first-photo"><i aria-hidden="true">＋</i><b>${t("canvas.firstPhoto")}</b></button><p class="canvas-first-hint">${t("canvas.firstHint")}</p>`,
   });
 }
 function photoRegion() {
@@ -1921,13 +1955,13 @@ function chapterChipsHTML() {
   // The cover sums up the day in one line (optional); each page keeps one
   // thing that happened. They sit side by side, cover first.
   const hasCover = hasDayPageContent(editor);
-  const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}">${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
-  return `<div class="strip-head"><span>${t("strip.summary", { count: moments.length })}</span>${moments.length ? `<button class="text-button" data-action="pages-manage">${t("pages.manageLong")}</button>` : ""}</div><nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
+  const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><i class="chip-num" aria-hidden="true">${t("strip.coverShort")}</i>${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
+  return `<nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
-        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}">${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
+        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
     )
-    .join("")}<button class="chapter-chip add" data-action="add-moment">＋ ${t("moment.addShort")}</button></nav>`;
+    .join("")}<button class="chapter-chip add" data-action="add-moment" aria-label="${t("moment.addShort")}"><i class="chip-num" aria-hidden="true">＋</i><span class="chip-text">＋ ${t("moment.addShort")}</span></button></nav>`;
 }
 // A small picture of a page for the strip and the "整理" sheet.
 function pageThumbHTML(p, cover = false) {
@@ -1953,7 +1987,7 @@ function renderPagesManage() {
       (m, i) =>
         `<li class="pages-row">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">${t("delete")}</button></li>`,
     )
-    .join("")}</ul><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
+    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
 async function removePage(momentId) {
   const moment = findMoment(editor, momentId);
@@ -2031,7 +2065,7 @@ function pageModeHTML() {
   const mode = pageModeOf();
   const b = (id, glyph) =>
     `<button data-action="page-mode" data-mode="${id}" class="${mode === id ? "selected" : ""}" aria-pressed="${mode === id}">${glyph}<span>${t("mode." + id)}</span></button>`;
-  return `<div class="page-mode three" role="group" aria-label="${t("mode.label")}">${b("line", icon("photo"))}${b("note", icon("pen"))}${b("layout", '<i class="mode-grid" aria-hidden="true"></i>')}<button class="page-draw" data-action="draw-new">${'<i class="draw-glyph draw-pen" aria-hidden="true"></i>'}<span>${t("draw.short")}</span></button></div>`;
+  return `<div class="page-mode three" role="group" aria-label="${t("mode.label")}">${b("line", icon("photo"))}${b("note", icon("pen"))}${b("layout", '<i class="mode-grid" aria-hidden="true"></i>')}</div>`;
 }
 // One line above the paper: which journal this page goes into, its time, and
 // deleting it (a story) or removing the day page.
@@ -2303,6 +2337,7 @@ function inlineInput(target) {
     const moment = activePage();
     const label = document.querySelector(`[data-chapter-label="${CSS.escape(moment.id)}"]`);
     if (label) label.textContent = moment.title || t("moment.untitled");
+    refreshStudioTitle();
   }
 }
 document.addEventListener("focusout", (event) => {
@@ -2409,7 +2444,7 @@ function studioTools() {
         `<div class="material-categories">${categories.map((category) => `<button data-action="material-category" data-category="${category}" class="${materialCategory === category ? "selected" : ""}">${t("category." + category)}</button>`).join("")}</div><div class="art-sticker-grid">${catalog.stickers
           .filter((s) => s.category === materialCategory)
           .map((s) => `<button data-action="asset-sticker" data-sticker="${s.id}" aria-label="${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}"><img src="library/stickers/${s.file}" alt=""><span>${esc(languageCode() === "en" ? s.nameEn : s.nameZh)}</span></button>`)
-          .join("")}</div><div class="editor-actions"><button data-action="add-text-layer">${t("studio.textBox")}</button><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div>`,
+          .join("")}</div><div class="editor-actions"><button data-action="collage-photo">${t("studio.collagePhoto")}</button></div>`,
     },
   );
   // Video and sound are added with 视频 / 声音 under the paper; the dock only
@@ -2449,19 +2484,53 @@ function studioTools() {
 }
 // Decoration tools live in a small icon dock at the bottom of the screen;
 // tapping one opens a bottom sheet so the page itself keeps the space.
+// More: every other tool, in one sheet. A tile opens that tool in the same
+// sheet (‹ comes back here).
+const MORE_LABELS = { photos: "more.photos", media: "more.media" };
+function moreSheetHTML(tools) {
+  const tile = (attrs, name, label, cls = "") => `<button class="more-tile ${cls}" ${attrs}><span class="more-icon">${svIcon(name)}</span><small>${label}</small></button>`;
+  const toolTile = (toolId) => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, t(MORE_LABELS[toolId] || "dock." + toolId), "dock-btn") : "");
+  const tiles =
+    toolTile("paper") +
+    toolTile("layout") +
+    toolTile("font") +
+    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw") +
+    tile('data-action="add-video"', "video", t("add.video")) +
+    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
+    toolTile("mood") +
+    toolTile("photos") +
+    toolTile("media") +
+    toolTile("growth") +
+    toolTile("book") +
+    toolTile("layer") +
+    toolTile("chapters") +
+    tile('data-action="open-pages"', "pages", t("more.pages")) +
+    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn");
+  const sound = soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : "";
+  const mode = isDayPage() ? "" : `<div class="more-mode"><b>${t("more.mode")}</b>${pageModeHTML()}</div>`;
+  return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
+}
+// Page details: date, journal, time, name, caption, tags, delete.
+function detailsSheetHTML() {
+  return `<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
+}
+// The bottom of the editor: an open sheet (if any) above one row of tools.
 function toolMenuHTML() {
   const tools = studioTools();
-  if (studioTool && !tools.some((tool) => tool.id === studioTool)) studioTool = null;
-  const open = tools.find((tool) => tool.id === studioTool);
+  const sheets = [
+    ...tools,
+    { id: "more", icon: "", label: "tool.more", value: "", body: () => moreSheetHTML(tools) },
+    { id: "details", icon: "", label: "tool.details", value: isDayPage() ? t("day.cover") : activePage().title || t("moment.untitled"), body: detailsSheetHTML },
+  ];
+  if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
+  const open = sheets.find((tool) => tool.id === studioTool);
+  const back = open && !["more", "stickers"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
-    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head"><span class="tool-icon" aria-hidden="true">${open.icon}</span><b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
-  const dock = `<nav class="tool-dock" aria-label="${t("write.decorate")}">${tools
-    .map(
-      (tool) =>
-        `<button class="dock-btn ${tool.id === studioTool ? "open" : ""}" data-action="tool" data-tool="${tool.id}" aria-expanded="${tool.id === studioTool}" aria-label="${t(tool.label)}"><span class="dock-icon" aria-hidden="true">${tool.icon}</span><small>${t("dock." + tool.id)}</small></button>`,
-    )
-    .join("")}</nav>`;
+  const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
+  const moreOpen = Boolean(studioTool) && studioTool !== "stickers";
+  const dock = `<nav class="tool-dock sv-tools" aria-label="${t("write.decorate")}">${tool('data-action="add-photos"', "photo", t("add.photo"))}${tool('data-action="add-text-layer"', "text", t("sv.text"))}${tool(`data-action="tool" data-tool="stickers" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("dock.stickers"), `dock-btn ${studioTool === "stickers" ? "open" : ""}`)}${tool(`data-action="tool" data-tool="more" aria-expanded="${moreOpen}"`, "more", t("dock.more"), `dock-btn ${moreOpen ? "open" : ""}`)}</nav>`;
   return sheet + dock;
 }
 // Updates the one-line summaries without re-rendering open inputs.
@@ -2681,6 +2750,7 @@ async function startQuickRecord() {
     render();
     await drawOnPage();
   } else setPageMode("note", { quiet: true });
+  resetHistory(); // setting the page up is not a step to undo
   toast(t("book.writingIn", { name }));
 }
 // ---------- Quick Create V2: today's story ----------
@@ -3321,11 +3391,56 @@ function addChoicesHTML(className = "") {
     `<button class="${className}" data-action="${action}" ${action === "add-sound" ? `aria-expanded="${soundMenu}"` : ""}><span aria-hidden="true">${glyph}</span><b>${t(label)}</b></button>`;
   return item("add-photos", "▣", "add.photo") + item("add-text-layer", "Aa", "add.text") + (className === "canvas-add-choice" ? item("draw-new", "✎", "draw.short") : "") + item("add-video", "▶", "add.video") + item("add-sound", "♫", "add.sound");
 }
+// ---------- Journal Studio shell (V10.0 · Phase A) ----------
+// Three states share one layout: the top bar (back · page name → pages ·
+// save state · preview · done), the paper, undo / redo and the page switcher
+// under it, and one row of tools at the bottom (photo · text · stickers ·
+// more). Everything else opens in the bottom sheet.
+let studioPreview = false;
+const SV_ICONS = {
+  photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
+  text: '<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
+  stickers: '<path d="M5 4.5h14a.5.5 0 0 1 .5.5v9l-5.5 5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5Z"/><path d="M14 19.5V15a1 1 0 0 1 1-1h4.5"/><path d="M9 10.5c.8 1.2 1.8 1.8 3 1.8s2.2-.6 3-1.8"/>',
+  more: '<circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/>',
+  paper: '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9h16M4 14h16"/>',
+  layout: '<rect x="4" y="4" width="7" height="9" rx="1.5"/><rect x="13" y="4" width="7" height="5" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/><rect x="4" y="15" width="7" height="5" rx="1.5"/>',
+  font: '<path d="M5 19 10.5 5h1L17 19M7.5 14h7"/><path d="M19.5 12v7"/>',
+  video: '<rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="m15.5 10.5 5-3v9l-5-3"/>',
+  sound: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  mood: '<circle cx="12" cy="12" r="8"/><path d="M9 14.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5M9.5 10h.01M14.5 10h.01"/>',
+  photos: '<rect x="3.5" y="7" width="13" height="11" rx="2"/><path d="M7 7V5.5a1 1 0 0 1 1-1h11.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1h-3"/>',
+  media: '<path d="M5 9v6M9 6v12M13 9v6M17 4v16M21 10v4"/>',
+  growth: '<path d="M12 21v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/>',
+  book: '<path d="M6 4.5h10.5A1.5 1.5 0 0 1 18 6v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"/><path d="m9 10 2 2 4-4"/>',
+  layer: '<path d="m12 4 8 4.5-8 4.5-8-4.5L12 4Z"/><path d="m4 13 8 4.5 8-4.5"/>',
+  pages: '<rect x="4" y="5" width="9" height="12" rx="1.5"/><path d="M8 20h10a1.5 1.5 0 0 0 1.5-1.5V8"/>',
+  details: '<circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/>',
+  chapters: '<path d="M9 7h10M9 12h10M9 17h10M5 7h.01M5 12h.01M5 17h.01"/>',
+  draw: '<path d="M4 20c2 0 3-1 3-3l9.5-9.5a2.1 2.1 0 0 1 3 3L10 20H4Z"/><path d="m14.5 9.5 3 3"/>',
+};
+const svIcon = (name) => `<svg class="sv-icon" viewBox="0 0 24 24" aria-hidden="true">${SV_ICONS[name] || SV_ICONS.more}</svg>`;
+function studioTitleHTML() {
+  const moments = editor.moments || [];
+  const day = isDayPage();
+  const current = activePage();
+  const name = day ? t("day.cover") : current.title || t("moment.untitled");
+  const count = day ? t("studio.coverOf", { count: moments.length }) : t("studio.pageOf", { n: moments.indexOf(current) + 1, count: moments.length });
+  return `<button class="sv-title" data-action="pages-manage" aria-label="${t("pages.title")}"><b data-studio-title>${esc(name)}</b><small>${esc(count)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></small></button>`;
+}
+function refreshStudioTitle() {
+  const el = document.querySelector("[data-studio-title]");
+  if (el && !isDayPage()) el.textContent = activePage().title || t("moment.untitled");
+}
 function studioPage() {
   const dayPage = isDayPage();
   if (quickResultActive()) return quickResultHTML();
-  // One compact bar (date · draft state · save) leaves the room to the page.
-  return `<header class="studio-bar"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1><input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"><span class="draft-status" id="draft-status">${draftDirty ? t("正在保存草稿…") : state().drafts[editor.date] ? t("草稿已保存在本机") : t("studio.draftHint")}</span>${keeperMiniHTML()}<button class="primary" data-action="save-entry">${t("save")} ${icon("check")}</button></header>${chapterChipsHTML()}${pageModeHTML()}${pageBarHTML()}${studioMusicHTML()}<div class="studio-stage ${studioTool ? "" : "large"}"><div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>${typeBarHTML()}<div class="stage-bar ${studioTool ? "with-size" : ""}"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${emptyPaper() ? "" : addChoicesHTML("stage-add")}<button class="stage-bg" data-action="open-background" aria-expanded="${studioTool === "paper"}"><span aria-hidden="true">▤</span><b>${t("add.background")}</b></button>${studioTool ? `<button data-action="preview-size" aria-label="${t("studio.previewLarge")}">⤢</button>` : ""}</div>${soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : ""}</div>${writeCardHTML()}<div class="studio-footer"><button class="secondary" data-action="save-draft">${t("studio.saveDraft")}</button><span class="export-choice"><button class="secondary" data-action="share-story">⇪ ${t("share.story")}</button><button class="primary" data-action="export">${icon("download")} ${t("export.photo")}</button><button class="primary" data-action="export-video">▶ ${t("export.video")}</button></span></div><p class="save-help">${t("studio.help")}</p><button class="float-save" data-action="save-float" hidden>${icon("check")} ${t("save")}</button><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  const paper = `<div class="canvas-wrap ${dayPage ? "" : "moment-wrap"}" id="canvas-wrap">${canvasHTML()}</div>`;
+  // Preview: the page as it will be kept, with sharing and export.
+  if (studioPreview)
+    return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-preview" aria-label="${t("studio.previewBack")}">${icon("back")}</button><div class="sv-title static"><b>${t("studio.preview")}</b><small>${t("studio.previewHint")}</small></div><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage large previewing">${paper}</div><div class="tool-dock-wrap"><nav class="sv-export" aria-label="${t("studio.preview")}"><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="export">${icon("download")}<b>${t("export.photo")}</b></button><button data-action="export-video"><span aria-hidden="true">▶</span><b>${t("export.video")}</b></button></nav></div>`;
+  const status = draftDirty && draftState !== "failed" ? "saving" : draftState;
+  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -3417,6 +3532,9 @@ function render() {
   $("#phone").classList.toggle("signed-out", !signedIn);
   // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
   $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "story"));
+  // The Studio shell sizes the paper from the room it really has.
+  $("#phone").classList.toggle("sv", signedIn && page === "studio" && !quickResultActive());
+  $("#phone").style.setProperty("--studio-h", $("#app-scroll").clientHeight + "px");
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
@@ -3878,14 +3996,24 @@ function accountAction(target) {
       else apply();
       return true;
     }
-    case "studio-back":
-      flushDraft();
-      if (readReturn) {
-        returnToReading();
+    case "studio-back": {
+      const leave = () => {
+        studioPreview = false;
+        if (readReturn) returnToReading();
+        else navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
+      };
+      try {
+        draftDirty = draftDirty || draftState === "failed";
+        flushDraft();
+      } catch {
+        // The changes could not be stored: stay, unless the user chooses to go.
+        setDraftState("failed");
+        askConfirm(t("studio.leaveUnsaved")).then((ok) => ok && leave());
         return true;
       }
-      navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
+      leave();
       return true;
+    }
     case "settings-back":
       navigate(settingsReturn && settingsReturn !== "settings" ? settingsReturn : "home");
       return true;
@@ -4030,6 +4158,12 @@ async function handleCheck(habitId, date) {
 }
 async function action(target) {
   const actionName = target.dataset.action;
+  // A tile in More that starts something (video, drawing, pages…) closes the sheet.
+  if (page === "studio" && studioTool === "more" && target.closest?.(".more-grid") && !["tool", "add-sound"].includes(actionName)) {
+    studioTool = null;
+    soundMenu = false;
+    render();
+  }
   if (accountAction(target)) return;
   if (
     (busyMedia || recorder) &&
@@ -4673,6 +4807,7 @@ async function action(target) {
   }
   if (actionName === "music-sheet") {
     soundMenu = false;
+    if (studioTool === "more") studioTool = null;
     if (page === "studio") render();
     openMusicSheet(target.dataset.target === "book" ? "book" : "page");
   }
@@ -4692,6 +4827,7 @@ async function action(target) {
   }
   if (actionName === "add-audio-file") {
     soundMenu = false;
+    if (studioTool === "more") studioTool = null;
     render();
     $("#audio-input").click();
   }
@@ -4720,8 +4856,19 @@ async function action(target) {
       return;
     }
     clearTimeout(draftTimer);
-    store.update((s) => saveEntry(s, editor));
+    setDraftState("saving");
+    try {
+      store.update((s) => saveEntry(s, editor));
+    } catch (error) {
+      // Nothing is lost: the page stays open, and Done can be tried again.
+      setDraftState("failed");
+      toast(t(error?.code === "stale-state" ? "error.conflict" : "studio.saveFailed"));
+      return;
+    }
     draftDirty = false;
+    setDraftState("saved");
+    studioPreview = false;
+    studioTool = null;
     syncReminder();
     toast(t("这一天，已经好好收藏。🌷"));
     if (readReturn?.page === "story" && story) {
@@ -4842,6 +4989,7 @@ document.addEventListener("input", (event) => {
       label.textContent =
         (moment.time ? moment.time + " · " : "") +
         (moment.title || t("moment.untitled"));
+    refreshStudioTitle();
   }
 });
 document.addEventListener("change", (event) => {
@@ -5552,7 +5700,16 @@ function afterHistoryStep() {
   scheduleDraft();
   render();
 }
-function selectMoment(momentId) {
+// Undo belongs to the page in view. Moving to another page forgets the
+// earlier steps, so undo can never change a page that is not on screen;
+// `keepStep` keeps the one step that caused the move (deleting a page or
+// clearing the cover), so that step can still be undone. A new page starts
+// with nothing to undo.
+function selectMoment(momentId, keepStep = false) {
+  if ((momentId || null) !== activeMomentId) {
+    history = keepStep ? history.slice(-1) : [];
+    future = [];
+  }
   activeMomentId = momentId || null;
   templateCount = null;
   selectedLayer = null;
@@ -5562,7 +5719,7 @@ function selectMoment(momentId) {
   const page = activePage();
   if (!studioTool && page.media?.length) studioTool = "media";
   render();
-  $(".chapter-chips")?.scrollIntoView({ block: "start" });
+  $(".chapter-chips .chapter-chip.active")?.scrollIntoView({ block: "nearest", inline: "center" });
 }
 function addMomentNow() {
   let created;
@@ -5577,7 +5734,7 @@ function addMomentNow() {
     entry.moments.push(created);
   }, false);
   studioTool = null;
-  selectMoment(created.id);
+  selectMoment(created.id); // a new page starts with nothing to undo
   $('[data-moment-field="title"]')?.focus();
   toast(t("moment.added"));
 }
@@ -6125,15 +6282,45 @@ function pinStageForSheet() {
   pinnedSheet = studioTool;
   const stage = $(".studio-stage"),
     scroller = $("#app-scroll");
+  // …just under the top bar, which stays in place.
+  const bar = $(".studio-bar.sv-top");
   if (stage && scroller)
-    scroller.scrollTop += stage.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    scroller.scrollTop += stage.getBoundingClientRect().top - scroller.getBoundingClientRect().top - (bar ? bar.offsetHeight : 0);
 }
 async function v31Action(target) {
   const name = target.dataset.action;
   const momentId = target.dataset.moment;
   switch (name) {
     case "tool":
+      if (target.dataset.tool !== "more") soundMenu = false;
       openTool(target.dataset.tool);
+      return true;
+    case "first-photo":
+      soundMenu = false;
+      openPhotoChooser("layers");
+      return true;
+    case "studio-preview":
+      studioPreview = !studioPreview;
+      selectedLayer = null;
+      cropMode = false;
+      studioTool = null;
+      soundMenu = false;
+      render();
+      return true;
+    case "open-pages":
+      openPagesManage();
+      return true;
+    case "pages-add":
+      $("#choose-dialog").close();
+      addMomentNow();
+      return true;
+    case "pages-details":
+      $("#choose-dialog").close();
+      studioTool = "details";
+      render();
+      return true;
+    case "draft-retry":
+      toast(t(retryDraft() ? "draft.retryOk" : "draft.retryFailed"));
       return true;
     case "open-background":
       // 背景 under the paper: the same panel as the dock's 背景 (tap again closes).
@@ -6211,6 +6398,8 @@ async function v31Action(target) {
       setPageMode("note", { quiet: true });
       return true;
     case "page-mode":
+      // Chosen from More: the sheet steps aside so the paper shows the change.
+      if (studioTool === "more") studioTool = null;
       setPageMode(target.dataset.mode);
       return true;
     case "moment-up":
@@ -6246,7 +6435,7 @@ async function v31Action(target) {
         entry.fieldValues = {};
       });
       selectedLayer = null;
-      if (editor.moments.length) selectMoment(editor.moments[0].id);
+      if (editor.moments.length) selectMoment(editor.moments[0].id, true);
       if ($("#choose-dialog").open && $("#choose-dialog .pages-sheet")) renderPagesManage();
       toast(t("write.dayCleared"));
       return true;
@@ -6260,7 +6449,7 @@ async function v31Action(target) {
       )
         return true;
       changeEditor((entry) => removeMoment(entry, moment.id), false);
-      selectMoment(!hasDayPageContent(editor) && editor.moments.length ? editor.moments.at(-1).id : null);
+      selectMoment(!hasDayPageContent(editor) && editor.moments.length ? editor.moments.at(-1).id : null, true);
       toast(t("moment.deleted"));
       return true;
     }
@@ -7331,7 +7520,11 @@ async function start() {
   store = new Store(localStorage, responses[2], undefined, {
     durableRaw,
     persist: (raw) => meta.write(raw),
-    onPersistError: () => toast(t("storage.saveFailed")),
+    onPersistError: () => {
+      toast(t("storage.saveFailed"));
+      // The editor says so too, and offers to try again.
+      if (page === "studio") setDraftState("failed");
+    },
   });
   // Ask the browser / iOS not to clear this app's storage when space runs low.
   navigator.storage?.persist?.().catch(() => {});

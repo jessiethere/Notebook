@@ -15484,3 +15484,650 @@ dialog h2,
   overflow: visible;
   text-overflow: clip;
 }
+
+/* =====================================================================
+   V10.0 · Journal Studio shell (Phase A)
+   One layout for the whole editor: a quiet top bar (back · page name →
+   pages · save state · preview · 完成), a large sheet of paper, undo /
+   redo and the page switcher under it (never on the paper), and one row
+   of four tools at the bottom. Everything else opens in the bottom sheet.
+   ===================================================================== */
+.phone.sv #app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 6px 23px 0;
+}
+.sv-icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* ---- Top bar ---- */
+.studio-bar.sv-top {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  margin: 0 -9px 4px -19px;
+}
+.sv-top .studio-back,
+.sv-top .sv-preview {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+}
+.sv-top .studio-back svg {
+  width: 24px;
+  height: 24px;
+}
+.sv-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--ink);
+}
+.sv-title b {
+  font: 600 16px/1.25 var(--ui-sans);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sv-title small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--t-675d54, #675d54);
+  white-space: nowrap;
+}
+.sv-title small svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sv-top .draft-status {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+  white-space: nowrap;
+  overflow: visible;
+  opacity: 1;
+}
+.sv-top .draft-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-8fae7e, #8fae7e);
+}
+.sv-top .draft-status[data-state="saving"] i {
+  background: var(--lemon);
+}
+.sv-top .draft-status[data-state="failed"] {
+  color: var(--t-a24b3f, #a24b3f);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sv-top .draft-status[data-state="failed"] i {
+  background: var(--c-a24b3f, #a24b3f);
+}
+.sv-top .primary {
+  flex: none;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+  font-size: 15px;
+  font-weight: 600;
+}
+/* ---- Paper ---- */
+.phone.sv .studio-stage {
+  position: sticky;
+  top: 0;
+  margin: auto -23px;
+  padding: 0 14px;
+  background: var(--cream);
+  box-shadow: none;
+}
+.phone.sv .studio-stage .canvas-wrap {
+  margin: 0 auto;
+  padding: 0;
+  border-radius: 6px;
+  background: none;
+}
+.phone.sv .studio-stage.large .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px) * 0.8));
+}
+/* A sheet never squeezes the paper under 170px tall: it scrolls inside. */
+.phone.sv {
+  --sheet-max: min(40dvh, 340px, calc(var(--studio-h, 100dvh - 40px) - 374px));
+  --sheet-max-more: min(46dvh, 420px, calc(var(--studio-h, 100dvh - 40px) - 374px));
+}
+.phone.sv .studio-stage:not(.large) .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max)) * 0.8));
+}
+.phone.sv #app:has(.tool-sheet[data-tool-row="more"]) .studio-stage .canvas-wrap,
+.phone.sv #app:has(.tool-sheet[data-tool-row="details"]) .studio-stage .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max-more)) * 0.8));
+}
+.phone.sv .studio-stage .journal-canvas {
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px var(--c-785f3c14, #785f3c14),
+    0 24px 40px -28px var(--c-46321e8c, #46321e8c);
+}
+/* ---- Undo / redo + pages, under the paper ---- */
+.phone.sv .stage-bar {
+  display: grid;
+  grid-template-columns: 44px 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  margin: 6px -8px 0;
+}
+.phone.sv .stage-bar > button {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+}
+.phone.sv .stage-bar > button svg {
+  width: 22px;
+  height: 22px;
+}
+.phone.sv .stage-bar > button:disabled {
+  opacity: 0.32;
+}
+.phone.sv .stage-bar .chapter-chips {
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 4px;
+}
+.phone.sv .stage-bar .chapter-chip {
+  position: relative;
+  min-height: 38px;
+  padding: 0;
+  gap: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  max-width: none;
+}
+.phone.sv .stage-bar .chapter-chip .chip-text,
+.phone.sv .stage-bar .chapter-chip > i:not(.chip-num),
+.phone.sv .stage-bar .chip-delete,
+.phone.sv .stage-bar .strip-divider {
+  display: none;
+}
+.phone.sv .stage-bar .page-thumb {
+  width: 30px;
+  height: 38px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--c-785f3c26, #785f3c26);
+}
+.phone.sv .stage-bar .chapter-chip.active .page-thumb {
+  box-shadow:
+    0 0 0 2px var(--cream),
+    0 0 0 4px var(--sageDeep);
+}
+.phone.sv .stage-bar .chip-num {
+  position: absolute;
+  z-index: 1;
+  left: -3px;
+  top: -4px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+  font: 600 10px/1 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.phone.sv .stage-bar .chapter-chip.active .chip-num {
+  background: var(--sageDeep);
+  box-shadow: none;
+  color: var(--t-ffffff, #ffffff);
+}
+.phone.sv .stage-bar .chapter-chip.add {
+  width: 30px;
+  height: 38px;
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed var(--c-cdbfa8, #cdbfa8);
+  border-radius: 4px;
+}
+.phone.sv .stage-bar .chapter-chip.add .chip-num {
+  position: static;
+  min-width: 0;
+  height: auto;
+  background: none;
+  box-shadow: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--sageDeep);
+}
+/* ---- Bottom: four tools ---- */
+.phone.sv .tool-dock-wrap {
+  margin: 0 -23px;
+  padding: 0;
+  background: none;
+}
+.tool-dock.sv-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  overflow: visible;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom) * 0);
+  border-top: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--c-fffcf6, #fffcf6);
+  box-shadow:
+    0 -1px 0 var(--line),
+    0 -14px 30px -24px var(--c-46321e80, #46321e80);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.tool-sheet + .tool-dock.sv-tools {
+  border-radius: 0;
+  box-shadow: 0 -1px 0 var(--line);
+}
+.sv-tools .sv-tool {
+  width: auto;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border-radius: 14px;
+  color: var(--ink);
+}
+.sv-tools .sv-tool .sv-icon {
+  width: 25px;
+  height: 25px;
+  padding: 2px 9px;
+  box-sizing: content-box;
+  border-radius: 10px;
+  color: var(--sageDeep);
+}
+.sv-tools .sv-tool small {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.sv-tools .sv-tool.open .sv-icon {
+  background: var(--c-e3ebdc, #e3ebdc);
+}
+.sv-tools .sv-tool.open small {
+  font-weight: 600;
+  color: var(--ink);
+}
+/* ---- Bottom sheet ---- */
+.phone.sv .tool-sheet {
+  margin: 0;
+  max-height: var(--sheet-max);
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: var(--c-fffcf6, #fffcf6);
+  box-shadow:
+    0 -1px 0 var(--line),
+    0 -24px 40px -24px var(--c-46321e73, #46321e73);
+}
+.phone.sv .tool-sheet[data-tool-row="more"],
+.phone.sv .tool-sheet[data-tool-row="details"] {
+  max-height: var(--sheet-max-more);
+}
+.phone.sv .tool-sheet.tall {
+  max-height: 78dvh;
+}
+.phone.sv .sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px 4px 18px;
+  border-bottom: 0;
+  background: var(--c-fffcf6, #fffcf6);
+}
+.phone.sv .sheet-head b {
+  font: 600 17px/1.3 var(--ui-sans);
+  color: var(--ink);
+}
+.phone.sv .sheet-head .tool-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: right;
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+.sheet-back {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  margin-left: -10px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+}
+.sheet-back svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.phone.sv .sheet-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--ink);
+}
+.phone.sv .tool-sheet .tool-body {
+  padding: 6px 18px 16px;
+}
+/* ---- More ---- */
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px 4px;
+}
+.more-grid .more-tile {
+  width: auto;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.more-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--sageDeep);
+}
+.more-icon .sv-icon {
+  width: 26px;
+  height: 26px;
+}
+.more-grid .more-tile small {
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.more-grid .more-tile[aria-expanded="true"] .more-icon {
+  background: var(--c-e3ebdc, #e3ebdc);
+}
+.tool-body .sound-menu {
+  margin: 10px 0 0;
+}
+.tool-body .studio-music {
+  margin-top: 10px;
+}
+.more-mode {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.more-mode > b {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-675d54, #675d54);
+}
+.more-mode .page-mode {
+  margin: 0;
+}
+/* ---- Page details ---- */
+.details-date {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-675d54, #675d54);
+}
+.details-date .date-input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--c-ffffff, #ffffff);
+  font: 400 16px/1.2 var(--ui-sans);
+  color: var(--ink);
+}
+/* ---- An empty page ---- */
+.canvas-first-photo {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px 26px;
+  border: 1.5px dashed var(--c-cdbfa8, #cdbfa8);
+  border-radius: 18px;
+  background: var(--c-ffffff99, #ffffff99);
+  color: var(--ink);
+}
+.canvas-first-photo i {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+}
+.canvas-first-photo b {
+  font: 600 15px/1.3 var(--ui-sans);
+}
+.canvas-first-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+/* ---- Preview ---- */
+.studio-stage.previewing .journal-canvas {
+  pointer-events: none;
+}
+.studio-stage.previewing .canvas-empty-hint,
+.studio-stage.previewing .layer-bar {
+  display: none;
+}
+.sv-title.static {
+  padding-left: 2px;
+}
+.sv-export {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 16px 14px;
+  border-radius: 24px 24px 0 0;
+  background: var(--c-fffcf6, #fffcf6);
+  box-shadow:
+    0 -1px 0 var(--line),
+    0 -14px 30px -24px var(--c-46321e80, #46321e80);
+}
+.sv-export button {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--c-ffffff, #ffffff);
+  color: var(--ink);
+}
+.sv-export button span,
+.sv-export button svg {
+  width: 22px;
+  height: 22px;
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--sageDeep);
+}
+.sv-export button b {
+  font-size: 12px;
+  font-weight: 600;
+}
+/* ---- Pages sheet ---- */
+.pages-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.pages-actions .secondary {
+  min-height: 46px;
+  font-size: 14px;
+}
+/* Phase A · sheet details after the first real screenshots */
+.phone.sv .sheet-head .sheet-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  text-align: center;
+}
+.phone.sv .tool-body .page-bar {
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+.phone.sv .tool-body .page-bar .write-book {
+  flex: 1 1 100%;
+}
+.phone.sv .tool-body .page-bar .write-book select {
+  flex: 1 1 auto;
+  min-height: 46px;
+  font-size: 16px;
+}
+.phone.sv .tool-body .page-bar .write-time {
+  flex: 1 1 auto;
+  min-height: 46px;
+  font-size: 16px !important;
+}
+.phone.sv .tool-body .page-bar .write-delete {
+  flex: none;
+  min-height: 46px;
+}
+.phone.sv .tool-body .save-help {
+  margin: 12px 0 0;
+  text-align: left;
+}
+/* Phase A · the empty page scales with the paper; messages sit under the
+   top bar (never on 预览 / 完成). */
+.phone.sv .canvas-empty-hint.canvas-add {
+  inset: 24% 8%;
+  gap: 0;
+  padding: 0;
+  border: 0;
+}
+.canvas-first-photo {
+  gap: 2.8cqw;
+  padding: 5cqw 7cqw;
+  border-radius: 5cqw;
+}
+.canvas-first-photo i {
+  width: 12.6cqw;
+  height: 12.6cqw;
+  font-size: 6.6cqw;
+}
+.canvas-first-photo b {
+  font-size: 4.1cqw;
+  white-space: nowrap;
+}
+.canvas-first-hint {
+  margin-top: 2.8cqw;
+  font-size: 3.3cqw;
+  line-height: 1.5;
+}
+.phone.sv ~ .toast {
+  top: 98px;
+}
+html[data-shell="ios"] .phone.sv ~ .toast {
+  top: calc(env(safe-area-inset-top) + 62px);
+}
+/* Phase A · the top bar never scrolls away (a tall sheet may make the page
+   longer than the screen); the paper pins just under it. */
+.phone.sv .studio-bar.sv-top {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+  margin-top: -6px;
+  padding-top: 6px;
+  background: var(--cream);
+}
+.phone.sv .studio-stage {
+  top: 58px;
+}

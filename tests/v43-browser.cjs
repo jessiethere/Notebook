@@ -2,6 +2,7 @@
 // the main picture spot, pull-up sheets and the calendar photo wall.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -63,7 +64,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     passed.push("main picture spot opens the chooser; a library photo fills that spot");
 
     // 3. The ＋照片 button offers album, picks and library (the album still opens the picker).
-    await page.locator('.stage-bar [data-action="add-photos"], #journal-canvas [data-action="add-photos"]').first().tap();
+    await page.locator('.tool-dock [data-action="add-photos"]').tap();
     await page.waitForSelector("#choose-dialog[open] .choose-album");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('#choose-dialog [data-action="choose-album"]').tap();
@@ -71,7 +72,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(picker.isMultiple(), true);
     await picker.setFiles([]);
     // From the chooser, a collection opens the swipe sheet.
-    await page.locator('.stage-bar [data-action="add-photos"], #journal-canvas [data-action="add-photos"]').first().tap();
+    await page.locator('.tool-dock [data-action="add-photos"]').tap();
     await page.locator('#choose-dialog [data-action="scene-collection"][data-collection="coffee"]').tap();
     await page.waitForSelector("#scene-dialog[open] .pb-tile");
     assert.equal(await page.locator("#choose-dialog[open]").count(), 0);
@@ -79,7 +80,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     passed.push("＋照片 → album (multi) / today's picks / library collections");
 
     // 4. Panels have a grabber: tap or pull up for more room, pull down to close.
-    await page.locator('[data-action="tool"][data-tool="photos"]').tap();
+    await studioTool(page, "photos");
     await page.waitForSelector(".tool-sheet .sheet-grabber");
     const small = (await page.locator(".tool-sheet").boundingBox()).height;
     await page.locator(".sheet-grabber").tap();

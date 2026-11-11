@@ -210,7 +210,7 @@ export function canvasHTML(page, ctx, options = {}) {
     fixed = `${!backdrop && !readOnly ? `<button class="line-pick" data-action="line-photo"><span aria-hidden="true">＋</span>${t("line.pickPhoto")}</button>` : ""}<div class="line-strip"><div class="line-title" ${readOnly ? "" : inline("title", t("line.placeholder"), 70)} style="font-family:${esc(fontFamily(font, catalog))}${esc(styleExtra(page.textStyle))}">${esc(page.title || "")}</div>${page.body ? `<div class="line-body" style="font-family:${esc(fontFamily(page.bodyFont || font, catalog))}">${esc(page.body)}</div>` : ""}</div>`;
   else if (!readOnly && !page.layers?.length)
     // Tap the empty paper to add something: the same four equal choices.
-    fixed = `<div class="canvas-empty-hint canvas-add"><span>✿</span><p>${t("moment.canvasHint")}</p>${options.addChoices ? `<div class="canvas-add-row">${options.addChoices}</div><button class="canvas-scene-link" data-action="tool" data-tool="photos">${t("scene.pick")} ›</button>` : ""}</div>`;
+    fixed = `<div class="canvas-empty-hint canvas-add">${options.addChoices ? "" : `<span>✿</span><p>${t("moment.canvasHint")}</p>`}${options.addChoices ? options.addChoices : ""}</div>`;
   const classes = [
     "journal-canvas",
     template,

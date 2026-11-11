@@ -4,6 +4,7 @@
 // space (looks, frames, layouts) and stationery level names.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -67,11 +68,14 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     assert.equal(line.title, "海风和一杯冰美式");
     assert.equal(await page.locator(".write-card").count(), 0, "the words are on the photo, no card below");
     assert.equal(await page.locator('.chapter-chips .cover-chip.empty').count(), 1, "the cover is there, optional and empty");
-    assert.match(await page.locator(".strip-head").innerText(), /封面 \+ 1 页/);
+    assert.match(await page.locator(".sv-title").innerText(), /第 1 页 · 共 1 页/);
+    await studioMore(page);
     assert.equal(await page.locator('[data-action="page-mode"][data-mode="line"][aria-pressed="true"]').count(), 1);
+    await studioClose(page);
     if (shots) await page.screenshot({ path: `${shots}/v51-line.png` });
     // The saved picture works for this page too.
     await page.evaluate(() => document.activeElement?.blur());
+    await studioPreview(page);
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
@@ -189,7 +193,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     passed.push("draw again on the same drawing; clearing it removes it");
 
     // 7. Draw on any page from the bar above the paper; cancel keeps nothing.
-    await page.locator('.page-mode [data-action="draw-new"]').tap();
+    await studioMoreAction(page, "draw-new");
     await page.waitForSelector("#draw-dialog[open]");
     await stroke("mouse", [[0.3, 0.3], [0.4, 0.4]]);
     await page.locator('[data-draw="cancel"]').tap();
@@ -198,6 +202,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     passed.push("draw from the page bar; cancel keeps nothing");
 
     // 8. Pages of the day: deleting one lands on another page, not an empty day page.
+    await studioDetails(page);
     await page.locator('.page-bar [data-action="moment-delete"]').dispatchEvent("click");
     await page.waitForFunction(() => !document.querySelector("#confirm-dialog[open]") || true);
     if (await page.locator("#confirm-dialog[open]").count()) await page.locator("#confirm-ok").tap();
@@ -210,7 +215,8 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     const order = async () => (await draft()).moments.map((m) => m.id);
     await page.waitForTimeout(1300);
     const before = await order();
-    await page.locator('.strip-head [data-action="pages-manage"]').tap();
+    await studioClose(page);
+    await page.locator('.sv-title[data-action="pages-manage"]').tap();
     await page.waitForSelector("#choose-dialog[open] .pages-sheet");
     assert.equal(await page.locator(".pages-row.cover-row").count(), 1);
     assert.equal(await page.locator(".pages-row:not(.cover-row)").count(), before.length);
@@ -224,7 +230,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await page.locator('#choose-dialog [data-action="choose-close"]').tap();
     await page.waitForTimeout(1300);
     assert.deepEqual(await order(), [before[1], before[0]]);
-    assert.match(await page.locator(".strip-head").innerText(), /封面 \+ 2 页/);
+    assert.match(await page.locator(".sv-title").innerText(), /共 2 页/);
     passed.push("整理这一天: move a page, delete a page, the cover listed first");
 
     // 9. Decorate my space: a look, then a frame and a post layout.

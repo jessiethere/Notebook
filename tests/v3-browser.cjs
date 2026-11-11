@@ -1,5 +1,6 @@
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -64,8 +65,7 @@ async function streamBytes(download) {
     // Studio settings live in a summary menu; open one row (if closed).
     const toolOn = async (target, id) => {
       if (id === "text") return; // writing is always open (write card)
-      const head = target.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      await studioTool(target, id);
     };
     const tool = (id) => toolOn(page, id);
     const read = () =>
@@ -345,6 +345,7 @@ async function streamBytes(download) {
       .locator(".media-card audio")
       .last()
       .evaluate((audio) => audio.pause());
+    await studioPreview(page);
     const exportPromise = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();
     assert.ok((await streamBytes(await exportPromise)).length > 10000);
@@ -517,7 +518,7 @@ async function streamBytes(download) {
     await denied.waitForSelector(".hero");
     await goTab(denied, "studio");
     // Recording starts from 声音 under the paper.
-    await denied.locator('.stage-bar [data-action="add-sound"]').click();
+    await studioMoreAction(denied, "add-sound");
     await denied.locator('[data-action="add-record"]').click();
     await denied.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("麦克风"),

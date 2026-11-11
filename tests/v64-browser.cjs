@@ -3,6 +3,7 @@
 // stronger Editorial style (kicker, headline, folio, masthead).
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { skipPhotoEditor } = require("./signed-in.cjs");
 const { withExifTime } = require("./exif-fixture.cjs");
 const assert = require("node:assert/strict");

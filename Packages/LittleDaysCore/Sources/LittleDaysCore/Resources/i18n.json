@@ -6262,5 +6262,113 @@
   "paper.title": {
     "zh": "纸张",
     "en": "Paper"
+  },
+  "draft.saved": {
+    "zh": "已保存",
+    "en": "Saved"
+  },
+  "draft.saving": {
+    "zh": "保存中",
+    "en": "Saving"
+  },
+  "draft.failed": {
+    "zh": "保存失败",
+    "en": "Not saved"
+  },
+  "draft.retryOk": {
+    "zh": "已经重新保存好了。",
+    "en": "Saved again."
+  },
+  "draft.retryFailed": {
+    "zh": "还是没能保存，内容还在这一页上，请稍后再试。",
+    "en": "Still not saved. Your changes are kept on this page — try again in a moment."
+  },
+  "canvas.firstPhoto": {
+    "zh": "添加第一张照片",
+    "en": "Add your first photo"
+  },
+  "canvas.firstHint": {
+    "zh": "也可以点下面的「文字」直接写",
+    "en": "Or tap Text below and just write"
+  },
+  "strip.coverShort": {
+    "zh": "封",
+    "en": "C"
+  },
+  "studio.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "studio.preview": {
+    "zh": "预览",
+    "en": "Preview"
+  },
+  "studio.previewBack": {
+    "zh": "回到编辑",
+    "en": "Back to editing"
+  },
+  "studio.previewHint": {
+    "zh": "保存后就是这个样子",
+    "en": "This is how it will be kept"
+  },
+  "studio.pageOf": {
+    "zh": "第 {n} 页 · 共 {count} 页",
+    "en": "Page {n} of {count}"
+  },
+  "studio.coverOf": {
+    "zh": "这一天 · 共 {count} 页",
+    "en": "This day · {count} pages"
+  },
+  "studio.saveFailed": {
+    "zh": "没能保存。内容还在这一页上，可以再点一次「完成」。",
+    "en": "Could not save. Your changes are still on this page — tap Done again."
+  },
+  "studio.leaveUnsaved": {
+    "zh": "刚才的修改还没保存下来。现在离开，这些修改可能会丢失。仍然离开吗？",
+    "en": "Your latest changes are not saved yet. If you leave now they may be lost. Leave anyway?"
+  },
+  "tool.more": {
+    "zh": "更多工具",
+    "en": "More tools"
+  },
+  "tool.details": {
+    "zh": "页面信息",
+    "en": "Page details"
+  },
+  "dock.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "more.pages": {
+    "zh": "页面管理",
+    "en": "Pages"
+  },
+  "more.details": {
+    "zh": "页面信息",
+    "en": "Page details"
+  },
+  "more.mode": {
+    "zh": "换一种写法",
+    "en": "Change how this page is written"
+  },
+  "more.back": {
+    "zh": "回到更多工具",
+    "en": "Back to more tools"
+  },
+  "more.audio": {
+    "zh": "音频",
+    "en": "Audio"
+  },
+  "more.photos": {
+    "zh": "本页照片",
+    "en": "Photos here"
+  },
+  "more.media": {
+    "zh": "本页音视频",
+    "en": "Media here"
+  },
+  "sv.text": {
+    "zh": "文字",
+    "en": "Text"
   }
 }

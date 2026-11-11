@@ -4,6 +4,7 @@
 // the page's video carries it.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 const shots = process.env.SHOTS_DIR || "";
@@ -29,7 +30,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     await page.keyboard.type("有音乐的一页");
     await page.evaluate(() => document.activeElement.blur());
-    await page.locator('.stage-bar [data-action="add-sound"], #journal-canvas [data-action="add-sound"]').first().tap();
+    await studioMoreAction(page, "add-sound");
     await page.locator('.sound-menu [data-action="music-sheet"]').tap();
     await page.waitForSelector("#choose-dialog[open] .music-sheet");
     assert.equal(await page.locator(".music-row").count(), 8);
@@ -42,7 +43,10 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('[data-action="music-pick"][data-music="rainy-window"]').tap();
     await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
     assert.deepEqual(await bgm(), { music: "", playing: false }, "no music while writing");
+    // The page's music shows in More (under 音频).
+    await studioMore(page);
     assert.match(await page.locator(".studio-music .music-chip").innerText(), /窗外下雨/);
+    await studioClose(page);
     await page.locator('[data-action="save-entry"]').tap();
     await require("./signed-in.cjs").homeAfterSave(page);
     const saved = await page.evaluate((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d), today);

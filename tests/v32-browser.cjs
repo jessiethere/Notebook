@@ -3,6 +3,7 @@
 // Synthetic data only.
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -77,9 +78,8 @@ const shift = (key, days) => {
     await page.waitForSelector(".hero");
     const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
-      if (id === "text") return; // writing is always open (write card)
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing happens on the paper
+      await studioTool(page, id);
     };
     const read = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
 
@@ -87,15 +87,21 @@ const shift = (key, days) => {
     await nav("studio");
     await page.waitForSelector("#journal-canvas");
     // Tools are small icons in a dock at the bottom of the screen.
-    const rows = await page.$$eval(".tool-dock [data-action='tool']", (els) => els.map((el) => el.dataset.tool));
+    // V10.0: four tools at the bottom; the other tools are tiles in More.
+    assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
+    const dockTools = await page.$$eval(".tool-dock.sv-tools .sv-tool", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    assert.deepEqual(dockTools, ["add-photos", "add-text-layer", "stickers", "more"]);
+    const dock = await page.locator(".tool-dock").boundingBox();
+    await page.evaluate(() => document.activeElement?.blur?.());
+    await studioMore(page);
+    const rows = [...(await page.$$eval(".more-grid [data-action='tool']", (els) => els.map((el) => el.dataset.tool))), "stickers"];
+    await studioClose(page);
     assert.equal(await page.locator('#journal-canvas [data-inline="title"]').count(), 1, "the title is typed on the paper (always open)");
     for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
     // No second place to choose the journal or add media: those are the line
     // above the paper and 视频 / 声音 under it.
     assert.ok(!rows.includes("media") && !rows.includes("book"), "no duplicate tools");
-    assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
-    const dock = await page.locator(".tool-dock").boundingBox();
     // Studio is full-screen: the tool row sits at the very bottom (no tab bar).
     const screen = await page.locator("#app-scroll").boundingBox();
     assert.equal(await page.locator("#navigation").isVisible(), false, "no tab bar in Studio");
@@ -121,10 +127,10 @@ const shift = (key, days) => {
       return box.top >= frame.top - 1 && box.bottom <= frame.bottom + 1 && box.height > 150;
     });
     assert.ok(visible, "preview pinned while editing");
+    // Closing the sheet gives the paper its full size back.
     const small = (await page.locator("#journal-canvas").boundingBox()).width;
-    await page.locator('[data-action="preview-size"]').click();
-    assert.ok((await page.locator("#journal-canvas").boundingBox()).width > small * 1.3, "preview can be enlarged");
-    assert.equal(await page.locator(".tool-sheet").count(), 0, "enlarging closes the sheet");
+    await studioClose(page);
+    await page.waitForFunction((w) => document.querySelector("#journal-canvas").getBoundingClientRect().width > w * 1.3, small);
     // Mood change is visible in the summary and on the page at once.
     await tool("mood");
     await page.locator('[data-action="mood"][data-mood="✨"]').click();
@@ -144,14 +150,14 @@ const shift = (key, days) => {
 
     // A Moment with audio: selecting it opens its players directly.
     await page.locator('[data-action="add-moment"]').first().click();
-    await page.locator('[data-moment-field="title"]').fill("Evening walk");
+    await (await momentField(page, "title")).fill("Evening walk");
     await page.locator("#audio-input").setInputFiles({ name: "walk.wav", mimeType: "audio/wav", buffer: wav() });
     await tool("media");
     await page.waitForSelector('.media-card audio[src^="blob:"]', { state: "attached" });
     await page.locator('.chapter-chip[data-moment=""]').click();
     await page.locator("[data-tool-row='media'] .tool-head").click(); // close
     const walk = page.locator(".chapter-chip", { hasText: "Evening walk" });
-    assert.match(await walk.innerText(), /♫1/);
+    assert.match(await walk.textContent(), /♫1/); // the switcher shows thumbnails; the counts stay for screen readers
     await walk.click();
     await page.waitForSelector('[data-tool-row="media"].open .ld-player audio[src^="blob:"]', { state: "attached" });
     await page.locator('[data-tool-row="media"] .ld-play').click();

@@ -1,5 +1,6 @@
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -25,9 +26,8 @@ const path = require("node:path");
 
     // Studio settings live in a summary menu; open one row (if closed).
     const tool = async (id) => {
-      if (id === "text") return; // writing is always open (write card)
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing happens on the paper
+      await studioTool(page, id);
     };
     const savedState = () =>
       page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
@@ -94,6 +94,7 @@ const path = require("node:path");
     await page.locator('#journal-canvas [data-inline="title"]').fill("一朵花的练习");
     await page.locator('#journal-canvas [data-inline="body"]').fill("记住今天，也记住慢慢变好的自己。");
     // The journal is chosen in the line above the paper (not in the dock).
+    await studioDetails(page);
     await page.locator("[data-day-book]").selectOption(bookId);
     await tool("font");
     await page.locator('[data-editor-field="font"]').selectOption("rounded");
@@ -149,6 +150,8 @@ const path = require("node:path");
     await page.waitForFunction(() =>
       document.querySelector(".canvas-photo img")?.src.startsWith("blob:"),
     );
+    // Export lives in the preview.
+    await studioPreview(page);
     const downloadPromise = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();
     const download = await downloadPromise;

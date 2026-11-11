@@ -2,6 +2,7 @@
 // other artwork are page backgrounds (Paper panel, or from the photo chooser).
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -68,7 +69,7 @@ const shots = process.env.SHOTS_DIR || "";
     passed.push("light background: covers the paper; title/words on a frosted card");
 
     // 4. A dark background: the words turn white.
-    await page.locator('.dock-btn[data-tool="paper"]').tap();
+    await studioTool(page, "paper");
     await page.locator('.backdrop-option[data-backdrop="photo:starry-lake"]').tap();
     await page.waitForSelector("#journal-canvas.dark-backdrop");
     assert.equal(await page.locator("#journal-canvas .canvas-title").evaluate((el) => getComputedStyle(el).color), "rgb(255, 255, 255)");
@@ -94,6 +95,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector('#journal-canvas .canvas-photo img[src*="LD-photo-latte-art"]');
     await page.waitForFunction(() => { const img = document.querySelector("#journal-canvas .canvas-photo img"); return img.complete && img.naturalWidth > 0; });
     await shot("v44-photo-on-dark");
+    await studioPreview(page);
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
@@ -113,7 +115,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector("#journal-canvas.has-backdrop");
     await page.evaluate(() => document.activeElement?.blur());
     if (await page.locator('[data-action="tool-close"]').count()) await page.locator('[data-action="tool-close"]').tap();
-    await page.locator('.dock-btn[data-tool="paper"]').tap();
+    await studioTool(page, "paper");
     await page.locator('.backdrop-option[data-backdrop=""]').tap();
     await page.waitForSelector("#journal-canvas:not(.has-backdrop)");
     assert.equal(await page.locator("#journal-canvas .backdrop-veil").count(), 0);

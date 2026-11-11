@@ -3,6 +3,7 @@
 // Latin titles lie sideways along the spine.
 const { chromium } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -125,15 +126,15 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(note.textStyle.color, "#B5838D");
     assert.ok(note.textStyle.size > 20);
     assert.equal(note.bodyStyle.color, "#7D8E66");
-    assert.match(await mobile.locator('.stage-bar [data-action="add-text-layer"]').innerText(), /加文字框/, "the Text button says it adds a box");
+    assert.match(await mobile.locator('.tool-dock [data-action="add-text-layer"]').innerText(), /文字/, "Text sits in the bottom tools");
     await mobile.evaluate(() => document.activeElement.blur());
     await mobile.waitForSelector("#type-bar", { state: "hidden" });
     // One place for each choice: the journal is in the line above the paper,
     // video / sound are added under it; the dock does not repeat them.
-    const dockTools = await mobile.$$eval(".tool-dock .dock-btn", (els) => els.map((el) => el.dataset.tool));
-    assert.ok(!dockTools.includes("book") && !dockTools.includes("media"), dockTools.join());
+    const dockTools = await mobile.$$eval(".tool-dock .sv-tool", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    assert.deepEqual(dockTools, ["add-photos", "add-text-layer", "stickers", "more"], dockTools.join());
     // A check-in on the page is a soft label with a check (no emoji, no box).
-    await mobile.locator('.dock-btn[data-tool="growth"]').click();
+    await studioTool(mobile, "growth");
     await mobile.locator('[data-action="insert-growth"][data-habit="move"]').click();
     await mobile.waitForSelector("#journal-canvas .growth-layer .growth-check");
     assert.doesNotMatch(await mobile.locator("#journal-canvas .growth-layer").innerText(), /\p{Extended_Pictographic}/u);

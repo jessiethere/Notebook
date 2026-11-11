@@ -4,6 +4,7 @@
 // (measured in the real browser), and every page exports as a picture.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { withExifTime } = require("./exif-fixture.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

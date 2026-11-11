@@ -3,6 +3,7 @@
 // one sans typeface, and deleting a story / removing the day page in place.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -92,9 +93,11 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.evaluate(() => document.activeElement.blur());
     // (The paper is pinned at the top and the tools at the bottom; the card's
     // buttons sit between them on screen, so the click is sent directly.)
+    await studioDetails(page);
     await page.locator('.page-bar [data-action="moment-delete"]').dispatchEvent("click");
     await page.locator("#confirm-ok").tap();
     await page.waitForFunction(() => !document.querySelector(".chapter-chips")?.innerText.includes("不想要的这页"));
+    await studioDetails(page);
     await page.locator('.page-bar [data-action="day-page-clear"]').dispatchEvent("click");
     await page.locator("#confirm-ok").tap();
     await page.waitForFunction(() => !document.querySelector('.page-bar [data-action="day-page-clear"]'));

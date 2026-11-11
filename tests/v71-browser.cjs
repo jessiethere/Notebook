@@ -2,6 +2,7 @@
 // book tags show the top 3 with a search for the rest.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 const shots = process.env.SHOTS_DIR || "";
@@ -77,9 +78,10 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 4. Writing: quiet while typing; a stamp after Save; a reply only when asked, made on the device.
     await page.locator('[data-action="today-write"]').tap();
-    await page.waitForSelector(".keeper-mini");
+    // V10.0: the editor's top bar is only back · page · save state · preview · 完成 — the Keeper stays out of the way while writing.
+    await page.waitForSelector("#journal-canvas");
+    assert.equal(await page.locator(".studio-bar .keeper-mini, .studio-bar .keeper-img").count(), 0);
     await page.locator('#journal-canvas [data-inline="title"]').click();
-    await page.waitForSelector(".keeper-mini.writing .mood-quiet");
     await page.keyboard.type("累但是很骄傲");
     await page.locator('#journal-canvas [data-inline="body"]').click();
     await page.keyboard.type("Today was exhausting, but I still managed to work out. I'm proud that I didn't give up.");

@@ -1,6 +1,7 @@
 // Dark theme readability (no low-contrast text) and the two habit buttons.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -65,7 +66,7 @@ const scan = (page) =>
     await page.locator('[data-action="quick-continue"]').tap();
     await page.waitForSelector("#journal-canvas");
     pages.studio = await scan(page);
-    await page.locator('[data-action="tool"][data-tool="layout"]').tap();
+    await studioTool(page, "layout");
     pages.sheet = await scan(page);
     for (const [name, bad] of Object.entries(pages)) assert.deepEqual(bad, [], `${name}: low-contrast text`);
     const save = await page.locator('[data-action="save-entry"]').evaluate((el) => getComputedStyle(el).color);

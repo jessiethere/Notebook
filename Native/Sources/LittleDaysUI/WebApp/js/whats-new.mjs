@@ -4,6 +4,38 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.0",
+    date: "2026-11-11",
+    zh: {
+      title: "写手帐的页面重新整理了（第一步：外壳）",
+      items: [
+        "纸张变大了，占满屏幕中间；写一页不用再上下滚动。",
+        "顶部只留：返回、这一页的名字（点它整理这一天的页面）、保存状态、预览、完成。",
+        "底部只有四个工具：照片、文字、贴纸、更多。背景、版式、字体、手绘、视频、音频、心情等都在「更多」里，点进去后左上角 ‹ 可以回到「更多」。",
+        "撤销和重做移到纸张左下方，不会挡住内容；没有可撤销的内容时是灰色。切到另一页后，撤销不会改到别的页面。",
+        "日期、记到哪本手帐、时间、名字和说明、删除这一页，都收在「更多 → 页面信息」。",
+        "分享、导出图片、导出视频移到「预览」（顶部的眼睛）里。",
+        "顶部会显示 已保存 / 保存中 / 保存失败。保存失败时留在编辑页、内容不丢，点「保存失败」可以重试。",
+        "点「完成」：保存好并回到刚保存的那一页（只读），需要时点「编辑这一页」再回来；不会自动公开或发到社区。",
+        "这是第一步。选中照片、文字、贴纸时在底部出现各自的工具，是下一步。",
+      ],
+    },
+    en: {
+      title: "The writing screen, reorganised (step 1: the shell)",
+      items: [
+        "A larger sheet of paper in the middle of the screen; no more scrolling up and down to write a page.",
+        "The top bar keeps only: back, the page's name (tap it to arrange the day's pages), the save state, preview and Done.",
+        "Four tools at the bottom: Photo, Text, Stickers, More. Background, layout, font, drawing, video, audio, mood and the rest are in More; ‹ at the top left of a tool returns to More.",
+        "Undo and redo moved under the paper at the lower left, never on your content; they are greyed out when there is nothing to undo. After switching pages, undo cannot change another page.",
+        "Date, journal, time, name and caption, and deleting the page are in More → Page details.",
+        "Share, export photo and export video moved into Preview (the eye at the top).",
+        "The top bar shows Saved / Saving / Not saved. If saving fails you stay in the editor with everything kept; tap “Not saved” to try again.",
+        "Done saves and shows the page you just saved (read-only); tap “Edit this page” to come back. Nothing is made public or posted to the community.",
+        "This is step 1. Tools that appear at the bottom for a selected photo, text or sticker come next.",
+      ],
+    },
+  },
+  {
     version: "9.2",
     date: "2026-11-10",
     zh: {

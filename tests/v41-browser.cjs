@@ -2,6 +2,7 @@
 // placing, editing and exporting a scene. Original illustrations only.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
 const { menu, openToday } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
@@ -49,14 +50,13 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('#choose-dialog [data-action="quick-start"]').tap();
     await page.waitForSelector("#journal-canvas.line-page");
     assert.match(await page.locator("#journal-canvas").getAttribute("style"), new RegExp(`LD-photo-${sceneId}`));
-    await page.locator('[data-action="page-mode"][data-mode="layout"]').tap();
-    await page.waitForSelector('[data-action="page-mode"][data-mode="layout"][aria-pressed="true"]');
+    await studioMode(page, "layout");
+    await page.waitForSelector("#journal-canvas"); // mode layout (chosen in More)
     passed.push("Home: picture of the day → one tap makes a photo + one line page");
 
     // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
     await page.evaluate(() => document.activeElement?.blur());
-    const dock = page.locator('.dock-btn[data-tool="photos"]');
-    if ((await dock.getAttribute("aria-expanded")) !== "true") await dock.tap();
+    await studioTool(page, "photos");
     await page.waitForSelector(".wall-gallery");
     const photoCollections = await page.evaluate(async () => (await (await fetch("shared/library.json")).json()).photoCollections.map((c) => c.id));
     assert.deepEqual(await page.$$eval(".wall-get", (els) => els.map((el) => el.dataset.collection)), photoCollections);
@@ -109,6 +109,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
 
     // 5. Export works with scenes on the page.
     await page.locator('[data-action="tool-close"]').first().tap().catch(() => {});
+    await studioPreview(page);
     const png = page.waitForEvent("download");
     await page.locator('[data-action="export"]').tap();
     assert.match((await png).suggestedFilename(), /\.png$/);
