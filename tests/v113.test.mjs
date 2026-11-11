@@ -1,0 +1,113 @@
+// V10.13 (dev only) · Captain's optional local AI provider: loopback only,
+// chat lines only, rules kept for real features, clean short replies, and a
+// quiet fallback when the model server is off or slow.
+import test from "node:test";
+import assert from "node:assert/strict";
+import http from "node:http";
+import * as AI from "../Public/js/captain-ai.mjs";
+import { understand } from "../Public/js/keeper-chat.mjs";
+
+const memory = (init = {}) => {
+  const data = new Map(Object.entries(init));
+  return { getItem: (k) => (data.has(k) ? data.get(k) : null), setItem: (k, v) => data.set(k, String(v)), removeItem: (k) => data.delete(k), data };
+};
+
+test("off unless a developer turns it on, and only page + model server on this computer", () => {
+  assert.equal(AI.devSettings(memory(), "http://127.0.0.1:8080/"), null, "off by default");
+  const on = memory({ [AI.DEV_KEY]: JSON.stringify({ on: true }) });
+  assert.deepEqual(AI.devSettings(on, "http://127.0.0.1:8080/"), { endpoint: "http://127.0.0.1:11434", model: "qwen3.5:4b" });
+  assert.ok(AI.devSettings(on, "http://localhost:8080/"));
+  for (const page of ["https://claude.ai/artifact/x", "http://192.168.1.20:8080/", "app://littledays/index.html", "file:///index.html", ""]) assert.equal(AI.devSettings(on, page), null, page);
+  const remote = memory({ [AI.DEV_KEY]: JSON.stringify({ on: true, endpoint: "https://api.example.com" }) });
+  assert.equal(AI.devSettings(remote, "http://127.0.0.1:8080/"), null, "a non-local model server is refused");
+  assert.throws(() => AI.createLocalProvider({ endpoint: "https://dashscope.aliyuncs.com" }));
+  // The URL switch works on this computer only.
+  const s = memory();
+  assert.equal(AI.applyDevParam("?dev-local-ai=qwen3.5:9b", s, "https://claude.ai/x"), null);
+  assert.equal(AI.applyDevParam("?dev-local-ai=qwen3.5:9b", s, "http://127.0.0.1:8080/?dev-local-ai=qwen3.5:9b"), "qwen3.5:9b");
+  assert.equal(AI.devSettings(s, "http://127.0.0.1:8080/").model, "qwen3.5:9b");
+  assert.equal(AI.applyDevParam("?dev-local-ai=off", s, "http://127.0.0.1:8080/"), "off");
+  assert.equal(AI.devSettings(s, "http://127.0.0.1:8080/"), null);
+});
+
+test("real features stay with the rules; chat goes to the model", () => {
+  for (const line of ["帮我整理今天的故事", "你会做什么", "看看这周写了什么", "What can you do?"]) assert.equal(AI.wantsModel(understand(line).intent), false, line);
+  for (const line of ["你好可爱呀", "你的柠檬帽真好看", "今天有点累，但是写完了一页", "我想摸摸你的头", "Hello, you're adorable!", "今天天气不错"]) assert.equal(AI.wantsModel(understand(line).intent), true, line);
+});
+
+test("the prompt: Captain's personality and limits; messages carry chat lines only", () => {
+  const zh = AI.systemPrompt({ language: "zh", wearing: "柠檬帽" });
+  assert.match(zh, /curious, playful, gentle, a little silly/);
+  assert.match(zh, /Simplified Chinese/);
+  assert.match(zh, /NOT read their journal/);
+  assert.match(zh, /柠檬帽/);
+  assert.match(AI.systemPrompt({ language: "en" }), /Answer in English/);
+  const history = Array.from({ length: 10 }, (_, i) => ({ who: i % 2 ? "keeper" : "me", text: `line ${i}` }));
+  const messages = AI.buildMessages({ text: "你好", history: [...history, { who: "system", text: "x" }, { who: "me", text: "  " }], language: "zh" });
+  assert.equal(messages[0].role, "system");
+  assert.equal(messages.length, 1 + AI.HISTORY_LINES + 1, "the last few chat lines only");
+  assert.deepEqual(messages.at(-1), { role: "user", content: "你好" });
+  assert.ok(messages.slice(1, -1).every((m) => ["user", "assistant"].includes(m.role)));
+});
+
+test("replies are cleaned: no hidden reasoning, stage directions or Markdown; two sentences at most", () => {
+  assert.equal(AI.cleanReply("<think>let me think</think>（歪头）**嘿嘿**，被你发现啦！真的吗？第三句不要。", "zh"), "嘿嘿，被你发现啦！真的吗？");
+  assert.equal(AI.cleanReply("Captain: *purrs* Thank you! You're kind. And more.", "en"), "Thank you! You're kind.");
+  assert.equal(AI.cleanReply("   ", "zh"), null);
+  assert.ok(AI.cleanReply("长".repeat(200), "zh").length <= 72);
+});
+
+function mockOllama(handler) {
+  return new Promise((resolve) => {
+    const seen = [];
+    const server = http.createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => {
+        seen.push({ url: req.url, body: body ? JSON.parse(body) : null });
+        handler(req, res, seen.at(-1));
+      });
+    });
+    server.listen(0, "127.0.0.1", () => resolve({ server, seen, endpoint: `http://127.0.0.1:${server.address().port}` }));
+  });
+}
+
+test("the call to Ollama: /api/chat, no reasoning, short output, kept loaded for 10 minutes only", async () => {
+  const { server, seen, endpoint } = await mockOllama((req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ model: "qwen3.5:4b", message: { role: "assistant", content: "嘿嘿，被你发现啦。" }, eval_count: 9, eval_duration: 300e6 }));
+  });
+  try {
+    const provider = AI.createLocalProvider({ endpoint });
+    const reply = await provider.reply({ text: "你好可爱呀", history: [{ who: "keeper", text: "我在呢。" }], language: "zh" });
+    assert.equal(reply.text, "嘿嘿，被你发现啦。");
+    assert.equal(reply.evalCount, 9);
+    const sent = seen[0];
+    assert.equal(sent.url, "/api/chat");
+    assert.equal(sent.body.stream, false);
+    assert.equal(sent.body.think, false);
+    assert.equal(sent.body.keep_alive, "10m");
+    assert.deepEqual(sent.body.options, AI.PARAMS);
+    assert.deepEqual(sent.body.messages.map((m) => m.role), ["system", "assistant", "user"]);
+  } finally {
+    server.close();
+  }
+});
+
+test("off, broken or slow → an error the app turns into the rules' reply", async () => {
+  await assert.rejects(AI.createLocalProvider({ endpoint: "http://127.0.0.1:9" }).reply({ text: "hi", language: "en" }));
+  const { server, endpoint } = await mockOllama((req, res) => {
+    if (req.url === "/api/chat" && !server.slow) {
+      server.slow = true;
+      res.statusCode = 500;
+      return res.end("{}");
+    }
+    setTimeout(() => res.end(JSON.stringify({ message: { content: "late" } })), 400);
+  });
+  try {
+    await assert.rejects(AI.createLocalProvider({ endpoint }).reply({ text: "hi" }), /HTTP 500/);
+    await assert.rejects(AI.createLocalProvider({ endpoint, timeoutMs: 80 }).reply({ text: "hi" }));
+  } finally {
+    server.close();
+  }
+});

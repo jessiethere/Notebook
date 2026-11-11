@@ -155,3 +155,10 @@ iOS 外壳 / 网页（Public/）
 - 处理：新模块 `Public/js/keeper-chat.mjs`，`understand(text) → { intent, mood, done, planned, notYet }`。只区分常见、明显的几类：功能请求（整理 / 回忆 / 这周 / 书架 / 代写）与「你会做什么」；关于今天（写完了 / 打算 / 还没写 + 累 / 难过 / 开心）；社交（问候、早安晚安、夸奖、夸帽子、谢谢、关心、摸摸抱抱、想玩）。其余为 unknown，回一句诚实的「没太懂」。
 - 刻意不做：不无限扩张关键词；不假装理解长句；功能列表只在被问到时出现。将来本地 Qwen 只需提供同样的输出结构即可替换 `understand()`，界面和回复选择不变。
 - 隐私：未开启「翻看以前的页面」时，`keeperFacts()` 不提供页面标题，引用标题的句子不会被选中；删去「偷偷多看了两眼」「每张都看了」「我听了一小段」等暗示偷看的表达。
+## 12. V10.13：本地 Qwen 实验的准备（2026-11-11，仅开发用）
+
+- 用户已有 MacBook Air（M5 / 24GB），决定开始 Step 2：在本机用 Ollama 运行 Qwen。实施细节、命令和状态见 [MAC_LOCAL_DEV.md](MAC_LOCAL_DEV.md)。
+- 提供者：`Public/js/captain-ai.mjs`（`createLocalProvider`），只允许本机地址。聊天意图（夸奖、帽子、累了、摸头、闲聊、没听懂的话）交给模型；功能请求仍走 `keeper-chat.mjs` 加规则。模型不可用时退回规则。发送内容只有用户打的句子和之前的模型回复。
+- 系统提示词、参数和测试集在仓库里，App 和 `tools/captain-eval.mjs` 共用同一份，结果放在 `docs/captain-ai/results/`。
+- 本节写作时还没有任何真实模型输出：会话在云端，连不到 Mac。
+- `createFeedbackService({ remote })`（保存一页后的回应）仍为 `remote = null`，这次没有接入模型。

@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.13",
+    date: "2026-11-11",
+    zh: {
+      title: "为在 Mac 上开发做准备（这个链接里看不到变化）",
+      items: [
+        "新增 Mac 本地开发说明和检查脚本：用于在你自己的 Mac 上运行网页预览、iPhone 模拟器，以及本地运行的 Qwen 模型（Ollama）。",
+        "Captain 可以在开发时接入本机的 Qwen 模型来聊天：默认关闭，只有在 Mac 上用开发命令打开时才会启用；这个链接和 iPhone App 里都不会使用。",
+        "接入后也只会发送你在 Captain 面板里打的那句话，不会发送手帐、照片或声音；模型没启动时，Captain 照常用原来的方式回答。",
+      ],
+    },
+    en: {
+      title: "Getting ready to develop on a Mac (nothing changes in this link)",
+      items: [
+        "New Mac development guide and check script: run the web preview, the iPhone Simulator and a Qwen model on your own Mac (Ollama).",
+        "During development, Captain can chat through the Qwen model on that Mac. It is off by default and only turned on with a developer command on the Mac — never in this link or the iPhone app.",
+        "Even then, only the line you type to Captain is sent — never your journal, photos or sound. When the model isn't running, Captain answers as before.",
+      ],
+    },
+  },
+  {
     version: "10.12",
     date: "2026-11-11",
     zh: {

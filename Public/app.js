@@ -34,6 +34,7 @@ import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.
 import * as Rich from "./js/rich-text.mjs";
 import * as Reader from "./js/reader.mjs";
 import * as Guide from "./js/studio-guide.mjs";
+import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
@@ -117,6 +118,9 @@ import {
 } from "./js/model.mjs";
 
 // The iOS Swift shell opens index.html?shell=ios (and also injects this marker).
+// Development only: ?dev-local-ai=<model> / =off on a page served from this
+// computer switches Captain's optional local-model chat (js/captain-ai.mjs).
+CaptainAI.applyDevParam(location.search);
 if (new URLSearchParams(location.search).get("shell") === "ios")
   document.documentElement.dataset.shell = "ios";
 const $ = (selector) => document.querySelector(selector);
@@ -1346,7 +1350,7 @@ function keepKeeperUnsent(text) {
   } catch {}
 }
 function keeperLinesHTML() {
-  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}${m.local ? " local-ai" : ""}">${esc(m.text)}${m.local ? `<small class="kp-local-ai">${t("kp.localAI")}</small>` : ""}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
   return lines + (keeperBusy ? `<p class="keeper-msg them pending" role="status" aria-label="${t("kp.thinking")}"><i></i><i></i><i></i></p>` : "");
 }
 // The field grows with the words (up to four lines); the button follows the field and the busy state.
@@ -1495,9 +1499,40 @@ function keeperAnswer(intent, said = "") {
     if (field) field.value = "";
   }
   if (!refreshKeeperChat()) openKeeperPanel("home");
+  // Development only (V10.13): chat lines may go to a model on this Mac
+  // (Ollama, 127.0.0.1). Real features and every failure use the rules below.
+  const local = said && CaptainAI.wantsModel(intent) ? CaptainAI.devSettings() : null;
+  if (local) {
+    askLocalModel(local, said, intent);
+    return;
+  }
   // Local replies are instant; the short pause shows that the line went and
-  // blocks a second send. (A future provider answers through this same step.)
+  // blocks a second send.
   setTimeout(() => keeperReply(intent, Boolean(said)), 420);
+}
+// Sends only the line just typed and the earlier chat lines that are the
+// person's own words or earlier model replies — never a page, a title, a
+// photo or a sound (rule replies can name pages, so they are left out). The
+// reply is a chat line only; it is never written into the journal.
+async function askLocalModel(settings, said, intent) {
+  const k = keeperNow();
+  const look = keeperLooks(catalog, k.animal, languageCode()).find((item) => item.id === (k.outfit || DEFAULT_OUTFIT[k.animal]));
+  const history = keeperChat
+    .slice(0, -1)
+    .filter((m) => m.who === "me" || m.local)
+    .map(({ who, text }) => ({ who, text }));
+  try {
+    const reply = await CaptainAI.createLocalProvider(settings).reply({ text: said, history, language: languageCode(), name: Keeper.keeperName(k, languageCode()), wearing: look?.name || "" });
+    keeperBusy = false;
+    keeperChat.push({ who: "keeper", text: reply.text, local: true });
+    keeperChat = keeperChat.slice(-12);
+    logEvent("keeper_local_ai", { ms: reply.ms });
+    const open = Boolean($("#choose-dialog")?.open && $("#choose-dialog .kp"));
+    if (open && !refreshKeeperChat()) openKeeperPanel("home");
+  } catch {
+    logEvent("keeper_local_ai_fallback", {});
+    keeperReply(intent, true);
+  }
 }
 function keeperReply(intent, typed) {
   keeperBusy = false;

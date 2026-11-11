@@ -11,3 +11,8 @@ node_modules/
 test-results/
 *.xcworkspace/
 dist/
+
+# Mac local development (tools/mac/dev.sh): Xcode build output; never commit model files
+build/
+*.gguf
+*.safetensors

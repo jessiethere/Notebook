@@ -336,3 +336,11 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 指针事件：`#app` 上的 pointerdown 先判断是否按在 `#sel-frame [data-handle]` 上（进入缩放或旋转）。按在图层上一律进入移动，并且要超过 `DRAG_SLOP` 才开始移动。`commitGesture` 判断点按：同一文字框上的第二次点按就是双击，在 pointerup 里调用 `editTextLayer`，属于用户手势，iOS 可以弹出键盘。缩放用 `localVector()` 把指针位置换算到图层自身坐标。编辑中的文字（contenteditable）不经过这些处理，交给浏览器原生光标和选择。
 - 引导：`Public/js/studio-guide.mjs` 只放纯函数，负责步骤、目标、文案选择和是否自动打开，并读写本机偏好 `little-days.studio-guide`。界面在 app.js，是 `#phone` 下的 `#studio-guide`（`pointer-events:none`，只有卡片可以点），每次 `render` 后重新定位；离开编辑器时算作跳过。这项偏好不在手帐 store、备份或 Swift 模型里。
 - 打字时的颜色：工具条第二行末尾 `.type-color-now`，点它给工具条加上 `.show-colors`，第二行换成色块，工具条高度不变。
+
+
+## 2026-11-11 V10.13 可选的本地 AI 提供者（仅开发）
+
+- 流程：Captain 面板 → `keeper-chat.mjs` 的 `understand()` → 功能请求走规则；聊天且 `CaptainAI.devSettings()` 返回本机设置时，调用 `askLocalModel()` → `createLocalProvider().reply()` → `POST 127.0.0.1:11434/api/chat`（Ollama）→ `cleanReply` → 作为一行聊天显示（`local: true`，带标签）。出错或超时时调用 `keeperReply()`，用规则回复。
+- 启用条件：本机偏好 `little-days.dev.local-ai = { on, endpoint, model }`，并且页面地址和模型地址都是 localhost 或 127.0.0.1。在线链接和 iPhone 外壳的地址都不是本机，所以永远不会启用。
+- 发送内容：系统提示词（包含 Captain 的名字和当前装扮名）、最近最多 6 行聊天（只含用户打的字和之前的模型回复）、新的一句。不发送手帐数据。
+- 开发工具：`tools/mac/doctor.sh`（只读检查）、`tools/mac/dev.sh`（预览、模拟器、评测、测试、停止）、`tools/captain-eval.mjs`（与 App 共用提示词和参数）。

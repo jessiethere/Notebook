@@ -19590,3 +19590,12 @@ button.book-detail-showcase {
     transition: none !important;
   }
 }
+
+/* V10.13 (development only) · a Captain line written by the model on this Mac. */
+.keeper-msg .kp-local-ai {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--c-8a8178, #8a8178);
+}

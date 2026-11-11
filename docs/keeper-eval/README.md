@@ -34,3 +34,8 @@
 - `Public/js/keeper.mjs` 的 `createFeedbackService({ remote })`：`remote` 现在是 `null`；将来传入 `{ available, respond(request) }` 即可接任意 Provider（本机 Ollama、自建后端代理、其他云端）。
 - 只有 `keeper.aiConsent === true` 才会走 `remote`；这个开关现在在界面上不能打开。
 - V10.3 的面板、选句器和两条本机流程不依赖 AI；`remote` 不可用或失败时自动用本机回应。
+
+## 2026-11-11 更新：本地实验工具已准备
+
+- 聊天类测试集：`docs/captain-ai/chat-cases.json`。运行器：`node tools/captain-eval.mjs`（只连本机 Ollama，与 App 共用 `Public/js/captain-ai.mjs` 的提示词和参数）。完整步骤见 `docs/MAC_LOCAL_DEV.md`。
+- 还没有在 Mac 上运行过。结果会写入 `docs/captain-ai/results/`。

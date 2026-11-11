@@ -48,6 +48,41 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.13（仅开发用）Mac 本地开发准备：环境检查、Captain × 本地 Qwen 实验工具、可选本地 AI 适配器
+
+- 需求：用户已有 MacBook Air（M5 / 24GB / 1TB，已下载 Ollama），希望实际检查和安装环境，在本机运行 Qwen（先 qwen3.5:4b，再评估 9b，不碰 27B 以上），用 Captain 的性格做中英文测试，在开发环境里加一个可选的 Local AI Provider，并在 Xcode iPhone 模拟器里运行真正的 App。
+- **受阻（如实记录）**：本会话运行在云端 Linux 容器里，`list_computer_folders` 为空，连不到用户的 Mac；容器的网络也打不开 ollama.com，无法核对模型标签。因此 Phase 1、2、3 的实际运行，以及 Phase 5 的 Xcode 构建和模拟器截图**都没有进行**，没有任何 Qwen 的真实回复，也没有模拟器截图。只做了不需要 Mac 的部分。
+- 仓库检查结论：已经有 `Native/LittleDays.xcodeproj`（iOS 17，App target「LittleDays」，`com.jessiethere.littledays`，自动签名，Team 为空，依赖本地 Package `Native/Package.swift` → `Packages/LittleDaysCore`），但从未用 Xcode 构建过。App 是 Swift 外壳 + WKWebView，加载打包进去的 `Public/` 副本；早期的 SwiftUI 原型视图还在，但没有使用。
+- 改动：
+  - `tools/mac/doctor.sh`：只读的环境检查，覆盖芯片 / 内存 / macOS、brew、git、node、python、Ollama 服务和模型、Ollama 是否只监听 127.0.0.1、Xcode / CLT / 模拟器运行时 / iPhone 模拟器、仓库分支和未提交修改。
+  - `tools/mac/dev.sh`：日常命令 web / web-ai / sim / ai / eval / test / stop。预览只监听 127.0.0.1；sim 依次做 sync → xcodebuild → 启动模拟器、安装、运行；不设开机自启动，不预先加载模型。
+  - `tools/captain-eval.mjs` + `docs/captain-ai/chat-cases.json`：12 句合成输入，包括用户指定的 7 句，另有难过、「你还记得吗」、天气、注入指令、「What can you do?」。脚本只连本机，统计耗时、tokens/s、首次加载时间和 /api/ps 报告的内存，结果写到 `docs/captain-ai/results/`。可调 `--runs`、`--temperature`、`--top-p`、`--num-predict`（推理参数，不是微调）。
+  - `Public/js/captain-ai.mjs`（V10.13）：
+    - Captain 系统提示词：好奇、调皮、温柔、有点呆；跟随用户的语言；回复 1–2 句；不推销功能；只知道聊天里说过的话、不编造；不能替用户按按钮；忽略要求改变规则的注入。
+    - `buildMessages`：最多带最近 6 行聊天。
+    - `cleanReply`：去掉 `<think>`、括号或星号里的动作和 Markdown，最多保留两句，并限制长度。
+    - 参数：temperature 0.7、top_p 0.9、top_k 40、repeat_penalty 1.1、num_predict 96；`think:false`；`keep_alive:"10m"`。
+    - `createLocalProvider`：只允许本机地址，超时 15 秒。
+    - `devSettings` / `applyDevParam`：只有页面和模型地址都是 localhost / 127.0.0.1，并且开发者用 `?dev-local-ai=<模型>` 打开时才启用；用 `?dev-local-ai=off` 关闭。
+    - `wantsModel`：整理、回忆、这周、书架、代写、「你会做什么」始终走规则。
+  - `Public/app.js`：`keeperAnswer` 判断本地 AI 启用并且是聊天意图时，调用 `askLocalModel()`，任何失败都退回 `keeperReply()` 的规则回复。发送的历史只包含用户自己打的句子和之前的模型回复；规则回复可能带页面标题，所以不发送。模型回复只作为一行聊天，带「本机模型 · 开发」标签，不写入手帐。i18n 增加 `kp.localAI`，样式增加 `.kp-local-ai`。
+  - `.gitignore`：加入 `build/`、`*.gguf`、`*.safetensors`。
+  - 文档：新增 `docs/MAC_LOCAL_DEV.md`，内容包括：状态表；如何在 Mac 上开 Claude 会话；检查、安装与 Qwen 实测命令；Captain 实验；本地 AI 架构；三种「本地 AI」的区别（Mac 本地 / 模拟器调用 Mac 服务 / 真实 iPhone）；Xcode 与模拟器；真机签名要求；日常流程；安全约定。KEEPER_AI_PLAN 第 12 节、ARCHITECTURE 和 README 同步更新。whats-new 增加 10.13，如实写明链接里看不到变化。
+- 测试：
+  - 新增 tests/v113.test.mjs（6 项，用 node:http 模拟 Ollama）和 tests/v113-browser.cjs，用 127.0.0.1 上模拟的 Ollama，覆盖：默认关闭；打开后聊天发给 /api/chat、`think:false`、回复经过清理并带标签；手帐标题和正文不会被发送；「你会做什么」和「整理今天的故事」不调用模型；服务停掉后退回规则；英文；手帐数据不变；`?dev-local-ai=off` 能关闭；没有请求离开本机。
+  - 结果：Node 184 通过；Python 16 通过；Captain 相关的浏览器测试 9 套（v41、v71、v103、v104、v105、v108、v109、v110、v113）全部通过，其中第一次有 1 套失败，单独重跑通过，没定位是哪一套。
+  - **没有用真实模型测试过。**
+- 三种情况的现状：
+  - Mac 本地 AI：代码已就绪，等在 Mac 上实测。
+  - 模拟器调用 Mac 服务：还没接通。外壳页面的地址不是 localhost，需要只在 DEBUG 构建里生效的开关，并确认 ATS 设置。
+  - 真实 iPhone 上的 AI：没有，也不让 Ollama 监听局域网。
+- 下一步（需要用户在 Mac 上开 Claude 会话，例如桌面 App 或在仓库里运行 `claude remote-control`）：
+  1. 运行 `bash tools/mac/doctor.sh`。
+  2. `ollama pull qwen3.5:4b`（标签以官方库为准）。
+  3. `bash tools/mac/dev.sh eval`，把结果提交到 `docs/captain-ai/results/`。
+  4. `bash tools/mac/dev.sh sim`：第一次构建按报错修工程，然后截图。
+  5. 评估 9B。
+
 ### 2026-11-11 — V10.12 Journal Studio：单击选中 / 双击编辑、框外控制点、文字颜色修复、三步操作指南
 
 - 需求：用户在 iPhone Web Preview 实际使用时发现：文字颜色选不了、移动文字框时容易误触控制点导致缩放 / 选择、文字不能双击编辑；希望统一单击 / 双击 / 拖动规则、独立的缩放和旋转手柄，并加一个轻量的首次使用引导（可跳过、只出现一次、「更多 → 操作指南」可重看、旧用户不因升级被重新教学）。
