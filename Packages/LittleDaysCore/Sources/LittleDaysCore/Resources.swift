@@ -154,6 +154,19 @@ public struct KeeperAsset: Decodable, Identifiable {
     public let license: String
 }
 
+/// V10.8: one look in Captain's wardrobe (library.json "keeperLooks"). `id`
+/// is a `KeeperAsset.outfit`; `kind` is "hat" or "accessory". Only looks with
+/// approved artwork are listed; nothing is unlocked or earned.
+public struct KeeperLook: Decodable, Identifiable {
+    public let id: String
+    public let animal: String
+    public let kind: String
+    public let nameZh: String
+    public let nameEn: String
+    public let noteZh: String?
+    public let noteEn: String?
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
@@ -164,6 +177,7 @@ public struct AssetCatalog: Decodable {
     public let photoCollections: [SceneCollection]?
     public let music: [MusicAsset]?
     public let keepers: [KeeperAsset]?
+    public let keeperLooks: [KeeperLook]?
     public let kits: [StoryKit]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]

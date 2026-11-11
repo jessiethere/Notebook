@@ -18302,3 +18302,79 @@ html[data-shell="ios"] .phone.sv ~ .toast {
   font: 400 10px var(--ui-sans);
   color: var(--t-8a8177, #8a8177);
 }
+
+/* =====================================================================
+   V10.8 · Captain's wardrobe — a few looks with real artwork, one tap to
+   change. No coins, no unlocking.
+   ===================================================================== */
+.keeper-looks {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 16px;
+}
+.look-group h4 {
+  margin: 0 0 8px;
+  font: 600 13px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.look-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.look-chip {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 96px;
+  min-height: 118px;
+  padding: 10px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--c-ffffff, #ffffff);
+  color: var(--ink);
+}
+.look-chip[aria-pressed="true"] {
+  border-color: var(--sageDeep);
+  box-shadow: 0 0 0 1px var(--sageDeep);
+  background: var(--c-f4f6ee, #f4f6ee);
+}
+.look-chip .look-art {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+}
+.look-chip .look-art img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+.look-chip b {
+  font: 600 13px var(--ui-sans);
+}
+.look-chip small {
+  font: 400 11px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.look-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--t-675d54, #675d54);
+}
+.kp-head .kp-look-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 13px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.kp-head .kp-look-link::after {
+  content: "";
+  position: absolute;
+}

@@ -48,6 +48,24 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.8 Captain 轻装扮（第一步：系统 + 现有画稿）
+
+- 需求：增加 Captain 的轻装扮系统，优先帽子与小配件，不做重度换装；装扮管理收进 Settings「角色与装扮」，Captain 快捷面板提供轻入口；第一阶段只做高质量、低复杂度的外观切换（例：柠檬帽、小花夹子、毛线帽、青蛙帽、睡帽；毛线球、围巾、铅笔、围裙）；不要金币、签到、亲密度等解锁系统。
+- 审查结论：Captain 的正式画稿只有两张来源——「Captain 角色视觉标准」（柠檬帽，4 个状态，已在用）和 docs/brand/LD-captain-natural-yarn-original.png（不戴帽、抱毛线球，此前只用于品牌）。小花夹子、毛线帽、青蛙帽、睡帽、围巾、铅笔、围裙没有任何画稿。项目既有约定（V7.9 / V8.0，与用户确认过）：Captain 只用正式画稿，不用 SVG / CSS / 表情符号代画；我也没有生成 3D 画稿的手段。因此本版实现完整的装扮系统，并上架「有画稿的」两个造型；其余造型不做假图、不做灰色占位，等画稿。
+- 改动文件：
+  - 新增 tools/extract_captain_look.py 与素材 Resources/Keepers/LD-keeper-cat-yarn-happy.png（320×325，透明 PNG；不重画）。LD-keeper-LICENSE.txt 补充来源说明与「待画稿清单 + 规格」。
+  - Resources/library.json：`keepers` 增加 `cat-yarn-happy`；新增 `keeperLooks`。Swift：`KeeperLook`、`AssetCatalog.keeperLooks`（未编译）。
+  - Public/js/keeper-art.mjs：`keeperLooks()`。Public/app.js：`keeperLooksHTML()`、动作 `keeper-look`、面板视图 `looks`、面板头部「装扮 ›」链接、设置「角色与装扮」面板里的选择器。
+  - Public/styles.css：V10.8 块。i18n：`look.*`。whats-new 10.8。
+  - tests：新增 tests/v108.test.mjs（4 项）、tests/v108-browser.cjs（4 组）、`test:browser:v108`；v79.test.mjs 的素材清单加入新图片。
+  - 文档：PRODUCT_SPEC / DESIGN_SYSTEM / ARCHITECTURE 的 V10.8 小节、README。
+- 决策与原因：① 一次一个造型（现有画稿是整只 Captain 的成品图，帽子和配件无法叠加）；数据沿用已有的 `keeper.outfit`，不加新字段。② 选择器只列有图片的造型，说明文字如实写「更多画好后会出现」。③ 毛线球造型只有一张画：所有表情显示这一张，首页不探头而是坐着。④ 抠图在浅色纸面上干净；深色背景下脚边有极细的浅色残留（原图的地面投影），已写入许可说明。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Safari）：Node 165、Python 16 通过；浏览器 E2E 全量 52 套全部通过（51 套旧 + v108）。v108 覆盖：面板轻入口尺寸、分组与只列有图造型、无锁定项、无游戏化字样、图片可加载；一点即换（面板 / 首页 / 书架 / 设置）、刷新后保留；设置里同一选择器、换回柠檬帽后首页恢复探头；不存在的造型回退柠檬帽；无外部请求。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 70，V10.8）。截图一张（四个画面）已发给用户。
+- 需要用户提供：小花夹子、毛线帽、青蛙帽、睡帽、围巾、铅笔、围裙的 Captain 画稿（每个至少「默认」姿势，透明或纯色背景、约 600px 高；最好还有开心 / 睡觉 / 探头，风格与比例同参考图）。放进 Resources/Keepers 并在 library.json 的 `keepers` / `keeperLooks` 各加一条即可上架，不需要改界面代码。
+- 未做：Design 画布没有加入 Book Reader 两板（设计图已直接发给用户，方案在 docs/BOOK_READER_PLAN.md）；Book Reader 等待用户确认后再实现；iPhone 真机未验证。
+- 下一步：等用户确认 Book Reader 的 7 个问题与装扮画稿；真机查看 V10.5–V10.8。
+
 ### 2026-11-11 — V10.7 离开 Journal Studio：完成手帐 / 保存草稿 / 继续编辑
 
 - 需求：点左上角返回、准备离开编辑器时三选一（完成手帐并退出 / 保存草稿并退出 / 继续编辑）；区分 Saved（已存到本机）、Draft（没做完）、Completed（做完了）；自动保存保留；保存失败不显示成功、不直接退出；草稿可在 My Books 等列表找到，带低调的「草稿」标签，重新进入恢复内容与编辑状态；先确认 Draft / Completed 属于整条记录还是当前编辑对象，不能把单张封面当成独立完成的手帐；面板用 Little Days 风格，文案「要先收好这一页吗？」，不用吓人的「放弃修改」；切换封面 / 内页、选文字、开工具不触发；右上角「完成」与面板里的「完成手帐」逻辑一致。

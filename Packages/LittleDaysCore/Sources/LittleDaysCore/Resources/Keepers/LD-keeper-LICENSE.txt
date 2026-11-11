@@ -14,7 +14,22 @@ from the reference; the reference itself is not shipped):
 The flat background and the baked drop shadow are removed; the app adds its
 own soft shadow.
 
+Second picture (V10.8, the "yarn ball" look): "Captain with a ball of yarn",
+no hat (docs/brand/LD-captain-natural-yarn-original.png, 941x1672), provided
+by the product owner. Cut out with tools/extract_captain_look.py; nothing
+redrawn. The backdrop, floor shadow, heart and sparkles are removed; the yarn
+and its thread stay.
+- LD-keeper-cat-yarn-happy.png    one pose, 320 px wide
+On a dark page a faint light edge can remain under the paws (the picture's
+own floor shadow); the app's pages are light.
+
 Usage: inside Little Days only. Not for redistribution or resale.
+
+Wanted looks that have NO artwork yet (they are not in the app and are never
+drawn in code): flower clip, knit hat, frog hat, sleep cap; scarf, pencil,
+apron. Each needs approved pictures of Captain wearing it — at least the
+"Normal" pose (transparent or flat background, about 600 px tall), ideally
+also Happy, Sleepy and Peek, in the same style and scale as the reference.
 
 Still needed from the artist: higher-resolution renders of each state
 (the reference figures are only ~190 px wide, the Peek ~340 px), and

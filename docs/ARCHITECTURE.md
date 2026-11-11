@@ -311,3 +311,11 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 重新进入草稿（`draft-continue`）：`openStudio(date)` 后回到记住的那一页。
 - 标签：`draftTagHTML(date)`（首页故事卡片、书本页面列表、翻页页眉）与当天页面的 `.draft-banner.is-draft`。
 - 兼容：旧记录不迁移。只存在于 `drafts` 的旧日子（以前用返回离开、从未点「完成」）现在显示为草稿——这与它们的真实状态一致。
+
+## 2026-11-11 V10.8 Captain 轻装扮
+
+- 素材：`Resources/Keepers/LD-keeper-cat-yarn-happy.png`（tools/extract_captain_look.py 从 docs/brand/LD-captain-natural-yarn-original.png 抠出：按边缘拟合背景平面、去掉地面投影和装饰、保留毛线和线头；不重画）。`library.json`：`keepers` 增加 `cat-yarn-happy`（outfit `yarn`）；新增 `keeperLooks: [{ id, animal, kind: "hat" | "accessory", nameZh, nameEn, noteZh?, noteEn? }]`。Swift：`KeeperLook`、`AssetCatalog.keeperLooks`（可选，未编译）。
+- `keeper-art.mjs`：`keeperLooks(catalog, animal, language)` 只返回「有图片的」造型（帽子在前）；`keeperAsset()` 原有回退不变——造型缺某个表情时用该造型的其他图片，不存在的造型用默认。
+- 数据：沿用已有的 `keeper.outfit`（V7.9 加入，小写字母；`""` = 默认），没有新字段。
+- app.js：`keeperLooksHTML()`（面板「装扮」视图与设置面板共用）、动作 `keeper-look`、面板视图 `looks`、头部链接 `.kp-look-link`。
+- 没有任何游戏化状态（无货币、无解锁表、无计数）。

@@ -26,6 +26,18 @@ export function keeperOutfits(catalog, animal) {
   return seen;
 }
 
+// V10.8: the wardrobe — looks that have approved pictures (library.json
+// "keeperLooks"), hats first. Nothing is unlocked or earned: every look
+// listed can simply be chosen.
+export function keeperLooks(catalog, animal = "cat", language = "zh-CN") {
+  const have = keeperOutfits(catalog, animal);
+  const en = language === "en";
+  return (catalog?.keeperLooks || [])
+    .filter((look) => look.animal === animal && have.includes(look.id))
+    .map((look) => ({ id: look.id, kind: look.kind === "accessory" ? "accessory" : "hat", name: en ? look.nameEn : look.nameZh, note: (en ? look.noteEn : look.noteZh) || "", isDefault: look.id === DEFAULT_OUTFIT[animal] }))
+    .sort((x, y) => (x.kind === y.kind ? 0 : x.kind === "hat" ? -1 : 1));
+}
+
 // The picture for an animal / outfit / mood (an unknown animal or outfit
 // shows Captain in the lemon hat).
 export function keeperAsset(catalog, { animal = "cat", outfit = "", mood = "idle" } = {}) {

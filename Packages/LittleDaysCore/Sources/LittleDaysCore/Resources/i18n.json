@@ -7134,5 +7134,25 @@
   "exit.draftFailed": {
     "zh": "没能保存草稿。内容还在这一页上，请再试一次。",
     "en": "The draft could not be saved. Your work is still on this page — please try again."
+  },
+  "look.title": {
+    "zh": "装扮",
+    "en": "Look"
+  },
+  "look.hat": {
+    "zh": "帽子",
+    "en": "Hats"
+  },
+  "look.accessory": {
+    "zh": "小配件",
+    "en": "Little things"
+  },
+  "look.note": {
+    "zh": "想换就换，不需要解锁。更多帽子和小配件画好后会出现在这里。",
+    "en": "Change it whenever you like — nothing to unlock. More hats and little things will appear here once they are drawn."
+  },
+  "look.say": {
+    "zh": "今天想让{name}是什么样子？",
+    "en": "How should {name} look today?"
   }
 }

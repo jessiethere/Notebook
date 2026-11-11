@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.8",
+    date: "2026-11-11",
+    zh: {
+      title: "Captain 可以换装扮了（第一步）",
+      items: [
+        "Captain 面板的名字下面多了「装扮 ›」；设置 →「角色与装扮」里也有同一个选择。点一下就换，首页、面板、书架上的 Captain 一起变。",
+        "现在有两个造型：柠檬帽（原来的样子），和抱着毛线球、不戴帽子的 Captain。",
+        "没有金币、签到、亲密度，也不需要解锁——想换就换。",
+        "小花夹子、毛线帽、青蛙帽、睡帽、围巾、铅笔、围裙还没有画稿。Captain 只用正式画稿，不用代码画，所以它们画好之后才会出现在这里。",
+        "毛线球造型目前只有一张画（开心的样子），所以首页上是坐着的 Captain，而不是从卡片后面探头。",
+      ],
+    },
+    en: {
+      title: "Captain can change its look (first step)",
+      items: [
+        "Under Captain's name in the panel there is now “Look ›”; the same choice is in Settings → Character & look. One tap changes it — on Home, in the panel and by the shelf.",
+        "Two looks for now: the lemon hat (as before), and Captain holding a ball of yarn, without a hat.",
+        "No coins, check-ins or closeness levels, and nothing to unlock — change it whenever you like.",
+        "Flower clip, knit hat, frog hat, sleep cap, scarf, pencil and apron have no artwork yet. Captain is only shown with real artwork, never drawn in code, so they will appear here once they are drawn.",
+        "The yarn look has a single picture for now (happy), so on Home Captain sits there instead of peeking over the card.",
+      ],
+    },
+  },
+  {
     version: "10.7",
     date: "2026-11-11",
     zh: {

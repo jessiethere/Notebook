@@ -31,7 +31,7 @@ import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import * as Rich from "./js/rich-text.mjs";
-import { keeperImage } from "./js/keeper-art.mjs";
+import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
@@ -1343,6 +1343,21 @@ function refreshKeeperChat() {
   syncKeeperComposer();
   return true;
 }
+// V10.8 · Captain's wardrobe: a hat or a small thing to hold, chosen with one
+// tap. No coins, check-ins or unlocking — only looks that have real artwork
+// are listed. The same picker is in Settings → 角色与装扮 and in the panel.
+function keeperLooksHTML() {
+  const k = keeperNow();
+  const looks = keeperLooks(catalog, k.animal, languageCode());
+  // A look that is no longer in the wardrobe shows as the default one (as the pictures do).
+  const wearing = looks.some((look) => look.id === k.outfit) ? k.outfit : DEFAULT_OUTFIT[k.animal] || looks[0]?.id || "";
+  const chip = (look) => `<button class="look-chip" data-action="keeper-look" data-look="${esc(look.id)}" aria-pressed="${look.id === wearing}"><span class="look-art">${keeperImage(catalog, { animal: k.animal, outfit: look.id, mood: "idle", label: "" })}</span><b>${esc(look.name)}</b>${look.note ? `<small>${esc(look.note)}</small>` : ""}</button>`;
+  const group = (kind) => {
+    const items = looks.filter((look) => look.kind === kind);
+    return items.length ? `<div class="look-group"><h4>${t("look." + kind)}</h4><div class="look-row">${items.map(chip).join("")}</div></div>` : "";
+  };
+  return `<div class="keeper-looks" role="group" aria-label="${t("look.title")}">${group("hat")}${group("accessory")}<p class="look-note">${t("look.note")}</p></div>`;
+}
 function openKeeperPanel(view = keeperView) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "invite")) return;
@@ -1351,12 +1366,13 @@ function openKeeperPanel(view = keeperView) {
   if (!keeperChat.length) keeperChat = [{ who: "keeper", text: keeperSay("tap", keeperFacts()) }];
   const top = (title) => `<div class="kp-title"><button class="kp-back" data-action="keeper-view" data-view="home" aria-label="${t("kp.back")}">${icon("back")}</button><b>${title}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
   let body;
-  if (view === "organize") body = top(t("kp.org.title")) + keeperOrganizeHTML();
+  if (view === "looks") body = top(t("look.title")) + `<div class="kp-note">${keeperArt("happy")}<p>${esc(tk("look.say", k))}</p></div>` + keeperLooksHTML();
+  else if (view === "organize") body = top(t("kp.org.title")) + keeperOrganizeHTML();
   else if (view === "memory") body = top(t("kp.mem.title")) + keeperMemoryHTML();
   else {
     const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
     const composer = `<div class="keeper-say kp-input"><textarea data-keeper-say rows="1" maxlength="300" enterkeyhint="enter" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}">${esc(keeperUnsent())}</textarea><button class="kp-send" data-action="keeper-say" aria-label="${t("kp.send")}" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5l6-6 6 6"/></svg><span>${t("kp.send")}</span><i class="kp-spin" aria-hidden="true"></i></button></div>`;
-    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small><button class="kp-look-link" data-action="keeper-view" data-view="looks">${t("look.title")} ›</button></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
   }
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp" data-view="${view}"><div class="choose-grabber" aria-hidden="true"></div>${body}</div>`;
@@ -4544,7 +4560,7 @@ function settingsSheetHTML(kind) {
     const leaves = config.stages.map((_, i) => `<i class="${i <= g.index ? "on" : ""}"></i>`).join("");
     const row = (key, on, hint, enabled = true) => `<button class="privacy-row s2-toggle" data-action="keeper-toggle" data-key="${key}" role="switch" aria-checked="${on}" ${enabled ? "" : "disabled"}><span><b>${t("keeper.settings." + key)}</b><small>${hint}</small></span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
     const quiet = k.mode === "quiet", interactive = k.mode === "interactive";
-    return `${head("s2.keeperManage")}<div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div><label class="s2-field keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label>${row("allowMemories", k.allowMemories, quiet ? t("s2.notInQuiet") : t("keeper.settings.allowMemoriesHint"), !quiet)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}<p class="s2-hint">${t("keeper.settings.growthNote")}</p><button class="kp-quiet keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="s2-hint">${t("keeper.settings.offKeeps")}</p>`;
+    return `${head("s2.keeperManage")}<div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div>${keeperLooksHTML()}<label class="s2-field keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label>${row("allowMemories", k.allowMemories, quiet ? t("s2.notInQuiet") : t("keeper.settings.allowMemoriesHint"), !quiet)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}<p class="s2-hint">${t("keeper.settings.growthNote")}</p><button class="kp-quiet keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="s2-hint">${t("keeper.settings.offKeeps")}</p>`;
   }
   if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li></ul>`;
   if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></div>`;
@@ -5360,6 +5376,18 @@ async function action(target) {
     if (said) keeperAnswer("unknown", said);
     // Still typing: the caret goes back to the field so the next line can follow.
     if (said && typing) $("[data-keeper-say]")?.focus();
+    return;
+  }
+  if (actionName === "keeper-look") {
+    const look = target.dataset.look || "";
+    const k = keeperNow();
+    if (!keeperLooks(catalog, k.animal, languageCode()).some((item) => item.id === look)) return;
+    saveKeeper((x) => (x.outfit = look === DEFAULT_OUTFIT[x.animal] ? "" : look));
+    logEvent("keeper_look", { kind: look });
+    render();
+    // The open picker (panel or Settings sheet) shows the new choice.
+    if ($("#choose-dialog")?.open && $("#choose-dialog .kp[data-view]")) openKeeperPanel("looks");
+    else if ($("#choose-dialog")?.open && settingsSheet === "keeper") openSettingsSheet("keeper");
     return;
   }
   if (actionName === "keeper-set") {

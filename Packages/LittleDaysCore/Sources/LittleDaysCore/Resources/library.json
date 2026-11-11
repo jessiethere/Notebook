@@ -2565,6 +2565,32 @@
       "mood": "peek",
       "file": "LD-keeper-cat-lemon-peek.png",
       "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-yarn-happy",
+      "animal": "cat",
+      "outfit": "yarn",
+      "mood": "happy",
+      "file": "LD-keeper-cat-yarn-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    }
+  ],
+  "keeperLooks": [
+    {
+      "id": "lemon",
+      "animal": "cat",
+      "kind": "hat",
+      "nameZh": "柠檬帽",
+      "nameEn": "Lemon hat"
+    },
+    {
+      "id": "yarn",
+      "animal": "cat",
+      "kind": "accessory",
+      "nameZh": "毛线球",
+      "nameEn": "Yarn ball",
+      "noteZh": "不戴帽子",
+      "noteEn": "no hat"
     }
   ]
 }

@@ -15,10 +15,11 @@ const png = (file) => {
 };
 
 test("catalog: Captain only — Normal, Happy, Sleepy, Peek; files, sizes, alpha and licence", () => {
-  assert.deepEqual(catalog.keepers.map((k) => k.id), ["cat-lemon-normal", "cat-lemon-happy", "cat-lemon-sleepy", "cat-lemon-peek"]);
+  // V10.8 adds the second approved picture (the yarn-ball look, one pose).
+  assert.deepEqual(catalog.keepers.map((k) => k.id), ["cat-lemon-normal", "cat-lemon-happy", "cat-lemon-sleepy", "cat-lemon-peek", "cat-yarn-happy"]);
   for (const k of catalog.keepers) {
     assert.equal(k.animal, "cat");
-    assert.equal(k.outfit, "lemon");
+    assert.ok(["lemon", "yarn"].includes(k.outfit));
     assert.ok(existsSync(new URL(`Keepers/${k.file}`, root)), k.file);
     const info = png(k.file);
     assert.ok(info.sig, "PNG");
