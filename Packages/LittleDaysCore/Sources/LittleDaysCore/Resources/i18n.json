@@ -7430,5 +7430,93 @@
   "s2.aiShort": {
     "zh": "现在没有 AI，不会发送你的手帐。",
     "en": "There is no AI now; your journal is never sent."
+  },
+  "reader.start": {
+    "zh": "开始翻阅",
+    "en": "Read Book"
+  },
+  "reader.continue": {
+    "zh": "继续翻阅 · 第 {n} 页",
+    "en": "Continue reading · page {n}"
+  },
+  "reader.fromCover": {
+    "zh": "从封面开始",
+    "en": "Start from the cover"
+  },
+  "reader.hint": {
+    "zh": "封面 + {count} 页 · 点封面也可以翻开",
+    "en": "Cover + {count} pages · tap the cover to open it"
+  },
+  "reader.last": {
+    "zh": "上次看到「{title}」",
+    "en": "Last read: “{title}”"
+  },
+  "reader.coverPos": {
+    "zh": "封面 · 共 {count} 页",
+    "en": "Cover · {count} pages"
+  },
+  "reader.pagePos": {
+    "zh": "第 {n} / {count} 页",
+    "en": "Page {n} of {count}"
+  },
+  "reader.coverEntry": {
+    "zh": "封面",
+    "en": "Cover"
+  },
+  "reader.back": {
+    "zh": "返回书本",
+    "en": "Back to the book"
+  },
+  "reader.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "reader.thumbs": {
+    "zh": "所有页面",
+    "en": "All pages"
+  },
+  "reader.thumbsHint": {
+    "zh": "封面 + {count} 页 · 点一页直接翻到那里",
+    "en": "Cover + {count} pages · tap one to go there"
+  },
+  "reader.edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "reader.editBook": {
+    "zh": "编辑书本",
+    "en": "Edit book"
+  },
+  "reader.swipe": {
+    "zh": "向左滑动翻开 ›",
+    "en": "Swipe left to open ›"
+  },
+  "reader.empty": {
+    "zh": "这本书还没有页面",
+    "en": "This book has no pages yet"
+  },
+  "reader.full": {
+    "zh": "阅读全文",
+    "en": "Read the full text"
+  },
+  "reader.musicOn": {
+    "zh": "播放这本书的音乐",
+    "en": "Play this book's music"
+  },
+  "reader.musicOff": {
+    "zh": "暂停音乐",
+    "en": "Pause the music"
+  },
+  "reader.unzoom": {
+    "zh": "还原大小",
+    "en": "Reset zoom"
+  },
+  "reader.toCover": {
+    "zh": "回到封面",
+    "en": "Back to the cover"
+  },
+  "reader.label": {
+    "zh": "翻页",
+    "en": "Turn pages"
   }
 }

@@ -4,6 +4,38 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.11",
+    date: "2026-11-11",
+    zh: {
+      title: "翻开一本手帐：全屏阅读",
+      items: [
+        "书本页最上面是「开始翻阅」（读过之后是「继续翻阅 · 第 N 页」，旁边可以「从封面开始」）；点封面也能翻开。「记录新的一页」和 PDF 分享放在下面。",
+        "阅读时整个屏幕都是这本书，底部导航先收起来。书页保持原来的 4:5，照片、贴纸、文字格式都和编辑时一样，不会被裁切。",
+        "封面不算页数：封面写「封面 · 共 8 页」，内页从「第 1 / 8 页」到「第 8 / 8 页」。",
+        "左右滑动翻页，也可以点左右边缘；点中间显示或隐藏按钮。双击照片放大看，可以双指缩放和拖动；双指也能放大整页看小字。视频和声音只在你点了之后才播放。",
+        "这本书的背景音乐默认不响，点右下角的 ♪ 才开始，可以暂停再继续。",
+        "页面列表里点某一天，直接翻到那天的第一页；封面也在列表最前面。右下角的「所有页面」可以一下跳到任意一页。",
+        "在阅读中点「编辑」，改完点完成或保存草稿，都会回到刚才那一页，显示最新的样子；新写好的一页保存后也会直接在阅读里打开。",
+        "放不下的长文字，书页保持原样，下面有「阅读全文」。",
+        "离开再回来，会记得读到哪一页（只记在这台设备上）。支持「减少动态效果」。",
+      ],
+    },
+    en: {
+      title: "Open a journal: full-screen reading",
+      items: [
+        "A book page now starts with “Read Book” (after reading, “Continue reading · page N”, with “Start from the cover”); tapping the cover opens it too. “Write a new page” and PDF sharing sit below.",
+        "While reading, the book fills the screen and the bottom menu steps away. Pages keep their 4:5 shape with photos, stickers and text formatting exactly as made — never cropped.",
+        "The cover is not a page: it reads “Cover · 8 pages”; pages go from “Page 1 of 8” to “Page 8 of 8”.",
+        "Swipe or tap the left / right edge to turn; tap the middle to show or hide the controls. Double-tap a photo to look closely (pinch and drag); pinch the page to read small words. Video and sound play only when you tap them.",
+        "The book's music is silent by default — tap ♪ to play, pause and continue.",
+        "In the page list, a day opens straight at its first page; the cover is listed first. “All pages” jumps to any page.",
+        "Edit from the reader, then finish or keep a draft: you come back to the same page, showing the change. A newly saved page also opens in the reader.",
+        "Long words that don't fit keep the page as it is, with “Read the full text” below.",
+        "Your place is remembered (on this device only). Reduce Motion is respected.",
+      ],
+    },
+  },
+  {
     version: "10.10",
     date: "2026-11-11",
     zh: {

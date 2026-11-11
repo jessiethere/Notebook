@@ -19,6 +19,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector(".hero");
     const keeper = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1") || "{}").keeper || null);
     const settings = async () => {
+      await require("./signed-in.cjs").leaveReader(page);
       await page.locator('#navigation [data-page="home"]').click();
       await page.locator(".settings-gear").click();
       await page.waitForSelector(".keeper-card");
@@ -89,8 +90,11 @@ const shots = process.env.SHOTS_DIR || "";
     await page.keyboard.type("Today was exhausting, but I still managed to work out. I'm proud that I didn't give up.");
     await page.locator('[data-action="save-entry"]').tap();
     await page.waitForSelector(".keeper-stamp");
-    await page.waitForSelector(".flip-page .keeper-ask");
-    await page.locator(".keeper-ask").click();
+    // V10.11: the saved page opens in the reader; 听听 Captain 怎么说 is under ⋯ there.
+    await page.waitForSelector(".reader .flip-page");
+    await page.locator('[data-action="reader-more"]').click();
+    await page.waitForSelector("#choose-dialog[open] .reader-keeper .keeper-ask");
+    await page.locator(".reader-keeper .keeper-ask").click();
     await page.waitForSelector(".keeper-sheet .keeper-reply");
     assert.match(await page.locator(".keeper-reply").innerText(), /辛苦|长|消耗|不轻松/);
     assert.match(await page.locator(".keeper-local").innerText(), /这台设备上生成/);

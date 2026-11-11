@@ -48,7 +48,7 @@ const transcript = [];
     await page.waitForFunction(() => !document.querySelector(".toast.visible"), null, { timeout: 8000 }).catch(() => {});
     await page.locator('.sv-top [data-action="save-entry"]').tap();
     await page.waitForSelector(".flip-page");
-    await page.locator('#navigation [data-page="home"]').tap();
+    await require("./signed-in.cjs").leaveReader(page); await page.locator('#navigation [data-page="home"]').tap();
     await page.waitForSelector(".keeper-home");
 
     // 1. Without permission Captain never quotes the page (and never says it peeked).

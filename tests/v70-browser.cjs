@@ -55,7 +55,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.waitForSelector(".flip-page:not(.is-cover)");
     assert.equal((await last()).skipToday, true, "today already kept: no reminder today");
     // A tapped reminder opens the record sheet.
-    await page.locator('#navigation [data-page="home"]').click();
+    await require("./signed-in.cjs").leaveReader(page); await page.locator('#navigation [data-page="home"]').click();
     await page.evaluate(() => window.littleDaysFromReminder());
     await page.waitForSelector("#choose-dialog[open] .quick-sheet");
     await page.locator('#choose-dialog [data-action="choose-close"]').click();

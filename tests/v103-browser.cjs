@@ -22,7 +22,7 @@ const shots = process.env.SHOTS || "";
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const shot = async (name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }); };
-    const home = async () => { await page.locator('#navigation [data-page="home"]').tap(); await page.waitForSelector(".hero"); };
+    const home = async () => { await require("./signed-in.cjs").leaveReader(page); await page.locator('#navigation [data-page="home"]').tap(); await page.waitForSelector(".hero"); };
     const closePanel = async () => { await page.locator('.kp [data-action="choose-close"]').first().tap(); await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" }); };
     const firstLine = () => page.locator(".kp .keeper-msg.them").first().innerText();
 

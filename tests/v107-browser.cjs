@@ -138,7 +138,11 @@ const shots = process.env.SHOTS || "";
     if (await page.locator('[data-action="book-view"][data-view="list"]').count()) await page.locator('[data-action="book-view"][data-view="list"]').tap();
     await page.waitForSelector(".day-cover .draft-tag");
     await shot("03-book-tag");
+    // V10.11: a day in the book opens the reader (with the 草稿 tag); its day page has the banner.
     await page.locator(".day-cover", { has: page.locator(".draft-tag") }).first().tap();
+    await page.waitForSelector(".reader .reader-caption .draft-tag");
+    await page.locator('[data-action="reader-more"]').tap();
+    await page.locator('#choose-dialog [data-action="open-day"]').tap();
     await page.waitForSelector(".day-detail .draft-banner.is-draft");
     assert.match(await page.locator(".day-detail .draft-banner").innerText(), /草稿[\s\S]*继续编辑/);
     await shot("04-day-banner");

@@ -247,10 +247,14 @@ const shift = (key, days) => {
     await page.waitForSelector(".book-filter + .empty");
     await page.locator('[data-action="book-filter-clear"]').click();
     await page.waitForFunction((n) => document.querySelectorAll(".day-cover").length === n, covers);
+    // V10.11: a day in the book's list opens the full-screen reader at that day's first page.
     await todayCover.click();
-    await page.waitForSelector(".day-detail .moment-chapter");
-    assert.match(await page.locator(".day-detail").innerText(), /Evening walk/);
-    passed.push("book day covers with month/date filters open the full day");
+    await page.waitForSelector(".reader .reader-page:not(.is-cover)");
+    const [y, m, d] = today.split("-").map(Number);
+    assert.match(await page.locator(".reader-caption").innerText(), new RegExp(`${y}年${m}月${d}日`));
+    assert.match(await page.locator(".reader-count").innerText(), /^第 \d+ \/ \d+ 页$/);
+    await require("./signed-in.cjs").leaveReader(page);
+    passed.push("book day covers with month/date filters open that day in the reader");
 
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });

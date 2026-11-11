@@ -114,17 +114,23 @@ const shots = process.env.SHOTS_DIR || "";
     await page.reload();
     await page.waitForSelector(".hero");
     await page.locator('.home-book-cover[data-book="food"]').tap();
-    await page.locator('[data-action="book-view"][data-view="flip"]').tap();
+    await page.locator(".book-detail-showcase").tap(); // V10.11: the reader, from the cover
     await page.waitForSelector(".flip-page.is-cover");
     let seen = false;
     while (!(await page.locator('[data-action="flip"][data-dir="1"]').isDisabled())) {
       await page.locator('[data-action="flip"][data-dir="1"]').tap();
       await page.waitForSelector(".flip-page:not(.is-cover)");
-      if (await page.locator(".flip-checklist").count()) {
+      // V10.11: in the reader the day's list is under ⋯ (More) on that day's first page.
+      await page.locator('[data-action="reader-more"]').tap();
+      await page.waitForSelector("#choose-dialog[open] .reader-sheet");
+      const listed = await page.locator("#choose-dialog .flip-checklist").count();
+      if (!listed) await require("./signed-in.cjs").closeSheet(page);
+      if (listed) {
         const moveTitle = (await store()).habits.find((h) => h.id === "move").title;
         assert.ok((await page.locator(".flip-checklist").innerText()).includes(moveTitle), "the habit checked, by name");
         assert.match(await page.locator(".flip-checklist").innerText(), /今日清单[\s\S]*给妈妈打电话/);
         seen = true;
+        await require("./signed-in.cjs").closeSheet(page);
         break;
       }
     }

@@ -1,6 +1,6 @@
 // V6.0 E2E: recommended background music. While writing: ♫ → choose one of
 // the original soft pieces (listen first). Reading that day plays it (pause
-// with the chip); leaving stops it; flipping the book plays it on that page;
+// with the chip); leaving stops it; in the book reader it plays on that page once ♪ is tapped;
 // the page's video carries it.
 const { chromium, devices } = require("playwright");
 require("./signed-in.cjs")(chromium);
@@ -78,19 +78,26 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#navigation [data-page="home"]').tap();
     await page.waitForSelector(".hero");
     await page.locator(`.home-book-cover[data-book="${withMusic.bookId || saved.bookId}"]`).first().tap();
-    await page.waitForSelector(".book-view-switch");
-    await page.locator('[data-action="book-view"][data-view="flip"]').tap();
+    // V10.11: in the full-screen reader a book is silent until ♪ is tapped;
+    // then the page's own piece plays.
+    await page.waitForSelector(".reader-start");
+    await page.locator('.book-detail-showcase').tap(); // the cover opens the reader at the cover
     await page.waitForSelector(".flip-page.is-cover");
     for (let i = 0; i < 80 && !(await page.locator('[data-action="flip"][data-dir="1"]').isDisabled()); i++) {
-      if (await page.locator(".flip-head .music-chip").count()) break;
+      if (await page.locator(".reader-music").count()) break;
       await page.locator('[data-action="flip"][data-dir="1"]').tap();
     }
-    await page.waitForSelector(".flip-head .music-chip");
+    await page.waitForSelector(".reader-music");
+    await page.waitForTimeout(500);
+    assert.equal(await page.evaluate(() => { const a = document.querySelector("#background-music"); return Boolean(a && !a.paused); }), false, "silent until asked");
+    await page.locator(".reader-music").tap();
     await page.waitForFunction(() => { const a = document.querySelector("#background-music"); return a && !a.paused && a.dataset.music === "rainy-window"; });
     if (shots) await page.screenshot({ path: `${shots}/v57-flip.png` });
+    await require("./signed-in.cjs").leaveReader(page);
     await page.locator('#navigation [data-page="home"]').tap();
     await page.waitForFunction(() => document.querySelector("#background-music").paused);
-    passed.push("flipping the book plays the page's music; leaving the book stops it");
+    passed.push("in the reader the page's music waits for ♪, then plays; leaving the book stops it");
+
 
     // 4. A voice note or video pauses the music (one sound at a time).
     await page.locator('#navigation [data-page="calendar"]').tap();

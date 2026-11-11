@@ -32,6 +32,7 @@ import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs"
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
 import * as Rich from "./js/rich-text.mjs";
+import * as Reader from "./js/reader.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
@@ -414,6 +415,11 @@ function returnToReading() {
   readReturn = null;
   flushDraft();
   quickResult = null;
+  if (back.page === "reader") {
+    // The same page (by identity), drawn again with what was just saved.
+    selectedDate = back.date;
+    return openReader(back.book, back.key || "resume");
+  }
   page = back.page;
   selectedBook = back.book;
   selectedDate = back.date;
@@ -534,7 +540,7 @@ function dayCoverHTML(day) {
     clips.some((c) => c.kind === "video") ? "◈" : "",
     clips.some((c) => c.kind === "audio") ? "♫" : "",
   ].filter(Boolean);
-  return `<button class="day-cover" data-action="open-day" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
+  return `<button class="day-cover" data-action="reader-open" data-book="${esc(selectedBook || "")}" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
     .slice(1, 4)
     .map((title) => `<li>${esc(title)}</li>`)
     .join("")}</ul>` : ""}${extras.length ? `<small>${esc(extras.join(" · "))}</small>` : ""}</span></button>`;
@@ -982,7 +988,8 @@ document.addEventListener(
 // book is flipped (never while writing), one at a time.
 const music = createMusicPlayer({ volume: loadVolume() });
 let musicPaused = false,
-  musicContext = "";
+  musicContext = "",
+  musicAsked = ""; // V10.11: the book whose music was asked for (books are silent by default)
 music.onChange(syncMusicChips);
 function syncMusicChips() {
   const current = music.current(),
@@ -994,6 +1001,14 @@ function syncMusicChips() {
     const glyph = chip.querySelector("i");
     if (glyph) glyph.textContent = on ? "❚❚" : "▶";
   });
+  // The reader's ♪ shows whether this book's music is really playing.
+  const readerButton = document.querySelector(".reader-music");
+  if (readerButton && page === "reader") {
+    const on = playing && current === readerMusicId();
+    readerButton.classList.toggle("on", on);
+    readerButton.setAttribute("aria-pressed", String(on));
+    readerButton.setAttribute("aria-label", t(on ? "reader.musicOff" : "reader.musicOn"));
+  }
   document.querySelectorAll("[data-music-preview]").forEach((button) => {
     const on = button.dataset.musicPreview === current && playing;
     button.classList.toggle("playing", on);
@@ -1015,22 +1030,24 @@ function syncMusic() {
     const entry = state().entries.find((e) => e.date === selectedDate) || state().drafts[selectedDate];
     wanted = dayMusic(entry, books);
     context = `day:${selectedDate}`;
-  } else if (page === "books" && selectedBook) {
-    // The book's own music; a page that has its own plays that instead.
-    wanted = bookMusic(books, selectedBook);
-    if (bookView === "flip" && flipIndex > 0) {
-      const turned = flipPages(selectedBook)[flipIndex - 1];
-      wanted = (turned?.moment || turned?.entry)?.music || wanted;
-      keep = true; // a page without music keeps what is playing going
-    }
-    context = `book:${selectedBook}`;
+  } else if ((page === "books" && selectedBook) || page === "reader") {
+    // V10.11: a book is silent until its music is asked for (the reader's ♪,
+    // or the chip on the book page); a page with its own piece plays that.
+    const id = page === "reader" ? readerBook : selectedBook;
+    wanted = page === "reader" ? readerMusicId() : bookMusic(books, id);
+    keep = page === "reader";
+    context = `book:${id}`;
   }
   if (context !== musicContext) {
     musicContext = context;
     musicPaused = false;
+    musicAsked = "";
   }
+  const silent = context.startsWith("book:") && musicAsked !== context;
   const track = findTrack(catalog, wanted);
-  if (track) {
+  if (silent) {
+    if (music.current() && !musicSheetOpen()) music.stop();
+  } else if (track) {
     if (!musicPaused && music.current() !== track.id) music.play(track);
   } else if (!keep || !music.current()) music.stop();
   syncMusicChips();
@@ -1044,6 +1061,7 @@ function toggleMusic(id) {
     syncMusicChips();
   } else {
     musicPaused = false;
+    musicAsked = musicContext;
     music.play(track);
   }
 }
@@ -1074,7 +1092,10 @@ function chooseMusic(id) {
       if (track) book.music = track.id;
       else delete book.music;
     });
-    musicContext = ""; // play the new choice straight away
+    // Choosing a piece for the book is asking for it: it plays straight away.
+    musicContext = `book:${selectedBook}`;
+    musicAsked = musicContext;
+    musicPaused = false;
   } else
     changeTarget((p) => {
       if (track) p.music = track.id;
@@ -1094,7 +1115,6 @@ function studioMusicHTML() {
   return track ? `<div class="studio-music"><button type="button" class="music-chip" data-action="music-sheet"><span class="music-note" aria-hidden="true">♫</span><span class="music-name">${esc(trackName(track, languageCode()))}</span><i aria-hidden="true">${t("music.change")}</i></button></div>` : "";
 }
 
-const BOOK_VIEW_KEY = "little-days.book-view";
 // Privacy choices on this device (Settings → Privacy). Both start "private":
 // the day's list stays out of exports and shared PDFs; Home may hide today.
 const PRIVACY_KEYS = { shareList: "little-days.share-list", hideToday: "little-days.hide-today" };
@@ -1952,73 +1972,413 @@ document.addEventListener("visibilitychange", () => {
     if (lock.grace === 0 && !isLocked()) showLock("unlock");
   } else if (hiddenAt && !isLocked() && lockUI.mode !== "set" && lockUI.mode !== "confirm" && AppLock.shouldRelock(lock, (Date.now() - hiddenAt) / 1000)) showLock("unlock");
 });
-const chosenBookView = () => {
-  try {
-    return localStorage.getItem(BOOK_VIEW_KEY) === "flip" ? "flip" : "list";
-  } catch {
-    return "list";
-  }
-};
-let bookView = chosenBookView();
 let flipIndex = 0,
-  flipTurn = 0,
-  flipBookId = null;
+  flipTurn = 0;
 function flipPages(bookId) {
   return bookSharePages(state(), bookId, { includeDemo: true });
 }
-function flipBookHTML(book) {
-  const pages = flipPages(book.id);
-  if (flipBookId !== book.id) {
-    flipBookId = book.id;
-    flipIndex = 0;
-  }
-  const total = pages.length + 1;
-  flipIndex = Math.max(0, Math.min(total - 1, flipIndex));
-  const range = dateRange(pages);
-  const when = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric" });
-  let body;
-  if (flipIndex === 0)
-    body = `<div class="flip-cover">${coverHTML(book, ctx())}<h3>${esc(book.title)}</h3>${book.description ? `<p>${esc(book.description)}</p>` : ""}<small>${range ? `${range.from === range.to ? when(range.from) : `${when(range.from)} – ${when(range.to)}`} · ` : ""}${t("bookShare.pages", { count: pages.length })}</small>${pages.length ? `<span class="flip-start">${t("flip.start")} ›</span>` : `<span class="save-help">${t("books.empty")}</span>`}</div>`;
-  else {
-    const { date, entry, moment } = pages[flipIndex - 1];
-    // The day's list (habits checked, things done) on its first page.
-    const firstOfDay = flipIndex === 1 || pages[flipIndex - 2].date !== date;
-    const listed = firstOfDay ? dayListItems(date) : [];
-    const checklist = listed.length ? `<p class="flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</p>` : "";
-    const page = moment || entry;
-    const demo = entry.isDemo || moment?.isDemo;
-    body = `<header class="flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}</span>${demo ? `<span class="badge">${t("entry.sample")}</span>` : draftTagHTML(date)}${musicChipHTML(findTrack(catalog, page.music || book.music), ctx())}</header>${page.title && !["line", "smart", "text"].includes(page.layoutTemplate) && moment ? `<h3 class="flip-title">${esc(page.title)}</h3>` : ""}<div class="flip-canvas">${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !moment })}</div>${checklist}<div class="flip-actions">${demo ? "" : `<button class="flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("read.edit")}</button>`}<button class="text-button flip-open" data-action="open-day" data-date="${esc(date)}">${t("flip.openDay")} ›</button></div>${demo ? "" : keeperAskHTML(date, moment?.id || "")}`;
-  }
-  const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
-  flipTurn = 0;
-  return `<section class="flip-book" aria-roledescription="book"><div class="flip-stage" data-flip-stage><article class="flip-page ${flipIndex === 0 ? "is-cover" : ""} ${turn}" aria-live="polite">${body}</article></div><nav class="flip-nav" aria-label="${t("flip.label")}"><button data-action="flip" data-dir="-1" ${flipIndex === 0 ? "disabled" : ""} aria-label="${t("journey.prev")}">‹</button><span>${t("journey.pageOf", { page: flipIndex + 1, total })}</span><button data-action="flip" data-dir="1" ${flipIndex >= total - 1 ? "disabled" : ""} aria-label="${t("journey.next")}">›</button></nav><p class="save-help flip-hint">${t("flip.hint")}</p></section>`;
+// ---------- V10.11 · The full-screen Book Reader ----------
+// Opening a book reads it like a book: one page at a time on a full screen
+// (the bottom menu hidden), the cover first. The pages are the app's own
+// read-only rendering of the real journal (canvasHTML, the same as Studio,
+// the day page and the export). Swipe or tap the edges to turn; tap the
+// middle to show / hide the controls; double-tap a photo to look at it
+// closely; pinch the page to read small words. Media never plays by itself,
+// and the book's music stays silent until asked for.
+let readerBook = null;
+let readerChrome = true;
+let readerZoom = { scale: 1, x: 0, y: 0 };
+let readerSeenKeys = "";
+function readerPages() {
+  return readerBook ? flipPages(readerBook) : [];
 }
-function turnPage(dir) {
-  if (!selectedBook || bookView !== "flip" || !dir) return;
-  const total = flipPages(selectedBook).length + 1;
-  const next = Math.max(0, Math.min(total - 1, flipIndex + dir));
-  if (next === flipIndex) return;
-  flipIndex = next;
-  flipTurn = dir;
+function readerKey() {
+  return flipIndex > 0 ? Reader.keyOf(readerPages()[flipIndex - 1]) : Reader.COVER;
+}
+// Open the reader on a book at a page (by identity) — "resume" uses the last read page.
+function openReader(bookId, key = "resume") {
+  const book = state().books.find((b) => b.id === bookId);
+  if (!book) return;
+  flushDraft();
+  quickResult = null;
+  readerBook = bookId;
+  selectedBook = bookId;
+  const pages = flipPages(bookId);
+  const wanted = key === "resume" ? Reader.savedPosition(bookId) || Reader.COVER : key;
+  flipIndex = Reader.positionOf(pages, wanted);
+  flipTurn = 0;
+  readerChrome = true;
+  readerZoom = { scale: 1, x: 0, y: 0 };
+  page = "reader";
   render();
 }
-// Swipe to turn (a mostly sideways move); arrow keys on a keyboard.
-let flipSwipe = null;
+function closeReader() {
+  Reader.savePosition(readerBook, readerKey());
+  document.querySelectorAll("#app audio, #app video").forEach((m) => m.pause());
+  page = "books";
+  selectedBook = readerBook;
+  render();
+  $("#app-scroll").scrollTop = 0;
+}
+function readerHTML() {
+  const book = state().books.find((b) => b.id === readerBook);
+  if (!book) {
+    page = "books";
+    return booksPage();
+  }
+  const pages = flipPages(book.id);
+  const count = pages.length;
+  flipIndex = Math.max(0, Math.min(count, flipIndex));
+  const when = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric" });
+  const turn = flipTurn > 0 ? "turn-next" : flipTurn < 0 ? "turn-prev" : "";
+  flipTurn = 0;
+  let paper, caption, edit;
+  if (flipIndex === 0) {
+    const range = dateRange(pages);
+    paper = `<article class="flip-page reader-page is-cover ${turn}"><div class="reader-cover">${coverHTML(book, ctx())}<h2>${esc(book.title)}</h2>${book.description ? `<p>${esc(book.description)}</p>` : ""}<small>${range ? `${range.from === range.to ? when(range.from) : `${when(range.from)} – ${when(range.to)}`} · ` : ""}${t("bookShare.pages", { count })}</small>${count ? `<span class="reader-swipe">${t("reader.swipe")}</span>` : `<span class="reader-swipe">${t("reader.empty")}</span>`}</div></article>`;
+    caption = "";
+    edit = `<button class="reader-edit" data-action="edit-book" data-book="${esc(book.id)}">✎ ${t("reader.editBook")}</button>`;
+  } else {
+    const { date, entry, moment } = pages[flipIndex - 1];
+    const pageData = moment || entry;
+    const demo = entry.isDemo || moment?.isDemo;
+    paper = `<article class="flip-page reader-page ${turn}"><div class="flip-canvas">${sharedCanvasHTML(pageData, ctx(), { readOnly: true, dayPage: !moment })}</div></article>`;
+    const title = pageData.title && !["line", "smart", "text"].includes(pageData.layoutTemplate) && moment ? `<b class="reader-title-line">${esc(pageData.title)}</b>` : "";
+    caption = `<div class="reader-caption flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}${demo ? ` <span class="badge">${t("entry.sample")}</span>` : draftTagHTML(date)}</span>${title}<button class="reader-full" data-action="reader-full" hidden>${t("reader.full")} ›</button></div>`;
+    edit = demo ? "" : `<button class="reader-edit flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("reader.edit")}</button>`;
+  }
+  const track = findTrack(catalog, readerMusicId());
+  const playing = track && music.current() === track.id && music.playing();
+  const musicBtn = track ? `<button class="reader-music ${playing ? "on" : ""}" data-action="reader-music" aria-pressed="${Boolean(playing)}" aria-label="${t(playing ? "reader.musicOff" : "reader.musicOn")}">${READER_ICONS.music}</button>` : `<span class="reader-music-gap" aria-hidden="true"></span>`;
+  const segments = Array.from({ length: count + 1 }, (_, i) => `<i class="${i === 0 ? "cover" : ""} ${i <= flipIndex ? "done" : ""}"></i>`).join("");
+  return `<section class="reader ${readerChrome ? "" : "chrome-off"} ${readerZoom.scale > 1 ? "zoomed" : ""}" data-reader aria-roledescription="book" aria-label="${esc(book.title)}">
+<header class="reader-top"><button class="reader-round" data-action="reader-back" aria-label="${t("reader.back")}">${icon("back")}</button><div class="reader-name"><small>MY BOOK</small><b>${esc(book.title)}</b></div>${edit}<button class="reader-round" data-action="reader-more" aria-label="${t("reader.more")}">${READER_ICONS.more}</button></header>
+<div class="reader-stage" data-flip-stage data-reader-stage>${paper}${caption}</div>
+<button class="reader-unzoom" data-action="reader-unzoom" ${readerZoom.scale > 1 ? "" : "hidden"}>${t("reader.unzoom")}</button>
+<footer class="reader-bottom"><button class="reader-round" data-action="reader-thumbs" aria-label="${t("reader.thumbs")}">${READER_ICONS.grid}</button><nav class="flip-nav reader-nav" aria-label="${t("reader.label")}"><button data-action="flip" data-dir="-1" ${flipIndex === 0 ? "disabled" : ""} aria-label="${t("journey.prev")}">‹</button><span class="reader-count" aria-live="polite">${esc(Reader.positionLabel(flipIndex, count, t))}</span><button data-action="flip" data-dir="1" ${flipIndex >= count ? "disabled" : ""} aria-label="${t("journey.next")}">›</button></nav>${musicBtn}</footer>
+<div class="reader-progress" aria-hidden="true">${segments}</div></section>`;
+}
+const READER_ICONS = {
+  book: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c2.7-1 5.3-1 8 .8 2.7-1.8 5.3-1.8 8-.8v13c-2.7-1-5.3-1-8 .8-2.7-1.8-5.3-1.8-8-.8Z"/><path d="M12 6.3v13"/></svg>',
+  more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  music: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
+};
+// The music for where the reader is: the page's own piece, else the book's.
+function readerMusicId() {
+  const book = state().books.find((b) => b.id === readerBook);
+  if (!book) return "";
+  const item = flipIndex > 0 ? readerPages()[flipIndex - 1] : null;
+  return (item?.moment || item?.entry)?.music || bookMusic(state().books, book.id) || "";
+}
+// After drawing: remember the place, load this page's (and the next ones')
+// media, and offer "read the full text" where words do not fit the paper.
+function afterReaderRender() {
+  if (page !== "reader") return;
+  Reader.savePosition(readerBook, readerKey());
+  const pages = readerPages();
+  const near = [flipIndex - 2, flipIndex - 1, flipIndex].map((i) => pages[i]).filter(Boolean);
+  const clips = near.flatMap((item) => (item.moment ? item.moment.media || [] : item.entry.media || []));
+  const keys = clips.map((clip) => clip.source).join(",");
+  if (keys && keys !== readerSeenKeys) {
+    readerSeenKeys = keys;
+    loadScope("reader", clips);
+  }
+  const body = document.querySelector(".reader-page .canvas-body");
+  const full = $(".reader-full");
+  if (full && body) full.hidden = !(body.scrollHeight > body.clientHeight + 2);
+  applyReaderZoom();
+}
+function turnPage(dir) {
+  if (page !== "reader" || !dir) return;
+  const count = readerPages().length;
+  const next = Math.max(0, Math.min(count, flipIndex + dir));
+  if (next === flipIndex) return;
+  document.querySelectorAll("#app audio, #app video").forEach((m) => m.pause());
+  flipIndex = next;
+  flipTurn = dir;
+  readerZoom = { scale: 1, x: 0, y: 0 };
+  render();
+}
+function goToPosition(at) {
+  const dir = at > flipIndex ? 1 : at < flipIndex ? -1 : 0;
+  flipIndex = at;
+  flipTurn = dir;
+  readerZoom = { scale: 1, x: 0, y: 0 };
+  render();
+}
+function applyReaderZoom() {
+  const paper = document.querySelector(".reader-page");
+  if (!paper) return;
+  const { scale, x, y } = readerZoom;
+  paper.style.transform = scale > 1 ? `translate(${x}px, ${y}px) scale(${scale})` : "";
+  document.querySelector(".reader")?.classList.toggle("zoomed", scale > 1);
+  const unzoom = $(".reader-unzoom");
+  if (unzoom) unzoom.hidden = scale <= 1;
+}
+// Gestures on the page. One finger: a mostly sideways move turns the page
+// (it follows the finger); a tap on the left / right fifth turns, the
+// middle shows / hides the controls; a double tap on a photo looks at it
+// closely. Two fingers: zoom the page; then one finger moves it.
+// Taps on players and buttons always go to them.
+const readerPointers = new Map();
+let readerGesture = null,
+  readerPinch = null,
+  readerTapTimer = 0,
+  readerLastTap = null,
+  readerClickBlock = 0;
+const READER_CONTROLS = 'button, a, input, select, textarea, audio, video, .layer-play, .audio-ticket, .media-layer, [data-action]:not([data-action="zoom-photo"])';
 document.addEventListener("pointerdown", (event) => {
-  if (event.target.closest?.("[data-flip-stage]")) flipSwipe = { x: event.clientX, y: event.clientY };
+  if (page !== "reader" || !event.target.closest?.("[data-reader-stage]") || $("#choose-dialog")?.open || $("#lightbox")?.open) return;
+  readerPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  const stage = event.target.closest("[data-reader-stage]").getBoundingClientRect();
+  if (readerPointers.size === 2) {
+    const [a, b] = [...readerPointers.values()];
+    readerPinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale: readerZoom.scale };
+    readerGesture = null;
+    return;
+  }
+  readerGesture = { id: event.pointerId, x: event.clientX, y: event.clientY, t: performance.now(), mode: null, control: Boolean(event.target.closest(READER_CONTROLS)), edge: event.clientX - stage.left < 16, width: stage.width, left: stage.left, target: event.target, startX: readerZoom.x, startY: readerZoom.y };
 });
-document.addEventListener("pointerup", (event) => {
-  if (!flipSwipe) return;
-  const dx = event.clientX - flipSwipe.x,
-    dy = event.clientY - flipSwipe.y;
-  flipSwipe = null;
-  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) turnPage(dx < 0 ? 1 : -1);
+document.addEventListener("pointermove", (event) => {
+  if (page !== "reader" || !readerPointers.has(event.pointerId)) return;
+  readerPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (readerPinch && readerPointers.size >= 2) {
+    const [a, b] = [...readerPointers.values()];
+    readerZoom.scale = Math.max(1, Math.min(3, (readerPinch.scale * Math.hypot(a.x - b.x, a.y - b.y)) / Math.max(1, readerPinch.dist)));
+    if (readerZoom.scale === 1) readerZoom = { scale: 1, x: 0, y: 0 };
+    applyReaderZoom();
+    return;
+  }
+  const g = readerGesture;
+  if (!g || g.id !== event.pointerId) return;
+  const dx = event.clientX - g.x,
+    dy = event.clientY - g.y;
+  if (!g.mode && Math.hypot(dx, dy) > 10) g.mode = readerZoom.scale > 1 ? "pan" : Math.abs(dx) > Math.abs(dy) * 1.4 && !g.edge ? "swipe" : "none";
+  const paper = document.querySelector(".reader-page");
+  if (g.mode === "pan") {
+    readerZoom.x = g.startX + dx;
+    readerZoom.y = g.startY + dy;
+    applyReaderZoom();
+  } else if (g.mode === "swipe" && paper) {
+    const count = readerPages().length;
+    const blocked = (dx > 0 && flipIndex === 0) || (dx < 0 && flipIndex >= count);
+    paper.style.transition = "none";
+    paper.style.transform = `translateX(${blocked ? dx * 0.25 : dx}px)`;
+  }
 });
+const endReaderPointer = (event) => {
+  if (!readerPointers.has(event.pointerId)) return;
+  readerPointers.delete(event.pointerId);
+  if (readerPinch) {
+    if (readerPointers.size < 2) readerPinch = null;
+    readerGesture = null;
+    readerClickBlock = performance.now();
+    return;
+  }
+  const g = readerGesture;
+  readerGesture = null;
+  if (!g || g.id !== event.pointerId || event.type === "pointercancel") return;
+  const dx = event.clientX - g.x,
+    dt = Math.max(1, performance.now() - g.t);
+  const paper = document.querySelector(".reader-page");
+  if (g.mode === "swipe") {
+    readerClickBlock = performance.now();
+    const fast = Math.abs(dx) / dt > 0.5 && Math.abs(dx) > 30;
+    if (Math.abs(dx) > g.width * 0.18 || fast) {
+      const dir = dx < 0 ? 1 : -1;
+      const count = readerPages().length;
+      if ((dir > 0 && flipIndex < count) || (dir < 0 && flipIndex > 0)) return turnPage(dir);
+    }
+    if (paper) {
+      paper.style.transition = "transform 200ms ease-out";
+      paper.style.transform = "";
+    }
+    return;
+  }
+  if (g.mode) {
+    readerClickBlock = performance.now();
+    return;
+  }
+  if (g.control) return; // a player, a button: its own click handles it
+  // A tap. On a photo, wait a moment for a second tap (look closely).
+  const photo = g.target.closest?.(".photo-layer img, .canvas-photo img, .canvas-photo, .photo-layer");
+  const photoSrc = photo && (photo.tagName === "IMG" ? photo.currentSrc || photo.src : photo.querySelector("img")?.currentSrc || photo.dataset.src || "");
+  const zone = (event.clientX - g.left) / g.width;
+  const act = () => {
+    if (zone < 0.2) turnPage(-1);
+    else if (zone > 0.8) turnPage(1);
+    else toggleReaderChrome();
+  };
+  if (photo) {
+    const now = performance.now();
+    if (readerLastTap && readerLastTap.src === photoSrc && now - readerLastTap.t < 320) {
+      clearTimeout(readerTapTimer);
+      readerLastTap = null;
+      return openZoomViewer(photoSrc);
+    }
+    readerLastTap = { src: photoSrc, t: now };
+    clearTimeout(readerTapTimer);
+    readerTapTimer = setTimeout(() => {
+      readerLastTap = null;
+      act();
+    }, 320);
+    return;
+  }
+  act();
+};
+document.addEventListener("pointerup", endReaderPointer);
+document.addEventListener("pointercancel", endReaderPointer);
+// A drag or pinch is not also a click on whatever is under the finger.
+document.addEventListener(
+  "click",
+  (event) => {
+    if (page === "reader" && event.target.closest?.("[data-reader-stage]") && performance.now() - readerClickBlock < 350) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  },
+  true,
+);
+function toggleReaderChrome() {
+  readerChrome = !readerChrome;
+  document.querySelector(".reader")?.classList.toggle("chrome-off", !readerChrome);
+}
 document.addEventListener("keydown", (event) => {
-  if (page !== "books" || !selectedBook || bookView !== "flip" || event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+  if (page !== "reader" || event.target.closest?.("input, textarea, select, [contenteditable]") || $("#choose-dialog")?.open) return;
   if (event.key === "ArrowRight") turnPage(1);
   if (event.key === "ArrowLeft") turnPage(-1);
+  if (event.key === "Escape" && !$("#lightbox")?.open) closeReader();
 });
+// All pages: the cover and every page, small; tap one to go there.
+function openReaderThumbs() {
+  const book = state().books.find((b) => b.id === readerBook);
+  const pages = readerPages();
+  const when = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(locale(), { month: "short", day: "numeric" });
+  // Not a <button>: a page can hold its own play button, and buttons cannot nest.
+  const item = (at, inner, label, extra = "") => `<div class="reader-thumb ${at === flipIndex ? "current" : ""}" role="button" tabindex="0" data-action="reader-go" data-at="${at}" aria-current="${at === flipIndex}" aria-label="${at ? esc(label) : t("reader.coverEntry")}"><span class="reader-thumb-paper" inert>${inner}</span><small>${label}${extra}</small></div>`;
+  const cover = item(0, `<span class="reader-thumb-cover">${coverHTML(book, ctx())}</span>`, t("reader.coverEntry"));
+  const rest = pages.map(({ date, entry, moment }, i) => item(i + 1, sharedCanvasHTML(moment || entry, ctx(), { readOnly: true, dayPage: !moment }), `${i + 1} · ${esc(when(date))}`, entry.isDemo || moment?.isDemo ? ` <span class="badge">${t("entry.sample")}</span>` : draftTagHTML(date))).join("");
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp reader-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("reader.thumbs")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><p class="reader-sheet-note">${t("reader.thumbsHint", { count: pages.length })}</p><div class="reader-thumbs">${cover}${rest}</div></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.querySelector(".reader-thumb.current")?.scrollIntoView({ block: "center" });
+}
+document.addEventListener("keydown", (event) => {
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".reader-thumb")) {
+    event.preventDefault();
+    event.target.click();
+  }
+});
+function openReaderMore() {
+  const pages = readerPages();
+  const item = flipIndex > 0 ? pages[flipIndex - 1] : null;
+  const row = (attrs, label, value = "") => `<button class="s2-more-row" ${attrs}><span><b>${label}</b></span><span class="v">${value}<i class="s2-chev" aria-hidden="true">›</i></span></button>`;
+  const listed = item ? dayListItems(item.date) : [];
+  const firstOfDay = item && (flipIndex === 1 || pages[flipIndex - 2].date !== item.date);
+  const checklist = firstOfDay && listed.length ? `<div class="reader-list flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</div>` : "";
+  const track = findTrack(catalog, readerMusicId());
+  const demo = item && (item.entry.isDemo || item.moment?.isDemo);
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp reader-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${item ? esc(Reader.positionLabel(flipIndex, pages.length, t)) : t("reader.more")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${checklist}${item ? row(`data-action="open-day" data-date="${esc(item.date)}"`, t("flip.openDay")) : ""}${row('data-action="music-sheet" data-target="book"', t("music.bookTitle"), track ? esc(trackName(track, languageCode())) : "")}${flipIndex > 0 ? row('data-action="reader-go" data-at="0"', t("reader.toCover")) : ""}${item && !demo ? `<div class="reader-keeper">${keeperAskHTML(item.date, item.moment?.id || "")}</div>` : ""}</div>`;
+  if (!dialog.open) dialog.showModal();
+}
+// The whole words of a page that do not fit on the paper (read only; from the journal itself).
+function openReaderFullText() {
+  const item = readerPages()[flipIndex - 1];
+  if (!item) return;
+  const pageData = item.moment || item.entry;
+  const when = new Date(`${item.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric" });
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp reader-sheet reader-text"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("reader.full")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><small class="reader-text-when">${esc(when)}${item.moment?.time ? ` · ${esc(item.moment.time)}` : ""}</small>${pageData.title ? `<h3>${Rich.richHTML(pageData.title, pageData.titleMarks, esc)}</h3>` : ""}<div class="reader-text-body">${Rich.richHTML(pageData.body || "", pageData.bodyMarks, esc)}</div></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+// Look at a photo closely: pinch or double-tap to zoom, drag to move; closing returns to the page as it was.
+let zoomView = { scale: 1, x: 0, y: 0 };
+function openZoomViewer(src) {
+  if (!src) return;
+  zoomView = { scale: 1, x: 0, y: 0 };
+  openLightbox(src);
+  $("#lightbox").classList.add("zoomable");
+  applyZoomView();
+}
+function applyZoomView() {
+  const img = $("#lightbox-image");
+  if (img) img.style.transform = zoomView.scale > 1 ? `translate(${zoomView.x}px, ${zoomView.y}px) scale(${zoomView.scale})` : "";
+}
+const zoomPointers = new Map();
+let zoomPinch = null,
+  zoomDrag = null,
+  zoomLastTap = 0;
+$("#lightbox").addEventListener("pointerdown", (event) => {
+  if (event.target.id !== "lightbox-image") return;
+  zoomPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (zoomPointers.size === 2) {
+    const [a, b] = [...zoomPointers.values()];
+    zoomPinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale: zoomView.scale };
+  } else zoomDrag = { x: event.clientX, y: event.clientY, sx: zoomView.x, sy: zoomView.y, moved: false };
+  event.preventDefault();
+});
+$("#lightbox").addEventListener("pointermove", (event) => {
+  if (!zoomPointers.has(event.pointerId)) return;
+  zoomPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (zoomPinch && zoomPointers.size >= 2) {
+    const [a, b] = [...zoomPointers.values()];
+    zoomView.scale = Math.max(1, Math.min(4, (zoomPinch.scale * Math.hypot(a.x - b.x, a.y - b.y)) / Math.max(1, zoomPinch.dist)));
+    if (zoomView.scale === 1) zoomView = { scale: 1, x: 0, y: 0 };
+  } else if (zoomDrag && zoomView.scale > 1) {
+    zoomDrag.moved = true;
+    zoomView.x = zoomDrag.sx + event.clientX - zoomDrag.x;
+    zoomView.y = zoomDrag.sy + event.clientY - zoomDrag.y;
+  }
+  applyZoomView();
+});
+const endZoomPointer = (event) => {
+  if (!zoomPointers.has(event.pointerId)) return;
+  zoomPointers.delete(event.pointerId);
+  if (zoomPointers.size < 2) zoomPinch = null;
+  if (!zoomPointers.size) {
+    const tap = zoomDrag && !zoomDrag.moved;
+    zoomDrag = null;
+    if (tap) {
+      const now = performance.now();
+      if (now - zoomLastTap < 320) {
+        zoomView = zoomView.scale > 1 ? { scale: 1, x: 0, y: 0 } : { scale: 2.2, x: 0, y: 0 };
+        applyZoomView();
+        zoomLastTap = 0;
+      } else zoomLastTap = now;
+    }
+  }
+};
+$("#lightbox").addEventListener("pointerup", endZoomPointer);
+$("#lightbox").addEventListener("pointercancel", endZoomPointer);
+$("#lightbox").addEventListener("wheel", (event) => {
+  if (!$("#lightbox").classList.contains("zoomable")) return;
+  event.preventDefault();
+  zoomView.scale = Math.max(1, Math.min(4, zoomView.scale * (event.deltaY < 0 ? 1.15 : 0.87)));
+  if (zoomView.scale === 1) zoomView = { scale: 1, x: 0, y: 0 };
+  applyZoomView();
+}, { passive: false });
+$("#lightbox").addEventListener("close", () => {
+  $("#lightbox").classList.remove("zoomable");
+  zoomView = { scale: 1, x: 0, y: 0 };
+  applyZoomView();
+});
+// The book's main way in: read it (from where I stopped, or from the cover).
+function readerEntryHTML(book) {
+  const pages = flipPages(book.id);
+  const saved = Reader.savedPosition(book.id);
+  const at = saved ? Reader.positionOf(pages, saved) : 0;
+  const item = at > 0 ? pages[at - 1] : null;
+  const title = item ? String((item.moment || item.entry).title || "").trim() : "";
+  const main = `<button class="primary full-width reader-start" data-action="reader-open" data-book="${esc(book.id)}">${READER_ICONS.book}<span>${at > 0 ? t("reader.continue", { n: at }) : t("reader.start")}</span></button>`;
+  const hint = at > 0 ? `<p class="reader-start-hint">${title ? `${t("reader.last", { title: esc(title) })} · ` : ""}<button class="text-button" data-action="reader-open" data-book="${esc(book.id)}" data-at="cover">${t("reader.fromCover")}</button></p>` : `<p class="reader-start-hint">${t("reader.hint", { count: pages.length })}</p>`;
+  return main + hint;
+}
+// The cover as its own entry in the page list.
+function coverEntryHTML(book) {
+  return `<button class="day-cover cover-entry" data-action="reader-open" data-book="${esc(book.id)}" data-at="cover"><span class="day-cover-photos n0"><span class="cover-entry-mini">${coverHTML(book, ctx())}</span></span><span class="day-cover-copy"><span class="day-cover-date"><b>${t("reader.coverEntry")}</b></span><strong>${esc(book.title)}</strong><small>${t("reader.coverPos", { count: flipPages(book.id).length })}</small></span></button>`;
+}
 function booksPage() {
   if (selectedBook) {
     const book = state().books.find((b) => b.id === selectedBook),
@@ -2026,11 +2386,11 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><div class="book-detail-showcase">${coverHTML(book, ctx())}</div><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p>${book.tags?.length ? `<div class="book-tags">${book.tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}">#${esc(tag)}</button>`).join("")}</div>` : ""}<span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}<button class="primary full-width" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary full-width book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-view-switch" role="tablist" aria-label="${t("flip.label")}"><button role="tab" data-action="book-view" data-view="list" aria-selected="${bookView !== "flip"}">${t("flip.list")}</button><button role="tab" data-action="book-view" data-view="flip" aria-selected="${bookView === "flip"}">${t("flip.flip")}</button></div>${bookView === "flip" ? flipBookHTML(book) : `<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><button class="book-detail-showcase" data-action="reader-open" data-book="${esc(book.id)}" data-at="cover" aria-label="${t("reader.start")} · ${esc(book.title)}">${coverHTML(book, ctx())}</button><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p>${book.tags?.length ? `<div class="book-tags">${book.tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}">#${esc(tag)}</button>`).join("")}</div>` : ""}<span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}${readerEntryHTML(book)}<div class="book-actions"><button class="secondary" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button></div><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
-        ? `<div class="day-covers">${days.map(dayCoverHTML).join("")}</div>`
+        ? `<div class="day-covers">${filtered ? "" : coverEntryHTML(book)}${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
-    }`}`;
+    }`;
   }
   if (booksView === "profile")
     return `<header class="page-top"><div><button class="back-button" data-action="books-view" data-view="shelf">${icon("back")} ${t("books.title")}</button><h1 class="page-title">${t("me.title")}</h1><p class="page-subtitle">${t("me.subtitle")}</p></div>${bell()}</header><div class="demo-banner"><b>${t("community.demoLabel")}</b>${t("me.demoNote")}</div>${profileHTML(social(), communityView, ctx(), state().books, myExperience())}`;
@@ -3742,17 +4102,10 @@ function finishStory() {
   }
   story = null;
   readReturn = null;
-  // Straight into the book, page by page, at the first page of this day.
-  page = "books";
-  selectedBook = book;
-  bookView = "flip";
-  flipBookId = book;
-  const at = flipPages(book).findIndex((p) => p.date === date);
-  flipIndex = at >= 0 ? at + 1 : 0;
-  flipTurn = 0;
-  render();
-  $("#app-scroll").scrollTop = 0;
-  document.querySelector(".flip-book")?.scrollIntoView({ block: "start" });
+  // Straight into the book, in the reader, at the first page of this day.
+  const pagesNow = flipPages(book);
+  const first = pagesNow.find((p) => p.date === date);
+  openReader(book, first ? Reader.keyOf(first) : Reader.COVER);
   toast(t("story.saved", { name: state().books.find((b) => b.id === book)?.title || "" }));
 }
 // After Save: see what I just made — the book opens at that page (turn the
@@ -3768,15 +4121,8 @@ function showSavedPage() {
   let at = pages.findIndex((p) => p.date === date && (momentId ? p.moment?.id === momentId : !p.moment));
   if (at < 0) at = pages.findIndex((p) => p.date === date);
   if (at < 0) return navigate("home");
-  page = "books";
-  selectedBook = book;
-  bookView = "flip";
-  flipBookId = book;
-  flipIndex = at + 1;
-  flipTurn = 0;
-  render();
-  $("#app-scroll").scrollTop = 0;
-  document.querySelector(".flip-book")?.scrollIntoView({ block: "start" });
+  // V10.11: the new page opens in the reader (‹ there goes to the book).
+  openReader(book, Reader.keyOf(pages[at]));
   keeperStamp();
   // Today's first page: the stamp moment, right here on the page just made.
   setTimeout(() => maybeCelebrate(true), 260);
@@ -4212,7 +4558,8 @@ function releaseLeftScope() {
     media.release(scopedPage);
     readyScopes.delete(scopedPage);
   }
-  scopedPage = ["studio", "day"].includes(page) ? page : null;
+  if (scopedPage === "reader" && page !== "reader") readerSeenKeys = "";
+  scopedPage = ["studio", "day", "reader"].includes(page) ? page : null;
 }
 async function loadScope(scope, clips) {
   readyScopes.delete(scope);
@@ -4248,6 +4595,8 @@ function render() {
   $("#phone").classList.toggle("signed-out", !signedIn);
   // Studio is full-screen (its own ‹ back); the tool row keeps its scroll.
   $("#phone").classList.toggle("in-studio", signedIn && (page === "studio" || page === "story"));
+  // The reader is full-screen too: no bottom menu.
+  $("#phone").classList.toggle("in-reader", signedIn && page === "reader");
   // The Studio shell sizes the paper from the room it really has.
   $("#phone").classList.toggle("sv", signedIn && page === "studio" && !quickResultActive());
   if (settingsSheet && page === "settings" && $("#choose-dialog").open && $("#choose-dialog .s2-sheet")) {
@@ -4267,6 +4616,7 @@ function render() {
     calendar: calendarPage,
     growth: growthPage,
     books: booksPage,
+    reader: readerHTML,
     studio: studioPage,
     story: storyPage,
     day: () => dayDetailHTML(selectedDate, ctx(), { icon, friendlyDate }),
@@ -4294,6 +4644,7 @@ function render() {
     }
   }
   if (page === "settings") showMediaUsage();
+  afterReaderRender();
   pinStageForSheet();
   placeLayerBar();
   syncMusic();
@@ -5159,7 +5510,8 @@ async function action(target) {
     document
       .getElementById(`moment-${target.dataset.moment}`)
       ?.scrollIntoView({ block: "start", behavior: "smooth" });
-  if (actionName === "zoom-photo") openLightbox(target.dataset.src);
+  // In the reader one tap turns / shows the controls; a photo opens on a double tap there.
+  if (actionName === "zoom-photo" && !(page === "reader" && target.closest("[data-reader-stage]"))) openLightbox(target.dataset.src);
   if (actionName === "player-toggle") togglePlayer(target);
   if (actionName === "calendar-today") {
     selectedDate = dateKey();
@@ -5184,7 +5536,6 @@ async function action(target) {
     booksView = "shelf";
     // Opening a book from the shelf uses my own list / flip choice (after a
     // save showed the page in flip view).
-    bookView = chosenBookView();
     pulledBook = target.dataset.book;
     flushDraft();
     selectedBook = target.dataset.book;
@@ -5297,15 +5648,42 @@ async function action(target) {
     render();
   }
   if (actionName === "quick-done") finishQuickPage();
-  if (actionName === "book-view") {
-    bookView = target.dataset.view === "flip" ? "flip" : "list";
-    try {
-      localStorage.setItem(BOOK_VIEW_KEY, bookView);
-    } catch {}
-    flipIndex = 0;
-    render();
-  }
   if (actionName === "flip") turnPage(Number(target.dataset.dir) || 0);
+  if (actionName === "reader-open") {
+    const bookId = target.dataset.book || selectedBook;
+    const pages = flipPages(bookId);
+    if (target.dataset.date) {
+      const first = pages.find((p) => p.date === target.dataset.date);
+      return openReader(bookId, first ? Reader.keyOf(first) : Reader.COVER);
+    }
+    return openReader(bookId, target.dataset.at === "cover" ? Reader.COVER : "resume");
+  }
+  if (actionName === "reader-back") return closeReader();
+  if (actionName === "reader-thumbs") return openReaderThumbs();
+  if (actionName === "reader-more") return openReaderMore();
+  if (actionName === "reader-full") return openReaderFullText();
+  if (actionName === "reader-go") {
+    if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+    return goToPosition(Math.max(0, Math.min(readerPages().length, Number(target.dataset.at) || 0)));
+  }
+  if (actionName === "reader-unzoom") {
+    readerZoom = { scale: 1, x: 0, y: 0 };
+    return applyReaderZoom();
+  }
+  if (actionName === "reader-music") {
+    const track = findTrack(catalog, readerMusicId());
+    if (!track) return;
+    if (music.current() === track.id && music.playing()) {
+      music.pause();
+      musicPaused = true;
+    } else {
+      musicPaused = false;
+      musicAsked = `book:${readerBook}`;
+      music.play(track);
+    }
+    syncMusicChips();
+    return;
+  }
   if (actionName === "streak-open") openStreak({ celebrate: false });
   if (actionName === "streak-close") $("#streak-dialog")?.close();
   if (actionName === "streak-write") {
@@ -5316,10 +5694,11 @@ async function action(target) {
   if (actionName === "read-edit") {
     if ($("#choose-dialog").open) $("#choose-dialog").close();
     const momentId = target.dataset.moment || "";
-    const from = { page, book: selectedBook, date: selectedDate, moment: momentId };
+    const from = { page, book: page === "reader" ? readerBook : selectedBook, date: selectedDate, moment: momentId, key: page === "reader" ? readerKey() : "" };
+    if (from.page === "reader") Reader.savePosition(readerBook, from.key);
     openStudio(target.dataset.date);
     selectMoment(momentId || null);
-    if (from.page === "day" || from.page === "books") readReturn = { ...from, date: from.page === "day" ? target.dataset.date : from.date };
+    if (from.page === "day" || from.page === "books" || from.page === "reader") readReturn = { ...from, date: from.page === "day" ? target.dataset.date : from.date };
   }
   if (actionName === "read-rename") {
     $("#choose-dialog").close();
@@ -8476,6 +8855,16 @@ document.addEventListener(
       document.querySelectorAll("audio,video").forEach((element) => {
         if (element !== event.target) element.pause();
       });
+    // A page's own video or sound pauses the book's music (one sound at a time).
+    if (page === "reader" && event.target.matches?.("#app audio, #app video") && music.playing()) {
+      music.pause();
+      musicPaused = true;
+      const button = $(".reader-music");
+      if (button) {
+        button.classList.remove("on");
+        button.setAttribute("aria-pressed", "false");
+      }
+    }
   },
   true,
 );

@@ -319,3 +319,13 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 数据：沿用已有的 `keeper.outfit`（V7.9 加入，小写字母；`""` = 默认），没有新字段。
 - app.js：`keeperLooksHTML()`（面板「装扮」视图与设置面板共用）、动作 `keeper-look`、面板视图 `looks`、头部链接 `.kp-look-link`。
 - 没有任何游戏化状态（无货币、无解锁表、无计数）。
+
+## 2026-11-11 V10.11 全屏 Book Reader
+
+- 新模块 `Public/js/reader.mjs`（纯函数）：`keyOf()`（页面身份 `日期|momentId`，封面为 `cover`）、`positionOf()`（找不到时落到同一天 / 之前最近的一页 / 封面）、`positionLabel()`、`firstPageOf()`、阅读进度 `loadPositions` / `savePosition` / `savedPosition`（localStorage `little-days.reader-pos`，不进手帐数据、不进备份、不进 Swift 模型；将来原生端可用 UserDefaults 存同样的键值）。
+- app.js：新页面 `page === "reader"`（`readerHTML()`），状态 `readerBook` / `flipIndex`（0 = 封面）/ `readerChrome` / `readerZoom`；`#phone.in-reader` 隐藏底部导航。书页用 `sharedCanvasHTML(page, ctx, { readOnly: true })`，保留 `.flip-page` / `.flip-canvas` / `.flip-head` / `.flip-nav` / `.flip-edit` / `data-flip-stage` 作为旧测试的钩子。
+- 手势：文档级 pointer 事件（单指：方向判定 10px、横向 > 纵向 1.4 倍；双指：缩放）；拖动 / 缩放后 350ms 内拦截 click，避免误触。照片查看器复用 `#lightbox`，加 `.zoomable` 的缩放与拖动。
+- 媒体 scope `reader`（与 `studio`、`day` 并列）：`afterReaderRender()` 载入当前页与前后页的音视频；离开阅读器时 `releaseLeftScope()` 释放。
+- 背景音乐：`syncMusic()` 对 `book:<id>` 上下文默认静音，`musicAsked` 记录用户主动请求过的书；`toggleMusic()`、阅读器 ♪、为书选曲会设置它。
+- 编辑往返：`readReturn = { page: "reader", book, key }`，`returnToReading()` → `openReader(book, key)`；`showSavedPage()` 与今日故事完成 → `openReader(book, keyOf(那一页))`。
+- 移除：书本详情页的「列表 / 翻页」切换、内嵌翻页 `flipBookHTML()`、`little-days.book-view`（旧值留在浏览器里，不再读取）。

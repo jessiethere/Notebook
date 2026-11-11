@@ -59,7 +59,8 @@ const shots = process.env.SHOTS_DIR || "";
     passed.push("a book's music: chosen from the book page, saved on the book, plays while it is open; volume set in the sheet");
 
     // 2. Page by page: the book's music goes on; a page with its own plays that.
-    await page.locator('[data-action="book-view"][data-view="flip"]').tap();
+    // V10.11: page by page is the full-screen reader; the music chosen here keeps playing.
+    await page.locator('.reader-start').tap();
     await page.waitForSelector(".flip-page.is-cover");
     assert.equal((await bgm()).music, "cafe-corner");
     let sawPlain = false, sawOwn = false;
@@ -69,12 +70,12 @@ const shots = process.env.SHOTS_DIR || "";
       const text = await page.locator(".flip-canvas").innerText();
       if (/没选音乐的一页/.test(text)) {
         await playing("cafe-corner");
-        assert.match(await page.locator(".flip-head .music-chip").innerText(), /咖啡馆一角/);
+        assert.equal(await page.locator('.reader-music[aria-pressed="true"]').count(), 1);
         sawPlain = true;
       }
       if (/有自己音乐的一页/.test(text)) {
         await playing("seaside");
-        assert.match(await page.locator(".flip-head .music-chip").innerText(), /海边/);
+        assert.equal(await page.locator('.reader-music[aria-pressed="true"]').count(), 1);
         sawOwn = true;
       }
     }

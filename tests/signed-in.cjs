@@ -48,12 +48,21 @@ async function leaveStudio(page) {
   await page.waitForSelector("#phone:not(.in-studio)");
 }
 module.exports.leaveStudio = leaveStudio;
+// V10.11: saving opens the full-screen reader (no bottom menu there): ‹ goes back to the book.
+async function leaveReader(page) {
+  if (!(await page.locator("#phone.in-reader").count())) return;
+  if (await page.locator("#choose-dialog[open]").count()) await page.evaluate(() => document.querySelector("#choose-dialog").close());
+  await page.locator('[data-action="reader-back"]').click();
+  await page.waitForSelector("#phone:not(.in-reader)");
+}
+module.exports.leaveReader = leaveReader;
 module.exports.goTab = async (page, tab) => {
   // Studio is full-screen: leave it with its own ‹ before using the menu.
   if (await page.locator("#phone.in-studio").count()) {
     await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
     await leaveStudio(page);
   }
+  await leaveReader(page);
   // Growth has no tab since V6.6: open "My habits" from Home's today card.
   if (tab === "growth") {
     await page.locator('#navigation [data-page="home"]').click();
@@ -92,6 +101,7 @@ module.exports.menu = async (page, tab) => {
     await module.exports.studioEdit(page); // the preview has its own ‹ (back to editing)
     await leaveStudio(page);
   }
+  await leaveReader(page);
   if (tab === "growth") {
     await page.locator('#navigation [data-page="home"]').click();
     await module.exports.openPlans(page);
@@ -104,6 +114,7 @@ module.exports.menu = async (page, tab) => {
 // suites then carry on from Home.
 module.exports.homeAfterSave = async (page) => {
   await page.waitForSelector(".flip-page:not(.is-cover)");
+  await leaveReader(page);
   await page.locator('#navigation [data-page="home"]').click();
   await page.waitForSelector(".hero");
 };

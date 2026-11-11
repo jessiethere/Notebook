@@ -43,8 +43,9 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 1. The book, page by page: ✎ on the page opens it; Save comes back here.
     await page.locator('.home-book-cover[data-book="food"]').tap();
-    await page.waitForSelector(".book-view-switch");
-    await page.locator('[data-action="book-view"][data-view="flip"]').tap();
+    // V10.11: the full-screen reader, from the cover.
+    await page.waitForSelector(".reader-start");
+    await page.locator('.book-detail-showcase').tap(); // the cover opens the reader at the cover
     await page.waitForSelector(".flip-page.is-cover");
     let sampleChecked = false;
     for (let i = 0; i < 60; i++) {
