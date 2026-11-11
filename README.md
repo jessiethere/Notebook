@@ -179,6 +179,12 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — 评估与设计：Little Keeper 互动与 AI 小管家、Settings V2（未改代码、未接入模型）
+
+- Little Keeper：审查了现有固定文案的问题，提出三层陪伴和「找小管家」快捷面板（四个操作），评估了 Qwen API 的接入、成本和隐私方案。说明见 docs/KEEPER_AI_PLAN.md。
+- Settings V2：新的个人资料区、Keeper 预览、外观与偏好、数据与隐私、关于与更多；功能映射见 docs/SETTINGS_V2_PLAN.md。
+- 设计稿在画布 https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG 。App 本身没有变化（仍是 V10.2），等确认后再实现。
+
 ### 2026-11-11 — 首页往下滑：今天的故事、今天的小计划、我的手帐（V10.2）
 
 - 「今天的故事」：同一天的几页排成一页回忆（只是展示，不改动任何一页），下面每页一行；显示「收藏于 · 手帐名」；纯文字是日记纸；今天没记录时显示邀请和「最近的故事」。
