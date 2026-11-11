@@ -39,12 +39,16 @@ const shots = process.env.SHOTS || "";
     assert.equal(await page.locator("#type-bar .type-to-box").isVisible(), true, "转为自由文字框 is offered for a note's title");
     await page.locator('#type-bar [data-type-font="zh-kuaile"]').tap();
     await page.locator('#type-bar [data-type-size="2"]').tap();
+    // V10.12: the colours open from the colour dot (the bar keeps its height).
+    await page.locator("#type-bar .type-color-now").tap();
     await page.locator('#type-bar [data-type-color="#B5838D"]').tap();
+    await page.locator("#type-bar .type-color-back").tap();
     // One button steps through the alignments: centre → right.
     const before = await page.locator('#journal-canvas [data-inline="title"]').evaluate((el) => getComputedStyle(el).textAlign);
     await page.locator('#type-bar [data-type-align="cycle"]').tap();
     await page.locator('#journal-canvas [data-inline="body"]').tap();
     await page.keyboard.type("又是充满能量的一天。");
+    await page.locator("#type-bar .type-color-now").tap();
     await page.locator('#type-bar [data-type-color="#6D8299"]').tap();
     await settle();
     let s = await story();

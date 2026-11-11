@@ -151,10 +151,10 @@ export function layerHTML(layer, ctx, options = {}) {
       inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${layer.bind && !words ? ` data-placeholder="${esc(t("story.linePlaceholder"))}"` : ""}>${rich(words, layer.bind ? boundMarks(layer, options.page, words) : layer.marks)}</span>`;
     } else inner = esc(layer.text);
   }
-  if (selected) {
-    classes += " active";
-    inner += `<i class="layer-handle handle-resize" data-handle="resize" aria-hidden="true"></i><i class="layer-handle handle-rotate" data-handle="rotate" aria-hidden="true"></i>`;
-  }
+  // The handles are drawn by the editor above the paper (V10.12, app.js
+  // selFrameHTML): inside the layer they were scaled with it, clipped by the
+  // paper and sat on top of the words.
+  if (selected) classes += " active";
   const interactive = readOnly
     ? attrs
     : ` data-layer="${esc(layer.id)}" role="button" tabindex="0" aria-label="${esc(layer.kind === "photo" ? t("layer.photo") : layer.text || t("layer.selected"))}"`;

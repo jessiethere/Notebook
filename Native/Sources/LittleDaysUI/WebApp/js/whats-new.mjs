@@ -4,6 +4,32 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.12",
+    date: "2026-11-11",
+    zh: {
+      title: "排版更顺手：双击就能写字",
+      items: [
+        "轻点文字框是选中；双击直接开始写（键盘会出来），也可以继续点下方的「编辑」。单击不会再意外进入输入。",
+        "按住文字框任何地方拖动都只会移动它。手指轻微抖动不再算作移动。",
+        "控制点挪到了框外面：上方的 ↻ 转角度，角上的圆点改大小。它们不再盖住文字，触控范围也不会互相抢。放大缩小时控制点大小不变，转过角度的文字框也一样好用。",
+        "文字颜色修好了：打字时点工具条上的颜色圆点就会展开整排颜色（‹ 返回），不会再被挤得点不到；「颜色」面板里当前颜色有勾选标记。新增橄榄绿和纸白（适合写在照片上），改完会自动保存。",
+        "第一次打开编辑器时有三步小引导：移动元素、双击编辑文字、用控制点调整布局。可以跳过，只出现一次；之后在「更多 → 操作指南」随时再看。已经写过手帐的人不会因为更新被重新教学。",
+        "第一次选中文字框时，会有一句「双击即可编辑文字」的小提示，只出现一次。",
+      ],
+    },
+    en: {
+      title: "Easier layout: double-tap to write",
+      items: [
+        "Tap a text box to select it; double-tap to start typing (the keyboard opens), or use Edit below. A single tap never starts typing by surprise.",
+        "Press anywhere on a text box and drag: it only moves. A small wobble of the finger is no longer a move.",
+        "The handles now sit outside the box: ↻ above turns it, the corner dot resizes it. They no longer cover the words or fight each other for your finger, keep their size when you zoom, and work on turned boxes too.",
+        "Text colour fixed: while typing, tap the colour dot in the bar to open the full row of colours (‹ back) — no more slivers too small to tap — and the Colour sheet marks the colour in use. New: olive and paper white (for words on a photo). Changes save by themselves.",
+        "A three-step guide the first time you open the editor: move things, double-tap to edit words, adjust with the handles. Skip it any time; it shows once, and More → How to opens it again. People who already keep pages are not taught again because of an update.",
+        "The first time you select a text box, a small “Double-tap to edit the words” tip points at it — once.",
+      ],
+    },
+  },
+  {
     version: "10.11",
     date: "2026-11-11",
     zh: {

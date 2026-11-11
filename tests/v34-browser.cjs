@@ -102,7 +102,7 @@ async function size(download) {
     await page.locator(`[data-layer="${videoId}"]`).focus();
     await page.keyboard.press("Enter");
     const before = (await draft()).layers.find((l) => l.id === videoId);
-    const handle = page.locator(`[data-layer="${videoId}"] .handle-resize`);
+    const handle = page.locator(`#sel-frame[data-sel="${videoId}"] .handle-resize`);
     await handle.scrollIntoViewIfNeeded();
     const box = await handle.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

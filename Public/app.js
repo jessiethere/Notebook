@@ -33,6 +33,7 @@ import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
 import * as Rich from "./js/rich-text.mjs";
 import * as Reader from "./js/reader.mjs";
+import * as Guide from "./js/studio-guide.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
@@ -2575,14 +2576,105 @@ function selectedLayerOf(page = activePage()) {
 function layerBarHTML() {
   return "";
 }
-function placeLayerBar() {}
+// ---------- The selected item's frame (V10.12) ----------
+// One thin frame over the selected item with two handles that sit OUTSIDE it:
+// ↻ above (turn) and ● at a corner (size). The frame is drawn above the paper
+// (not inside the item), so the handles keep their size at any zoom, are never
+// clipped by the paper or a rounded frame, never cover the words, and their
+// touch areas (40 px) never overlap each other. The item itself is the move
+// area. While typing in a text box the frame steps aside.
+const SEL_ROTATE_GAP = 30; // px from the edge to the ↻ handle
+const SEL_CORNER_GAP = 10; // px outside the corner for the ● handle
+const SEL_TARGET = 40; // px touch area of a handle
+function selFrameHTML() {
+  const layer = selectedLayerOf();
+  if (!layer || (cropMode && layer.kind === "photo")) return "";
+  return `<div class="sel-frame" id="sel-frame" data-sel="${esc(layer.id)}" aria-hidden="true"><i class="sel-stem"></i><i class="layer-handle handle-rotate" data-handle="rotate"></i><i class="layer-handle handle-resize" data-handle="resize"></i></div>`;
+}
+// Where the selected item is, in px inside #canvas-wrap: centre, size (with
+// its zoom) and angle.
+const pct = (v) => (Number.isFinite(Number(v)) && v !== null && v !== "" ? Number(v) : 50);
+function selGeometry(layer = selectedLayerOf()) {
+  const el = layer && layerElement(layer.id);
+  const canvas = $("#journal-canvas");
+  if (!el || !canvas) return null;
+  const scale = Number(layer.scale) || 1;
+  return {
+    cx: canvas.offsetLeft + canvas.clientLeft + (canvas.clientWidth * pct(layer.x)) / 100,
+    cy: canvas.offsetTop + canvas.clientTop + (canvas.clientHeight * pct(layer.y)) / 100,
+    w: el.offsetWidth * scale,
+    h: el.offsetHeight * scale,
+    rotation: Number(layer.rotation) || 0,
+    canvas: { left: canvas.offsetLeft, top: canvas.offsetTop, width: canvas.offsetWidth, height: canvas.offsetHeight },
+  };
+}
+// Where the handles go: ↻ above (below if that leaves the paper), ● at the
+// first corner that stays on the paper and is well clear of ↻.
+function selHandleSpots(g) {
+  const rad = (g.rotation * Math.PI) / 180,
+    cos = Math.cos(rad),
+    sin = Math.sin(rad);
+  const toWrap = ([x, y]) => {
+    const lx = x - g.w / 2,
+      ly = y - g.h / 2;
+    return [g.cx + lx * cos - ly * sin, g.cy + lx * sin + ly * cos];
+  };
+  const room = 16;
+  const inside = (spot) => {
+    const [x, y] = toWrap(spot);
+    return x >= g.canvas.left - room && x <= g.canvas.left + g.canvas.width + room && y >= g.canvas.top - room && y <= g.canvas.top + g.canvas.height + room;
+  };
+  const rotates = [
+    [g.w / 2, -SEL_ROTATE_GAP],
+    [g.w / 2, g.h + SEL_ROTATE_GAP],
+  ];
+  const rotate = rotates.find(inside) || rotates[0];
+  const corners = [
+    [g.w + SEL_CORNER_GAP, g.h + SEL_CORNER_GAP],
+    [-SEL_CORNER_GAP, g.h + SEL_CORNER_GAP],
+    [g.w + SEL_CORNER_GAP, -SEL_CORNER_GAP],
+    [-SEL_CORNER_GAP, -SEL_CORNER_GAP],
+  ];
+  const clear = (c) => Math.hypot(c[0] - rotate[0], c[1] - rotate[1]) >= SEL_TARGET + 4;
+  const resize = corners.find((c) => inside(c) && clear(c)) || corners.find(clear) || corners[0];
+  return { rotate, resize, flipped: rotate[1] > 0 };
+}
+function placeLayerBar() {
+  const frame = $("#sel-frame");
+  if (!frame) return;
+  const g = selGeometry();
+  if (!g) {
+    frame.hidden = true;
+    return;
+  }
+  frame.hidden = false;
+  Object.assign(frame.style, {
+    left: `${g.cx}px`,
+    top: `${g.cy}px`,
+    width: `${g.w}px`,
+    height: `${g.h}px`,
+    transform: `translate(-50%, -50%) rotate(${g.rotation}deg)`,
+  });
+  const spots = selHandleSpots(g);
+  const put = (el, [x, y]) => {
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+  };
+  put(frame.querySelector(".handle-rotate"), spots.rotate);
+  put(frame.querySelector(".handle-resize"), spots.resize);
+  const stem = frame.querySelector(".sel-stem");
+  stem.style.left = `${g.w / 2}px`;
+  stem.style.top = spots.flipped ? `${g.h}px` : `${-SEL_ROTATE_GAP + 7}px`;
+  stem.style.height = `${SEL_ROTATE_GAP - 7}px`;
+  frame.classList.toggle("flipped", spots.flipped);
+}
 function canvasHTML() {
   return layerBarHTML() + sharedCanvasHTML(activePage(), ctx(), {
     selectedId: selectedLayer,
     cropMode,
     dayPage: isDayPage(),
     addChoices: `<button class="canvas-first-photo" data-action="first-photo"><i aria-hidden="true">＋</i><b>${t("canvas.firstPhoto")}</b></button><p class="canvas-first-hint">${t("canvas.firstHint")}</p>`,
-  });
+  }) + selFrameHTML();
 }
 function photoRegion() {
   return isDayPage() ? { top: 4, bottom: 60 } : { top: 4, bottom: 96 };
@@ -2917,8 +3009,14 @@ const TYPE_FONTS = [
   ["zh-xiaowei", "小薇", "XiaoWei"],
   ["handwritten", "Caveat", "Caveat"],
 ];
-const TYPE_COLORS = ["#2B2622", "#6F675D", "#7D8E66", "#B5838D", "#6D8299", "#C08B5C"];
+// Text colours (V10.12: + the text box's own sage and a paper white for words
+// on a photo). Each has a name for VoiceOver.
+const TYPE_COLORS = ["#2B2622", "#6F675D", "#6A7059", "#7D8E66", "#B5838D", "#6D8299", "#C08B5C", "#FFFDF8"];
 let typeTarget = null; // { kind: "title" | "body" | "layer", id? }
+const rgbHex = (value) => {
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(value || "");
+  return m ? "#" + m.slice(1, 4).map((n) => Number(n).toString(16).padStart(2, "0")).join("") : "";
+};
 function typeBarHTML() {
   return `<div class="type-bar type-controls" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}">${typeControlsHTML()}</div>`;
 }
@@ -2943,7 +3041,16 @@ function syncTypeBar() {
     const font = layer ? layer.fontId || p.font : target.kind === "body" ? p.bodyFont || p.font : p.font;
     bar.querySelectorAll("[data-type-font]").forEach((b) => b.classList.toggle("selected", b.dataset.typeFont === (font || "serif")));
     const style = layer ? { color: layer.color, align: layer.align } : target.kind === "title" ? p.textStyle : p.bodyStyle;
-    bar.querySelectorAll("[data-type-color]").forEach((b) => b.classList.toggle("selected", (style?.color || "").toLowerCase() === b.dataset.typeColor.toLowerCase()));
+    // The colour now: the saved one, or what the words show (a box keeps the
+    // default until a colour is chosen).
+    const el0 = layer ? layerElement(layer.id) : $(`#journal-canvas [data-inline="${target.kind}"]`);
+    const now = (style?.color || (el0 ? rgbHex(getComputedStyle(el0).color) : "")).toLowerCase();
+    bar.querySelectorAll("[data-type-color]").forEach((b) => {
+      const on = now === b.dataset.typeColor.toLowerCase();
+      b.classList.toggle("selected", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    bar.querySelector(".type-color-now")?.style.setProperty("--swatch", now || "#2b2622");
     const el = layer ? layerElement(layer.id) : $(`#journal-canvas [data-inline="${target.kind}"]`);
     const shown = ["left", "center", "right"].includes(style?.align) ? style.align : el ? getComputedStyle(el).textAlign.replace("start", "left").replace("end", "right") : "left";
     bar.querySelectorAll("[data-type-align]").forEach((b) => {
@@ -2992,6 +3099,7 @@ document.addEventListener("focusout", (event) => {
   setTimeout(() => {
     if (!typeTargetOf(document.activeElement) && $("#type-bar")) {
       $("#type-bar").hidden = true;
+      $("#type-bar").classList.remove("show-colors");
       typeTarget = null;
     }
   }, 0);
@@ -3006,6 +3114,12 @@ document.addEventListener("mousedown", (event) => {
 document.addEventListener("click", (event) => {
   const button = event.target.closest?.(".type-controls button");
   if (!button || button.dataset.action) return;
+  if (button.hasAttribute("data-type-colors-open")) {
+    const bar = button.closest(".type-controls");
+    const open = bar.classList.toggle("show-colors");
+    bar.querySelector(".type-color-now")?.setAttribute("aria-expanded", String(open));
+    return;
+  }
   const sheetTarget = typeTargetFor(button.closest(".type-controls"));
   if (!sheetTarget) return;
   const typeTarget = sheetTarget; // the field being typed in, or the selected text box
@@ -3517,7 +3631,8 @@ function moreSheetHTML(tools) {
     toolTile("layer") +
     toolTile("chapters") +
     tile('data-action="open-pages"', "pages", t("more.pages")) +
-    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn");
+    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
+    tile('data-action="guide-open"', "guide", t("more.guide"));
   const sound = soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : "";
   const mode = isDayPage() ? "" : `<div class="more-mode"><b>${t("more.mode")}</b>${pageModeHTML()}</div>`;
   return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
@@ -3563,7 +3678,7 @@ function typeControlsHTML(only) {
   const en = languageCode() === "en";
   const fonts = `<div class="type-fonts">${TYPE_FONTS.map(([id, zh, enName]) => `<button type="button" data-type-font="${id}" style="font-family:${esc(fontFamily(id, catalog))}">${en ? enName : zh}</button>`).join("")}</div>`;
   const size = `<button type="button" data-type-size="-2" aria-label="${t("type.smaller")}">A−</button><button type="button" data-type-size="2" aria-label="${t("type.bigger")}">A+</button>`;
-  const colors = `<span class="type-colors">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-label="${c}"></button>`).join("")}</span>`;
+  const colors = `<span class="type-colors" role="group" aria-label="${t("ctx.color")}">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-pressed="false" aria-label="${t("type.colour." + c.slice(1).toLowerCase())}"></button>`).join("")}</span>`;
   const align = `<span class="type-align" role="group" aria-label="${t("ctx.align")}">${["left", "center", "right"].map((a) => `<button type="button" data-type-align="${a}" aria-label="${t("type.align." + a)}"><i class="align-glyph ${a}" aria-hidden="true"></i></button>`).join("")}</span>`;
   // B / I / U / S: on the selected words; with only a caret, on what is typed
   // next; on a text box that is selected but not being typed in, on all of it.
@@ -3576,7 +3691,13 @@ function typeControlsHTML(only) {
   // note's title / words only) and one button steps through the alignments.
   const toBox = `<button type="button" class="type-to-box" data-action="text-to-box" hidden>${t("type.toBox")}</button>`;
   const cycle = `<button type="button" class="type-align-cycle" data-type-align="cycle" aria-label="${t("ctx.align")}"><i class="align-glyph left" aria-hidden="true"></i></button>`;
-  return `${fonts.replace('<div class="type-fonts">', '<div class="type-fonts">' + toBox)}<div class="type-row">${size}${marks}${cycle}${colors}</div>`;
+  // V10.12: squeezed in after B I U S the colours shrank to slivers on a
+  // 375–390 px phone and could not be tapped. Now one dot shows the colour in
+  // use; tapping it turns this row into the colours (‹ goes back), so the bar
+  // keeps its height above the keyboard.
+  const colorNow = `<button type="button" class="type-color-now" data-type-colors-open aria-expanded="false" aria-label="${t("ctx.color")}"><i aria-hidden="true"></i></button>`;
+  const colorBack = `<button type="button" class="type-color-back" data-type-colors-open aria-label="${t("more.back")}">‹</button>`;
+  return `${fonts.replace('<div class="type-fonts">', '<div class="type-fonts">' + toBox)}<div class="type-row type-main-row">${size}${marks}${cycle}${colorNow}</div><div class="type-row type-color-row">${colorBack}${colors}</div>`;
 }
 function textStyleSheetHTML() {
   return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
@@ -4480,6 +4601,7 @@ const SV_ICONS = {
   color: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>',
   align: '<path d="M4 6h16M4 10.5h10M4 15h16M4 19.5h10"/>',
   trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>',
+  guide: '<path d="M9.5 12V5.8a1.4 1.4 0 0 1 2.8 0V11"/><path d="M12.3 10.5V9.2a1.4 1.4 0 0 1 2.8 0v1.6"/><path d="M15.1 11v-.6a1.4 1.4 0 0 1 2.8 0V15a6 6 0 0 1-6 6h-.6a5 5 0 0 1-4-2l-2.6-3.6a1.4 1.4 0 0 1 2.2-1.8L9.5 15"/><path d="M6 6.5 4.5 5M6.5 3.5 6 2M9.5 2.5 10 1"/>',
 };
 const svIcon = (name) => `<svg class="sv-icon" viewBox="0 0 24 24" aria-hidden="true">${SV_ICONS[name] || SV_ICONS.more}</svg>`;
 function studioTitleHTML() {
@@ -4647,6 +4769,9 @@ function render() {
   afterReaderRender();
   pinStageForSheet();
   placeLayerBar();
+  if (page === "studio") maybeStartGuide();
+  if (guideStep != null) placeGuide();
+  else if (page !== "studio") hideDoubleTapTip();
   syncMusic();
   const dock = $(".tool-dock");
   if (dock) {
@@ -5029,6 +5154,159 @@ function renderTour() {
   box.innerHTML = `<div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title"><button class="tour-skip text-button" data-action="tour-skip">${t("tour.skip")}</button><div class="tour-icon tour-${item.id}" aria-hidden="true">${item.icon}</div><span class="tour-count">${step + 1} / ${Account.TOUR.length}</span><h2 id="tour-title">${item.id === "welcome" && !account.name ? t("tour.welcome.titleAnon") : t(`tour.${item.id}.title`, { name: account.name })}</h2><p>${t(`tour.${item.id}.body`)}</p>${item.id === "theme" ? `<div class="tour-themes">${(tokens.themes || []).map((theme) => `<button data-action="theme" data-theme-id="${esc(theme.id)}" class="${theme.id === loadTheme() ? "selected" : ""}" aria-pressed="${theme.id === loadTheme()}"><span class="theme-swatch" aria-hidden="true">${(theme.swatch || []).map((c) => `<i style="background:${esc(c)}"></i>`).join("")}</span>${t("theme." + theme.id)}</button>`).join("")}</div>` : ""}<div class="tour-dots" aria-hidden="true">${Account.TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div><div class="tour-actions">${step ? `<button class="secondary" data-action="tour-prev">${t("tour.prev")}</button>` : "<span></span>"}<button class="primary" data-action="tour-next">${t(last ? "tour.done" : "tour.next")}</button></div></div>`;
   if (!box.contains(document.activeElement)) box.querySelector('[data-action="tour-next"]')?.focus({ preventScroll: true });
 }
+// ---------- Journal Studio · the three-step guide (V10.12) ----------
+// A small card and a ring around the real thing on the paper: 1 move,
+// 2 double-tap to type, 3 the handles. It never blocks the paper (only the
+// card takes taps), never changes the page, can be skipped, and opens by
+// itself once — for someone new (js/studio-guide.mjs). 更多 → 操作指南 opens it
+// again. A one-time "双击即可编辑" tip points at the first text box selected.
+let guideStep = null; // 0, 1, 2 while open
+let guideAutoChecked = false;
+let guideTipTimer = null;
+function guideTarget() {
+  const step = Guide.STEPS[guideStep];
+  return Guide.stepTarget(step, activePage()?.layers || [], selectedLayer);
+}
+function guideTargetEl(target) {
+  if (target.kind === "layer") return layerElement(target.id);
+  if (target.kind === "addText") return document.querySelector('.tool-dock [data-action="add-text-layer"]') || $("#journal-canvas");
+  return $("#journal-canvas");
+}
+function guideDemoHTML(id) {
+  // Little drawings of the real gestures (the handles look like the real ones).
+  if (id === "move") return `<span class="sg-demo-box"></span><i class="sg-demo-finger"></i>`;
+  if (id === "type") return `<span class="sg-demo-words">Aa<i class="sg-demo-caret"></i></span><i class="sg-demo-finger tap2"></i>`;
+  return `<span class="sg-demo-box framed"><i class="sg-demo-stem"></i><i class="sg-demo-rotate"></i><i class="sg-demo-size"></i></span>`;
+}
+function openGuide() {
+  if (page !== "studio" || quickResultActive()) return;
+  hideDoubleTapTip();
+  if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
+  guideStep = 0;
+  logEvent("studio_guide_open", {});
+  placeGuide();
+}
+function closeGuide(outcome) {
+  if (guideStep == null) return;
+  Guide.finishTour(outcome);
+  logEvent("studio_guide_" + (outcome === "done" ? "done" : "skip"), { step: guideStep + 1 });
+  guideStep = null;
+  $("#studio-guide")?.remove();
+}
+function placeGuide() {
+  const open = guideStep != null;
+  if (open && (page !== "studio" || studioPreview || quickResultActive())) {
+    // Leaving the editor mid-way counts as skipping (it will not reopen by itself).
+    closeGuide("skipped");
+    return;
+  }
+  if (!open) return;
+  const step = Guide.STEPS[guideStep];
+  const target = guideTarget();
+  const copy = Guide.stepCopy(step, target);
+  const last = guideStep === Guide.STEPS.length - 1;
+  let box = $("#studio-guide");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "studio-guide";
+    box.className = "sg";
+    $("#phone").append(box);
+  }
+  box.dataset.step = step.id;
+  box.innerHTML = `<div class="sg-ring" aria-hidden="true"></div><section class="sg-card" role="dialog" aria-modal="false" aria-labelledby="sg-title" aria-describedby="sg-body"><div class="sg-head"><span class="sg-count">${t("guide.count", { n: guideStep + 1, count: Guide.STEPS.length })}</span><button type="button" class="sg-skip" data-action="guide-skip">${t("guide.skip")}</button></div><div class="sg-row"><div class="sg-demo ${step.id}" aria-hidden="true">${guideDemoHTML(step.id)}</div><div class="sg-copy"><b id="sg-title">${t(copy.title)}</b><p id="sg-body">${t(copy.body)}</p></div></div><div class="sg-actions"><span class="sg-dots" aria-hidden="true">${Guide.STEPS.map((_, i) => `<i class="${i === guideStep ? "on" : ""}"></i>`).join("")}</span>${guideStep ? `<button type="button" class="secondary" data-action="guide-prev">${t("guide.prev")}</button>` : ""}<button type="button" class="primary" data-action="guide-next">${t(last ? "guide.done" : "guide.next")}</button></div></section>`;
+  // The ring goes around the real item; the card sits on the other half of
+  // the screen so it never covers what it points at.
+  const phone = $("#phone").getBoundingClientRect();
+  const el = guideTargetEl(target);
+  const ring = box.querySelector(".sg-ring");
+  const card = box.querySelector(".sg-card");
+  if (el) {
+    const r = el.getBoundingClientRect();
+    const pad = target.kind === "paper" ? 4 : 8;
+    Object.assign(ring.style, { left: `${r.left - phone.left - pad}px`, top: `${r.top - phone.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
+    ring.classList.toggle("round", target.kind === "addText");
+    ring.hidden = false;
+    const middle = r.top + r.height / 2 - phone.top;
+    const below = target.kind === "paper" || middle < phone.height * 0.5;
+    card.classList.toggle("at-bottom", below);
+    card.classList.toggle("at-top", !below);
+  } else ring.hidden = true;
+  if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
+}
+function guideAction(name) {
+  if (name === "guide-open") {
+    if (studioTool === "more") studioTool = null;
+    render();
+    openGuide();
+    return true;
+  }
+  if (guideStep == null) return name.startsWith("guide-");
+  if (name === "guide-skip") closeGuide("skipped");
+  else if (name === "guide-prev") {
+    guideStep = Math.max(0, guideStep - 1);
+    placeGuide();
+  } else if (name === "guide-next") {
+    if (guideStep >= Guide.STEPS.length - 1) closeGuide("done");
+    else {
+      guideStep += 1;
+      placeGuide();
+    }
+  } else return false;
+  return true;
+}
+// The first time someone opens the editor (and has no pages of their own).
+function maybeStartGuide() {
+  if (guideAutoChecked || page !== "studio" || quickResultActive() || studioPreview) return;
+  guideAutoChecked = true;
+  if (!Guide.shouldAutoStart(Guide.loadGuide(), state())) return;
+  setTimeout(() => {
+    if (page === "studio" && guideStep == null && !$("#choose-dialog")?.open && !$("#photo-editor")?.open) openGuide();
+  }, 500);
+}
+function noteGuide(tip) {
+  Guide.markTip(tip);
+  hideDoubleTapTip();
+}
+function hideDoubleTapTip() {
+  clearTimeout(guideTipTimer);
+  guideTipTimer = null;
+  $("#dbl-tip")?.remove();
+}
+// The first text box someone selects: a small "双击即可编辑" pointing at it.
+// (Waits a moment: the first tap of a double tap must not flash it.)
+function showDoubleTapTip(layer) {
+  if (guideStep != null || Guide.tipSeen(Guide.loadGuide(), "dblTap")) return;
+  clearTimeout(guideTipTimer);
+  guideTipTimer = setTimeout(() => {
+    if (page !== "studio" || selectedLayer !== layer.id || layerElement(layer.id)?.classList.contains("editing")) return;
+    const el = layerElement(layer.id);
+    if (!el) return;
+    Guide.markTip("dblTap");
+    const phone = $("#phone").getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const tip = document.createElement("div");
+    tip.id = "dbl-tip";
+    tip.className = "dbl-tip";
+    tip.setAttribute("role", "status");
+    tip.textContent = t("guide.tip.dblTap");
+    $("#phone").append(tip);
+    // Under the box (the ↻ handle is above it), or above when there is no room.
+    const room = phone.bottom - r.bottom;
+    const below = room > 120;
+    tip.classList.toggle("above", !below);
+    tip.style.left = `${Math.max(12, Math.min(phone.width - 12 - tip.offsetWidth, r.left - phone.left + r.width / 2 - tip.offsetWidth / 2))}px`;
+    tip.style.top = below ? `${r.bottom - phone.top + 22}px` : `${r.top - phone.top - tip.offsetHeight - 46}px`;
+    tip.style.setProperty("--arrow-x", `${r.left - phone.left + r.width / 2 - parseFloat(tip.style.left)}px`);
+    guideTipTimer = setTimeout(hideDoubleTapTip, 4200);
+  }, DOUBLE_TAP_MS + 60);
+}
+document.addEventListener("pointerdown", (event) => {
+  if (!event.target.closest?.("#dbl-tip")) hideDoubleTapTip();
+}, true);
+window.addEventListener("resize", () => {
+  placeLayerBar();
+  if (guideStep != null) placeGuide();
+});
 function accountAction(target) {
   const name = target.dataset.action;
   switch (name) {
@@ -5078,6 +5356,11 @@ function accountAction(target) {
       account = Account.finishTour(localStorage);
       renderTour();
       return true;
+    case "guide-open":
+    case "guide-skip":
+    case "guide-prev":
+    case "guide-next":
+      return guideAction(name);
     case "settings-sheet":
       profileDraft = null;
       openSettingsSheet(target.dataset.sheet);
@@ -6542,6 +6825,12 @@ function twoPointerMetrics() {
     angle: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI,
   };
 }
+// How far a finger may wander before a touch becomes a drag (V10.12). Below
+// it a touch is a tap: it selects, or (twice, quickly) starts typing — a
+// finger always wobbles a few pixels, and 2 px made every tap a tiny move.
+const DRAG_SLOP = { touch: 8, pen: 6, mouse: 4 };
+const DOUBLE_TAP_MS = 400;
+let lastTap = null; // { id, at, x, y } — the last tap on a text box
 function beginGesture(layer, mode, event) {
   const rect = canvasRect();
   drag = {
@@ -6553,9 +6842,13 @@ function beginGesture(layer, mode, event) {
     start: gestureSnapshot(layer),
     before: structuredClone(editor),
     moved: false,
+    // Handles are deliberate: they follow at once. A move waits for the slop.
+    slop: mode === "move" || mode === "crop" ? DRAG_SLOP[event.pointerType] ?? DRAG_SLOP.touch : 0,
   };
-  if (mode === "rotate") {
-    const element = layerElement(layer.id).getBoundingClientRect();
+  if (mode === "rotate" || mode === "resize") {
+    // The item's real centre on screen (its angle does not move it).
+    const element = layerElement(layer.id)?.getBoundingClientRect();
+    if (!element) return;
     drag.center = {
       x: element.left + element.width / 2,
       y: element.top + element.height / 2,
@@ -6567,11 +6860,33 @@ function beginGesture(layer, mode, event) {
       ) *
         180) /
       Math.PI;
+    drag.local0 = localVector(event, drag.center, layer.rotation);
   }
   if (mode === "pinch") Object.assign(drag, twoPointerMetrics());
 }
+// A point relative to the item's centre, in the item's own (unturned) axes.
+function localVector(point, center, rotation) {
+  const rad = (-(Number(rotation) || 0) * Math.PI) / 180;
+  const dx = point.clientX - center.x,
+    dy = point.clientY - center.y;
+  return { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
+}
 $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
+  // The ↻ and ● handles of the selected item (drawn above the paper).
+  const frameHandle = event.target.closest("#sel-frame [data-handle]");
+  if (frameHandle) {
+    const layer = selectedLayerOf();
+    if (!layer) return;
+    if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    beginGesture(layer, frameHandle.dataset.handle, event);
+    try {
+      frameHandle.setPointerCapture(event.pointerId);
+    } catch {}
+    event.preventDefault();
+    return;
+  }
   const canvas = event.target.closest("#journal-canvas");
   if (!canvas) return;
   if (event.target.closest(".layer-play, .canvas-add-row, .canvas-scene-link, .layer-bar, .photo-placeholder")) return;
@@ -6605,24 +6920,17 @@ $("#app").addEventListener("pointerdown", (event) => {
   }
   const layer = activePage().layers.find((l) => l.id === element.dataset.layer);
   if (!layer) return;
-  const wasSelected = selectedLayer === layer.id;
   if (selectedLayer !== layer.id) {
     if (cropMode) cropMode = false;
     selectedLayer = layer.id;
-    // Re-render so handles and controls appear, then keep dragging.
+    // Re-render so the frame and controls appear, then keep dragging.
     $("#canvas-wrap").innerHTML = canvasHTML();
+    placeLayerBar();
     // The 图层 icon appears in the dock; no sheet pops up mid-drag.
     refreshToolMenu();
   }
-  const handle = event.target.closest("[data-handle]")?.dataset.handle;
-  beginGesture(
-    layer,
-    cropMode && layer.kind === "photo" ? "crop" : handle || "move",
-    event,
-  );
-  // A second tap on a selected text box types into it, right on the paper.
-  // (The rotate knob sits over short boxes; a tap there without turning also types.)
-  if (drag) drag.tapToEdit = wasSelected && layer.kind === "text" && handle !== "resize" && !cropMode;
+  // Touching the item itself always moves it (the handles are outside it).
+  beginGesture(layer, cropMode && layer.kind === "photo" ? "crop" : "move", event);
   try {
     $("#journal-canvas").setPointerCapture(event.pointerId);
   } catch {}
@@ -6633,20 +6941,32 @@ $("#app").addEventListener("pointermove", (event) => {
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (!drag) return;
   const { layer, start, rect } = drag;
+  if (!drag.moved) {
+    // Still a tap until the finger really travels.
+    if (drag.mode !== "pinch" && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < drag.slop) return;
+    drag.moved = true;
+  }
   const dx = ((event.clientX - drag.startX) / rect.width) * 100,
     dy = ((event.clientY - drag.startY) / rect.height) * 100;
   if (drag.mode === "move") {
     layer.x = Math.max(0, Math.min(100, start.x + dx));
     layer.y = Math.max(0, Math.min(100, start.y + dy));
     if (layer.kind === "photo" && layer.mediaRef && !layer.drawing) markSwapTarget(event, layer);
-  } else if (drag.mode === "resize") {
-    const factor = 2 / (start.scale || 1);
-    layer.w =
-      Math.round(Math.max(8, Math.min(100, start.w + dx * factor)) * 10) / 10;
-    if (layer.kind === "photo" || layer.kind === "video")
-      layer.h =
-        Math.round(Math.max(8, Math.min(100, start.h + dy * factor)) * 10) / 10;
-  } else if (drag.mode === "rotate") {
+  } else if (drag.mode === "resize" && drag.local0) {
+    // Measured along the item's own axes, so a turned item resizes the same
+    // way: a photo / video frame stretches (width and height), anything else
+    // (words, stickers, check-ins, sound) grows or shrinks as a whole.
+    const now = localVector(event, drag.center, start.rotation);
+    if (layer.kind === "photo" || layer.kind === "video") {
+      const fx = Math.abs(now.x) / Math.max(12, Math.abs(drag.local0.x)),
+        fy = Math.abs(now.y) / Math.max(12, Math.abs(drag.local0.y));
+      layer.w = Math.round(Math.max(8, Math.min(100, start.w * fx)) * 10) / 10;
+      layer.h = Math.round(Math.max(8, Math.min(100, start.h * fy)) * 10) / 10;
+    } else {
+      const f = Math.hypot(now.x, now.y) / Math.max(12, Math.hypot(drag.local0.x, drag.local0.y));
+      layer.scale = Math.round(Math.max(0.3, Math.min(3, (start.scale || 1) * f)) * 100) / 100;
+    }
+  } else if (drag.mode === "rotate" && drag.center) {
     const angle =
       (Math.atan2(
         event.clientY - drag.center.y,
@@ -6693,10 +7013,6 @@ $("#app").addEventListener("pointermove", (event) => {
       ),
     };
   }
-  drag.moved ||=
-    Math.abs(event.clientX - drag.startX) +
-      Math.abs(event.clientY - drag.startY) >
-      2 || drag.mode === "pinch";
   paintLayer(layer);
 });
 // Drag a photo onto another photo: they change places. Each takes the
@@ -6747,7 +7063,7 @@ function swapPhotos(a, b, from) {
 }
 function commitGesture() {
   if (!drag) return;
-  const { moved, before, layer, tapToEdit, swapWith, start } = drag;
+  const { moved, before, layer, swapWith, start, mode, startX, startY } = drag;
   drag = null;
   document.querySelectorAll("#journal-canvas .swap-target").forEach((el) => el.classList.remove("swap-target"));
   const other = swapWith && activePage().layers.find((l) => l.id === swapWith);
@@ -6767,7 +7083,19 @@ function commitGesture() {
     scheduleDraft();
   }
   render();
-  if (!moved && tapToEdit) editTextLayer(layer.id);
+  // A tap selects; two quick taps on a text box start typing in it (with the
+  // keyboard: this runs inside the touch's own pointerup).
+  if (moved || mode !== "move" || layer.kind !== "text") {
+    lastTap = null;
+    return;
+  }
+  const now = performance.now();
+  const twice = lastTap && lastTap.id === layer.id && now - lastTap.at < DOUBLE_TAP_MS && Math.hypot(startX - lastTap.x, startY - lastTap.y) < 32;
+  lastTap = twice ? null : { id: layer.id, at: now, x: startX, y: startY };
+  if (twice) {
+    editTextLayer(layer.id);
+    noteGuide("dblTap");
+  } else showDoubleTapTip(layer);
 }
 function endPointer(event) {
   if (!pointers.has(event.pointerId)) return;

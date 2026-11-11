@@ -114,11 +114,14 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const stageBefore = await settledBox();
     await mobile.locator('[data-type-font="zh-kuaile"]').click();
     await mobile.locator('[data-type-size="2"]').click();
+    await mobile.locator("#type-bar .type-color-now").click(); // V10.12: colours open from the dot
     await mobile.locator('[data-type-color="#B5838D"]').click();
+    await mobile.locator("#type-bar .type-color-back").click();
     assert.equal(await mobile.evaluate(() => document.activeElement?.dataset.inline), "title", "still typing in the title");
     await mobile.keyboard.type("！");
     assert.deepEqual(await settledBox(), stageBefore, "the bar never moves the page");
     await mobile.locator('#journal-canvas [data-inline="body"]').click();
+    await mobile.locator("#type-bar .type-color-now").click();
     await mobile.locator('[data-type-color="#7D8E66"]').click();
     await mobile.waitForTimeout(1300);
     const note = await mobile.evaluate(() => { const d = new Date(); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; return JSON.parse(localStorage.getItem("little-days.v1")).drafts[k].moments.at(-1); });
@@ -141,7 +144,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.doesNotMatch(await mobile.locator("#journal-canvas .growth-layer").innerText(), /\p{Extended_Pictographic}/u);
     assert.equal(await mobile.locator("#journal-canvas .growth-layer .growth-card").evaluate((el) => getComputedStyle(el).borderTopWidth), "0px");
     // Selection: two small dots, not a square box.
-    const handle = await mobile.locator("#journal-canvas .growth-layer .handle-resize").evaluate((el) => [el.offsetWidth, getComputedStyle(el).borderRadius]);
+    const handle = await mobile.locator("#sel-frame .handle-resize").evaluate((el) => [el.offsetWidth, getComputedStyle(el).borderRadius]);
     assert.ok(handle[0] <= 16 && handle[1] === "50%", JSON.stringify(handle));
     passed.push("type bar: tap the title or words → font / size / colour, caret stays, page never moves; 加文字框 is clearly an add");
 

@@ -11,6 +11,9 @@ function seedAccount() {
       const d = new Date();
       localStorage.setItem("little-days.celebrated", `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
     }
+    // The Studio guide (V10.12) is tested in v112; older suites have seen it.
+    if (localStorage.getItem("little-days.studio-guide") === null)
+      localStorage.setItem("little-days.studio-guide", JSON.stringify({ tour: "skipped", tips: { dblTap: true } }));
     if (!localStorage.getItem("little-days.account"))
       localStorage.setItem(
         "little-days.account",

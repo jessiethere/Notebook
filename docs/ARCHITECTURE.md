@@ -329,3 +329,10 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 背景音乐：`syncMusic()` 对 `book:<id>` 上下文默认静音，`musicAsked` 记录用户主动请求过的书；`toggleMusic()`、阅读器 ♪、为书选曲会设置它。
 - 编辑往返：`readReturn = { page: "reader", book, key }`，`returnToReading()` → `openReader(book, key)`；`showSavedPage()` 与今日故事完成 → `openReader(book, keyOf(那一页))`。
 - 移除：书本详情页的「列表 / 翻页」切换、内嵌翻页 `flipBookHTML()`、`little-days.book-view`（旧值留在浏览器里，不再读取）。
+
+## 2026-11-11 V10.12 选中框、手势与引导
+
+- 选中框画在纸张上方，在 `#canvas-wrap` 内（`selFrameHTML` / `placeLayerBar`），不放在图层内。位置由 `selGeometry()` 计算：模型里的 x/y 百分比乘以画布尺寸；`offsetWidth/offsetHeight × scale` 得到大小；`rotation` 得到角度。手柄位置在框的自身坐标里由 `selHandleSpots()` 选定。框在 `render`、`updateCanvas`、`paintLayer`、选中和窗口大小变化后重新定位。
+- 指针事件：`#app` 上的 pointerdown 先判断是否按在 `#sel-frame [data-handle]` 上（进入缩放或旋转）。按在图层上一律进入移动，并且要超过 `DRAG_SLOP` 才开始移动。`commitGesture` 判断点按：同一文字框上的第二次点按就是双击，在 pointerup 里调用 `editTextLayer`，属于用户手势，iOS 可以弹出键盘。缩放用 `localVector()` 把指针位置换算到图层自身坐标。编辑中的文字（contenteditable）不经过这些处理，交给浏览器原生光标和选择。
+- 引导：`Public/js/studio-guide.mjs` 只放纯函数，负责步骤、目标、文案选择和是否自动打开，并读写本机偏好 `little-days.studio-guide`。界面在 app.js，是 `#phone` 下的 `#studio-guide`（`pointer-events:none`，只有卡片可以点），每次 `render` 后重新定位；离开编辑器时算作跳过。这项偏好不在手帐 store、备份或 Swift 模型里。
+- 打字时的颜色：工具条第二行末尾 `.type-color-now`，点它给工具条加上 `.show-colors`，第二行换成色块，工具条高度不变。

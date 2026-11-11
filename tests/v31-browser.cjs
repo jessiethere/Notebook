@@ -221,8 +221,8 @@ async function noOverflow(page, label) {
     const g0 = (await day(D1)).layers.find((l) => l.id === ids[0]);
     // Drags keep the share of the paper they had on the smaller pre-V10.0 paper.
     const paperW = (await page.locator("#journal-canvas").boundingBox()).width;
-    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-resize`), (20 * paperW) / 186, (16 * paperW) / 186);
-    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-rotate`), 40, 25);
+    await mouseDrag(page, await center(page, `#sel-frame[data-sel="${ids[0]}"] .handle-resize`), (20 * paperW) / 186, (16 * paperW) / 186);
+    await mouseDrag(page, await center(page, `#sel-frame[data-sel="${ids[0]}"] .handle-rotate`), 40, 25);
     await waitDay(D1, (e, a) => {
       const l = e.layers.find((x) => x.id === a.id);
       return l.w > a.w && l.h > a.h && l.rotation !== a.rotation;
@@ -610,8 +610,8 @@ async function noOverflow(page, label) {
     await selectLayer(desk.page, deskIds[1]);
     const before = (await d.day(deskDate)).layers.find((l) => l.id === deskIds[1]);
     await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"]`), -40, 30);
-    await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-resize`), 40, 30);
-    await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-rotate`), 60, 40);
+    await mouseDrag(desk.page, await center(desk.page, `#sel-frame[data-sel="${deskIds[1]}"] .handle-resize`), 40, 30);
+    await mouseDrag(desk.page, await center(desk.page, `#sel-frame[data-sel="${deskIds[1]}"] .handle-rotate`), 60, 40);
     const c = await center(desk.page, `[data-layer="${deskIds[1]}"]`);
     await desk.page.mouse.move(c.x, c.y);
     await desk.page.mouse.wheel(0, -120);
