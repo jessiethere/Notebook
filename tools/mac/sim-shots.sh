@@ -34,6 +34,8 @@ shot() { # shot <file> <wait seconds> [taps]
 start=$(date +%s)
 shot 01-home 12
 echo "first screen after about $(( $(date +%s) - start ))s (includes waiting)"
-shot 02-calendar 10 '#navigation [data-page="calendar"]'
-shot 03-shelf 10 '#navigation [data-page="books"]'
-shot 04-studio 12 '[data-action="today-write"]'
+# "body" steps only wait (~0.8 s each): Home re-renders once after its data
+# loads, and a tap before that is lost.
+shot 02-calendar 12 'body||body||body||#navigation [data-page="calendar"]'
+shot 03-shelf 12 'body||body||body||#navigation [data-page="books"]'
+shot 04-studio 14 'body||body||body||[data-action="today-write"]'

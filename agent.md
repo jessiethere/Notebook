@@ -48,6 +48,37 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.14 iPhone App 第一次在 Xcode 模拟器里运行；引导圆环在 App 里的位置修复；Captain 提示词第 2 版
+
+- 背景：用户在 Mac 上用 Claude Code 完成了环境检查、Homebrew / Node 安装和 qwen3.5:4b 评测（提交 d945cf2，评分 145/168），随后把 Mac 上的 Notebook 文件夹连到本会话（Remote Control，用户本人确认信任）。
+- 在用户 Mac 上实际运行（Xcode 27.2，iPhone 18 Pro 模拟器 iOS 27.2）：
+  - `xcodebuild -list`：scheme LittleDays / LittleDaysCore / LittleDaysUI 由 Xcode 自动生成，两个本地包都能解析。
+  - 第一次 `xcodebuild … build`：**BUILD SUCCEEDED**，工程没改，只有警告。
+  - 安装运行：首页、日历、书架、Journal Studio 都能打开。冷启动约 15–20 秒才到首页，原因未查。
+  - 这一版 Xcode 没有单独的 Simulator.app（`open -a Simulator` 找不到），命令行构建、安装、截图不受影响。
+  - Xcode 解析包时在用户 Mac 上改了 `Package.resolved`（未提交，留在用户本机，没有动）。
+- 为了不点屏幕也能截到各页面：
+  - `LittleDaysWebShellView` 增加只在 Debug 构建生效的启动参数 `-LittleDaysTap "<selector>||…"`：页面加载完后按顺序点击，Release 不读这个参数，也不读取或发送任何数据。
+  - 新增 `tools/mac/sim-shots.sh`：构建、安装、截四个页面，不清空数据。第一次截图时首页重新渲染吃掉了点击，现在先等约 2.4 秒（`body||body||body||…`）再点。
+  - 提交 91a82a5，用户确认后以 fast-forward 合并到 Mac 上的副本。
+- 在模拟器里发现的问题（V10.12 引导）：绿色圆环比纸张低约 34px。
+  - 浏览器在 `?shell=ios` 下可以复现：旧代码测得 top -34 / bottom +42。
+  - 原因：引导放好后，纸张在 App 外壳的布局里又往下挪了。
+  - 修复：`positionGuide()` 以引导层自身为基准计算位置，引导打开期间每 250ms 跟随目标一次（关闭时停止）。「双击」提示也改为以自身的定位容器为基准。
+  - v112 增加一组 iPhone 外壳布局测试：圆环与纸张的四边距离在 2–6px 之内。
+- Captain 提示词第 2 版（`PROMPT_VERSION = 2`），按第一次 Mac 评测的问题修改：
+  - 禁止 喵 / 喵呜 / meow，改用观察和动作表现猫的特点；不用表情符号；
+  - 看不到手帐，所以不谈页面、写了多少、今天是不是空的；
+  - 不把聊天引向写或记录；
+  - 累的时候既体谅累也肯定做完的事；难过时不说「别难过」；
+  - 被摸的是 Captain；问到功能时只说「聊天上面的按钮」，不编按钮名；
+  - 跟随最新一句的语言；
+  - 加 3 个不同话题的语气示例。
+  - `cleanReply` 加一层保险：去掉句首或句尾的「喵 / Meow」，英文首字母大写。
+  - `captain-eval.mjs` 修正：除帽子用例外，原来都没传当前装扮，导致模型说「没带小帽子」；现在和 App 一样默认柠檬帽。结果文件名带上提示词版本。
+- 测试：v113 单元测试加 1 项，共 7 项；v113 浏览器测试改为兼容规则回复的随机句子，并适配新提示词；v112 加 iPhone 外壳布局一组。结果：Node 185、Python 16 通过；浏览器测试 v36、v101、v107、v109、v112、v113 通过，其中 v113 连跑 3 次都通过（之前有一次因为规则回复随机挑到另一句而失败，已改断言）。这一轮没有跑全量浏览器回归。
+- 未完成：提示词第 2 版要在 Mac 上重跑评测，和第 1 版对比；冷启动 15–20 秒的原因未查；App 里的本地 AI 聊天（第 5 节）和模拟器调用 Mac 服务都还没接通。
+
 ### 2026-11-11 — Mac 上实际运行：环境检查、安装 Homebrew / Node、qwen3.5:4b 实测与 Captain 评测
 
 - 需求：用户在 Mac 上的 Claude Code 会话里要求按 docs/MAC_LOCAL_DEV.md 执行：第一步运行 doctor.sh，缺什么只装什么，装之前先问。

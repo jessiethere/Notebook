@@ -39,9 +39,9 @@ test("the prompt: Captain's personality and limits; messages carry chat lines on
   const zh = AI.systemPrompt({ language: "zh", wearing: "柠檬帽" });
   assert.match(zh, /curious, playful, gentle, a little silly/);
   assert.match(zh, /Simplified Chinese/);
-  assert.match(zh, /NOT read their journal/);
+  assert.match(zh, /cannot see their journal/);
   assert.match(zh, /柠檬帽/);
-  assert.match(AI.systemPrompt({ language: "en" }), /Answer in English/);
+  assert.match(AI.systemPrompt({ language: "en", wearing: "the lemon hat" }), /language of the person.s latest message[\s\S]*You are wearing: the lemon hat/);
   const history = Array.from({ length: 10 }, (_, i) => ({ who: i % 2 ? "keeper" : "me", text: `line ${i}` }));
   const messages = AI.buildMessages({ text: "你好", history: [...history, { who: "system", text: "x" }, { who: "me", text: "  " }], language: "zh" });
   assert.equal(messages[0].role, "system");
@@ -110,4 +110,23 @@ test("off, broken or slow → an error the app turns into the rules' reply", asy
   } finally {
     server.close();
   }
+});
+
+test("prompt v2 (after the first Mac run): no cat sounds, no journal guesses, no nudging, no invented buttons", () => {
+  assert.equal(AI.PROMPT_VERSION, 2);
+  const p = AI.systemPrompt({ language: "zh", wearing: "柠檬帽" });
+  assert.match(p, /Do NOT say 喵, 喵呜, meow/);
+  assert.match(p, /cannot see their journal: never say anything about their pages/);
+  assert.match(p, /Never steer the chat toward writing/);
+  assert.match(p, /never name or invent a button/);
+  assert.match(p, /do not say "don't be sad" \(别难过\)/);
+  assert.match(p, /latest message/);
+  assert.match(p, /No emoji/);
+  // The examples are not the test lines (so the run is not just copying).
+  for (const line of ["你好可爱呀", "你的柠檬帽真好看", "今天有点累", "我想摸摸你的头", "adorable"]) assert.ok(!p.includes(line), line);
+  // Safety net: a cat sound as an opener or a tag at the end is dropped; the rest stays.
+  assert.equal(AI.cleanReply("喵呜！谢谢夸奖，本猫今天也戴着小帽子呢。", "zh"), "谢谢夸奖，本猫今天也戴着小帽子呢。");
+  assert.equal(AI.cleanReply("好呀，快摸！喵～", "zh"), "好呀，快摸！");
+  assert.equal(AI.cleanReply("Meow hello! Your words taste like warm milk today.", "en"), "Hello! Your words taste like warm milk today.");
+  assert.equal(AI.cleanReply("我喜欢喵喵叫的小鸟。", "zh"), "我喜欢喵喵叫的小鸟。", "only a leading / trailing cat sound goes");
 });

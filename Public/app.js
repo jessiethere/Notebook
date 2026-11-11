@@ -5226,6 +5226,7 @@ function closeGuide(outcome) {
   Guide.finishTour(outcome);
   logEvent("studio_guide_" + (outcome === "done" ? "done" : "skip"), { step: guideStep + 1 });
   guideStep = null;
+  clearInterval(guideFollow);
   $("#studio-guide")?.remove();
 }
 function placeGuide() {
@@ -5249,9 +5250,24 @@ function placeGuide() {
   }
   box.dataset.step = step.id;
   box.innerHTML = `<div class="sg-ring" aria-hidden="true"></div><section class="sg-card" role="dialog" aria-modal="false" aria-labelledby="sg-title" aria-describedby="sg-body"><div class="sg-head"><span class="sg-count">${t("guide.count", { n: guideStep + 1, count: Guide.STEPS.length })}</span><button type="button" class="sg-skip" data-action="guide-skip">${t("guide.skip")}</button></div><div class="sg-row"><div class="sg-demo ${step.id}" aria-hidden="true">${guideDemoHTML(step.id)}</div><div class="sg-copy"><b id="sg-title">${t(copy.title)}</b><p id="sg-body">${t(copy.body)}</p></div></div><div class="sg-actions"><span class="sg-dots" aria-hidden="true">${Guide.STEPS.map((_, i) => `<i class="${i === guideStep ? "on" : ""}"></i>`).join("")}</span>${guideStep ? `<button type="button" class="secondary" data-action="guide-prev">${t("guide.prev")}</button>` : ""}<button type="button" class="primary" data-action="guide-next">${t(last ? "guide.done" : "guide.next")}</button></div></section>`;
-  // The ring goes around the real item; the card sits on the other half of
-  // the screen so it never covers what it points at.
-  const phone = $("#phone").getBoundingClientRect();
+  positionGuide();
+  const card = box.querySelector(".sg-card");
+  if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
+  // The page can still settle after the guide opens (in the iPhone shell the
+  // paper moved ~35 px once the safe area and the sticky stage applied), so
+  // the ring follows its target while the guide is open.
+  clearInterval(guideFollow);
+  guideFollow = setInterval(() => (guideStep == null ? clearInterval(guideFollow) : positionGuide()), 250);
+}
+let guideFollow = null;
+// The ring goes around the real item; the card sits on the other half of the
+// screen so it never covers what it points at. Measured from the guide layer
+// itself (its containing block).
+function positionGuide() {
+  const box = $("#studio-guide");
+  if (!box || guideStep == null) return;
+  const target = guideTarget();
+  const phone = box.getBoundingClientRect();
   const el = guideTargetEl(target);
   const ring = box.querySelector(".sg-ring");
   const card = box.querySelector(".sg-card");
@@ -5268,7 +5284,6 @@ function placeGuide() {
     // Pointing at the whole paper: the card sits over the tool row, not on the paper.
     card.classList.toggle("over-dock", target.kind === "paper");
   } else ring.hidden = true;
-  if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
 }
 function guideAction(name) {
   if (name === "guide-open") {
@@ -5319,7 +5334,6 @@ function showDoubleTapTip(layer) {
     const el = layerElement(layer.id);
     if (!el) return;
     Guide.markTip("dblTap");
-    const phone = $("#phone").getBoundingClientRect();
     const r = el.getBoundingClientRect();
     const tip = document.createElement("div");
     tip.id = "dbl-tip";
@@ -5327,6 +5341,8 @@ function showDoubleTapTip(layer) {
     tip.setAttribute("role", "status");
     tip.textContent = t("guide.tip.dblTap");
     $("#phone").append(tip);
+    // Measured from the tip's own containing block (see placeGuide).
+    const phone = (tip.offsetParent || $("#phone")).getBoundingClientRect();
     // Under the box (the ↻ handle is above it), or above when there is no room.
     const room = phone.bottom - r.bottom;
     const below = room > 120;

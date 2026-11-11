@@ -133,7 +133,8 @@ function mockOllama() {
     await page.waitForSelector('.kp[data-view="home"]');
     mock.state.down = true;
     reply = await say("今天有点累，但是写完了一页");
-    assert.match(reply, /累的时候还写完了一页/, "the rules' reply");
+    assert.doesNotMatch(reply, /嘿嘿|本机模型/, "the rules' reply (one of the doneTired lines), not the model's");
+    assert.equal(await page.locator(".kp .keeper-msg.local-ai").count(), 2, "no new model line");
     assert.doesNotMatch(reply, /本机模型/);
     passed.push("model server down → the rules' reply, quietly");
 
@@ -147,7 +148,8 @@ function mockOllama() {
     reply = await say("Hello, you're adorable!");
     assert.match(reply, /^Oh! You found my good side\.\n/, "cleaned: no reasoning, no *purrs*, two sentences");
     assert.match(reply, /Local model · dev/);
-    assert.match(mock.seen.at(-1).body.messages[0].content, /Answer in English/);
+    assert.match(mock.seen.at(-1).body.messages[0].content, /language of the person.s latest message/);
+    assert.equal(mock.seen.at(-1).body.messages.at(-1).content, "Hello, you're adorable!");
     passed.push("English: English prompt and reply");
 
     // 6. The journal is untouched; nothing went outside this computer; off again.

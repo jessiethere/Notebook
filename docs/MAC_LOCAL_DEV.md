@@ -1,6 +1,6 @@
 # Little Days · Mac 本地开发、本地 Qwen 与 iPhone 模拟器（2026-11-11）
 
-> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 5 节（App 里的本地 AI）和第 7 节（Xcode / 模拟器）还没在 Mac 上运行。
+> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 7 节（Xcode / 模拟器）也已在 Mac 上跑通（见下表）。第 5 节（App 里的本地 AI 聊天）还没在 Mac 上实际打开过。
 
 ## 0. 怎样让 Claude 直接在你的 Mac 上操作
 
@@ -15,13 +15,13 @@
 
 | 项目 | 状态 | 说明 |
 |---|---|---|
-| 仓库里的原生工程 | **已存在，从未编译** | `Native/LittleDays.xcodeproj`：iOS 17，App target「LittleDays」，Bundle ID `com.jessiethere.littledays`，自动签名，`DEVELOPMENT_TEAM` 为空。依赖本地 Swift Package `Native/Package.swift`（LittleDaysUI）和 `Packages/LittleDaysCore`。至今只做过 Linux 上的语法和资源检查，没有用 Xcode 构建过。 |
+| 仓库里的原生工程 | **2026-11-11 第一次构建成功，并在模拟器里运行** | `Native/LittleDays.xcodeproj`：iOS 17，App target「LittleDays」，Bundle ID `com.jessiethere.littledays`，自动签名，`DEVELOPMENT_TEAM` 为空。依赖本地 Swift Package `Native/Package.swift`（LittleDaysUI）和 `Packages/LittleDaysCore`。Xcode 27.2 + iPhone 18 Pro 模拟器（iOS 27.2）：工程**没有改就 BUILD SUCCEEDED**（scheme 由 Xcode 自动生成，只有警告）；安装后首页、日历、书架、Journal Studio 都能打开（截图：`bash tools/mac/sim-shots.sh` → `build/sim-shots/`）。冷启动到首页约 15–20 秒（先空白，再「正在打开你的文具店…」），原因未查。这一版 Xcode 里没有单独的 Simulator.app，用 Xcode 打开工程按 ⌘R 才会显示模拟器窗口；命令行构建、安装、截图不受影响。 |
 | App 的界面 | Swift 外壳 + 同一套 Web 界面 | `LittleDaysApp` → `LittleDaysWebShellView`（WKWebView），加载打包进 App 的 `Public/` 副本（`tools/sync_native_web.py` 同步到 `Native/Sources/LittleDaysUI/WebApp/`）。Home、日历、书架、Journal Studio、阅读器、Captain 都是这套 Web 界面；原生 Swift 的部分是外壳、每日提醒（`LittleDaysReminders`）、资源加载。早期的 SwiftUI 原型视图（`HomeView`、`CalendarView`、`BooksView`、`StudioView` 等）还在，但 App 不用它们，功能落后于 Web。 |
 | 环境检查脚本 | **2026-11-11 已在 Mac 上运行，全部 ✅** | `bash tools/mac/doctor.sh`：只读。机器：Apple M5 / 24 GB / macOS 26.6；Xcode 27.2、iOS 27.2 模拟器；Ollama 0.40.16 只监听 127.0.0.1。当时缺 Homebrew 和 Node，经用户同意后装了 Homebrew 7.0.13 和 Node 26.13.0。 |
-| 日常命令 | 已写好，未在 Mac 上运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop` |
+| 日常命令 | `sim-shots.sh` 已在 Mac 上运行；其余未全部运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop`；`bash tools/mac/sim-shots.sh`（构建 + 四个页面截图；靠只在 Debug 构建生效的启动参数 `-LittleDaysTap` 打开页面） |
 | Captain 测试集 | 已写好 | `docs/captain-ai/chat-cases.json`：12 句合成输入，包括你指定的 7 句。 |
 | Captain × Qwen 评测脚本 | **2026-11-11 已在 Mac 上运行（qwen3.5:4b，每句 3 次）** | 结果和人工评分在 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md`：145/168（86%），每句约 0.4–1.9 秒，约 32 tokens/s。主要问题是「喵」成了口头禅、偶尔编造手帐状态。 |
-| App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试） | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
+| App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试）；**提示词第 2 版**（2026-11-11，按 Mac 上第一次评测修改：不说「喵」、不猜手帐内容、不劝写、不编按钮名；另有一层清理去掉句首 / 句尾的「喵」），待在 Mac 上重跑评测 | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
 | `qwen3.5:4b` 这个标签 | **已确认存在**（2026-11-11） | 已经下载到 Mac 上（4.0 GB，ID `7f3251fa6878`），用 Ollama 的 MLX runner 运行，100% 在 GPU 上。 |
 
 ## 2. 第一步：检查 Mac（只读）

@@ -477,6 +477,32 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       await context.close();
     }
     passed.push("375×667 (中文) and 430×932 (English): the guide card fits, English copy; the one-time 「双击即可编辑」 tip points at the first selected box and goes once typing starts; handles apart; colours ≥ 28 px while typing; no sideways scroll");
+    // ---------------------------------------------------------------- 5b
+    // The iPhone shell's layout (?shell=ios): the ring sits exactly on the paper
+    // (found in the Xcode Simulator: it was drawn ~30 px too low there).
+    {
+      const { context, page, errors } = await phone(browser, devices["iPhone 13"], { fresh: true });
+      await page.goto(`${base}/?shell=ios`);
+      await page.waitForSelector(".hero");
+      await page.locator('[data-action="today-write"]').first().tap();
+      await page.waitForSelector("#studio-guide .sg-card");
+      const measure = () => page.evaluate(() => {
+        const ring = document.querySelector(".sg-ring").getBoundingClientRect();
+        const paper = document.querySelector("#journal-canvas").getBoundingClientRect();
+        return { top: Math.round(paper.top - ring.top), left: Math.round(paper.left - ring.left), bottom: Math.round(ring.bottom - paper.bottom) };
+      });
+      // The ring follows the paper while the page settles (with a 0.25 s glide).
+      let off = await measure();
+      for (let i = 0; i < 20 && ![off.top, off.left, off.bottom].every((d) => d >= 2 && d <= 6); i++) {
+        await page.waitForTimeout(150);
+        off = await measure();
+      }
+      assert.ok([off.top, off.left, off.bottom].every((d) => d >= 2 && d <= 6), `ring hugs the paper in the iPhone shell: ${JSON.stringify(off)}`);
+      if (shots) await page.screenshot({ path: `${shots}/12-guide-ios-shell.png` });
+      assert.deepEqual(errors, []);
+      await context.close();
+      passed.push("iPhone shell layout (?shell=ios): the guide's ring sits exactly on the paper");
+    }
     // ---------------------------------------------------------------- 6
     // A mouse still works the same (desktop preview): double-click types.
     {

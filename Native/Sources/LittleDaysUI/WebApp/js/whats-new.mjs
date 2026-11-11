@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.14",
+    date: "2026-11-11",
+    zh: {
+      title: "iPhone App 第一次在模拟器里跑起来了",
+      items: [
+        "Little Days 的 iPhone App 第一次在 Mac 的 Xcode 模拟器里构建并运行成功：首页、日历、书架和写手帐的页面都能正常打开。",
+        "修好了操作指南在 iPhone App 里的位置：绿色圆环原来会比纸张低一截，现在会跟着纸张走，准确圈住要讲的地方。",
+        "开发用的 Captain 本地模型对话换了一版说法：不再一直「喵」，不猜你的手帐里写了什么，也不老是劝你去写。这个只在 Mac 上开发时使用，这个链接里看不到。",
+      ],
+    },
+    en: {
+      title: "The iPhone app runs in the Simulator for the first time",
+      items: [
+        "The Little Days iPhone app was built and run in Xcode's Simulator on a Mac for the first time: Home, Calendar, the shelf and the page editor all open.",
+        "Fixed the guide's position in the iPhone app: the green ring used to sit a little below the page; it now follows the page and circles the right spot.",
+        "Captain's development-only local-model chat got a new voice: no more \u201cmeow\u201d in every line, no guessing what's in your journal, no nudging you to write. It is only used while developing on a Mac — not in this link.",
+      ],
+    },
+  },
+  {
     version: "10.13",
     date: "2026-11-11",
     zh: {
