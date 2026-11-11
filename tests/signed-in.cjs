@@ -130,6 +130,17 @@ module.exports.studioTool = async (target, id) => {
   const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
   if (await sheet.count()) return sheet;
   await dockReady(target);
+  // With something selected the bottom row is that item's tools (V10.1):
+  // 图层 is there; for any other tool, × returns to the four tools first.
+  if (await target.locator(".tool-dock.ctx").count()) {
+    if (await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).count()) {
+      await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).click();
+      await sheet.waitFor();
+      return sheet;
+    }
+    await target.locator('.tool-dock.ctx [data-action="layer-deselect"]').click();
+    await target.locator(".tool-dock:not(.ctx)").waitFor();
+  }
   if (id === "stickers" || id === "more") await target.locator(`.tool-dock [data-tool="${id}"]`).click();
   else {
     if (!(await target.locator('.tool-sheet[data-tool-row="more"]').count())) await target.locator('.tool-dock [data-tool="more"]').click();
@@ -172,4 +183,12 @@ module.exports.studioEdit = async (target) => {
 module.exports.momentField = async (target, name) => {
   await module.exports.studioDetails(target);
   return target.locator(`[data-moment-field="${name}"]`);
+};
+// Back to the four tools (× in the selected item's row), if something is selected.
+module.exports.studioDeselect = async (target) => {
+  await dockReady(target);
+  if (await target.locator(".tool-dock.ctx").count()) {
+    await target.locator('.tool-dock.ctx [data-action="layer-deselect"]').click();
+    await target.locator(".tool-dock:not(.ctx)").waitFor();
+  }
 };

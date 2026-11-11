@@ -16131,3 +16131,188 @@ html[data-shell="ios"] .phone.sv ~ .toast {
 .phone.sv .studio-stage {
   top: 58px;
 }
+
+/* =====================================================================
+   V10.1 · Journal Studio contextual tools (Phase B)
+   With something selected, the bottom row is that item's tools: × and its
+   kind on the left, then only what applies. The floating black menu is gone.
+   ===================================================================== */
+.tool-dock.sv-tools.ctx {
+  display: flex;
+  align-items: stretch;
+  padding-left: 4px;
+}
+.tool-dock.sv-tools.ctx .sv-tool {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.tool-dock.sv-tools.ctx .ctx-back {
+  flex: 0 0 54px;
+  color: var(--t-675d54, #675d54);
+}
+.tool-dock.sv-tools.ctx .ctx-back small {
+  color: var(--t-675d54, #675d54);
+}
+.ctx-x {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1;
+}
+.ctx-rule {
+  flex: none;
+  width: 1px;
+  margin: 12px 2px;
+  background: var(--line);
+}
+.tool-dock.sv-tools.ctx .sv-tool.danger .sv-icon,
+.tool-dock.sv-tools.ctx .sv-tool.danger small {
+  color: var(--t-a24b3f, #a24b3f);
+}
+.tool-dock.sv-tools.ctx .sv-tool[aria-pressed="true"] .sv-icon {
+  background: var(--c-e3ebdc, #e3ebdc);
+}
+/* Text style: the same controls in the sheet and in the bar while typing. */
+.type-sheet {
+  display: grid;
+  gap: 10px;
+}
+.type-sheet .type-fonts {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.type-sheet .type-fonts::-webkit-scrollbar {
+  display: none;
+}
+.type-sheet .type-fonts button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--c-f1eadf, #f1eadf);
+  font-size: 17px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.type-sheet .type-fonts button.selected {
+  background: var(--ink);
+  color: var(--t-fffcf6, #fffcf6);
+}
+.type-sheet .type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.type-sheet [data-type-size] {
+  min-width: 56px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.type-sheet .type-colors {
+  display: flex;
+  gap: 12px;
+  padding: 4px 2px;
+}
+.type-sheet .type-colors button {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--c-ffffff, #ffffff);
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.type-sheet .type-colors button.selected {
+  box-shadow: 0 0 0 2px var(--sageDeep);
+}
+.type-align {
+  display: inline-flex;
+  gap: 6px;
+}
+.type-align button {
+  width: 52px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--c-ffffff, #ffffff);
+  color: var(--ink);
+}
+.type-align button[aria-pressed="true"] {
+  border-color: var(--sageDeep);
+  background: var(--c-e3ebdc, #e3ebdc);
+}
+.align-glyph {
+  width: 20px;
+  height: 14px;
+  display: block;
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 6px / 60% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 12px / 100% 2px no-repeat;
+}
+.align-glyph.center {
+  background-position:
+    0 0,
+    50% 6px,
+    0 12px;
+}
+.align-glyph.right {
+  background-position:
+    0 0,
+    100% 6px,
+    0 12px;
+}
+.type-bar .type-align-cycle {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.type-bar .type-colors {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.type-bar .type-fonts .type-to-box {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--sageDeep);
+  border-radius: 999px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sageDeep);
+  white-space: nowrap;
+}
+.type-to-box[hidden] {
+  display: none;
+}
+.type-bar .type-colors {
+  padding: 3px;
+}
+/* The text sheet is short: the paper keeps most of its size. */
+.phone.sv #app:has(.tool-sheet[data-tool-row="textstyle"]) .studio-stage .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - 190px) * 0.8));
+}
+/* A phone hides the bottom row while typing — the selected item's row too. */
+@media (pointer: coarse) {
+  body.typing .tool-dock.sv-tools.ctx {
+    display: none;
+  }
+}

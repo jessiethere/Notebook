@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.1",
+    date: "2026-11-11",
+    zh: {
+      title: "选中什么，底部就出现什么工具（第二步）",
+      items: [
+        "点一下照片、文字或贴纸，底部那排工具换成它自己的：照片是 替换 · 裁切 · 调整 · 图层 · 删除；文字是 编辑 · 字体 · 颜色 · 对齐 · 图层 · 删除；贴纸是 图层 · 删除。左边的 × 回到 照片 · 文字 · 贴纸 · 更多。",
+        "原来浮在纸上的黑色小菜单取消了，不再挡住内容。复制、置顶和上下层顺序在「图层」里。",
+        "文字框：字体、字号、颜色、左中右对齐，改的只是选中的这一个；点「编辑」直接在纸上打字。",
+        "「随手写」和「照片+一句」的标题、正文：打字时可以改字体、字号、颜色和对齐（位置仍由页面自动安排）。",
+        "打字时的工具条里多了「转为自由文字框」：标题和正文会带着字体、字号、颜色、对齐变成可以拖动的文字框，不会重复、不会丢字，也可以撤销。",
+        "导出的图片会按你选的对齐来画标题和正文。",
+        "修好：在面板里点输入框（例如「页面信息」里的名字）时，光标有时会立刻丢失。",
+      ],
+    },
+    en: {
+      title: "The tools follow what you select (step 2)",
+      items: [
+        "Tap a photo, text or sticker and the bottom row becomes its own tools: Replace · Crop · Adjust · Layer · Delete for a photo; Edit · Font · Colour · Align · Layer · Delete for text; Layer · Delete for a sticker. × on the left returns to Photo · Text · Stickers · More.",
+        "The black menu that floated over the paper is gone, so it no longer covers your content. Duplicate, to front and the stacking order are in Layer.",
+        "Text boxes: font, size, colour and left / centre / right alignment change only the selected box; Edit lets you type right on the paper.",
+        "Titles and words in “Just write” and “Photo + a line” take font, size, colour and alignment while you type (the page still places them).",
+        "The typing bar has “Make it a free text box”: the title and words become movable text boxes with their font, size, colour and alignment — nothing doubled, nothing lost, and it can be undone.",
+        "Exported pictures draw the title and words with the alignment you chose.",
+        "Fixed: tapping a field inside a sheet (such as the page name in Page details) could lose the caret straight away.",
+      ],
+    },
+  },
+  {
     version: "10.0",
     date: "2026-11-11",
     zh: {

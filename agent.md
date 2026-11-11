@@ -48,6 +48,27 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.1 Journal Studio Phase B：选中对象的上下文工具
+
+- 需求（用户「正式开发确认」的 Phase B）：照片 / 文字 / 贴纸的专属工具、直接编辑文字、拖动 / 缩放 / 裁剪、图层和对象操作，只显示与当前选中对象相关的工具；「照片+一句」「随手写」的标题和正文可改文字、字体、字号、颜色、对齐，位置保持自动排版；提供「转换为自由文字框」，保留文字、字体和样式，不重复、不丢数据。
+- 改动文件：
+  - Public/app.js：`ctxDockHTML()`——有选中对象时底部一排换成该对象的工具（× + 对象名 | 专属工具 | 图层 | 删除），`toolMenuHTML()` 据此切换；`layerBarHTML()` / `placeLayerBar()` 置空（黑色浮动菜单取消）；新动作 `layer-deselect`、`ctx-crop`、`text-style`（字体 / 颜色 / 对齐，同一个小面板 `textstyle`，再点收起）、`ctx-edit-text`（`editTextLayer()` 在纸上打字）、`text-to-box`；`typeControlsHTML()` 统一打字工具条与文字面板的控件，点击处理从 `#type-bar` 扩到 `.type-controls`（面板里作用于选中的文字框），新增对齐（`data-type-align`，打字条里是一个循环按钮）；`syncTypeBar()` 同步两处的选中状态并决定「转为自由文字框」是否出现；`noteToLayout()` 转换时带上字体（标题用页面字体、正文用 `bodyFont`）、字号、颜色、对齐；图层面板加「复制」「置顶」。`leaveTyping` 的点击判断忽略刚获得焦点 600ms 内的那次点击。
+  - Public/js/canvas.mjs：`alignCSS()`，`textCSS()` / `styleExtra()` 输出 `text-align`（仅当 `align` 是 left / center / right）。Public/js/export.mjs：`alignIn()`，照片+一句、随手写 / 封面、智能排版说明三处导出按所选对齐绘制。
+  - Packages/LittleDaysCore：`JournalTextStyle.align`（可选）+ CoreTests 往返断言。
+  - Public/styles.css（追加 V10.1 块）、i18n.json（ctx.*、type.align.*、type.toBox，`layer.barHint` 改写）、whats-new 10.1。
+  - tests：新增 tests/v101-browser.cjs（8 组）、tests/v101.test.mjs（2 项）、`test:browser:v101`；signed-in.cjs 的 `studioTool` 适配上下文工具栏、新增 `studioDeselect`；v38、v39、v41、v51、v64、v100 改为从底部工具栏 / 图层面板操作。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.1 小节）、docs/STUDIO_UX_PLAN.md（实现状态与未做项）、README。
+- 决策与原因：
+  - 复制与层级顺序只放在「图层」面板，底部一排不重复，保证每个动作在页面上只有一个入口。
+  - 标题 / 正文的对齐用可选字段 `textStyle.align` / `bodyStyle.align`，旧数据没有该字段时屏幕与导出都不变（保持兼容）。
+  - 「转为自由文字框」复用已有的「自由排版」转换路径（一步撤销可恢复），只补上样式继承，不另造一套数据。
+  - 打字工具条保持两行（对齐做成一个循环按钮），避免在键盘上方占太多高度。
+- 回归中发现并修复的真实问题：① 选中对象的工具栏在手机打字时没有隐藏（CSS 优先级）；② 在面板里点输入框（如页面信息的名字）时，面板上移导致同一次点击落到别处、被当成「点别处」而失去焦点（V9.2 引入的隐患）——现在忽略刚聚焦后的那次点击；③ 打字条里的「转为自由文字框」与「更多」里的写法按钮同名动作冲突——改为独立动作 `text-to-box`。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Xcode，Swift 未编译）：Node 146 项、Python 16 项通过；浏览器 E2E 全量 45 套全部通过（43 套旧 + v100 + v101；第一轮 42 通过、3 套因本次改动失败，修复后整体重跑 45/45）。真实截图（393×852，2x）12 张 + 与设计稿对照图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 63，V10.1；上传 app.js、styles.css、themes.css、js/canvas.mjs、js/export.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 与设计稿的差异：字体是 Bottom Sheet + A− / A+（设计稿为字体条 + 字号滑杆）；裁切仍是滑杆面板；贴纸没有「替换」；页面管理 / 页面信息仍是旧样式；刚加入的照片 / 贴纸处于选中状态，要点 × 或点空白处才回到四个工具；未在 iPhone 真机 / Xcode 验证。
+- 下一步：等用户真机查看 V10.0 / V10.1；之后按用户安排做页面管理 / 页面信息的新样式，或继续 V9.0 Phase 2（Memory Calendar）。
+
 ### 2026-11-11 — V10.0 Journal Studio Phase A：编辑器外壳重构（用户「正式开发确认」）
 
 - 需求：用户确认 Journal Studio 三状态方案（Creative Freedom Without Complexity），要求先做 Studio、Calendar Phase 2 顺延；按 Phase A（外壳）→ 回归 → Phase B（上下文工具）→ 回归推进。用户的决定：撤销 / 重做放纸张左下方、画布外、位置稳定、不可用时禁用、各类修改都进历史、切页后不能改到其他页面、顶部不放；「完成」= 保存成功并离开编辑、显示刚保存页的只读视图，编辑中自动存草稿，顶部显示 已保存 / 保存中 / 保存失败，失败留在编辑器可重试，不自动发布；Quick Create 标题 / 正文可改样式但不可拖，并提供「转换为自由文字框」（Phase B）；视觉沿用 Tactile Stationery × Cozy Editorial；每阶段交付真实截图、交互测试、与设计稿对照、完成 / 未完成清单、问题与修复；不得丢失现有手帐、图片、视频、音频、字体设置。

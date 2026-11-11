@@ -106,7 +106,8 @@ function wav(seconds = 1) {
     const withPhoto = (await layers()).length;
     assert.ok(withPhoto >= 1);
     assert.equal(await undo.isDisabled(), false, "undo is on after a change");
-    // Text.
+    // Text (the new photo is selected: × returns to the four tools).
+    await require("./signed-in.cjs").studioDeselect(page);
     await page.locator('.tool-dock [data-action="add-text-layer"]').tap();
     await page.waitForFunction(() => document.activeElement?.classList.contains("layer-text"));
     await page.keyboard.type("下午的咖啡");
@@ -133,7 +134,9 @@ function wav(seconds = 1) {
     const moved = (await layers()).find((l) => l.id === sticker.id);
     assert.ok(Math.abs(moved.x - sticker.x) > 2 || Math.abs(moved.y - sticker.y) > 2, "dragging moves it");
     // Layer order.
-    await page.locator('.layer-bar [data-action="layer-front"], [data-action="layer-front"]').first().tap();
+    await studioTool(page, "layer");
+    await page.locator('.tool-sheet [data-action="layer-front"]').tap();
+    await studioClose(page);
     await settle();
     // Undo walks back through every step…
     const steps = [];

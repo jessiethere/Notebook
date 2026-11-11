@@ -27,7 +27,11 @@ export function textCSS(style, fontId, defaultSize, catalog, fallbackColor = "#2
     color = /^#[0-9a-f]{6}$/i.test(style.color || "") ? style.color : fallbackColor,
     weight = clamp(Number(style.weight) || 400, 100, 900),
     spacing = clamp(Number(style.spacing) || 0, -2, 8);
-  return `font-family:${fontFamily(fontId, catalog)};font-size:${size / 3.2}cqw;color:${color};font-weight:${weight};letter-spacing:${spacing}px`;
+  return `font-family:${fontFamily(fontId, catalog)};font-size:${size / 3.2}cqw;color:${color};font-weight:${weight};letter-spacing:${spacing}px${alignCSS(style)}`;
+}
+// Alignment chosen for a page's title or words (V10.1; optional).
+export function alignCSS(style) {
+  return ["left", "center", "right"].includes(style?.align) ? `;text-align:${style.align}` : "";
 }
 
 // Size / colour chosen in the type bar for a page's title or words (only
@@ -37,7 +41,7 @@ export function styleExtra(style = {}) {
   const size = Number(style?.size);
   if (size >= 10 && size <= 60) css += `;font-size:${size / 3.2}cqw`;
   if (/^#[0-9a-f]{6}$/i.test(style?.color || "")) css += `;color:${style.color}`;
-  return css;
+  return css + alignCSS(style);
 }
 export function cropOf(layer) {
   const crop = layer.crop || {};

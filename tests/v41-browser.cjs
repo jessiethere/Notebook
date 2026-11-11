@@ -94,7 +94,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
       return [draft, ...draft.moments].flatMap((p) => p.layers).find((l) => l.mediaRef === `photo:${id}`).id;
     }, other);
     await page.locator(`[data-layer="${layerId}"]`).tap();
-    await page.locator('.layer-bar [data-action="photo-edit"]').tap();
+    await page.locator('.tool-dock.ctx [data-action="photo-edit"]').tap();
     await page.waitForSelector("#photo-editor[open] .pe-frame");
     await page.locator('[data-pe-action="filter"][data-filter="film"]').tap();
     await page.locator('[data-pe-action="done"]').tap();

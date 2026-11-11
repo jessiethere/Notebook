@@ -93,6 +93,8 @@ public struct JournalTextStyle: Codable, Equatable {
     public var color: String?
     public var weight: Int?
     public var spacing: Double?
+    /// V10.1: "left" / "center" / "right" for a page's title or words (optional; absent = the page's own alignment).
+    public var align: String?
 }
 
 public enum JSONValue: Codable, Equatable {

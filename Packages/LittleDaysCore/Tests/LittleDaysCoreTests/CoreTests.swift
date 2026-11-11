@@ -80,6 +80,9 @@ final class CoreTests: XCTestCase {
         entries[0]["fieldValues"] = ["water": true, "minutes": 12]
         entries[0]["font"] = "handwritten"
         entries[0]["bodyFont"] = "chinese"
+        // V10.1: alignment chosen for the title / the words (optional).
+        entries[0]["textStyle"] = ["size": 24, "color": "#2F2A26", "align": "center"]
+        entries[0]["bodyStyle"] = ["align": "right"]
         entries[0]["layers"] = [["id": "art", "kind": "sticker", "text": "Little bear", "assetId": "bear", "x": 20, "y": 40, "scale": 1.2, "rotation": 15]]
         object["entries"] = entries
         var decoded = try JSONDecoder().decode(DayState.self, from: JSONSerialization.data(withJSONObject: object))
@@ -88,6 +91,8 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(reloaded.entries[0].media?[0].source, "media:test-audio")
         XCTAssertEqual(reloaded.entries[0].layers[0].assetId, "bear")
         XCTAssertEqual(reloaded.entries[0].bodyFont, "chinese")
+        XCTAssertEqual(reloaded.entries[0].textStyle?.align, "center")
+        XCTAssertEqual(reloaded.entries[0].bodyStyle?.align, "right")
         XCTAssertEqual(reloaded.entries[0].fieldValues?["water"], .bool(true))
         XCTAssertEqual(reloaded.books[0].fields?[0].type, "checkbox")
         XCTAssertEqual(reloaded.books[0].music, "morning-piano")

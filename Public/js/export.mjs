@@ -17,6 +17,14 @@ export function loadImage(source) {
     image.src = source;
   });
 }
+// Alignment chosen for a page's title / words (V10.1): where the text starts
+// inside its box; without a choice the page's own alignment stays.
+function alignIn(ctx, style, left, width, fallbackX) {
+  const align = ["left", "center", "right"].includes(style?.align) ? style.align : null;
+  if (!align) return fallbackX;
+  ctx.textAlign = align;
+  return align === "left" ? left : align === "right" ? left + width : left + width / 2;
+}
 function wrapText(ctx, text, x, y, width, lineHeight, maxLines) {
   let line = "",
     row = 0;
@@ -281,11 +289,12 @@ export async function renderJournalCanvas(editor, options = {}) {
     const lineColor = /^#[0-9a-f]{6}$/i.test(editor.textStyle?.color || "") ? editor.textStyle.color : null;
     ctx.fillStyle = darkBackdrop ? "#FFFFFF" : lineColor || "#2F2A26";
     ctx.font = `500 ${Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 54}px ${font}`;
-    wrapText(ctx, editor.title || "", 540, editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
+    wrapText(ctx, editor.title || "", alignIn(ctx, editor.textStyle, 110, 860, 540), editor.body ? 1140 : 1165, 860, 66, editor.body ? 1 : 2);
     if (editor.body) {
       ctx.fillStyle = darkBackdrop ? "#E9E4F5" : "#8D857B";
       ctx.font = `34px ${options.fontFamily ? options.fontFamily(editor.bodyFont || editor.font, options.catalog) : font}`;
-      wrapText(ctx, editor.body, 540, 1218, 860, 44, 1);
+      ctx.textAlign = "center";
+      wrapText(ctx, editor.body, alignIn(ctx, editor.bodyStyle, 110, 860, 540), 1218, 860, 44, 1);
     }
     ctx.restore();
   }
@@ -294,7 +303,9 @@ export async function renderJournalCanvas(editor, options = {}) {
     const titleColor = editor.textStyle?.color || "#2F2A26";
     ctx.fillStyle = darkBackdrop && /^#2f2a26$/i.test(titleColor) ? "#FFFFFF" : titleColor;
     ctx.font = `${editor.textStyle?.weight || 400} ${(editor.textStyle?.size || 16) * 3.375}px ${font}`;
-    wrapText(ctx, editor.title || "今天的小美好", 129, 910, 820, 78, 2);
+    ctx.save();
+    wrapText(ctx, editor.title || "今天的小美好", alignIn(ctx, editor.textStyle, 129, 820, 129), 910, 820, 78, 2);
+    ctx.restore();
     const bodyColor = /^#[0-9a-f]{6}$/i.test(editor.bodyStyle?.color || "") ? editor.bodyStyle.color : null;
     ctx.fillStyle = bodyColor || (darkBackdrop ? "#E9E4F5" : "#998C7A");
     const bodyFont = options.fontFamily
@@ -302,7 +313,9 @@ export async function renderJournalCanvas(editor, options = {}) {
       : font;
     const bodySize = Number(editor.bodyStyle?.size) >= 10 ? Math.min(60, Number(editor.bodyStyle.size)) * 3.375 : 34;
     ctx.font = `${bodySize}px ${bodyFont}`;
-    wrapText(ctx, editor.body || "", 129, 1110, 820, 58, 3);
+    ctx.save();
+    wrapText(ctx, editor.body || "", alignIn(ctx, editor.bodyStyle, 129, 820, 129), 1110, 820, 58, 3);
+    ctx.restore();
     ctx.font = "125px sans-serif";
     ctx.fillText(editor.mood || "", 875, 820);
   }
@@ -451,7 +464,7 @@ export async function renderJournalCanvas(editor, options = {}) {
     const fit = captionFit(editor.title);
     const base = Number(editor.textStyle?.size) >= 10 ? Math.min(60, Number(editor.textStyle.size)) * 3.375 * 0.8 : 52;
     ctx.font = `500 ${Math.round(base * fit.factor)}px ${font}`;
-    wrapText(ctx, editor.title, 540, fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
+    wrapText(ctx, editor.title, alignIn(ctx, editor.textStyle, 110, 860, 540), fit.lines > 1 ? 1172 : 1196, 860, Math.round(64 * fit.factor), fit.lines);
     ctx.restore();
   }
   return options.dayList?.length ? withDayList(canvas, options.dayList, options.dayListTitle) : canvas;

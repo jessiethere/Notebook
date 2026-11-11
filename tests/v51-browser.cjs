@@ -167,7 +167,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
 
     // 6. Draw again on the same drawing; a photo layout leaves it in place.
     await page.locator("#journal-canvas .drawing-layer").click();
-    await page.locator('.layer-bar [data-action="draw-edit"]').click();
+    await page.locator('.tool-dock.ctx [data-action="draw-edit"]').click();
     await page.waitForSelector("#draw-dialog[open]");
     await page.waitForFunction(() => {
       const c = document.querySelector(".draw-canvas");
@@ -185,7 +185,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     assert.ok(again[0].h > drawing.h, "the new lines are part of it");
     // Clearing everything removes the drawing.
     await page.locator("#journal-canvas .drawing-layer").click();
-    await page.locator('.layer-bar [data-action="draw-edit"]').click();
+    await page.locator('.tool-dock.ctx [data-action="draw-edit"]').click();
     await page.waitForSelector("#draw-dialog[open]");
     await page.locator('[data-draw="clear"]').tap();
     await page.locator('[data-draw="done"]').tap();

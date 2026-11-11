@@ -69,10 +69,10 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // 3. Replace a photo: same place, the new photo's shape, no crop.
     await page.locator(`#journal-canvas [data-layer="${a.id}"]`).click();
-    await page.waitForSelector('.layer-bar [data-action="replace-photo"]');
+    await page.waitForSelector('.tool-dock.ctx [data-action="replace-photo"]');
     const before = (await page0()).layers.find((l) => l.id === a.id);
     const pick = page.waitForEvent("filechooser");
-    await page.locator('.layer-bar [data-action="replace-photo"]').click();
+    await page.locator('.tool-dock.ctx [data-action="replace-photo"]').click();
     await (await pick).setFiles({ name: "portrait.jpg", mimeType: "image/jpeg", buffer: fs.readFileSync(path.join(lib, "LD-photo-latte-beans.jpg")) });
     await skipPhotoEditor(page);
     await page.waitForFunction(([t, id, ref]) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[t].moments.find((x) => x.time === "08:10").layers.find((l) => l.id === id).mediaRef !== ref, [today, a.id, before.mediaRef]);

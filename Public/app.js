@@ -1830,39 +1830,12 @@ function changeTarget(change, redraw = true) {
 function selectedLayerOf(page = activePage()) {
   return page.layers.find((layer) => layer.id === selectedLayer);
 }
-// A small bar right above the selected item: the common actions in reach.
+// V10.1: the selected item's actions are the bottom row (ctxDockHTML); the
+// black bar that floated over the paper is gone.
 function layerBarHTML() {
-  const layer = selectedLayerOf();
-  if (!layer || page !== "studio") return "";
-  const b = (action, label, extra = "") => `<button type="button" data-action="${action}" ${extra}>${label}</button>`;
-  const first =
-    layer.drawing
-      ? b("draw-edit", `✎ ${t("draw.again")}`)
-      : layer.kind === "photo" && layer.mediaRef
-      ? b("photo-edit", `✨ ${t("pe.open")}`) + b("replace-photo", `↺ ${t("photo.replaceShort")}`)
-      : layer.kind === "video"
-        ? b("video-cover", `🖼 ${t("poster.short")}`, `data-clip="${esc(layer.clipId)}"`)
-        : layer.kind === "text"
-          ? b("layer-edit-text", `✎ ${t("edit")}`)
-          : "";
-  return `<div class="layer-bar" role="toolbar" aria-label="${t("layer.selected")}">${first}${b("layer-copy", `⧉ ${t("copy")}`)}${b("layer-front", `⬆ ${t("layer.frontShort")}`)}${b("layer-delete", `🗑 ${t("delete")}`, 'class="danger"')}</div>`;
+  return "";
 }
-function placeLayerBar() {
-  const bar = document.querySelector("#canvas-wrap .layer-bar");
-  const element = selectedLayer && layerElement(selectedLayer);
-  const wrap = $("#canvas-wrap");
-  if (!bar || !element || !wrap) return;
-  const box = element.getBoundingClientRect(),
-    area = wrap.getBoundingClientRect();
-  const half = bar.offsetWidth / 2;
-  const left = Math.min(area.width - half - 4, Math.max(half + 4, box.left + box.width / 2 - area.left));
-  const above = box.top - area.top - 8;
-  const below = above < bar.offsetHeight + 4;
-  bar.classList.toggle("below", below);
-  bar.style.left = `${left}px`;
-  // Under a tall item the menu stays on the paper, clear of undo / redo.
-  bar.style.top = `${below ? Math.min(box.bottom - area.top + 8, area.height - bar.offsetHeight - 6) : above}px`;
-}
+function placeLayerBar() {}
 function canvasHTML() {
   return layerBarHTML() + sharedCanvasHTML(activePage(), ctx(), {
     selectedId: selectedLayer,
@@ -1931,7 +1904,7 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -2083,16 +2056,22 @@ function noteToLayout(page) {
   page.layoutTemplate = null;
   if (fromSmart) {
     const line = (page.title || "").trim();
-    if (line) page.layers.push({ id: id(), kind: "text", text: line.slice(0, 500), x: 50, y: 90, w: 84, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize: 18, color: "#2F2A26", weight: 500, spacing: 0, align: "center" });
+    if (line) page.layers.push({ id: id(), kind: "text", text: line.slice(0, 500), x: 50, y: 90, w: 84, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize: Number(page.textStyle?.size) >= 10 ? Math.min(60, Number(page.textStyle.size)) : 18, color: /^#[0-9a-f]{6}$/i.test(page.textStyle?.color || "") ? page.textStyle.color : "#2F2A26", weight: 500, spacing: 0, align: ["left", "center", "right"].includes(page.textStyle?.align) ? page.textStyle.align : "center" });
     page.layoutEdited = true;
     return;
   }
   const title = (page.title || "").trim();
   const words = (page.body || "").trim();
-  const box = (text, y, fontSize, color) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: page.font || "serif", fontSize, color, weight: 400, spacing: 0, align: "left" });
+  // The look chosen while typing comes along: font, size, colour, alignment.
+  const pick = (style, size, color) => ({
+    fontSize: Number(style?.size) >= 10 ? Math.min(60, Number(style.size)) : size,
+    color: /^#[0-9a-f]{6}$/i.test(style?.color || "") ? style.color : color,
+    align: ["left", "center", "right"].includes(style?.align) ? style.align : "left",
+  });
+  const box = (text, y, fontId, look) => ({ id: id(), kind: "text", text: text.slice(0, 500), x: 50, y, w: 80, scale: 1, rotation: 0, fontId: fontId || "serif", ...look, weight: 400, spacing: 0 });
   // Where the note had them, so nothing jumps.
-  if (title) page.layers.push(box(title, 27, 24, "#2F2A26"));
-  if (words) page.layers.push(box(words, title ? 52 : 40, 15, "#5D554B"));
+  if (title) page.layers.push(box(title, 27, page.font, pick(page.textStyle, 24, "#2F2A26")));
+  if (words) page.layers.push(box(words, title ? 52 : 40, page.bodyFont || page.font, pick(page.bodyStyle, 15, "#5D554B")));
   page.body = "";
 }
 function setPageMode(mode, { quiet = false } = {}) {
@@ -2194,8 +2173,7 @@ const TYPE_FONTS = [
 const TYPE_COLORS = ["#2B2622", "#6F675D", "#7D8E66", "#B5838D", "#6D8299", "#C08B5C"];
 let typeTarget = null; // { kind: "title" | "body" | "layer", id? }
 function typeBarHTML() {
-  const en = languageCode() === "en";
-  return `<div class="type-bar" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}"><div class="type-fonts">${TYPE_FONTS.map(([id, zh, enName]) => `<button type="button" data-type-font="${id}" style="font-family:${esc(fontFamily(id, catalog))}">${en ? enName : zh}</button>`).join("")}</div><div class="type-row"><button type="button" data-type-size="-2" aria-label="${t("type.smaller")}">A−</button><button type="button" data-type-size="2" aria-label="${t("type.bigger")}">A+</button><span class="type-colors">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-label="${c}"></button>`).join("")}</span></div></div>`;
+  return `<div class="type-bar type-controls" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}">${typeControlsHTML()}</div>`;
 }
 function typeTargetOf(el) {
   if (!el?.closest?.("#journal-canvas")) return null;
@@ -2203,15 +2181,35 @@ function typeTargetOf(el) {
   if (el.dataset.inline === "title" || el.dataset.inline === "body") return { kind: el.dataset.inline };
   return null;
 }
+// What the controls act on: the field being typed in, or (in the text
+// sheet) the selected text box.
+function typeTargetFor(controls) {
+  if (controls?.classList.contains("type-sheet")) return selectedLayerOf()?.kind === "text" ? { kind: "layer", id: selectedLayer } : null;
+  return typeTarget;
+}
 function syncTypeBar() {
-  const bar = $("#type-bar");
-  if (!bar || !typeTarget) return;
-  const p = activePage();
-  const layer = typeTarget.kind === "layer" ? p.layers.find((l) => l.id === typeTarget.id) : null;
-  const font = layer ? layer.fontId || p.font : typeTarget.kind === "body" ? p.bodyFont || p.font : p.font;
-  bar.querySelectorAll("[data-type-font]").forEach((b) => b.classList.toggle("selected", b.dataset.typeFont === (font || "serif")));
-  const style = layer ? { color: layer.color } : typeTarget.kind === "title" ? p.textStyle : p.bodyStyle;
-  bar.querySelectorAll("[data-type-color]").forEach((b) => b.classList.toggle("selected", (style?.color || "").toLowerCase() === b.dataset.typeColor.toLowerCase()));
+  document.querySelectorAll(".type-controls").forEach((bar) => {
+    const target = typeTargetFor(bar);
+    if (!target) return;
+    const p = activePage();
+    const layer = target.kind === "layer" ? p.layers.find((l) => l.id === target.id) : null;
+    const font = layer ? layer.fontId || p.font : target.kind === "body" ? p.bodyFont || p.font : p.font;
+    bar.querySelectorAll("[data-type-font]").forEach((b) => b.classList.toggle("selected", b.dataset.typeFont === (font || "serif")));
+    const style = layer ? { color: layer.color, align: layer.align } : target.kind === "title" ? p.textStyle : p.bodyStyle;
+    bar.querySelectorAll("[data-type-color]").forEach((b) => b.classList.toggle("selected", (style?.color || "").toLowerCase() === b.dataset.typeColor.toLowerCase()));
+    const el = layer ? layerElement(layer.id) : $(`#journal-canvas [data-inline="${target.kind}"]`);
+    const shown = ["left", "center", "right"].includes(style?.align) ? style.align : el ? getComputedStyle(el).textAlign.replace("start", "left").replace("end", "right") : "left";
+    bar.querySelectorAll("[data-type-align]").forEach((b) => {
+      if (b.dataset.typeAlign === "cycle") {
+        b.dataset.now = shown;
+        b.firstElementChild.className = `align-glyph ${shown}`;
+        b.setAttribute("aria-label", `${t("ctx.align")} · ${t("type.align." + shown)}`);
+      } else b.setAttribute("aria-pressed", String(b.dataset.typeAlign === shown));
+    });
+    // A note's title / words stay where the page puts them; this makes them a free text box.
+    const toBox = bar.querySelector(".type-to-box");
+    if (toBox) toBox.hidden = target.kind === "layer" || isDayPage() || !["note", "line"].includes(pageModeOf());
+  });
 }
 document.addEventListener("focusin", (event) => {
   const target = typeTargetOf(event.target);
@@ -2237,8 +2235,11 @@ document.addEventListener("pointerdown", (event) => {
   if (event.target.closest?.("#type-bar")) event.preventDefault();
 });
 document.addEventListener("click", (event) => {
-  const button = event.target.closest?.("#type-bar button");
-  if (!button || !typeTarget) return;
+  const button = event.target.closest?.(".type-controls button");
+  if (!button || button.dataset.action) return;
+  const sheetTarget = typeTargetFor(button.closest(".type-controls"));
+  if (!sheetTarget) return;
+  const typeTarget = sheetTarget; // the field being typed in, or the selected text box
   const focused = document.activeElement;
   const p = activePage();
   const canvas = $("#journal-canvas");
@@ -2286,6 +2287,19 @@ document.addEventListener("click", (event) => {
       else page.bodyStyle = { ...(page.bodyStyle || {}), color };
     });
     textEl.style.color = color;
+  }
+  if (button.dataset.typeAlign) {
+    const order = ["left", "center", "right"];
+    const align = button.dataset.typeAlign === "cycle" ? order[(order.indexOf(button.dataset.now || "left") + 1) % 3] : button.dataset.typeAlign;
+    inlineChange(() => {
+      const page = activePage();
+      if (typeTarget.kind === "layer") {
+        const layer = page.layers.find((l) => l.id === typeTarget.id);
+        if (layer) layer.align = align;
+      } else if (typeTarget.kind === "title") page.textStyle = { ...(page.textStyle || {}), align };
+      else page.bodyStyle = { ...(page.bodyStyle || {}), align };
+    });
+    textEl.style.textAlign = align;
   }
   inlineTyping = false; // each tap on the bar is its own undo step
   syncTypeBar();
@@ -2514,6 +2528,57 @@ function moreSheetHTML(tools) {
 function detailsSheetHTML() {
   return `<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
 }
+// With something selected, the bottom row is that item's tools: × (back to
+// the four tools) and only what applies to a photo / text / sticker / clip.
+// Copy and the stacking order are in 图层; font, colour and alignment in the
+// text sheet.
+let textTab = "font";
+function ctxKind(layer) {
+  if (layer.drawing) return "drawing";
+  if (layer.kind === "photo") return "photo";
+  if (layer.kind === "text") return "text";
+  if (layer.kind === "video") return "video";
+  if (layer.kind === "audio") return "audio";
+  if (layer.kind === "growth") return "growth";
+  return "sticker";
+}
+function ctxDockHTML(tool) {
+  const layer = selectedLayerOf();
+  const kind = ctxKind(layer);
+  const on = (id, tab) => studioTool === id && (!tab || textTab === tab);
+  const style = (tab, name, label) => tool(`data-action="text-style" data-tab="${tab}" aria-expanded="${on("textstyle", tab)}"`, name, t(label), on("textstyle", tab) ? "open" : "");
+  const own =
+    kind === "photo" && layer.mediaRef
+      ? tool('data-action="replace-photo"', "replace", t("photo.replaceShort")) + tool(`data-action="ctx-crop" aria-pressed="${cropMode}"`, "crop", t("photo.crop"), cropMode ? "open" : "") + tool('data-action="photo-edit"', "adjust", t("ctx.adjust"))
+      : kind === "text"
+        ? tool('data-action="ctx-edit-text"', "pen", t("edit")) + style("font", "font", "ctx.font") + style("color", "color", "ctx.color") + style("align", "align", "ctx.align")
+        : kind === "video"
+          ? tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
+          : kind === "drawing"
+            ? tool('data-action="draw-edit"', "draw", t("draw.again"))
+            : "";
+  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t("delete"), "danger")}</nav>`;
+}
+// Font · size · colour · alignment for the selected text box (the same
+// controls as the bar that shows while typing).
+function typeControlsHTML(only) {
+  const en = languageCode() === "en";
+  const fonts = `<div class="type-fonts">${TYPE_FONTS.map(([id, zh, enName]) => `<button type="button" data-type-font="${id}" style="font-family:${esc(fontFamily(id, catalog))}">${en ? enName : zh}</button>`).join("")}</div>`;
+  const size = `<button type="button" data-type-size="-2" aria-label="${t("type.smaller")}">A−</button><button type="button" data-type-size="2" aria-label="${t("type.bigger")}">A+</button>`;
+  const colors = `<span class="type-colors">${TYPE_COLORS.map((c) => `<button type="button" data-type-color="${c}" style="--swatch:${c}" aria-label="${c}"></button>`).join("")}</span>`;
+  const align = `<span class="type-align" role="group" aria-label="${t("ctx.align")}">${["left", "center", "right"].map((a) => `<button type="button" data-type-align="${a}" aria-label="${t("type.align." + a)}"><i class="align-glyph ${a}" aria-hidden="true"></i></button>`).join("")}</span>`;
+  if (only === "font") return `${fonts}<div class="type-row">${size}</div>`;
+  if (only === "color") return `<div class="type-row">${colors}</div>`;
+  if (only === "align") return `<div class="type-row">${align}</div>`;
+  // While typing the bar stays two rows: 转为自由文字框 leads the font row (a
+  // note's title / words only) and one button steps through the alignments.
+  const toBox = `<button type="button" class="type-to-box" data-action="text-to-box" hidden>${t("type.toBox")}</button>`;
+  const cycle = `<button type="button" class="type-align-cycle" data-type-align="cycle" aria-label="${t("ctx.align")}"><i class="align-glyph left" aria-hidden="true"></i></button>`;
+  return `${fonts.replace('<div class="type-fonts">', '<div class="type-fonts">' + toBox)}<div class="type-row">${size}${cycle}${colors}</div>`;
+}
+function textStyleSheetHTML() {
+  return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
+}
 // The bottom of the editor: an open sheet (if any) above one row of tools.
 function toolMenuHTML() {
   const tools = studioTools();
@@ -2522,13 +2587,15 @@ function toolMenuHTML() {
     { id: "more", icon: "", label: "tool.more", value: "", body: () => moreSheetHTML(tools) },
     { id: "details", icon: "", label: "tool.details", value: isDayPage() ? t("day.cover") : activePage().title || t("moment.untitled"), body: detailsSheetHTML },
   ];
+  if (selectedLayerOf()?.kind === "text") sheets.push({ id: "textstyle", icon: "", label: "ctx." + textTab, value: "", body: textStyleSheetHTML });
   if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
   const open = sheets.find((tool) => tool.id === studioTool);
-  const back = open && !["more", "stickers"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
+  const back = open && !["more", "stickers", "layer", "textstyle"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
     ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
+  if (selectedLayerOf()) return sheet + ctxDockHTML(tool);
   const moreOpen = Boolean(studioTool) && studioTool !== "stickers";
   const dock = `<nav class="tool-dock sv-tools" aria-label="${t("write.decorate")}">${tool('data-action="add-photos"', "photo", t("add.photo"))}${tool('data-action="add-text-layer"', "text", t("sv.text"))}${tool(`data-action="tool" data-tool="stickers" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("dock.stickers"), `dock-btn ${studioTool === "stickers" ? "open" : ""}`)}${tool(`data-action="tool" data-tool="more" aria-expanded="${moreOpen}"`, "more", t("dock.more"), `dock-btn ${moreOpen ? "open" : ""}`)}</nav>`;
   return sheet + dock;
@@ -3418,6 +3485,13 @@ const SV_ICONS = {
   details: '<circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/>',
   chapters: '<path d="M9 7h10M9 12h10M9 17h10M5 7h.01M5 12h.01M5 17h.01"/>',
   draw: '<path d="M4 20c2 0 3-1 3-3l9.5-9.5a2.1 2.1 0 0 1 3 3L10 20H4Z"/><path d="m14.5 9.5 3 3"/>',
+  replace: '<path d="M4 9a8 8 0 0 1 14-3l2 2"/><path d="M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M4 20v-4h4"/>',
+  crop: '<path d="M7 3v14h14"/><path d="M3 7h14v14"/>',
+  adjust: '<path d="M5 7h8M17 7h2M5 17h2M11 17h8"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  pen: '<path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="m13 7 4 4"/>',
+  color: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>',
+  align: '<path d="M4 6h16M4 10.5h10M4 15h16M4 19.5h10"/>',
+  trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>',
 };
 const svIcon = (name) => `<svg class="sv-icon" viewBox="0 0 24 24" aria-hidden="true">${SV_ICONS[name] || SV_ICONS.more}</svg>`;
 function studioTitleHTML() {
@@ -6397,6 +6471,10 @@ async function v31Action(target) {
       addMomentNow();
       setPageMode("note", { quiet: true });
       return true;
+    case "text-to-box":
+      // 转为自由文字框 (typing bar): the same as choosing 自由排版.
+      setPageMode("layout");
+      return true;
     case "page-mode":
       // Chosen from More: the sheet steps aside so the paper shows the change.
       if (studioTool === "more") studioTool = null;
@@ -6525,6 +6603,35 @@ async function v31Action(target) {
     case "crop-mode":
       cropMode = !cropMode;
       render();
+      return true;
+    case "ctx-crop":
+      // 裁剪 in the bottom row: crop mode with its sliders in the layer sheet.
+      cropMode = !cropMode;
+      studioTool = cropMode ? "layer" : null;
+      render();
+      $(".crop-sliders")?.scrollIntoView({ block: "nearest" });
+      return true;
+    case "layer-deselect":
+      selectedLayer = null;
+      cropMode = false;
+      if (["layer", "textstyle"].includes(studioTool)) studioTool = null;
+      render();
+      return true;
+    case "text-style":
+      // Font / colour / alignment share one small sheet; tapping the open one closes it.
+      if (studioTool === "textstyle" && textTab === target.dataset.tab) studioTool = null;
+      else {
+        textTab = target.dataset.tab;
+        studioTool = "textstyle";
+      }
+      render();
+      syncTypeBar();
+      return true;
+    case "ctx-edit-text":
+      // Type right on the paper.
+      if (["layer", "textstyle"].includes(studioTool)) studioTool = null;
+      render();
+      editTextLayer(selectedLayer);
       return true;
     case "replace-photo":
       if (selectedLayerOf()?.kind === "photo")
@@ -7633,6 +7740,7 @@ function keepFieldInView() {
 document.addEventListener("focusin", (event) => {
   if (!event.target.matches?.(TYPING_FIELD) || !matchMedia("(pointer: coarse)").matches) return;
   clearTimeout(typingTimer);
+  typingFocusAt = performance.now();
   document.body.classList.add("typing");
   document.body.classList.toggle("typing-sheet", Boolean(event.target.closest(".tool-sheet")));
   setTimeout(keepFieldInView, 250);
@@ -7648,6 +7756,7 @@ document.addEventListener("focusout", () => {
 // the field, which kept the tool row hidden for good. Leave typing mode when
 // the keyboard closes, and on a tap outside the field.
 let keyboardSeen = false;
+let typingFocusAt = 0; // when a field last took the caret
 function leaveTyping() {
   if (!document.body.classList.contains("typing")) return;
   keyboardSeen = false;
@@ -7669,6 +7778,10 @@ document.addEventListener(
     // The text style bar and an open panel work on the caret: keep it.
     // The paper places the caret itself (a tap on blank paper starts typing).
     if (event.target.closest?.(`${TYPING_FIELD}, #journal-canvas, #type-bar, .type-bar, .tool-sheet, label`)) return;
+    // The tap that put the caret in a panel's field moves that panel above the
+    // keyboard, so its click can land on what is now under the finger: that
+    // tap is not "a tap elsewhere".
+    if (performance.now() - typingFocusAt < 600) return;
     leaveTyping();
   },
   true,

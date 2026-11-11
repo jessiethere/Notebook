@@ -64,19 +64,20 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     const videoLayer = s.layers.find((l) => l.kind === "video");
     passed.push("new video gets an automatic cover");
 
-    // 2. Selecting shows quick actions right above it.
+    // 2. Selecting turns the bottom row into the clip's own tools (V10.1: no
+    // menu floating over the paper); copy and the order are in 图层.
     await page.locator(`[data-layer="${videoLayer.id}"]`).tap({ position: { x: 6, y: 6 } });
-    await page.waitForSelector("#canvas-wrap .layer-bar");
-    const actions = await page.$$eval(".layer-bar button", (els) => els.map((el) => el.dataset.action));
-    assert.deepEqual(actions, ["video-cover", "layer-copy", "layer-front", "layer-delete"]);
-    const bar = await page.locator(".layer-bar").boundingBox();
-    const item = await page.locator(`[data-layer="${videoLayer.id}"]`).boundingBox();
-    assert.ok(bar.y + bar.height <= item.y + 4 || bar.y >= item.y + item.height - 4, "bar sits above (or below) the item, not on it");
-    assert.ok(Math.abs(bar.x + bar.width / 2 - (item.x + item.width / 2)) < item.width, "bar is centred on the item");
-    passed.push("selected video: cover / copy / to front / delete right above it");
+    await page.waitForSelector('.tool-dock.ctx[data-ctx="video"]');
+    assert.equal(await page.locator(".layer-bar").count(), 0, "nothing floats on the paper");
+    const actions = await page.$$eval(".tool-dock.ctx button", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    assert.deepEqual(actions, ["layer-deselect", "video-cover", "layer", "layer-delete"]);
+    const bar = await page.locator(".tool-dock.ctx").boundingBox();
+    const paper = await page.locator("#journal-canvas").boundingBox();
+    assert.ok(bar.y >= paper.y + paper.height, "the tools sit under the paper, never on the item");
+    passed.push("selected video: × · cover · layer · delete in the bottom row");
 
     // 3. Cover: pick a frame with the slider.
-    await page.locator('.layer-bar [data-action="video-cover"]').tap();
+    await page.locator('.tool-dock.ctx [data-action="video-cover"]').tap();
     await page.waitForSelector("#poster-dialog[open] video");
     await page.locator("[data-poster-time]").evaluate((el) => { el.value = "1.2"; el.dispatchEvent(new Event("input")); });
     await page.waitForTimeout(400);
@@ -86,7 +87,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     const framePoster = s.media[0].poster;
     // …or upload a picture.
     await page.locator(`[data-layer="${videoLayer.id}"]`).tap({ position: { x: 6, y: 6 } });
-    await page.locator('.layer-bar [data-action="video-cover"]').tap();
+    await page.locator('.tool-dock.ctx [data-action="video-cover"]').tap();
     await page.waitForSelector("#poster-dialog[open]");
     const chooser = page.waitForEvent("filechooser");
     await page.locator('[data-poster="upload"]').tap();
@@ -96,14 +97,15 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
 
     // 4. Copy and delete from the bar (delete also clears the clip; undo restores).
     await page.locator(`[data-layer="${videoLayer.id}"]`).tap({ position: { x: 6, y: 6 } });
-    await page.locator('.layer-bar [data-action="layer-copy"]').tap();
+    await studioTool(page, "layer");
+    await page.locator('.tool-sheet [data-action="layer-copy"]').tap();
     await waitStory((m) => m.layers.filter((l) => l.kind === "video").length === 2);
-    await page.locator('.layer-bar [data-action="layer-delete"]').tap();
+    await page.locator('.tool-dock.ctx [data-action="layer-delete"]').tap();
     await waitStory((m) => m.layers.filter((l) => l.kind === "video").length === 1);
     s = await story();
     assert.equal(s.media.length, 1, "clip kept while another copy is on the page");
     await page.locator("#journal-canvas .video-layer").tap({ position: { x: 6, y: 6 } });
-    await page.locator('.layer-bar [data-action="layer-delete"]').tap();
+    await page.locator('.tool-dock.ctx [data-action="layer-delete"]').tap();
     await waitStory((m) => !m.layers.some((l) => l.kind === "video") && m.media.length === 0);
     await page.locator('[data-action="undo"]').tap();
     await waitStory((m) => m.layers.some((l) => l.kind === "video") && m.media.length === 1);
@@ -114,7 +116,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     await page.locator('#photo-editor [data-pe-action="cancel"]').tap();
     await page.waitForSelector("#journal-canvas .photo-layer img");
     await page.locator("#journal-canvas .photo-layer").first().tap();
-    await page.waitForSelector('.layer-bar [data-action="photo-edit"]');
+    await page.waitForSelector('.tool-dock.ctx [data-action="photo-edit"]');
     await page.evaluate(() => {
       const img = document.querySelector("#journal-canvas .photo-layer img");
       img.src = "data:image/jpeg;base64,AAAA";

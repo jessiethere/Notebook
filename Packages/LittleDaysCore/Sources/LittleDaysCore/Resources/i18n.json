@@ -4404,8 +4404,8 @@
     "en": "This photo can't be shown on this device — use “Replace photo” to pick it again."
   },
   "layer.barHint": {
-    "zh": "复制、置顶、删除和编辑在纸上选中内容上方的小工具条里。",
-    "en": "Copy, to front, delete and edit are in the small bar above the selected item."
+    "zh": "替换、裁切、编辑和删除在底部那一排；点左边的 × 回到四个工具。",
+    "en": "Replace, crop, edit and delete are in the bottom row; × on the left returns to the four tools."
   },
   "growth.checkedHint": {
     "zh": "打卡啦 🌱 想写心得、加照片，点旁边的 ✎",
@@ -6370,5 +6370,73 @@
   "sv.text": {
     "zh": "文字",
     "en": "Text"
+  },
+  "ctx.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "ctx.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "ctx.sticker": {
+    "zh": "贴纸",
+    "en": "Sticker"
+  },
+  "ctx.video": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "ctx.audio": {
+    "zh": "声音",
+    "en": "Sound"
+  },
+  "ctx.drawing": {
+    "zh": "手绘",
+    "en": "Drawing"
+  },
+  "ctx.growth": {
+    "zh": "打卡",
+    "en": "Check-in"
+  },
+  "ctx.deselect": {
+    "zh": "取消选择，回到工具",
+    "en": "Deselect, back to the tools"
+  },
+  "ctx.adjust": {
+    "zh": "调整",
+    "en": "Adjust"
+  },
+  "ctx.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "ctx.color": {
+    "zh": "颜色",
+    "en": "Colour"
+  },
+  "ctx.align": {
+    "zh": "对齐",
+    "en": "Align"
+  },
+  "ctx.layer": {
+    "zh": "图层",
+    "en": "Layer"
+  },
+  "type.align.left": {
+    "zh": "靠左",
+    "en": "Align left"
+  },
+  "type.align.center": {
+    "zh": "居中",
+    "en": "Centre"
+  },
+  "type.align.right": {
+    "zh": "靠右",
+    "en": "Align right"
+  },
+  "type.toBox": {
+    "zh": "转为自由文字框",
+    "en": "Make it a free text box"
   }
 }
