@@ -148,6 +148,35 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
         decisionHandler(ownOrigin && type == .microphone ? .prompt : .deny)
     }
 
+    // MARK: Debug: open a screen from the command line
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        #if DEBUG
+        // Debug builds only (Release never reads it): launched with
+        // `-LittleDaysTap "<css selector>||<css selector>"`, the shell taps those
+        // elements one after another once the page is ready, so a Simulator
+        // screenshot of Calendar, the shelf or Journal Studio can be taken
+        // without touching the screen (tools/mac/sim-shots.sh). It only clicks
+        // what a person could tap; it reads and sends nothing.
+        guard let steps = UserDefaults.standard.string(forKey: "LittleDaysTap"), !steps.isEmpty else { return }
+        let selectors = steps.components(separatedBy: "||").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard let data = try? JSONSerialization.data(withJSONObject: selectors), let list = String(data: data, encoding: .utf8) else { return }
+        let script = """
+        void (async (steps) => {
+          const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          for (let i = 0; i < 150 && !document.querySelector('#navigation [data-page]'); i++) await wait(100);
+          for (const selector of steps) {
+            let el = null;
+            for (let i = 0; i < 50 && !(el = document.querySelector(selector)); i++) await wait(100);
+            if (el) el.click();
+            await wait(800);
+          }
+        })(\(list));
+        """
+        webView.evaluateJavaScript(script, completionHandler: nil)
+        #endif
+    }
+
     // MARK: Navigation and downloads
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, preferences: WKWebpagePreferences, decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
