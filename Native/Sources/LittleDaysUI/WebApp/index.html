@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#F8F5EF" />
     <meta
@@ -12,11 +12,12 @@
       content="Little Days 手帐文具店，记录生活的美好，也收藏一点点变好的自己。"
     />
     <title>Little Days · 手帐文具店</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F8F5EF'/%3E%3Ctext x='8' y='48' font-size='45'%3E🌷%3C/text%3E%3C/svg%3E"
-    />
+    <!-- Official app icon (docs/brand, tools/make_app_icon.py) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="themes.css" />
     <link rel="stylesheet" href="fonts.css" />
     <script type="module" src="app.js"></script>
   </head>
@@ -46,6 +47,7 @@
         </main>
       </div>
       <nav class="bottom-nav" id="navigation" aria-label="主要导航"></nav>
+      <div id="tour" class="tour" hidden></div>
     </div>
     <div class="preview-footnote">数据保存在当前浏览器 · 示例内容可编辑</div>
     <dialog id="form-dialog"><form id="dialog-form"></form></dialog>
@@ -58,6 +60,16 @@
         </div>
       </form>
     </dialog>
+    <dialog id="export-dialog" class="export-dialog" aria-labelledby="export-title">
+      <p id="export-title">正在导出视频</p>
+      <div class="export-bar"><span id="export-progress"></span></div>
+      <p id="export-time" class="save-help"></p>
+      <div class="dialog-actions"><button type="button" id="export-cancel" class="secondary">取消</button></div>
+    </dialog>
+    <dialog id="photo-editor" class="photo-editor" aria-label="Photo editor"></dialog>
+    <dialog id="poster-dialog" class="poster-dialog" aria-label="Video cover"></dialog>
+    <dialog id="scene-dialog" class="scene-dialog" aria-label="Scenes"></dialog>
+    <dialog id="choose-dialog" class="choose-dialog" aria-label="Add a picture"></dialog>
     <dialog id="lightbox" class="lightbox">
       <button type="button" class="lightbox-close" data-action="close-lightbox" aria-label="Close">×</button>
       <img id="lightbox-image" alt="" />

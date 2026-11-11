@@ -1,3 +1,4 @@
+import LocalAuthentication
 import SwiftUI
 import UIKit
 import WebKit
@@ -9,10 +10,68 @@ import WebKit
 public struct LittleDaysWebShellView: View {
     public init() {}
 
+    @Environment(\.scenePhase) private var scenePhase
+    @ObservedObject private var privacy = LittleDaysPrivacy.shared
+
     public var body: some View {
         LittleDaysWebView()
             .ignoresSafeArea()
             .background(Color(red: 248 / 255, green: 245 / 255, blue: 239 / 255))
+            // App lock on: the app switcher shows a plain cover, not the journal.
+            .overlay {
+                if privacy.lockEnabled && scenePhase != .active {
+                    ZStack {
+                        Color(red: 246 / 255, green: 241 / 255, blue: 231 / 255)
+                        Text("Little Days").font(.system(size: 30, weight: .regular, design: .serif))
+                            .foregroundStyle(Color(red: 47 / 255, green: 42 / 255, blue: 38 / 255))
+                    }
+                    .ignoresSafeArea()
+                }
+            }
+    }
+}
+
+/// Whether the Web app's lock is on (told by the page through the bridge;
+/// only ever changed on the main thread).
+final class LittleDaysPrivacy: ObservableObject {
+    static let shared = LittleDaysPrivacy()
+    @Published var lockEnabled = false
+}
+
+/// The page's app lock asks iOS for Face ID / Touch ID here and gets the
+/// answer back; Little Days never sees the face or fingerprint itself.
+@MainActor
+final class LittleDaysLockBridge: NSObject, WKScriptMessageHandler {
+    static let name = "littleDaysLock"
+    weak var webView: WKWebView?
+
+    /// "faceID", "touchID" or "" — given to the page at start.
+    nonisolated static func biometry() -> String {
+        let context = LAContext()
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) else { return "" }
+        switch context.biometryType {
+        case .faceID: return "faceID"
+        case .touchID: return "touchID"
+        default: return ""
+        }
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == Self.name, let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
+        if type == "state" {
+            LittleDaysPrivacy.shared.lockEnabled = (body["on"] as? Bool) == true
+            return
+        }
+        guard type == "unlock" else { return }
+        let reason = (body["reason"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "Unlock Little Days"
+        let context = LAContext()
+        // No system passcode fallback: the page's own keypad is the fallback.
+        context.localizedFallbackTitle = ""
+        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { ok, _ in
+            Task { @MainActor [weak self] in
+                self?.webView?.evaluateJavaScript("window.littleDaysBiometricResult && window.littleDaysBiometricResult(\(ok ? "true" : "false"))", completionHandler: nil)
+            }
+        }
     }
 }
 
@@ -28,13 +87,20 @@ struct LittleDaysWebView: UIViewRepresentable {
         configuration.mediaTypesRequiringUserActionForPlayback = .all
         // Lets the shared CSS drop the "web preview" phone frame and use real safe areas.
         let marker = WKUserScript(
-            source: "document.documentElement.dataset.shell = 'ios';",
+            source: "window.littleDaysBiometry = '\(LittleDaysLockBridge.biometry())'; document.documentElement.dataset.shell = 'ios'; document.documentElement.dataset.biometric = window.littleDaysBiometry;",
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         )
         configuration.userContentController.addUserScript(marker)
+        // App lock: Face ID / Touch ID and the app switcher cover.
+        let lockBridge = LittleDaysLockBridge()
+        configuration.userContentController.add(lockBridge, name: LittleDaysLockBridge.name)
+        // Daily reminder: local notifications (V7.6).
+        configuration.userContentController.add(LittleDaysReminders.shared, name: LittleDaysReminders.name)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        lockBridge.webView = webView
+        LittleDaysReminders.shared.webView = webView
         webView.uiDelegate = context.coordinator
         webView.navigationDelegate = context.coordinator
         webView.isOpaque = false

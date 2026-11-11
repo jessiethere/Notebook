@@ -1,6 +1,7 @@
 // V3.1 pure helpers: a Day (Entry) contains ordered Moments; Growth checks
 // stay unique per (habitId, date) and can carry private reflections.
 import { normalizeMoment } from "./model.mjs";
+import { smartLayout, SMART_VARIANTS } from "./smart-layout.mjs";
 
 const newId = () => globalThis.crypto.randomUUID();
 const clamp = (value, min, max) =>
@@ -240,7 +241,17 @@ export function saveReflection(state, period, key, values) {
 
 /* ---------- Photo layout ---------- */
 
-export const LAYOUT_TEMPLATES = ["duo", "trio", "grid", "polaroid", "collage"];
+export const LAYOUT_TEMPLATES = ["duo", "trio", "grid", "polaroid", "collage", "full", "corner", "stack"];
+// Step 1 picks how many photos (0 = text only, 5 = five or more); step 2
+// offers the layouts that suit that number.
+export const TEMPLATES_BY_COUNT = {
+  0: ["text"],
+  1: ["full", "polaroid", "corner"],
+  2: ["duo", "stack", "polaroid"],
+  3: ["trio", "collage", "polaroid"],
+  4: ["grid", "collage", "polaroid"],
+  5: ["collage", "grid", "stack"],
+};
 export const PHOTO_FRAMES = ["polaroid", "border", "rounded", "bare"];
 
 export function suggestLayout(count) {
@@ -278,7 +289,23 @@ export function autoLayout(count, template, region = { top: 4, bottom: 60 }) {
       });
     }
   };
-  if (template === "duo") {
+  if (template === "full" && count === 1) {
+    slots.push({ x: 50, y: top + height / 2, w: 92, h: height * 0.96, rotation: 0, frame: "bare" });
+  } else if (template === "corner" && count === 1) {
+    slots.push({ x: 30, y: top + height * 0.34, w: 46, h: height * 0.6, rotation: -4, frame: "polaroid", tape: true });
+  } else if (template === "stack") {
+    // Overlapping prints, as if dropped on the desk.
+    for (let i = 0; i < count; i++)
+      slots.push({
+        x: 50 + [-10, 9, -4, 12, -12, 5][i % 6],
+        y: top + height * 0.5 + [-6, 4, 8, -3, 2, -8][i % 6],
+        w: 58,
+        h: height * 0.62,
+        rotation: [-8, 6, -3, 9, -6, 3][i % 6],
+        frame: "polaroid",
+        tape: i === count - 1,
+      });
+  } else if (template === "duo") {
     const rows = Math.max(1, Math.ceil(count / 2));
     grid(count, rows, 2, top, height, "border");
     slots.forEach((slot, i) => (slot.rotation = i % 2 ? 2 : -2));
@@ -358,6 +385,11 @@ export function autoLayout(count, template, region = { top: 4, bottom: 60 }) {
   }));
 }
 
+// A framed photo takes part in layouts; a hand drawing (also a picture
+// layer) stays where it was drawn.
+export function framedPhoto(layer) {
+  return layer?.kind === "photo" && !layer.drawing;
+}
 export function photoLayer(reference, name, values = {}) {
   return {
     id: newId(),
@@ -378,8 +410,59 @@ export function photoLayer(reference, name, values = {}) {
 
 // Applies a template to photo layers in their current order (main photo
 // first). Text, stickers and growth cards keep their positions.
+// Applies a template for a chosen number of photos. Missing photos become
+// empty frames (filled by the next photo pick); "text" keeps the page to the
+// title and words. Existing photos are never removed.
+export function applyPageTemplate(page, count, template, region, options = {}) {
+  const filled = page.layers.filter((layer) => framedPhoto(layer) && layer.mediaRef);
+  if (template === "text") {
+    if ((filled.length || page.photo) && !options.force) throw new Error("layout.textHasPhotos");
+    // Words only: photos leave the page (their files stay on the device; undoable).
+    page.layers = page.layers.filter((layer) => !framedPhoto(layer));
+    if (page.photo) page.photo = "";
+    page.layers = page.layers.filter((layer) => !(layer.kind === "photo" && !layer.mediaRef));
+    page.layoutTemplate = "text";
+    page.layoutEdited = false;
+    return 0;
+  }
+  const target = Math.max(count, filled.length);
+  let empty = page.layers.filter((layer) => layer.kind === "photo" && !layer.mediaRef);
+  // Drop surplus empty frames, add missing ones.
+  const surplus = new Set(empty.slice(Math.max(0, target - filled.length)).map((layer) => layer.id));
+  page.layers = page.layers.filter((layer) => !surplus.has(layer.id));
+  for (let i = filled.length + empty.length - surplus.size; i < target; i++)
+    page.layers.push(photoLayer("", "slot"));
+  return applyLayout(page, template, region);
+}
+
+// Fills empty frames in order; returns references that did not fit.
+export function fillEmptySlots(page, references) {
+  const queue = [...references];
+  for (const layer of page.layers)
+    if (layer.kind === "photo" && !layer.mediaRef && queue.length) {
+      const next = queue.shift();
+      layer.mediaRef = next.reference;
+      layer.text = next.name || "photo";
+      if (next.sourceRef) {
+        layer.sourceRef = next.sourceRef;
+        layer.edit = next.edit;
+      }
+    }
+  return queue;
+}
+
 export function applyLayout(page, template, region) {
-  const photos = page.layers.filter((layer) => layer.kind === "photo");
+  const photos = page.layers.filter(framedPhoto);
+  if (template === "smart") {
+    // Photos keep their own shape; layoutVariant picks one of three looks.
+    const variant = (Number(page.layoutVariant) || 0) % SMART_VARIANTS.length;
+    const slots = smartLayout(photos.map((layer) => layer.aspect), variant);
+    photos.forEach((layer, index) => Object.assign(layer, slots[index], { scale: 1, crop: { x: 50, y: 50, zoom: 1 } }));
+    page.layoutTemplate = "smart";
+    page.layoutVariant = variant;
+    page.layoutEdited = false;
+    return photos.length;
+  }
   const slots = autoLayout(photos.length, template, region);
   photos.forEach((layer, index) => {
     Object.assign(layer, slots[index], { scale: 1 });
@@ -405,6 +488,27 @@ export function freeMainPhoto(entry) {
   return layer;
 }
 
+// Video / audio placed on the paper. The clip stays in page.media; the layer
+// only references it, so removing it from the paper never deletes the file.
+export function mediaLayer(clip, values = {}) {
+  const video = clip.kind === "video";
+  return {
+    id: newId(),
+    kind: video ? "video" : "audio",
+    clipId: clip.id,
+    text: clip.name || (video ? "video" : "audio"),
+    x: 50,
+    y: video ? 62 : 80,
+    w: video ? 58 : 64,
+    ...(video ? { h: 30 } : {}),
+    scale: 1,
+    rotation: video ? -2 : 2,
+    ...values,
+  };
+}
+export function isOnPage(page, clipId) {
+  return page.layers.some((layer) => layer.clipId === clipId);
+}
 export function moveLayer(page, layerId, delta) {
   const index = page.layers.findIndex((layer) => layer.id === layerId);
   const next = Math.max(0, Math.min(page.layers.length - 1, index + delta));

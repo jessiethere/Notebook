@@ -117,6 +117,11 @@ export class MediaStore {
     // Stored sample photos keep their original "/assets/…" value; they are
     // displayed through a relative URL so hosted copies of the app work too.
     if (/^\/assets\/[a-z0-9-]+\.jpg$/i.test(reference)) return reference.slice(1);
+    // Original artwork bundled with the app (library.json "scenes": page
+    // backgrounds, plus the retired hand-drawn scenes older pages still use).
+    if (/^scene:[a-z0-9-]+$/.test(reference)) return `library/scenes/LD-scene-${reference.slice(6)}.svg`;
+    // Real photos bundled with the app (library.json "photos", Unsplash License).
+    if (/^photo:[a-z0-9-]+$/.test(reference)) return `library/photos/LD-photo-${reference.slice(6)}.jpg`;
     if (/^data:image\/(jpeg|png|webp);base64,/.test(reference)) return reference;
     return "";
   }
@@ -265,11 +270,16 @@ export function visitMediaReferences(state, visit) {
       object[key] = visit(object[key], type);
   };
   const page = (item) => {
+    reference(item, "backdrop");
     for (const clip of item.media || []) {
       reference(clip, "source", "clip");
       reference(clip, "poster");
     }
-    for (const layer of item.layers || []) reference(layer, "mediaRef");
+    for (const layer of item.layers || []) {
+      reference(layer, "mediaRef");
+      // The untouched original of an edited photo (kept for re-editing).
+      reference(layer, "sourceRef");
+    }
   };
   for (const book of state.books || []) reference(book, "coverImage");
   for (const check of state.checks || []) reference(check, "photo");

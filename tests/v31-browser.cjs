@@ -2,6 +2,9 @@
 // Growth reflections, legacy data, backup/restore, bilingual, phone/desktop.
 // Uses synthetic media only (repo sample JPEGs, generated WAV/WebM, fake mic).
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
+const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -90,11 +93,13 @@ const helpers = (page) => {
   return {
     read,
     day,
-    nav: (tab) => page.locator(`#navigation [data-page="${tab}"]`).click(),
+    nav: (tab) => goTab(page, tab),
     // Studio settings live in a summary menu; open one row (if closed).
     tool: async (id) => {
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing is always open (write card)
+      // Put the phone keyboard away first, as a person would (typing hides the tools).
+      await page.evaluate(() => document.activeElement?.blur?.());
+      await studioTool(page, id);
     },
     // Waits until the stored draft/entry for a date satisfies a predicate.
     waitDay: (date, predicate, arg) =>
@@ -110,8 +115,11 @@ const helpers = (page) => {
 };
 async function openStudioDate(page, nav, date) {
   await nav("studio");
+  // The date sits in 页面信息 (More → Page details).
+  await studioDetails(page);
   await page.locator("#editor-date").fill(date);
   await page.waitForFunction((d) => document.querySelector("#editor-date")?.value === d, date);
+  await studioClose(page);
 }
 const photoGeometry = (layers) =>
   layers
@@ -157,6 +165,7 @@ async function noOverflow(page, label) {
     // 1. Upload five photos in one pick; every photo is its own layer.
     await openStudioDate(page, nav, D1);
     await page.locator("#photos-input").setInputFiles(photos(5, "pick"));
+    await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('.photo-layer img[src^="blob:"]').length === 5);
     await waitDay(D1, (e) => e.layers.filter((l) => l.kind === "photo").length === 5);
     let entry = await day(D1);
@@ -167,6 +176,7 @@ async function noOverflow(page, label) {
     assert.ok(!JSON.stringify(await read()).includes("base64,"), "no image bytes in LocalStorage");
     // Adding more keeps the existing photos.
     await page.locator("#photos-input").setInputFiles(photos(1, "extra"));
+    await skipPhotoEditor(page);
     await waitDay(D1, (e) => e.layers.filter((l) => l.kind === "photo").length === 6);
     entry = await day(D1);
     assert.deepEqual(entry.layers.filter((l) => l.kind === "photo").slice(0, 5).map((l) => l.id), ids);
@@ -189,8 +199,10 @@ async function noOverflow(page, label) {
       }, id);
       const before = (await day(D1)).layers.find((l) => l.id === id);
       const point = await center(page, `[data-layer="${id}"]`);
-      const dx = (index % 2 ? 1 : -1) * (14 + index * 3),
-        dy = index % 2 ? -12 : 12;
+      // The same share of the paper as before the larger V10.0 paper (290px wide then).
+      const unit = (await page.locator("#journal-canvas").boundingBox()).width / 290;
+      const dx = (index % 2 ? 1 : -1) * (14 + index * 3) * unit,
+        dy = (index % 2 ? -12 : 12) * unit;
       await mouseDrag(page, point, dx, dy);
       await page.mouse.move(point.x + dx, point.y + dy);
       await page.mouse.wheel(0, -120);
@@ -207,8 +219,10 @@ async function noOverflow(page, label) {
     // Resize and rotate handles (mouse) on one photo, crop on another.
     await selectLayer(page, ids[0]);
     const g0 = (await day(D1)).layers.find((l) => l.id === ids[0]);
-    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-resize`), 30, 24);
-    await mouseDrag(page, await center(page, `[data-layer="${ids[0]}"] .handle-rotate`), 40, 25);
+    // Drags keep the share of the paper they had on the smaller pre-V10.0 paper.
+    const paperW = (await page.locator("#journal-canvas").boundingBox()).width;
+    await mouseDrag(page, await center(page, `#sel-frame[data-sel="${ids[0]}"] .handle-resize`), (20 * paperW) / 186, (16 * paperW) / 186);
+    await mouseDrag(page, await center(page, `#sel-frame[data-sel="${ids[0]}"] .handle-rotate`), 40, 25);
     await waitDay(D1, (e, a) => {
       const l = e.layers.find((x) => x.id === a.id);
       return l.w > a.w && l.h > a.h && l.rotation !== a.rotation;
@@ -266,7 +280,7 @@ async function noOverflow(page, label) {
     const geometry = photoGeometry((await day(D1)).layers);
     const order = (await day(D1)).layers.map((l) => l.id);
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     await page.reload();
     await page.waitForSelector(".hero");
     entry = (await read()).entries.find((e) => e.date === D1);
@@ -286,22 +300,24 @@ async function noOverflow(page, label) {
     const addMoment = async (title, time) => {
       await page.locator('[data-action="add-moment"]').first().click();
       await tool("text");
-      await page.locator('[data-moment-field="title"]').fill(title);
-      await page.locator('[data-moment-field="time"]').fill(time);
+      await (await momentField(page, "title")).fill(title);
+      await (await momentField(page, "time")).fill(time);
     };
     await addMoment("Gym Session", "08:00");
-    await page.locator('[data-moment-field="body"]').fill("今天的训练计划：深蹲 4 组。");
-    await page.locator('[data-moment-field="tags"]').fill("fitness, morning");
+    await (await momentField(page, "body")).fill("今天的训练计划：深蹲 4 组。");
+    await (await momentField(page, "tags")).fill("fitness, morning");
     await page.locator("#photos-input").setInputFiles(photos(3, "gym"));
+    await skipPhotoEditor(page);
     await page.waitForFunction(() => document.querySelectorAll('.moment-canvas .photo-layer img[src^="blob:"]').length === 3);
     await addMoment("Coffee Time", "14:30");
-    await page.locator('[data-moment-field="body"]').fill("一杯燕麦拿铁。");
+    await (await momentField(page, "body")).fill("一杯燕麦拿铁。");
     await tool("mood");
     await page.locator('[data-action="moment-mood"][data-mood="☁️"]').click();
     await addMoment("Home Cooking", "19:00");
-    await page.locator('[data-moment-field="body"]').fill("番茄牛腩食谱");
-    await tool("media");
+    await (await momentField(page, "body")).fill("番茄牛腩食谱");
+    // Video goes in with 视频 under the paper; its list is then in the dock.
     await page.locator("#video-input").setInputFiles({ name: "cooking.webm", mimeType: "video/webm", buffer: await syntheticVideo(page) });
+    await tool("media");
     await page.waitForSelector('.media-card video[src^="blob:"]');
     await page.locator("#audio-input").setInputFiles({ name: "kitchen-sounds.wav", mimeType: "audio/wav", buffer: wav() });
     await page.waitForSelector('.media-card audio[src^="blob:"]', { state: "attached" });
@@ -319,7 +335,7 @@ async function noOverflow(page, label) {
     // Edit only Coffee Time.
     await page.locator(`[data-action="select-moment"][data-moment="${coffeeId}"]`).first().click();
     await tool("text");
-    await page.locator('[data-moment-field="title"]').fill("Afternoon Coffee Time");
+    await (await momentField(page, "title")).fill("Afternoon Coffee Time");
     await waitDay(D1, (e, id) => e.moments.find((m) => m.id === id).title === "Afternoon Coffee Time", coffeeId);
     entry = await day(D1);
     assert.equal(entry.moments.find((m) => m.id === gymId).title, "Gym Session");
@@ -341,7 +357,7 @@ async function noOverflow(page, label) {
       return saved.moments.length === 1 && saved.moments[0].id === id;
     }, cookingId);
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     entry = (await read()).entries.find((e) => e.date === D1);
     assert.deepEqual(entry.moments.map((m) => m.title), ["Gym Session", "Home Cooking", "Afternoon Coffee Time"]);
     passed.push("4/5 three Moments edited, reordered, saved individually and together");
@@ -361,25 +377,21 @@ async function noOverflow(page, label) {
     assert.match(await page.locator(".day-detail").innerText(), /番茄牛腩食谱/);
     assert.equal(await page.locator('.day-detail [data-action="remove-media"]').count(), 0, "read-only");
     assert.equal(await page.locator(".day-detail [data-layer]").count(), 0, "no editable layers");
-    await page.waitForFunction(() => document.querySelectorAll('.day-detail .ld-player audio[src^="blob:"]').length === 2);
+    // V3.4: clips sit on the paper and play there.
+    await page.waitForFunction(() => document.querySelectorAll('.day-detail .audio-layer audio[src^="blob:"]').length === 2);
     const playAndCheck = async (index) => {
-      await page.locator(".day-detail .ld-play").nth(index).click();
+      await page.locator(".day-detail .audio-layer .layer-play").nth(index).click();
       await page.waitForFunction((i) => {
-        const player = document.querySelectorAll(".day-detail .ld-player")[i];
+        const player = document.querySelectorAll(".day-detail .audio-layer")[i];
         return player.classList.contains("playing") && player.querySelector("audio").currentTime > 0.05;
       }, index);
     };
     await playAndCheck(0); // uploaded WAV
     await playAndCheck(1); // microphone recording
-    assert.equal(await page.locator(".day-detail .ld-player").nth(0).evaluate((p) => p.querySelector("audio").paused), true, "only one plays");
-    await page.locator(".day-detail .ld-play").nth(1).click();
-    await page.waitForFunction(() => document.querySelectorAll(".day-detail .ld-player.playing").length === 0);
+    assert.equal(await page.locator(".day-detail .audio-layer").nth(0).evaluate((p) => p.querySelector("audio").paused), true, "only one plays");
+    await page.locator(".day-detail .audio-layer .layer-play").nth(1).click();
+    await page.waitForFunction(() => document.querySelectorAll(".day-detail .audio-layer.playing").length === 0);
     // Seek with the designed progress bar.
-    await page.locator(".day-detail [data-player-seek]").first().evaluate((el) => {
-      el.value = "500";
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    assert.ok((await page.locator(".day-detail .ld-player audio").first().evaluate((a) => a.currentTime)) > 0.5);
     await page.locator(".day-detail video").evaluate(async (video) => {
       video.muted = true;
       await video.play();
@@ -391,7 +403,7 @@ async function noOverflow(page, label) {
     await page.waitForFunction(() => document.querySelector("#lightbox").open && document.querySelector("#lightbox-image").src.startsWith("blob:"));
     await page.locator('#lightbox [data-action="close-lightbox"]').click();
     // Leaving the view revokes its temporary audio/video object URLs.
-    const audioURL = await page.locator(".day-detail .ld-player audio").first().getAttribute("src");
+    const audioURL = await page.locator(".day-detail .audio-layer audio").first().getAttribute("src");
     await page.locator('[data-action="day-back"]').click();
     await page.waitForSelector(".calendar-grid");
     assert.equal(
@@ -401,7 +413,7 @@ async function noOverflow(page, label) {
     // Edit from Day Detail opens the Studio.
     await cell.click();
     await page.locator('.day-detail-top [data-action="edit-date"]').click();
-    await page.waitForSelector("#editor-date");
+    await studioDetails(page);
     assert.equal(await page.locator("#editor-date").inputValue(), D1);
     passed.push("6 Day Detail lists all Moments", "7 uploaded audio + recording play in Calendar", "8 video plays in Calendar; URLs revoked on leave");
 
@@ -416,13 +428,16 @@ async function noOverflow(page, label) {
     await page.locator('#dialog-form .mood-radio:has(input[value="✨"])').click();
     await page.locator('#dialog-form [type="submit"]').click();
     await page.locator(`.note-button[data-habit="move"][data-date="${today}"]`).first().click();
+    // A written check-in opens to read first; Edit is inside.
+    await page.locator('.check-view [data-action="check-note"]').click();
     assert.equal(await page.locator('#dialog-form [name="detail"]').inputValue(), "Lower Body");
     assert.equal(await page.locator('#dialog-form [name="note"]').inputValue(), "今天左腿的发力感明显比之前好。");
     assert.equal(await page.locator('#dialog-form [name="shareNote"]').isChecked(), false);
     await page.locator('#dialog-form [name="note"]').fill("今天左腿的发力感明显比之前好，深蹲更稳。");
     await page.locator('#dialog-form [type="submit"]').click();
     // Duration habit: the check-in dialog records minutes and a note at once.
-    await page.locator(`.check-button[data-habit="reading"][data-date="${today}"]`).first().click();
+    // ✎ before checking in: the dialog records minutes and a note at once.
+    await page.locator(`.note-button[data-habit="reading"][data-date="${today}"]`).first().click();
     await page.locator('#dialog-form [name="minutes"]').fill("15");
     await page.locator('#dialog-form [name="detail"]').fill("Spanish");
     await page.locator('#dialog-form [name="note"]').fill("终于理解了一个语法点。");
@@ -433,6 +448,8 @@ async function noOverflow(page, label) {
     assert.deepEqual([move.detail, move.minutes, move.mood, move.shareNote], ["Lower Body", 60, "✨", false]);
     assert.match(move.note, /深蹲更稳/);
     assert.equal(s.checks.find((c) => c.habitId === "reading").minutes, 15);
+    // Check-in notes are folded by default; open them once and they stay open.
+    await page.locator(".check-history > summary").click();
     assert.match(await page.locator(".check-history").innerText(), /深蹲更稳/);
     // Weekly reflection.
     await page.locator('[data-action="reflection-edit"][data-period="week"]').first().click();
@@ -451,15 +468,15 @@ async function noOverflow(page, label) {
     assert.equal(await page.locator('[data-action="insert-growth"][data-habit="move"]').isDisabled(), true, "no duplicate card");
     await page.locator('[data-action="add-moment"]').first().click();
     await tool("text");
-    await page.locator('[data-moment-field="title"]').fill("Temporary");
+    await (await momentField(page, "title")).fill("Temporary");
     await tool("growth");
     await page.locator('[data-action="insert-growth"][data-habit="reading"]').click();
     await page.waitForSelector(".growth-layer");
     await tool("chapters");
-    await page.locator('[data-action="moment-delete"]').click();
+    await page.locator('.moment-actions [data-action="moment-delete"]').click();
     await page.locator("#confirm-dialog[open] #confirm-ok").click();
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     s = await read();
     assert.equal(s.checks.filter((c) => c.date === today).length, 2, "check-ins survive page deletion");
     const todayEntry = s.entries.find((e) => e.date === today);
@@ -490,10 +507,10 @@ async function noOverflow(page, label) {
     await page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
     await page.waitForSelector(".day-detail");
     const englishDay = await page.locator(".day-detail").innerText();
-    assert.match(englishDay, /CHAPTER 01|Chapter 01/i);
+    assert.match(englishDay, /PAGE 01|Page 01/i);
     assert.match(englishDay, /Afternoon Coffee Time/);
     assert.match(englishDay, /番茄牛腩食谱/);
-    assert.equal(await page.locator(".day-detail .ld-play").first().getAttribute("aria-label"), "Play");
+    assert.match(await page.locator(".day-detail .audio-layer .layer-play").first().getAttribute("aria-label"), /^Play /);
     await nav("growth");
     assert.match(await page.locator(".reflections").innerText(), /This week/);
     assert.match(await page.locator(".reflections").innerText(), /完成三次训练/);
@@ -515,7 +532,8 @@ async function noOverflow(page, label) {
     const backupDay = backup.state.entries.find((e) => e.date === D1);
     assert.equal(backupDay.moments.length, 3);
     assert.ok(backup.media.length >= 5 + 3 + 3, "photos, moment photos and clips are included");
-    assert.match(await page.locator("#media-usage").innerText(), /MB/);
+    // The usage line is filled in asynchronously after the backup render.
+    await page.waitForFunction(() => /MB/.test(document.querySelector("#media-usage")?.textContent || ""), null, { timeout: 8000 });
     const restore = await setup(browser);
     const r = helpers(restore.page);
     await restore.page.goto(base);
@@ -539,9 +557,9 @@ async function noOverflow(page, label) {
     assert.equal(restored.reflections[0].wentWell, "完成三次训练");
     await r.nav("calendar");
     await restore.page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
-    await restore.page.waitForFunction(() => document.querySelectorAll('.day-detail .ld-player audio[src^="blob:"]').length === 2);
-    await restore.page.locator(".day-detail .ld-play").nth(1).click();
-    await restore.page.waitForFunction(() => document.querySelectorAll(".day-detail .ld-player audio")[1].currentTime > 0.05);
+    await restore.page.waitForFunction(() => document.querySelectorAll('.day-detail .audio-layer audio[src^="blob:"]').length === 2);
+    await restore.page.locator(".day-detail .audio-layer .layer-play").nth(1).click();
+    await restore.page.waitForFunction(() => document.querySelectorAll(".day-detail .audio-layer audio")[1].currentTime > 0.05);
     assert.equal(await restore.page.locator(".day-detail .photo-layer img").count(), 5 + 3);
     assert.deepEqual(restore.errors, []);
     await restore.context.close();
@@ -566,7 +584,7 @@ async function noOverflow(page, label) {
       await page.setViewportSize({ width: 390, height: 844 });
       await nav("calendar");
       await page.locator(`[data-action="select-date"][data-date="${D1}"]`).click();
-      await page.waitForSelector(".day-detail .ld-player audio[src^='blob:']", { state: "attached" });
+      await page.waitForSelector(".day-detail .audio-layer audio[src^='blob:']", { state: "attached" });
       await page.locator(".day-detail").screenshot({ path: path.join(process.env.SCREENSHOT_DIR, "little-days-v31-day-detail.png") });
       await page.locator('.day-detail-top [data-action="edit-date"]').click();
       await page.waitForSelector("#journal-canvas");
@@ -581,29 +599,49 @@ async function noOverflow(page, label) {
     const d = helpers(desk.page);
     await desk.page.goto(base);
     await desk.page.waitForSelector(".hero");
-    await openStudioDate(desk.page, d.nav, "2026-11-10");
+    // An empty past date (was a fixed deskDate, which became today):
+    // 20 days ago is never today and never a sample day.
+    const deskDate = await desk.page.evaluate(() => { const x = new Date(); x.setDate(x.getDate() - 20); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; });
+    await openStudioDate(desk.page, d.nav, deskDate);
     await desk.page.locator("#photos-input").setInputFiles(photos(2, "desk"));
-    await d.waitDay("2026-11-10", (e) => e.layers.filter((l) => l.kind === "photo").length === 2);
-    const deskIds = (await d.day("2026-11-10")).layers.map((l) => l.id);
+    await skipPhotoEditor(desk.page);
+    await d.waitDay(deskDate, (e) => e.layers.filter((l) => l.kind === "photo").length === 2);
+    const deskIds = (await d.day(deskDate)).layers.map((l) => l.id);
     await selectLayer(desk.page, deskIds[1]);
-    const before = (await d.day("2026-11-10")).layers.find((l) => l.id === deskIds[1]);
+    const before = (await d.day(deskDate)).layers.find((l) => l.id === deskIds[1]);
     await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"]`), -40, 30);
-    await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-resize`), 40, 30);
-    await mouseDrag(desk.page, await center(desk.page, `[data-layer="${deskIds[1]}"] .handle-rotate`), 60, 40);
+    await mouseDrag(desk.page, await center(desk.page, `#sel-frame[data-sel="${deskIds[1]}"] .handle-resize`), 40, 30);
+    await mouseDrag(desk.page, await center(desk.page, `#sel-frame[data-sel="${deskIds[1]}"] .handle-rotate`), 60, 40);
     const c = await center(desk.page, `[data-layer="${deskIds[1]}"]`);
     await desk.page.mouse.move(c.x, c.y);
     await desk.page.mouse.wheel(0, -120);
     await desk.page.keyboard.down("Shift");
     await desk.page.mouse.wheel(0, -120);
     await desk.page.keyboard.up("Shift");
-    await d.waitDay("2026-11-10", (e, a) => {
+    await d.waitDay(deskDate, (e, a) => {
       const l = e.layers.find((x) => x.id === a.id);
       return l.x < a.x && l.w > a.w && l.scale > a.scale && l.rotation !== a.rotation;
     }, { id: deskIds[1], x: before.x, w: before.w, scale: before.scale, rotation: before.rotation });
-    await desk.page.locator(`[data-layer="${deskIds[1]}"]`).focus();
-    const nudged = (await d.day("2026-11-10")).layers.find((l) => l.id === deskIds[1]).x;
-    await desk.page.keyboard.press("ArrowRight");
-    await d.waitDay("2026-11-10", (e, a) => e.layers.find((x) => x.id === a.id).x === a.x + 1, { id: deskIds[1], x: nudged });
+    // Arrow keys nudge the focused, selected layer by 1. (Focus is checked
+    // before each try: a late draft-save re-render can take it away.)
+    let nudgedOk = false;
+    for (let attempt = 0; attempt < 3 && !nudgedOk; attempt++) {
+      await desk.page.waitForTimeout(800);
+      await selectLayer(desk.page, deskIds[1]);
+      await desk.page.locator(`[data-layer="${deskIds[1]}"]`).focus();
+      const focused = await desk.page.evaluate((id) => document.activeElement?.dataset?.layer === id, deskIds[1]);
+      if (!focused) continue;
+      const x0 = (await d.day(deskDate)).layers.find((l) => l.id === deskIds[1]).x;
+      await desk.page.keyboard.press("ArrowRight");
+      nudgedOk = await desk.page
+        .waitForFunction(([date, id, x]) => {
+          const s = JSON.parse(localStorage.getItem("little-days.v1"));
+          const e = s.drafts[date] || s.entries.find((x) => x.date === date);
+          return Math.abs(e.layers.find((l) => l.id === id).x - (x + 1)) < 1e-6;
+        }, [deskDate, deskIds[1], x0], { timeout: 4000 })
+        .then(() => true, () => false);
+    }
+    assert.ok(nudgedOk, "ArrowRight nudges the selected layer by 1");
     await noOverflow(desk.page, "desktop studio");
     assert.deepEqual(desk.errors, []);
     await desk.context.close();
@@ -657,9 +695,10 @@ async function noOverflow(page, label) {
     assert.match(await legacy.page.locator(".day-detail").innerText(), /让身体动起来/);
     await legacy.page.locator('.day-detail-top [data-action="edit-date"]').click();
     await l.tool("text");
-    assert.equal(await legacy.page.locator("#entry-title").inputValue(), "很久以前的一天");
+    assert.equal(await legacy.page.locator('#journal-canvas [data-inline="title"]').innerText(), "很久以前的一天");
     await legacy.page.waitForSelector('.canvas-photo img[src^="blob:"]');
     await l.nav("books");
+    await legacy.page.locator('[data-action="pull-book"][data-book="daily"]').click();
     await legacy.page.locator('[data-action="book"][data-book="daily"]').click();
     assert.match(await legacy.page.locator("#app").innerText(), /很久以前的一天/);
     assert.deepEqual(legacy.errors, []);

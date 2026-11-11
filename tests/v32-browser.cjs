@@ -2,6 +2,9 @@
 // presets, Chinese fonts, Moment media, habit journey and book day covers.
 // Synthetic data only.
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
+const { goTab, skipPhotoEditor } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -73,20 +76,36 @@ const shift = (key, days) => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) => page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     const tool = async (id) => {
-      const head = page.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing happens on the paper
+      await studioTool(page, id);
     };
     const read = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
 
     // Studio desk: summary rows, one open at a time, preview stays visible.
     await nav("studio");
     await page.waitForSelector("#journal-canvas");
-    const rows = await page.$$eval("[data-tool-row]", (els) => els.map((el) => el.dataset.toolRow));
-    for (const id of ["photos", "layout", "text", "font", "paper", "mood", "stickers", "media", "book", "chapters"])
-      assert.ok(rows.includes(id), `menu has ${id}`);
+    // Tools are small icons in a dock at the bottom of the screen.
+    // V10.0: four tools at the bottom; the other tools are tiles in More.
     assert.equal(await page.locator(".tool-body").count(), 0, "all rows start closed");
+    const dockTools = await page.$$eval(".tool-dock.sv-tools .sv-tool", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
+    assert.deepEqual(dockTools, ["add-photos", "add-text-layer", "stickers", "more"]);
+    const dock = await page.locator(".tool-dock").boundingBox();
+    await page.evaluate(() => document.activeElement?.blur?.());
+    await studioMore(page);
+    const rows = [...(await page.$$eval(".more-grid [data-action='tool']", (els) => els.map((el) => el.dataset.tool))), "stickers"];
+    await studioClose(page);
+    assert.equal(await page.locator('#journal-canvas [data-inline="title"]').count(), 1, "the title is typed on the paper (always open)");
+    for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "chapters"])
+      assert.ok(rows.includes(id), `menu has ${id}`);
+    // No second place to choose the journal or add media: those are the line
+    // above the paper and 视频 / 声音 under it.
+    assert.ok(!rows.includes("media") && !rows.includes("book"), "no duplicate tools");
+    // Studio is full-screen: the tool row sits at the very bottom (no tab bar).
+    const screen = await page.locator("#app-scroll").boundingBox();
+    assert.equal(await page.locator("#navigation").isVisible(), false, "no tab bar in Studio");
+    assert.ok(Math.abs(dock.y + dock.height - (screen.y + screen.height)) < 12, "dock sits at the bottom");
     await tool("paper");
     await tool("font");
     assert.equal(await page.locator(".tool-body").count(), 1, "only one row open");
@@ -108,10 +127,10 @@ const shift = (key, days) => {
       return box.top >= frame.top - 1 && box.bottom <= frame.bottom + 1 && box.height > 150;
     });
     assert.ok(visible, "preview pinned while editing");
+    // Closing the sheet gives the paper its full size back.
     const small = (await page.locator("#journal-canvas").boundingBox()).width;
-    await page.locator('[data-action="preview-size"]').click();
-    assert.ok((await page.locator("#journal-canvas").boundingBox()).width > small * 1.3, "preview can be enlarged");
-    await page.locator('[data-action="preview-size"]').click();
+    await studioClose(page);
+    await page.waitForFunction((w) => document.querySelector("#journal-canvas").getBoundingClientRect().width > w * 1.3, small);
     // Mood change is visible in the summary and on the page at once.
     await tool("mood");
     await page.locator('[data-action="mood"][data-mood="✨"]').click();
@@ -119,33 +138,33 @@ const shift = (key, days) => {
     assert.equal(await page.locator("#journal-canvas .canvas-mood").innerText(), "✨");
     // Adding photos opens Layout right away; the summary follows the template.
     await page.locator("#photos-input").setInputFiles([0, 1, 2].map((i) => ({ name: `p${i}.jpg`, mimeType: "image/jpeg", buffer: jpeg(i % 2 ? "lake.jpg" : "coffee.jpg") })));
+    await skipPhotoEditor(page);
     await page.waitForSelector('[data-tool-row="layout"].open');
     await page.locator('[data-action="apply-layout"][data-template="polaroid"]').click();
     await page.waitForFunction(() => document.querySelector('[data-tool-value="layout"]').textContent.includes("拍立得"));
     // Typing the title updates the page preview and the summary row.
     await tool("text");
-    await page.locator("#entry-title").fill("十一月的小日子");
-    await page.waitForFunction(() => document.querySelector('[data-tool-value="text"]').textContent === "十一月的小日子");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("十一月的小日子");
     assert.match(await page.locator("#journal-canvas .canvas-title").innerText(), /十一月的小日子/);
     passed.push("studio desk: summary menu, one row open, pinned/enlargeable preview, 9 papers");
 
     // A Moment with audio: selecting it opens its players directly.
     await page.locator('[data-action="add-moment"]').first().click();
-    await page.locator('[data-moment-field="title"]').fill("Evening walk");
-    await tool("media");
+    await (await momentField(page, "title")).fill("Evening walk");
     await page.locator("#audio-input").setInputFiles({ name: "walk.wav", mimeType: "audio/wav", buffer: wav() });
+    await tool("media");
     await page.waitForSelector('.media-card audio[src^="blob:"]', { state: "attached" });
     await page.locator('.chapter-chip[data-moment=""]').click();
     await page.locator("[data-tool-row='media'] .tool-head").click(); // close
     const walk = page.locator(".chapter-chip", { hasText: "Evening walk" });
-    assert.match(await walk.innerText(), /♫1/);
+    assert.match(await walk.textContent(), /♫1/); // the switcher shows thumbnails; the counts stay for screen readers
     await walk.click();
     await page.waitForSelector('[data-tool-row="media"].open .ld-player audio[src^="blob:"]', { state: "attached" });
     await page.locator('[data-tool-row="media"] .ld-play').click();
     await page.waitForFunction(() => document.querySelector('[data-tool-row="media"] audio').currentTime > 0.05);
     await page.locator('[data-tool-row="media"] .ld-play').click();
     await page.locator('[data-action="save-entry"]').click();
-    await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").homeAfterSave(page);
     passed.push("moment media plays right after selecting the moment");
 
     // Pet / Parenting presets and five Chinese fonts.
@@ -175,7 +194,7 @@ const shift = (key, days) => {
 
     // Habit journey: read check-ins like a book.
     await nav("growth");
-    await page.locator('[data-action="habit-journey"][data-habit="move"]').click();
+    await page.locator('.journey-chip[data-habit="move"]').click();
     await page.waitForSelector(".journey-cover");
     const cover = await page.locator(".journey-cover").innerText();
     assert.match(cover, /4\s*次打卡/);
@@ -209,6 +228,7 @@ const shift = (key, days) => {
 
     // Books: one cover per day, filter by month or date, open the day.
     await nav("books");
+    await page.locator('[data-action="pull-book"][data-book="daily"]').click();
     await page.locator('[data-action="book"][data-book="daily"]').click();
     await page.waitForSelector(".day-cover");
     const covers = await page.locator(".day-cover").count();
@@ -218,18 +238,23 @@ const shift = (key, days) => {
     assert.match(await todayCover.innerText(), /Evening walk/);
     assert.ok((await todayCover.locator("img").count()) >= 1);
     await page.locator('[data-book-filter="month"]').selectOption(lastMonth.slice(0, 7));
-    await page.waitForFunction(() => document.querySelectorAll(".day-cover").length === 1);
-    assert.match(await page.locator(".day-cover").innerText(), /上个月的一天/);
+    // (Sample days may also fall in last month; this test's own day is there.)
+    await page.waitForFunction(() => [...document.querySelectorAll(".day-cover")].some((el) => /上个月的一天/.test(el.innerText)));
+    assert.equal(await page.locator(`.day-cover[data-date="${today}"]`).count(), 0, "this month's days are filtered out");
     await page.locator('[data-book-filter="date"]').fill(today);
     await page.waitForFunction((d) => document.querySelectorAll(".day-cover").length === 1 && document.querySelector(".day-cover").dataset.date === d, today);
     await page.locator('[data-book-filter="date"]').fill("2001-01-01");
     await page.waitForSelector(".book-filter + .empty");
     await page.locator('[data-action="book-filter-clear"]').click();
     await page.waitForFunction((n) => document.querySelectorAll(".day-cover").length === n, covers);
+    // V10.11: a day in the book's list opens the full-screen reader at that day's first page.
     await todayCover.click();
-    await page.waitForSelector(".day-detail .moment-chapter");
-    assert.match(await page.locator(".day-detail").innerText(), /Evening walk/);
-    passed.push("book day covers with month/date filters open the full day");
+    await page.waitForSelector(".reader .reader-page:not(.is-cover)");
+    const [y, m, d] = today.split("-").map(Number);
+    assert.match(await page.locator(".reader-caption").innerText(), new RegExp(`${y}年${m}月${d}日`));
+    assert.match(await page.locator(".reader-count").innerText(), /^第 \d+ \/ \d+ 页$/);
+    await require("./signed-in.cjs").leaveReader(page);
+    passed.push("book day covers with month/date filters open that day in the reader");
 
     for (const width of [375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
@@ -238,7 +263,7 @@ const shift = (key, days) => {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${target} ${width}`);
       }
       await nav("growth");
-      await page.locator('[data-action="habit-journey"][data-habit="move"]').click();
+      await page.locator('.journey-chip[data-habit="move"]').click();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `journey ${width}`);
     }
     if (process.env.SCREENSHOT_DIR) {

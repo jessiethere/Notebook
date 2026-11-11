@@ -1,37 +1,138 @@
 {
   "schemaVersion": 1,
   "tabs": [
-    { "id": "home", "title": "Home", "subtitle": "首页", "symbol": "house" },
+    {
+      "id": "home",
+      "title": "Home",
+      "subtitle": "首页",
+      "symbol": "house"
+    },
     {
       "id": "calendar",
       "title": "Calendar",
       "subtitle": "日历",
       "symbol": "calendar"
     },
-    { "id": "studio", "title": "Studio", "subtitle": "创作", "symbol": "plus" },
-    { "id": "growth", "title": "Growth", "subtitle": "成长", "symbol": "leaf" },
+    {
+      "id": "studio",
+      "title": "Studio",
+      "subtitle": "创作",
+      "symbol": "plus"
+    },
+    {
+      "id": "growth",
+      "title": "Growth",
+      "subtitle": "成长",
+      "symbol": "leaf",
+      "inNav": false
+    },
     {
       "id": "books",
       "title": "My Books",
       "subtitle": "手帐本",
       "symbol": "book"
+    },
+    {
+      "id": "community",
+      "title": "Community",
+      "subtitle": "社区",
+      "symbol": "users"
     }
   ],
   "templates": [
-    { "id": "minimal", "title": "Minimal" },
-    { "id": "cute", "title": "Cute" },
-    { "id": "vintage", "title": "Vintage" },
-    { "id": "grid", "title": "Grid" },
-    { "id": "lined", "title": "Lined" },
-    { "id": "kraft", "title": "Kraft" },
-    { "id": "gingham", "title": "Gingham" },
-    { "id": "berry", "title": "Berry Dots" },
-    { "id": "watercolor", "title": "Watercolor" }
+    {
+      "id": "minimal",
+      "title": "Minimal"
+    },
+    {
+      "id": "cute",
+      "title": "Cute"
+    },
+    {
+      "id": "vintage",
+      "title": "Vintage"
+    },
+    {
+      "id": "grid",
+      "title": "Grid"
+    },
+    {
+      "id": "lined",
+      "title": "Lined"
+    },
+    {
+      "id": "kraft",
+      "title": "Kraft"
+    },
+    {
+      "id": "gingham",
+      "title": "Gingham"
+    },
+    {
+      "id": "berry",
+      "title": "Berry Dots"
+    },
+    {
+      "id": "watercolor",
+      "title": "Watercolor"
+    }
   ],
-  "moods": ["☀️", "🌷", "☁️", "🌧️", "✨"],
+  "moods": [
+    "☀️",
+    "🌷",
+    "☁️",
+    "🌧️",
+    "✨"
+  ],
   "stickers": {
-    "cute": ["🌷", "🍓", "🎀", "🐰", "🌼", "🧸"],
-    "minimal": ["♡", "✦", "☀", "☾", "✿", "〰"],
-    "vintage": ["🗝️", "✉️", "🕯️", "🦋", "🍂", "📜"]
+    "cute": [
+      "🌷",
+      "🍓",
+      "🎀",
+      "🐰",
+      "🌼",
+      "🧸"
+    ],
+    "minimal": [
+      "♡",
+      "✦",
+      "☀",
+      "☾",
+      "✿",
+      "〰"
+    ],
+    "vintage": [
+      "🗝️",
+      "✉️",
+      "🕯️",
+      "🦋",
+      "🍂",
+      "📜"
+    ]
+  },
+  "keeper": {
+    "stages": [
+      {
+        "id": "new",
+        "min": 0
+      },
+      {
+        "id": "growing",
+        "min": 15
+      },
+      {
+        "id": "keeper",
+        "min": 45
+      }
+    ],
+    "points": {
+      "day": 2,
+      "photo": 1,
+      "check": 1,
+      "revisit": 1,
+      "book": 2,
+      "tag": 1
+    },
+    "dayCap": 4
   }
 }

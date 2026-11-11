@@ -1,0 +1,12 @@
+Little Days background music (LD-music-*.mp3)
+
+Original music composed for the Little Days project. Every note, drum and
+texture (piano, ukulele, upright bass, brushes, rain, waves, café murmur,
+vinyl crackle) is synthesised from code in
+tools/make_music.py; no samples, recordings, loops or songs by anyone else are
+used, and nothing was taken from a streaming service. The chord progressions
+are common ones; the melodies were written for this project.
+
+Users may play these pieces in the app and include them in the photos,
+videos and books they make from their own journals, including when sharing
+them with family and friends.

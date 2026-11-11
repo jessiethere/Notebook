@@ -4,11 +4,11 @@
 
 在现有 Swift Package / Vapor 4.110.1 / SwiftUI Native / Public HTML 五页上增量开发；本轮基于 `5edaf19`。没有切换 React，没有新建替代项目。
 
-最终 iPhone 是 Swift + SwiftUI。Windows localhost 是独立交互 HTML 预览，不是 Apple SwiftUI。Apple iOS SDK 无法直接在 Windows 浏览器运行；SwiftWasm/Tokamak 等兼容层的照片/手势/媒体兼容性尚未在本项目验证，因此不引入。保留现有 Vapor，Windows 的日常预览继续使用 Python 标准库，不要求安装 Swift 或 Node。
+最终 iPhone 是 Swift + SwiftUI。日常查看用 claude.ai 固定链接（2026-11-09 用户确认，取代 Windows localhost:8080 作为查看方式）；网页预览不是 Apple SwiftUI。Apple iOS SDK 无法直接在 Windows 浏览器运行；SwiftWasm/Tokamak 等兼容层的照片/手势/媒体兼容性尚未在本项目验证，因此不引入。保留现有 Vapor，Windows 的日常预览继续使用 Python 标准库，不要求安装 Swift 或 Node。
 
 ## 2026-11-07 架构确认：iOS = Swift 外壳 + 同一份 Web 界面
 
-用户确认：最终发布 iOS App，App 是 **SwiftUI + WKWebView 外壳**，运行与 localhost 预览完全相同的 `Public/` HTML/CSS/JavaScript；用户在 Windows 浏览器打开 http://localhost:8080 检查每次更新，不需要 Mac/Xcode。
+用户确认：最终发布 iOS App，App 是 **SwiftUI + WKWebView 外壳**，运行与 localhost 预览完全相同的 `Public/` HTML/CSS/JavaScript；用户通过 claude.ai 固定链接检查每次更新（2026-11-09 起取代 Windows localhost:8080），不需要 Mac/Xcode。
 
 | 部分 | 说明 |
 | --- | --- |
@@ -50,6 +50,7 @@ flowchart TD
 | `Public/js/canvas.mjs` | V3.1 共享画布与媒体卡片渲染：Studio 编辑模式与 Day Detail 只读模式使用同一套标记 |
 | `Public/js/day-view.mjs` | V3.1 Calendar Day Detail 只读回忆页 |
 | `Public/js/journey-view.mjs` | V3.2 习惯成长轨迹（书页式阅读） |
+| `Public/js/community.mjs` / `community-view.mjs` | V3.3 社区/好友/私信**本机演示**：纯函数与视图；数据存 `little-days.demo-social`，不进入手帐数据、备份或任何网络请求 |
 | `tools/merge_font_slices.py` | V3.2 把 OFL 网页字体子集合并回单个 TTF（来源记录） |
 | `tools/build_link.py` | 生成在线链接（claude.ai Artifact）用的文件夹 `dist/link/` |
 | `tools/preview.py` | 127.0.0.1 HTTP、共享资源白名单、`--open`、完整解压检查 |
@@ -105,6 +106,11 @@ DayState   += reflections?: [{id, period:"week"|"month", key, wentWell,
 
 成长卡片是对 `(habitId, date)` 打卡的引用：修改感想处处更新；删除手帐页/Moment 不影响打卡；打卡仍唯一，计数不变。感想默认私人，`shareNote` 为未来分享时的明确授权位，目前没有任何分享出口。
 
+### V5.2 增量（全部可选，旧数据不变）
+
+- 照片图层 `aspect`（原图宽 / 高）；页面（Entry / Moment）`layoutVariant`（0–2）；`layoutTemplate` 新值 `"smart"`（按照片形状自动排，`Public/js/smart-layout.mjs`）、`"line"`（照片 + 一句话）；手绘图层 `drawing: true`；`backdrop` 可以是 `media:`（自己的照片，计入备份引用）。
+- 本机测试记录 `little-days.events`（`Public/js/events.mjs`）：只存白名单字段，不上传；实验室开关 `little-days.labs`（"1" = 打开）；已看过的更新版本 `little-days.seen-version`（更新内容在 `Public/js/whats-new.mjs`）。两者都只是本机便利设置，不属于手帐数据，也不进备份。
+
 ### V3.1 媒体加载与对象 URL 生命周期
 
 `MediaStore` 以 scope 引用计数对象 URL：`app`（照片、封面、海报、成长照片，用于缩略图）在启动时载入；音视频 Blob 只由打开它们的视图（`studio` 或 `day`）通过 `acquire()` 从 IndexedDB 读取，离开视图 `release()` 暂停播放并撤销仅属于该视图的 URL。Day Detail 不再依赖 Studio 临时状态，刷新或重选日期都会重新从 IndexedDB 生成可播放 URL。恢复备份写入 Blob 时不创建 URL。
@@ -139,7 +145,7 @@ LocalStorage 保存前比较已读快照，能提示已发生的旧标签页更�
 
 - 视频卡片与录音/音频使用浏览器原生 controls；一段媒体播放时暂停其他媒体。切页或重新渲染可能暂停播放，不实现后台音乐。
 - 麦克风只在主动点击录音后请求；结束/失败停止音轨；最多 5 分钟/20 MB。当前测试使用 Chromium 的虚拟麦克风和合成视频/音频。
-- 可选背景音乐、视频剪辑、语音转文字均未实现；没有连接音乐平台或下载歌曲。
+- V6.0 背景音乐：`Public/js/music.mjs` 一个共享播放器（隐藏的 `#background-music`，循环、音量 0.7），文件先 fetch 成 blob URL 再播放（iOS 外壳的自定义 scheme 不支持媒体分段请求）。页面字段 `music` 与书的字段 `music`（V6.2，library.json `music` 的 id，可选）；阅读一天（封面优先，否则第一页，再否则这本书的音乐）、打开书（列表或翻页，页面自己的音乐优先）时自动播放；音量是本机设置 `little-days.music-volume`（默认 0.7），写作时不播放；任何其他音视频开始播放时它被暂停。导出视频时作为循环音轨混入（有其他声音时 0.35，只有音乐时 0.8、15 秒、结尾 1.5 秒淡出）。音乐全部原创，不连接音乐平台、不下载歌曲；视频剪辑、语音转文字仍未实现。
 - 字体在 Web 使用本地 TTF `@font-face`，中文回退到授权中文字体/系统；Native 由 CoreText 注册。完整许可证与来源附仓库。
 - Settings 的 `little-days.language` 与用户记录分开，日期/数字采用当前 locale。Native 用 UserDefaults 对应偏好和共享翻译；两端偏好不会自动同步。
 - PNG 导出是静态画面，不包含可播放的视频/录音；与 DOM 的长文排版、照片边距等仍有差异。
@@ -188,3 +194,153 @@ LocalStorage 保存前比较已读快照，能提示已发生的旧标签页更�
 Windows 无 Git：下载仓库 ZIP，全部解压，进入含 Start-Windows.cmd、Public、tools、Packages 的目录，双击 Start-Windows.cmd。手动命令 `py -3 tools\preview.py --open`，地址 http://localhost:8080 。详见 [WINDOWS_PREVIEW.md](WINDOWS_PREVIEW.md)。
 
 Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 `Native/LittleDays.xcodeproj`。当前 Linux 验证不能替代 Windows CMD/Python Launcher、iOS SDK 构建、模拟器或真机。
+
+## 2026-11-09 提案：Quick Create v3 的技术增量（V6.3 已实施 P0 ①：exif.mjs、day-story.mjs、story 页面、timeline 封面；V6.5 Quick Create V2 见下）
+
+见 [QUICK_CREATE_PLAN.md](QUICK_CREATE_PLAN.md) §8。要点：不换技术栈、不重写；新增纯模块 `day-story.mjs`（按时间分组、选模板、封面时间线、装饰空位）和 `exif.mjs`（在 `imageBlob()` 缩图前读拍摄时间，因为 canvas 重新编码会丢 EXIF）；扩展 `smart-layout.mjs`（新模板、钉住图层当障碍物、文字量测）；数据只加可选字段（页面 `capturedAt` / `kit` / `alsoIn` / `habitId` / `fieldValues`，图层 `pinned`，封面 `layoutTemplate: "timeline"`），schemaVersion 不变、不迁移，自动封面只在封面为空时写入；原生 PhotoKit 桥接列为 P1。Vapor、IndexedDB 不变。
+
+## 2026-11-09 V6.5 Quick Create V2 · Scrapbook 排版引擎
+
+- `Public/js/scrapbook-layout.mjs`（纯函数，可单测）：`layoutMoment(input, style, variant)` 返回每个照片 / 视频图层的位置（x、y、w、h、旋转、相框、胶带）+ 生成的文字图层；`layoutDay(moments, style, variant)` 生成「当天跨页」（每个 Moment 一张代表照片，最多 4 个，其余显示「还有 N 个」）；`boundText(layer, page)` 读出绑定文字。
+- 三种风格是三套构图逻辑：editorial（主图 + 不对称 + 行排列，照片不重叠）、cozy（拍立得散落 / 宽松网格，倾斜、胶带）、playful（拼贴打包：每张与最近的一张相接、重叠 ≤ 12%，柔色背景）。相框高度按照片比例和相框内边距计算（`frameHeight`），所以不裁切；文字按字数估算行数（`textBlock` / `fitText`），自动缩小并预留空间；内容少时整体放到视觉中心。
+- 数据（全部可选，schemaVersion 不变）：页面 `layoutTemplate: "scrapbook"`、`layoutStyle`；图层 `gen`（引擎生成，重排时替换）、`bind`（"title" / "time"）、`of`（跨页上指向的 Moment id）、`excerpt`、`prefix`、`chip`。绑定文字在 canvas.mjs 和 export.mjs 里都从页面 / Moment 读取，所以预览、阅读、翻书、PDF、自由编辑改的是同一份文字；自由编辑里改绑定文字会写回 Moment 的 title。
+- 手动调整保护：拖动 / 缩放已有的 `layoutEdited` 标记；换风格时如有这样的页会先确认（取消 = 保留这些页），重新排版也会确认。旧页面（smart / timeline / text）照旧显示，不迁移。
+
+## 2026-11-09 V6.6 成长合并
+
+- features.json 的 growth tab 加 `"inNav": false`（Swift `NavigationTab.inNav` 可选），网页导航过滤掉它；页面 `growth` / `journey` 仍然存在，高亮在「书架」。
+- 状态新增可选 `plans: { [date]: [{ id, text, done }] }`（Swift `JournalState.plans: [String: [DayPlan]]?`），schemaVersion 不变；旧数据没有该字段照常读取。今日清单是读取 checks + plans 的派生视图，不写入页面图层（所以不会影响「当天跨页」只在封面为空时生成的规则）。
+
+## 2026-11-09 V6.7 照片互换 / 替换
+
+- 互换：Studio 拖动（mode "move"）时用指针位置找下面最上层的照片（`swapCandidate`），松手时 `swapPhotos`：A 放到 B 的中心与倾斜，B 放到 A 拖动前的位置，各自用 `fitPhoto(aspect, 对方框宽, 对方框高, 自己的相框)` 缩放（不裁切），并交换叠放顺序；进入撤销历史，标记 `layoutEdited`。
+- 替换：图层工具条「替换」走已有的 `replace` 上传；新照片保留位置，用 `fitPhoto` 在旧框内按新比例重算 w / h，记录 `aspect`。
+- 杂志：`boundText` 支持 `prefix: "kicker"`（时间 + 英文时段）；`layoutMoment` 接受 `folio`，`layoutDay` 接受 `issue`。`story-style.layerBox` 的文字高度按行数估算，装饰不再压到多行文字。
+- 我的相册（Quick Create）：`startQuickRecord` 先 `chooseAttachment({kind:"quick", book, date})`，`handleImageUpload` 收到照片后才 `startPage`；`#attachment-image-input` 的 `cancel` 事件只在来自面板时重开面板（`lastQuick.fromHome` 区分）。
+- 保存后 `showSavedPage()`：按 `activePage()` 的 bookId 与 moment id 在 `flipPages(book)` 里找到位置，切到 books / flip。
+- 首页 `todayPeekHTML(entry)`：封面（有内容时）+ 各 Moment，最多 12 张；滚动用捕获阶段的 document scroll 监听更新圆点。
+- 字体：Moment 也可有可选 `bodyFont`（Swift `JournalMoment.bodyFont`），正文渲染 / 导出读 `bodyFont || font`。
+
+## 2026-11-09 V6.8 首页 planner、更新记录
+
+- `todayListHTML()` 只渲染 planner（`plansOf` / `savePlans`，不再看 `labsOn`）和 `.today-habits-link`（`data-action="nav" data-page="growth"`）。
+- `newsSectionHTML()` 在设置渲染时读 `hasUnseen()` 再 `markSeen()`；首页齿轮 `.settings-gear .news-dot` 由 `hasUnseen()` 决定。`whatsNewCardHTML` 与 `whats-new-dismiss` 已移除。
+
+## 2026-11-09 V6.9 今日清单进导出
+
+- `dayListItems(date)`（app.js）= 当天打卡习惯的 `title` + 做完的 `plans`；翻书页、导出共用。
+- `renderJournalCanvas(page, { dayList, dayListTitle })` 有清单时返回加高的画布（`withDayList`）；`buildPdf` 每页 MediaBox 高度 = 432 × 图片高 / 图片宽。
+
+## 2026-11-09 V7.0 todayPeekHTML
+
+- 按页面顺序收集照片引用（backdrop、封面 photo、非 `gen` / 非手绘照片图层），用 Set 去重；每个引用一张卡，无照片但有文字的页面一张卡；`data-moment` 指向所在页。
+
+## 2026-11-09 V7.2 隐私开关
+
+- 本机键：`little-days.share-list`、`little-days.hide-today`（"1" 为开，缺省为关）；`privacyOn(name)` 在导出（`exportOptionsFor`、导出图片）与首页（`todayPeekHTML`）读取。不进入 `little-days.v1`，不需要 Swift 模型字段。
+
+## 2026-11-10 V7.4 App 锁
+
+- `Public/js/app-lock.mjs`：纯函数（SHA-256、makeLock / checkPin / readLock / saveLock / shouldRelock / pauseLeft）。本机键 `little-days.lock`（`{v:1, salt, hash, grace, biometric}`）、`little-days.lock-tries`。不进 `little-days.v1`、不进备份，因此不需要 Swift 模型字段。
+- 网页 ↔ iOS：`window.webkit.messageHandlers.littleDaysLock.postMessage({type:"unlock"|"state"})`；iOS 回调 `window.littleDaysBiometricResult(ok)`；启动时注入 `window.littleDaysBiometry = "faceID"|"touchID"|""`。Swift：`LittleDaysLockBridge`（LocalAuthentication）、`LittleDaysPrivacy`（App 切换器封面）。Info.plist：`NSFaceIDUsageDescription`。
+
+## 2026-11-10 V7.5 记录存储：IndexedDB 为主、LocalStorage 镜像
+
+- `little-days.v1` 的 JSON 存在 IndexedDB `little-days-meta` 数据库 `kv` 仓库（`MetaStore`，写入排队合并）。`Store` 每次保存：先写 LocalStorage 镜像（放得下时），再异步写 IndexedDB。启动：LocalStorage 有副本就用它，否则用 IndexedDB。LocalStorage 写满时删除镜像并设 `little-days.v1-mirror=off`。媒体仍在 `little-days-media`。
+- 本机键：`little-days.last-backup`、`little-days.backup-snooze`。
+
+## 2026-11-10 V7.6 搜索 / 回忆 / 提醒 / 标签
+
+- `Public/js/search.mjs`（纯函数，Node 测试）：`searchJournal(state, query)` → `{pages, books, total}`；`onThisDay(state, today)`。
+- 提醒：本机键 `little-days.reminder`；网页 → iOS：`littleDaysReminder.postMessage({type:"schedule"|"ready", …})`；iOS → 网页：`littleDaysReminderResult`、`littleDaysFromReminder`、`littleDaysReminderTurnedOff`。Swift `LittleDaysReminders`（UserNotifications，标识 `little-days.daily.0…13`，分类 `little-days.reminder`）。
+- 标签：`book.tags?: string[]`（JS `parseTags`，Swift `JournalBook.tags`）。
+
+## 2026-11-10 V7.7 Little Keeper
+
+- 模块分离：资料与偏好 `normalizeKeeper`（`state.keeper`，可选字段，Swift `KeeperProfile`）；外观与动画 `keeper-art.mjs` + styles.css；成长 `growthPoints` / `stageFor`（配置 `features.json.keeper`）；回应服务 `createFeedbackService({remote})` + `localFeedback`；聊天 `localChat`；页面集成在 app.js（首页、Studio、翻书页、书架、设置）。
+- 隐私：正文只在本机读取用来选词，不存储、不发送；`remote` 为 null；`aiConsent` 在没有安全服务时 UI 禁用，服务层没有同意绝不调用 remote（单元测试覆盖）；聊天内容不保存；回忆与本周标题需要 `allowMemories`。
+- 首页问候：`greetingHTML` 读 `account.name`（本机账号），点按设置名字（`Account.signIn` 更新）。
+
+## 2026-11-10 V7.9 Little Keeper 使用 3D 角色图片
+
+- 素材：`Resources/Keepers/*.png`（20 张）+ `LD-keeper-LICENSE.txt`；`library.json` 新增 `keepers: [{ id, animal, outfit, mood, file, license }]`（Swift `AssetCatalog.keepers: [KeeperAsset]?`）。服务：`tools/preview.py` 允许 `/library/keepers/`，`tools/build_link.py` 复制到 `library/keepers/`，iOS 外壳走 `SharedResources.libraryData(category: "keepers")`（只允许清单里的文件）。裁切脚本 `tools/extract_keepers.py`（原图不进仓库）。
+- `Public/js/keeper-art.mjs` 不再画 SVG：`keeperAsset(catalog, { animal, outfit, mood })` 选图（造型不存在 → 默认造型；表情按 `FALLBACK` 顺序只找现有图片），`keeperImage()` 输出 `<img class="keeper-img" src="library/keepers/…" data-animal data-outfit data-mood>`，`keeperOutfits()` 列出造型，`DEFAULT_OUTFIT` = 兔 sprout / 猫 lemon / 西高地 sprout。
+- `keeper.mjs`：`ANIMALS` 加 `westie`；`normalizeKeeper` 新增可选 `outfit`（小写字母，"" = 默认；Swift `KeeperProfile.outfit`）；默认名字 兔 小团 / Pip、猫 Captain、西高地 小白 / Snowy。换动物时清空造型。
+- app.js：`keeperArt(mood)` 外层仍是 `.keeper.mood-<mood>`（测试与旧选择器不变）；首页 `peek`（22–6 点 `sleepy`，长大那次 `happy`）；点按 `keeperBounce` 短暂换成 happy / excited 图 1.6s；设置里 `keeperOutfitHTML` 换帽子。CSS 只做位置、大小、整体呼吸 / 弹跳 / 倾斜，没有任何角色部件动画。
+
+## 2026-11-10 V8.0 Captain Keeper V1
+
+- 素材：`library.json` `keepers` 只剩 Captain 4 张（mood: normal / happy / sleepy / peek）；`tools/extract_captain.py` 生成（背景洪泛 + 暖色投影识别、最大连通块去装饰、2px 带内 α 估计与去色、小块浅色碎片清理）。
+- `keeper-art.mjs`：`FALLBACK` 只映射到这 4 张；未知动物 / 造型一律显示 Captain。`keeper.mjs`：`ANIMALS = ["cat"]`，`normalizeKeeper` 把旧的 bunny / westie 读成 cat（字段与 schema 不变；Swift `KeeperProfile` 不变）。
+- app.js：首页固定 Peek；默认不显示气泡（只有点按、成长一步、或互动 + 主动打招呼时）；点按后的一句话 `keeperLineLater()` 5 秒后淡出；`keeperBounce` 不再换图；新手引导只介绍 Captain（`.keeper-intro`），设置里去掉动物和帽子选择；书架夜间用 Sleepy。
+- 修复：聊天气泡 class 原为 `keeper-msg keeper`，与角色图片外层 `.keeper`（64px 宽、可旋转）同名，导致回复被压成 64px 宽；改为 `keeper-msg them`。
+- CSS：Peek 110px（= 原图分辨率），切线对齐卡片上沿、爪子压边 6px、两层 drop-shadow；气泡绝对定位；保存印章移到页面右上角空白处（原位置会挡住「打开这一天」）。
+
+## 2026-11-11 V10.6 富文本（部分文字的加粗 / 斜体 / 下划线 / 删除线）
+
+**审查结论**：此前所有文字都是普通字符串——页面的 `title` / `body`（Entry 与 Moment）、文本框图层的 `layer.text`，样式只有「整段」级别（`textStyle` / `bodyStyle` / 图层的 `fontId`、`fontSize`、`color`、`align`）。编辑用 `contenteditable="plaintext-only"`，每次输入读 `innerText` 写回模型；阅读与预览用 `canvas.mjs` 输出 `esc(text)`；导出用 `export.mjs` 的 `wrapText()` 逐字换行画到 Canvas。没有任何「片段」概念。
+
+**升级方案（已实现）**：文字仍然是原来的普通字符串，格式是旁边一份可选的范围表（marks），不改 schemaVersion。
+
+- 数据：`{ start, end, bold?, italic?, underline?, strike? }`，`start` / `end` 是 UTF-16 偏移（end 不含）——与 JS 字符串下标、Swift 的 `NSString` / `NSRange` 同一单位。字段：图层 `layer.marks`，页面 `titleMarks` / `bodyMarks`（Entry 与 Moment）。存储的列表已排序、不重叠、相邻同格式合并、不越界；没有格式就没有这个键。旧手帐没有这些键，读取与显示完全不变。
+- `Public/js/rich-text.mjs`（纯函数，Node 可测）：`normalizeMarks`、`toggleMark`、`applyLook`、`lookAt`、`textChange`、`editMarks`、`sliceMarks`、`runsOf`、`richHTML`、`readMarks`、`storeMarks`。
+- 渲染（一处实现，处处一致）：`canvas.mjs` 的 `rich(text, marks)` → 普通文字仍是裸文本节点，带格式的片段是 `<span class="rt rt-b rt-i rt-u rt-s" data-m="biux">`。编辑、预览、Day Detail、翻页、时间线都走 `canvasHTML`；`day-view.mjs` 的正文同样处理。绑定到 Moment 标题的文字图层用 `boundMarks()`（带时间前缀或被截短时不套格式）。
+- 编辑：仍是 `plaintext-only`（Chromium 里带格式的 span 会被保留，紧挨着打的字留在同一个 span 里）。`inlineInput()` 读回文字后用 `Rich.readMarks()` 从 DOM 的 span 取范围（只认我们自己的 `data-m`）；DOM 文字与 `innerText` 对不上时退回 `Rich.editMarks()`（按前后缀差异平移范围）。选区：`selectionchange` 记下纸上文字里的最后一次选区（`richSel`），B / I / U / S 用 `pointerdown` / `mousedown` 的 `preventDefault` 不抢焦点，应用后按偏移恢复选区。只有光标时记为「接下来输入的格式」（`typingLook`），在下一次输入的差异范围上精确套用并重画；输入法组合期间不重画，`compositionend` 后再套用。
+- 其他修改路径：`changeEditor()` 结束时 `reconcileMarks(改动前快照, editor)`——文字被普通输入框、模板、工具改动而 marks 没被同时改时，自动按差异平移；「转为自由文字框」把 `titleMarks` / `bodyMarks` 带到新的文本框。
+- 撤销 / 重做：格式变化经 `inlineChange()` 进入现有的页面历史，每点一次是一步。
+- 导出：`export.mjs` 的 `wrapRich()`——没有 marks 时直接调用原 `wrapText()`（旧页面逐像素不变）；有 marks 时逐片段量宽、换行、绘制，下划线 / 删除线用矩形画。
+- 粘贴 / 拖入：`paste` / `drop` 一律 `preventDefault`，只取 `text/plain` 用 `insertText` 插入；保存时也只从自己的 span 读格式，所以外来的字体、字号、颜色、链接、图片进不了数据。
+- 读取保护：`model.mjs` 的 `tidyMarks()` 在 `normalizeState` / `normalizeMoment` 里清理 marks（不合法的丢弃，文字不动，永不因此加载失败）。
+- Swift：`TextMark`（含 `nsRange(in:)`）；`StickerLayer.marks`、`JournalEntry` / `JournalMoment` 的 `titleMarks` / `bodyMarks`，全部可选；CoreTests 增加解码与范围断言（本环境无 Swift 工具链，未编译运行）。原生界面目前是 WKWebView 外壳，显示的就是 Web 这一份；将来做原生渲染时用同一份范围生成 `AttributedString`。
+- 字体：界面全局 `font-synthesis: none`；`.rt` 片段单独设为 `weight style`，所以没有粗体 / 斜体字形的字体（多数中文字体、手写体）由浏览器加粗 / 倾斜。中文没有真正的斜体，显示为倾斜。
+- 限制：一条绑定了时间前缀或被截短显示的标题不能做部分格式（按钮禁用）；颜色、字号、字体仍是整段级别；只在 Chromium 验证，Safari / WKWebView 的 `plaintext-only` 行为与选区保持未实测。
+
+## 2026-11-11 V10.7 草稿 / 已完成，与离开编辑器
+
+**审查结论**：编辑器编辑的对象是「一天」这条记录（`Entry`：日期容器 = 封面页 + 有序的 `moments`）。此前已有两处存放：`state.entries`（点过「完成」的记录）和 `state.drafts[date]`（编辑器的自动保存副本）。用返回离开时只写 `drafts`，所以同一天可能同时有「已保存的旧版本」和「没收好的新版本」，而且没有任何地方表示「这篇做没做完」。
+
+**状态归属**：Draft / Completed 属于整条记录（一天：封面 + 所有内页），不属于某一页或封面本身。封面不是一篇独立的手帐。
+
+- 数据：`Entry.status?: "draft" | "completed"`（可选；V10.7 之前保存的记录没有这个字段 = 已完成）。`model.mjs`：`saveEntry(state, entry, status = "completed")` 写入状态；`entryStatus(state, date)` → `"draft"`（`status === "draft"`，或只存在于 `drafts`）/ `"completed"` / `null`；`normalizeState` 丢弃其他取值。Swift：`JournalEntry.status: String?` 与 `isDraft`（未编译）。
+- 三个概念分开：**Saved** = 内容已写到本机（`draftState`: saved / saving / failed，自动保存，450ms 防抖，机制不变）；**Draft / Completed** = 记录状态（上面的字段）。顶部状态按钮同时显示两行。
+- 自动保存不变：编辑中仍写 `drafts[date]`（崩溃 / 被系统关闭时可恢复）。**离开时只留一份**：「完成手帐」和「保存草稿」都调用 `saveEntry()` 写入 `entries` 并删除 `drafts[date]`，区别只是 `status`。所以离开后各处（首页、日历、书本、搜索）看到的都是最新内容。
+- 离开流程（`studio-back`）：先把自动保存写完；失败 → 状态「保存失败」+ 原有的确认（保存不了时才会出现，避免把人困在编辑器里）。成功后：记录上什么都没有且从未保存过 → 删除空的自动保存副本并离开；已完成且本次没有改动（`studioTouched` 为假）→ 直接离开；其余 → `openExitSheet()`。
+- 「完成手帐」= 右上角「完成」：同一个 `save-entry` 动作（同一段代码），保存、标记 Completed、显示刚收好的那一页（或回到进入编辑前的阅读位置）。
+- 「保存草稿」（`studio-draft-exit`）：`saveEntry(…, "draft")`，记住离开时所在的页（`little-days.draft-page`，仅本机），回到进入编辑器之前的页面。保存抛错时：状态「保存失败」、提示、留在编辑器，不显示成功。
+- 「继续编辑」/ × / 下拉：只关闭面板，不重绘，纸面、选中项、光标不变。
+- 重新进入草稿（`draft-continue`）：`openStudio(date)` 后回到记住的那一页。
+- 标签：`draftTagHTML(date)`（首页故事卡片、书本页面列表、翻页页眉）与当天页面的 `.draft-banner.is-draft`。
+- 兼容：旧记录不迁移。只存在于 `drafts` 的旧日子（以前用返回离开、从未点「完成」）现在显示为草稿——这与它们的真实状态一致。
+
+## 2026-11-11 V10.8 Captain 轻装扮
+
+- 素材：`Resources/Keepers/LD-keeper-cat-yarn-happy.png`（tools/extract_captain_look.py 从 docs/brand/LD-captain-natural-yarn-original.png 抠出：按边缘拟合背景平面、去掉地面投影和装饰、保留毛线和线头；不重画）。`library.json`：`keepers` 增加 `cat-yarn-happy`（outfit `yarn`）；新增 `keeperLooks: [{ id, animal, kind: "hat" | "accessory", nameZh, nameEn, noteZh?, noteEn? }]`。Swift：`KeeperLook`、`AssetCatalog.keeperLooks`（可选，未编译）。
+- `keeper-art.mjs`：`keeperLooks(catalog, animal, language)` 只返回「有图片的」造型（帽子在前）；`keeperAsset()` 原有回退不变——造型缺某个表情时用该造型的其他图片，不存在的造型用默认。
+- 数据：沿用已有的 `keeper.outfit`（V7.9 加入，小写字母；`""` = 默认），没有新字段。
+- app.js：`keeperLooksHTML()`（面板「装扮」视图与设置面板共用）、动作 `keeper-look`、面板视图 `looks`、头部链接 `.kp-look-link`。
+- 没有任何游戏化状态（无货币、无解锁表、无计数）。
+
+## 2026-11-11 V10.11 全屏 Book Reader
+
+- 新模块 `Public/js/reader.mjs`（纯函数）：`keyOf()`（页面身份 `日期|momentId`，封面为 `cover`）、`positionOf()`（找不到时落到同一天 / 之前最近的一页 / 封面）、`positionLabel()`、`firstPageOf()`、阅读进度 `loadPositions` / `savePosition` / `savedPosition`（localStorage `little-days.reader-pos`，不进手帐数据、不进备份、不进 Swift 模型；将来原生端可用 UserDefaults 存同样的键值）。
+- app.js：新页面 `page === "reader"`（`readerHTML()`），状态 `readerBook` / `flipIndex`（0 = 封面）/ `readerChrome` / `readerZoom`；`#phone.in-reader` 隐藏底部导航。书页用 `sharedCanvasHTML(page, ctx, { readOnly: true })`，保留 `.flip-page` / `.flip-canvas` / `.flip-head` / `.flip-nav` / `.flip-edit` / `data-flip-stage` 作为旧测试的钩子。
+- 手势：文档级 pointer 事件（单指：方向判定 10px、横向 > 纵向 1.4 倍；双指：缩放）；拖动 / 缩放后 350ms 内拦截 click，避免误触。照片查看器复用 `#lightbox`，加 `.zoomable` 的缩放与拖动。
+- 媒体 scope `reader`（与 `studio`、`day` 并列）：`afterReaderRender()` 载入当前页与前后页的音视频；离开阅读器时 `releaseLeftScope()` 释放。
+- 背景音乐：`syncMusic()` 对 `book:<id>` 上下文默认静音，`musicAsked` 记录用户主动请求过的书；`toggleMusic()`、阅读器 ♪、为书选曲会设置它。
+- 编辑往返：`readReturn = { page: "reader", book, key }`，`returnToReading()` → `openReader(book, key)`；`showSavedPage()` 与今日故事完成 → `openReader(book, keyOf(那一页))`。
+- 移除：书本详情页的「列表 / 翻页」切换、内嵌翻页 `flipBookHTML()`、`little-days.book-view`（旧值留在浏览器里，不再读取）。
+
+## 2026-11-11 V10.12 选中框、手势与引导
+
+- 选中框画在纸张上方，在 `#canvas-wrap` 内（`selFrameHTML` / `placeLayerBar`），不放在图层内。位置由 `selGeometry()` 计算：模型里的 x/y 百分比乘以画布尺寸；`offsetWidth/offsetHeight × scale` 得到大小；`rotation` 得到角度。手柄位置在框的自身坐标里由 `selHandleSpots()` 选定。框在 `render`、`updateCanvas`、`paintLayer`、选中和窗口大小变化后重新定位。
+- 指针事件：`#app` 上的 pointerdown 先判断是否按在 `#sel-frame [data-handle]` 上（进入缩放或旋转）。按在图层上一律进入移动，并且要超过 `DRAG_SLOP` 才开始移动。`commitGesture` 判断点按：同一文字框上的第二次点按就是双击，在 pointerup 里调用 `editTextLayer`，属于用户手势，iOS 可以弹出键盘。缩放用 `localVector()` 把指针位置换算到图层自身坐标。编辑中的文字（contenteditable）不经过这些处理，交给浏览器原生光标和选择。
+- 引导：`Public/js/studio-guide.mjs` 只放纯函数，负责步骤、目标、文案选择和是否自动打开，并读写本机偏好 `little-days.studio-guide`。界面在 app.js，是 `#phone` 下的 `#studio-guide`（`pointer-events:none`，只有卡片可以点），每次 `render` 后重新定位；离开编辑器时算作跳过。这项偏好不在手帐 store、备份或 Swift 模型里。
+- 打字时的颜色：工具条第二行末尾 `.type-color-now`，点它给工具条加上 `.show-colors`，第二行换成色块，工具条高度不变。
+
+
+## 2026-11-11 V10.13 可选的本地 AI 提供者（仅开发）
+
+- 流程：Captain 面板 → `keeper-chat.mjs` 的 `understand()` → 功能请求走规则；聊天且 `CaptainAI.devSettings()` 返回本机设置时，调用 `askLocalModel()` → `createLocalProvider().reply()` → `POST 127.0.0.1:11434/api/chat`（Ollama）→ `cleanReply` → 作为一行聊天显示（`local: true`，带标签）。出错或超时时调用 `keeperReply()`，用规则回复。
+- 启用条件：本机偏好 `little-days.dev.local-ai = { on, endpoint, model }`，并且页面地址和模型地址都是 localhost 或 127.0.0.1。在线链接和 iPhone 外壳的地址都不是本机，所以永远不会启用。
+- 发送内容：系统提示词（包含 Captain 的名字和当前装扮名）、最近最多 6 行聊天（只含用户打的字和之前的模型回复）、新的一句。不发送手帐数据。
+- 开发工具：`tools/mac/doctor.sh`（只读检查）、`tools/mac/dev.sh`（预览、模拟器、评测、测试、停止）、`tools/captain-eval.mjs`（与 App 共用提示词和参数）。

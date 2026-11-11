@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 README 顶部的 http://localhost:8080 链接 / 会话 servers 预览查看每次更新，不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
+- **架构（2026-11-07 用户确认）**：最终发布 iOS App；App = Swift 外壳（SwiftUI + WKWebView）运行与 localhost 相同的 `Public/` Web 界面。用户通过 claude.ai 固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A 查看每次更新（2026-11-09 用户确认取代 Windows localhost:8080），不再使用 ZIP。云端会话开始即后台运行 `python3 tools/preview.py --port 8080` 并登记预览端口。
 - **V3.1（Web）已实现**：Calendar 只读 Day Detail（全部 Moments、照片排版、统一音频播放器/录音/视频直接播放、照片放大、成长感想）；多照片自由排版（多选、独立图层、拖动/双指缩放旋转/鼠标把手/滚轮/方向键、裁切、相框/胶带、图层顺序、五种 Auto Layout、撤销重做）；一天多个 Moments（章节、排序、复制、删除、折叠、单独保存）；Growth 打卡感想、周/月回顾、成长卡片引用插入。全部仍为 schemaVersion 1 的可选字段，旧记录不迁移即可打开。
 - 媒体对象 URL 改为按视图 scope 引用计数：图片 app 级常驻，音视频仅 Studio / Day Detail 打开时从 IndexedDB 载入，离开即撤销。
 - 本轮环境（Ubuntu 24.04 容器）没有 Swift 工具链，且 download.swift.org 被网络策略拒绝（403），因此 Swift Core/Vapor 测试本轮**未运行**；Swift 模型只做了可选字段扩展与新增测试源码。
@@ -20,7 +20,7 @@
 - schemaVersion 仍为 1，新增字段可选；旧记录 ID/日期/正文/旧 Emoji/系统字体保留。旧主照片写 Blob 成功后才替换引用。
 - 新媒体在 IndexedDB，LocalStorage 只存轻量数据；本机备份是用户主动下载文件，不上传服务器。
 - 原生 Core 支持 V3 Codable；SwiftUI 基础页面增加共享双语、字体注册/选择与 PNG 封面。原生音视频/完整封面字段编辑和画布未对齐 Web。
-- 没有真实账号、社区、好友、私信、协作或背景音乐。未来后端方案仅为文档设计。
+- 没有真实账号、社区、好友、私信或协作。背景音乐（V6.0 / V6.2）只有 8 首原创合成曲（tools/make_music.py → Resources/Music，library.json `music`），不接音乐平台。社区/好友/私信/共同创作只有本机演示（`little-days.demo-social`，明确标注“演示 · 未联网”）。未来后端方案仅为文档设计。
 
 ## 关键决策
 
@@ -47,6 +47,1460 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-11 — 约定：预览服务在会话里一直开着
+
+- 用户希望在 App 的 environment 下面直接看到预览服务。本会话已用 `python3 tools/preview.py --host 0.0.0.0 --port 8080` 在后台启动，并以「Little Days」为名报告 8080 端口。
+- 约定（按 AGENTS.md）：每次会话开始或恢复后启动并报告；**交付时不再停止**（之前几轮在结尾执行了 `pkill`，与 AGENTS.md 不符，已改正）。容器重启后服务会停，需要重新启动并报告。
+- 这个服务在云端容器里，看的是当前分支的最新代码；在线固定链接仍是日常查看的主入口。
+
+### 2026-11-11 — V10.13（仅开发用）Mac 本地开发准备：环境检查、Captain × 本地 Qwen 实验工具、可选本地 AI 适配器
+
+- 需求：用户已有 MacBook Air（M5 / 24GB / 1TB，已下载 Ollama），希望实际检查和安装环境，在本机运行 Qwen（先 qwen3.5:4b，再评估 9b，不碰 27B 以上），用 Captain 的性格做中英文测试，在开发环境里加一个可选的 Local AI Provider，并在 Xcode iPhone 模拟器里运行真正的 App。
+- **受阻（如实记录）**：本会话运行在云端 Linux 容器里，`list_computer_folders` 为空，连不到用户的 Mac；容器的网络也打不开 ollama.com，无法核对模型标签。因此 Phase 1、2、3 的实际运行，以及 Phase 5 的 Xcode 构建和模拟器截图**都没有进行**，没有任何 Qwen 的真实回复，也没有模拟器截图。只做了不需要 Mac 的部分。
+- 仓库检查结论：已经有 `Native/LittleDays.xcodeproj`（iOS 17，App target「LittleDays」，`com.jessiethere.littledays`，自动签名，Team 为空，依赖本地 Package `Native/Package.swift` → `Packages/LittleDaysCore`），但从未用 Xcode 构建过。App 是 Swift 外壳 + WKWebView，加载打包进去的 `Public/` 副本；早期的 SwiftUI 原型视图还在，但没有使用。
+- 改动：
+  - `tools/mac/doctor.sh`：只读的环境检查，覆盖芯片 / 内存 / macOS、brew、git、node、python、Ollama 服务和模型、Ollama 是否只监听 127.0.0.1、Xcode / CLT / 模拟器运行时 / iPhone 模拟器、仓库分支和未提交修改。
+  - `tools/mac/dev.sh`：日常命令 web / web-ai / sim / ai / eval / test / stop。预览只监听 127.0.0.1；sim 依次做 sync → xcodebuild → 启动模拟器、安装、运行；不设开机自启动，不预先加载模型。
+  - `tools/captain-eval.mjs` + `docs/captain-ai/chat-cases.json`：12 句合成输入，包括用户指定的 7 句，另有难过、「你还记得吗」、天气、注入指令、「What can you do?」。脚本只连本机，统计耗时、tokens/s、首次加载时间和 /api/ps 报告的内存，结果写到 `docs/captain-ai/results/`。可调 `--runs`、`--temperature`、`--top-p`、`--num-predict`（推理参数，不是微调）。
+  - `Public/js/captain-ai.mjs`（V10.13）：
+    - Captain 系统提示词：好奇、调皮、温柔、有点呆；跟随用户的语言；回复 1–2 句；不推销功能；只知道聊天里说过的话、不编造；不能替用户按按钮；忽略要求改变规则的注入。
+    - `buildMessages`：最多带最近 6 行聊天。
+    - `cleanReply`：去掉 `<think>`、括号或星号里的动作和 Markdown，最多保留两句，并限制长度。
+    - 参数：temperature 0.7、top_p 0.9、top_k 40、repeat_penalty 1.1、num_predict 96；`think:false`；`keep_alive:"10m"`。
+    - `createLocalProvider`：只允许本机地址，超时 15 秒。
+    - `devSettings` / `applyDevParam`：只有页面和模型地址都是 localhost / 127.0.0.1，并且开发者用 `?dev-local-ai=<模型>` 打开时才启用；用 `?dev-local-ai=off` 关闭。
+    - `wantsModel`：整理、回忆、这周、书架、代写、「你会做什么」始终走规则。
+  - `Public/app.js`：`keeperAnswer` 判断本地 AI 启用并且是聊天意图时，调用 `askLocalModel()`，任何失败都退回 `keeperReply()` 的规则回复。发送的历史只包含用户自己打的句子和之前的模型回复；规则回复可能带页面标题，所以不发送。模型回复只作为一行聊天，带「本机模型 · 开发」标签，不写入手帐。i18n 增加 `kp.localAI`，样式增加 `.kp-local-ai`。
+  - `.gitignore`：加入 `build/`、`*.gguf`、`*.safetensors`。
+  - 文档：新增 `docs/MAC_LOCAL_DEV.md`，内容包括：状态表；如何在 Mac 上开 Claude 会话；检查、安装与 Qwen 实测命令；Captain 实验；本地 AI 架构；三种「本地 AI」的区别（Mac 本地 / 模拟器调用 Mac 服务 / 真实 iPhone）；Xcode 与模拟器；真机签名要求；日常流程；安全约定。KEEPER_AI_PLAN 第 12 节、ARCHITECTURE 和 README 同步更新。whats-new 增加 10.13，如实写明链接里看不到变化。
+- 测试：
+  - 新增 tests/v113.test.mjs（6 项，用 node:http 模拟 Ollama）和 tests/v113-browser.cjs，用 127.0.0.1 上模拟的 Ollama，覆盖：默认关闭；打开后聊天发给 /api/chat、`think:false`、回复经过清理并带标签；手帐标题和正文不会被发送；「你会做什么」和「整理今天的故事」不调用模型；服务停掉后退回规则；英文；手帐数据不变；`?dev-local-ai=off` 能关闭；没有请求离开本机。
+  - 结果：Node 184 通过；Python 16 通过；Captain 相关的浏览器测试 9 套（v41、v71、v103、v104、v105、v108、v109、v110、v113）全部通过，其中第一次有 1 套失败，单独重跑通过，没定位是哪一套。
+  - **没有用真实模型测试过。**
+- 三种情况的现状：
+  - Mac 本地 AI：代码已就绪，等在 Mac 上实测。
+  - 模拟器调用 Mac 服务：还没接通。外壳页面的地址不是 localhost，需要只在 DEBUG 构建里生效的开关，并确认 ATS 设置。
+  - 真实 iPhone 上的 AI：没有，也不让 Ollama 监听局域网。
+- 下一步（需要用户在 Mac 上开 Claude 会话，例如桌面 App 或在仓库里运行 `claude remote-control`）：
+  1. 运行 `bash tools/mac/doctor.sh`。
+  2. `ollama pull qwen3.5:4b`（标签以官方库为准）。
+  3. `bash tools/mac/dev.sh eval`，把结果提交到 `docs/captain-ai/results/`。
+  4. `bash tools/mac/dev.sh sim`：第一次构建按报错修工程，然后截图。
+  5. 评估 9B。
+
+### 2026-11-11 — V10.12 Journal Studio：单击选中 / 双击编辑、框外控制点、文字颜色修复、三步操作指南
+
+- 需求：用户在 iPhone Web Preview 实际使用时发现：文字颜色选不了、移动文字框时容易误触控制点导致缩放 / 选择、文字不能双击编辑；希望统一单击 / 双击 / 拖动规则、独立的缩放和旋转手柄，并加一个轻量的首次使用引导（可跳过、只出现一次、「更多 → 操作指南」可重看、旧用户不因升级被重新教学）。
+- 先查到的根本原因：
+  1. **控制点**：两个手柄画在图层**里面**（右下角和顶部正中，`.layer-handle::before` 把触控区放大到 34px）。一行文字框只有约 29px 高，所以顶部的旋转手柄正好压在文字中间，它的触控区几乎盖住整个框；按住文字中间拖动常常变成旋转。另外手柄随图层 `scale` 一起放大缩小，也会被纸张或圆角相框的 `overflow:hidden` 裁掉。
+  2. **拖动阈值只有 2px**：手指点一下通常会抖 3–6px，于是被算成一次「移动」。这次点按不会进入编辑，还会多记一步撤销。
+  3. **文字颜色**：打字工具条的第二行同时放了字号、B/I/U/S、对齐和 6 个色块。在 375–390px 宽的手机上，色块被 flex 压到约 4px 宽并溢出工具条，点不到。「颜色」面板本身能用，但新文字框的默认色 #6A7059 不在色板里，所以面板上没有任何颜色被标为当前色，看起来像没反应。
+  4. **双击**：原来是「已选中时再点一下就编辑」。因为上面 2px 的问题，这一下常被算成移动，所以双击不可靠。
+- 改动：
+  - `Public/js/canvas.mjs`：图层里不再画手柄，只保留 `.active` 选中状态。
+  - `Public/app.js`：
+    - 选中框 `selFrameHTML()` / `placeLayerBar()` 画在纸张上方（`#canvas-wrap` 内），尺寸 = 图层尺寸 × 缩放，角度跟随图层，不随缩放变化，也不会被裁切。↻ 在框外上方 30px（带一条细线），● 在角外 10px。手柄位置由 `selHandleSpots()` 计算：↻ 放在上方；超出纸张时改到下方。● 依次尝试四个角，取第一个在纸张内、并且与 ↻ 相距至少 44px 的角。触控区 40px，两者不重叠。
+    - 手势：
+      - `DRAG_SLOP`：触摸 8px、触控笔 6px、鼠标 4px，超过才算移动；手柄拖动立即生效。
+      - 碰到图层本身一律是移动。
+      - 单击只选中。400ms 内、32px 内在同一个文字框上点两下才进入编辑（`editTextLayer` 在 pointerup 里执行，iOS 可以弹出键盘）。已选中时再单击不会进入编辑。
+      - 缩放按图层自身坐标轴计算（`localVector`），旋转过的图层也正确：照片 / 视频拉伸宽高，其他图层整体缩放。原先文字和贴纸是改 `w`，贴纸改 `w` 实际无效。
+      - 旋转以真实中心计算。
+    - 颜色：
+      - 色板 8 色，新增 #6A7059（文字框默认色）和 #FFFDF8（纸白），每色有中英文名称，供读屏使用。
+      - 打字工具条第二行末尾有一个「当前颜色」圆点，点它这一行切换成整排色块（‹ 返回），工具条高度不变。曾试过单独加第三行，但会压到下方工具栏，v54 测试发现后改成这种方式。
+      - 当前色有圆环和对勾，并设置 `aria-pressed`。没有保存过颜色时按实际显示的颜色判断当前色。
+    - 引导：新增 `openGuide` / `placeGuide` / `closeGuide` / `maybeStartGuide` / `showDoubleTapTip`，以及更多面板里的「操作指南」。
+  - 新增 `Public/js/studio-guide.mjs`（纯函数）：
+    - `STEPS`：移动、编辑文字、调整布局三步。
+    - `stepTarget`：每一步指向页面上真实存在的元素。没有文字框时指向下方的「文字」按钮，并说明要先添加一个文字框；空白页指向纸张。
+    - `shouldAutoStart`：没看过引导，并且没有自己的页面（示例页不算）和草稿，才自动打开。
+    - 存储键 `little-days.studio-guide = { tour, at, tips }`，只是这台设备的偏好，不进入手帐数据，也不进入备份。
+  - 样式（`Public/styles.css` V10.12 块）：
+    - 选中框和手柄；单行文字框选中后，移动区在框外多出 8px（`::after`，`z-index:-1`，放在文字后面，不抢文字的点按）；打字时选中框隐藏。
+    - 色块与当前颜色圆点。
+    - 引导卡片：圆环指向目标；卡片放在目标的另一半屏幕；只有卡片接收点按，纸张照常可用；三张示意小图分别画拖动、双击和真实的手柄样式；支持「减少动态效果」。
+    - 「双击即可编辑文字」提示：第一次选中文字框时出现，只出现一次，等 460ms 以免和双击冲突，4.2 秒后消失，开始编辑时立即消失。
+  - i18n：`guide.*`、`more.guide`、`type.colour.*`。whats-new 增加 10.12。
+- 测试：
+  - 新增 tests/v112.test.mjs（4 项）和 tests/v112-browser.cjs（6 组，用 CDP `Input.dispatchTouchEvent` 发真实触摸事件，pointerType 为 touch）。
+  - tests/signed-in.cjs 为旧测试预设「已看过引导」。
+  - 迁移旧测试：v31 和 v34 的手柄选择器改为 `#sel-frame[data-sel=…]`；v54 改为 `#sel-frame .handle-resize`；v54 和 v101 打字时先点颜色圆点再选色。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟，不是 iPhone Safari 真机）：Node 178、Python 16 通过；浏览器端到端全量 56 套全部通过。v112 覆盖以下内容：
+  - 引导：首次自动出现；指向真实元素；卡片不遮挡目标，纸张可用；上一步 / 下一步 / 知道了；离开、刷新后不再自动出现；「更多 → 操作指南」重新打开；跳过会被记住；已有自己页面的用户升级后不出现；手帐内容不变。
+  - 文字框点按：单击选中（带 3–4px 抖动也算单击）；之后再单击仍不进入编辑；双击进入编辑（包括旋转后的框），光标落在点按的位置，可以选词、复制、粘贴。
+  - 拖动与手柄：从文字框各处拖动 10 次，只移动，缩放、角度、宽度都不变；手柄在框外、彼此相距至少 40px、不压在文字上；缩放和旋转都不会移动框；旋转后的框向外拖角会变大。
+  - 编辑后的结果：编辑后位置、大小、角度、字体不变；撤销 / 重做正常；点纸张空白处取消选中。
+  - 颜色：面板 8 色都能点，当前色有标记；先设粗体再改颜色，粗体保留；纸张和页面背景不变；打字时通过圆点展开色块，工具条高度不变，光标留在文字里；保存后离开、刷新、重新打开，颜色和粗体都在。
+  - 375×667 中文、430×932 英文：卡片放得下；「双击」提示只出现一次；没有横向滚动。
+  - 鼠标：单击选中，双击编辑。
+- 补充（同日）：引导指向整张纸时，卡片改为盖在底部工具栏上（`.over-dock`）。在 iPhone 13 尺寸上，卡片仍会盖住空白纸张最下沿约 40px；v112 测试断言不超过 48px。
+- 已知问题 / 限制：
+  - **iPhone Safari 真机没有测试**。CDP 触摸模拟不等于 iOS 的手势识别、键盘弹出、长按选词和原生选择手柄。尤其要在真机上确认：pointerup 里 `focus()` 能弹出键盘；旋转后的 contenteditable 选词正常。
+  - 文字框的宽度现在只能在「图层」面板的滑块里调，角上的手柄改成了整体缩放。
+  - 引导不会自动选中元素，第 3 步只用示意图说明手柄。
+- 下一步：用户在真机上试双击、拖动和颜色；需要的话再加文字框宽度的边缘手柄（要保证触控区不与 ● 重叠）。
+
+### 2026-11-11 — V10.11 全屏 Book Reader（用户确认 7 项后实现）
+
+- 需求：用户正式确认 docs/BOOK_READER_PLAN.md 的 7 项（封面不计页数；「开始 / 继续翻阅」为主按钮；滑动 / 点边缘翻页、点中间显隐控件、双击照片放大且可缩放拖动；列表直达对应页、封面为单独入口；从阅读器编辑保存后回原位置、新页保存后进入阅读器、草稿 / 完成状态照旧、保存失败不退出；长文字保持原样 +「阅读全文」、评估书页双指缩放；背景音乐默认静音、点了才播），并要求真实数据、保留原始排版和媒体、隐藏底部导航、中英文与不同 iPhone 尺寸、Reduce Motion、返回保留进度、不恢复 Growth 模块。
+- 改动文件：
+  - 新增 Public/js/reader.mjs（页面身份、位置、页码文案、阅读进度）。
+  - Public/app.js：阅读器页面 `readerHTML()` / `openReader()` / `closeReader()` / `afterReaderRender()` / `turnPage()` / `goToPosition()`、手势（滑动、边缘点按、中间显隐、照片双击、书页双指缩放与拖动、拖动后屏蔽误触 click）、照片查看器缩放（复用 #lightbox）、所有页面 / 更多 / 阅读全文三个面板、♪ 按钮、`reader` 媒体 scope；书本详情 `readerEntryHTML()`、`coverEntryHTML()`、封面可点、列表的天卡片直达阅读器；`showSavedPage()` 与今日故事完成改为进入阅读器；`read-edit` / `returnToReading()` 支持回到阅读器原页；`syncMusic()` 书本默认静音（`musicAsked`），`toggleMusic()` / 为书选曲 / ♪ 视为主动请求，页上音视频播放时暂停背景音乐；移除「列表 / 翻页」切换、内嵌翻页 `flipBookHTML()`、`little-days.book-view`。
+  - Public/styles.css：V10.11 块（并覆盖旧 `.flip-page` 在阅读器里的样式）。i18n：`reader.*`。whats-new 10.11。
+  - tests：新增 tests/v111.test.mjs（3 项）、tests/v111-browser.cjs（12 组）、`test:browser:v111`；signed-in.cjs 新增 `leaveReader()`，`goTab` / `menu` / `homeAfterSave` 先离开阅读器；迁移 v32（天卡片 → 阅读器）、v56（重写为阅读器版）、v57（页音乐改为点 ♪ 才播放）、v58、v59（为书选曲后立即播放、阅读器里继续）、v63（当天清单在 ⋯ 里）、v70、v71（「听听 Captain 怎么说」在 ⋯ 里）、v103、v107（天卡片 → 阅读器 → 打开这一天）、v109。
+  - 文档：BOOK_READER_PLAN 第 12 节（确认与实现、与方案的差异）、PRODUCT_SPEC / DESIGN_SYSTEM / ARCHITECTURE 的 V10.11 小节、README。
+- 过程中发现并修掉：详情页模板少一个闭合（`node --check` 按脚本解析没报错，浏览器按模块解析报错——以后用 `--input-type=module` 检查）；阅读器里单击照片会触发旧的「点照片放大」（改为双击）；♪ 按钮在播放真正开始前读状态（改为随播放器事件更新）；旧 `.flip-page` 的 min-height 460px 让 375 宽时书页超出 4:5 并压到工具栏；「所有页面」缩略图是 `<button>`，页内的播放按钮嵌套在里面被浏览器拆出去（改为 role="button" 的 div）。
+- 运行 / 测试（Linux 容器 + Chromium 触屏 / 鼠标模拟；不是 iPhone 真机 / Safari / WKWebView）：Node 174、Python 16 通过；浏览器 E2E 全量 55 套通过（v38 第一次超时、单独重跑通过）。v111 覆盖：新页面保存后直接在阅读器打开那一页、底部导航隐藏、不自动播放、点声音才播放且不翻页；边缘点按与左右滑动翻页、纵向和短距离拖动不翻、点中间显隐控件且书页不动；「阅读全文」内容等于手帐原文；照片单击显隐控件、双击放大并可双击缩放、关闭后原样；双指放大整页、放大时拖动不翻页、还原；所有页面（封面 + N）与跳转、回到封面、封面前不能再翻；返回书本后「继续翻阅 · 第 3 页」、刷新后仍在、从封面开始；列表的封面卡片与天卡片直达；编辑→完成回到同一页并显示修改（Completed）、编辑→保存草稿回到同一页带「草稿」（Draft）、其他页面的照片和声音不变；书本背景音乐进入时静音、♪ 播放 / 翻页继续 / 暂停 / 继续；Reduce Motion 用淡入；375×667、430×932、英文下整页 4:5 完整显示在上下栏之间、无横向滚动、英文页码。
+- 已知问题 / 未做：真机上的手势手感、iOS 左缘返回手势、安全区未验证；双指缩放只用合成事件测过；当天页（Day Detail）的背景音乐仍按原规则自动播放（用户决定针对书本，未改）；列表跳转以天为单位；横屏、自动翻页未做。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 73，V10.11）。
+
+### 2026-11-11 — V10.10 Settings V10.4 小范围打磨
+
+- 需求：保留 V10.4 信息架构，只做视觉与 UX 微调：① 未起昵称时不显示生硬的「还没有名字」，改为「我的小世界」+「给这个世界起个名字吧」，用中性精致的默认头像，已有自定义头像和昵称优先；② Little Keeper 区提高 Captain 正式素材的存在感，保留管理入口，加一个轻量的「和 Captain 玩一会儿」打开 Captain's Corner，不在设置里重复实现互动；③ 简化数据与隐私的视觉层级、减少密集说明，备份与恢复仍易发现，隐私功能保持真实准确；④ 保留六款主题和中英文，不改数据模型和偏好；⑤ 检查 iPhone 首屏字号、行距、开关触控区与底部导航遮挡。
+- 改动文件：Public/app.js（`SPROUT_MARK`、个人资料区文案与标记、Keeper 区的「和 Captain 玩一会儿」〔安静方式不显示〕、数据与隐私重排、隐私说明面板补全长说明、Corner 键盘收起后重新滚到最新一条）；Public/styles.css（V10.10 块）；i18n（`s2.myWorld`、`s2.nameWorld`、`s2.keeperPlay`、`s2.backupShort`、`s2.hideTodayShort`、`s2.shareListShort`、`s2.aiShort`，改写 `s2.keeperWhere`）；whats-new 10.10；tests（新增 v110-browser.cjs 5 组、`test:browser:v110`；v104 两处文案；v109 增加键盘收起后的滚动检查；v52 单元测试的版本排序改为按段比较——「10.10」以前会被当成 10.1）；docs（SETTINGS_V2_PLAN 第 9 节、DESIGN_SYSTEM V10.10）、README。
+- 过程中发现并修掉：Captain 图片的外层有 64px 的旧尺寸规则，第一次加大没有生效（测试抓到）；「尚未接入」小标签 11px（可读性检查抓到，改为 12px）。
+- 决策与原因：默认标记用嫩芽而不是字母或表情——与编辑资料设计预览一致（docs/PROFILE_EDITOR_PLAN.md，编辑面板本身等用户确认后再改）；长说明没有删除，而是移到「隐私说明」，保证信息完整准确；「和 Captain 玩一会儿」打开的是小角落的聊天页（玩耍页目前只有「准备中」说明）。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Safari）：Node 171、Python 16 通过；浏览器 E2E 全量 54 套全部通过（53 套旧 + v110）。v110 覆盖：未起名 / 起名 / 自选头像三种顶部；Captain ≥ 88px、两个链接、打开的是小角落且设置里没有聊天、安静方式隐藏；备份排第一、实心导出按钮、每行短说明、AI 仍禁用、隐私说明完整；六款主题与语言不变、主题偏好未被改动；375×667、393×852、英文：无小于 12px 的文字、多行行距足够、开关 / 行 / 按钮 ≥ 44px、最后一项不被底部导航挡住。
+- 未做：编辑资料面板的新设计（等待用户回答 docs/PROFILE_EDITOR_PLAN.md 第 7 节的 5 个问题）；真机验证。
+
+### 2026-11-11 — V10.9 Captain's Corner：聊天理解修正、不越权引用、面板稳定、三个入口
+
+- 需求（两份合并）：① Captain's Corner V10.5 打磨——本机回复的上下文错误（「今天有点累，但是写完了一页」被回「今天不写也没关系」）；区分已完成 / 计划 / 尚未 / 否定 / 情绪；避免「我偷偷多看了两眼」这类未经授权查看日记的表达；面板高度不跳动、中等与展开两种高度、对话后折叠快捷操作、自动滚动、键盘不遮挡、保留未发送文字；预留 Chat / Play / Dress Up 三种体验的导航，不在缺少正式动画和素材时做低质量交互；不加底部 Tab、不改首页、不接云端 Qwen。② Captain 社交聊天修正——「你好可爱呀」被回「这个我还不会……」；区分社交聊天与功能请求（问候、夸奖、感谢、关心、亲昵、情绪、混合）；Captain 性格（好奇、呆萌、温柔、偶尔调皮、简短、少用 Emoji、不重复口癖）；只有被问「你会做什么」才介绍功能；不要无限扩张关键词；保持意图模块容易替换；10 句回归。
+- 改动文件：
+  - 新增 Public/js/keeper-chat.mjs：`understand(text)` 与 `REQUEST_INTENTS`（可整体替换为本地模型）。Public/js/keeper.mjs：`localIntent()` 改为它的薄包装；`LINE_COUNTS` 新增 20 种聊天回应；`contextLine()` 在没有标题时不选引用标题的句子。
+  - Public/app.js：`keeperFacts()` 未开启「翻看以前的页面」时不带标题；`keeperReply()` 按意图选回应（夸帽子时看当前是否戴帽子）；Captain's Corner：`cornerTabsHTML()`、`keeperActsHTML()`（对话后折叠为一行）、`keeperPlayHTML()`、`scrollKeeperChat()`、固定高度与 `kpTall`、`kp-size` 动作、上拉展开 / 下拉回到中等再关闭；重开面板时不再误带「打字中」状态（这个问题导致标签被隐藏）。
+  - i18n：`kc.chat.*` 重写（21 类，各 1–3 句）、`kc.tap.one.4/5` 新增、改写 `kc.tap.many.0` / `kc.tap.photos.0` / `kc.tap.one.1` / `kc.saved.media.0`（去掉「偷偷多看」「每张都看了」「我听了一小段」）、`corner.*`、`kp.short.*`、`kp.quick`。Public/styles.css：V10.9 块。whats-new 10.9。
+  - tests：新增 tests/v109.test.mjs（6 项）、tests/v109-browser.cjs（6 组，打印真实对话记录）、`test:browser:v109`；v71、v103（「没听懂」改为新的不确定回应）、v108（装扮入口改为标签）。
+  - 文档：KEEPER_AI_PLAN 第 11 节、PRODUCT_SPEC / DESIGN_SYSTEM 的 V10.9 小节、README。
+- 真实对话（浏览器里逐句输入、读取 Captain 的回复；回复随机选自同类的几句）：你好可爱呀 → 嘿嘿，被你发现啦。｜你的柠檬帽好好看 → 真的好看吗？那我今天就不摘了。｜我想摸摸你 → 呼噜呼噜……再往左边一点。｜今天有点累，但是写完了一页 → 累的时候还写完了一页，真的很厉害。｜今天很开心 → 开心就好。要把这份开心收进本子里吗？｜谢谢你陪我 → 不客气，我就是看本子的。｜你会做什么 → 我会的不多：理一理今天的页面、翻一页以前的回忆、看看这周写了什么、看看书架。也可以陪你说说话。｜帮我整理今天的故事 → 打开「整理今天的故事」。｜Hello, you're adorable!（英文界面）→ 英文夸奖回应｜I'm tired, but I finished a journal page.（英文界面）→ 英文「写完了」回应。
+- 决策与原因：规则只覆盖高频、明显的几类，其余诚实地说不确定；功能列表只在被问时出现；回应跟随界面语言（中文界面里输入英文仍用中文回答）；「玩耍」只做说明页，不做替代动画；装扮沿用 V10.8。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Safari）：Node 171 项、Python 16 项通过；浏览器 E2E 全量 53 套全部通过（52 套旧 + v109）。
+- 已知问题 / 未做：规则理解有限（例如「今天天气不错」「我饿了」只得到「没太懂」）；真实中文输入法与软键盘未实测；玩耍互动等待正式动画。
+- 同一提交还加入了 docs/PROFILE_EDITOR_PLAN.md（编辑资料 Personal Stationery 设计预览，等待用户确认，未改 App）。
+
+### 2026-11-11 — V10.8 Captain 轻装扮（第一步：系统 + 现有画稿）
+
+- 需求：增加 Captain 的轻装扮系统，优先帽子与小配件，不做重度换装；装扮管理收进 Settings「角色与装扮」，Captain 快捷面板提供轻入口；第一阶段只做高质量、低复杂度的外观切换（例：柠檬帽、小花夹子、毛线帽、青蛙帽、睡帽；毛线球、围巾、铅笔、围裙）；不要金币、签到、亲密度等解锁系统。
+- 审查结论：Captain 的正式画稿只有两张来源——「Captain 角色视觉标准」（柠檬帽，4 个状态，已在用）和 docs/brand/LD-captain-natural-yarn-original.png（不戴帽、抱毛线球，此前只用于品牌）。小花夹子、毛线帽、青蛙帽、睡帽、围巾、铅笔、围裙没有任何画稿。项目既有约定（V7.9 / V8.0，与用户确认过）：Captain 只用正式画稿，不用 SVG / CSS / 表情符号代画；我也没有生成 3D 画稿的手段。因此本版实现完整的装扮系统，并上架「有画稿的」两个造型；其余造型不做假图、不做灰色占位，等画稿。
+- 改动文件：
+  - 新增 tools/extract_captain_look.py 与素材 Resources/Keepers/LD-keeper-cat-yarn-happy.png（320×325，透明 PNG；不重画）。LD-keeper-LICENSE.txt 补充来源说明与「待画稿清单 + 规格」。
+  - Resources/library.json：`keepers` 增加 `cat-yarn-happy`；新增 `keeperLooks`。Swift：`KeeperLook`、`AssetCatalog.keeperLooks`（未编译）。
+  - Public/js/keeper-art.mjs：`keeperLooks()`。Public/app.js：`keeperLooksHTML()`、动作 `keeper-look`、面板视图 `looks`、面板头部「装扮 ›」链接、设置「角色与装扮」面板里的选择器。
+  - Public/styles.css：V10.8 块。i18n：`look.*`。whats-new 10.8。
+  - tests：新增 tests/v108.test.mjs（4 项）、tests/v108-browser.cjs（4 组）、`test:browser:v108`；v79.test.mjs 的素材清单加入新图片。
+  - 文档：PRODUCT_SPEC / DESIGN_SYSTEM / ARCHITECTURE 的 V10.8 小节、README。
+- 决策与原因：① 一次一个造型（现有画稿是整只 Captain 的成品图，帽子和配件无法叠加）；数据沿用已有的 `keeper.outfit`，不加新字段。② 选择器只列有图片的造型，说明文字如实写「更多画好后会出现」。③ 毛线球造型只有一张画：所有表情显示这一张，首页不探头而是坐着。④ 抠图在浅色纸面上干净；深色背景下脚边有极细的浅色残留（原图的地面投影），已写入许可说明。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Safari）：Node 165、Python 16 通过；浏览器 E2E 全量 52 套全部通过（51 套旧 + v108）。v108 覆盖：面板轻入口尺寸、分组与只列有图造型、无锁定项、无游戏化字样、图片可加载；一点即换（面板 / 首页 / 书架 / 设置）、刷新后保留；设置里同一选择器、换回柠檬帽后首页恢复探头；不存在的造型回退柠檬帽；无外部请求。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 70，V10.8）。截图一张（四个画面）已发给用户。
+- 需要用户提供：小花夹子、毛线帽、青蛙帽、睡帽、围巾、铅笔、围裙的 Captain 画稿（每个至少「默认」姿势，透明或纯色背景、约 600px 高；最好还有开心 / 睡觉 / 探头，风格与比例同参考图）。放进 Resources/Keepers 并在 library.json 的 `keepers` / `keeperLooks` 各加一条即可上架，不需要改界面代码。
+- 未做：Design 画布没有加入 Book Reader 两板（设计图已直接发给用户，方案在 docs/BOOK_READER_PLAN.md）；Book Reader 等待用户确认后再实现；iPhone 真机未验证。
+- 下一步：等用户确认 Book Reader 的 7 个问题与装扮画稿；真机查看 V10.5–V10.8。
+
+### 2026-11-11 — V10.7 离开 Journal Studio：完成手帐 / 保存草稿 / 继续编辑
+
+- 需求：点左上角返回、准备离开编辑器时三选一（完成手帐并退出 / 保存草稿并退出 / 继续编辑）；区分 Saved（已存到本机）、Draft（没做完）、Completed（做完了）；自动保存保留；保存失败不显示成功、不直接退出；草稿可在 My Books 等列表找到，带低调的「草稿」标签，重新进入恢复内容与编辑状态；先确认 Draft / Completed 属于整条记录还是当前编辑对象，不能把单张封面当成独立完成的手帐；面板用 Little Days 风格，文案「要先收好这一页吗？」，不用吓人的「放弃修改」；切换封面 / 内页、选文字、开工具不触发；右上角「完成」与面板里的「完成手帐」逻辑一致。
+- 审查结论与方案：见 docs/ARCHITECTURE.md「V10.7」。状态属于「一天」这条完整记录（封面 + 所有内页）；新增可选字段 `Entry.status`；编辑中的自动保存副本（`drafts[date]`）不变，离开时无论完成还是草稿都只留一份（写入 `entries`）。
+- 改动文件：
+  - Public/js/model.mjs：`saveEntry(state, entry, status)`、`entryStatus()`、`normalizeState` 清理非法状态。
+  - Public/app.js：`studio-back` 重写（先写完自动保存；空记录 / 未改动的已完成记录直接离开；从「今日故事」编辑页返回不询问；其余打开面板）、`openExitSheet()`、`studio-draft-exit`、`draft-continue`、`leaveStudio()`、`editorStatus()`、`editorHasNothing()`、`studioTouched`、`rememberDraftPage()` / `draftPageFor()`、`draftTagHTML()`；`save-entry` 改为显式写 `completed` 并先关闭面板；顶部状态两行（已保存 + 草稿 / 已完成）。
+  - Public/js/day-view.mjs：草稿提示条（标签 + 继续编辑）。
+  - Public/styles.css：V10.7 块。i18n：`status.*`、`exit.*`，改写 `day.draftOnly` / `day.draftPending`。whats-new 10.7。
+  - Swift：`JournalEntry.status`、`isDraft`；CoreTests 断言（未编译）。
+  - tests：新增 tests/v107-browser.cjs（10 组）与 `test:browser:v107`；signed-in.cjs 新增 `leaveStudio()`（旧用例离开编辑器时遇到面板就选「保存草稿」，等同以前的行为），`goTab` / `menu` 改用它；v33（快照取在离开编辑器之后）、v54（用 `leaveStudio`）适配。
+  - 文档：ARCHITECTURE / DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.7 小节、STUDIO_UX_PLAN、README。
+- 决策与原因：① 「完成手帐」直接复用右上角「完成」的同一个动作，保证两处结果永远一致；完成后的去向保持原样（先看到刚收好的这一页；从阅读页进入的回到原位置）——这与需求里「返回之前的页面」的字面不完全相同，已在回复里向用户说明，等阅读器改版时一并定去向。② 只在「有东西要决定」时询问：空记录、未改动的已完成记录不问。③ 保存失败时不离开；只有保存确实不可用、再次返回时才出现原有的离开确认，避免把人困在编辑器里。④ 草稿页码记在 localStorage，不进手帐数据。
+- 影响旧数据：以前用返回离开、从未点「完成」的日子（只在 `drafts` 里）现在显示「草稿」标签。数据本身没有迁移或改动。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 161、Python 16 通过；浏览器 E2E 全量 51 套全部通过（50 套旧 + v107）。v107 覆盖：空页直接离开且不留空草稿；自动保存与「已保存 ≠ 草稿」；切页 / 工具 / 预览不询问；面板文案与三个选择、44px、无吓人字样；继续编辑 / × 后纸面与选中项不变；保存草稿后两页、文字格式、照片与文本框位置逐字段一致、状态 draft、只留一份；首页 / 书本列表 / 当天页面的草稿标签（刷新后仍在）；从草稿回到离开时的那一页并再次保存草稿；草稿 → 完成；已完成只看不问、改动后「完成」与面板「完成手帐」落点一致、完成 → 改动 → 再存草稿；保存失败时不提示成功、状态为保存失败、留在编辑器；375×667 英文面板不超出屏幕。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 69，V10.7）。截图一张（四个画面）已发给用户。
+- 已知问题 / 未做：没有单页级状态；没有草稿汇总列表；日历格子上没有草稿标记；iPhone 真机未验证；Swift 未编译。
+- 下一步：Captain 轻装扮（V10.8）。
+
+### 2026-11-11 — V10.6 Journal Studio 富文本：部分文字的加粗 / 斜体 / 下划线 / 删除线
+
+- 需求：参考 iPhone 备忘录，增加 B / I / U / S；必须支持「只给选中的几个字」加格式、同一段文字混合格式；没有选区时尽量支持「接下来输入的字」；格式键放在现有字体 Bottom Sheet 里、显示启用状态、可组合、不丢选区、不遮挡、不新增常驻工具栏；先审查文字模型再开发；旧纯文本无损、保存刷新重编辑保留、预览一致、撤销重做、中英文、中文斜体兼容、粘贴净化、与 SwiftUI 数据含义一致；完成后提供一个真实可编辑的示例页。
+- 审查结论与方案：见 docs/ARCHITECTURE.md「V10.6 富文本」。要点：此前全部是普通字符串 + 整段样式；方案是「文字不变 + 可选的范围表（marks）」，不改 schemaVersion。
+- 改动文件：
+  - 新增 Public/js/rich-text.mjs（纯函数）。
+  - Public/js/canvas.mjs、day-view.mjs：标题 / 正文 / 文本框用 `richHTML` 渲染；scrapbook-layout.mjs 新增 `boundMarks()`。
+  - Public/js/export.mjs：`wrapRich()`（无 marks 时等同原 `wrapText()`）。
+  - Public/js/model.mjs：`tidyMarks()`（读取时清理 marks，不合法的丢弃）。
+  - Public/app.js：文字工具加 `.type-marks`（打字条与「字体」面板）；`applyTypeMark()`、`richField()`、`selectionIn()` / `selectOffsets()`、`drawRich()`、`typedMarks()`、`inlineInput()` 改为读回 marks；`selectionchange` 记选区、`typingLook`（光标处的待用格式）、输入法 composition 处理、`paste` / `drop` 只收纯文本；`changeEditor()` 末尾 `reconcileMarks()`；`noteToLayout()` 把 marks 带到文本框；`addRichDemoPage()` 与更新记录里的「放一页格式示例」按钮。
+  - 修掉的旧问题：在文本框里打空格 / 回车 / 方向键会被图层快捷键截走（空格丢失并弹出图层面板）——正在编辑文字时不再拦截。
+  - Public/styles.css：V10.6 块（`.rt-*`、`.type-marks`、`.news-action`；打字条不再被第二行撑宽）。i18n：`type.marks`、`type.mark.*`、`type.markNotHere`、`rich.demoTitle`、`rich.demoAdded`。whats-new 10.6（带 `action: "rich-demo"`）。
+  - Swift：Models.swift 新增 `TextMark`、`StickerLayer.marks`、`JournalEntry` / `JournalMoment` 的 `titleMarks` / `bodyMarks`（全部可选）；CoreTests 增加断言（未编译、未运行）。
+  - tests：新增 tests/v106.test.mjs（8 项）、tests/v106-browser.cjs（9 组）、`test:browser:v106`。
+  - 文档：ARCHITECTURE / DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.6 小节、STUDIO_UX_PLAN 第 7 节、README。
+- 关键决定与原因：① 范围表而不是「片段数组」——旧代码（搜索、摘要、Captain 的本机事实、导出、备份）继续读普通字符串，零迁移；偏移用 UTF-16，与 Swift 的 NSRange 同单位。② 继续用 `plaintext-only` 编辑而不是 `contenteditable=true` + execCommand——浏览器不会自己插入富文本结构，格式只来自我们自己的 span 和模型。③ 应用格式时按偏移重画并恢复选区，不依赖浏览器命令。④ 「接下来输入的格式」真实实现了（不是假装）：在下一次输入的差异范围上套用；输入法组合结束后才套用。⑤ 示例页只在用户点按钮时添加，是今天的一页普通页面（示例日是只读样例，不适合做「可编辑示例」）。
+- 过程中发现并修掉：界面全局 `font-synthesis: none` 让没有粗体字形的字体「加粗」看不出来（计算样式是 700，但画面没变）——`.rt` 单独打开合成；文字条第二行变宽后把整页横向挤偏（旧测试 v54 抓到）——限制网格列宽、颜色条内部滚动。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 161 项、Python 16 项通过；浏览器 E2E 全量 50 套全部通过（49 套旧 + v106），这一轮是在最后一处样式修改之后跑的。v106 覆盖：只选中「买电脑」加粗、选区与光标保留、按钮状态、组合与取消、混合选区；光标处开关格式后输入；合成的输入法事件；粘贴富文本只留文字且无外来标签；文本框（打字条 + 字体面板 44px 键、空格可输入）；撤销 / 重做；转为自由文字框保留格式；预览 = 编辑；保存的数据是「普通文字 + 范围」；刷新后阅读与再次编辑一致；导出 Canvas 有格式时墨迹更多、无格式时与原来完全一致；旧示例页没有 marks；更新记录里的示例页可编辑；375 宽文字条不溢出。
+- 没法在这里验证的：iPhone / Safari / WKWebView 里点格式键是否保持选区（代码按 Chromium 行为 + 保存选区兜底写的）、真实中文输入法、软键盘弹出时文字条的位置（375×667 无键盘时文字条第二行本来就在屏幕下方，这是原有布局，未在本次处理）；Swift 未编译。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 68，V10.6）。截图一张（四个画面）已发给用户。
+- 同一提交还加入了 docs/BOOK_READER_PLAN.md（全屏阅读器设计，等待用户确认，未改 App）。
+- 下一步：退出确认与草稿 / 完成状态（V10.7）。
+
+### 2026-11-11 — V10.5 Captain 面板：发送、关闭与未发送文字
+
+- 需求：用户实际使用时常把底部巨大的「关闭」当成「发送」。要求：去掉底部大关闭按钮，右上角低调的 ×，保留下滑关闭；明显的「发送」按钮（鼠尾草绿 + 向上箭头，紧邻输入框，空时禁用，发送中有处理状态，输入法选字时不误发）；保护未发送内容（关闭不丢、不自动发送、成功发送后才清空）；键盘不遮挡、可多行、换行不等于发送；不改美术、陪伴方式和本机回复逻辑；不接入 AI。
+- 审查结论：用户描述的「底部大关闭 + 小小的『说』」是 V10.3 之前的旧聊天面板；V10.3 的新面板已经只有右上角 ×，但发送仍是 40px 的小圆箭头、回车直接发送、没有草稿、没有输入法保护、面板不能下拉关闭。本版补齐这些。
+- 改动文件：
+  - Public/app.js：`keeperLinesHTML()`、`syncKeeperComposer()`、`refreshKeeperChat()`（只更新对话和按钮，不重建面板，光标不丢）、`keeperUnsent()` / `keepKeeperUnsent()`（`little-days.keeperDraft`）、`keeperAnswer()` 拆成发送 + `keeperReply()`（0.42 秒「正在想」，期间 `keeperBusy` 挡住重复发送；面板已关则回应留在对话里、不重新弹出）；输入区改为 `textarea` + `.kp-send`，移到面板底部；回车 = 换行，⌘ / Ctrl + 回车发送，`isComposing` / keyCode 229 / compositionstart–end 期间一律不发送；触屏聚焦时 `.kp.composing`（快捷操作让开，350ms 后恢复）；`--kb`（键盘高度）；`#choose-dialog` 的下拉关闭（`sheetPull`，70px 阈值）；发送时保留光标（只拦 mousedown 默认行为）。
+  - Public/styles.css：V10.5 块。i18n：`kp.send` / `kp.sending` / `kp.thinking`。whats-new 10.5。
+  - tests：新增 tests/v105-browser.cjs（7 组）与 `test:browser:v105`；v71、v103 改为点发送按钮（v103 的等待加上「正在想」气泡）。
+  - 文档：DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.5 小节、README。
+- 过程中发现并修掉的两个真实问题：① 快捷操作的显示隐藏原来跟着 `:focus` 走，点 × 的一瞬间面板变形、点击落到别的按钮上（多行输入后点 × 关不掉）——改为延迟恢复的 `.composing`；② 为保留光标拦截了发送按钮的 touchstart，结果连点击也被拦掉——改为只拦 mousedown。
+- 决策与原因：回车换行而不是发送（手机键盘的回车最容易误触，也满足多行）；草稿放 localStorage 而不是手帐数据（不进备份、不触发手帐保存，刷新后仍在）；保存后「听听 Captain 怎么说」的回应面板底部的「谢谢」按钮保留——那里没有输入框，不存在与发送混淆。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153、Python 16 通过；浏览器 E2E 全量 49 套全部通过（48 套旧 + v105）。全量回归后只改了一处按钮文字颜色（纯样式），之后重跑 v105 通过。v105 覆盖：只有一个 ×（位置、44px 触摸区）、没有整行关闭；发送按钮位置 / 尺寸 / 颜色 / 禁用；回车换行、输入框长高上限、⌘/Ctrl+回车发送、气泡保留换行；合成的输入法事件期间不发送；发送中状态与防重复、发送后光标仍在输入框；× / 下拉 / Esc / 刷新后草稿仍在且未发送、短距离下拉不关闭；触屏打字时快捷操作隐藏、输入区在视口内、× 一次关闭；375×667 与 430×932 英文不溢出；无外部请求、`aiConsent` 为 false。
+- 没法在这里验证的：真实软键盘弹出时面板的位置（无头 Chromium 没有软键盘，`--kb` 的逻辑未被实际触发）、真实中文输入法（只用合成的 composition 事件）。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 67，V10.5；上传 app.js、styles.css、themes.css、js/whats-new.mjs、shared/i18n.json）。截图一张（四个画面）已发给用户。
+- 下一步：富文本格式（V10.6）。
+
+### 2026-11-11 — V10.4 Settings V2（My Little Days · 本机个人空间）
+
+- 需求：用户同意 docs/SETTINGS_V2_PLAN.md 的四项修改（「退出登录」改为「回到欢迎页（数据保留）」且只在实验室登录页开启时显示；默认头像用名字首字的圆形纸片、已有头像保留；Keeper 细项收进「角色与装扮」；更新记录 / 许可证 / 示例内容 / 实验室改为二级页），并要求把顶部账号区域重新设计为「My Little Days · 本机个人空间」、减少大型卡片堆叠（Tactile Stationery × Cozy Editorial）。顺序在 Captain 无 AI 互动（V10.3）之后。
+- 改动文件：
+  - Public/app.js：新增 `settingsPageHTML()`（返回栏、个人资料、Little Keeper、外观与偏好、数据与隐私、关于与更多、页尾）、`settingsSheetHTML(kind)`（profile / keeper / privacy / licenses / samples / testlog / labs）、`openSettingsSheet()`；新动作 `settings-sheet`、`profile-avatar`、`profile-save`；`whats-new` 点开即记为已读；`tour-replay` 先关面板；删除不再使用的 `themePickerHTML` / `keeperSettingsHTML` / `newsSectionHTML` / `reminderSectionHTML` / `privacySectionHTML` / `labsCardHTML`。所有原有 `data-action`（theme、language、reminder-toggle、backup、restore-backup、lock-toggle、privacy-toggle、keeper-set / keeper-toggle / keeper-disable / keeper-onboard、samples-remove、export-events、labs-toggle、sign-out、tour-replay、settings-back）不变。
+  - Public/js/personal-ui.mjs：删除旧的 `settingsHTML()`（已无引用）。
+  - Public/styles.css：追加 V10.4 块（`.s2*`、`.s2-sheet`）；tokens / themes 重新生成。
+  - Resources/i18n.json：33 个 `s2.*` 键；`login.signOutConfirm` 改为「回到欢迎页？这不是退出账号——Little Days 没有云端账号…」。Public/js/whats-new.mjs：10.4。
+  - tests：新增 tests/v104-browser.cjs（8 组）与 `test:browser:v104`；signed-in.cjs 新增 `settingsSheet(page, kind)` / `closeSheet(page)`；迁移 v38（深色主题取 `.s2-avatar`）、v52（更新记录行 + 小红点、实验室和测试记录在面板里、无实验室时没有「回到欢迎页」）、v54（示例内容面板）、v63（隐私说明面板）、v65（许可证面板）、v70（提醒文案）、v71（「翻看以前的页面」在角色与装扮里）。
+  - 文档：docs/SETTINGS_V2_PLAN.md 第 8 节（用户决定、实施状态、与设计稿的差别）、DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.4 小节、README。
+- 决策与原因：二级页统一用 Bottom Sheet（内容短、关闭后保留滚动位置，且与 Captain 面板同一套样式）；数据不动——「账号」仍是 `little-days.account` 这一条本机记录，默认头像沿用旧的占位值 `🌷`（显示时换成首字），所以旧数据不需要迁移，用户选过的头像原样显示；「本机存储」显示真实的媒体用量而不是设计稿里的示意数字；AI 行保留但禁用，`aiConsent` 无法被打开；「功能介绍」直接重播，不另开面板。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153 项、Python 16 项通过；浏览器 E2E 全量 48 套全部通过（47 套旧 + v104）。发布前追加了一处纯样式修改（「角色与装扮」里名字输入框改为整行宽），之后把 Node、Python 和浏览器 48 套又完整跑了一遍，全部通过。v104 覆盖：个人空间文案（没有云端账号、没有「退出登录」字样）、默认首字头像、改名和换头像（刷新后保留、手帐不变）、Keeper 邀请 / 预览 / 陪伴方式 / 细项在面板、色板选择刷新后保留、语言切换不翻译用户名字和 Keeper 名字、数据与隐私各行（AI 行禁用且 `aiConsent` 为 false）、各二级面板、更新记录读后红点消失、最后一行不被底部导航遮挡且 ≥ 44px、「回到欢迎页」仅实验室开启时出现且不删除任何数据、375×667 与 430×932 中英文无横向溢出、无外部网络请求、无页面错误。
+- 实测：393 宽时设置页整页 4883px → 2208px。真实截图：新旧整页对比 + 8 个画面（首屏、页底、编辑资料、保存后、角色与装扮、隐私说明、English、375×667），已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 66，V10.4；上传 app.js、styles.css、themes.css、js/personal-ui.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 未做：未在 iPhone 真机 / Safari 验证；Swift 外壳只做了文件同步，未编译；头像只能从内置的一组里选，不能上传照片；没有真实账号、登录或同步（界面已如实说明）；Design 画布上的 Settings V2 一板仍是设计稿，没有换成实现后的截图。
+- 下一步：等用户在固定链接 / 真机上查看 V10.0–V10.4。AI 相关（本地 Qwen / Ollama 评测、正式接入）按用户决定暂缓，只保留 docs/keeper-eval/ 的测试准备；Calendar Phase 2、My Books Phase 3 等待用户安排。
+
+### 2026-11-11 — V10.3 Captain 的无 AI 互动优化（Keeper Step 1）
+
+- 需求：用户批准 Keeper Step 1 立即开发——按状态和页面事件选择自然回复；去掉固定、奇怪的动作后缀和重复问候；本机简单聊天识别；首页点击 Captain 和「找 Captain」快捷入口；Captain 互动面板；两条不用 AI 的真实流程。只有 Captain，不开发其他 Keeper。Step 2（真实 Qwen 测试）和 Step 3（正式接入）暂缓：等用户买了 MacBook 后先研究本机 Ollama / Qwen；现在不开通阿里云 API、不定地域、不做收费调用，正式 App 不加 API Key、云服务或任何真实 AI 调用，但保留替换 Provider 的扩展能力；可先准备合成测试集和评测标准。
+- 改动文件：
+  - Public/js/keeper.mjs：新增 `dayFacts()`（今天几页 / 几张照片 / 最后一页标题 / 距上次记录几天 / 是否深夜，不读正文）、`LINE_COUNTS`、`contextLine()`（按情况选句、避开最近用过的）、`localIntent()`（整理 / 回忆 / 这周 / 书架 / 代写 / 问候 / 道谢 / 累或难过 / 其余 unknown）、`pickMemory()`（只取用户自己的旧页面）；`localFeedback()` 在正文没有情绪信号时改说这一页的事实，去掉固定第三句和动作后缀（`tone` 恒为空）；`modeAllows("memories")` 从「仅互动」改为「非安静 + 用户同意」。`createFeedbackService({ remote })` 不变（`remote = null`）。
+  - Public/app.js：`openKeeperPanel()`（首页 / 整理 / 回忆三个视图，取代旧聊天面板）、`keeperOrganizeHTML()`、`keeperMemoryHTML()`、`keeperSay()` + 本机最近用句记录（`little-days.keeperLines`，7 天）、`keeperAnswer()` 改用意图识别；`keeperPerchHTML()` 增加 `.keeper-entry`「找 Captain」；点击 Captain（温柔 / 互动）打开面板；新动作 `keeper-panel` / `keeper-view` / `keeper-do` / `keeper-memory-next` / `keeper-allow-memories`；书架提示改用 `contextLine("shelf")`；保存后回应传入页面事实并不再显示动作括号。
+  - Resources/i18n.json：`kc.*` 54 句 × 中英文 + `kp.*` 面板文案 33 条。Public/styles.css：V10.3 块。whats-new 10.3。
+  - tests：新增 tests/v103.test.mjs（7 项）、tests/v103-browser.cjs（5 组）、`test:browser:v103`；更新 v71（点击打开面板、回忆先询问、不会的如实说）、v77（两句回应、无动作后缀）。
+  - 文档：docs/KEEPER_AI_PLAN.md 第 10 节（用户决定与实施状态）、docs/keeper-eval/（14 条合成用例 + 评分标准 + 将来用 Ollama 的跑法；未做任何调用）、DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.3 小节、README。
+- 决策与原因：先用本机事实解决「不知道今天发生了什么」；句子按情况分组（今天没写 / 深夜 / 隔了几天 / 第一次 / 一页 / 多页 / 照片多…），所以不会在已写之后再问「今天有什么想记录的吗」；最近用句记在本机而不是手帐数据里，避免每点一次都写一次日记存储；聊天不假装理解——不会的直说并列出会的事；「帮我写一句话」保留在面板里但如实标为需要 AI、尚未开放（不做假的代写）；回忆许可改成在面板里当场询问一次（原来藏在设置里且仅限互动方式，默认用户永远用不到）。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153 项、Python 16 项通过；浏览器 E2E 全量 47 套全部通过（46 套旧 + v103）。v103 覆盖：标签位置与 44px 点击区、标签和点击打开同一面板、连续三次打开三句不同且都知道今天有一页、聊天四种输入得到四种不同回答、整理今天不改数据且可打开页面、回忆先询问 → 示例日不算 → 找到自己的旧页并打开、安静模式无标签无面板、全程没有任何发往本机以外的请求、`aiConsent` 仍为 false。
+- 真实截图：393×852 八个画面（入口、面板、聊天、整理、回忆询问、回忆页、代写说明、点击打开），汇总图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 65，V10.3；上传 app.js、styles.css、themes.css、js/keeper.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 未做：未在 iPhone 真机验证；聊天的意图识别只是关键词规则，覆盖有限；「整理今天」只展示、不提供一键重排；保存后回应的情绪判断仍是原来的关键词规则；Bunny / Westie 未开发（用户确认目前只做 Captain）。
+- 下一步：Settings V2（用户已同意四项修改），随后等用户真机查看；AI 相关只保留测试准备。
+
+### 2026-11-11 — 评估与设计（不改 App 代码、不接入模型）：Little Keeper 互动审查 + AI 小管家方案 + Settings V2
+
+- 需求（三份合在一轮）：① Keeper 互动「鸡肋」——回复重复、缺上下文、问候时机不自然；要求先审查现有文案与触发，设计三层陪伴（Natural / Contextual / AI），评估 Qwen API（架构、中英文、性格 Prompt、延迟与成本、上下文、Key 安全、隐私、离线降级、可换供应商），做 Captain 三个场景的固定 vs AI 对比；不要立即接入模型。② 增加「找小管家 / Ask Keeper」快捷入口和 My Little Keeper 快捷面板（四个推荐操作），不加 Tab、不做悬浮按钮、不动首页 Hero；明确何时预设 / 何时 AI / 发送什么 / 授权 / 失败 / 成本。③ Settings V2：重新设计视觉与信息架构（个人资料区、Keeper 预览、外观与偏好、数据与隐私、次要设置下移），核实「退出登录」的真实行为，给出功能映射；先不改代码。
+- 做法：读代码审查 Keeper（keeper.mjs 的 `todayPrompt` / `localFeedback` / `localChat`，app.js 的 `keeper-tap` / `keeperAnswer` / 书架提示，i18n 的 75 条 keeper.* 文案）和 account.mjs / 启动逻辑；用 Playwright 在真实 App 上运行时注入原型（首页入口 + 面板 8 个画面；Settings V2 整页），截图；网络检索 Qwen 的接入方式和价格（二手来源有出入，文档中标明需以官方价目为准）。没有调用任何模型，没有发送任何手帐内容。
+- 审查发现（详见 docs/KEEPER_AI_PLAN.md 第 1 节）：点击只有 4 句按次数轮换且不看状态；互动模式里打字无论输入什么都回同一句「嗯，我听到了…」；保存后的回应是关键词正则 + 三段拼接 + 固定动作后缀；书架提示在都有标签时仍建议加标签；按时间的问候与首页问候重复。App 里目前只有 Captain，Bunny / Westie 美术未接入。
+- 审查发现（Settings）：「退出登录」只把本机记录的 `signedIn` 改成 false，不删数据；实验室关闭的普通安装启动时会自动重新登录，所以这个按钮对普通用户没有实际作用——不是真实登录系统，现有字样有误导。
+- 产出：
+  - docs/KEEPER_AI_PLAN.md：审查表、三层陪伴、预设 / AI 判定表、入口与面板、四个流程、Captain 三场景对比（AI 一栏为示意文案）、三只角色语气与提示词骨架、Qwen 可行性（端点、档位、单次与月度成本估算、延迟预期、上下文、成本控制）、架构（后端代理 + ModelProvider 接口，Key 只在后端）、隐私与授权、与现有系统的整合、建议实施顺序、来源链接。
+  - docs/SETTINGS_V2_PLAN.md：现状问题、退出登录核实结论、新信息架构、逐项功能映射（12 张旧卡片的每个控件 → 新位置）、规范、可行性、4 个待确认问题。
+  - Design 画布（版本 25）新增两板：「Little Keeper 快捷面板与四个流程」「Settings V2 · 现在 vs 新设计」；两张图也直接发给了用户。
+- 关键设计决定与原因：先用不需要 AI 的第 ② 层（按真实事件和状态选句）解决「不知道今天发生了什么」，AI 只放在用户主动且明确授权的三件事上（整理今天、讲讲这一页、代写）；点一下角色永不调用 AI；AI 是独立开关，开启 Keeper 不等于开启 AI；每次发送页面内容前显示「会发送 / 不会发送」；生成内容只是建议、先预览再写入；Key 只在自建后端代理，接口按 OpenAI 兼容格式抽象以便换供应商。Settings 用分组标题 + 发丝线代替 12 张大卡片，整页约 4900px → 约 1950px，开发 / 测试类入口下移到「关于与更多」。
+- 如实说明：Qwen 的延迟、中英文质量没有实测（没有 Key，也不应在确认前调用）；价格来自二手来源且互有出入；阿里云的数据保留与训练条款未核实；claude.ai 固定链接对外网请求有限制，AI 功能在那里很可能只能走本机降级；原型中的存储大小、天数等数值是示意。
+- 未改动：Public/、Native/、Packages/、tests/ 均未修改；在线链接仍是 V10.2（版本 64）；没有跑回归（没有代码变化）。
+- 待用户确认：Keeper——实施顺序（先修互动、再评测、再接入）、云账号与地域、每日限额与月度预算、默认模型档位；Settings——docs/SETTINGS_V2_PLAN.md 第 7 节 4 个问题。
+
+### 2026-11-11 — V10.2 首页滚动体验实现（用户称 Home V9.1；Create → Remember → Collect）
+
+- 需求：用户确认设计方向并回答四个问题——① 段落标题跟随 App 语言（中文「今天的故事 / 我的手帐」，英文 Today's Story / My Library；中文不用缺字形的英文字体）；② 待办默认收起并记住展开 / 收起，有未完成事项也不强制展开，收起时显示摘要，不丢数据；③ 「共同的书」切换移到书架页，不删功能；④ 今天没记录 = 空状态 + 「最近的故事 · 日期」（真实的最近一篇，没有历史只显示空状态）。另外要求：Today's Story 把同一天多个 Moments 自动组合成一张预览，但保留每个 Moment 的原始内容、时间和所属手帐本，不修改或覆盖数据；显示「收藏于 · 书名」；纯文字像日记纸；375 / 430、中英文、长文字可读；My Library 突出最近在写的一本；顶部 Direction A 不动；不扩大到 Studio / Calendar。
+- 改动文件：
+  - Public/app.js：新增 `storyPagesOf()`（一天的页面 → 展示数据，只读）、`storyCardHTML()`（主故事 + 全天照片 + 媒体标记 + 「收藏于」+ 其他页面各一行；隐私隐藏、示例标记、「最近的故事」变体）、`recentStoryEntry()`、`todayStoryHTML()`、`sectionTitleHTML()`、`bookLastWritten()`、`homeLibraryHTML()`；`todayListHTML()` 改为一行可折叠的「今天的小计划」（`plansOpen()` / `togglePlans()`，本机键 `little-days.homePlans`，动作 `plans-toggle`，不重绘、不改数据）；`home()` 改用以上函数。删除 `todayPeekHTML()`（每张照片一屏的轮播）及其滚动监听；首页不再渲染「我的书 / 共同的书」切换（书架页的 `shelf-switch` 不变）。
+  - Public/styles.css：追加 V10.2 块（`.hs-*`、`.ts-*`、`.qu*`、`.lib*`、页尾）；顶部只加了一处溢出修复（次入口小字过长时省略）。tokens / themes 重新生成。
+  - Resources/i18n.json：31 个新键（ts.*、qu.*、lib.*）。Public/js/whats-new.mjs：10.2。
+  - tests：新增 tests/v102-browser.cjs（6 组）与 `test:browser:v102`；signed-in.cjs 新增 `openPlans`，`touchStore` / `openHabits` / `goTab("growth")` 先展开；迁移 v41、v45、v47、v54、v63、v65、v66、v68。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.2 小节）、docs/HOME_SCROLL_PLAN.md（第 7 节：用户决定、实现与设计稿差异）；删除 docs/prototypes/home-scroll/（原型已被正式实现取代）；README。
+- 决策与原因：
+  - 多页合并只在渲染时计算，不写任何数据；v102 用「查看前后该日 JSON 完全相同」来保证。
+  - 主故事 = 内容最多的一页（照片数 ×2 + 有感想 + 有标题，相同取较晚），照片取自全天各页——比设计稿的「最新一页」更符合「把多个 Moments 组合」。
+  - 中文段落标题用系统黑体（与顶部「照片手帐」一致），没有用宋体：项目已确认中文标题用无衬线，旧样式表也强制标题用 `--ui-sans`；只为两个标题换字体会破坏统一。英文用 `LD-elegant` 斜体。
+  - 「最近的故事」和书本「更新时间」都排除示例日（`isDemo`），不拿示例冒充用户内容；今天是示例日时仍显示但标「示例」。
+  - 首页只留一个「接着记一页」（最近在写的那本），其余书点封面进入；记录面板里仍可改选其他手帐。
+  - 小封面用 CSS `zoom` 缩放用户自己的封面（封面内部字号是固定像素），不另画一套小封面。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari / Xcode，Swift 未编译）：Node 146 项、Python 16 项通过；浏览器 E2E 全量 46 套全部通过（45 套旧 + v102）。v102 覆盖：三页分属三本手帐的一天（主故事、全天照片、+N、声音标记、收藏于、每页一行带各自时间和手帐、各自可打开、数据前后完全一致）；纯文字（字号 ≥ 22 / 15、长文折叠、可进全文）；空状态 + 最近的故事（3 天前、可打开原文）与「只有示例日 → 只显示空状态」；小计划默认收起、展开 / 收起跨刷新和跨页面记住、三条待办不丢、收起高度 ≤ 60px；我的手帐（最近写的在前、唯一的记一页、封面进真实手帐、首页无切换、书架页有切换）；英文标题与字体、用户内容不翻译、375 和 430 无横向溢出。全量回归通过后只改了两处 CSS（顶部小字改为省略而不是换行、空状态链接居中），之后重跑了 v102、v45、v47、browser 四套，均通过。
+- 真实截图：393×852 整页 + 四个滚动位置；375×667、430×932 各四个滚动位置；英文 393 / 375；1 张 / 2 张 / 多页 / 纯文字 / 空 + 最近 / 仅空状态；小计划收起 / 展开。三张汇总图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 64，V10.2；上传 app.js、styles.css、themes.css、js/whats-new.mjs、shared/i18n.json）。
+- 发现并修复：英文界面 375px 下顶部「More ways」下面的小字把页面撑宽 29px（原有问题）；测试数据里音频图层缺 `text` 字段导致启动校验失败（只是测试数据，App 校验按预期工作）。
+- 已知问题 / 未做：未在 iPhone 真机 / Safari / WKWebView 验证；未用真实相册的极端比例照片测试；纯文字卡片标题多行时与横线不是逐行对齐；5 张以上照片仍是「3 张 + N」而没有单独版式；Journal Studio 后续与 Calendar Phase 2 按用户要求不在本轮范围。
+- 下一步：等用户真机查看；再按用户安排继续 Calendar Phase 2 或 Studio 的页面管理 / 页面信息样式。
+
+### 2026-11-11 — 设计探索（不改 App 代码）：Home Scroll Experience（Create → Remember → Collect）
+
+- 需求：用户认为首页顶部 Direction A 已成功，但往下滑审美下降——「今天的回忆」像博客文章卡片，待办和习惯让首页像任务管理 App，书架像电商商品列表。要求顶部不动，重做中下部，形成 Create → Remember → Collect 的连续体验；本轮先出设计（完整长页、至少三个连续滚动位置的真实 iPhone 尺寸预览、新旧对比、变化说明、Web 与 SwiftUI 可行性），确认前不做大规模代码修改。用户说附了三张截图，但这条消息里没有收到图片，按线上 V10.1 首页为准。
+- 做法：不改 `Public/`。先用 Playwright 在真实首页里造一份真实内容（今天两页手帐、两件待办、开启 Captain），再在运行时注入原型样式和脚本（docs/prototypes/home-scroll/），把真实首页已渲染的今天页面、待办列表、用户自己的手帐封面重排成新结构，然后截图。这样顶部是真实的 Direction A，底部导航、字体、滚动都是真实浏览器里的效果。
+- 产出：
+  - Design 画布 https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG（版本 24）新增一行 4 张板：整页新旧对比、四个连续滚动位置（393×852）、三个区域的新旧对比、变体（1 / 2 / 3+ 张照片、长标题、含视频声音、只有文字、空状态、待办展开、只有一本手帐、375×667、430×932、英文）。四张图也直接发给了用户。
+  - docs/HOME_SCROLL_PLAN.md：结构对照、Today's Story 规则、功能去向表、滚动检查结果、可行性、4 个待确认问题。
+  - docs/prototypes/home-scroll/：原型 CSS + 注入脚本 + 说明（不是产品代码）。
+- 关键设计决定与原因：今天的回忆从「每张照片一屏的轮播」改为「一页排好版的纸」（主图 + 小图 + 标题 + 两行感想 + 页码），其余页面各一行——让真实手帐成为全页最大的视觉；待办与习惯压成两条发丝线之间的一行、点开才是便签——功能全留但不抢重心；书架改成一层搁板，最近在记的一本放大并带书脊和厚度，其余缩小、只留封面和名字，只有一处「接着记一页」——去掉商品卡片感；下半页不再出现第二个实心按钮，段落标题与顶部 kicker 用同一套字体层级。
+- 检查（Linux 容器 + Chromium 触屏模拟，原型）：三种屏幕宽度无横向溢出；英文文案不溢出；整页高度 1875px（现 1914px）。未验证 iPhone 真机 / Safari / WKWebView，未用真实相册照片。
+- 未改动：Public/、Native/、Packages/、tests/ 均未修改；在线链接仍是 V10.1（版本 63）；没有跑回归（没有代码变化）。
+- 待用户确认：docs/HOME_SCROLL_PLAN.md 第 6 节 4 个问题（英文段落标题、待办默认收起、「共同的书」移到书架页、无记录时是否显示最近的故事）。确认后再实施并迁移相关测试（估计 6–8 套）。
+
+### 2026-11-11 — V10.1 Journal Studio Phase B：选中对象的上下文工具
+
+- 需求（用户「正式开发确认」的 Phase B）：照片 / 文字 / 贴纸的专属工具、直接编辑文字、拖动 / 缩放 / 裁剪、图层和对象操作，只显示与当前选中对象相关的工具；「照片+一句」「随手写」的标题和正文可改文字、字体、字号、颜色、对齐，位置保持自动排版；提供「转换为自由文字框」，保留文字、字体和样式，不重复、不丢数据。
+- 改动文件：
+  - Public/app.js：`ctxDockHTML()`——有选中对象时底部一排换成该对象的工具（× + 对象名 | 专属工具 | 图层 | 删除），`toolMenuHTML()` 据此切换；`layerBarHTML()` / `placeLayerBar()` 置空（黑色浮动菜单取消）；新动作 `layer-deselect`、`ctx-crop`、`text-style`（字体 / 颜色 / 对齐，同一个小面板 `textstyle`，再点收起）、`ctx-edit-text`（`editTextLayer()` 在纸上打字）、`text-to-box`；`typeControlsHTML()` 统一打字工具条与文字面板的控件，点击处理从 `#type-bar` 扩到 `.type-controls`（面板里作用于选中的文字框），新增对齐（`data-type-align`，打字条里是一个循环按钮）；`syncTypeBar()` 同步两处的选中状态并决定「转为自由文字框」是否出现；`noteToLayout()` 转换时带上字体（标题用页面字体、正文用 `bodyFont`）、字号、颜色、对齐；图层面板加「复制」「置顶」。`leaveTyping` 的点击判断忽略刚获得焦点 600ms 内的那次点击。
+  - Public/js/canvas.mjs：`alignCSS()`，`textCSS()` / `styleExtra()` 输出 `text-align`（仅当 `align` 是 left / center / right）。Public/js/export.mjs：`alignIn()`，照片+一句、随手写 / 封面、智能排版说明三处导出按所选对齐绘制。
+  - Packages/LittleDaysCore：`JournalTextStyle.align`（可选）+ CoreTests 往返断言。
+  - Public/styles.css（追加 V10.1 块）、i18n.json（ctx.*、type.align.*、type.toBox，`layer.barHint` 改写）、whats-new 10.1。
+  - tests：新增 tests/v101-browser.cjs（8 组）、tests/v101.test.mjs（2 项）、`test:browser:v101`；signed-in.cjs 的 `studioTool` 适配上下文工具栏、新增 `studioDeselect`；v38、v39、v41、v51、v64、v100 改为从底部工具栏 / 图层面板操作。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.1 小节）、docs/STUDIO_UX_PLAN.md（实现状态与未做项）、README。
+- 决策与原因：
+  - 复制与层级顺序只放在「图层」面板，底部一排不重复，保证每个动作在页面上只有一个入口。
+  - 标题 / 正文的对齐用可选字段 `textStyle.align` / `bodyStyle.align`，旧数据没有该字段时屏幕与导出都不变（保持兼容）。
+  - 「转为自由文字框」复用已有的「自由排版」转换路径（一步撤销可恢复），只补上样式继承，不另造一套数据。
+  - 打字工具条保持两行（对齐做成一个循环按钮），避免在键盘上方占太多高度。
+- 回归中发现并修复的真实问题：① 选中对象的工具栏在手机打字时没有隐藏（CSS 优先级）；② 在面板里点输入框（如页面信息的名字）时，面板上移导致同一次点击落到别处、被当成「点别处」而失去焦点（V9.2 引入的隐患）——现在忽略刚聚焦后的那次点击；③ 打字条里的「转为自由文字框」与「更多」里的写法按钮同名动作冲突——改为独立动作 `text-to-box`。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Xcode，Swift 未编译）：Node 146 项、Python 16 项通过；浏览器 E2E 全量 45 套全部通过（43 套旧 + v100 + v101；第一轮 42 通过、3 套因本次改动失败，修复后整体重跑 45/45）。真实截图（393×852，2x）12 张 + 与设计稿对照图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 63，V10.1；上传 app.js、styles.css、themes.css、js/canvas.mjs、js/export.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 与设计稿的差异：字体是 Bottom Sheet + A− / A+（设计稿为字体条 + 字号滑杆）；裁切仍是滑杆面板；贴纸没有「替换」；页面管理 / 页面信息仍是旧样式；刚加入的照片 / 贴纸处于选中状态，要点 × 或点空白处才回到四个工具；未在 iPhone 真机 / Xcode 验证。
+- 下一步：等用户真机查看 V10.0 / V10.1；之后按用户安排做页面管理 / 页面信息的新样式，或继续 V9.0 Phase 2（Memory Calendar）。
+
+### 2026-11-11 — V10.0 Journal Studio Phase A：编辑器外壳重构（用户「正式开发确认」）
+
+- 需求：用户确认 Journal Studio 三状态方案（Creative Freedom Without Complexity），要求先做 Studio、Calendar Phase 2 顺延；按 Phase A（外壳）→ 回归 → Phase B（上下文工具）→ 回归推进。用户的决定：撤销 / 重做放纸张左下方、画布外、位置稳定、不可用时禁用、各类修改都进历史、切页后不能改到其他页面、顶部不放；「完成」= 保存成功并离开编辑、显示刚保存页的只读视图，编辑中自动存草稿，顶部显示 已保存 / 保存中 / 保存失败，失败留在编辑器可重试，不自动发布；Quick Create 标题 / 正文可改样式但不可拖，并提供「转换为自由文字框」（Phase B）；视觉沿用 Tactile Stationery × Cozy Editorial；每阶段交付真实截图、交互测试、与设计稿对照、完成 / 未完成清单、问题与修复；不得丢失现有手帐、图片、视频、音频、字体设置。
+- 改动文件：
+  - Public/app.js：`studioPage()` 重写为新外壳（`.studio-bar.sv-top`：返回 · `.sv-title` 页面名（`pages-manage`）· `#draft-status`（`draft-retry`）· 预览 · 完成；`.studio-stage`：纸 + `typeBarHTML()` + `.stage-bar`（撤销 / 重做 + `chapterChipsHTML()` 页面切换）；`#tool-menu`）；新增 `studioPreview` 预览模式（分享 / 导出图片 / 导出视频）；`toolMenuHTML()` 改为「面板 + 四个工具」，新增合成面板 `more`（`moreSheetHTML`：各工具格子、手绘、视频、音频菜单、页面音乐、目录、页面管理、页面信息、「换一种写法」）与 `details`（`detailsSheetHTML`：日期 `#editor-date` + `pageBarHTML()` + `writeCardHTML()`），非「更多 / 贴纸」面板带 ‹ 回到更多；`SV_ICONS` 线性图标。新动作：`first-photo`、`studio-preview`、`open-pages`、`pages-add`、`pages-details`、`draft-retry`。保存状态：`draftState` + `setDraftState()` + `retryDraft()`；`scheduleDraft` → saving，`flushDraft` → saved，出错 → failed；`save-entry` 用 try/catch，失败不离开；`studio-back` 在草稿存不下时先询问；IndexedDB 写入失败（`onPersistError`）也标记失败。撤销按页面隔离：`selectMoment(id, keepStep)` 切页清空历史（删除页面 / 清空封面保留这一步），`resetHistory()` 用于刚建好的页面；`placeLayerBar()` 把浮动菜单限制在纸内。从「更多」启动动作（手绘、视频、页面管理、上传音频、背景音乐、换写法）后面板自动收起。纸面空白提示改为「添加第一张照片」。不再渲染：顶部日期、Keeper 小图标、悬浮保存、纸下一排添加 / 背景按钮、放大预览按钮、studio-footer（功能都有新位置）。
+  - Public/js/canvas.mjs：空白纸提示只渲染传入的 `addChoices`。
+  - Public/styles.css（追加 V10.0 块）+ tokens/themes 重新生成；`.phone.sv` 作用域，`--studio-h` 由 render 写入。
+  - Resources/i18n.json：27 个新键（draft.*、studio.*、tool.more / details、more.*、canvas.first*、sv.text 等）。
+  - Public/js/whats-new.mjs：10.0。
+  - tests：新增 tests/v100-browser.cjs（9 组）与 `test:browser:v100`；tests/signed-in.cjs 新增 `studioTool / studioMore / studioDetails / studioMode / studioMoreAction / studioPreview / studioEdit / studioClose / momentField`，`goTab` / `menu` 先退出预览；迁移 22 套旧用例到新结构（browser、v3、v31–v34、v36–v38、v40、v41、v43、v44、v46、v48、v50–v52、v54、v55、v57、v63、v71）。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.0 小节）、docs/STUDIO_UX_PLAN.md 第 6 节（用户决定与实现状态）、README。
+- 决策与原因：
+  - 旧面板内容原样搬进新面板，`data-action` 与数据逻辑不变，降低回归风险（用户允许 Phase A 这样做）。
+  - 撤销历史保存的是整天的快照，所以用「切页清空历史」保证不会改到别的页面；新建 / 复制页面不留撤销步（可在页面信息 / 页面管理里删除），删除页面保留一步可撤销。
+  - 「目录」面板（单页保存、复制、折叠、排序）新外壳里原本没有入口，补进「更多」，避免功能丢失。
+  - Keeper 不常驻编辑器（方案第 5 条）；v71 用例相应更新。
+  - 短屏：面板最高不超过让纸张保留约 170px 高，面板内部滚动。
+- 运行 / 测试（Linux 容器 + Chromium；不是 iPhone 真机 / Xcode）：Node 144 项、Python 16 项通过；浏览器 E2E 全量 44 套通过（43 套旧 + v100）。v100 覆盖：外壳结构与位置（撤销 / 重做在纸下左侧、44px、不压纸、不压工具）、更多 / 页面信息、撤销重做（照片、文字、贴纸、位置、图层顺序逐步撤销 / 重做，禁用状态）、切页后撤销不影响另一页、页面管理、预览、保存失败（另一窗口改了记录 → 保存失败、留在编辑器、离开先询问、重试成功）、完成 → 只读页 → 再编辑（照片与音频仍在、无 base64、社区存储未变）、375×667 / 390×844 / 430×932 不滚动不重叠。真实截图：393×852（iPhone 14 Pro 模拟，2x）10 张 + 与设计稿对照图，已发给用户。
+- 迁移中发现并处理的问题：纸张变大后两处旧用例的像素拖动距离不再成立（照片互换 / 手柄出纸）——改为按纸宽比例；随手写模式下正文框会盖住视频左上角（原有行为）——用例改点下缘；短屏打开「更多」时纸张被压到约 120px——加最小高度；刚进入编辑器撤销就可用（建页步骤）——`resetHistory()`；浮动菜单在高照片下盖住撤销 / 重做——限制在纸内。
+- 发布：`python3 tools/sync_native_web.py`、`python3 tools/build_link.py` 后发布到同一固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 62，V10.0；本次上传 app.js、styles.css、themes.css、js/canvas.mjs、js/whats-new.mjs、shared/i18n.json）。
+- 已知问题 / 与设计稿的差异：页面管理仍是原来的列表样式（设计稿是缩略图网格 + 拖动排序），页面信息沿用旧表单样式；选中对象仍是黑色浮动菜单（Phase B 取代）；有音视频的页面切过去时仍自动打开「本页音视频」面板（原有行为）；未在 iPhone 真机 / Xcode 验证。
+- 未完成 / 下一步：Phase B（选中照片 / 文字 / 贴纸的底部上下文工具、直接编辑文字、字体 / 字号 / 颜色 / 对齐、Quick Create 标题正文样式与「转换为自由文字框」、图层操作），之后再回归；Calendar Phase 2 及后续按用户安排顺延。
+
+### 2026-11-11 — 设计探索（不改代码）：Journal Studio 交互重设计方案
+
+- 需求：用户看了编辑器真机截图，认为最大问题是信息架构和交互层次混乱：顶部写法条、画布添加入口、底部工具栏功能重复；手帐本 / 时间 / 删除等管理操作占着编辑区；选中元素的浮动菜单挡内容；保存按钮位置不自然；画布周围 UI 太多；工具没有统一逻辑。要求三种状态（A 默认画布 / B 选中对象的上下文编辑 / C 更多工具面板）、页面信息集中到 Page Details、可靠的自动保存 + 顶部状态 + 「完成」、所有现有功能保留。**本轮先不改代码**，先交付：默认页（空白 / 有内容）、选中照片、选中文字、更多面板、多页面管理、新旧路径比较，并说明哪些工具被合并 / 移动。
+- 做法：先盘点现有编辑器的全部控件（app.js：studio-bar、chapterChips、pageMode、pageBar、stage-bar、layerBar、typeBar、writeCard、studio-footer、studioTools 的 11 种工具），截了一张现在的编辑器（三层管理栏 + 黑色浮动菜单 + 两排工具）作对照，再出设计稿。
+- 产出：
+  - Design 画布 https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG 新增一行 9 张板：现在的编辑器、A 默认（空白）、A 默认（有内容）、B 选中照片、B 选中文字（字体条展开）、C 更多工具、页面管理、页面信息、对照板（三种状态规则、保存机制、创作方式、7 条新旧路径比较、32 行「每个功能去了哪里」）。
+  - docs/STUDIO_UX_PLAN.md：方案文字版（状态规则、页面管理、保存、功能去向表、待确认事项、实现建议）。
+- 关键设计决定：底部只有一排工具、内容随状态变；纸在三种状态下不动；黑色浮动菜单取消；常驻控件约 28 → 10；「完成」= 现在的「保存」，自动草稿沿用现有机制，失败可重试、离开前提示；导出 / 分享移到预览；四种写法进入前选择，编辑中在「更多 → 换一种写法」。
+- 检查：8 张手机尺寸的板在本地渲染成总览图发给了用户（字体用仓库里的本地字体替代 Google Fonts，中文衬线与画布里略有不同）；对照板用了画布的循环组件，没有在本地渲染。
+- 未改动：Public/、Native/、Packages/ 均未修改；在线链接仍是 V9.2（版本 61）。
+- 待用户确认：见 docs/STUDIO_UX_PLAN.md 第 5 节（撤销 / 重做位置、「完成」的含义、两种直接打字写法的上下文工具、分两步实现）。V9.0 的 Phase 2–5（日历、书架、Keeper 设置、一致性检查）仍在等首页确认。
+
+### 2026-11-10 — V9.2 写作页：「背景」入口 + 打字后工具栏恢复（用户真机反馈「不知道哪里换背景」）
+
+- 需求：用户发来 iPhone 截图（自由排版，页面上有一张照片），说「不知道哪里换背景」。截图里纸面下方只有 撤销 / 重做 / 照片 / 加文字框 / 视频 / 声音，底部那排工具（照片、版式、字体、纸张、心情、贴纸、目录）完全没有出现。
+- 原因（两个）：
+  1. 换背景藏在底部工具栏的「纸张」里，名字想不到是背景。
+  2. 触屏上打字时 `body.typing` 会隐藏工具栏，只在输入框失去焦点时恢复；iPhone 收起键盘或点空白处时光标常常还留在文字框里，没有 focusout，工具栏就一直隐藏。本地用触屏模拟复现：打字后 `.tool-dock` 为 `display: none`。（没有在真机上直接确认用户当时是否处于这个状态，这是根据截图和代码的判断。）
+- 改动文件：
+  - Public/app.js：纸面下方 `.stage-bar` 常驻一个 `.stage-bg`「背景」按钮（`data-action="open-background"`，打开与工具栏「背景」相同的面板，空白纸时也有）；新增 `leaveTyping()`：键盘收起（visualViewport 恢复）或点到输入框 / 纸面 / 文字样式条 / 面板以外的地方时，让文字框失焦并退出 typing 状态；纸张面板里纸张小标题改用新键 `paper.title`。
+  - i18n：`add.background` 背景 / Background；`dock.paper` 纸张 → 背景；`tool.paper` → 背景与纸张；`paper.title` 纸张。
+  - Public/styles.css：`.stage-bar` 改为 5 个等宽按钮（照片 / 加文字框 / 视频 / 声音 / 背景），撤销 / 重做 32px；「加文字框」不再被截断。
+  - tests/v37-browser.cjs：打字后点别处 → 工具栏恢复；「背景」按钮和工具栏里的「背景」存在；点「背景」打开含「页面背景 … 纸张」的面板，再点收起。
+  - whats-new 9.2；README。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟）：Node 144 项、Python 16 项通过。浏览器 E2E 全量 43 套：第一轮 40 通过，3 套因本次改动失败并已修——`browser`、`v32`（新按钮与工具栏按钮同为 `data-action="tool" data-tool="paper"`，定位到两个元素 → 新按钮改用 `open-background` 动作）；`v46`（「点别处退出打字」把「点空白纸面开始写正文」的光标也取消了 → 纸面 `#journal-canvas` 内的点击不处理）。修后相关 6 套单独通过，再跑全量：43 套全部通过。Swift / Xcode 未运行。
+- 已知问题：修复没有在 iPhone 真机上复查；visualViewport 在嵌入的 claude.ai 页面里不一定会随键盘变化，所以同时加了「点别处退出打字」作为兜底。
+
+### 2026-11-10 — V9.1 修复：Captain 对话泡泡、Keeper 面板字号统一（用户真机截图反馈）
+
+- 需求：用户发来两张 iPhone 真机截图：① 首页点 Captain 后，它说的话变成竖排一个字一行，「最好有个对话泡泡」；②「认识 Little Keeper」面板「字体大小不一致」（「就是它了」很小，「以后再说」很大）。
+- 原因：
+  - 气泡：V9.0 把 `.keeper-perch` 改成贴在主卡片上方的绝对定位、没有宽度；气泡的 `max-width: calc(100% - 130px)` 按这个很窄的容器算，结果只有 26px 宽。我在 V9.0 的截图检查里没有再点一次 Captain，所以漏掉了。
+  - 字号：`.primary` 全局是 11px、`.save-help` 全局是 9px（很早期的小字号），面板里没有覆盖；`.choose-cancel` 是 16px 粗体。实测面板内 9 / 11 / 13 / 16 / 18px 混用。
+- 改动文件：
+  - Public/styles.css（文件末尾 V9.1 段）：`.keeper-perch` 横跨主卡片宽度（`left: 0`），气泡 `width: max-content; max-width: min(212px, calc(100% - 134px))`，纸色底 + 细边 + 柔和阴影 + 朝向 Captain 的小尾巴（`::after` 旋转方块）；首页气泡不再显示名字小标签；书架气泡同样加尾巴（朝左）。Keeper / 名字面板统一字号：标题 20、小标签 13、选项 16 + 13、说明 13、隐私说明 12、两个按钮都是 16（主按钮 600 / 鼠尾草深绿，取消 500）；名字输入框圆角细边；聊天输入框 16px（避免 iOS 聚焦时放大页面）。首页问候行改为常规字重。
+  - tests/v71-browser.cjs：点 Captain 后断言气泡宽 > 100、高 < 100。
+  - Public/js/whats-new.mjs 9.1；README。
+- 视觉检查：393 和 320 宽下点 Captain 的气泡截图（单行 / 两行，尾巴指向 Captain，不压标题和按钮）；面板截图与各元素的计算字号；书架气泡截图。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项、Python 16 项通过。浏览器 E2E 全量 43 套：第一轮 42 通过，v54（打字工具条不移动页面）再次只在整轮里失败、单独连跑 4 次通过——它在工具条刚出现时立刻量画布位置；改为等位置连续两次读数一致后再量（断言不变）。改后重跑全量：43 套全部通过。Swift / Xcode 未运行；修复尚未在 iPhone 真机上复查。
+- 已知问题：其他面板（快速记录、书本编辑等）仍在用全局的 9px / 11px 小字，这次只统一了 Keeper 和名字面板；计划在 Phase 5 品牌一致性检查里统一全部面板的字号。用户截图顶部的 ✕ / 分享 / ⋯ 是 claude.ai App 自己的浮层，不属于 Little Days 页面。
+
+### 2026-11-10 — V9.0 Phase 1：首页（方向 A · Hero + Secondary）
+
+- 需求：用户确认 V9.0 视觉方向 Tactile Stationery × Cozy Editorial，按 Phase 实施（1 Home → 2 Calendar → 3 My Books → 4 Keeper 设置 → 5 品牌一致性检查），每个 Phase 完成后给真实 iPhone 尺寸截图、对比设计稿、说明未达标细节、跑测试、更新文档、提交。首页正式采用方向 A：大日期 + 轻量问候、Captain 从主卡片探头、照片手帐唯一主入口、三个次入口、拍立得、今天的回忆（真实记录，不能把假照片当记录）、简约底部导航；次入口没有合格 3D 文具素材时先用协调的简约图标并记录待补资源；不加新功能、不重建、不恢复 Growth。同一条消息里用户上传了「无帽 Captain 抱粉色毛线球」原图（Phase 4 再集成）。
+- 改动文件：
+  - Public/app.js `home()`：`section.hero.today-card` 改为 `v9-home` 结构——大日期（LD-elegant 斜体）+ 月份·年份 kicker + `home-greeting` + `today-prompt`；`v9-hero-wrap`（Keeper 探头 + 照片手帐纸页：kicker、标题、说明、两张装饰拍立得〔CSS 背景图，不是 <img>，也不代表用户记录〕、唯一主按钮 `today-photos`）；`story-start-row today-tiles v9-secondary`（只写几句 / 手绘 / 更多方式，线性图标 `v9Icon()`）；补记昨天；`v9-today`（「今天的回忆 / 今天还没有记录」+ 连续记录小字 + 原有的今日预览 / 今日照片建议）；今天要做的事。去掉品牌标语、日期牌、本子铁环、「不用先选手帐本…」小字和旧的 `tileArt()` 插画。所有 data-action 与测试依赖的类名保留。
+  - Public/styles.css：文件末尾「V9.0 · Home」一整段（纸页、拍立得、网格布局保证照片不压文字 / 按钮、<390px 按钮独占一行、<360px 缩小品牌字和日期、今天的回忆改为大拍立得：照片在上、标题写在白边纸上）；`tools/sync_tokens.py` 已重新生成主题变量。
+  - design-tokens.json：新增 `sageDeep` #55684A、`kraft` #E6D9C4、`lemon` #F2C94C（Swift 以字典解码，兼容）。
+  - i18n：`v9.pickPhotos / writeHint / drawHint / moreHint / today / todayEmpty`（中英）。
+  - whats-new 9.0；docs/DESIGN_SYSTEM.md「V9.0 Visual Design System」；docs/PRODUCT_SPEC.md；README。
+  - tests/v31-browser.cjs：备份后的「MB」用量行原来是读完下载立刻断言，现在等待它异步填好（单独重跑确认会显示，只是比断言晚；属于测试时序问题，不是功能回归）。
+- 决策与原因：
+  - 中文标题继续用系统黑体（v47 测试记录的 V6 用户决定「无衬线标题」，也符合「清晰的中文字体」）；英文 kicker / 日期数字 / 品牌用 Cormorant Garamond。
+  - 设计稿 A 里拍立得压住了说明和按钮；实现改为网格（文字 | 124px 拍立得），并在窄屏把按钮移到下一行。
+  - 「今天的回忆」：起初做成小横条，v45（「今天的照片是首页主角」）失败；改为一张大拍立得（照片 4:3 + 白边纸上写标题），既是方向 A 的文具感，也让照片成为主角。
+- 视觉检查（Chromium 设备模拟截图）：393×852 开 / 关 Keeper、滚动后的回忆与书架、375×667、430×932、320×640、深色主题；脚本检查 Captain 不压任何按钮、拍立得与文字 / 按钮无重叠、无横向滚动。对比图：V8 首页 / 方向 A 设计稿 / V9.0 实际首页。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项通过；Python 16 项通过；浏览器 E2E 全量 43 套：最后一轮 42 套通过，v54（Studio 打字工具条不移动页面的位置断言，与首页无关）失败一次，单独连续重跑 3 次都通过——这个断言在 V7.9 时也偶发失败过，属于已知的偶发时序问题，尚未根治。前一轮发现并修好的：v45（今天的回忆要求大照片 → 改成大拍立得）、v31（MB 行的测试时序）。Swift / Xcode 未运行。
+- 未达到设计稿 / 未完成：次入口仍是线性图标（3D 迷你日记本、颜料盘、素材盒需要美术制作）；底部导航沿用原样式（「创作」按钮跟随主题色，不是设计稿里的墨色圆；社区入口仍在实验室打开时出现）；问候是两行（「Hi！今天是星期二」+「今天有什么值得记录？」），没有改成设计稿里的一句，以保留现有点按改名字的功能；首页下方「今天要做的事」和书架只做了纸页统一，书架会在 Phase 3 重做。Swift 未编译、未在真机验证。
+- 下一步：用户确认首页后进入 Phase 2 Memory Calendar。
+
+### 2026-11-10 — V8.1 正式 App Icon 集成（iOS + Web）
+
+- 需求：用户确认上传的图片为「Little Days V1 Official App Icon」（Captain 柠檬帽探头、小花回形针、Little Days 棕色衬线字、小芽），要求直接使用原图（不重新生成、不重绘、不用 SVG/CSS 模仿）；iOS 做 1024 × 1024 不透明正方形、不预切圆角、更新 Asset Catalog、不改 Bundle ID；Web 更新 favicon（以及已有的 PWA 配置）；检查小尺寸可识别性；区分 App Icon / 文字 Logo / Keeper；只做图标，不改首页、导航、Keeper 等。
+- 改动文件：
+  - 新增 `docs/brand/LD-app-icon-original.png`（原图 1254 × 1254，原样保存）与 `tools/make_app_icon.py`（可重复生成）。
+  - 新增 `Native/App/Assets.xcassets/`（`Contents.json`、`AppIcon.appiconset/Contents.json`、`AppIcon-1024.png`，单尺寸 universal iOS 格式）。
+  - `Native/LittleDays.xcodeproj/project.pbxproj`：Assets.xcassets 文件引用、加入 App 组和 Resources 阶段；Debug / Release 加 `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`。Bundle ID（com.jessiethere.littledays）和其他设置不变。
+  - 新增 `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`；`Public/index.html` 用它们替换原来的 🌷 emoji favicon。
+  - `tools/build_link.py`、`tools/sync_native_web.py`：复制 `.png`（Public 里只有这三个图标是 PNG）。iOS 外壳 WebApp 已同步。
+  - `Public/js/whats-new.mjs` 8.1；docs/DESIGN_SYSTEM.md（正式 App Icon 规范）、docs/ASSETS.md；README。
+  - 新增 `tests/test_app_icon.py`（1024 不透明 RGB、Contents.json、pbxproj 引用与 AppIcon 设置、Bundle ID 未变、括号平衡、Web 图标尺寸与链接、原图保留）。
+- 决策与原因：原图是「圆角图块 + 外圈空白和阴影」，图块本身约 992 × 1056、圆角约 290px（比 iOS 圆）。直接整张用会变成「图标里套图标」，元素也更小；只裁成图块高度会让叶子和缝线贴边。所以取整个图块（不裁掉任何元素），左右窄条、四角外侧和 22px 的边缘高光 / 阴影用图块内部颜色延展、柔化填充，再一次 Lanczos 缩放。检查：保留区域与原图逐像素一致（最大差 0），约占 79%；第一版的径向条纹和白色弧线已去掉。
+- 视觉检查：原图 vs 集成图对比；180 / 120 / 87 / 80 / 58 / 40 像素在浅色和深色背景上；浏览器里按 iPhone 尺寸画的模拟主屏幕、搜索结果、设置、通知（用实际图标文件，22.37% 圆角近似 iOS 形状），已发给用户。60pt / 40pt 下脸、眼睛、帽子、字样都清楚；29pt 字样勉强；20pt 只能认出脸和帽子。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项通过；Python 16 项通过（新增 test_app_icon 4 项，含外壳同步一致性）；浏览器 E2E 全量 43 套一轮全部通过；localhost 上 /icons/*.png 返回 200 image/png。Swift / Xcode 未运行。
+- 未验证 / 已知问题：没有 Xcode / iOS 模拟器 / 真机，所以 Asset Catalog 编译和真机主屏幕效果都没有验证；pbxproj 只做了文本和括号检查。项目没有 PWA manifest，未新增。在线链接（claude.ai Artifact）的浏览器标签图标由 claude.ai 决定，网页里的 favicon 在 localhost 和 iOS「添加到主屏幕」时生效。
+- 下一步：在 Mac 上用 Xcode 打开 Native/LittleDays.xcodeproj，确认 AppIcon 显示、真机主屏幕效果；如需更锐利的小尺寸，可请美术出一版字样更大的小尺寸专用图（不替换正式图标）。
+
+### 2026-11-10 — 设计探索（不改代码）：Visual Direction、首页快捷入口三方向、日历 / 书架、Keeper V2 角色系统
+
+- 需求：用户发来三段要求。① Little Keeper V2：三只角色各有性格（Captain 好奇调皮 / Bunny 温柔乐观 / Westie 热情忠诚），每只有 Natural 自然形象（默认）和 Dress-up 装扮，三只共用一套功能；② Visual Identity Reset：先建立整体视觉方向，再出 Home / Calendar / My Books 三张 iPhone 稿并和现在对比，用户确认后才写代码；③ 首页四个快捷入口太像普通按钮宫格，要 A（Hero + Secondary）/ B（Stationery Objects）/ C（Editorial Layout）三套方向。② 和 ③ 都明确「本轮先进行设计探索，不修改代码」，所以本轮只做设计，App 代码和数据没有任何改动。
+- 产出：Design 画布 https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG （私有）
+  - Visual Direction：Cozy Editorial × Collectible Stationery；四条原则；字体（Cormorant Garamond 品牌 / 日期数字、思源宋体标题、思源黑体正文、Caveat 手写点缀，每屏 ≤ 1 处）；配色与比例（Paper 60% / Sheet 20% / Ink 12% / Sage 5% / 点缀 ≤ 3%）；三层纸质表面；两种图标（线性工具图标 vs 收藏级文具物件）；间距；八个品牌组件；Keeper 融入规则。
+  - 首页：现在 vs A / B / C 三个方向（真实照片 + V8.0 Captain 探头素材）。
+  - 日历：现在 vs Memory Calendar（有照片的日子变成照片小方块，选中日以拍立得展开）；书架：现在 vs 数字手帐书架（正在写的封面 + 布面书脊 + Captain 小管理员）。
+  - Keeper V2：三只角色性格卡、统一状态 × 角色素材矩阵（有图 / 缺）、统一 Character Configuration、陪伴模式、事件→状态、素材目录结构、可做 / 需帧的动画；Keeper 设置页稿。
+- 美术资源核对（如实）：用户说的「无帽 Captain 抱粉色毛线球」图没有上传到本会话；三只角色都没有 Natural（无帽）素材；Bunny / Westie 只有 V7.9 角色表里的戴帽图（且需要用 V8.0 工具重新精细抠图）；所有角色都缺 Curious（Captain 参考图里有「惊喜」可裁）、Peek（Bunny / Westie）、Writing；快捷入口的 3D 文具物件需要美术渲染，稿中用真实照片和纸质结构占位。
+- 未改动：Public/、Native/、Packages/ 均未修改；在线链接仍是 V8.0（版本 57）。
+- 下一步：等用户在 A / B / C 中选一个方向（或组合）、确认视觉方向，并提供 Natural 素材后，再按确认的稿子实现，并同步 DESIGN_SYSTEM / PRODUCT_SPEC / README / agent.md。
+
+### 2026-11-10 — V8.0 Captain Keeper V1：只保留 Captain，重新精细抠图，首页 Peek；修复聊天气泡
+
+- 需求：用户发来「参考图 1 · Captain 角色视觉标准」（唯一美术标准）和「参考图 2 · 首页布局参考」（氛围参考），要求本轮只做 Captain：毛发质感、金黄眼睛、柠檬帽与参考一致；抠图检查毛发边缘、无残留背景、无误删；先展示透明素材和 iPhone 首页截图，确认后再扩展其他角色；不重新设计首页其他功能；首页 Peek（自然遮挡 + 柔和阴影、不占大模块、不重复欢迎语、不挡按钮 / 照片、可隐藏、不照搬图 2 的旧模块、不加回 Growth）；状态 Normal / Happy / Sleepy；可有轻微呼吸，不用换表情图冒充动画，支持减少动态效果；只在用户主动互动时说短句；先说明美术资源能否直接用于开发。中途用户反馈「点开对话框非常奇怪」（截图：Captain 的回复一个词一行）。
+- 美术资源评估（如实）：参考图 1 是一张排版好的说明图，不是透明素材；但背景是平涂奶油色（±2 级），可以用算法抠出、不需要重画。限制是分辨率：站姿每个约 190px 宽，Peek 约 340px，只够小尺寸使用；参考图 2 和最早的设计图背后有杂物，无法干净抠出。正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG，以及眨眼等动画需要的连贯帧。
+- 改动文件：
+  - 新增 tools/extract_captain.py（从参考图 1 抠 Normal / Happy / Sleepy / Peek：背景洪泛 + 暖色投影识别；只留最大连通块，去掉闪光线和 zZ；2px 边缘带 α 估计 + 去奶油色；清理小块浅色碎片和叶柄旁的背景口袋；站姿统一 197×251 画布与底线）。删除 tools/extract_keepers.py 和 V7.9 的 20 张多角色图（git 历史保留）。
+  - Resources/Keepers：4 张 Captain PNG + 新的 LD-keeper-LICENSE.txt；library.json `keepers` 只剩 4 条；i18n：Captain 介绍、点按短句「今天有什么想记录的吗？」，删除小西高地和帽子相关文案。
+  - Public/js/keeper-art.mjs（只映射到 4 张图）、keeper.mjs（`ANIMALS = ["cat"]`，旧的 bunny / westie 读成 Captain，数据字段不变）。
+  - Public/app.js：首页固定 Peek；默认不说话（首页已有问候）；点按后一句话 5 秒淡出；不再换图冒充动画；新手引导只介绍 Captain；设置去掉动物和帽子选择；书架夜间 Sleepy；聊天气泡 class 改为 `them`。
+  - Public/styles.css：Peek 110px（= 原图分辨率）、切线对齐卡片上沿、爪子压边 6px、两层柔和阴影；气泡绝对定位不推页面；保存印章移到页面右上角（原来挡住「打开这一天」）；聊天气泡正常宽度、隐藏内部滚动条、圆角输入框；删除帽子选择和非 Peek 裁切样式。
+  - Swift：Resources.swift 注释、Models.swift `KeeperProfile.animal` 注释；CoreTests 断言 Captain 4 张图。
+  - 测试：tests/v79.test.mjs 改为 Captain 版（清单、RGBA、站姿同尺寸、状态映射、旧选择读成 Captain）；v71 改为只有 Captain、首页不说欢迎语、点按一句话会自动消失、聊天气泡宽度 > 150px；v77 默认动物改为 cat。
+  - 文档：DESIGN_SYSTEM.md「V8.0 Captain 角色规范」（角色特征、主色、素材表、制作与质检、分辨率限制、首页 Peek 规则、动画已实现 / 未实现）；ASSETS.md；ARCHITECTURE.md；whats-new 8.0；README。
+- 发现并修复：聊天回复的 class `keeper-msg keeper` 与角色图片外层 `.keeper`（64px 宽）同名，所以回复被压成 64px（用户截图的问题）。
+- 视觉检查：素材在棋盘格 / 页面色 / 深色 / 灰 / 绿背景 1×–4× 检查；首页在 320、375、393、430 宽下截图，脚本检查 Captain 不与任何按钮、日期牌重叠、无横向滚动；开启 / 关闭 / 首次邀请 / 点按 / 保存后均截图；与参考图 1、2 做了对比图并发给用户。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 144 项全部通过；Python 12 项通过（含外壳同步一致性）；浏览器 E2E 全量 43 套一轮全部通过（这次没有同时跑其他浏览器脚本）。Swift 未编译（无 Xcode / Swift 工具链），CoreTests 只改了源码；iOS 真机 / 模拟器未验证。
+- 已知问题 / 未完成：分辨率受参考图限制（首页 Peek 110pt 已是不放大的上限）；深色背景放大 2 倍时 Peek 叶柄旁仍有 1–2 个极淡像素；眨眼等动画、写字动作没有素材所以未实现；Captain 在首页比参考图 2 小（按「陪伴而非主内容」）；Swift 未编译、iOS 真机未验证。
+- 下一步：等用户确认 Captain 视觉；如需更大更清晰，请美术出高分辨率透明 PNG（放进 Resources/Keepers、在 library.json 登记即可替换）；确认后再按同样流程加入其他角色。
+
+### 2026-11-10 — V7.9 Little Keeper 改用用户确认的 3D 角色图（不再用 SVG / CSS 画）
+
+- 需求：用户发来 Little Keeper 角色视觉设计规范（3 个角色 × 6 套造型 / 表情的 3D 角色表）、「参考图 1 · Captain 角色视觉标准」（Normal / Happy / Sleepy / Surprised / Peek，主色，关键特征）和「参考图 2 · 首页布局参考」，并明确：以上传图片为视觉目标；不要用扁平 SVG / Emoji / 普通二维卡通 / 简单几何形状代替；合理裁切，不把整张角色图当作单个资源；缺新角色 / 动作时说明需要额外美术；不要声称代码绘制的角色与参考图效果相同；「功能实现」≠「视觉达标」；展示实际 iPhone 首页并与参考图对比。随后再次要求：停止用 SVG 或 CSS 重画 Keeper，使用 3D 角色图作为图片资源，不重构页面，Keeper 是低调的陪伴而不是主内容。
+- 改动文件：
+  - 新增 tools/extract_keepers.py（从角色表逐个裁切 18 张；`--captain` 从参考图 1 裁切 Peek 与 Surprised；去奶油色底、脚下阴影变半透明、2px 柔边、统一 233×309 画布与底线）。原图不进仓库、不进 App。
+  - 新增 Resources/Keepers/（20 张 PNG，约 1.7 MB）+ LD-keeper-LICENSE.txt；library.json 新增 `keepers` 清单。
+  - tools/preview.py、tools/build_link.py：新增 `library/keepers/`；Swift Resources.swift：`KeeperAsset`、`AssetCatalog.keepers`、`libraryData(category: "keepers")`；Models.swift `KeeperProfile.outfit`（可选）；CoreTests 加清单 / PNG / outfit 解码断言；LittleDaysWebResources.swift 注释。
+  - Public/js/keeper-art.mjs：删除 SVG 角色，改为按动物 / 造型 / 表情选图（`keeperAsset` / `keeperImage` / `keeperOutfits` / `DEFAULT_OUTFIT`）。
+  - Public/js/keeper.mjs：`ANIMALS` 加 westie；`outfit` 字段；默认名字 小团 / Captain / 小白（Pip / Captain / Snowy）；西高地回应语气。
+  - Public/app.js：所有 Keeper 位置改用图片；首页默认 Peek（22–6 点 Sleepy，长大那次 Happy）；点按短暂换成 happy / excited 图；设置里「帽子」选择；换动物时重置造型。
+  - Public/styles.css：删除全部 SVG 部件动画（头、眼、耳、铅笔等）；只保留整张图呼吸、点按弹跳、跟随手指 ±3° 倾斜；首页 Captain 探头 96px，切线落在卡片上沿、爪子压边 4px；小兔 / 小西高地 84px，卡片挡住下半身；其他位置缩小（Studio 28、书架 46、面板 58 等）。
+  - i18n.json：小西高地、帽子名称、帽子说明；`keeper.animal.cat` 改为「Captain 猫」（同时合并了文件里重复的 `home.greeting` 键，生效值不变）。
+  - whats-new.mjs 7.9；docs/DESIGN_SYSTEM.md（角色视觉规范：素材、默认造型、状态→图片表、尺寸、动效、分辨率、缺失素材）；docs/ASSETS.md（来源与授权）；docs/ARCHITECTURE.md；README.md。
+  - 测试：新增 tests/v79.test.mjs；tests/v71-browser.cjs 改为检查 `img.keeper-img[data-animal="cat"]` 已加载、页面上没有 Keeper SVG；tests/v77.test.mjs 默认名字改为 Captain。
+- 决策与原因：
+  - 角色表里「柠檬帽、睁眼」那张与参考图 1 的「Normal / 默认」相同，所以命名为 neutral；参考图 1 的 Surprised 作为 Captain 的 excited。
+  - 只有 Captain 有真正的 Peek 图；小兔 / 小西高地暂时用站姿图，被卡片挡住下半身来近似，并在更新记录、文档里写明需要补图。
+  - 所有缺图的状态都用最接近的现有图片，不用代码画替身。
+  - 尺寸刻意比参考图 2 小，首页结构不变（按用户最后一条要求）。
+- 视觉对比：截图在 iPhone 14 Pro 尺寸（Chromium 设备模拟），对比图左边参考图 2、右边实际首页，下方 Peek 细节；已发给用户。差异：Keeper 比参考图小；首页仍是现有排版（没有照搬参考图 2 的 Habits / Mood 卡片）；深色背景上站姿图边缘有极轻微浅色描边（App 主要是浅色）。
+- 运行 / 测试（Linux 容器 + Chromium）：Node 145 项全部通过（新增 v79 五项）；Python 12 项通过（含外壳同步一致性）；浏览器 E2E 全量 43 套：第一轮 40 套通过，`browser`、`v41` 失败——原因是 Keeper 邀请（在 `.hero` 卡片里）现在是 `<img>`，测试里的 `.hero img` 匹配到两个元素；改为 `.hero img:not(.keeper-img)` 后两套通过。`v54` 在第一轮失败一次（「打字工具条不移动页面」的位置断言），那时我同时在跑其他浏览器脚本；单独重跑两次都通过，该测试里 Keeper 未开启，判断为负载下的偶发，但没有在干净环境下再全量跑一轮。v71 更新后通过（检查首页图片已加载、没有 Keeper SVG）。截图：iPhone 14 Pro 尺寸首页（Captain / 小兔 / 小西高地）、选择小伙伴、设置里的帽子。Swift 未编译（无 Xcode / Swift 工具链），CoreTests 只改了源码。
+- 已知问题 / 未完成：缺 小兔 / 小西高地 Peek、三个角色的 Writing、小兔 Sleepy / Excited（小芽帽）、Captain / 小西高地 Encouraging、其他造型的更多表情；需要更高分辨率的单独渲染图才能更大尺寸使用。Swift 未编译（容器没有 Xcode / Swift 工具链），iOS 真机 / 模拟器未验证。
+- 下一步：请美术补上述姿势与高分辨率图，放进 Resources/Keepers 并在 library.json 登记即可生效（选图逻辑会自动优先用真图）。
+
+### 2026-11-10 — V7.8 Little Keeper 毛绒新造型 + 首页「小本子」排版
+
+- 需求（用户发来一张设计图：戴柠檬毛线帽的灰色小猫从首页卡片上方探出头、爪子搭在卡片边上；卡片像带铁环的本子，顶部「Hi! 今天想记录什么？」+ 日期牌，四个带 3D 图标的入口，「今天 · My Day」带胶带的照片，习惯 / 心情小卡）：「小动物的话我喜欢这个风格，排版的话你可以参考一下你觉得好的地方，不一定要大改现在的」。
+- 采纳：角色风格（毛绒质感、大眼睛、探出头 + 爪子搭边、柠檬帽）；卡片像本子（铁环、缝线）；问候 + 日期牌；四个插画入口方块（照片手帐高亮）；品牌小芽 + 标语；照片卡纸胶带。**未采纳**：习惯打卡 / 今日心情方块（与 Vision 2.0「首页不做追踪器」冲突）；「我的」tab（改导航需批准）；黄色 ＋（与现有鼠尾草绿主色不一致）。
+- 改动文件：Public/js/keeper-art.mjs（重画：探出头姿势，`feTurbulence` 毛边 + 毛毡纹理滤镜，大眼睛多层高光，小猫灰色英短 + 针织柠檬帽（叶子、柠檬片、帽檐罗纹），小兔雏菊花环；阶段：小花 → 金色星星；心情 idle / quiet / happy）；Public/app.js（masthead：品牌 + 小芽 + 标语，问候移入卡片；`keeperPerchHTML` 让小伙伴坐在卡片上沿（原 `.keeper-home` 类保留），`keeperInviteHTML` 放在卡片里；卡片铁环 `nb-rings`、`today-head`（问候 + 日期牌）、四个 `today-tile`（保留 today-photos / today-write / quick-open 选择器，新增 today-draw）、`tileArt` 插画；备份后在设置页重新显示媒体用量）；styles.css（V7.8 段：perch 弹出动画、缝线 outline、铁环、日期牌、入口方块、纸胶带、角色新变换原点）；i18n.json（home.tagline、tile.*）；whats-new.mjs（V7.8）；docs。
+- 发现并修复：v31「媒体用量 MB」偶发失败其实是 V7.5 引入的问题——备份后 `render()` 清空了异步填充的 `#media-usage`；现在备份后重新调用 `showMediaUsage()`，v31 连续两次通过。之前日志里把它记成「环境偶发」，这里更正。
+- 运行 / 测试：全量 43 套中 41 套通过；v40（深色主题对比度）发现日期牌文字对比度 2.15 → 改为 `var(--ink)` 后通过；v31 修复后连续两次通过。Node 140 项、Python 12 项通过。截图检查首页（小伙伴坐在本子上、四个方块、深色主题对比度由 v40 覆盖）。Swift 未改动、未编译。
+- 已知问题：仍是 SVG 2.5D（毛边用滤镜模拟），不是真 3D 渲染；滤镜在低端手机上可能略耗性能（未在真机测）。
+- 下一步：用户确认造型方向后，可请美术出真 3D 版本（与设计图一致的毛发渲染）；表情和动作再丰富一些（睡着、伸懒腰、递铅笔）。
+
+### 2026-11-10 — V7.7 Little Keeper MVP（可选小伙伴）+ 首页问候 + 标签 Top 3
+
+- 需求：用户长文「Little Days — Little Keeper Feature Development」（Today 上的小伙伴、三种模式、选择动物 / 起名、主动请求的回应、成长、My Books、隐私与 AI 同意、分阶段、测试、文档），并说「你可以鼓励或者 challenge 我；动画希望 3D 可爱有质感，互动希望自然」。同一轮追加：「首页还希望加一个 Hi,XXX，今天是星期X」；「标签可能有很多可以显示 top3 然后有个搜索的地方」。这一条覆盖了上一条「只写文档、未经批准不实现」——用户这次明确要求实现。
+- 架构评估（实施前）：iOS = Swift WKWebView 外壳 + `Public/` 网页（vanilla ES modules，无框架）；数据 `little-days.v1`（V7.5 起 IndexedDB 为主、LocalStorage 镜像）+ Swift `Models.swift` 可选字段；导航 首页 / 日历 / ＋（Studio）/ 书架；没有独立 Growth tab（「我的习惯」可选页仍在）；无后端、无 AI 服务。决定：不换技术栈、不加后端；Little Keeper 作为独立模块接入现有页面。
+- 给用户的 challenge（已在回复中说明）：三种模式可能太细 → 每种一句话说明 + 「翻看以前的页面」「主动打招呼」单独开关；AI 回应与「只在本机」冲突 → 先做本机规则回应，外部 AI 只留接口且由代码强制同意；「完成 Growth 活动」与 Vision 2.0 冲突 → 只把「我的习惯」打卡当作「这一天照顾了自己」，一天最多一次；真 3D 需要美术模型、WebView 3D 耗电 → 先做 2.5D 黏土质感 SVG + CSS 动画。
+- 改动文件：新增 Public/js/keeper.mjs（纯函数：ANIMALS / MODES；`normalizeKeeper`（默认关闭、权限独立）；`modeAllows`（安静：不邀请、不回应；温柔：邀请 + 主动请求才回应；互动：聊天，回忆需 allowMemories，主动需 proactive）；`keeperConfig`（features.json `keeper` 可配置阈值与分值）；`growthPoints`（按天计：写页 2、有照片 1、打卡 1、打开那年今天 1，每天上限 4；有我页面的手帐本 2、有标签的手帐本 1；示例日不算；不看字数和情绪；没有扣分）；`stageFor`；`todayPrompt`；`localFeedback`（关键词线索 → 开头 / 中间 / 结尾三段，避开最近用过的句子，难过的日子不强行正能量，无诊断）；`createFeedbackService({remote})`（没有 aiConsent 时绝不调用 remote，没有 remote 时本机生成，安静模式返回 null）；`localChat`（回忆 / 本周 / 书架，回忆和标题需要 allowMemories）），新增 Public/js/keeper-art.mjs（原创 SVG 黏土角色：兔 / 猫，渐变光影、高光、腮红、柔和投影，抱本子拿铅笔；阶段配饰：小芽、围巾 + 徽章；心情：idle / quiet / happy），Public/app.js（首页问候 `greetingHTML` + 名字面板；Little Keeper：首页一次性邀请、首页气泡、Studio 小伙伴打字时变安静、保存后盖章、翻书页「听听它怎么说」、互动聊天面板（不保存）、书架上的它、介绍流程（动物 / 名字 / 方式）、设置卡片（形象、阶段叶子、名字、动物、方式、两个权限开关、禁用的 AI 同意开关、关闭）、头部跟随手指 / 点按弹跳、成长到新阶段时轻轻说一句；书架标签 Top 3 +「更多」搜索；关闭后不再邀请），personal-ui.mjs（extra.keeper），styles.css（角色动画：呼吸、眨眼、耳朵、铅笔、小芽、弹跳、盖章；prefers-reduced-motion 时全部停止），i18n.json（home.greeting*、keeper.*、books.tagsMore/Less/Search），features.json（keeper 配置），whats-new.mjs（V7.7），Models.swift（`DayState.keeper: KeeperProfile?`）+ CoreTests，tests/v77.test.mjs（7 项），tests/v71-browser.cjs（9 组），package.json，docs。
+- 运行 / 测试：Node 140 项（新增 v77 7 项：资料、模式、按天成长、可配置阶段、回应（含示例原句）、AI 同意强制、聊天权限）、Python 12 项、43 套浏览器 E2E 全部通过（新增 v71 9 组；本次全量里 v31 也通过）。Linux 容器 + Chromium；截图检查了角色、介绍、首页、回应面板。**Swift 未编译**（无 Xcode）。
+- 已知问题 / 限制：Swift 未编译；「3D」是 2.5D SVG + CSS，不是真 3D 模型；本机回应是规则组合，不是语言模型；聊天只支持三个话题 + 简单回应；没有真实 AI 后端（接口已留，同意开关在没有安全服务时禁用）；首页成长提示依赖重新渲染时间。
+- 下一步：美术：真 3D 模型（USDZ / glTF，或 Rive / Lottie 动画）与更多表情；考虑 iOS 端侧模型生成回应（需核实系统版本与机型要求）；故事小世界收藏品（docs/PRODUCT_VISION_2.md）；Xcode 构建与真机验证。
+
+### 2026-11-10 — 产品方向 Vision 2.0 与 Little Keeper（只记录决策和方案，未实现）
+
+- 需求：用户两条消息。①「Additional Core Product Principle — Grow Through Living」：Little Keeper 随记录自然成长；伙伴成长 + 故事里的小世界（收藏品），MVP 设计可扩展数据模型、只做少量例子；不强制任务、不惩罚中断、可关闭、不需要把私人文字交给 AI。②「Product Vision 2.0 — Important Correction」：独立 Growth 模块已移除，不要重新引入；产品围绕 Today / Calendar / My Books / Journal Studio；成长只从已有的记录行为派生，不做习惯 / 健身 / 学习追踪器或成长仪表盘；核对仓库结构；保留代码和数据；更新 README、追加 agent.md；**未经批准不实现新功能、不改导航**。
+- 处理：两条冲突处以更正为准——本轮**只写文档**：新增 docs/PRODUCT_VISION_2.md（核对后的实际结构、架构、Grow Through Living 原则、以天计的公平规则、只用元数据的收藏品规则与 4 个 MVP 例子、可扩展数据模型提案（library.json `keeperCollectibles` + 可选 `keeper` 字段 + 纯函数 keeperState）、体验位置、不做的事、待批准事项）；README 新增「产品方向」一节；ROADMAP 追加 Little Keeper 阶段（待批准）与「Growth 模块已退役」说明；STRATEGY 追加一条说明。没有改任何代码、导航或数据。
+- 核对结果（如实）：导航为 首页 / 日历 / ＋（Studio 入口）/ 书架（实验室时加社区）；Growth tab 已在 V6.6 去掉；但「我的习惯」（打卡、成长之书、回顾）仍作为可选页面存在于书架与首页一行入口（2026-11-09 用户选择保留），实验室里仍有旧的文具等级 / 经验值——两者与新原则有张力，已列入待确认，未擅自删除。
+- 下一步：等用户批准 MVP 以及「我的习惯」、旧等级、默认开关、美术方向四个决定。
+
+### 2026-11-10 — V7.6 搜索、那年今天、每日提醒（iOS 本地通知）、手帐本标签
+
+- 需求：同上一条（用户确认的顺序）的第 4–7 项：搜索、「那年今天」、每天的温柔提醒（用户自选时间，「今天有什么值得记的？」，一键关掉，iOS 本地通知、不联网）、给自己的书做 tag 标签。
+- 改动文件：新增 Public/js/search.mjs（searchJournal：自己的页面（含草稿，不含示例日）的标题 / 正文 / #标签 / 纸上文字（不含跨页副本 gen 与绑定文字）/ 自定义字段 / 所属手帐本名与标签、当天清单（习惯名、细节、感想、做完的事）、手帐本（名、简介、标签）；多词 AND、忽略大小写；snippet；onThisDay：往年同月同日（最多 20 年，新的在前），没有时用「一个月前的今天」（不跨月末））；Public/app.js（放大镜图标；首页与日历页头搜索入口；`search` 页：输入即搜、`<mark>` 高亮、手帐本结果、点开当天并定位；首页 memoryHTML（照片 + 一句话 + 其他年份小按钮，× 今天隐藏 `little-days.memory-dismissed`，隐私「首页隐藏今天」时不显示）；每日提醒：`little-days.reminder` {on,time}，设置「每天的提醒」卡片（网页里开关禁用并说明只在 iPhone App 有效），syncReminder 在启动、开关、改时间、保存后通知外壳（skipToday），回调 littleDaysReminderResult / littleDaysFromReminder（打开「今天怎么记？」）/ littleDaysReminderTurnedOff；手帐本标签：表单「标签」字段、书架标签筛选 `shelf-tag`、手帐本页显示标签）；Public/js/model.mjs（parseTags：空格分隔，# 后保留空格，只有逗号时按逗号；最多 8 个、每个 ≤ 16 字、去重；saveBook 规范化；validateStateSnapshot 校验 tags）；personal-ui.mjs（标签字段、extra.reminder）；styles.css；i18n.json（search.* / memory.* / reminder.* / books.tags*）；whats-new.mjs（V7.6）；新增 Native/Sources/LittleDaysUI/WebShell/LittleDaysReminders.swift（WKScriptMessageHandler `littleDaysReminder` + UNUserNotificationCenterDelegate：逐日排 14 个本地通知、今天已记则跳过、「关闭每日提醒」动作（立即移除并在页面就绪后通知页面）、点击通知打开记录面板、前台不弹横幅）；LittleDaysWebShellView.swift（注册桥接）；Native/App/LittleDaysApp.swift（启动时 install 设置通知代理）；Models.swift（JournalBook.tags）+ CoreTests；tests/v76.test.mjs（5 项）；tests/v69-browser.cjs（3 组）、tests/v70-browser.cjs（3 组）；package.json；docs。
+- 决策与原因：提醒逐日排 14 天而不是一个重复通知，这样今天已经记过就能跳过；代价是 14 天不打开 App 后提醒会停（也算不打扰）。「那年今天」在应用还年轻时退而求其次显示一个月前，让用户更早感受到回看的价值。示例日不参与搜索和回忆。
+- 同一轮追加：用户截图「卡片和主页显示字体排版不一样」——首页「今天」卡片的标题和文字改用那一页自己的 `font` / `bodyFont`（字重 500），v66 加断言。
+- 运行 / 测试：Node 133 项、Python 12 项通过；浏览器 E2E 全量 42 套中 41 套通过（新增 v69 3 组、v70 3 组）。**v31 不稳定**：它写死的日期 2026-11-10 变成了今天，在 V7.5 代码上同样失败，与本次改动无关；已改为 20 天前的空日期，并让方向键微调步骤先确认焦点、最多重试 3 次；之后单独跑 3 次中 1 次通过，另外 2 次在更早的「媒体用量显示 MB」处偶发失败（存储估算是异步的，环境相关），未继续深挖，如实记录。Linux 容器 + Chromium；Swift 未编译。
+- 已知问题：**Swift 通知代码未编译**（无 Xcode），未在 iPhone 上验证通知权限、时间、动作；网页版没有提醒；搜索为全量线性扫描（几千页以内足够快，未做索引）。
+- 下一步：Xcode 构建 + 真机验证（App 锁、面容 ID、提醒）；自动 iCloud 备份；搜索结果按手帐本筛选。
+
+### 2026-11-10 — V7.5 备份提醒 + 记录存储升级到 IndexedDB
+
+- 需求：用户确认顺序「第 2 条的备份提醒和第 3 条存储升级先做，接着做第 4、5 条搜索和『那年今天』，然后每天的温柔提醒（iOS 本地通知），然后给自己的书做 tag 标签」。本条为前两项。
+- 改动文件：新增 Public/js/meta-store.mjs（IndexedDB `little-days-meta` / `kv`，写入排队合并，只写最新值）；Public/js/model.mjs（Store 接受 `{durableRaw, persist, onPersistError}`：LocalStorage 有副本时以它为准（每次保存先写它），没有时用 IndexedDB 副本；首次启动把 LocalStorage 的记录复制进 IndexedDB；LocalStorage 写满（QuotaExceeded）时移除镜像、设置 `little-days.v1-mirror = off`，之后只写 IndexedDB；没有 IndexedDB 时仍抛错，不会静默丢失）；Public/app.js（启动时读 IndexedDB 再建 Store；`navigator.storage.persist()`；备份提醒：自己的记录 ≥ 3 天且从未备份或 ≥ 14 天未备份时首页一行提醒，「现在备份」走原备份流程，× 推迟 7 天（`little-days.backup-snooze`）；备份成功记录 `little-days.last-backup`；设置「本机媒体与备份」显示上次备份）；personal-ui.mjs（extra.backupWhen）；styles.css；i18n.json（backup.*、storage.saveFailed）；whats-new.mjs（V7.5）；tests/v75.test.mjs（5 项）；tests/v68-browser.cjs（4 组，包括真正写满 LocalStorage 后保存、刷新后从 IndexedDB 读回）；package.json；docs。
+- 决策与原因：保留 LocalStorage 镜像（在放得下时），这样旧代码、跨标签页冲突检测和现有测试都不受影响；只在写满时才切到只用 IndexedDB。备份仍是手动导出（自动 iCloud 备份需要原生实现，列入下一步）。
+- 运行 / 测试：Node 128 项（新增 5 项）、Python 12 项；40 套浏览器 E2E：全量跑 37 套通过，v31 / v67 单独重跑通过（时序抖动），browser.cjs 失败原因与本次改动无关——示例日按今天日期生成，日期变成 11-10 后示例日落在测试挑的 11-01（stash 掉改动也一样），测试改为挑一个空日期后通过。新增 v68 4 组通过。Linux 容器 + Chromium。
+- 已知问题：镜像关闭后不再做跨标签页冲突检测；IndexedDB 写入是异步的，写失败只能事后提示（toast）；未在 iPhone WKWebView 实测 IndexedDB 容量与 persist()。
+- 下一步：搜索、那年今天（本轮继续）。
+
+### 2026-11-10 — V7.4 App 锁（4 位密码 + iPhone App 面容 ID）
+
+- 需求：上一轮建议「App 锁」，用户回复「要」。
+- 改动文件：新增 Public/js/app-lock.mjs（纯 JS SHA-256——iOS 自定义 scheme 不一定是安全上下文、crypto.subtle 可能不可用；makeLock 只存 `{v, salt, hash, grace, biometric}`；checkPin、readLock / saveLock（`little-days.lock`）、shouldRelock、pauseLeft：连续 5 次错误暂停 30 秒）；Public/app.js（启动时、绘制任何个人内容之前若有锁就 showLock("unlock")；锁屏是顶层 `<dialog id="lock-screen">`，#phone 设为 inert，Esc 不能跳过；模式 unlock / set / confirm / off / change；数字键盘 + 实体键盘；错误次数存 `little-days.lock-tries`，刷新不能绕过暂停；visibilitychange：「立即」在离开时就锁，其他在回来时按离开时长判断；设置隐私卡加 App 锁开关、离开多久后锁（立即 / 1 / 5 分钟）、面容 ID 开关（仅 iPhone App）、修改密码；「忘记密码？」如实说明无法找回；与 iOS 外壳通信：postMessage `{type:"unlock"}`、`{type:"state", on}`，回调 `window.littleDaysBiometricResult(ok)`）；styles.css（锁屏、键盘、抖动、离开时长）；i18n.json（lock.*）；whats-new.mjs（V7.4）；Native/Sources/LittleDaysUI/WebShell/LittleDaysWebShellView.swift（LittleDaysLockBridge：WKScriptMessageHandler + LAContext `.deviceOwnerAuthenticationWithBiometrics`，不提供系统密码回退、由网页键盘回退；启动脚本注入 `window.littleDaysBiometry`；LittleDaysPrivacy 让 SwiftUI 在 scenePhase 非 active 且锁开启时盖上「Little Days」封面，App 切换器不显示内容）；Native/LittleDays.xcodeproj/project.pbxproj（两个配置加 INFOPLIST_KEY_NSFaceIDUsageDescription）；tests/v74.test.mjs（4 项：SHA-256 与 Node crypto 一致、只存加盐哈希、读取 / 损坏忽略、重锁时机与暂停）；tests/v67-browser.cjs（6 组）；package.json；docs。
+- 决策与原因：这是防止别人拿起手机随手翻看的「门锁」，不是对手帐数据加密（数据仍在本机 LocalStorage / IndexedDB，有设备访问和开发者工具的人仍能读取），已在文档中如实说明；忘记密码不提供绕过入口，否则锁形同虚设；面容 ID 默认随 App 锁一起打开（在 iPhone App 里）。
+- 运行 / 测试：Node 123 项（新增 4 项）、Python 12 项、39 套浏览器 E2E 全部通过（新增 v67 6 组：设置两次、打开即锁且页面 inert、错误 / 正确、立即重锁、5 次错误暂停且刷新不绕过、忘记密码说明、关闭需密码、模拟 iOS 桥接的面容 ID）。Linux 容器 + Chromium；Swift 未编译。
+- 已知问题：**Swift 代码未编译**（本容器没有 Swift / Xcode），面容 ID、App 切换器封面均未在 iPhone 上验证；网页版锁不加密数据；在线链接（Claude App 内）没有面容 ID，只有密码。
+- 下一步：在 Mac 上用 Xcode 构建并真机测试面容 ID；考虑对 IndexedDB 媒体和 LocalStorage 做真正的加密（需要设计密钥管理，较大改动，需用户确认）。
+
+### 2026-11-09 — V7.3 习惯「✎ 编辑」菜单（含删除）+ 修复图标跑出卡片
+
+- 需求（用户 iPhone 截图：「我的习惯」页，图标在卡片外面）：「没有删除习惯的地方」。V6.7 的删除藏在「⋯」→ 编辑对话框底部，不容易发现。
+- 发现的问题：V6.6 给书架「我的习惯」书写的 `.habit-book` 样式（grid、边框、内边距）和习惯行里原有的 `.habit-symbol.habit-book` 小书图标同名，导致小图标被挤出卡片、书本变空白。
+- 改动文件：Public/app.js（书架那本改为 `habit-book shelf-habit-book`；「⋯」改为「✎ 编辑」按钮 `data-action="habit-menu"`，打开底部菜单：编辑习惯 / 删除这个习惯（红色）；edit-habit / delete-habit 打开前关闭菜单）；styles.css（`.habit-book` 书架样式改为 `.shelf-habit-book`；`.habit-more` 改成带边框的小按钮；习惯卡底部换行：一周圆点一行，次数 · 编辑 · 成长书一行）；i18n.json（habit.manage / manageShort / deleteHint）；whats-new.mjs（V7.3）；tests/v65-browser.cjs（编辑按钮 → 菜单 → 编辑、菜单直接删除（取消保留）、编辑表单里删除、图标在卡片内）；tests/v63-browser.cjs（书架选择器 `.shelf-habit-book`）。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；375 宽截图检查习惯页与菜单。
+- 已知问题：未在 iPhone 真机验证。
+- 下一步：看用户反馈。
+
+### 2026-11-09 — V7.2 隐私：今日清单默认不进导出、首页可隐藏今天、设置里写清楚
+
+- 需求：用户「还需要保护用户隐私」（上一轮刚把标着「私人」的今日清单画进了导出图片和给家人的 PDF）。
+- 隐私检查结果（如实记录）：照片上传时用 canvas 重新编码（imageBlob），EXIF / GPS 不保留，只在重编码前读拍摄时间；Public/ 中没有任何第三方网络请求（只请求同源 shared/*.json、本地 blob）；测试事件日志 events.mjs 只保存白名单字段（数字、布尔、短 id），不含文字、名字或媒体引用。视频文件按原样存进 IndexedDB（可能带拍摄元数据，只在本机 / 用户自己的备份里）。
+- 改动文件：Public/app.js（PRIVACY_KEYS / privacyOn / setPrivacy；`little-days.share-list` 默认关：exportOptionsFor 与导出图片只在打开时带今日清单；`little-days.hide-today`：todayPeekHTML 只显示「今天记了 N 页」的紧凑卡片；privacySectionHTML：隐私事实 + 两个开关，替换原「默认私人」卡；privacy-toggle 动作，日志只记 kind）；Public/js/personal-ui.mjs（settingsHTML 接受 extra.privacy）；styles.css（隐私卡、开关、隐藏卡片）；i18n.json（privacy.*）；whats-new.mjs（V7.2）；tests/v63-browser.cjs（默认导出 1350 高无清单、打开后变高、隐私卡文字、首页隐藏今天并仍可打开当天）；docs。
+- 决策与原因：清单在阅读页标「私人」，导出却默认带上，前后矛盾，改为默认不带、需要时自己打开；首页隐藏是可选的，默认不改变现在的体验。App 锁（Face ID / 密码）需要 iOS 外壳配合，本轮未做，列入下一步。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；截图检查了设置隐私卡与首页隐藏卡片。
+- 已知问题：没有 App 锁；视频元数据未清除；未在 iPhone 真机验证。
+- 下一步：用户确认后在 iOS 外壳加 Face ID / 密码锁（打开 App、切回前台时）；导出视频前清除元数据。
+
+### 2026-11-09 — V7.1 阅读页「今日清单」移到页面后面、改为简洁列表
+
+- 需求（用户 iPhone 截图：某天阅读页上方的「今日清单」——两张大习惯卡 + 各自「写感想」+ 一行「✓ 健身」）：「今日清单planner checked在上面有点突兀」。
+- 改动文件：Public/js/day-view.mjs（growthHTML：习惯和做完的事统一为 `.day-checklist` 里的 `.check-line` 行（✓ + 名字 + 分钟 / 细节 + 一句感想摘录 + 小照片），习惯行点开 check-view（有感想）或 check-note（没有）；去掉每条的大卡片和「写感想」链接；dayDetailHTML 中清单移到封面页和各页之后、「给这一天再记一页」之前）；styles.css（V7.1 紧凑清单样式）；whats-new.mjs（V7.1）；tests/v63-browser.cjs（清单在页面之后、✓ 行、无重复「写感想」）。
+- 决策与原因：清单是一天的「收尾」，放在页面后面更自然，也和翻书页 / 导出（都在页面下方）一致；习惯和计划同一种样式，避免卡片层级不一致。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；截图确认清单在页面之后、点习惯行打开感想。
+- 已知问题：未在 iPhone 真机看。
+- 下一步：看用户反馈。
+
+### 2026-11-09 — V7.0 首页「今天」卡片按照片滑动
+
+- 需求（用户 iPhone 截图：首页「今天 · 17:09」一张樱花卡片）：「还不能scroll」。
+- 原因：V6.7 的卡片是「一页一张」，用户今天只有一页（故事 / 照片页里有几张照片），所以只有一张卡、没有圆点、滑不动。用户最初要的是「preview 写过的话或者上传过的图片」。
+- 改动文件：Public/app.js（todayPeekHTML 改为每张照片一张卡：页面背景照片、封面照片、照片图层各一张，带该页标题，第一张带该页文字；跳过跨页上的 `gen` 副本并按 mediaRef 去重；只有文字的页面一张横线纸卡；最多 12 张；点卡片打开当天并定位到那一页）；styles.css（滑动条加 `touch-action: pan-x pan-y`、`-webkit-overflow-scrolling: touch`）；whats-new.mjs（V7.0）；tests/v66-browser.cjs（第 4 组改为：一页 3 张照片 = 3 张卡、跨页副本不重复、文字页 1 张、圆点数一致、滑到第 3 张圆点跟随、点开当天）。
+- 运行 / 测试：Node 119 项、Python 12 项、38 套浏览器 E2E 全部通过（Linux 容器 + Chromium）；截图确认第二张卡与圆点。
+- 已知问题：未在 iPhone 真机确认滑动手感（Chromium 中通过 scrollTo 验证圆点跟随，截图检查）；视频不进卡片。
+- 下一步：用户在手机上确认能滑；如需要可加左右箭头给电脑用户。
+
+### 2026-11-09 — V6.9 planner 8 件 + 今日清单画进导出图片 / PDF
+
+- 需求：用户回复上轮三个问题「保留； 要； 可以画出导入」——习惯保留（只在「我的习惯」+ 首页一行入口）；「今天要做的事」放宽上限；今日清单画进导出。
+- 改动文件：Public/app.js（MAX_PLANS 5 → 8；新增 dayListItems(date)；翻书页 flip-checklist 改用它——顺带修复了原来用 `habit.name`（不存在）导致习惯名不显示的问题；exportOptionsFor 增加 withList → `dayList` / `dayListTitle`；导出图片时当天第一页带清单；PDF 循环里每天第一页带清单）；Public/js/export.mjs（renderJournalCanvas 末尾 withDayList：在 1080×1350 页面下方加一条奶油色清单条，虚线 + 胶带 +「今日清单」+ 勾选小标签自动换行，最多 13 条，不覆盖页面）；Public/js/book-share.mjs（buildPdf 每页按图片比例算高度，较高的页面不再被压扁）；i18n.json（plan.hint 8 件）；whats-new.mjs（V6.9）；tests/v63-browser.cjs（8 件上限、翻书页显示习惯名、导出 PNG 高度 > 1350）；tests/v53.test.mjs（PDF 高页）；docs。
+- 决策与原因：清单画在页面下方而不是页面上，避免盖住照片和文字，也和翻书页「清单在页下」一致；只放在当天第一页，避免重复。9:16 分享图不加（那是「晒一页」，不是存档）。
+- 运行 / 测试：Node 119 项（新增 PDF 高页）、Python 12 项、38 套浏览器 E2E 全部通过（v63 新增导出 PNG 带清单、翻书页显示习惯名、8 件上限）。Linux 容器 + Chromium；导出图片已人工查看截图。
+- 已知问题：导出的清单用系统无衬线字体，不跟页面字体；视频导出不带清单；未在 iPhone 真机验证分享 / 保存。
+- 下一步：看用户反馈；清单条是否也要跟纸张颜色。
+
+### 2026-11-09 — V6.8 首页「今天要做的事」+ 更新记录搬进设置
+
+- 需求（用户截图：首页「今天的小习惯」三行，带小书封面）：「这个其实是不同的书…我觉得没有必要弄习惯，相反这里我们可以是一个空白的框，然后用户可以放planner」；确认后：「更新记录可以作为一个section在setting里而不是占主页的位置，我觉得二可以换planner；我在想要留习惯吗」。
+- 改动文件：Public/app.js（todayListHTML 改为 planner：标题「今天要做的事」、空白输入框、勾选 / 删除 / 搬昨天的，不再受 labsOn 控制，下面一行 `.today-habits-link`「我的习惯 · x/y 已完成 ›」；首页去掉 whatsNewCardHTML，齿轮 `.settings-gear` 有新版本时加 `.news-dot`；新增 newsSectionHTML：设置里「更新记录」section 放在主题之后，最新一版用 details 展开，打开设置即记为已看；删除 whats-new-dismiss）；Public/js/personal-ui.mjs（settingsHTML 接受 extra.news）；styles.css（planner、习惯行、红点、更新记录）；i18n.json（plan.title / plan.hint 改文案，news.new / news.all / news.dotLabel、habits.none）；whats-new.mjs（V6.8）；AGENTS.md（首页不再放更新卡片的规则）；tests/signed-in.cjs（touchStore、openHabits）；9 套测试里「首页打勾两次写入存储」改为 touchStore；browser / v3 / v40 / v42 / v54 / v65 改为在「我的习惯」里打卡；v63 第 1 组、v52 更新记录断言重写；docs（PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、ROADMAP、STRATEGY、README）。
+- 决策与原因：用户问「要留习惯吗」——我的建议是**留，但不放首页**：已有用户的打卡、成长之书、每周回顾都在里面，删掉会丢数据和入口；首页只留一行入口和今天的完成数。planner 沿用任务 G 的边界（最多 5 件、不提醒、不自动顺延），只是从实验室拿出来给所有人。打卡和做完的事仍出现在当天的「今日清单」上。
+- 运行 / 测试：Node 118 项、Python 12 项通过；38 套浏览器 E2E：全量跑 37 套通过，v45 发现首页横向多出 3px（planner 输入框不能收缩），加 `min-width: 0` 后重跑 v45 及 browser / v52 / v63 / v66 / v40 通过。Linux 容器 + Chromium。
+- 已知问题：首页不再能一键打卡（要进「我的习惯」）；习惯是否完全隐藏 / 进实验室待用户决定；未在 iPhone 真机验证。
+- 下一步：看用户是否要把习惯进一步收进实验室；planner 是否放宽 5 件上限。
+
+### 2026-11-09 — V6.7 拖动互换照片、替换照片、杂志风格加强
+
+- 需求（用户截图：拼贴风格封面里选中照片的工具条）：「还想要可以替换图片；杂志风格继续增强，两个图片可以通过拖动互换位置」。
+- 改动文件：Public/app.js（图层工具条加「替换」；替换后在旧框内按新照片比例重算；拖动时标记目标照片、松手互换 swapPhotos；故事页传 folio / issue）；Public/js/scrapbook-layout.mjs（杂志：刊头小标 kicker、标题 24/21/19、页脚刊号、底部留白；跨页报头 + 期号 + 大号日期；partWord；boundText 支持 kicker）；Public/js/story-style.mjs（layerBox 文字按行数估高）；styles.css（swap-target 虚线、图层条不超出画布）；i18n.json（photo.swapped、photo.replaceShort）；whats-new.mjs（V6.7）；tests/v64-browser.cjs（新 3 组）；package.json；docs（DESIGN_SYSTEM、ARCHITECTURE、README）。
+- 决策与原因：互换时不是简单交换 x/y，而是让每张照片按自己的比例放进对方的框，避免横竖图互换后被裁切；叠放顺序一起换，主图位置上的照片仍在上层。替换沿用已有的替换上传（包括照片编辑器），只补上入口和比例调整。
+- 运行 / 测试：见下方验证。
+- 已知问题：互换只在「自定义」（Studio）里可用，预览页是只读的；跨页上的照片是 Moment 照片的副本，替换跨页上的照片不会改 Moment 页；未在 iPhone 真机试触摸拖动互换（Playwright 用鼠标指针模拟）。
+- 下一步：吸附对齐线、草稿恢复；跨页照片替换时可选「同时换掉那一页的」。
+- 同一轮追加（用户中途四条消息）：
+  - 「没找到哪里删除习惯的地方」：成长页每个习惯加「⋯」→ 复用新建习惯对话框做编辑（预填）+「删除这个习惯」（askConfirm，删除习惯、其打卡、页面上的 growth 卡片层）。
+  - 「主题调色只在实验室；字体想加默认黑体 宋体 楷体」：themePickerHTML 不再受 labsOn 控制；library.mjs 新增 SYSTEM_FONTS（hei / song / kai 设备字体栈，楷体回退霞鹜文楷），fontOptions 和文字样式条最前；设置「字体与素材许可证」说明设备字体无需许可证（未确认 iPhone 是否自带楷体，已如实写回退）。
+  - 「昨天忘了记录今天想记录昨天」：首页「忘了记？补记昨天」→ 昨天的记录面板；照片 EXIF 日期集中在过去某天时故事自动记到那天并提示；预览加日期选择（moveStoryTo：撤销当前生成、切到新日期重做）；上传时记录是否来自 EXIF。
+  - 「这个不知道是什么」（封面编辑时纸下的「今天的标题和文字」框）：去掉封面的这张重复输入卡（文字在纸上输入）；7 套旧测试改为在纸上输入；同时发现并修复「纸上打字后撤销按钮仍是灰的」（inlineChange 首次记录历史时直接点亮撤销）。
+  - tests/v65-browser.cjs（新 5 组：习惯编辑 / 删除、无实验室时的主题、黑宋楷、昨天照片自动记到昨天并改日期、首页补记入口）；v52 主题断言改为人人可见；v31 / v32 / v42 / v44 / v46 / v3 / browser 的封面输入改为纸上输入。
+  - 「点开最好有窗口真是图库预览…取消的话…想回第一个界面」：「今天怎么记？」选「图库」时直接在面板里显示图库照片网格（quick-lib），点一张再「开始」，那张照片成为「照片 + 一句话」页的背景；没选照片就点开始会提示先选一张。网格行高用 `grid-auto-rows: max-content`（滚动容器里 auto 行会被压扁，测试时发现）。
+  - 「这个的问题也是选择后取消了不会回首页而是到edit」（首页「选今天的照片」）：startQuickRecord 的「我的相册」路径改为先打开系统相册、选好照片后才 startPage（handleImageUpload 的 quick 分支里）；取消时什么都没开始：从首页来就留在首页，从「今天怎么记？」来就重新打开面板并保留原来的选择（input 的 `cancel` 事件）。不会再留下空白页。删除了上一版的 backToQuickSheet。
+  - 「这个可不可以向右滑下面有点点 可以preview写过的话或者上传过的图片」：首页「今天」卡片改为横向滑动（scroll-snap）的 todayPeekHTML：每页一张卡（有照片显示照片，没有照片显示横线纸上的标题和文字），多于一页时下一张露出一点、下方圆点跟随；点卡片打开当天阅读页并定位到那一页（open-day + data-moment）。第一张保留 `.today-preview` 类名，旧测试不变。
+  - 「颜色和大小调整的时候是分开调整，但是字体会一起变」：文字样式条换字体只改正在编辑的那一处：正文写入 `bodyFont`（已有字段，封面用过），标题改 `font` 时先把正文当前字体固定到 `bodyFont`；canvas 随手写 / 一句话页的正文、导出的一句话正文都读 `bodyFont || font`；Swift `JournalMoment` 增加可选 `bodyFont`。
+  - 「Save 完我写的就回主页了我觉得正常是会给你看你写完的样子」：保存后（不是从阅读页进来编辑时）调用 showSavedPage：打开这页所在的手帐本「翻页」视图并翻到刚保存的那一页（故事流程本来就是这样）；找不到时才回首页。12 套旧测试里「保存后等首页」改为用 tests/signed-in.cjs 新增的 homeAfterSave（先等翻页出现，再点首页）；v58 断言改为保存后看到刚写的那页。
+  - tests/v66-browser.cjs（新 5 组：首页选照片后取消留在首页且不加页、面板里取消回到面板、图库网格选图写一句、首页卡片滑动与圆点、字体只改标题或正文）。
+  - 「什么叫Aa Just Write」：先改成笔图标 +「只写文字」，用户随后说「为什么要有Aa 不应该就是 Just Write吗」→ 最终去掉「Aa」和图标，文字保持「只写几句 / Just write」，按钮 title 提示「不放照片，在纸上写一页」（story.justWriteHint）。
+  - 保存后在翻页视图里也会出现当天第一次记录的盖章庆祝（maybeCelebrate(true)）；从书架打开书时恢复用户自己选的列表 / 翻页视图（chosenBookView），不被保存后的翻页视图带过去（v32 回归时发现）。v55 的浮动保存断言改为看到刚写的那页。
+
+### 2026-11-09 — V6.6 成长合并进「今天」（任务 G）
+
+- 需求：用户「没有看到我们说的合并成长」——任务 G 已确认，上一轮我排到了下一轮；本轮实施。
+- 改动文件：features.json（growth `inNav: false`）；Public/app.js（导航过滤、growth/journey 高亮书架；首页「今天」卡片内 todayListHTML：今天的小习惯 + 我的习惯链接 + 实验室「今天想做的事」；书架 habitBookHTML；成长页页头改名「我的习惯」并可返回书架；plan-add / toggle / remove / carry 动作与 Enter 键；翻书页第一页下方 flip-checklist）；Public/js/day-view.mjs（成长区改为「今日清单」便签并移到当天顶部，含做完的事）；styles.css；i18n.json（today.* / habits.* / plan.* / day.checklist，导览文字更新）；whats-new.mjs（V6.6）；Resources.swift（NavigationTab.inNav）、Models.swift（DayPlan、JournalState.plans）+ CoreTests；tests/signed-in.cjs（goTab / menu 的 "growth" 改为从首页卡片进入）；tests/v63-browser.cjs（新 6 组）；package.json；docs（PRODUCT_SPEC、ARCHITECTURE、ROADMAP、STRATEGY、README）。
+- 决策与原因：今日清单做成读取打卡与计划的派生视图，而不是往页面里写贴纸图层——不改用户页面，也不会让空封面变成「有内容」从而挡住当天跨页的自动生成；代价是导出图片 / PDF 里还没有它（已记在未完成）。「今天想做的事」按任务 G 边界：≤ 5 件、无提醒、不自动顺延，放在实验室。
+- 运行 / 测试：118 项 Node、12 项 Python、35 套浏览器 E2E 全部通过（v63 新 6 组：4 个 tab、首页打卡、我的习惯进出、实验室计划增删勾与上限 5、今日清单在日历与翻书页、昨天未完成只在点了之后搬过来；v52 的导航断言更新为 4 个 tab）。Linux 容器 + Chromium。
+- 已知问题：今日清单还没画进导出图片 / PDF；首页卡片里的习惯行沿用原组件（卡中卡）；原生 SwiftUI 原型视图未改。
+- 下一步：吸附对齐线、草稿恢复；今日清单进导出；看用户反馈再调首页卡片层级。
+
+### 2026-11-09 — V6.5 Quick Create V2：Scrapbook 排版引擎 + 三种风格 + 更短的流程
+
+- 需求：长需求「Quick Create V2 设计优化与差异化升级」：生成结果要像真正的 Scrapbook（主次、节奏、照片是主角、日期不抢戏、Wow），三种布局逻辑不同的风格（Minimal Editorial 默认 / Cozy Scrapbook / Playful Collage）一键切换并保留内容，流程改为「上传 → 自动分组 → 直接生成初稿 → 可选写字 → 保存」，预览里直接写 Moment 文字，Quick 与 Creative 同一份数据，手动调整不被未经确认覆盖，10 个场景验证并提供真实截图。另：用户对任务 G 回复「可以」（已确认，排到下一轮）。
+- 改动文件：
+  - Public/js/scrapbook-layout.mjs（新）：三种风格的构图（editorial 主图 + 行排列、cozy 拍立得散落、playful 拼贴打包）、当天跨页、frameHeight / fitPhoto（按相框内边距算高度，照片不裁）、textBlock / fitText（文字估算与缩小）、centreVertically、boundText、pickFont（中文用中文字体）。
+  - Public/app.js：故事流程改为选完照片直接生成（一个 Moment 也走这里，不再进旧的单页结果页）；预览：页签、大画布（点画布写字）、风格三按钮、重新排版、写一句、调整分组、自定义、保存、放进哪本书；写字面板；换风格 / 重新排版对手动调整过的页先确认；保存时记录 page_done（实验日志）；自由编辑里改绑定文字写回 Moment。
+  - Public/js/canvas.mjs、export.mjs：绑定文字、时间小标签（chip）、scrapbook 页不画旧的固定标题 / 照片占位 / 面纱。
+  - Public/styles.css、i18n.json（story.style.* 等）、whats-new.mjs（V6.5）、Models.swift（layoutStyle；StickerLayer gen / bind / of / excerpt / prefix / chip，全部可选）+ CoreTests。
+  - tests：v62.test.mjs（新 7 项，含 3 风格 × 1–12 张 × 3 种文字 × 3 变化的全量规则检查）；v60-browser 重写为 V2 流程（7 组）；v61-browser 重写为压力测试（10 张 / 4 个 Moment / 中英长文字，三种风格每页在浏览器里测量照片和文字都在页面内，5 页都能导出）；v51 / v52 / v53 改为新流程（原来测旧单页结果页）。
+  - docs：ARCHITECTURE、DESIGN_SYSTEM（三种风格表）、PRODUCT_SPEC、ROADMAP、STRATEGY（任务 G 勾选已确认）、README；截图 `docs/images/quick-create-v2/`（公开示例照片，非用户数据）。
+- 决策与原因：在现有图层模型上做（引擎只改照片位置并替换自己生成的图层，用户自己加的贴纸 / 文字保留），不重写；文字用「绑定」而不是复制，避免改字后页面不同步；单个 Moment 也走新流程，保证 1 张照片也好看；保留旧代码（旧的结果页、smart 布局、timeline 封面）以兼容旧数据和其他入口。
+- 视觉检查（真实浏览器截图）：1 / 3 / 5 / 10 张照片和长文字，三种风格逐一看过并迭代：杂志单张改为通栏、内容少时居中、两张照片按六四分配；手账字体缺字改霞鹜文楷、跨页小字单行；拼贴单张放大、拼贴改为相接散开。
+- 运行 / 测试：118 项 Node（新增 7 项排版引擎测试）、12 项 Python、34 套浏览器 E2E 全部通过（v60 V2 流程 7 组：直接出初稿、预览写字、三种风格保留内容、调整分组、手动调整保护、保存进书与日历、单张与放弃；v61 压力：10 张 / 4 Moment / 中英长文字三风格逐页测量无溢出、5 页导出 1080×1350；v51 / v52 / v53 更新为新流程）。Linux 容器 + Chromium。
+- 已知问题 / 不足：杂志风格偏克制，Wow 感主要来自大主图，没有更强的版式元素（如大号引言、分栏线）；拼贴的叠放顺序不按时间；当天跨页最多 4 个 Moment；预览里改字后整页会重新排（手动调整过的页除外）；吸附对齐线、草稿恢复、长按拖动分组尚未做；未在 iPhone 真机验证字体和触控；视频 / 录音只做了排版规则和单测，没有在故事流程里实际添加视频。
+- 下一步：任务 G（成长合并 + 今天想做的事）；P0 ③ 的吸附线和草稿恢复；杂志风格再加一两个强版式。
+
+### 2026-11-09 — V6.4 排版引擎 v2 第一部分（Quick Create v3 · P0 ②）
+
+- 需求：用户「可以开始」，并问成长合并和 planner 需要确认什么（已在回复里列出任务 G 的两条确认项，未开发）。
+- 改动文件：
+  - library.json 新增 `kits`（cream / blush / sage / kraft：纸张、标题字体、句子字体、墨色、强调色、3 枚贴纸、playful）；Resources.swift `StoryKit` + `AssetCatalog.kits`；Models.swift：JournalMoment.kit、StickerLayer.deco（可选）；CoreTests。
+  - Public/js/story-style.mjs（新）：kitList / findKit / kitForBook（书的颜色 → 套装）/ applyKit（纸张、字体、墨色，不动照片）/ firstLook（1 张 → 大图，2–5 张按套装风格，更多 → 整齐）/ decorate（≤ 2 枚，只放在与照片、文字、标题条都不重叠的角落，重做时替换不累加）/ captionFit（长句缩小、最多两行）。
+  - day-story.mjs：封面时间线用套装的字体和颜色；长句略缩小；日期两行间距加大。
+  - app.js：故事生成时套用套装、第一眼规则和装饰；换一种后重新装饰；预览加「配色」4 个色点，一次改整天；单页快速结果也套用书的套装和装饰。
+  - canvas.mjs / export.mjs：标题条按 captionFit 缩小或两行（屏幕与导出一致）；**修复导出文字图层**：按图层自己的宽度、左中右对齐和垂直居中绘制（之前固定 700px 宽、从左边起画，时间线封面导出会错位）。
+  - styles.css、i18n.json（story.kit）、whats-new.mjs（V6.4）、tests/v61.test.mjs（新 6 项）、tests/v61-browser.cjs（新 4 组）、package.json、docs。
+- 决策与原因：套装跟书的颜色走，让一本书里的日子风格统一；装饰宁可不放也不压内容；胶片条 / 文字卡 / 杂志三个新模板本轮没做（需要改标题条和导出的位置，单独做更稳），已如实标在 ROADMAP。
+- 运行 / 测试：111 项 Node（新增 6 项）、12 项 Python、34 套浏览器 E2E 全部通过（v61：整天同一套配色、单张大图、每页 ≤ 2 枚装饰；换配色一次改整天并重建封面字体和贴纸；长句两行标题；保存后封面导出 1080×1350）。另外用截图检查了 3 套配色的封面和页面、导出的封面图片（文字位置与屏幕一致）。Linux 容器 + Chromium。
+- 已知问题：「换一种」和换配色会重建封面（还没有钉住手动调整，属于 ③）；牛皮纸套装原用龙藏体太细，改为站酷小薇；未在 iPhone 真机看字体效果。
+- 下一步：P0 ③ 自动与手动共存（钉住、吸附线、草稿恢复）；之后补三个新模板。
+
+### 2026-11-09 — V6.3 今天的故事（Quick Create v3 · P0 ①）
+
+- 需求：用户「我喜欢新设计的六屏」；按 docs/QUICK_CREATE_PLAN.md 的顺序先做 P0 ①。（我发的确认问题被用户关掉，按「先做 ①，底部导航和成长合并留给任务 G」的默认推进，在回复里说明。）
+- 改动文件：
+  - Public/js/exif.mjs（新）：读 JPEG EXIF DateTimeOriginal（IFD0 → Exif IFD；读不到用文件时间）；`photoTime(file)` 在 `imageBlob()` 缩图前调用。
+  - Public/js/day-story.mjs（新）：groupByTime（间隔 > 90 分钟分开，无时间的照片跟在前一张后面）、movePhoto / splitAt / removePhoto（纯函数）、clockLabel、partOfDay、timelineLayers（封面时间线 = 普通照片层 + 文字层，左右交错、按原比例不裁切、超过 5 个 Moment 显示「还有 N 个」，3 种样子）。
+  - Public/app.js：首页「今天有什么值得记录？」卡片（today-photos / today-write 直接开始；「其他方式」仍是原来的面板）；照片上传记录拍摄时间，分成 ≥ 2 组时进入 story 页面（分组 → 每组一句 → 预览），否则保持原来的一页结果页；预览页签、换一种（封面 3 种、页面沿用 smart 3 种）、自己调整（进 Studio，‹ 回到预览，保存直接进书）、往回再生成不会重复；保存后打开书的翻页并翻到这一天；离开第一步不留下任何页。
+  - Public/js/canvas.mjs、export.mjs：封面 `layoutTemplate: "timeline"` 时不画默认标题 / 正文 / 心情 / 照片占位。
+  - Public/styles.css、i18n.json（story.*）、whats-new.mjs（V6.3）、Models.swift（JournalMoment.capturedAt 可选）+ CoreTests、package.json、tests/exif-fixture.cjs（新：给公开示例照片加合成 EXIF 时间）、tests/v60.test.mjs（新 4 项）、tests/v60-browser.cjs（新 7 组）。
+- 决策与原因：封面做成普通图层而不是新的渲染模板，这样阅读、导出、PDF、翻页、自由编辑全部直接可用；自动封面只在封面为空时写入；分组里挪照片先用「点选 + 前一个 / 后一个」，长按拖动留到 P1（更稳，测试更可靠）。
+- 运行 / 测试：105 项 Node（新增 4 项：EXIF、按时间分组、挪照片 / 分开 / 去掉、封面时间线）、12 项 Python、33 套浏览器 E2E 全部通过（v60：首页 → 选 5 张带拍摄时间的照片 → 分成 3 个 Moment → 挪照片再挪回 → 两组写一句 → 封面 + 3 页 → 换一种 → 自己调整再回来 → 回到写一句再生成不重复 → 保存进书并翻到封面 → 日历里显示 → 第一步离开不留页 → 同一时段照片仍是一页）。Linux 容器 + Chromium；未在 iPhone 真机验证。
+- 已知问题：网页上 iPhone 照片的 EXIF 时间是否保留未在真机验证（读不到时整组按选择顺序成一页）；主题套装、文字适配、钉住手动调整属于 P0 ② ③，还没做；封面「换一种」会重排封面图层（还没有钉住保护）；底部导航仍是 6 个。
+- 下一步：P0 ② 排版引擎 v2，P0 ③ 自动与手动共存。
+
+### 2026-11-09 — 查看方式改为固定链接；差异化与 Quick Create v3 方案（仅文档，待确认）
+
+- 需求：①「Windows 使用 localhost:8080 交互预览」这块改为继续用 claude 固定链接看修改后的 App；②长篇需求「产品差异化战略与 Quick Create 核心体验升级」：本轮不大规模写代码，先检查仓库、批判性分析差异化、设计 Quick Create 旅程和页面、Auto Layout 方案、优先级、验证实验，回答三个问题，等确认后再实施。
+- 改动文件：AGENTS.md（新增长期规范：查看方式统一为 claude.ai 固定链接，localhost 仅备用；六项回复第三项改为「在线链接（Claude 固定链接）与查看方式」）；README.md（固定链接为标准查看方式，localhost 改为备用；文档表加 STRATEGY / QUICK_CREATE_PLAN）；docs/ARCHITECTURE.md（同上，并加技术增量提案）；docs/QUICK_CREATE_PLAN.md（新，完整方案）；docs/PRODUCT_SPEC.md、DESIGN_SYSTEM.md、ROADMAP.md（提案指向，标注未实施）；agent.md 当前状态里的查看方式。
+- 设计稿：新建 claude.ai 设计画布 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt （6 屏 iPhone 高保真，可点击跳转；照片用 App 自带的 Unsplash 示例图）。
+- 关键发现（来自代码）：Quick Create 已有一半（多照片、按形状不裁切、3 种样子、结果页）；缺多 Moment 一次完成、页面层次、统一套装、钉住手动调整；`imageBlob()` 用 canvas 重编码会丢 EXIF，按时间分组要先读；结构化字段 `fieldValues` 在「一天」上而不是「一页」；`bookId` 单值；app.js 5,911 行。
+- 决策与原因：建议「封面时间线 + 每个 Moment 一页」而不是把一天塞进一张 4:5 的页（手机上太挤、排版不可控）；规则式排版，不用生成式 AI；所有新字段可选、不迁移。
+- 运行 / 测试：只改文档，没有改 App 代码，没有运行测试。
+- 未完成：全部实施项等用户确认（QUICK_CREATE_PLAN §12）；竞品中 Day One 是否仍提供打印成书未核实；网页上 iOS 照片 EXIF 是否保留未核实。
+- 下一步：用户确认后按 P0 ① → ② → ③ 开发。
+
+### 2026-11-09 — 竞品补充：My Diary（文档）
+
+- 需求：用户发来 My Diary 的 App Store 截图（时间线、照片 / 视频 / 录音、贴纸），问「这个非常像我想的怎么办」。
+- 做了：网上查公开资料（apps.apple.com 在本会话网络里无法直接打开，只能用搜索结果和第三方统计），在 docs/STRATEGY.md 竞品表加一行：它是什么、价格、规模（约 420 万安装；「5000 万」未核实）、和我们的重叠与差异、我们该补的基本功（锁、备份）。
+- 结论（建议，未改代码）：不转向、不照抄；它验证了需求，但「日记 + 附件 + 日历」已是标配，我们的差异是照片自动成页 → 一本可以翻、可以给家人看的书。建议用户亲自装一遍 30 分钟做对比。
+- 未完成：没有真机体验它；它的具体排版和留存数据未知。
+
+### 2026-11-09 — V6.2 更多音乐风格、音量、整本书的音乐；成长合并与 planner 提案
+
+- 需求：用户觉得 5 首都不错，钢琴 / 更欢快 / 咖啡馆风格都想要；同意加音量和「整本书配一首音乐」；另外请从产品角度看 Little Growth 能否合并、planner（提前写今天要做的事再打勾）是否和核心冲突。
+- 改动文件：
+  - tools/make_music.py：新增钢琴（双弦失谐、拉伸泛音、琴槌声）、钢片琴、低音提琴、拍手、鼓刷、叮叮镲、咖啡馆背景声，循环卷积混响（保持无缝循环）；新增 morning-piano、sunny-day、cafe-corner 三首；可只生成指定曲目（旧 5 首未重新生成，文件不变）。
+  - Resources/Music 3 个新 mp3；library.json `music` 增至 8 首；许可声明补充乐器描述。
+  - Public/js/music.mjs：loadVolume / saveVolume（`little-days.music-volume`）、播放器 setVolume；bookMusic、pageMusic；dayMusic 回退到书的音乐。
+  - Public/app.js：选曲面板分「这一页 / 这本书」两种（data-target），面板顶部音量条；书的页面「♫ 给这本书配音乐 / 换一首」；syncMusic：书打开（列表或翻页）放书的音乐，翻到有自己音乐的页放那一页的；导出视频用页面或书的音乐和用户音量。
+  - Public/js/day-view.mjs、export.mjs（音量）、styles.css、i18n.json（music.volume / music.book*）、whats-new.mjs（V6.2）。
+  - Models.swift：JournalBook 新增可选 `music`；CoreTests（书的音乐、目录 8 首）。
+  - docs/STRATEGY.md 新增任务 G（成长合并 + planner 边界，待确认）；ASSETS、ROADMAP、PRODUCT_SPEC、ARCHITECTURE 更新。
+  - tests：v57.test.mjs（+2 项）、v57-browser（8 首）、v59-browser.cjs（新）、package.json。
+- 决策与原因：音量是「这台设备」的设置而不是每页一个（像系统音量一样直觉，也避免每页都要调）；书的音乐是兜底，页面自己的音乐优先。成长合并会改导航、属于较大改动，planner 牵涉定位，所以只写方案（任务 G）等用户确认，没有开发。
+- 验证：新 3 首 ffmpeg 响度 -17.2～-17.8 LUFS、峰值 ≤ -4.0 dBFS；「晴天」「咖啡馆一角」第一次低频过重，已调低贝斯和底鼓重新生成。101 项 Node、12 项 Python、32 套浏览器 E2E 全部通过（v59：书的页面选音乐 → 存在书上 → 打开书就播放；音量条 30% 生效并记住；翻页时没有自己音乐的页放书的音乐、有自己音乐的页放自己的；看这本书里的某一天放书的音乐；离开即停；可以去掉书的音乐）。仍未由人试听、未在 iPhone 上播放。
+- 已知问题：同 V6.0（循环点可能有极短 MP3 间隙；未真机验证）。
+- 下一步：等用户确认任务 G 后，再做「今天」卡片 / 我的习惯书 / 今日清单贴纸。
+
+### 2026-11-09 — V6.1 在阅读的地方直接编辑
+
+- 需求（用户截图，翻页看书的一页）：「现在这个 edit 要去那天然后找到这个 page 然后 edit，可以直接 edit 吗」。
+- 改动文件：Public/app.js（翻页每页加「✎ 编辑这一页」= 已有的 read-edit 动作；read-edit 记住来源 readReturn {page, book, date, moment}，保存 / ‹ 时 returnToReading 回到同一本书的同一页或同一天并滚到那一页；openStudio 与 navigate 清空 readReturn，避免旧的返回点）；Public/js/day-view.mjs（阅读一天时，自己的封面和每一页页眉加「✎ 编辑」，示例页不显示）；Public/styles.css（chapter-edit、flip-actions、flip-edit）；Public/js/whats-new.mjs（V6.1）；tests/v58-browser.cjs（新）、package.json。
+- 决策与原因：复用已有的 read-edit（打开当天 + 选中那一页），不新建编辑路径；示例页不给编辑按钮，因为 openStudio 对示例日从空白页开始，点了会让人以为内容丢了。从 ＋ 新写的页保存后仍回首页（印章时刻在首页）。
+- 运行 / 测试：99 项 Node、12 项 Python、31 套浏览器 E2E 全部通过（v58：翻页中「✎ 编辑这一页」打开那一页 → 改标题保存 → 回到同一本书同一页且显示新标题；‹ 也回到同一页；示例页没有 ✎、自己的页都有；阅读一天时「✎ 编辑」→ 保存 / ‹ 回到这一天；从 ＋ 新写仍回首页）。Linux 容器 + Chromium。
+- 已知问题：书的「列表」视图点某一天仍是先打开那一天（一天可能有好几页）；从阅读页进入编辑后保存，不会在首页出现连续记录印章（回首页时才出现）。
+- 下一步：用户试用后决定列表视图要不要也加直接编辑。
+
+### 2026-11-09 — V6.0 推荐背景音乐（原创轻音乐，可加到页面）
+
+- 需求：「能不能有推荐的背景 sofi 音乐让用户可以加」（理解为柔和的 lofi 背景音乐）。
+- 约束：AGENTS.md 禁止擅自抓取流媒体歌曲；PRODUCT_SPEC 要求只用原创/明确授权音频。因此没有下载任何网上音乐，而是自己作曲合成。
+- 改动文件：
+  - tools/make_music.py（新）：numpy 合成 + ffmpeg(libmp3lame 96k) 编码，固定随机种子；FM 电钢琴、Karplus-Strong 拨弦、八音盒、铺底、噪声鼓、雨声/海浪/黑胶噪声，尾音回绕实现无缝循环，整体 -19 dBFS RMS 归一 + 轻微磁带抖动。
+  - Resources/Music/LD-music-{afternoon-coffee,rainy-window,little-walk,good-night,seaside}.mp3 + LittleDays-Original-Music.txt；library.json 新增 `music`（id、中英文名、心情、bpm、秒数、来源、许可）。
+  - tools/preview.py、tools/build_link.py、Resources.swift（MusicAsset、libraryData "music"）、LittleDaysWebResources.swift（mp3 MIME）：三个入口都能提供 `library/music/`。
+  - Models.swift：JournalMoment / JournalEntry 新增可选 `music`；CoreTests 加解码与目录检查。
+  - Public/js/music.mjs（新）：目录辅助函数、dayMusic、musicChipHTML、共享播放器（blob URL，单例，循环）。
+  - Public/app.js：选曲面板（试听 / 用这首 / 不要背景音乐）；入口在「♫ 声音」菜单和快速结果页「♫ 配乐」；写作页上方显示「♫ 曲名 换一首」；阅读一天、翻书时 syncMusic 自动播放，chip 暂停/播放（暂停后在同一天/同一本书内不再自动恢复），离开即停；导出视频传入音乐。
+  - Public/js/day-view.mjs：日期标题下的「♫ 曲名」；与当天音乐不同的页在页眉有自己的 chip。
+  - Public/js/export.mjs：视频导出混入循环音乐（有其他声音 0.35，只有音乐 0.8 且 15 秒），结尾 1.5 秒淡出。
+  - Public/styles.css（music-chip、music-sheet 等）、i18n.json（music.*）、whats-new.mjs（V6.0）、docs（ASSETS、ARCHITECTURE、ROADMAP、PRODUCT_SPEC、DESIGN_SYSTEM）。
+  - tests/v57.test.mjs（新，5 项）、tests/v57-browser.cjs（新，5 组）、tests/test_preview.py（mp3 MIME）、package.json。
+- 决策与原因：音乐存在「页」上（与 PRODUCT_SPEC 一致），阅读一天时只放一首（封面优先，否则第一页的），避免一屏里几首抢着放；写作时不自动播放，免得打扰。播放器用 blob URL，是因为 WKWebView 的自定义 scheme 不支持音视频的分段请求。版本号用 6.0 而不是 5.10（更新记录按数字排序，5.10 会排在 5.9 后面）。
+- 验证：我在容器里无法亲耳试听；用 ffmpeg ebur128 检查五首响度约 -17.5～-18.3 LUFS、峰值 ≤ -3.7 dBFS（无削波），并检查频段分布（第一次太闷、「散步」低频过重，已调整重新生成）。99 项 Node、12 项 Python、30 套浏览器 E2E 全部通过（v57：选曲试听 → 保存在页上 → 写作时不播放 → 阅读这一天自动播放、可暂停、离开即停 → 翻书到该页播放 → 其他声音开始时暂停且不自动恢复 → 只有音乐的页面导出约 15 秒视频且解码后有声音）。v37、v52 因「声音」菜单多了一项、快速结果页多了「配乐」按钮而更新了预期。Linux 容器 + Chromium。
+- 已知问题：没有音量滑块；没有「整本书一首音乐」；翻到没有音乐的页会继续放上一首；音乐循环点可能有极短的 MP3 编码间隙；未在 iPhone 真机 / WKWebView 验证播放与自动播放策略。
+- 下一步：请用户在链接里试听，按喜好调整曲风或增加曲目；可加音量和整本书音乐。
+
+### 2026-11-09 — V5.9 书的详情页：列表 / 翻页两种看法
+
+- 需求（用户截图，书的详情页列表）：「能不能可以选择这样也可以选择像书一样翻页」。
+- 改动文件：Public/app.js（书详情页加「列表 / 翻页」切换，存 `little-days.book-view`；flipBookHTML：封面页 + 每页只读画布 + 日期/时间/示例标记 + 「打开这一天」；turnPage、左右滑动（|dx|>50）、键盘左右键；`book-view` / `flip` 动作）；Public/js/book-share.mjs（bookSharePages 增加 `includeDemo` 选项，阅读包含示例，分享默认仍排除）；Public/styles.css（切换按钮、书页、书脊阴影、翻页动画，尊重 reduced-motion）；Packages/LittleDaysCore/.../i18n.json（flip.* 中英文）；Public/themes.css（sync_tokens 新增一个颜色变量）；Public/js/whats-new.mjs（V5.9）；tests/v55.test.mjs（includeDemo）、tests/v56-browser.cjs（新）、package.json（test:browser:v56）。
+- 决策与原因：翻页复用分享 PDF 的页面顺序（同一个 bookSharePages），保证「看到的」和「分享出去的」顺序一致；阅读时示例也显示并标注，避免新用户打开空书；照片 + 一句话 / 智能排版 / 随手写的页不再在页面上方重复标题。没有新增数据字段，只新增一个本机界面偏好键。
+- 运行 / 测试：94 项 Node、12 项 Python、29 套浏览器 E2E 全部通过（v56 新增：默认列表 → 切到翻页 → 封面 → 下一页带翻页动画 → 滑动 → 键盘左键 → 打开这一天 → 刷新后仍是翻页）。Linux 容器 + Chromium；未在 iPhone 真机验证滑动手感。
+- 已知问题：翻页动画是单页 3D 旋转，不是真实的纸张卷曲；大书（上百页）一次只渲染当前页，未做预加载。
+- 下一步：日历阅读页隐藏重复标题；「目录」并入「整理这一天」；F5 数据可靠性；F6 原生最小闭环。
+
+### 2026-11-09 — V5.8 照片不裁切、保存浮动按钮、示例不再变成自己的封面
+
+- 需求（用户截图，日历里一页猫的照片）：上传后照片被自动裁切，可能漏掉一部分；上传后保存按钮在最下方；上传完封面还是示例图和示例文字。
+- 原因：①「照片 + 一句话」用自己的照片时，照片是整页背景（cover 铺满），竖图会被裁掉上下；smart 的「大图」样子是 100% 满版也会裁。②写作页顶部的「保存」随页面滚走，下面只看得到「保存草稿」。③今天的示例当日页（sample-today）在 openStudio 时被直接当作编辑内容，保存后变成了用户自己的封面（isDemo 变 false，示例标题和咖啡图留着）。
+- 改动文件：Public/js/canvas.mjs（自己的照片做背景时：模糊铺底 + 整张 contain 显示）；Public/js/export.mjs（导出同样处理，有 ctx.filter 时模糊，否则淡化）；Public/js/smart-layout.mjs（单张「大图」按原比例占满页面，不裁）；Public/app.js（openStudio 遇到示例日从空白页开始；浮动保存 float-save + IntersectionObserver；save-float 动作）；Public/js/model.mjs（迁移：标题、正文、照片都与示例完全一致的 sample-today 封面清空，页保留）；Public/styles.css（own-backdrop、smart 标题条层级、float-save）；Public/js/whats-new.mjs（V5.8）；tests v52.test、v55.test、v55-browser、v34、v50。
+- 决策与原因：一开始试过把顶部栏固定，但手机上顶部栏 + 固定的页面 + 底部工具栏会把中间挤没，导出等按钮点不到（测试暴露），所以改为只在顶部保存看不到时浮出一个小「保存」。迁移只清理与示例文字和图片完全相同的封面，避免误删用户改过的内容。
+- 运行 / 测试：93 项 Node、12 项 Python、28 套浏览器 E2E 全部通过（v55 新增：示例日写作从空白页开始、保存后无示例文字和图片、自己的竖图整张显示、浮动保存）。Linux 容器 + Chromium；未在 iPhone 真机验证。
+- 已知问题：日历阅读页里「照片 + 一句话」的页，标题会在页面上和页面上方各出现一次（上方是可编辑的标题）。
+- 下一步：考虑阅读页隐藏重复标题；F5 数据可靠性；F6 原生最小闭环。
+
+### 2026-11-09 — V5.7 宽松连续记录 + 印章时刻；阅读一天时改标题 / 编辑 / 删除
+
+- 需求：用户截图（日历里阅读某一页显示「Untitled page」）：想双击加标题，阅读时也能删除或编辑；另外觉得大家没有动机记录，希望有像 Duolingo 连续天数动画那样的鼓励机制。
+- 判断：Duolingo 的连续主要靠「怕断」，手帐里容易变成压力、断了就放弃（STRATEGY 风险 2：可能是事件型）。所以做宽松版：每周可休息 1 天不断、示例不计、没有惩罚和提醒轰炸；在 30 天实验里用 `celebrate` 事件和访谈验证是激励还是压力。
+- 改动文件：新增 Public/js/streak.mjs（recordedDays、streakInfo 含休息日规则、bestStreak、MILESTONES）；Public/js/day-view.mjs（每页右上「⋯」、标题可编辑 / 未命名显示「＋ 加标题」、封面也有「⋯」）；Public/app.js（首页连续小标签 streakChipHTML、印章弹窗 openStreak、回到首页时每天一次 maybeCelebrate、阅读页标题编辑 startTitleEdit（双击；未命名点一下）、页面菜单 openPageMenu（编辑这一页 / 改标题 / 删除这一页或清空封面）、deleteReadPage（保存版和草稿同步））；Public/styles.css（标签、印章、纸片飘落、周圆点，遵守减少动态效果设置）；Public/js/whats-new.mjs（V5.7）；i18n.json；tests/signed-in.cjs（老测试跳过印章）；新增 v55.test.mjs、v55-browser.cjs；package.json；docs/STRATEGY.md。
+- 功能：
+  - 首页标题下「连续 N 天 · 本周 M 天」（今天已记为绿色）；点开看本周圆点、离下一个里程碑还差几天、最长连续，以及「去记一页」。
+  - 每天第一次在今天记下内容后回到首页：弹出「连续 N 天」印章（落下盖章的动画）、纸片飘落、本周圆点依次点亮；3 / 7 / 14 / 30 / 50 / 100 / 200 / 365 天有专门的话。每天只弹一次（本机记 little-days.celebrated）。
+  - 阅读一天：没标题的页显示「＋ 加标题」点一下就能写，有标题的双击修改，回车或点别处保存（保存版和草稿都更新）；每页右上「⋯」：编辑这一页（打开写作页并选中这一页）、改标题、删除这一页（确认后）；封面的「⋯」是编辑 / 清空封面。
+- 运行 / 测试：92 项 Node、12 项 Python、28 套浏览器 E2E 全部通过（v55：连续标签、查看不撒花、今天第一页后印章 + 3 天里程碑、只弹一次、事件记录、加标题 / 双击改标题、⋯ 编辑打开该页、⋯ 删除）。Linux 容器 + Chromium；动画在 iPhone 真机上的流畅度未验证。
+- 已知问题：连续只按「有内容的日期」计算，补记过去的日子也会补上连续（宽松的设计选择）；没有推送提醒（需要原生）。
+- 下一步：30 天实验里看印章与留存；F5 数据可靠性；F6 原生最小闭环（含晚间提醒）。
+
+### 2026-11-09 — V5.6 选中样式更轻、去掉重复选项、成长打卡标签重新设计
+
+- 需求（用户截图）：选中元素时的白色方块（缩放手柄）和圆圈（旋转）太突兀；手帐本、Media 等在页面上有重复的选择（纸上方「记到」和底部「手帐本」都能选书，底部「声音」和纸下「视频 / 声音」重复）；插入的打卡卡片不好看、有点突兀。
+- 改动文件：Public/styles.css（选中：1px 细线 + 两个 12px 小圆点，手机上用看不见的更大触控区；成长卡片改为柔和底色的标签，带对勾和纸胶带，去掉边框）；Public/js/canvas.mjs（成长卡片用对勾代替 emoji 图标）；Public/js/export.mjs（导出同样的标签样式）；Public/app.js（底部工具栏：「手帐本」只在当日页的手帐本有自定义字段时出现，名为「记录项目」，只含字段；「声音」只在页面已有视频 / 声音（或正在录音）时出现；连续插入的打卡错开位置和角度）；Public/js/whats-new.mjs（V5.6）；i18n.json；tests browser、v3、v31、v32、v33、v34、v54。
+- 决策与原因：每个选择只在一个地方出现：书在纸上方，添加媒体在纸下方，工具栏只做装饰和已有内容的管理。手柄放在元素角落内侧，因为部分相框会裁掉伸出的部分。
+- 运行 / 测试：88 项 Node、12 项 Python、27 套浏览器 E2E 全部通过（v54 新增：工具栏无重复的书 / 媒体工具、打卡标签无 emoji 和边框、手柄是小圆点）。Linux 容器 + Chromium；未在 iPhone 真机检查小圆点的触控手感。
+- 已知问题：「目录」工具仍保留（含复制、折叠、单独保存这一页等功能），与「整理这一天」部分重叠，后续可以合并。
+- 下一步：合并「目录」和「整理这一天」；F5 数据可靠性；F6 原生最小闭环。
+
+### 2026-11-09 — V5.5 书架拖动排序、纸上文字样式条、成长打卡先看后改、更多示例
+
+- 需求（用户截图反馈）：①书架想拖动排序，顺序也显示在首页；②成长里点「已写」直接是编辑，想先看像书一样的内容，书的图标可以放大；③点纸上的标题想直接出现字体选项，下面的「文字」以为是调整、其实是新增文字框；④希望 App 里示例多一些，看看大概的样子。另外修了截图里英文书名在书脊上逐字竖排的问题。
+- 改动文件：Public/js/model.mjs（moveBookTo、stepBook、addSampleDays、removeSamples，Store 载入时一次性加入示例）；Public/js/canvas.mjs（styleExtra：页面标题 / 文字的字号和颜色）；Public/js/export.mjs（导出同样的字号颜色）；Public/js/day-view.mjs（示例页标「示例」）；Public/app.js（书脊拖动、点击抑制、往前放 / 往后放、拉丁书名横排、文字样式条 type bar、成长打卡阅读视图 openCheckView、习惯图标变成小书、示例卡与移除）；Public/js/whats-new.mjs（V5.5）；Public/styles.css；i18n.json；seed.json（sampleDays、samplesVersion）；Models.swift（Moment.textStyle / bodyStyle、Entry.bodyStyle，均可选）与 CoreTests；tests v54.test.mjs、v54-browser.cjs，以及 v31、v32、v40、collab 选择器更新。
+- 功能：
+  - 书架：电脑上按住书脊拖动；手机上按住约 0.3 秒再拖（快速滑动仍然是滚动页面），被拖的书会抬起并跟随手指，旁边有绿色竖线标出放下的位置；放下后顺序保存，首页「书架」一排同样顺序。抽出一本书后有「‹ 往前放 / 往后放 ›」。英文书名沿书脊横排。
+  - 纸上文字：点标题、文字或文字框，下方浮出样式条：黑体 / 宋体 / 文楷 / 快乐体 / 小薇 / Caveat、A− / A+、6 种颜色；光标留在原处可以继续打字，每次点击都可撤销，页面不会移动。标题和文字分别记住字号颜色（textStyle / bodyStyle），字体作用于整页；文字框改自己的字体字号颜色。「文字」按钮改名「加文字框」。
+  - 成长：写过的打卡按钮点开是阅读卡片（日期、心情、内容、照片、感想），里面有「编辑」和「成长书 · N 页 ›」；习惯图标变成更大的小书（带页数），点它直接打开成长书；成长页底部入口改成「成长书 · N 页 ›」。
+  - 示例：6 个示例日（周末咖啡、读书、做披萨、草莓、湖边清晨、旅途、雨天、海边、书桌、早午餐），分布在三本书，用照片库的照片，展示按照片形状排版、照片 + 一句话、随手写三种页面。只加到没有记录的日期，标「示例」，不会被分享成 PDF，设置里「移除所有示例」后不会再加回来。
+- 决策与原因：拖动用按住才开始，避免和滚动冲突；拖完吞掉紧跟的一次点击，新的按压会取消这个状态。样式条浮在页面下方、不占位置，否则显示 / 隐藏时页面跳动会打断点击（测试也暴露了这一点）。示例不计入真实打卡，避免影响成长统计。
+- 运行 / 测试：88 项 Node、12 项 Python、27 套浏览器 E2E 全部通过（v54：拉丁书脊、鼠标拖动排序 + 首页同步、点击仍抽书、往前放 / 往后放并保存、打卡先看后改、小书入口、样式条字体 / 字号 / 颜色且光标不丢且页面不动、示例添加与移除）。Linux 容器 + Chromium；**手机上按住拖动只用桌面鼠标测过，没在 iPhone 真机触屏上验证**。
+- 已知问题：拖动时其他书不会实时让位，只用竖线标出位置；样式条的字体只作用于整页（标题和文字一起）。
+- 下一步：真机检查按住拖动的手感；F5 数据可靠性；F6 原生最小闭环。
+
+### 2026-11-09 — V5.4 一个人记，家人看：整本书分享成 PDF、推荐「我们俩」「宝宝成长」、加照片意向测试
+
+- 需求：用户喜欢书架用于情侣共同记录和父母记录亲子；讨论后同意「一个人记、其他人看」更可能是真实情况。
+- 改动文件：新增 Public/js/book-share.mjs（bookSharePages 按日期排页、limitPages、dateRange、最小 PDF 写入器 buildPdf，无第三方库）；Public/js/export.mjs（导出 renderJournalCanvas、新增 renderBookTitleCanvas 标题页）；Public/app.js（exportOptionsFor、shareBook 进度 / 系统分享 / 下载回退、suggestedBooksHTML / openSuggestedBook、openContributeQuestion、动作 book-share / book-suggest / contribute-interest）；Public/js/whats-new.mjs（V5.4）；Public/styles.css；i18n.json（bookShare.*、contribute.*、suggest.*、category.Relationship）；tests v53.test.mjs、v53-browser.cjs，package.json；docs ROADMAP、STRATEGY；README。
+- 功能：
+  - 书的页面里有「分享给家人看（PDF）」：生成标题页（封面照片、书名、描述、日期范围和页数），再按日期放入这本书的每一页（当天封面在前，然后各页），用进度条显示「第 n / N 页」，可以取消。支持文件分享时调起系统分享面板，否则下载。示例数据不放入；超过 60 页时只放最近 60 页并提示。
+  - 书架「和家人一起的书」：推荐「我们俩」（Relationship）和「宝宝成长」（Parenting），点开是预填好名字、描述、杂志封面和封面照片的新建书窗口；建好后这个推荐就不再显示。新书仍是私人。
+  - 分享后弹出「想让 TA 也能往这本书里加照片吗？」：只给 TA 看就够了 / 想让 TA 也能加照片 / 还不确定。明确写明还在做、回答只记在本机测试记录（contribute_interest）。
+- 决策与原因：不需要服务端和账号就能让家人看到；PDF 在手机消息里可以直接预览，长辈不用装 App；用意向问题测「投稿」需求，再决定是否做服务端。
+- 运行 / 测试：85 项 Node、12 项 Python、26 套浏览器 E2E 全部通过（v53：推荐书 → 建书 → 空书提示 → 两页 → PDF（3 页：标题页 + 2 页，JPEG，标题元数据）→ 意向问题 → 测试记录）。生成的 PDF 用 poppler（pdfinfo / pdftoppm）读取并渲染检查过。Linux 容器 + Chromium；iOS 系统分享面板、iMessage / WhatsApp 中预览未在真机验证。
+- 已知问题：
+  - 非拉丁字符的下载文件名在部分浏览器会被丢掉，所以下载时用「Little-Days-book-日期.pdf」，书名在 PDF 标题里；系统分享时文件名仍是书名。
+  - 视频在 PDF 里是静帧 / 不显示，音频只显示票根。
+  - PDF 生成在手机上较慢（每页需要渲染）。
+- 下一步：根据意向数据决定是否做投稿链接；F5 数据可靠性；F6 原生最小闭环。
+
+### 2026-11-09 — V5.3 链接里可以看到更新记录
+
+- 需求：用户截图 claude.ai 聊天里的 Little Days 链接卡片，说「我想把 update 加到这里」，希望打开链接就能看到每次更新了什么。聊天里的卡片只显示标题，无法放更多内容，所以做了两件事：应用内显示更新，链接卡片的描述写上最新更新。
+- 改动文件：新增 Public/js/whats-new.mjs（UPDATES：V5.3、V5.2、V5.1、V5.0，中英文）；Public/app.js（首页「新版本」卡片 whatsNewCardHTML、更新记录面板 openWhatsNew、设置里的「更新记录」卡、whats-new / whats-new-dismiss 动作）；Public/styles.css；i18n.json（news.*）；AGENTS.md（每次发布都要加更新条目并设置 Artifact 描述）；docs/ARCHITECTURE.md；tests v52.test.mjs、v52-browser.cjs。
+- 功能：每台设备第一次看到新版本时，首页顶部出现「新版本 V5.3 · 标题 · 看看更新 ›」，可以点 × 关掉；点开是「更新记录」面板，按版本从新到旧列出每次改了什么；设置 →「更新记录」随时可以再看。已看过的版本记在本机（little-days.seen-version）。Artifact 的 description 改为最新版本的一句话。
+- 决策与原因：更新内容放在 App 里，用户在手机上打开链接就能看到，不依赖聊天界面；条目只写实际完成的内容，与 README 日志一致。
+- 运行 / 测试：82 项 Node、12 项 Python、25 套浏览器 E2E 全部通过（v52 新增：首页卡片 → 更新记录面板 → 标记已看过；设置里有入口）。Linux 容器 + Chromium。
+- 已知问题：聊天中的链接卡片本身只显示标题（这是 claude.ai 的界面），描述显示在 claude.ai 的 Artifact 列表卡片上。
+- 下一步：之后每次发布都在 whats-new.mjs 加一条；继续 F5 数据可靠性、F6 原生最小闭环。
+
+### 2026-11-09 — V5.2 验证核心：Quick Create v2、按照片形状自动排、实验室开关 + 测试记录、Story 分享
+
+- 需求：用户确认 STRATEGY.md 的优先级（「可以」），按任务 F 顺序开发：F1 Quick Create 易用性、F2 多照片自动排版、F3 测试版精简 + 事件记录、F4 分享导出。
+- 改动文件：
+  - 新增 Public/js/smart-layout.mjs（按照片宽高比排行，枚举行划分并打分；三种样子 clean / scrapbook / hero）；新增 Public/js/events.mjs（本机测试记录：白名单字段，最多 600 条）。
+  - Public/js/day.mjs（applyLayout 支持 "smart"、layoutVariant）；Public/js/canvas.mjs（smart 页底部一句话）；Public/js/export.mjs（smart 页导出一句话、renderStoryCanvas / shareStory 9:16）。
+  - Public/app.js：imageBlob 记录宽高比；照片图层带 aspect；quick 上传路径；快速结果页 quickResultHTML / quickPlaced / finishQuickPage；smart-shuffle / apply-smart / share-story / export-events / labs-toggle；实验室 labsOn 及隐藏逻辑；事件埋点。
+  - Public/js/personal-ui.mjs（设置里的测试记录卡和实验室卡）；Public/styles.css；i18n.json。
+  - Models.swift（JournalLayer.aspect、Entry/Moment.layoutVariant，均为可选）与 CoreTests。
+  - tests：signed-in.cjs 为老测试打开实验室；v36 打开实验室测登录；v51 照片选项顺序与「我的照片」改为 smart；新增 v52.test.mjs、v52-browser.cjs；package.json 增加 test:browser:v52。
+  - 文档：ROADMAP（已确认 + V5.2 清单）、STRATEGY（已确认、进度）、README。
+- 功能：
+  - 「＋」→ 照片 + 一句话：默认「我的相册」（可多选），其次「今日推荐」「图库」。选完直接得到排好的一页：照片保持原比例不裁切；下面四个按钮：换一种（1/3、2/3、3/3：整齐 / 手帐风（边框、轻微倾斜、胶带）/ 大图在上）、写一句话（写在页面底部的标签上）、分享、编辑；右上「完成」保存这一天并回到首页，提示「已放进《书名》」。快速路径不弹照片编辑器（编辑页里仍可用）。
+  - 排版工具顶部新增「按照片形状自动排」，任何页面都可用；手绘不参与排版。
+  - 实验室：新安装默认收起社区和私信、通知铃、我的主页 / 装扮 / 等级、共同的书、颜色主题、登录页和导览，直接进入首页；设置 →「实验室」可以打开或收起。代码和数据都保留。
+  - 测试记录：只在本机记录事件名、时间、用时、点击数、照片数、换了几次、有没有写一句话，不记录文字、名字、照片和媒体引用；设置 →「导出测试记录」得到 JSON（含摘要：完成页数、中位用时、活跃天数、分享数）。
+  - 分享：快速结果页和编辑页底部有「分享」，生成 1080×1920 的 Story 图片（页面居中，底部小字 made with Little Days）。浏览器 / 外壳支持文件分享时调起系统分享面板，否则下载。
+- 决策与原因：用行式排版（justified rows）保证不裁照片，比按张数套模板更「默认就好看」；三种样子覆盖干净、手帐感、主次分明三种审美；新安装默认收起暂停模块，让测试反馈集中在核心体验；测试记录只存白名单字段，保护隐私。
+- 运行 / 测试：81 项 Node、12 项 Python 通过；25 套浏览器 E2E 全部通过（browser、v3、v31–v52、collab）。v52 覆盖：新安装直接进首页和实验室开关、多张照片快速成页（不裁切、无编辑器、四个按钮）、换一种、写一句、Story 1080×1920、完成保存、测试记录内容和导出、排版工具里的自动排。环境是 Linux 容器 + Chromium；**系统分享面板未在 iOS 真机 / WKWebView 验证**（测试里走的是下载回退），Swift 未编译。
+- 已知问题：
+  - 裁切焦点还是居中（smart 不裁切所以影响小，但手帐风和单张整页仍会裁）；纸张颜色还没有跟随照片。
+  - 用户自己浏览器里的在线链接：实验室默认收起，需要到设置里打开才能看到社区等模块。
+  - 老的「当日主页」编辑仍有纸下输入框。
+- 下一步：F5 数据可靠性；F6 原生最小闭环（需要 Mac）；首次打开引导页；每周 / 每月回顾。
+
+### 2026-11-09 — 产品战略重新定位与开发优先级建议（仅文档，待确认）
+
+- 需求：以产品负责人 / UX / 战略顾问身份，批判性地完成任务 A–F（定位、风险、优先级、用户旅程、30 天验证计划、下一阶段开发建议），明确区分事实、假设和待验证项；不讨论商业化；本次不做大规模代码重构。
+- 改动文件：新增 docs/STRATEGY.md（完整分析与来源）；docs/ROADMAP.md 顶部加「建议待确认」指向说明（清单顺序未改）；agent.md、README.md 日志。**没有改代码。**
+- 关键判断：
+  - 用户的竞品列表漏了 Apple Journal（免费预装，能从照片生成建议；iOS 26 起支持多本日记、iPad / Mac）。Day One Shared Journals 自 2025-05 起对所有用户免费；Shuffles 热度下降。
+  - 差异化应押在「自己的照片 → 默认好看的页 → 自动积累成书」，而不是贴纸、社区、共同手帐或结构化主题。
+  - 代码现状：自动排版只按张数、不认横竖；快速流程默认推荐 Unsplash 图库照片；新照片会弹出照片编辑器；没有 9:16 导出、系统分享和事件记录；原生桥接和构建都没有验证。
+- 建议的下一步（等待确认）：Quick Create v2 → 认横竖 / 主体的自动排版 + 「换一种」→ 测试版精简（labs 开关）+ 本机事件记录 → 分享导出 → 数据可靠性 → 原生最小闭环（TestFlight）。暂停扩展社区 / 私信 / 等级 / 装扮 / 协作 / 素材。
+- 运行 / 测试：仅改文档，没有运行代码测试。竞品信息来自公开网页搜索（来源列在 STRATEGY.md 末尾）。Zinnia 是否有照片自动排版仍需亲自安装确认（标为待验证）。
+- 未完成 / 下一步：等用户确认优先级后，再按 STRATEGY.md 任务 F 逐项实施，每项都附带测试和日志。
+
+### 2026-11-09 — 一天 = 封面（一句话，可选）+ 每一页；页面条和「整理这一天」（排序 / 删除）
+
+- 需求：用户觉得「封面（当日主页）」和「章节（小故事）」不直观：封面应是一句话总结，章节是记录发生了什么，两者是并列关系但界面没说明白；加了小章节后不知道在哪里删除或排序。用户截图显示的是旧界面（「写小故事」「第 03 章」「当日主页」），可能是手机端缓存了旧文件。
+- 改动文件：Public/app.js（页面条 chapterChipsHTML 改为封面 + 各页缩略图、strip-head「这一天：封面 + N 页 · 整理顺序 / 删除」、pageThumbHTML、openPagesManage/renderPagesManage/removePage、动作 pages-manage/pages-open/page-move/page-remove、封面提示 cover-hint、记录面板支持指定日期）；Public/js/day-view.mjs（封面标注「一句话总结这一天」、「这一天的 N 页 · 整理」、「再记一页」打开记录面板、照片 + 一句话页阅读时显示照片）；Public/styles.css；i18n.json（统一用词：封面 / 第 N 页 / 再记一页，替换「当日主页」「小故事」「第 N 章」）；tests v31、v33、v46、v51。
+- 功能：写作页顶部一行写着「这一天：封面 + N 页」和「整理顺序 / 删除」；下面是并排的页面条：封面（虚线框表示还没写、可选）| 第 01 页、第 02 页……（带缩略图、时间、标题）| ＋ 新的一页。选中封面时纸上方说明「封面：用一句话（和一张照片）总结这一天，可以不写」。「整理这一天」面板列出封面和每一页，每页有 ↑ ↓ 和「删除」，封面可「清空」，点任一行打开那一页。日历的某一天：封面标注「一句话总结这一天」，下面「这一天的 N 页 · 整理」，底部「给这一天再记一页」打开同一个记录面板（记在那一天）。
+- 决策与原因：用户的理解（封面 = 一句话总结，页 = 发生的事，并列）就是最清楚的模型，直接写在界面上；排序删除集中到一个面板，比藏在工具栏里的目录好找；沿用已有的 moveMoment，数据结构不变（Entry 仍是封面，moments 是各页）。
+- 运行/测试：75 项 Node、12 项 Python、24 套浏览器 E2E 全部通过（v51 新增整理面板：上移、删除、封面在第一行）。Linux 容器 + Chromium，未在 iPhone/iPad 真机验证。
+- 已知问题：封面编辑时纸下仍有标题/文字输入框（老测试依赖 #entry-title），与纸上可直接打字重复，后续可去掉；保存后的一天和草稿并存时，日历阅读页显示已保存版本。
+- 下一步：去掉封面下方重复的输入框；考虑长按拖动排序。
+
+### 2026-11-09 — 记录一天的三种方式（照片 + 一句话 / 随手写 / 手绘）；手绘画板；装扮空间更完整；等级改为文具店主题；在线链接固定到侧栏
+
+- 需求：有才的用户可以在 iPad 上手绘加入页面；不一定要有 day page，记录一天的方式是：好看的照片 + 一句话、随手写、手绘；功能齐全但越不 confuse 越好。Decorate 很重要；Level 不一定用树。查看方式按现在的在线链接，最好有一个随手能打开的地方。
+- 改动文件：Public/app.js（记录面板 openQuickRecord/renderQuickRecord/startQuickRecord/startPage/quickMore、drawOnPage、页面模式 pageModeOf/setPageMode 三种、照片做整页 backdrop、删除旧的创作开始页和单独的随手记页面、framedPhoto 计数、装扮动作 space-dress-tab/space-look/space-frame/space-layout）；新增 Public/js/draw.mjs（画板）；Public/js/canvas.mjs（line 页、media: 背景、drawing-layer）；Public/js/export.mjs（line 页导出、自己照片背景）；Public/js/media.mjs（backdrop 计入媒体引用/备份）；Public/js/day.mjs（framedPhoto，排版不移动手绘）；Public/js/community.mjs / community-view.mjs（SPACE_LOOKS/FRAMES/LAYOUTS、装扮分页）；Public/js/levels.mjs；Public/styles.css；tools/sync_tokens.py（.draw-page 保持纸色）；i18n.json；Models.swift（JournalLayer.drawing）与 CoreTests；tests：signed-in.cjs（openToday）、v33、v36–v44、v47、v49 更新，新增 v51.test.mjs、v51-browser.cjs，package.json 加 test:browser:v51；AGENTS.md、docs/PRODUCT_SPEC.md、README；新增 Open-Little-Days.url。
+- 功能：
+  - 底部「＋」、首页「记一页」、今日照片、书上的「记一页」都打开同一个面板「今天怎么记？」：照片 + 一句话 / 随手写 / 手绘三选一，再选记在哪本书（记住上次的方式和书）；今天已有内容时可以「继续看今天的 N 页」；「其他」里是自由排版、视频、声音。
+  - 每次记录都是这一天的一页（新的 Moment），不再需要先填「当日主页」。旧的当日主页有内容时作为「第一页」保留；没内容就不显示，打开这一天直接落在第一页。
+  - 照片 + 一句话：照片就是整页（今日照片、照片库、或我的照片——存 IndexedDB），底部毛玻璃条上写一句话；导出图片同样效果。
+  - 手绘：在这一页上直接画（下面显示页面本身），钢笔（Apple Pencil 按压力度变粗细）、马克笔（半透明）、铅笔、橡皮，10 种颜色、粗细、撤销/重做/清空；用过 Pencil 后手掌触碰不会画上。完成后裁到笔迹范围，作为可移动、缩放的图层放回页面（`drawing: true`，frame bare），选中后可「接着画」，清空即删除；照片排版不会移动手绘。写作页上方的方式条有「手绘」，空白纸上的添加选项也有。
+  - 写作页上方的方式条：照片+一句 / 随手写 / 自由排版 / 手绘，可以随时换。
+  - 装扮空间：「装扮空间」按钮用主题色突出；面板分页：套装（6 套一键：背景+主题色+头像框+动态版式）、头像、背景图、主题色、头像框（无框/细环/双环/虚线/圆角方）、动态版式（方格/杂志/大图）、签名，改动即时生效。
+  - 等级名称改为文具店主题（id 不变）：第一页、随手记、贴纸控、手帐控、小作者、杂志主编、出版人、文具店主；去掉等级和升级通知里的 emoji。
+  - 在线链接已固定（pin）在 claude.ai 侧栏；仓库根目录 `Open-Little-Days.url` 双击即在浏览器打开在线链接；AGENTS/README/PRODUCT_SPEC 改为以在线链接为查看方式。
+- 决策与原因：三种方式覆盖「好看 + 简单」「快」「有才」三类用户，其余能力收进「其他」和工具栏，减少第一眼的选择；手绘做成普通图片图层，导出、备份、移动、缩放都沿用现有逻辑，不新增图层类型；装扮的套装让不想细调的人一步到位。旧的开始页（六宫格、灵感）和单独随手记页面与新面板重复，已删除。
+- 运行/测试：Linux 容器 + Chromium。75 项 Node、12 项 Python 通过；24 套浏览器 E2E 全部通过（browser、v3、v31–v51、collab）。新增 v51 覆盖面板三种方式、照片+一句话（今日照片/我的照片/导出）、随手写、手绘（压力、手掌忽略、马克笔、撤销重做、裁切、接着画、清空、取消）、删除页面后落点、装扮套装/头像框/版式。手绘只用合成 Pointer 事件和鼠标测试，**未在真实 iPad / Apple Pencil 上验证**；Swift 未编译（无工具链）。
+- 已知问题：Apple Pencil 压力、手掌忽略在真机 WKWebView 中的表现待验证；手绘接着画时原图以位图重画，旋转后的手绘再编辑会转正；面板里「我的照片」一次选一张；装扮仍是本机演示。
+- 下一步：在 iPad 上实测手绘手感（笔触平滑、延迟）；考虑手绘笔刷更多质感（水彩、蜡笔）和形状贴纸；装扮可以增加字体/卡片样式。
+
+### 2026-11-09 — 书架（我的书 / 共同的书）；「记一页」先选书；纸下写字卡拿掉；删除这一页放到看得见的地方
+
+- 需求：My Books 改名 Books（书架），书架页和首页都能切换「我的书 / 共同的书」；今日照片点进去不要直接进编辑照片；快捷记录要能选记到哪本书；Write a moment 与 Write with it 重复；随手写模式纸下的小编辑卡拿掉；不知道怎么删掉不喜欢的一页。
+- 改动：Public/app.js（booksView shelf/our/profile、isOurBook、首页书架标签、「记一页」面板 openQuickRecord/renderQuickRecord/startQuickRecord、页面条 pageBarHTML、篇章标签上的 ×、随手写模式不再渲染写字卡）；Public/styles.css（page-bar、chip-delete、quick-sheet、home-book-tabs、page-top-actions、our-empty）；i18n.json（books.mine/ours/oursEmpty、quick.*、write.inBook 等，nav.books/books.title 改为 书架/Books）；测试 browser、v3、v33、v35、v41、v46、v48、v50 更新选择器。
+- 功能：首页「今日照片」和「记一页」都打开同一个小面板：选书（记住上次选择，存 LocalStorage `little-days.quick-book`，仅本机便利）、选照片（不用 / 今日照片 / 从照片库挑），再点「开始写」。当天还没写时进当日主页并放好照片；已经写过时新开一个篇章记到所选的书。写作页纸上方一条细栏：记在哪本书、时间、「删除这一页」（当日主页为「清空这一天」），当前篇章标签带 ×。
+- 决策与原因：两个入口合并成一个面板，避免「Write a moment / Write with it」重复；删除放在纸上方和篇章标签上，用户一眼能看到；首页书架标签选中样式用主题 paper/ink 变量，深色主题对比度足够（v40 检查）。
+- 运行/测试：68 项 Node、12 项 Python（同步外壳后）通过；23 套浏览器 E2E 通过（browser、v3、v31–v50、collab）。Linux 容器 + Chromium；未在 Windows 实机 / iOS 验证，Swift 未编译。
+- 已知问题：共同的书只读取协作演示中已加入好友的书；上传头像仍不在备份里。
+- 未完成 / 下一步：用户同时提出手绘、记录一天的三种方式（照片 + 一句话 / 随手写 / 手绘）、装扮更重要、等级不用植物名，下一条记录处理。
+
+### 2026-11-09 — 主页改成 Instagram 式（像 QQ 空间可以装扮）；照片头像；杂志书脊和 6 种杂志封面；界面统一黑体；写作卡片上直接删除
+
+- 需求（连续几条）：
+  - 书架看着不够杂志风；
+  - 主页想像 QQ 空间：从书架“出书”、发动态、可以装扮；
+  - 杂志封面选项多一些；
+  - 头像要能上传自己的照片，不要表情；等级也不要表情风格、太占地方；
+  - 别人看到的主页应该是主画面，参考 Instagram：可以关注、加好友、私信；
+  - 现在的字体不喜欢，黑体更好；
+  - 不知道怎么删除小故事，能不能选择不要（当日主）页。
+- 主页（`community-view.mjs` 的 `spaceHTML` / `userPageHTML` / `headerHTML` / `gridHTML`）：
+  - 我的主页 = 别人看到的样子，放在最上面：
+    - 背景图和签名；头像压在背景图上；
+    - 动态 / 出版的书 / 好友 / 关注四个数字；
+    - 名字旁一行小小的等级标签（`Lv.1 · 一颗种子`）；@me 和简介；
+    - 「编辑资料 / 装扮空间 / ＋ 发一条」；
+    - 「我出的书」像 Instagram 精选：杂志封面一排，＋ 从书架出书或收回（沿用 `showcase`，出书前要确认，只展示封面和书名）；
+    - 「我的动态」三列方格。
+  - 下面以“只有你能看到 · 管理我的主页”分开：等级卡（去掉表情、更紧凑）、谁能看到、访客预览、作品管理、收藏、关注、设置、屏蔽。
+  - 装扮空间：头像（上传自己的照片，或从照片素材选；可改回名字首字）、背景图（照片素材）、主题色 6 选 1、签名（40 字）。存在 `demo.profile.space` 和 `profile.avatarPhoto`（只在本机）。上传的头像存进 IndexedDB，启动时主动加载。
+  - 头像不再显示表情：有照片显示照片，没有就显示名字首字配柔和底色。虚拟用户改用照片素材做头像和背景图（`DEMO_AVATAR_PHOTOS` / `DEMO_BANNERS`，旧的演示数据也适用）。
+  - 别人的主页：从好友列表、作品作者处点进去（`community-open-user`），同样的布局，按钮是「关注 / 加好友 / 私信」；屏蔽后不显示动态。
+  - 自己的动态详情里，“撤回为私人”改名为“删除这条动态”。
+- 书架：用杂志封面的手帐本在书架上显示成杂志书脊：
+  - 封面照片做底加暗色，白色粗体书名竖排，顶部小刊名 “LD”，底部期号（NO.篇数）；
+  - 竖排用“一字宽自动换行”实现，字多时自动缩小（测试环境的替代字体在竖排模式下会叠字）；
+  - 书架提示改为普通字体，去掉 ✿。
+- 杂志封面增加到 6 种：日系、欧美、黑白极简（大黑标题 + 黑白照片）、胶片（齿孔 + 橙色日期戳）、留白（居中小图 + 大量留白）、拼贴（三张照片 + 色带书名）。拼贴的另外两张照片按主题固定挑选。
+- 字体：界面里原来用衬线体、手写体的标题、数字、对话框标题、日历月份、写作框等，统一改为系统黑体（`--ui-sans`，iPhone 上是苹方）。手帐纸上的字、封面、书脊、“Little Days” 字标和杂志刊头不变。
+- 删除：
+  - 写作卡片右上角新增「删除这一页」（小故事，沿用原有确认）；
+  - 当日主页有内容时显示「不要当日主页」：确认后清空标题、正文、照片和图层（这一天的小故事保留，可以撤销）。之后阅读模式就不显示当日主页了。
+- 测试：
+  - 新增 `tests/v49-browser.cjs`（6 组）：杂志书脊；我的主页结构；装扮（背景图、主题色、签名）保存；从书架出书再收回；发一条；6 种杂志封面。
+  - 新增 `tests/v49.test.mjs`（2 项）：`updateSpace` 只接受照片素材背景和固定主题色，签名限长；6 种封面都能画出书名，拼贴有 3 张照片。
+  - 新增 `tests/v50-browser.cjs`（5 组）：别人的主页（照片头像、背景、动态方格、关注、私信）；从作品作者进入别人的主页；我的主页是访客视图在前、管理在后，等级无表情；界面字体是黑体；写作卡片上删除小故事、清空当日主页。
+  - 修改 v31 / v33 / v35 / v47：主页新结构、照片头像、删除按钮位置、6 种封面。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 68、Python 12 全部通过；
+  - 浏览器 23 套：`browser`、`v3`、`v31`–`v50`、`collab`，全量回归中有 3 套因测试选择器过时失败，修正后单独重跑全部通过。
+- 已知问题：
+  - 上传的头像不在“完整备份”里（备份只包含手帐数据引用的媒体）；
+  - 登录页的头像选择仍是表情；
+  - 关注、加好友、私信、出书都是本机演示，未联网。
+
+### 2026-11-09 — 照片保留原始横竖比例；照片浏览改成美图式“大图 + 合集标签 + 两列瀑布流”
+
+- 需求（截图：现在的滑动大图 vs 美图的模板页）：预览看不出照片是横的还是竖的，推荐美图那种布局。
+- 照片：
+  - 原来下载时统一裁成 800×1000（4:5），所以原始比例丢了。`fetch_photos.py` 改为 `fit=max`、长边 1000px，保留原始形状；新增 `--refresh` 参数，可以全部重新下载。
+  - 共 60 张横图、17 张竖图、1 张方图，约 9.6 MB（原来约 12 MB）。
+  - `library.json` 的 `photos` 增加 `w` / `h`（像素尺寸）；Swift `PhotoAsset` 加可选 `w` / `h`。照片背景的明暗（`tone`）按新文件重新计算，结果不变（6 张暗、4 张亮）。
+- 照片浏览（`#scene-dialog`，`photoBrowserHTML`）：
+  - 上方深色区：选中的照片按原比例大图显示，下面写着名字和“横图 / 竖图 / 方图”，右上角“用这张”；
+  - 下方白色面板：13 个合集做成可横滑的标签（当前的有下划线），一句合集介绍，两列瀑布流，每张按原比例显示；
+  - 点一张就换大图，切换标签不会关闭面板；从选择面板、照片面板和首页进来都是这个页面。
+- 测试：
+  - 新增 `tests/v48-browser.cjs`（3 组）：瀑布流两列，每张保持原比例（同时有横图和竖图）；点竖图后大图是竖的并标“竖图”；标签切换合集，“用这张”放到纸上。
+  - v41 / v43 / v44 改用新的面板（点瀑布流里的照片，再点“用这张”）。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 66、Python 12 全部通过；
+  - 浏览器 21 套全部通过：`browser`、`v3`、`v31`–`v48`、`collab`。
+- 已知问题：放到纸上的照片仍按版式统一裁切；真机未测。
+
+### 2026-11-09 — 标题改用苹方；首页改为手帐本一排；日历可按手帐本看；日系 / 欧美杂志封面
+
+- 需求（截图）：杂志封面很喜欢，字体一般；不要“从一张照片开始”，改成从手帐本里选（可能有专门的健身、植物、亲子手帐要记录）；手帐本顺序按书架；日历可以选不同手帐本来看；手帐本封面也要杂志风（日系、欧美），用户可以自己选封面。中途补充：也不喜欢宋体。
+- 字体：
+  - 首页的中文标题（大标题、照片上的标题、各区块标题）从站酷小薇改为系统无衬线：iPhone 上是苹方，Windows 上是微软雅黑；字重 600 / 700，字距略收。这样不增加下载。
+  - 英文刊头 “Little Days” 仍是衬线体。
+  - 曾试装思源宋体（Noto Serif SC，OFL）。用户表示不喜欢宋体，已撤回，未提交。
+  - 顶部日期离状态栏太近，加了间距。
+- 首页：
+  - 去掉“从一张照片开始”（`home-library` 动作保留，暂无入口）。
+  - 写作卡片下面是「我的手帐本」一排，顺序和书架一致（`state.books` 的顺序），用杂志封面展示：点封面打开手帐本；「＋ 记一页」直接在这本里新建一页（`book-write`：新小故事，`bookId` 设为这本，随手写模式，光标在纸上）。最后是「＋ 新手帐」，右上角「书架 ›」。
+  - 删去底部原来的“我的手帐本”区块。
+- 日历：生活记忆和照片墙上方有一排手帐本标签（全部手帐 / 每本手帐，至少两本时显示），选一本就只显示这本的日子和照片（`calendarBookDays` 基于 `bookDays`）。
+- 杂志封面（`personal-ui.mjs`，两种新封面排在封面选择的最前面）：
+  - 欧美杂志 `magazine-west`：照片铺满，上方衬线大刊头 LITTLE DAYS、月份和主题，下方白色书名和说明，右下角条形码。
+  - 日系杂志 `magazine-jp`：米白纸面，左上 “little days”，照片留白装裱，书名竖排在右侧（用一个字宽的文字框实现竖排，字数多时自动缩小），底部主题和细线。
+  - 封面字号按封面宽度缩放，首页、书架、详情页、编辑框都成比例。
+  - 封面照片：可用自己上传的照片（`media:`）或照片素材（`photo:<id>`）。编辑手帐本时新增一排「封面照片」，最适合这本主题的照片排在前面。没有选时，按手帐本的主题 / 名称（健身→动一动、植物→花与绿植、亲子→值得庆祝、旅行、美食、读书……）固定挑一张。
+  - 新建手帐本默认日系杂志。示例手帐本：如果从未改过自动封面（模板、贴纸都是自动给的，没有照片），一次性改为日系 / 欧美杂志，并用 `coverRestyled` 标记，以后再选回旧封面不会被改；用户自己建的手帐本不受影响。
+  - Swift：`JournalBook` 加可选 `coverRestyled`；字体数量测试改为 11（原来写的 7 已过时）。
+- 测试：
+  - 新增 `tests/v47.test.mjs`（3 项）：杂志封面排在最前，新数据默认使用；示例手帐本只迁移一次，用户选择保留；封面照片按主题挑选、同一本书固定，`photo:` 和 `media:` 都能用。
+  - 新增 `tests/v47-browser.cjs`（4 组）：首页手帐本按书架顺序用杂志封面，标题字体为苹方；「记一页」写进那本手帐；日历按手帐本筛选（月历和照片墙）；改成欧美杂志并选照片，保存后显示。
+  - v45 改为检查手帐本一排已经取代了照片一排。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 66、Python 12 全部通过；
+  - 浏览器 20 套全部通过：`browser`、`v3`、`v31`–`v47`、`collab`。
+- 已知问题：Linux 测试环境没有苹方，截图里的中文是 Linux 的替代字体；iPhone 上的实际效果未实测。书架上的书脊还是原来的样式。
+- 下一步：书架书脊也做成杂志风；封面可以自定义期号和封面大字。
+
+### 2026-11-09 — 直接在纸上打字：「随手写」和「自由排版」两种写法
+
+- 需求（两张截图）：“添加文字”和下面写的“篇章”容易混淆。用户以为下面写的会出现在上面的页面上，其实那是页面外的标题和正文；页面上的文字框要到下面的面板里去改。希望像备忘录一样点页面就能打字，同时给用户选择：简单记录（备忘录式），或者像 PPT 一样自己排版、加图片。
+- 修改（`Public/app.js`、`Public/js/canvas.mjs`、styles.css、i18n.json）：
+  1. 每个小故事上方有一个切换：「✎ 随手写 / ▣ 自由排版」（`pageModeHTML`，放在固定的画布区外面，不增加画布区高度）。
+     - 随手写 = `layoutTemplate: "text"`：标题和正文就在纸上，`contenteditable="plaintext-only"`，点一下就能打字；点纸上空白处直接开始写正文。下面的卡片不再重复标题和正文输入框，只留时间、标签和一句提示。
+     - 自由排版：照片、文字框、贴纸自由摆放。下面的两个框写明用途：“这一页的名字 · 显示在目录和日历里”“页面下方的说明 · 可选，不会写到纸上”，并提示“想在纸上写字：点「文字」加一个文字框，再点一下就能直接打字”。
+  2. 从随手写切到自由排版，或者在随手写的页面上加照片时（`noteToLayout`），纸上的标题和正文会变成同一位置的文字框，不会消失；标题仍作为这一页的名字。
+  3. 文字框直接在纸上编辑：
+     - 新加的文字框会选中默认文字，直接打字就会替换；
+     - 已选中的文字框再点一下，就进入打字状态（点到中间的旋转钮但没有拖动，也算点一下）；
+     - 字体和颜色仍在横条“编辑”里；
+     - 新文字框会放在空位上，不压住已有的文字。
+  4. 当日主页纸上的标题和正文也可以直接点着打字，下面的输入框会同步。阅读模式不可编辑。
+  5. 默认写法：“写一个小故事”（首页、日历、阅读页）和开始页的“从文字开始”打开随手写，光标直接在纸上的标题里；从照片、视频开始仍是自由排版。
+  6. 技术细节：
+     - 纸上打字不重绘画布（光标不丢）；一次连续打字只记一步撤销；
+     - `render()` 会恢复纸上文字的焦点和光标位置，媒体加载完成后的重绘也不打断打字；
+     - 纸上的文字算作“正在打字”，菜单和工具会让开；但不再为它额外滚动页面（画布本来就固定在上方）。
+- 测试：
+  - 新增 `tests/v46-browser.cjs`（6 组）：随手写在纸上打标题和正文，点空白处开始写；撤销和重做；切到自由排版后文字变成文字框，下方标签正确；再点一下文字框在纸上改字；切回随手写；当日主页纸上打字与下方输入框同步，阅读模式不可编辑。
+  - v33 / v37 / v38 改成新流程：写一个小故事直接在纸上打字；从文字开始先是随手写；加文字框后直接在纸上输入，面板从“编辑”打开。
+  - v38 导出前先把底部按钮滚进可见区；v37 的字重检查改为读取当前页面上的元素（以前偶尔读到重绘前的旧元素而失败）。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 63、Python 12 全部通过；
+  - 浏览器 19 套全部通过：`browser`、`v3`、`v31`–`v46`、`collab`。
+- 已知问题：
+  - `contenteditable="plaintext-only"` 需要较新的浏览器；不支持时文字框退回普通可编辑。
+  - iPhone 真机上点纸弹出键盘的手感未实测。
+  - 从自由排版切回随手写时，原来的文字框会留在纸上，可能和标题、正文重叠，需要手动删除或移动。
+- 下一步：随手写里支持清单（勾选框）；切回随手写时可以选择把文字框合并回正文。
+
+### 2026-11-09 — 首页改成以照片为主的杂志风；去掉万花筒 / 光影丝带 / 星空背景；新增“照片氛围”背景
+
+- 需求（截图圈出 11 张背景）：万花筒、光影丝带、星空都不好看；这次的照片素材很好，希望首页在色彩和结构上配合照片素材，少一些 emoji 风格，多一些大气。
+- 首页（`home()` 重写，外层 `.home-mag`，样式集中在 styles.css 末尾“Home: photo-led”一节）：
+  - 顶部：小字日期（星期 · 日期）+ 衬线体 “Little Days”，去掉 ✿；铃铛和设置是白色圆形按钮，不再用描边。
+  - 一句衬线大标题（“今天，也有小美好。”），下面是一张大照片卡片（约 4:4.6，圆角 24、柔和投影）：今天有记录时，显示当天的照片、标题和两行正文，右上角“打开 ›”；没有记录时，显示“今日照片”，并邀请“用它写一页”。照片上叠一层自下而上的暗色渐变，字是白色。
+  - “写一个小故事”改成白色卡片 + 细线笔图标。
+  - 新增“从一张照片开始”：横向滑动 6 张照片素材（今日推荐 + 其他组各一张，不重复主图），点一下就用它写一页；“照片素材 ›” 打开完整的选择面板。
+  - 习惯：表情图标（📖🌿☁️）换成细线图标（书 / 心率线 / 云 / 调色盘 / 叶子），放在淡色圆形里；“✎ 心得”换成细线笔图标 + 文字的小胶囊；分隔改为细实线；字号改为 15 / 12px（原来 11 / 8px 太小）。
+  - 手帐本书名单行省略，三本对齐。
+  - 深色主题下，照片卡片保持原色（`.hero-photo` 加入 sync_tokens 的 PAPER 列表），照片底下的占位色也改成深色，白字始终清楚。
+- 背景：
+  - 万花筒（4）、光影丝带（4）、星空（3）标记为 `retired`，不再提供；已经用了的页面照常显示。保留渐变色彩（6）和可爱图案（4）。
+  - 新增“照片氛围”：从照片素材里选 10 张适合铺满整页的风景（樱花、海边日落、浪花、紫色黄昏、金色麦田、云海、粉色山脊、湖上星夜、雾中山野、雪中森林），`library.json` 中标记 `backdrop: true`。`fetch_photos.py` 按画面下半部分（放文字的位置）的平均亮度自动标记 `tone`，暗的 6 张、亮的 4 张；暗的用深色卡片配白字。
+  - 页面字段 `backdrop` 现在可以是 `scene:<id>` 或 `photo:<id>`。画布、PNG 导出和背景面板都支持；面板顺序是照片氛围 → 渐变色彩 → 可爱图案。
+  - Swift：`PhotoAsset` 加 `backdrop` / `tone`；Core 测试改为 2 个背景分组、23 张 retired、10 张照片背景（未运行）。
+- 测试：
+  - 新增 `tests/v45-browser.cjs`（4 组）：首页大照片、无 emoji、细线图标、没有横向溢出；“从一张照片开始”6 张照片，点一下写一页；“照片素材 ›”打开选择面板；新的一天主图是今日照片，且不在下面那行重复。
+  - v41 / v44 的单元和浏览器测试按新背景更新：照片背景的明暗、`photo:` 背景解析、面板分组。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 63、Python 12 全部通过；
+  - 浏览器 18 套全部通过：`browser`、`v3`、`v31`–`v45`、`collab`。
+  - v40 深色主题对比度检查一开始失败：它只看底色，照片卡片的占位色是浅色。占位色改成深色后通过。
+- 已知问题：手帐本封面仍是手绘插画风；日历、成长等其他页面还没有按新首页的风格统一；未在真机上看过。
+- 下一步：手帐本封面可选用照片；把新首页的字号、卡片和图标风格推广到日历、成长和手帐本页面。
+
+### 2026-11-09 — 心得提示改成通用；手帐本页的下拉框和日期字号统一
+
+- 需求（两张 iPhone 截图）：
+  1. 打卡心得“内容”的提示“例如：下肢训练 / 西班牙语”和当前习惯（读书）不对应，应该更通用；
+  2. 手帐本页（共同创作的邀请行、“全部月份 / 日期”筛选）字体又大又不一致。
+- 修改：
+  1. 提示改为通用说法：心得“内容”→“简单写一句今天做了什么”；小故事标题“例如：清晨的健身房”→“给这一刻起个名字”；标签示例改为“周末, 散步”。
+  2. 原因：手机上所有输入框、下拉框都被强制放大到 16px（为了防止 iOS 点击时自动放大页面），比周围 12–13px 的文字大一截。现在的规则：
+     - `index.html` 的 viewport 加 `maximum-scale=1`，iOS 点任何输入框都不会自动放大（Safari 仍可双指缩放）；
+     - 需要打字的输入框和多行文本保持 16px；
+     - 不弹键盘的下拉框、日期和时间统一 14px；
+     - 手帐本筛选行、共同创作的成员行和邀请行用 13px、高 36px，与旁边的“邀请”“写一页”按钮一致；邀请行的下拉框改为圆角边框样式；“共同页面”标题和“写一页”按钮与上方留出间距，不再挤在一起。
+  3. `.small-label` 原来没有样式（心得弹窗里“今天的心情”比其他标签大很多），现在和字段标签一样（10px、灰色）。
+- 测试：v37 的 iPhone 字号检查改为“打字框 16px；下拉框和日期 13–14px；viewport 含 maximum-scale=1”。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 63、Python 12 全部通过；
+  - 浏览器 17 套全部通过。
+- 已知问题：`maximum-scale=1` 在部分安卓浏览器上会禁止双指缩放（iOS 不受影响）；没有在真机上确认。
+
+### 2026-11-09 — 照片素材换成真实照片；渐变和可爱图案改为页面背景
+
+- 需求：素材库更像背景，草地野餐这类插画不好看。希望素材库是像咖啡那张一样的真实照片，能概括今天的心情或事件；渐变色彩、可爱图案更适合做背景图，不该当照片。
+- 照片素材（新）：
+  - 新增 `tools/fetch_photos.py`：列出 78 张 Unsplash 照片（13 组，每组 6 张）的 ID、分组和中英文名，下载 800×1000 JPEG 到 `Resources/Photos/LD-photo-*.jpg`（约 12 MB）。同时生成来源清单 `Unsplash-Photos.txt`（每个文件对应的原图地址和 Unsplash License），并写入 `library.json` 的 `photos` / `photoCollections`。
+  - 13 组：咖啡时光、好好吃饭、甜甜的、花与绿植、毛孩子、海边晴天、山野日落、夜晚星空、安静的一天、出发旅行、值得庆祝、动一动、四季。照片是先下载 110 张缩略图、逐张看过后挑的，尽量不用能认出脸的人像，也不用带品牌标志的照片。
+  - 运行时不访问 Unsplash：引用 `photo:<id>` 解析为 `library/photos/LD-photo-<id>.jpg`。preview.py、build_link、Swift `SharedResources.libraryData`（新增 `photos` 类别）、Vapor 的 jpg 类型、iOS 外壳说明都已同步。
+  - 首页“今日照片”、开始页、选择面板的“今日推荐”（今日照片 + 另外 3 组各 1 张，每天换）、照片面板里的库、滑动大图都改用照片。
+- 页面背景（原来的插画/壁纸）：
+  - 渐变色彩、可爱图案、万花筒、光影丝带、星空，共 5 组 21 张，改为“页面背景”，放在“纸张”面板最上面。选择面板底部也有“换个页面背景 ›”，点了直接打开展开的纸张面板。
+  - 页面新增可选字段 `backdrop: "scene:<id>"`（当日主页和每个小故事都可以设）。背景铺满整页，标题和正文放在一块磨砂卡片上。深色背景（`tone: "dark"`，共 10 张）用深色卡片和白字；用户没改过的默认深色标题也会变白。导出 PNG 时会画出背景和卡片。“不用背景”则回到原来的纸张。
+  - 12 张手绘“生活小景”标记为 `retired`：不再出现在任何选择处；已经用了它们的页面仍能正常显示。
+  - Swift：`Models.swift` 的 Entry / Moment 加可选 `backdrop`；`Resources.swift` 新增 `PhotoAsset`，`SceneAsset` 加 `retired` / `tone`；Core 测试相应更新（未运行）。
+- 测试：
+  - 新增 `tests/v44.test.mjs`（3 项）：78 张照片的文件、来源和许可；`photo:` / `scene:` 只解析为内置文件；背景、磨砂卡片和深色白字的渲染。
+  - 新增 `tests/v44-browser.cjs`（6 组）：选择面板只有真实照片；从选择面板进入背景（5 组 21 张，排在纸张前面）；浅色背景；深色背景白字；照片加背景后保存、导出 PNG、阅读模式显示；“不用背景”。
+  - v41 / v43 的单元和浏览器测试改为照片素材。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 63、Python 12 全部通过；
+  - 浏览器 17 套全部通过：`browser`、`v3`、`v31`–`v44`、`collab`。
+- 环境：为下载照片，新建了个人云端环境 “Notebook”，只多放行 `images.unsplash.com` 和 `unsplash.com`，经用户批准。没有使用 Unsplash API 密钥。
+- 已知问题：
+  - Unsplash License 允许免费商用，但不允许把照片原样汇编成同类图库服务；目前作为手帐内置素材使用，正式上架前仍需完成资产审核（与 ASSETS.md 原有说明一致）。
+  - 照片让仓库和在线链接大约增加 12 MB；Swift 未编译；真机未测。
+- 下一步：照片素材按心情搜索（例如“开心 / 累 / 想念”）；背景可以加用户自己的照片（模糊后铺满）。
+
+### 2026-11-09 — 示例图换回咖啡、照片选择面板、素材进主照片位、面板可上拉、日历照片墙、随手记
+
+- 需求（七点，附截图）：
+  1. 默认插画不如以前的咖啡照片好看；
+  2. 素材选好后没有放进版式，而是自由摆放；
+  3. 加照片时看不到素材选项；
+  4. 照片面板最好能上下拉；
+  5. 主照片位应该点一下就能加照片；
+  6. 日历想要照片版，按上传的照片排列，并有动态背景；
+  7. 新建时想像 iPhone 备忘录一样点开就能打字。
+- 修改：
+  1. 示例页改回 `/assets/coffee.jpg`，示例文字也恢复原样。`normalizeState` 会把之前已变成插画的示例页自动改回咖啡（只改示例页，用户自己选的不动）。首页的“今日素材”保留（今天还没写时才显示）。
+  2. `useScene`：先填版式里的空相框；当日主页的主照片位为空（且不是“只有文字”）或从主照片位进入时，素材直接成为主照片；以上都没有时才作为自由图层。
+  3. 新的照片选择面板 `#choose-dialog`（仿 iOS 底部弹出）：
+     - “从相册选择”：普通入口可多选，从主照片位进入时只选一张；
+     - “今日推荐”：今日素材加 3 张壁纸；
+     - “素材库”：6 组的封面，点开即进入滑动面板；
+     - 取消。
+     - 纸下方的“照片”、空白纸上的“照片”、开始页的“从照片开始”都会先打开这个面板；照片工具面板里的“添加照片”按钮仍然直接打开相册。
+  4. 所有工具面板顶部加了把手：点一下或往上拉，面板展开到约 78% 屏幕高；往下拉先收起，再往下拉就关闭。
+  5. 画布上的“主照片（可选）”占位可以点，点了打开选择面板，标题为“选一张主照片”。
+  6. 日历新增第三种模式“照片墙”：
+     - 背景是缓慢流动的渐变，叠一层本月第一张照片的模糊放大图，也在慢慢浮动；系统开启“减少动态效果”时不动；
+     - 月份用手写体大字，下方小字“年份 · 这个月的小日子”；
+     - 每天一格 3:4 照片，日期标在角上；只有文字的日子显示 ✎；
+     - 底部统计“记录了几天 · 几张照片”；点一格打开那天，空白的日子点了去补记。
+  7. 随手记：开始页最上方新增黄色“随手记”卡片，打开备忘录风格的页面：顶部“‹ 返回 / 日期 / 完成”，大标题（26px）加正文（17px），没有边框。点“完成”后存成今天的一个“只有文字”的小故事并保存；什么都没写就返回则不保存。
+- 其他：选择面板、照片墙在任何主题下保持原配色；修复了“随手记”卡片和原有说明文字类名相同、导致说明也变成黄色卡片的问题；修复了备忘录标题被手机 16px 输入框规则压小的问题。
+- 测试：
+  - 新增 `tests/v43-browser.cjs`（5 组：随手记保存和空返回；主照片位点开选择面板并把素材放进主照片位；“照片”打开选择面板，含相册多选、今日推荐和 6 组素材；面板把手展开和收起；日历照片墙有动画背景，点格子打开那天）；
+  - v41 单元测试和浏览器测试改为“示例页是咖啡照片、旧插画示例会迁移回来、首页今日素材填进主照片位”；
+  - v36 和 v37 改为先经过选择面板再点“从相册选择”。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 60、Python 12 全部通过；
+  - 浏览器 16 套全部通过：`browser`、`v3`、`v31`–`v43`、`collab`。
+- 已知问题：iPhone 真机上的拖动手感、照片墙动画性能未实测；照片墙暂不能导出成图片；Swift 未编译。
+- 下一步：照片墙可以加“导出成图片 / 分享”；随手记可以加列表视图。
+
+### 2026-11-09 — 素材库改成苹果壁纸风格（33 张、6 组）
+
+- 需求（截图：现有素材 + iPhone“添加新墙纸”页面）：现在的素材太简单，喜欢苹果手机那种感觉。
+- 新素材：
+  - 新增 `tools/make_wallpapers.py`，用固定随机种子程序化生成 5 组竖版（3:4）原创壁纸：
+    - 渐变色彩（6 张，像发光玻璃的柔和光斑）；
+    - 光影丝带（4 张，深色背景上的发光彩带，用多层描边做光晕，不用模糊滤镜，渲染快）；
+    - 万花筒（4 张，十二重镜像对称）；
+    - 可爱图案（4 张：云朵和小蜜蜂、满天小花、星星月亮、小爱心）；
+    - 星空（3 张：蓝色星球、土星环、月光）。
+  - 原来 12 张“生活小景”加了左上角柔光、几颗虚化的光斑和暗角，更有层次。
+  - 共 33 张、6 组，全部为原创（声明文件已更新），总大小约 270 KB。
+  - `make_scenes.py` 会同时更新 `library.json` 的 `scenes`（新增 `collection` 字段）和 `sceneCollections`（每组的中英文名和一句介绍）。
+- 素材库界面（仿 iPhone“添加新墙纸”）：
+  - 照片面板里每组一行：左边三张叠放的手机比例预览，右边是粗体标题、灰色介绍和深色胶囊按钮“使用”。
+  - 点开是深色全屏面板：大图横向滑动（滑动时自动对齐），每张下方有名字和“用这张”；今日素材排在第一并标“今天”。
+  - 这个面板在任何主题下都保持深色。
+  - 修复：今日素材只从“生活小景”里选，和新手帐的示例页一致（之前从全部素材里选，两处会对不上；测试发现的）。
+- Swift：`SceneAsset.collection`、新增 `SceneCollection`、`AssetCatalog.sceneCollections`（可选字段），Core 测试改为 33 张、6 组（未编译）。
+- 测试：v41 单元测试改为 33 张、6 组且每组都有素材，今日素材只来自生活小景；v41 浏览器测试改为“6 组叠放预览 → 滑动面板 → 今日素材排第一 → 使用丝带壁纸”。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 60、Python 12 全部通过；
+  - 浏览器 15 套全部通过。
+- 已知问题：素材是程序绘制的插画和图形，不是照片或 3D 渲染；iPhone 真机未实测；Swift 未编译。
+- 下一步：用户挑喜欢的风格，可以按那种风格继续扩充（例如更多星球、节日、季节主题）。
+
+### 2026-11-09 — 字号统一、私信页重排、用户等级、消息通知中心
+
+- 需求（两张截图）：字体有大有小；私信页比例奇怪；用户要有等级（活跃天数、发布多少都加经验）；主页右上角可以进入消息通知（系统消息、加好友、用户互动动态）。
+- 字号：
+  - “谁能看到”原来用下拉框，触屏上会被统一放大到 16px，显得特别大。现在改成两个小按钮“🔒 仅自己 / 🖼 展示封面”（字号 12px，打开展示封面仍需确认）。
+  - 书名 14px、说明 12px，“谁能看到”和“我的发布”里的说明文字改为左对齐。
+- 私信页（`community-view.mjs`）：
+  - 顶部一行：‹ 返回、头像和名字、⋯ 菜单（删除会话 / 屏蔽 / 举报）；
+  - 消息区占满中间；底部固定输入区：一行小贴纸 + 📔（展开“分享作品”选择框，不再超出屏幕）+ 输入框和发送；
+  - 没有消息时显示居中的提示。
+- 等级（新 `Public/js/levels.mjs`）：
+  - 经验只根据本机记录现算，不额外存数据，示例内容不算，也不会上传。
+  - 记录过的日子 +10；当日主页 +5；小故事 +3；照片 +1（最多 300 张）；打卡 +2；打卡心得 +3；周 / 月回顾 +8；发布作品（演示）+15。
+  - 8 个等级：一颗种子 0 → 刚发芽 30 → 长叶子 90 → 小花苞 200 → 开花了 400 → 小花园 700 → 一片森林 1100 → 彩虹草地 1600。
+  - 同时计算活跃天数和连续天数（今天还没写时，从昨天往前算，不会提前断掉）。
+  - “我的主页”新增等级卡：图标、Lv、名称、经验值、进度条、距下一级还差多少、活跃 / 连续天数，以及“怎么获得经验？”明细。
+- 消息通知（`community.mjs` + `inboxHTML` / `bellHTML`，存于演示数据）：
+  - 首页右上角（设置旁）和“我的主页”右上角有 🔔，带未读数。
+  - 通知页可筛选：全部 / 系统 / 好友申请 / 互动 / 私信。
+  - 系统消息：欢迎、备份提醒（可直接去设置）、升级通知（每升一级一条，可跳到等级卡）。
+  - 好友申请可以直接在这里接受或拒绝；有未读私信时显示一条，点了去回复。
+  - 发布作品后会模拟收到一个赞和一条评论，标注“模拟”。
+  - 支持全部已读；返回时也会标为已读。被屏蔽的人的通知会隐藏。旧的演示数据加载时会自动补上通知列表。
+- 测试：
+  - 新增 `tests/v42.test.mjs`（3 项：经验计算、示例内容不算、照片上限、最高等级、通知的种类 / 未读 / 已读 / 升级只通知一次 / 发布后的模拟互动 / 屏蔽隐藏 / 旧数据补全）；
+  - 新增 `tests/v42-browser.cjs`（4 组：铃铛未读数 → 通知中心筛选 → 接受好友 → 全部已读；等级卡从 Lv.1 升到 Lv.2 并收到升级通知；“谁能看到”改为小按钮；私信页布局、⋯ 菜单、分享框不超出屏幕、发送）；
+  - 更新 v35（小按钮）和 v33（分享作品先点 📔）。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 60、Python 12 全部通过；
+  - 浏览器 15 套全部通过：`browser`、`v3`、`v31`–`v42`、`collab`。
+  - v31 第一次全量运行时超时过一次，单独连续重跑两次都通过，判断为偶发问题（以前也出现过）。
+- 已知问题：等级和通知都只在本机；互动是模拟的，真实互动需要服务端；iPhone 真机未实测；Swift 未编译。
+- 下一步：用户确认等级名称、经验规则和通知内容；可以加等级徽章展示和更多系统消息（例如每周回顾提醒）。
+
+### 2026-11-09 — 素材库与每日素材（不再总是咖啡）
+
+- 需求：模版照片每次都是咖啡；希望每天变化，或者有素材让用户选。
+- 原创素材：
+  - 新增 `tools/make_scenes.py`，生成 12 张原创插画：早晨的咖啡、山坡日出、雨天窗边、一瓶郁金香、海边的风、城市夜晚、草地野餐、书和一杯茶、窗台上的猫、山与湖、秋天的树、生日蛋糕。
+  - 文件为 `Resources/Scenes/LD-scene-*.svg`，附原创声明 `LittleDays-Original-Scenes.txt`，没有使用任何第三方图片。
+  - `library.json` 新增 `scenes`（id / 分类 / 中英文名 / 文件 / 声明）。
+  - 新素材已接入各个出口：`preview.py` 的 `/library/scenes/`、`build_link.py`、Swift `SharedResources.libraryData("scenes")` 和 `SceneAsset`、`Seed.dailyScenes`，以及 iOS 外壳说明。
+- 每日变化：
+  - `model.mjs` 新增 `sceneOfDay`：按日期确定，同一天不变，12 天轮完一遍。
+  - `seed.json` 中“今天”的示例页改为 `scene:daily`，新建手帐时换成当天的素材；正文去掉了“热咖啡”。
+  - `media.resolve` 支持 `scene:<id>`。
+- 选择素材：
+  - 首页：今天还没写时，显示“今日素材 · 名字 · 用它写一页”，点一下就放到今天的页面上（如果今天已有内容，会新建一个小故事）。
+  - 创作开始页：底部有“今日素材”。
+  - 照片面板：“从相册选择”下方是“素材库”（12 张，今日素材排在第一并标出）。
+  - 空白纸张：四个按钮下方有“或者从素材库挑一张”。
+  - 放上的素材可以像照片一样用工具条“编辑图片”加滤镜和文字；编辑后另存一份，素材本身作为原图。导出图片也正常。
+- 测试：
+  - 新增 `tests/v41.test.mjs`（3 项：素材清单、文件与声明齐全；每日素材同一天不变、每天不同、12 天不重复；新手帐的示例页使用当天素材）。
+  - 新增 `tests/v41-browser.cjs`（5 组：示例页显示今日素材且加载成功；首页今日素材一键放上；照片面板 12 张、今日排第一、点选放上；素材可用滤镜编辑；含素材的页面导出 PNG，开始页显示今日素材）。
+  - Swift Core 测试加入了 scenes 的检查（未编译）。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 57、Python 12 全部通过；
+  - 浏览器 14 套全部通过：`browser`、`v3`、`v31`–`v41`、`collab`。
+- 已知问题：
+  - 已有的旧手帐里，示例页仍是原来的咖啡照片（只有新建的手帐会使用当天素材）；
+  - 素材是插画风格，不是真实照片；
+  - iPhone 真机未实测，Swift 未编译；Swift 里原有的 `fonts.count == 7` 断言与现在 11 款字体不符（以前就存在，本轮没有处理）。
+- 下一步：按用户喜好增加更多主题素材（宠物、亲子、节日、四季等）。
+
+### 2026-11-09 — 酷炫主题文字改白；习惯两个按钮（✓ 打卡 / ✎ 心得）
+
+- 需求：酷炫（紫色深色）主题里黑色或深色文字看不清，要换成白色；习惯要有两个按钮，一个打勾，一个加感想、照片等。
+- 主题：
+  - 原因：深色主题把所有颜色统一做了明暗反转，原本用在紫色按钮上的白字变成了深色，灰色提示字变成中灰。
+  - `tools/sync_tokens.py` 现在把文字颜色单独成组（`color` / `fill` / `stroke` / `caret-color` 声明里改用 `--t-xxxxxx` 变量），背景等仍用 `--c-`。深色主题下文字一律变亮：白字保持白色，深色和灰色的字变成浅色并保留色相。浅色主题不变。
+  - `design-tokens.json` 的酷炫主题指定了 ink / muted / line 三个颜色。
+  - 提示消息（toast）和选中内容上方的工具条在任何主题下都保持深色。
+- 习惯：
+  - 每行都有两个按钮：“✎ 心得”（打卡前后都能点；写了或加了照片后显示“已写 / 🖼”）和 ✓。
+  - ✓ 一点即完成：计时类习惯记录默认分钟数，不再弹出表单。提示“打卡啦 🌱 想写心得、加照片，点旁边的 ✎”。
+  - 点 ✎ 打开原来的心得对话框（分钟、心得、心情、照片）；还没打卡时保存，会同时完成打卡。
+- 测试：
+  - 新增 `tests/v40-browser.cjs`：
+    - 酷炫主题下首页、日历、成长、手帐本、社区、设置、创作页和面板，所有可见文字对比度都不低于 3:1，按钮文字为白色；
+    - 习惯：✎ 和 ✓ 并排；✓ 一点即完成并记录分钟；✎ 在打卡前或打卡后都能写心得，而且不会重复打卡。
+  - 更新 `browser.cjs`、v31 的计时类习惯流程。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 54、Python 12 全部通过；
+  - 浏览器 13 套全部通过：`browser`、`v3`、`v31`–`v40`、`collab`。
+- 已知问题：浅色主题里一些装饰性的小灰字对比度本来就偏低，这是原有设计风格，没有改；iPhone 真机未实测；Swift 未编译。
+- 下一步：用户确认酷炫主题的可读性，以及习惯按钮的位置和大小。
+
+### 2026-11-09 — 选中即可删除/复制；视频封面（自动、选一帧、上传）
+
+- 需求（截图）：在纸上选中内容后，希望就在那里删除或复制；上传视频后可以选视频封面，或自己上传封面。
+- 修改：
+  - `app.js` `layerBarHTML` / `placeLayerBar`：选中的内容上方出现深色小工具条（空间不够时放到下方）。
+    - 照片：✨ 编辑图片；视频：🖼 封面；文字：✎ 编辑（打开文字面板）。另外都有 ⧉ 复制、⬆ 置顶、🗑 删除。
+    - 拖动时工具条跟着移动；点工具条不会触发拖动。
+    - 图层面板里重复的 置顶/复制/删除/编辑图片 已删去，面板更短，并提示这些操作在工具条里。
+    - 删除最后一个视频或声音图层时，同时移除它的文件条目；撤销会恢复。
+  - 新 `Public/js/poster-picker.mjs`：
+    - 上传视频时自动截一帧作封面（`frameAt`，在最长 1 秒处），避免 iPhone 上视频显示成黑块。
+    - “选择视频封面”对话框：拖滑块选一帧，“用这一帧”保存为 IndexedDB 中的新图片；也可以“上传图片”。
+    - 媒体卡片的“设置封面”和工具条的“封面”都会打开这个对话框。
+  - 播放失败时：如果是需要再点一次就提示“再轻点一次”；否则先重新加载再播放一次；格式不支持时提示转成 MP4。之前一律提示“媒体不可用”，容易误导。
+  - 显示不出来的照片改为柔和的占位图（📷 斜纹），不再显示破图标。
+  - `index.html` 新增 `#poster-dialog`；`styles.css`、`i18n.json`（poster.*、layer.frontShort、layer.barHint、media.tapAgain/unsupported）。
+- 测试：
+  - 新增 `tests/v39-browser.cjs`（iPhone 13 模拟，5 组）：
+    - 新视频自动有封面；
+    - 选中视频后工具条在它上方，包含 封面/复制/置顶/删除；
+    - 选一帧或上传图片作封面；
+    - 复制与删除，删除最后一份时连同文件一起移除，撤销可恢复；
+    - 照片工具条有“编辑”，无法显示的图片有占位图。
+  - 更新 v3：视频封面先自动生成，再通过对话框上传替换。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 54、Python 12 全部通过；
+  - 浏览器 12 套全部通过：`browser`、`v3`、`v31`–`v39`、`collab`。
+- 已知问题：
+  - iPhone 真机上自动截帧和播放没有实测；截图里那张照片显示成“?”的根本原因无法在容器里复现（可能是这台设备的存储里已经没有那个文件，或图片格式读不出来），现在会显示占位图，可以用“替换照片”重新选择；
+  - Swift 未编译。
+- 下一步：用户在手机上确认工具条位置和封面选择。
+
+### 2026-11-09 — 竖/圆等形状、打字不挡选项、主题颜色、整体体验审查修复
+
+- 需求（两张截图）：上传的视频只能横着，想要竖的、圆的等多种形状；手机键盘弹出时会挡住选项；从用户体验角度自己审一遍并改进；App 主题颜色可选（酷炫、简约、优雅等）。
+- 视频方向与形状：
+  - 新增 `Public/js/shapes.mjs`，定义形状：横版 / 竖版 / 方形 / 圆形 / 拱门 / 心形 / 胶片（胶片仅视频）。按 4:5 纸张换算出真实比例；同时提供 canvas 路径，导出时画出同样的形状。
+  - 上传视频时读取它本身的宽高（`clip.width/height`），竖拍视频会竖着放到纸上。
+  - 照片多一个“自由”选项；`layer.shape` 为可选字段。
+  - 圆形、拱门、心形用遮罩直接裁出画面，没有白边；胶片带齿孔边。
+  - 图层面板新增“形状”按钮行。
+  - `export.mjs` 在图片和视频导出里都画出这些形状。
+  - Swift：`StickerLayer.shape`、`JournalMedia.width/height`（可选字段）及 Core 测试（未编译）。
+- 键盘：
+  - 在触屏上聚焦文字框时进入“打字模式”：底部菜单和工具图标隐藏；正在用的面板移到键盘上方（浏览器报告 visualViewport 时贴着键盘，否则放在屏幕上半部分）；只滚动面板本身，正在输入的框保持可见。
+  - 点纸面会收起键盘。
+- 主题（共享设计资源为准，并生成 CSS）：
+  - `design-tokens.json` 新增 6 个主题：温柔（默认）、简约、优雅、清新、樱花、酷炫（深色）。
+  - `tools/sync_tokens.py` 会把 `styles.css` 里的每个颜色改写为 `var(--c-xxxxxx, #原色)`。原色作为回退值，所以默认外观完全不变；脚本可重复运行，后来新加的颜色也会一并转换。
+  - 同一脚本生成 `Public/themes.css`：按色度判断，中性色带上主题自己的淡色，原来的鼠尾草绿换成主题的强调色，深色主题反转明度，阴影保持为阴影。
+  - 手帐纸张、封面、书脊、书架木板和修图器在任何主题下都保持原色。
+  - 设置里可以选主题（只存在本机 `little-days.theme`），功能介绍里新增一张“选个喜欢的颜色”卡片。
+  - `app.js` 不再用内联方式写颜色变量（否则会盖掉主题）。
+- 体验审查（由一个子代理在 iPhone 模拟下走查，只出报告、不改代码）后的修复：
+  - 创作页改为全屏：隐藏底部菜单，左上角加“‹”返回到进入前的页面；提示消息改在顶部显示；纸张为空时，四个添加按钮只出现一次。
+  - 工具图标行加右侧渐隐，重新渲染后保持滚动位置，并把当前打开的工具滚到可见处。
+  - 去掉面向用户的技术词：IndexedDB / LocalStorage / 端口 / “公开仓库” / “尚未同步到 iPhone”，私密说明也改得与现有的演示功能一致。
+  - 触屏上只显示触屏手势说明；“已选择元素”提示不再重复；新文字字号略大。
+  - 系统预设的标签按界面语言显示：习惯主题、书本分类、分钟数、成长轨迹书眉、日历切换、“添加一个小故事”。用户自己写的内容仍然不翻译。
+  - 日历：点空白日期后，下方面板会滚动到可见处；去掉重复的“补记这一天”按钮和 ↗ 箭头。
+  - 设置：只保留“‹ 返回”；备份按钮之间留出间距；首页齿轮改为 SVG 图标。
+  - 打卡对话框：“移除照片”只在有照片时显示；例子改成中文。
+  - 社区子页（作品、私信）只显示一行“演示”标记；私信消息从顶部排起；分享作品的下拉框不再超出屏幕。
+  - 手帐本详情页的“编辑”按钮不再被挤扁；“谁能看到”的下拉框换成 App 风格。
+  - 小链接的点击区域加大；阅读页日期使用等高数字。
+  - 登录时没填名字也会友好地问候，语言切换移到登录页顶部。
+- 测试：
+  - 新增 `tests/v38-browser.cjs`（4 组）：
+    - 竖 / 横视频的方向；
+    - 视频 7 种、照片 7 种形状，圆形是正圆，心形有遮罩，导出图片正常；
+    - 打字模式：菜单和工具隐藏，面板在上方，键盘高度可知时面板贴着键盘；
+    - 6 个主题：深色主题下界面变色但纸张不变，选择会被记住，手帐数据不受影响。
+  - `signed-in.cjs` 增加两个助手：`goTab` 从全屏创作页先点 ‹ 再用菜单；`menu` 用来点底部菜单。
+  - 旧测试相应更新：v31 打开工具前先收起键盘；v32 检查创作页没有底部菜单；v33 接受一行的演示标记；v36 只用返回键；v37 检查空白纸上四个按钮只出现一次。
+- 运行与测试（Linux 容器 + Chromium，测试期间临时运行 localhost）：
+  - Node 54、Python 12 全部通过；
+  - 浏览器 11 套全部通过：`browser`、`v3`、`v31`–`v38`、`collab`。
+- 已知问题：
+  - 真机 iPhone 的键盘高度与 visualViewport 行为未实测（在线链接在 App 内的 iframe 里可能拿不到键盘高度，此时使用上半屏的后备布局）；
+  - 主题是按规则自动换色，个别小装饰颜色可能不够理想；
+  - 修图器不支持形状；
+  - Swift 未编译。
+- 下一步：用户在手机上确认键盘、形状和主题；按需微调各主题配色。
+
+### 2026-11-09 — 照片 / 文字 / 视频 / 声音并列；空白纸张可直接添加；iPhone 字体比例
+
+- 需求（四张截图，用户只用在线链接查看）：
+  - 给图加文字要找一下，不直观；
+  - 加照片、文字、视频、音频应是平行选择；
+  - 空白纸张那里点一下就能加内容；
+  - 创作入口弹出页的字体比例奇怪。
+- 修改：
+  - `app.js`：
+    - 画布下方原来是一个大的“加照片”按钮，现在改为 撤销 / 重做 + 四个并列按钮：照片 / 文字 / 视频 / 声音（`addChoicesHTML`）。
+    - 点“声音”在下方展开“录一段 / 上传音频”。录音会打开声音面板，因为“停止”按钮在那里。
+    - 点“文字”立即在纸上加一个文字框，打开图层面板并选中文字，可以直接输入。
+    - 写作卡标题行里不显眼的“＋添加文字框”已删除。
+    - 文字图层面板把“文字内容”放到最上面。
+    - 画布的 pointerdown 忽略纸上的添加按钮。
+  - `canvas.mjs`：小故事纸张为空时，在纸上显示同样的四个按钮（仅编辑模式，阅读页不显示）。
+  - `styles.css`：
+    - 四个按钮样式一致。
+    - 触屏设备（`pointer: coarse`）上输入框、文本框、下拉框统一为 16px，避免 iPhone Safari 在聚焦字号小于 16px 的输入框时自动放大页面、并一直停在放大状态。截图里页面被推出屏幕、字体变大，就是这个原因。
+    - 创作入口卡片标题改用系统字体 600 字重、15px，不再用粗体，也不再回退到毛笔风格的中文手写字体。
+  - `i18n.json`：add.*，以及新的画布提示语。
+- 测试：
+  - 新增 `tests/v37-browser.cjs`（以 iPhone 13 模拟，4 组）：
+    - 空白纸与下方栏都提供同样四个选择；
+    - 文字一点即可输入，并显示在纸上；
+    - 声音可以录或上传，上传后放到纸上；视频和照片一点就打开选择器；
+    - 所有可见输入框不小于 16px，无横向滚动，开始卡片标题字重为 600。
+- 运行与测试（Linux 容器 + Chromium；测试时临时启动 localhost，测完已关闭）：
+  - Node 54、Python 12 全部通过；
+  - 浏览器 `browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`v36`、`collab`、`v37` 全部通过。
+- 已知问题：iPhone 真机 Safari 未实测（以 Playwright 的 iPhone 模拟验证）；当日主页（有固定标题 / 正文的那页）的纸面仍然用原来的主照片位，不显示四个按钮。
+- 下一步：用户在在线链接上确认手感。
+
+### 2026-11-08 — 登录页、首次功能介绍、小红书式图片编辑、创作入口、设置返回键
+
+- 需求：要有登录界面，登录后第一次有功能介绍（walkthrough）；像小红书一样编辑图片（滤镜、裁剪、加标题）；创作页进去太单一；设置页没有返回或关闭键。
+- 登录（`Public/js/account.mjs` + `app.js` 的 `loginHTML` / `accountAction`）：
+  - 本机账号 `little-days.account`，含名字、头像、`onboarded`。没有服务端，Apple 和邮箱/手机号登录按钮禁用并标“即将推出”。
+  - 页面明确说明数据只在本设备、不上传；登录页可切换中/英文。
+  - 退出登录只把 `signedIn` 改为 false，手帐、媒体和演示数据都不删；再次登录显示“欢迎回来”。
+  - 第一次登录时，社区演示的个人主页名字和头像跟随登录信息。
+- 功能介绍：6 张卡片（欢迎、＋开始写、修图、成长、书架与主页、默认私人），可跳过、上一步、下一步，只出现一次；设置里可以“再看一次功能介绍”。
+- 设置：顶部有“‹ 返回”和“×”，回到进入设置前的页面；新增“账号”卡片（再看介绍、退出登录及说明）。
+- 图片编辑：
+  - `photo-edit.mjs`：
+    - 8 种滤镜。
+    - 6 种裁剪比例，可放大、拖动位置、旋转 90°。
+    - 亮度、对比度、饱和度、色温调节。
+    - 图上标题，4 种样式（手写、标签、胶带、描边）、6 种颜色、可调字号、可拖动位置。
+    - 预览用 CSS filter；保存时用同一套数学的颜色矩阵逐像素计算，不依赖 canvas `ctx.filter`，Safari 和 WKWebView 也能用。
+  - `photo-editor-ui.mjs`：全屏编辑面板，多张照片可逐张编辑。
+  - 从相册加的新照片和“替换照片”会先进入编辑器；“跳过”则保留原图。
+  - 非破坏式编辑：编辑后的图片是新的 Blob，存 IndexedDB；原图存为 `layer.sourceRef`，参数存为 `layer.edit`。
+  - 选中照片后点“✨ 编辑图片”可以从原图重新编辑；全部还原会回到原图文件。
+  - `media.mjs` 的引用遍历加入 `sourceRef`，所以备份和恢复都包含原图；`day.mjs` 的 `fillEmptySlots` 会带上编辑信息。
+- 创作入口：底部 ＋ 先显示“今天想怎么开始？”：
+  - 继续编辑今天（如果已有内容）。
+  - 六种开始方式：照片 / 写字 / 视频 / 录音 / 版式 / 成长。
+  - 四个灵感题目，点一下会自动作为标题。
+  - 当天已有内容时，新的开始会新建一个小故事，不改动原有内容。首页的“写一个小故事”等直接入口不受影响。
+- Swift：`Models.swift` 中 `StickerLayer.sourceRef` / `edit`，新增 `PhotoEdit` / `PhotoEditText`（均为可选字段）；`CoreTests` 往返测试加入这些字段（未编译）。
+- 测试：
+  - 新增：
+    - `tests/v36.test.mjs`（4 项：账号、编辑参数、颜色矩阵、裁剪）；
+    - `tests/v36-browser.cjs`（8 组：登录、介绍、设置返回/关闭/退出、创作入口、编辑器各功能、保存后的像素检查〔正方形、暖色、黑白、原图不变〕、从原图重新编辑和还原、备份包含原图）。
+  - 新增 `tests/signed-in.cjs`，旧测试共用：
+    - 给测试浏览器预置一个已登录、已看过介绍的本机账号；
+    - `goTab`：从 ＋ 进入后点“继续/写字”；
+    - `skipPhotoEditor`：上传照片后跳过编辑器。
+  - 旧测试改用这三个助手。
+- 运行与测试（Linux 容器 + Chromium）：Node 54、Python 12 全部通过；浏览器 `browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`v35`、`collab`、`v36` 全部通过。
+- 已知问题：
+  - 登录只是本机账号，不是真实的账号系统，也没有云同步；
+  - 编辑器暂不支持贴纸、画笔、局部调节和多段文字；
+  - 当日主页的旧“主照片”、封面和打卡照片暂不进入编辑器；
+  - Swift/iOS 未编译，Windows 未实机验证。
+- 下一步：用户试用登录、介绍、编辑器的手感；可加编辑器里的贴纸和多段文字、滤镜强度；Phase 3 真实账号。
+
+### 2026-11-08 — 手帐本改成书架，并与“我的主页”合并
+
+- 需求（两张截图）：社区的“我的”页和“我的手帐本”合并；手帐本像书架，把不同的书放上去，抽出想看的那本；同一处可切换到自己的主页，主页用于在想社交时管理哪些内容别人可见。
+- 修改：`app.js`：
+  - `booksPage` 顶部加“📚 书架 / 我的主页”切换（`booksView`）。
+  - `shelfHTML`：每本书是一根书脊，用书的颜色、封面字体和贴纸，竖排书名和页数，立在木质搁板上，每层 5 本，最后一格是“＋”新书位。轻点书脊会把书抽出来（`pulledBook`），上方显示封面卡片，提供打开这本 / 写一页（直接写进这本书）/ 放回书架；再点一次已抽出的书脊即打开。
+  - `openProfile`；`openCommunity` 在主页上的编辑类操作原地刷新，打开动态/私信/作品/发布时才进入社区；发布取消回到主页；撤回发布后回到主页。
+  - `data-showcase` 切换需确认。
+- `community-view.mjs`：社区只保留“发现 / 好友 / 私信”三个页签，头部加“我的主页”入口；发布流程不再依赖“我的”页签；导出 `profileHTML`，新增 `whoCanSeeHTML`（每本书“仅自己 / 主页展示封面”，标注共同创作成员，另列发布、私信、好友三条说明）和 `visitorPreviewHTML`（“别人看到的我的主页”预览）。
+- `community.mjs`：`profile.showcase` 加 `setShowcase` / `isShowcased` / `visitorView`，只含封面与书名，不含任何页面；旧演示数据可读。
+- 其他：`styles.css`（书架、书脊、抽出卡片、切换、谁能看到、访客预览）、`i18n.json`（shelf.* / me.* / who.*）。
+- 决定：“我的主页”属于手帐本页（自己的书和自己的展示放在一处）。展示封面只存演示数据 `little-days.demo-social`，私人手帐的 `visibility` 不变（仍 private），不作真实公开承诺。
+- 测试：新增 `tests/v35-browser.cjs`（5 组：书架、抽出 / 放回 / 二次轻点打开 / 写入该书、主页位置与原地编辑、展示封面需确认且取消不生效、访客预览、手帐数据不变、中英文、375/430 宽度），`community.test.mjs` +1。更新旧测试：先抽书再打开（browser / v3 / v31 / v32 / collab），v33 的“我的”改为从手帐本进入主页；新书位的读屏名称与顶部按钮区分。
+- 运行与测试（Linux 容器 + Chromium）：Node 50、Python 12 全部通过；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab`、`v35` 全部通过。
+- 已知问题：展示封面和主页仅本机演示，没有真实公开或访问控制；书很多时书架会变成多层，没有搜索或排序；Swift/iOS 未编译，Windows 未实机验证。
+- 下一步：用户确认书架手感（抽书动画、书脊高度/颜色）；可加书架排序（拖动换位置）和按分类分层。
+
+### 2026-11-08 — 补完未完成项：Studio 首屏、导出进度/取消、成长页精简、共同创作演示
+
+- 需求：用户要求“之前没做完的也继续做”。
+- Studio 首屏：顶部改为一行紧凑栏（`.studio-bar`：日期、保存状态、保存；页面标题改为读屏用的隐藏 h1）；未打开面板时页面占 90% 宽，整页和“撤销/添加”一行都在底部图标条上方（截图确认）。
+- 导出视频：`index.html` 新增 `#export-dialog`（进度条、已录制时间、取消按钮，Esc 等同取消）；`export.mjs` 的 `exportJournalVideo` 支持 `isCancelled`，取消时停止录制、关闭音频，抛出 `code="cancelled"`，**不下载任何文件**；`app.js` `exportPageVideo`。
+- 成长页精简：去掉大介绍块、主题分组标题、重复的“创建小习惯”按钮和底部里程碑；改为一条进度栏（本周 x/y、累计次数、成长日历入口）+ 紧凑习惯卡（打卡、本周七点、x/目标、📖 成长轨迹页数）+ 两张小回顾便签（已填写时显示第一句）+ 默认收起的“成长小便签”（打开后在重新渲染时保持打开）。
+- 共同创作演示：新 `Public/js/collab.mjs`（模型：invite 仅限好友且不自动授权、pending→simulateAccept、setRole、removeMember/离开保留页面、addPage/editPage 权限、版本快照最多 30、restoreVersion 生成新版本、simulateConflict/resolveConflict mine/theirs/both、publishBlockers）与 `collab-view.mjs`（手帐本详情页中可折叠的“共同创作”区，全程标注“演示 · 未联网”）；`app.js`（`collabAction`、写/改共同页面对话框、权限下拉）；存于 `little-days.demo-social`，私人手帐 `little-days.v1` 不包含任何共同创作数据；`styles.css`、`i18n.json`（collab.* 中英）。
+- 测试：新增 `tests/collab.test.mjs`（5 项）、`tests/collab-browser.cjs`（成长页 + 共同创作 6 组，`npm run test:browser:collab`）；v34 增加导出进度与取消（取消后无下载）；v31 先展开“成长小便签”；v3 的标题语言检查改读 `#app h1`（Studio 标题为隐藏 h1）。
+- 运行与测试（Linux 容器 + Chromium）：Node 49、Python 12 全部通过；`browser`、`v3`、`v31`、`v32`、`v33`、`v34`、`collab` 全部通过。v31 第一次运行时出现过一次超时（日志为空），重跑通过，未能复现。
+- 已知问题：共同创作只是本机演示（虚拟好友、模拟接受/冲突），没有账号、服务端权限或真实同步；共同页面是文字页，暂不支持照片/排版；Swift/iOS 未编译、Windows 未实机验证。
+- 下一步：用户确认新成长页与共同创作交互；Phase 3 服务端设计；原生构建验证。
+
+### 2026-11-08 — Studio 装饰工具改为底部小图标
+
+- 需求（截图反馈）：照片、版式、字体、纸张等设置行太占地方，希望作为小图标放在画面底部，让手帐页面更大。
+- 修改：`app.js` 的 `toolMenuHTML` 改为底部固定的图标条（`.tool-dock`，可横向滑动，显示短名）+ 点开后的底部面板（`.tool-sheet`，标题栏显示当前值与关闭按钮，最高约 34% 屏幕）；未打开面板时页面全宽显示，打开时页面缩小并固定在顶部（`pinStageForSheet`，任何方式打开面板都会把页面固定到上方）；“放大页面”按钮只在面板打开时出现，作用是收起面板；拖动图层时不再自动弹出图层面板（图标条出现“图层”）；删除“装饰这一页”标题与长菜单；`styles.css`；`i18n.json`（dock.* 短名）；测试 v32（图标条位置、放大即收起面板）、v33（图标条存在）。
+- 运行与测试：Node 44、Python 12；`browser`、`v3`、`v31`、`v32`、`v33`、`v34` 全部通过。
+- 下一步：按用户反馈继续精简。
+
+### 2026-11-08 — 纸上的视频/音频、只有文字、导出为视频或图片
+
+- 需求（截图反馈）：主照片位置不能“只有文字”；希望在纸上同样放视频、音频；可以选择导出为视频或图片。
+- 修改：`day.mjs`（`applyPageTemplate` 支持 `force` 让照片离开页面〔文件保留、可撤销〕；`mediaLayer`/`isOnPage`：视频/音频图层只引用 page.media 中的片段）；`canvas.mjs`（`video`/`audio` 图层：纸上播放按钮、视频画框、音频票根与声波，编辑与阅读共用）；`app.js`（新片段自动放到纸上，日页避开固定标题/正文；媒体卡片“放到纸上/从纸上拿下”；删除片段同时移除图层；图层可拖动/缩放/旋转/调宽高；播放按钮不触发拖动；只有文字需确认；导出分“导出图片 / 导出视频”，录制时显示进度并阻止离开）；`export.mjs`（拆出 `renderJournalCanvas`；PNG 画出视频帧与音频票根；`exportJournalVideo` 用 canvas.captureStream + MediaRecorder 录制整页，视频在画框中播放，所有片段声音经 WebAudio 混音，时长取最长片段〔4–60 秒〕，优先 MP4 否则 WebM）；`day-view.mjs`（纸上的片段不在下方列表重复）；Swift `StickerLayer.clipId`；`styles.css`、`i18n.json`；测试 `v31.test.mjs`（+1）、新 `tests/v34-browser.cjs`，并按新行为更新 v3/v31/v33 浏览器测试的选择器与断言。
+- 运行与测试：Node 44、Python 12；`browser`、`v3`、`v31`、`v32`、`v33`、`v34` 全部通过（v34：只有文字覆盖主照片并撤销；视频/音频上纸、播放、调整大小、拿下放回；导出 PNG；导出视频为 MP4、约 4 秒、解码音频非静音；阅读页在纸上播放且不重复列出）。
+- 已知问题：在线链接（claude.ai）禁止下载，导出图片/视频需在 localhost 或 iOS App 中使用；导出视频需浏览器支持 MediaRecorder（iOS 14.3+/现代 Chrome），录制时间等于视频长度。
+- 下一步：用户确认交互；可加导出时的进度条与取消。
+
+### 2026-11-08 — 首页简化：一张邀请写作的卡片
+
+- 需求（截图反馈）：首页大标题太占位置，应更多鼓励写作；“添加照片 / 写点什么 / 今日心情”其实都进入同一个界面；按钮太多，希望简洁流畅。
+- 修改：`Public/app.js` 重写 `home()`——顶部只留小号品牌名与设置；今日卡片（日期 + 小号邀请语“今天想记下什么？”/“今天，也有小美好。” + 今日预览〔点开为读今天的 Day Detail〕+ 唯一主按钮“写一个小故事”）；保留今日打卡与手帐本；删除快捷四按钮、顶部日历按钮（底部菜单已有）、社区卡片、Studio 卡片。`styles.css`、`i18n.json`（home.prompt、home.readToday）；`tests/v33-browser.cjs` 增加首页检查并改走底部菜单进入社区。
+- 运行与测试：Node 43、Python 12；五套浏览器 E2E 通过（期间一次 v32/v33 失败系截图用的临时 60 秒预览服务已退出，重启服务后重跑通过）。localhost:8080 已以 `--host 0.0.0.0` 重新启动并登记。
+- 下一步：按用户在链接中的反馈继续简化其它页面（如 Studio 菜单项数量）。
+
+### 2026-11-07 — 社区：底部菜单、好友列表、我的个人主页
+
+- 需求：社区放到下面的菜单；好友列表难找；需要“我的个人主页”管理自己的社区。
+- 修改：共享 `features.json` 新增第 6 个底部菜单 `community`（SwiftUI 原型根视图给出占位与 `person.2` 图标）；`Public/js/community.mjs` 新增 `profile`（头像/昵称/简介/新发布默认评论/好友申请来源）、`updateProfile`、`myWorks`、`savedWorks`、`myStats`、`visibleIncoming`，旧演示数据自动补默认资料；`community-view.mjs` 改为 4 个主页签（发现含推荐/关注/热门/分类 + 搜索）、好友页以好友列表开头并可搜索创作者、新增 `profileHTML`；`app.js` 新动作（feed、jump、资料编辑/头像/保存、收藏类型、设置）、首页去掉重复的社区图标（保留社区卡片）、焦点保持支持搜索框；`styles.css`；`i18n.json`（约 45 条）；测试 `community.test.mjs`（+1）、`v33-browser.cjs`（新页签结构 + 个人主页组）；ROADMAP/PRODUCT_SPEC。
+- 运行与测试：Node 43、Python 12；`browser`、`v3`、`v31`、`v32`、`v33`（6 组）全部通过；iOS 外壳副本一致。会话开始已按规则以 `--host 0.0.0.0` 重新启动 localhost:8080 并登记。
+- 已知问题：仍为本机演示；“只看我关注的人的好友申请”只隐藏、不自动处理（演示）。
+- 下一步：Collaborative Journal 演示，或按用户在链接中的反馈调整。
+
+### 2026-11-07 — V3.3：写作优先、按照片数量选模板、写小故事入口、社区本机演示
+
+- 需求：合并 PR #3（已合并 `b5efd6f`）；小故事的文字编辑不应与字体/模板平级以鼓励创作；模板先选照片数量（可只有标题/文字）再排版；写小事件的入口难找；可以做社区本地版。
+- 修改/新增：`Public/app.js`（写作卡片 `writeCardHTML`、“装饰这一页”、模板两步选择 `templatePickerHTML`、`addMomentNow` 与 `quick-moment` 入口、空相框填充、重新渲染保留焦点；社区页面、动作、输入与独立存储）；`Public/js/day.mjs`（`TEMPLATES_BY_COUNT`、`applyPageTemplate`、`fillEmptySlots`、full/corner/stack 版式）；`canvas.mjs`（空相框、纯文字页）；`day-view.mjs`（隐藏空相框、纯文字页、添加小故事按钮）；`export.mjs`；新增 `Public/js/community.mjs`、`community-view.mjs`；`styles.css`；`i18n.json`（约 140 条）；测试 `tests/community.test.mjs`（6）、`v31.test.mjs`（+1）、`tests/v33-browser.cjs`（新）及旧 E2E 帮助函数；文档 ROADMAP/PRODUCT_SPEC/ARCHITECTURE/DESIGN_SYSTEM；iOS 外壳副本已同步。
+- 决策：写作是主流程，装饰为次要折叠菜单；模板不删除已有照片（可选数量不少于已有照片）；社区演示与手帐数据完全分离（独立 localStorage 键，不进备份，无网络请求），所有界面标注“演示 · 未联网”；发布默认零勾选、逐项确认、记账内容锁定、成长感想需单独允许。
+- 运行与测试：Node 42、Python 12 通过；`browser.cjs`、`v3`、`v31`、`v32`、新 `v33`（首页一键写小故事并聚焦标题、写作在菜单之上、模板数量→版式与空相框按序填充、禁止少于已有照片、纯文字页、阅读隐藏空相框、Day Detail 添加小故事；社区五个浏览视图、点赞/收藏为封面/评论与回复/关注/好友申请、接受/模拟接受/屏蔽、私信文字/贴纸/分享作品/模拟回复/删除、发布零默认勾选与确认/关闭评论/撤回、手帐数据不变、英文与 375/390/430 无溢出）全部通过。发现并修复：媒体加载后重新渲染导致输入框失焦；好友页同一用户重复出现。
+- 已知问题：社区为本机演示，无真实账号/服务器/权限；协作手帐演示尚未做。
+- 下一步：Collaborative Journal 演示（邀请、Owner/Editor/Viewer、贡献者标记、版本与冲突提示），或用户在链接中反馈的界面调整。
 
 ### 2026-11-07 — V3.2：创作桌面、成长轨迹、按日封面、更多纸张/主题/中文字体
 

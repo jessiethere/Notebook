@@ -38,7 +38,7 @@ def main():
     (OUT / 'index.html').write_text(page_html(), encoding='utf-8')
     files = []
     for path in sorted(PUBLIC.rglob('*')):
-        if path.is_file() and path.name != 'index.html' and path.suffix in {'.css', '.js', '.mjs'}:
+        if path.is_file() and path.name != 'index.html' and path.suffix in {'.css', '.js', '.mjs', '.png'}:
             files.append((path, path.relative_to(PUBLIC)))
     for name in ['design-tokens', 'features', 'seed', 'library', 'i18n']:
         files.append((SHARED / f'{name}.json', Path('shared') / f'{name}.json'))
@@ -49,6 +49,18 @@ def main():
     for sticker in catalog['stickers']:
         for name in {sticker['file'], sticker['license']}:
             files.append((SHARED / 'Stickers' / name, Path('library/stickers') / name))
+    for scene in catalog.get('scenes', []):
+        for name in {scene['file'], scene['license']}:
+            files.append((SHARED / 'Scenes' / name, Path('library/scenes') / name))
+    for photo in catalog.get('photos', []):
+        for name in {photo['file'], photo['license']}:
+            files.append((SHARED / 'Photos' / name, Path('library/photos') / name))
+    for track in catalog.get('music', []):
+        for name in {track['file'], track['license']}:
+            files.append((SHARED / 'Music' / name, Path('library/music') / name))
+    for keeper in catalog.get('keepers', []):
+        for name in {keeper['file'], keeper['license']}:
+            files.append((SHARED / 'Keepers' / name, Path('library/keepers') / name))
     for name in ['coffee.jpg', 'lake.jpg']:
         files.append((SHARED / 'Media' / name, Path('assets') / name))
     published = {}

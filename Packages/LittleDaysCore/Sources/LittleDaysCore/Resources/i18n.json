@@ -16,8 +16,8 @@
     "en": "Growth"
   },
   "nav.books": {
-    "zh": "手帐本",
-    "en": "My Books"
+    "zh": "书架",
+    "en": "Books"
   },
   "settings": {
     "zh": "设置",
@@ -100,8 +100,8 @@
     "en": "Saved in this browser · sample entries are editable"
   },
   "home.greeting": {
-    "zh": "今天，也有小美好。",
-    "en": "A little lovely, today."
+    "zh": "Hi，{name}！今天是{weekday}",
+    "en": "Hi, {name}! It's {weekday}."
   },
   "home.subtitle": {
     "zh": "记录生活，也记录一点点变好的自己。",
@@ -152,8 +152,8 @@
     "en": "{done}/{total} done"
   },
   "home.books": {
-    "zh": "我的手帐本",
-    "en": "My little books"
+    "zh": "书架",
+    "en": "Books"
   },
   "home.allBooks": {
     "zh": "查看全部 ›",
@@ -188,12 +188,12 @@
     "en": "Back to today"
   },
   "calendar.memory": {
-    "zh": "Memory · 生活记忆",
-    "en": "Memory · little moments"
+    "zh": "生活记忆",
+    "en": "Little moments"
   },
   "calendar.growth": {
-    "zh": "Growth · 成长轨迹",
-    "en": "Growth · little steps"
+    "zh": "成长轨迹",
+    "en": "Little steps"
   },
   "calendar.prev": {
     "zh": "上个月",
@@ -328,8 +328,8 @@
     "en": "Undo"
   },
   "books.title": {
-    "zh": "我的手帐本",
-    "en": "My Books"
+    "zh": "书架",
+    "en": "Books"
   },
   "books.subtitle": {
     "zh": "给每一种热爱，一本小小的收藏。",
@@ -544,8 +544,8 @@
     "en": "A name for today"
   },
   "studio.titlePlaceholder": {
-    "zh": "今天的小美好",
-    "en": "Today’s little lovely"
+    "zh": "用一句话总结今天…",
+    "en": "Today in one line…"
   },
   "studio.bodyLabel": {
     "zh": "写点什么",
@@ -592,8 +592,8 @@
     "en": "Export image"
   },
   "studio.help": {
-    "zh": "媒体保存在此浏览器的 IndexedDB，尚未同步到 iPhone。图片导出不包含可播放的视频或音频。",
-    "en": "Media stays in IndexedDB in this browser, without iPhone sync. Image exports do not include playable video or audio."
+    "zh": "照片、视频和声音只保存在这台设备上。导出的图片里，视频和声音不能播放；需要的话请导出视频。",
+    "en": "Photos, videos and sounds stay on this device. An exported picture can't play video or sound — export a video for that."
   },
   "studio.textBox": {
     "zh": "添加文字框",
@@ -772,24 +772,656 @@
     "en": "Local media & backup"
   },
   "settings.storageNote": {
-    "zh": "文字与引用保存在 LocalStorage；照片、视频和音频保存在 IndexedDB。更换浏览器或端口不会自动同步。",
-    "en": "Text and references use LocalStorage; photos, video and audio use IndexedDB. Browsers and ports do not sync automatically."
+    "zh": "你的文字、照片、视频和声音都只保存在这台设备上，不会上传。换手机或换浏览器前，请先导出备份。",
+    "en": "Your words, photos, videos and sounds stay on this device and are never uploaded. Before switching phones or browsers, export a backup."
   },
   "settings.backup": {
     "zh": "导出完整本机备份",
     "en": "Export full local backup"
   },
   "settings.backupNote": {
-    "zh": "备份含私人文字和媒体，导出媒体上限 100 MB、导入文件上限 150 MB。请妥善保存，不要提交到公开仓库。",
-    "en": "Backups include private words and media. Export: up to 100 MB of media; import: 150 MB per file. Keep them safe and off public repositories."
+    "zh": "备份文件里有你的私人文字和照片，请放在安全的地方，不要分享给别人。单次导出最多 100 MB 媒体，导入文件最大 150 MB。",
+    "en": "A backup holds your private words and photos — keep it somewhere safe and don't share it. Up to 100 MB of media per export; files up to 150 MB can be restored."
+  },
+  "lock.title": {
+    "zh": "App 锁",
+    "en": "App lock"
+  },
+  "lock.offHint": {
+    "zh": "打开后，进入 Little Days 要输入 4 位密码（iPhone App 里也可以用面容 ID）。",
+    "en": "When on, a 4-digit passcode opens Little Days (or Face ID in the iPhone app)."
+  },
+  "lock.onHint": {
+    "zh": "已打开。密码只保存在这台设备上（加密后的校验值，不存原密码）。关掉要先输入密码。",
+    "en": "On. The passcode stays on this device (stored only as a salted hash). Turning it off asks for it first."
+  },
+  "lock.after": {
+    "zh": "离开多久后锁上",
+    "en": "Lock after leaving for"
+  },
+  "lock.after0": {
+    "zh": "立即",
+    "en": "Immediately"
+  },
+  "lock.after60": {
+    "zh": "1 分钟",
+    "en": "1 minute"
+  },
+  "lock.after300": {
+    "zh": "5 分钟",
+    "en": "5 minutes"
+  },
+  "lock.faceID": {
+    "zh": "用面容 ID 解锁",
+    "en": "Unlock with Face ID"
+  },
+  "lock.touchID": {
+    "zh": "用触控 ID 解锁",
+    "en": "Unlock with Touch ID"
+  },
+  "lock.biometricHint": {
+    "zh": "只在 iPhone App 里可用；验证由 iOS 完成，Little Days 拿不到你的面容或指纹信息。",
+    "en": "iPhone app only; iOS checks it — Little Days never sees your face or fingerprint."
+  },
+  "lock.useBiometric": {
+    "zh": "面容 ID",
+    "en": "Face ID"
+  },
+  "lock.biometricReason": {
+    "zh": "解锁你的 Little Days 手帐",
+    "en": "Unlock your Little Days journal"
+  },
+  "lock.change": {
+    "zh": "修改密码",
+    "en": "Change passcode"
+  },
+  "lock.enter": {
+    "zh": "输入密码",
+    "en": "Enter passcode"
+  },
+  "lock.setNew": {
+    "zh": "设置 4 位密码",
+    "en": "Set a 4-digit passcode"
+  },
+  "lock.again": {
+    "zh": "再输入一次",
+    "en": "Enter it again"
+  },
+  "lock.enterToOff": {
+    "zh": "输入密码以关闭 App 锁",
+    "en": "Enter passcode to turn the lock off"
+  },
+  "lock.enterOld": {
+    "zh": "输入现在的密码",
+    "en": "Enter your current passcode"
+  },
+  "lock.wrong": {
+    "zh": "密码不对，再试一次",
+    "en": "Wrong passcode, try again"
+  },
+  "lock.mismatch": {
+    "zh": "两次不一样，请重新设置",
+    "en": "They didn't match — set it again"
+  },
+  "lock.pause": {
+    "zh": "试错太多次了，{seconds} 秒后再试",
+    "en": "Too many tries — wait {seconds} s"
+  },
+  "lock.delete": {
+    "zh": "删除",
+    "en": "Delete"
+  },
+  "lock.forgot": {
+    "zh": "忘记密码？",
+    "en": "Forgot passcode?"
+  },
+  "lock.forgotText": {
+    "zh": "密码只保存在这台设备上，我们也无法帮你找回。iPhone App 里打开了面容 ID 的话可以用它解锁；否则只能清除这台设备上 Little Days 的数据（记录会一起删除，所以记得定期在设置里备份）。",
+    "en": "The passcode lives only on this device, so we can't recover it. In the iPhone app, Face ID unlocks it if turned on; otherwise the only way is to clear Little Days' data on this device (which deletes the journal — so back up from Settings now and then)."
+  },
+  "lock.turnedOn": {
+    "zh": "App 锁已打开",
+    "en": "App lock is on"
+  },
+  "lock.turnedOff": {
+    "zh": "App 锁已关闭",
+    "en": "App lock is off"
+  },
+  "lock.changed": {
+    "zh": "密码已修改",
+    "en": "Passcode changed"
+  },
+  "storage.saveFailed": {
+    "zh": "这次没能存进本机数据库，请检查手机存储空间，并尽快备份。",
+    "en": "Couldn't save to this device's database — check free space and back up soon."
+  },
+  "backup.never": {
+    "zh": "记了 {count} 天，还没备份过 · 记录只在这台手机上",
+    "en": "{count} days kept, no backup yet · it's all only on this phone"
+  },
+  "backup.since": {
+    "zh": "已经 {days} 天没备份了",
+    "en": "No backup for {days} days"
+  },
+  "backup.now": {
+    "zh": "现在备份",
+    "en": "Back up"
+  },
+  "backup.later": {
+    "zh": "一周后再提醒",
+    "en": "Remind me in a week"
+  },
+  "backup.when": {
+    "zh": "上次备份：{date}（{days} 天前）",
+    "en": "Last backup: {date} ({days} days ago)"
+  },
+  "backup.whenNever": {
+    "zh": "还没备份过。在 iPhone 上可以把备份文件存到「文件」或 iCloud 云盘。",
+    "en": "No backup yet. On iPhone you can save the file to Files or iCloud Drive."
+  },
+  "search.open": {
+    "zh": "搜索我的手帐",
+    "en": "Search my journal"
+  },
+  "search.placeholder": {
+    "zh": "搜索写过的字、#标签、手帐本…",
+    "en": "Search words, #tags, journals…"
+  },
+  "search.hint": {
+    "zh": "可以搜标题、正文、纸上的字、#标签、习惯感想和做完的事；几个词用空格隔开就会都匹配。只在这台设备上搜索。",
+    "en": "Search titles, words, text on the paper, #tags, habit notes and things done; several words separated by spaces must all match. Searching happens only on this device."
+  },
+  "search.none": {
+    "zh": "没有找到「{query}」",
+    "en": "Nothing found for “{query}”"
+  },
+  "search.books": {
+    "zh": "手帐本",
+    "en": "Journals"
+  },
+  "search.pages": {
+    "zh": "页面 · {count}",
+    "en": "Pages · {count}"
+  },
+  "memory.yearsAgo": {
+    "zh": "{count} 年前的今天",
+    "en": "{count} year(s) ago today"
+  },
+  "memory.monthAgo": {
+    "zh": "一个月前的今天",
+    "en": "A month ago today"
+  },
+  "memory.dismiss": {
+    "zh": "今天不再显示",
+    "en": "Hide for today"
+  },
+  "memory.open": {
+    "zh": "打开那一天 · {count} 页",
+    "en": "Open that day · {count} page(s)"
+  },
+  "reminder.title": {
+    "zh": "每天的提醒",
+    "en": "Daily reminder"
+  },
+  "reminder.note": {
+    "zh": "在你选的时间轻轻问一句。用 iPhone 本地通知，不联网；今天已经记过了就不打扰。",
+    "en": "A gentle nudge at your time — a local iPhone notification, nothing online; skipped once today is kept."
+  },
+  "reminder.toggle": {
+    "zh": "每天提醒我记录",
+    "en": "Remind me every day"
+  },
+  "reminder.body": {
+    "zh": "今天有什么值得记的？",
+    "en": "Anything worth keeping today?"
+  },
+  "reminder.preview": {
+    "zh": "通知会说：「{body}」",
+    "en": "It says: “{body}”"
+  },
+  "reminder.at": {
+    "zh": "提醒时间",
+    "en": "Time"
+  },
+  "reminder.offAction": {
+    "zh": "关闭每日提醒",
+    "en": "Turn off daily reminder"
+  },
+  "reminder.turnedOn": {
+    "zh": "每天 {time} 提醒你",
+    "en": "Reminding you daily at {time}"
+  },
+  "reminder.turnedOff": {
+    "zh": "每日提醒已关闭",
+    "en": "Daily reminder off"
+  },
+  "reminder.setAt": {
+    "zh": "改成每天 {time}",
+    "en": "Now daily at {time}"
+  },
+  "reminder.appOnly": {
+    "zh": "提醒只在 iPhone App 里有效：网页关掉后没法发通知。",
+    "en": "Reminders work in the iPhone app only — a closed web page can't notify you."
+  },
+  "reminder.denied": {
+    "zh": "iPhone 没有允许 Little Days 发通知：请到「设置 → 通知 → Little Days」打开。",
+    "en": "Notifications are off for Little Days: turn them on in Settings → Notifications → Little Days."
+  },
+  "reminder.failed": {
+    "zh": "提醒没能设置好，请稍后再试。",
+    "en": "The reminder couldn't be set — try again later."
+  },
+  "books.tags": {
+    "zh": "标签",
+    "en": "Tags"
+  },
+  "books.tagsPlaceholder": {
+    "zh": "例如：阅读 感恩 健身",
+    "en": "e.g. reading gratitude fitness"
+  },
+  "books.tagsHint": {
+    "zh": "用空格分开，最多 8 个；带空格的标签前面加 #（例如 #self awareness）。书架上可以按标签找书，搜索也能搜到。",
+    "en": "Separate with spaces, up to 8; put # before a tag with spaces (e.g. #self awareness). Filter the shelf by tag; search finds them too."
+  },
+  "books.allTags": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "home.greetingAnon": {
+    "zh": "Hi！今天是{weekday}",
+    "en": "Hi! It's {weekday}."
+  },
+  "home.greetingEdit": {
+    "zh": "设置我的称呼",
+    "en": "Set what to call me"
+  },
+  "home.nameTitle": {
+    "zh": "想让我怎么称呼你？",
+    "en": "What should I call you?"
+  },
+  "home.nameHint": {
+    "zh": "只用在首页的问候里，保存在这台设备上。",
+    "en": "Used only in Home's greeting, kept on this device."
+  },
+  "books.tagsMore": {
+    "zh": "更多 · {count}",
+    "en": "More · {count}"
+  },
+  "books.tagsLess": {
+    "zh": "收起",
+    "en": "Less"
+  },
+  "books.tagsSearch": {
+    "zh": "搜索标签",
+    "en": "Search tags"
+  },
+  "keeper.invite.title": {
+    "zh": "想要一个陪你记录的小伙伴吗？",
+    "en": "Would you like a little companion for your journal?"
+  },
+  "keeper.invite.body": {
+    "zh": "Little Keeper 会住在你的手帐里，随你记录的日子慢慢长大。完全可选，随时可以关掉。",
+    "en": "Little Keeper lives in your journal and grows as you keep your days. Entirely optional — turn it off any time."
+  },
+  "keeper.invite.yes": {
+    "zh": "认识一下",
+    "en": "Meet them"
+  },
+  "keeper.invite.later": {
+    "zh": "以后再说",
+    "en": "Maybe later"
+  },
+  "keeper.onboard.title": {
+    "zh": "认识 Little Keeper",
+    "en": "Meet Little Keeper"
+  },
+  "keeper.onboard.body": {
+    "zh": "你的手帐才是主角，它只是让这段路更温暖一点。不用喂、不用照顾，也不会因为你没来而难过。",
+    "en": "Your journal is the main character; your companion just makes the journey warmer. No feeding, no looking after, never sad when you're away."
+  },
+  "keeper.onboard.animal": {
+    "zh": "选一个小伙伴",
+    "en": "Choose a companion"
+  },
+  "keeper.onboard.name": {
+    "zh": "给它起个名字",
+    "en": "Give them a name"
+  },
+  "keeper.onboard.mode": {
+    "zh": "陪伴方式",
+    "en": "How they keep you company"
+  },
+  "keeper.onboard.privacy": {
+    "zh": "它说的话都在这台设备上生成，你的日记不会被发送到任何地方。",
+    "en": "Everything they say is made on this device; your journal is never sent anywhere."
+  },
+  "keeper.onboard.start": {
+    "zh": "就是它了",
+    "en": "That's the one"
+  },
+  "keeper.animal.bunny": {
+    "zh": "小兔",
+    "en": "Bunny"
+  },
+  "keeper.animal.bunnyHint": {
+    "zh": "温柔、安静地陪着你",
+    "en": "gentle and thoughtful"
+  },
+  "keeper.animal.cat": {
+    "zh": "Captain 猫",
+    "en": "Captain Cat"
+  },
+  "keeper.animal.catHint": {
+    "zh": "灰蓝色的小猫，戴着柠檬帽，安静地帮你看管日记和书架",
+    "en": "a little grey-blue cat in a lemon hat who quietly looks after your journals"
+  },
+  "keeper.mode.quiet": {
+    "zh": "安静",
+    "en": "Quiet"
+  },
+  "keeper.mode.quietHint": {
+    "zh": "只在旁边陪着，不说话、不打扰、不读你的日记。",
+    "en": "Just there beside you — no messages, no interruptions, never reads your journal."
+  },
+  "keeper.mode.gentle": {
+    "zh": "温柔",
+    "en": "Gentle"
+  },
+  "keeper.mode.gentleHint": {
+    "zh": "轻轻邀请你记录；只有你点「听听它怎么说」时才回应那一页。",
+    "en": "A soft invitation to write; replies to a page only when you ask."
+  },
+  "keeper.mode.interactive": {
+    "zh": "互动",
+    "en": "Interactive"
+  },
+  "keeper.mode.interactiveHint": {
+    "zh": "可以点它聊几句、一起回看和整理；翻看以前的页面、主动打招呼都要你另外打开。",
+    "en": "Tap to chat, revisit and tidy up together; looking at earlier pages and speaking first each need your OK."
+  },
+  "keeper.prompt.morning": {
+    "zh": "早上好～今天想先记下点什么吗？",
+    "en": "Good morning — anything you'd like to keep from today?"
+  },
+  "keeper.prompt.afternoon": {
+    "zh": "今天有什么想记住的吗？",
+    "en": "What would you like to remember about today?"
+  },
+  "keeper.prompt.evening": {
+    "zh": "今天过得怎么样？想写一句也可以。",
+    "en": "How was today? Even one line is lovely."
+  },
+  "keeper.prompt.night": {
+    "zh": "夜深了，想把今天收进本子里吗？",
+    "en": "It's late — shall we tuck today into the notebook?"
+  },
+  "keeper.prompt.kept": {
+    "zh": "今天的页面我收好了，谢谢你。",
+    "en": "I've tucked today's page away. Thank you."
+  },
+  "keeper.prompt.memory": {
+    "zh": "{years} 年前的今天，你写了「{title}」，要一起看看吗？",
+    "en": "{years} year(s) ago today you wrote “{title}” — want to look together?"
+  },
+  "keeper.grew": {
+    "zh": "我好像长大了一点点 —— {stage}。谢谢你记下的每一天。",
+    "en": "I think I've grown a little — {stage}. Thank you for every day you kept."
+  },
+  "keeper.tapLabel": {
+    "zh": "{name}",
+    "en": "{name}"
+  },
+  "keeper.tap.0": {
+    "zh": "嘿嘿，被你发现了。",
+    "en": "Hehe, you found me."
+  },
+  "keeper.tap.1": {
+    "zh": "今天有什么想记录的吗？",
+    "en": "Anything you'd like to keep from today?"
+  },
+  "keeper.tap.2": {
+    "zh": "今天不写也没关系哦。",
+    "en": "It's okay not to write today, too."
+  },
+  "keeper.tap.3": {
+    "zh": "你的手帐越来越好看了。",
+    "en": "Your journal keeps getting lovelier."
+  },
+  "keeper.stage.new": {
+    "zh": "新朋友",
+    "en": "New Friend"
+  },
+  "keeper.stage.growing": {
+    "zh": "一起长大中",
+    "en": "Growing Companion"
+  },
+  "keeper.stage.keeper": {
+    "zh": "Little Keeper",
+    "en": "Little Keeper"
+  },
+  "keeper.hello": {
+    "zh": "你好，我是{name}。",
+    "en": "Hi, I'm {name}."
+  },
+  "keeper.turnedOff": {
+    "zh": "Little Keeper 已关闭，你的记录都还在。",
+    "en": "Little Keeper is off — all your pages are still here."
+  },
+  "keeper.ask": {
+    "zh": "听听{name}怎么说",
+    "en": "What does {name} think?"
+  },
+  "keeper.thanks": {
+    "zh": "谢谢",
+    "en": "Thanks"
+  },
+  "keeper.localNote": {
+    "zh": "这句话是在这台设备上生成的，这一页没有被发送到任何地方。",
+    "en": "Made on this device — this page wasn't sent anywhere."
+  },
+  "keeper.shelf.count": {
+    "zh": "这里有你的 {count} 本手帐，我都帮你看着。",
+    "en": "{count} journals here — I'm keeping an eye on them all."
+  },
+  "keeper.shelf.latest": {
+    "zh": "最近收进来的是《{title}》。",
+    "en": "The newest one is “{title}”."
+  },
+  "keeper.shelf.tidy": {
+    "zh": "给手帐本加个标签，找起来会更快哦。",
+    "en": "Tags make journals quicker to find."
+  },
+  "keeper.shelf.find": {
+    "zh": "帮我找",
+    "en": "Help me find"
+  },
+  "keeper.chip.memory": {
+    "zh": "回看一个回忆",
+    "en": "Revisit a memory"
+  },
+  "keeper.chip.week": {
+    "zh": "这周我写了什么",
+    "en": "What did I write this week?"
+  },
+  "keeper.chip.shelf": {
+    "zh": "看看我的书架",
+    "en": "Look at my shelf"
+  },
+  "keeper.chat.hello": {
+    "zh": "我在呢。想一起回看，还是整理一下书架？",
+    "en": "I'm here. Shall we look back, or tidy the shelf?"
+  },
+  "keeper.chat.heard": {
+    "zh": "嗯，我听到了。想把它写进今天的一页吗？",
+    "en": "I hear you. Would you like to write it into today's page?"
+  },
+  "keeper.chat.placeholder": {
+    "zh": "和{name}说点什么",
+    "en": "Say something to {name}"
+  },
+  "keeper.chat.send": {
+    "zh": "说",
+    "en": "Send"
+  },
+  "keeper.chat.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "keeper.chat.needMemories": {
+    "zh": "我还没有翻看你以前页面的许可。如果愿意，可以在设置 → Little Keeper 里打开「翻看以前的页面」。",
+    "en": "I don't have permission to look at your earlier pages. If you'd like, turn on “Look at earlier pages” in Settings → Little Keeper."
+  },
+  "keeper.chat.noMemories": {
+    "zh": "以前的页面还不多，我们慢慢攒。",
+    "en": "Not many earlier pages yet — we'll collect them slowly."
+  },
+  "keeper.chat.memory": {
+    "zh": "我翻到了 {date} 的一页：「{title}」。",
+    "en": "I found a page from {date}: “{title}”."
+  },
+  "keeper.chat.weekNone": {
+    "zh": "这周还没有记录，没关系，想写的时候再写。",
+    "en": "Nothing kept this week yet — that's fine, write when you feel like it."
+  },
+  "keeper.chat.weekCount": {
+    "zh": "这周你记了 {count} 天。",
+    "en": "You kept {count} day(s) this week."
+  },
+  "keeper.chat.weekTitles": {
+    "zh": "这周你记了 {count} 天，有「{titles}」。",
+    "en": "You kept {count} day(s) this week, including “{titles}”."
+  },
+  "keeper.chat.shelfTags": {
+    "zh": "你有 {count} 本手帐，其中 {untagged} 本还没有标签。要不要给它们加几个？",
+    "en": "You have {count} journals; {untagged} have no tags yet. Want to add a few?"
+  },
+  "keeper.chat.shelfTidy": {
+    "zh": "你的 {count} 本手帐都有标签了，整整齐齐。",
+    "en": "All {count} of your journals have tags — neat and tidy."
+  },
+  "keeper.chat.privacyOn": {
+    "zh": "可以翻看你以前的页面（只在这台设备上）。随时可以在设置里关掉。",
+    "en": "May look at your earlier pages (on this device only). Turn it off any time in Settings."
+  },
+  "keeper.chat.privacyOff": {
+    "zh": "不会翻看你以前的页面；聊天不会被保存或发送。",
+    "en": "Doesn't look at your earlier pages; the chat isn't saved or sent."
+  },
+  "keeper.settings.offNote": {
+    "zh": "一个可选的小伙伴，随你记录的日子慢慢长大。关着的时候不会出现在任何地方。",
+    "en": "An optional little companion who grows as you keep your days. While off, it appears nowhere."
+  },
+  "keeper.settings.days": {
+    "zh": "一起记录了 {count} 天",
+    "en": "{count} day(s) kept together"
+  },
+  "keeper.settings.growthNote": {
+    "zh": "它随你记录的日子慢慢长大：写一页、放进照片、照顾自己、回看回忆、把记录收进手帐本。每天最多长一点点；难过的日子和开心的日子一样算；没来也不会退步。",
+    "en": "They grow with the days you keep: writing a page, adding photos, looking after yourself, revisiting memories, filling your journals. A little at most each day; sad and happy days count the same; nothing is lost when you're away."
+  },
+  "keeper.settings.allowMemories": {
+    "zh": "翻看以前的页面",
+    "en": "Look at earlier pages"
+  },
+  "keeper.settings.allowMemoriesHint": {
+    "zh": "让它在聊天里帮你回看以前的页面（只在这台设备上）。",
+    "en": "Lets them revisit earlier pages with you in chat (on this device only)."
+  },
+  "keeper.settings.proactive": {
+    "zh": "主动打招呼",
+    "en": "Speak first"
+  },
+  "keeper.settings.proactiveHint": {
+    "zh": "在首页偶尔主动提起「那年今天」。需要同时打开「翻看以前的页面」。",
+    "en": "Now and then mention “On this day” on Home. Needs “Look at earlier pages” too."
+  },
+  "keeper.settings.interactiveOnly": {
+    "zh": "只在「互动」方式里可用。",
+    "en": "Only in Interactive mode."
+  },
+  "keeper.settings.aiConsent": {
+    "zh": "允许发送给 AI 服务",
+    "en": "Allow sending to an AI service"
+  },
+  "keeper.settings.aiConsentHint": {
+    "zh": "还没有接入安全的 AI 服务，所以这里不能打开；现在的回应都在这台设备上生成，不会发送你的日记。",
+    "en": "No secure AI service is connected, so this stays off; replies are made on this device and your journal is never sent."
+  },
+  "keeper.settings.turnOff": {
+    "zh": "关闭 Little Keeper",
+    "en": "Turn off Little Keeper"
+  },
+  "keeper.settings.offKeeps": {
+    "zh": "关闭只会让它不再出现，你的记录、名字和设置都会保留。",
+    "en": "Turning off only hides them; your pages, its name and settings are kept."
+  },
+  "home.tagline": {
+    "zh": "把日子，好好收藏",
+    "en": "Your life, beautifully collected."
+  },
+  "tile.photo": {
+    "zh": "照片手帐",
+    "en": "Photo journal"
+  },
+  "tile.draw": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "tile.more": {
+    "zh": "更多方式",
+    "en": "More ways"
+  },
+  "privacy.title": {
+    "zh": "隐私",
+    "en": "Privacy"
+  },
+  "privacy.factDevice": {
+    "zh": "文字、照片、视频和声音只存在这台设备上，没有账号服务器，也不会上传。",
+    "en": "Words, photos, videos and sounds stay on this device: no account server, nothing uploaded."
+  },
+  "privacy.factPhotos": {
+    "zh": "放进来的照片会重新存一份，拍摄地点（GPS）等照片信息不会留下；只读一下拍摄时间，用来排序和补记。",
+    "en": "Photos you add are saved anew without their location (GPS) and other photo details; only the time taken is read, to order them and fill in a day."
+  },
+  "privacy.factNothingSent": {
+    "zh": "App 不连接任何第三方服务，没有广告和统计追踪；测试记录只记次数，不含内容，只有你导出时才离开设备。",
+    "en": "The app talks to no third-party service — no ads, no tracking; the test log counts taps only, with no content, and leaves the device only if you export it."
+  },
+  "privacy.factDemo": {
+    "zh": "社区、好友、私信、共同创作目前是本机演示，不会发出任何内容。",
+    "en": "Community, friends, messages and shared books are a local demo for now and send nothing."
+  },
+  "privacy.hideToday": {
+    "zh": "首页隐藏今天的内容",
+    "en": "Hide today on Home"
+  },
+  "privacy.hideTodayHint": {
+    "zh": "首页「今天」卡片不显示照片和文字，只显示记了几页；别人看到你的手机时更安心。",
+    "en": "Home's “Today” card shows no photos or words, only how many pages; handy when someone else sees your phone."
+  },
+  "privacy.shareList": {
+    "zh": "导出和分享时附上今日清单",
+    "en": "Add today's list to exports"
+  },
+  "privacy.shareListHint": {
+    "zh": "默认不附：打卡的习惯和做完的事是私人的。打开后，导出的图片和分享给家人的 PDF 会在当天第一页下面带上它。",
+    "en": "Off by default: habits and things done are private. Turn on to add it under a day's first page in exported pictures and shared PDFs."
+  },
+  "privacy.hiddenTitle": {
+    "zh": "今天记了 {count} 页",
+    "en": "{count} page(s) kept today"
+  },
+  "privacy.hiddenHint": {
+    "zh": "照片和文字已在首页隐藏 · 点开查看",
+    "en": "Photos and words hidden on Home · tap to open"
   },
   "settings.private": {
     "zh": "默认私人 · 无联网社交",
     "en": "Private by default · no online social features"
   },
   "settings.privateNote": {
-    "zh": "当前没有账号、公开社区、私信或多人协作。选择封面和主题不会公开你的内容。",
-    "en": "There are no accounts, public community, DMs or collaboration in this phase. Editing a cover or theme does not publish anything."
+    "zh": "手帐默认只有你自己能看。社区、好友、私信和共同创作目前是本机演示，不会把任何内容发出去；换封面或主题也不会公开内容。",
+    "en": "Your journal is private by default. Community, friends, messages and shared books are a local demo for now and send nothing anywhere; changing a cover or theme never publishes anything."
   },
   "settings.licenses": {
     "zh": "字体与素材许可证",
@@ -1000,8 +1632,8 @@
     "en": "One little step collected 🌱"
   },
   "草稿已保存，下次从 Studio 继续。": {
-    "zh": "草稿已保存，下次从 Studio 继续。",
-    "en": "Draft saved. Continue in Studio next time."
+    "zh": "草稿已保存，下次打开「创作」就能接着写。",
+    "en": "Draft saved — pick it up next time in Studio."
   },
   "先留下一张照片，或者写点什么吧。": {
     "zh": "先留下一张照片，或者写点什么吧。",
@@ -1184,8 +1816,8 @@
     "en": "Growth"
   },
   "calendar.markMoments": {
-    "zh": "个小故事",
-    "en": "Moments"
+    "zh": "页",
+    "en": "Pages"
   },
   "day.reading": {
     "zh": "回忆阅读",
@@ -1196,8 +1828,8 @@
     "en": "Edit"
   },
   "day.cover": {
-    "zh": "当日主页",
-    "en": "Day page"
+    "zh": "封面",
+    "en": "Cover"
   },
   "day.growth": {
     "zh": "当天的成长",
@@ -1212,8 +1844,8 @@
     "en": "View photo larger"
   },
   "day.statMoments": {
-    "zh": "{count} 个小故事",
-    "en": "{count} moments"
+    "zh": "{count} 页",
+    "en": "{count} pages"
   },
   "day.statPhotos": {
     "zh": "{count} 张照片",
@@ -1232,36 +1864,36 @@
     "en": "{count} check-ins"
   },
   "day.draftPending": {
-    "zh": "这一天还有尚未正式保存的草稿。",
-    "en": "This day also has an unsaved draft."
+    "zh": "这一天还有没收好的修改。",
+    "en": "This day has changes that were not put away."
   },
   "day.continueDraft": {
     "zh": "继续编辑",
     "en": "Continue editing"
   },
   "day.draftOnly": {
-    "zh": "以下是尚未正式保存的草稿内容。",
-    "en": "This is an unsaved draft."
+    "zh": "这一天还是草稿。",
+    "en": "This day is still a draft."
   },
   "moment.title": {
-    "zh": "今日小故事",
-    "en": "Moments of the day"
+    "zh": "这一天的页",
+    "en": "Pages of the day"
   },
   "moment.caption": {
-    "zh": "一天里的每个片段，都可以是一章。",
-    "en": "Every part of the day can be its own chapter."
+    "zh": "封面用一句话总结这一天，每一页记录一件事。",
+    "en": "The cover sums up the day; each page keeps one thing."
   },
   "moment.add": {
-    "zh": "添加一个小故事 · Add a Moment",
-    "en": "Add a Moment"
+    "zh": "再记一页",
+    "en": "Add a page"
   },
   "moment.added": {
-    "zh": "新的小故事已经翻开 ✿",
-    "en": "A new moment is ready ✿"
+    "zh": "新的一页已经翻开 ✿",
+    "en": "A new page is ready ✿"
   },
   "moment.untitled": {
-    "zh": "未命名的小故事",
-    "en": "Untitled moment"
+    "zh": "未命名的一页",
+    "en": "Untitled page"
   },
   "moment.empty": {
     "zh": "还没有内容",
@@ -1272,8 +1904,8 @@
     "en": "Title, main photo and notes for the day"
   },
   "moment.chapter": {
-    "zh": "第 {number} 章",
-    "en": "Chapter {number}"
+    "zh": "第 {number} 页",
+    "en": "Page {number}"
   },
   "moment.up": {
     "zh": "上移",
@@ -1296,8 +1928,8 @@
     "en": "Title"
   },
   "moment.titlePlaceholder": {
-    "zh": "例如：清晨的健身房",
-    "en": "e.g. Morning gym session"
+    "zh": "给这一刻起个名字",
+    "en": "Name this moment"
   },
   "moment.time": {
     "zh": "时间（可选）",
@@ -1316,32 +1948,32 @@
     "en": "Tags"
   },
   "moment.tagsPlaceholder": {
-    "zh": "用逗号分隔，例如：健身, 早晨",
-    "en": "Comma separated, e.g. gym, morning"
+    "zh": "用逗号分隔，例如：周末, 散步",
+    "en": "Comma separated, e.g. weekend, walk"
   },
   "moment.save": {
-    "zh": "保存这个小故事",
-    "en": "Save this moment"
+    "zh": "保存这一页",
+    "en": "Save this page"
   },
   "moment.savedToast": {
-    "zh": "这个小故事已经单独保存 🌷",
-    "en": "This moment is saved on its own 🌷"
+    "zh": "这一页已经单独保存",
+    "en": "This page is saved on its own"
   },
   "moment.savedAt": {
     "zh": "已保存 {time}",
     "en": "Saved {time}"
   },
   "moment.deleteConfirm": {
-    "zh": "删除这个小故事？照片和录音文件仍保留在本机，可撤销。",
-    "en": "Delete this moment? Its media files stay on this device and you can undo."
+    "zh": "删除这一页？照片和录音文件仍保留在本机，可撤销。",
+    "en": "Delete this page? Its media files stay on this device and you can undo."
   },
   "moment.deleted": {
-    "zh": "小故事已删除，可以撤销。",
-    "en": "Moment deleted. You can undo."
+    "zh": "这一页已删除，可以撤销。",
+    "en": "Page deleted. You can undo."
   },
   "moment.canvasHint": {
-    "zh": "添加照片、贴纸或文字，自由排版这个小故事。",
-    "en": "Add photos, stickers or text and arrange this moment freely."
+    "zh": "点一下，添加照片、文字、视频或声音",
+    "en": "Tap to add a photo, text, video or sound"
   },
   "photo.addMany": {
     "zh": "添加照片（可多选）",
@@ -1536,8 +2168,8 @@
     "en": "What you did"
   },
   "growth.detailPlaceholder": {
-    "zh": "例如：Lower Body / Spanish",
-    "en": "e.g. Lower Body / Spanish"
+    "zh": "简单写一句今天做了什么",
+    "en": "A few words about what you did"
   },
   "growth.minutesOptional": {
     "zh": "时长（分钟，可选）",
@@ -1728,8 +2360,8 @@
     "en": "Font"
   },
   "tool.paper": {
-    "zh": "纸张",
-    "en": "Paper"
+    "zh": "背景与纸张",
+    "en": "Background & paper"
   },
   "tool.mood": {
     "zh": "心情",
@@ -1752,8 +2384,8 @@
     "en": "Book & records"
   },
   "tool.chapters": {
-    "zh": "小故事目录",
-    "en": "Moments"
+    "zh": "这一天的页",
+    "en": "Pages"
   },
   "tool.none": {
     "zh": "还没有",
@@ -1788,20 +2420,20 @@
     "en": "Add photos first to choose a layout here."
   },
   "moment.addShort": {
-    "zh": "小故事",
-    "en": "Moment"
+    "zh": "新的一页",
+    "en": "New page"
   },
   "moment.none": {
-    "zh": "还没有小故事。",
-    "en": "No moments yet."
+    "zh": "还没有记录。",
+    "en": "Nothing yet."
   },
   "studio.previewSmall": {
     "zh": "缩小预览",
     "en": "Smaller preview"
   },
   "studio.previewLarge": {
-    "zh": "放大预览",
-    "en": "Larger preview"
+    "zh": "收起面板，放大页面",
+    "en": "Close the panel and enlarge the page"
   },
   "journey.title": {
     "zh": "成长轨迹",
@@ -1914,5 +2546,5077 @@
   "books.noMatch": {
     "zh": "这个日期还没有记录。",
     "en": "Nothing recorded for this date."
+  },
+  "write.title": {
+    "zh": "写下这一页",
+    "en": "Write this page"
+  },
+  "write.dayTitle": {
+    "zh": "今天的标题和文字",
+    "en": "Today's title and words"
+  },
+  "write.decorate": {
+    "zh": "装饰这一页",
+    "en": "Decorate this page"
+  },
+  "write.decorateHint": {
+    "zh": "版式、照片、字体、纸张…点开一项就能看到变化",
+    "en": "Layout, photos, font, paper… open one and watch the page change"
+  },
+  "layout.step1": {
+    "zh": "① 放几张照片？",
+    "en": "① How many photos?"
+  },
+  "layout.step2": {
+    "zh": "② 选一个版式",
+    "en": "② Pick a layout"
+  },
+  "layout.textOnly": {
+    "zh": "只有文字",
+    "en": "Words only"
+  },
+  "layout.hasPhotos": {
+    "zh": "这一页已经有 {count} 张照片",
+    "en": "This page already has {count} photos"
+  },
+  "layout.textHelp": {
+    "zh": "不放照片，标题和文字会直接排在纸上。",
+    "en": "No photos: the title and words are set on the paper."
+  },
+  "layout.slotHelp": {
+    "zh": "预览里会出现空相框，点「加照片」就会按顺序放进去；之后仍可拖动。",
+    "en": "Empty frames appear in the preview; tap Photos to fill them in order. You can still drag them later."
+  },
+  "layout.textHasPhotos": {
+    "zh": "这一页已经有照片，不能改成只有文字。",
+    "en": "This page has photos, so it can't be words only."
+  },
+  "layout.text": {
+    "zh": "纯文字",
+    "en": "Words only"
+  },
+  "layout.full": {
+    "zh": "整页大图",
+    "en": "Full photo"
+  },
+  "layout.corner": {
+    "zh": "角落小图",
+    "en": "Corner photo"
+  },
+  "layout.stack": {
+    "zh": "叠放",
+    "en": "Stacked"
+  },
+  "photo.slot": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "moment.cta": {
+    "zh": "记一页",
+    "en": "Add a page"
+  },
+  "moment.ctaDay": {
+    "zh": "给这一天再记一页",
+    "en": "Add a page to this day"
+  },
+  "moment.ctaHint": {
+    "zh": "照片 + 一句话、随手写，或者手绘",
+    "en": "Photo + a line, just write, or draw"
+  },
+  "community.title": {
+    "zh": "社区",
+    "en": "Community"
+  },
+  "community.subtitle": {
+    "zh": "看看别人的小日子，也分享你愿意分享的那一页。",
+    "en": "See other little days, and share only what you choose."
+  },
+  "community.demoLabel": {
+    "zh": "演示 · 本机模拟 · 未联网　",
+    "en": "Demo · simulated on this device · offline  "
+  },
+  "community.demoNote": {
+    "zh": "这里的用户、作品、好友和消息都是虚拟的演示数据，只保存在这个浏览器里；不会上传你的手帐，也不会真的公开任何内容。",
+    "en": "Users, works, friends and messages here are virtual demo data kept in this browser only. Nothing is uploaded and nothing becomes public."
+  },
+  "community.demoShort": {
+    "zh": "演示",
+    "en": "Demo"
+  },
+  "community.homeHint": {
+    "zh": "发现、关注、好友与私信（本机演示，未联网）",
+    "en": "Discover, follow, friends and messages (offline demo)"
+  },
+  "community.me": {
+    "zh": "我",
+    "en": "Me"
+  },
+  "community.reset": {
+    "zh": "重置演示数据",
+    "en": "Reset demo data"
+  },
+  "community.resetConfirm": {
+    "zh": "把社区演示数据恢复成初始状态？你的手帐不受影响。",
+    "en": "Reset the community demo? Your journal is not affected."
+  },
+  "community.saveFailed": {
+    "zh": "演示数据保存失败，请检查浏览器存储空间。",
+    "en": "Demo data could not be saved. Check browser storage."
+  },
+  "community.tab.discover": {
+    "zh": "发现",
+    "en": "Discover"
+  },
+  "community.tab.following": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.tab.popular": {
+    "zh": "热门",
+    "en": "Popular"
+  },
+  "community.tab.categories": {
+    "zh": "分类",
+    "en": "Categories"
+  },
+  "community.tab.search": {
+    "zh": "搜索",
+    "en": "Search"
+  },
+  "community.tab.friends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.tab.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "community.tab.mine": {
+    "zh": "我的发布",
+    "en": "My posts"
+  },
+  "community.followingEmpty": {
+    "zh": "关注作者后，他们的新作品会出现在这里。",
+    "en": "Follow creators to see their new work here."
+  },
+  "community.week": {
+    "zh": "本周",
+    "en": "This week"
+  },
+  "community.month": {
+    "zh": "本月",
+    "en": "This month"
+  },
+  "community.popularHow": {
+    "zh": "按点赞、评论、收藏和发布时间综合排序。",
+    "en": "Ranked by likes, comments, saves and how recent it is."
+  },
+  "community.nothing": {
+    "zh": "这里还没有内容。",
+    "en": "Nothing here yet."
+  },
+  "community.searchPlaceholder": {
+    "zh": "搜索作品、主题或创作者",
+    "en": "Search works, topics or creators"
+  },
+  "community.creators": {
+    "zh": "创作者",
+    "en": "Creators"
+  },
+  "community.works": {
+    "zh": "作品",
+    "en": "Works"
+  },
+  "community.missing": {
+    "zh": "这个作品已不在社区中。",
+    "en": "This work is no longer in the community."
+  },
+  "community.follow": {
+    "zh": "关注",
+    "en": "Follow"
+  },
+  "community.following": {
+    "zh": "已关注",
+    "en": "Following"
+  },
+  "community.addFriend": {
+    "zh": "加好友",
+    "en": "Add friend"
+  },
+  "community.requested": {
+    "zh": "已发送申请",
+    "en": "Requested"
+  },
+  "community.accept": {
+    "zh": "接受",
+    "en": "Accept"
+  },
+  "community.decline": {
+    "zh": "拒绝",
+    "en": "Decline"
+  },
+  "community.message": {
+    "zh": "私信",
+    "en": "Message"
+  },
+  "community.mediaCount": {
+    "zh": "包含 {count} 段音频/视频（演示中只显示数量）",
+    "en": "Includes {count} audio/video clips (demo shows the count only)"
+  },
+  "community.share": {
+    "zh": "分享",
+    "en": "Share"
+  },
+  "community.shareText": {
+    "zh": "Little Days 演示作品：{title}（本机演示，没有真实链接）",
+    "en": "Little Days demo work: {title} (offline demo, no real link)"
+  },
+  "community.shareCopied": {
+    "zh": "已复制分享文字（演示）",
+    "en": "Share text copied (demo)"
+  },
+  "community.report": {
+    "zh": "举报",
+    "en": "Report"
+  },
+  "community.reportWhy": {
+    "zh": "举报原因",
+    "en": "Why are you reporting this?"
+  },
+  "community.reason.spam": {
+    "zh": "垃圾内容",
+    "en": "Spam"
+  },
+  "community.reason.harassment": {
+    "zh": "骚扰或不友善",
+    "en": "Harassment"
+  },
+  "community.reason.privacy": {
+    "zh": "泄露隐私",
+    "en": "Privacy"
+  },
+  "community.reason.copyright": {
+    "zh": "侵犯版权",
+    "en": "Copyright"
+  },
+  "community.reason.other": {
+    "zh": "其他",
+    "en": "Other"
+  },
+  "community.reported": {
+    "zh": "已记录举报（演示，不会发送）",
+    "en": "Report recorded (demo, not sent)"
+  },
+  "community.save.work": {
+    "zh": "收藏作品",
+    "en": "Save work"
+  },
+  "community.save.template": {
+    "zh": "收藏为模板",
+    "en": "Save as template"
+  },
+  "community.save.recipe": {
+    "zh": "收藏为食谱",
+    "en": "Save as recipe"
+  },
+  "community.save.cover": {
+    "zh": "收藏封面灵感",
+    "en": "Save cover idea"
+  },
+  "community.save.pack": {
+    "zh": "收藏素材包",
+    "en": "Save sticker pack"
+  },
+  "community.unsave": {
+    "zh": "取消收藏",
+    "en": "Remove from saved"
+  },
+  "community.saved": {
+    "zh": "已收藏（只是收藏引用，不会复制作品）",
+    "en": "Saved (a bookmark, not a copy)"
+  },
+  "community.unsaved": {
+    "zh": "已取消收藏",
+    "en": "Removed from saved"
+  },
+  "community.saveNote": {
+    "zh": "收藏只是记下这份作品；复制编辑他人作品需要作者授权并保留来源（演示中不提供复制）。",
+    "en": "Saving only bookmarks the work. Copying someone's work needs their permission and credit (not offered in the demo)."
+  },
+  "community.commentsOpen": {
+    "zh": "允许评论",
+    "en": "Allow comments"
+  },
+  "community.unpublish": {
+    "zh": "删除这条动态",
+    "en": "Delete this post"
+  },
+  "community.unpublishConfirm": {
+    "zh": "把这篇撤回为私人？社区里将不再显示。",
+    "en": "Make this private again? It will leave the community."
+  },
+  "community.unpublished": {
+    "zh": "已撤回，只有你自己能看到。",
+    "en": "Made private again."
+  },
+  "community.comments": {
+    "zh": "评论",
+    "en": "Comments"
+  },
+  "community.moreComments": {
+    "zh": "还有 {count} 条较早的评论",
+    "en": "{count} earlier comments"
+  },
+  "community.reply": {
+    "zh": "回复",
+    "en": "Reply"
+  },
+  "community.replyingTo": {
+    "zh": "回复",
+    "en": "Replying to"
+  },
+  "community.commentPlaceholder": {
+    "zh": "写下友善的评论…",
+    "en": "Write a kind comment…"
+  },
+  "community.send": {
+    "zh": "发送",
+    "en": "Send"
+  },
+  "community.commentsClosed": {
+    "zh": "作者关闭了评论。",
+    "en": "The author turned comments off."
+  },
+  "community.followVsFriends": {
+    "zh": "关注和好友不一样",
+    "en": "Following isn't friendship"
+  },
+  "community.followVsFriendsText": {
+    "zh": "关注是单向的，只看对方公开的作品；好友需要双方确认，可以互发私信。成为好友也不会看到对方的私人手帐。",
+    "en": "Following is one-way and shows public work only. Friends confirm each other and can message. Being friends never opens private journals."
+  },
+  "community.incoming": {
+    "zh": "收到的好友申请",
+    "en": "Friend requests"
+  },
+  "community.friends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.noFriends": {
+    "zh": "还没有好友。",
+    "en": "No friends yet."
+  },
+  "community.removeFriend": {
+    "zh": "删除好友",
+    "en": "Remove"
+  },
+  "community.removeConfirm": {
+    "zh": "删除这位好友？之后不能再互发私信。",
+    "en": "Remove this friend? You won't be able to message each other."
+  },
+  "community.block": {
+    "zh": "屏蔽",
+    "en": "Block"
+  },
+  "community.blockConfirm": {
+    "zh": "屏蔽后将不再看到对方的作品，也不能互发消息或好友申请。",
+    "en": "Blocking hides their work and stops messages and friend requests."
+  },
+  "community.blockedToast": {
+    "zh": "已屏蔽",
+    "en": "Blocked"
+  },
+  "community.blocked": {
+    "zh": "已屏蔽",
+    "en": "Blocked"
+  },
+  "community.unblock": {
+    "zh": "取消屏蔽",
+    "en": "Unblock"
+  },
+  "community.outgoing": {
+    "zh": "我发出的申请",
+    "en": "Sent requests"
+  },
+  "community.simulateAccept": {
+    "zh": "模拟对方接受",
+    "en": "Simulate accept"
+  },
+  "community.cancelRequest": {
+    "zh": "撤回申请",
+    "en": "Cancel"
+  },
+  "community.people": {
+    "zh": "发现更多创作者",
+    "en": "More creators"
+  },
+  "community.requestSent": {
+    "zh": "好友申请已发送（演示）",
+    "en": "Friend request sent (demo)"
+  },
+  "community.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "community.deleteChat": {
+    "zh": "删除会话",
+    "en": "Delete chat"
+  },
+  "community.deleteChatConfirm": {
+    "zh": "删除这个会话？只会删除你这边的记录。",
+    "en": "Delete this chat? Only your copy is removed."
+  },
+  "community.chatEmpty": {
+    "zh": "还没有消息",
+    "en": "No messages yet"
+  },
+  "community.simulated": {
+    "zh": "模拟回复",
+    "en": "simulated"
+  },
+  "community.shareWork": {
+    "zh": "分享一篇公开作品…",
+    "en": "Share a public work…"
+  },
+  "community.messagePlaceholder": {
+    "zh": "写点什么…",
+    "en": "Say something…"
+  },
+  "community.chatNote": {
+    "zh": "对方的回复是本机模拟的演示消息。",
+    "en": "Replies are simulated on this device."
+  },
+  "community.friendsOnly": {
+    "zh": "只有互相确认的好友才能私信。",
+    "en": "Only confirmed friends can message each other."
+  },
+  "community.stickerMsg": {
+    "zh": "[贴纸]",
+    "en": "[sticker]"
+  },
+  "community.workMsg": {
+    "zh": "[作品]",
+    "en": "[work]"
+  },
+  "community.noChats": {
+    "zh": "还没有会话。",
+    "en": "No conversations yet."
+  },
+  "community.sim1": {
+    "zh": "哇，好喜欢！（模拟回复）",
+    "en": "Oh I love this! (simulated reply)"
+  },
+  "community.sim2": {
+    "zh": "收到啦～周末一起去？（模拟回复）",
+    "en": "Got it — this weekend? (simulated reply)"
+  },
+  "community.sim3": {
+    "zh": "哈哈哈太可爱了（模拟回复）",
+    "en": "Haha so cute (simulated reply)"
+  },
+  "community.publishStart": {
+    "zh": "选择一天发布到社区（演示）",
+    "en": "Publish a day to the community (demo)"
+  },
+  "community.privateDefault": {
+    "zh": "你的手帐默认私人。只有你在下面逐项勾选并确认的页面和媒体才会出现在社区演示里。",
+    "en": "Your journal stays private. Only pages and media you tick and confirm appear in the demo community."
+  },
+  "community.noWorks": {
+    "zh": "你还没有发布任何作品。",
+    "en": "You haven't published anything yet."
+  },
+  "community.publishTitle": {
+    "zh": "发布前确认要分享的内容",
+    "en": "Choose exactly what to share"
+  },
+  "community.publishHelp": {
+    "zh": "默认什么都不勾选。照片、录音和视频需要逐个勾选；记账类内容不能公开；成长感想只有你单独允许过才可能出现。",
+    "en": "Nothing is selected by default. Tick each photo, recording or video; money records can't be shared; growth notes appear only if you allowed them."
+  },
+  "community.pickDay": {
+    "zh": "选择一天",
+    "en": "Pick a day"
+  },
+  "community.nothingToShare": {
+    "zh": "这一天没有可以分享的页面。",
+    "en": "Nothing on this day can be shared."
+  },
+  "community.moneyLocked": {
+    "zh": "记账/金额类内容默认私人，不能公开",
+    "en": "Money records stay private"
+  },
+  "community.workTitle": {
+    "zh": "作品标题",
+    "en": "Title"
+  },
+  "community.allowComments": {
+    "zh": "允许评论",
+    "en": "Allow comments"
+  },
+  "community.confirmPublish": {
+    "zh": "我已检查以上页面和媒体，确认可以公开（演示）",
+    "en": "I've checked these pages and media and want to share them (demo)"
+  },
+  "community.publish": {
+    "zh": "发布",
+    "en": "Publish"
+  },
+  "community.published": {
+    "zh": "已发布到社区演示（没有上传，只在本机）",
+    "en": "Published to the demo community (offline, this device only)"
+  },
+  "community.confirmRequired": {
+    "zh": "请先勾选确认。",
+    "en": "Please confirm first."
+  },
+  "community.noPages": {
+    "zh": "请至少勾选一页。",
+    "en": "Tick at least one page."
+  },
+  "community.notOwner": {
+    "zh": "只能修改自己的内容。",
+    "en": "You can only change your own content."
+  },
+  "community.emptyComment": {
+    "zh": "评论不能为空。",
+    "en": "Write something first."
+  },
+  "community.emptyMessage": {
+    "zh": "消息不能为空。",
+    "en": "Write something first."
+  },
+  "community.saveType": {
+    "zh": "无法识别的收藏类型。",
+    "en": "Unknown save type."
+  },
+  "community.reason": {
+    "zh": "请选择举报原因。",
+    "en": "Choose a reason."
+  },
+  "community.blockedUser": {
+    "zh": "已屏蔽该用户。",
+    "en": "This user is blocked."
+  },
+  "nav.community": {
+    "zh": "社区",
+    "en": "Community"
+  },
+  "community.tab.me": {
+    "zh": "我的",
+    "en": "Me"
+  },
+  "community.feed.all": {
+    "zh": "推荐",
+    "en": "For you"
+  },
+  "community.feed.following": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.feed.popular": {
+    "zh": "热门",
+    "en": "Popular"
+  },
+  "community.feed.categories": {
+    "zh": "分类",
+    "en": "Categories"
+  },
+  "community.myFriends": {
+    "zh": "我的好友",
+    "en": "My friends"
+  },
+  "community.requestsWaiting": {
+    "zh": "另有 {count} 个申请来自你没有关注的人，按你的设置暂不显示。",
+    "en": "{count} more requests from people you don't follow are hidden by your setting."
+  },
+  "community.peopleSearch": {
+    "zh": "搜索创作者的名字或 @账号",
+    "en": "Search creators by name or @handle"
+  },
+  "community.avatar": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "community.profileName": {
+    "zh": "社区昵称",
+    "en": "Display name"
+  },
+  "community.profileBio": {
+    "zh": "一句话介绍",
+    "en": "Short bio"
+  },
+  "community.bioPlaceholder": {
+    "zh": "比如：记录早餐、散步和慢慢变好的自己",
+    "en": "e.g. Breakfasts, walks and growing gently"
+  },
+  "community.bioEmpty": {
+    "zh": "还没有介绍。",
+    "en": "No bio yet."
+  },
+  "community.privateJournal": {
+    "zh": "手帐默认私人",
+    "en": "journals stay private"
+  },
+  "community.editProfile": {
+    "zh": "编辑资料",
+    "en": "Edit profile"
+  },
+  "community.profileSaved": {
+    "zh": "个人资料已保存（演示）",
+    "en": "Profile saved (demo)"
+  },
+  "community.statWorks": {
+    "zh": "发布",
+    "en": "Posts"
+  },
+  "community.statLikes": {
+    "zh": "获赞",
+    "en": "Likes"
+  },
+  "community.statFollowing": {
+    "zh": "关注",
+    "en": "Following"
+  },
+  "community.statFriends": {
+    "zh": "好友",
+    "en": "Friends"
+  },
+  "community.statSaved": {
+    "zh": "收藏",
+    "en": "Saved"
+  },
+  "community.myPosts": {
+    "zh": "我的发布",
+    "en": "My posts"
+  },
+  "community.view": {
+    "zh": "查看",
+    "en": "View"
+  },
+  "community.mySaved": {
+    "zh": "我的收藏",
+    "en": "Saved"
+  },
+  "community.savedType.work": {
+    "zh": "作品",
+    "en": "Works"
+  },
+  "community.savedType.template": {
+    "zh": "模板",
+    "en": "Templates"
+  },
+  "community.savedType.recipe": {
+    "zh": "食谱",
+    "en": "Recipes"
+  },
+  "community.savedType.cover": {
+    "zh": "封面灵感",
+    "en": "Cover ideas"
+  },
+  "community.savedType.pack": {
+    "zh": "素材包",
+    "en": "Packs"
+  },
+  "community.noSaved": {
+    "zh": "还没有收藏。",
+    "en": "Nothing saved yet."
+  },
+  "community.myFollowing": {
+    "zh": "我关注的人",
+    "en": "Following"
+  },
+  "community.unfollow": {
+    "zh": "取消关注",
+    "en": "Unfollow"
+  },
+  "community.settings": {
+    "zh": "隐私与互动设置（演示）",
+    "en": "Privacy & interaction (demo)"
+  },
+  "community.defaultComments": {
+    "zh": "新发布的作品默认允许评论",
+    "en": "Allow comments on new posts by default"
+  },
+  "community.whoCanRequest": {
+    "zh": "谁可以向我发送好友申请",
+    "en": "Who can send me friend requests"
+  },
+  "community.requestsEveryone": {
+    "zh": "所有人",
+    "en": "Everyone"
+  },
+  "community.requestsFollowing": {
+    "zh": "只有我关注的人",
+    "en": "Only people I follow"
+  },
+  "community.messagesFriendsOnly": {
+    "zh": "私信始终只对互相确认的好友开放；成为好友也不会看到你的私人手帐。",
+    "en": "Messages are always friends-only, and friends never see your private journals."
+  },
+  "community.noBlocked": {
+    "zh": "没有屏蔽任何人。",
+    "en": "You haven't blocked anyone."
+  },
+  "community.settingSaved": {
+    "zh": "设置已保存（演示）",
+    "en": "Setting saved (demo)"
+  },
+  "community.avatar.error": {
+    "zh": "请选择列表里的头像。",
+    "en": "Choose one of the avatars."
+  },
+  "community.setting": {
+    "zh": "无法识别的设置。",
+    "en": "Unknown setting."
+  },
+  "home.prompt": {
+    "zh": "今天想记下什么？",
+    "en": "What would you like to keep from today?"
+  },
+  "home.readToday": {
+    "zh": "读今天的手帐",
+    "en": "Read today's page"
+  },
+  "export.photo": {
+    "zh": "导出图片",
+    "en": "Export photo"
+  },
+  "export.video": {
+    "zh": "导出视频",
+    "en": "Export video"
+  },
+  "export.photoDone": {
+    "zh": "手帐图片已导出",
+    "en": "Page exported as a photo"
+  },
+  "export.recording": {
+    "zh": "已录制 {now} / {total}，请保持页面打开",
+    "en": "Recorded {now} of {total} — keep this page open"
+  },
+  "export.videoDone": {
+    "zh": "视频已导出，纸上的视频和声音都在里面。",
+    "en": "Video exported with the clips and sound from the page."
+  },
+  "export.videoFailed": {
+    "zh": "视频导出失败，请重试；这个浏览器可能不支持录制。",
+    "en": "Video export failed. Try again; this browser may not support recording."
+  },
+  "export.videoUnsupported": {
+    "zh": "这个浏览器不支持导出视频。",
+    "en": "This browser can't export video."
+  },
+  "media.onPage": {
+    "zh": "放到纸上",
+    "en": "Put on the page"
+  },
+  "media.offPage": {
+    "zh": "从纸上拿下",
+    "en": "Take off the page"
+  },
+  "layout.textConfirm": {
+    "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
+    "en": "Switch to words only? Photos leave this page (the files stay on this device, and you can undo)."
+  },
+  "dock.layer": {
+    "zh": "图层",
+    "en": "Layer"
+  },
+  "dock.photos": {
+    "zh": "照片",
+    "en": "Photos"
+  },
+  "dock.layout": {
+    "zh": "版式",
+    "en": "Layout"
+  },
+  "dock.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "dock.paper": {
+    "zh": "背景",
+    "en": "Background"
+  },
+  "dock.mood": {
+    "zh": "心情",
+    "en": "Mood"
+  },
+  "dock.stickers": {
+    "zh": "贴纸",
+    "en": "Stickers"
+  },
+  "dock.media": {
+    "zh": "声音",
+    "en": "Media"
+  },
+  "dock.growth": {
+    "zh": "成长",
+    "en": "Growth"
+  },
+  "dock.book": {
+    "zh": "记录项目",
+    "en": "Fields"
+  },
+  "dock.chapters": {
+    "zh": "目录",
+    "en": "Moments"
+  },
+  "export.title": {
+    "zh": "正在导出视频",
+    "en": "Exporting video"
+  },
+  "export.preparing": {
+    "zh": "正在准备画面和声音…",
+    "en": "Preparing the page and sound…"
+  },
+  "export.cancelling": {
+    "zh": "正在停止…",
+    "en": "Stopping…"
+  },
+  "export.cancelled": {
+    "zh": "已取消导出，没有生成文件。",
+    "en": "Export cancelled; no file was made."
+  },
+  "growth.calendarShort": {
+    "zh": "成长日历",
+    "en": "Calendar"
+  },
+  "growth.none": {
+    "zh": "还没有小习惯，先种下一颗吧。",
+    "en": "No habits yet — plant your first one."
+  },
+  "collab.title": {
+    "zh": "共同创作",
+    "en": "Write together"
+  },
+  "collab.demoLabel": {
+    "zh": "演示 · 未联网",
+    "en": "Demo · offline"
+  },
+  "collab.demoNote": {
+    "zh": "成员是虚拟好友，邀请、回复和修改都只在这个浏览器里模拟，不会发送给任何人。上面你自己的私人页面不会被共享。",
+    "en": "Members are virtual friends; invites, replies and edits are simulated in this browser only and sent to no one. Your own private pages above are never shared."
+  },
+  "collab.memberCount": {
+    "zh": "{count} 位成员",
+    "en": "{count} members"
+  },
+  "collab.members": {
+    "zh": "成员",
+    "en": "Members"
+  },
+  "collab.inviteWho": {
+    "zh": "邀请哪位好友",
+    "en": "Friend to invite"
+  },
+  "collab.role": {
+    "zh": "权限",
+    "en": "Role"
+  },
+  "collab.role.editor": {
+    "zh": "可编辑",
+    "en": "Editor"
+  },
+  "collab.role.viewer": {
+    "zh": "只能看",
+    "en": "Viewer"
+  },
+  "collab.role.owner": {
+    "zh": "拥有者 · 管理成员",
+    "en": "Owner · manages members"
+  },
+  "collab.invite": {
+    "zh": "邀请",
+    "en": "Invite"
+  },
+  "collab.noFriends": {
+    "zh": "只能邀请好友；好友也不会自动看到你的手帐。",
+    "en": "Only friends can be invited, and friends never see your journal automatically."
+  },
+  "collab.findFriends": {
+    "zh": "去加好友",
+    "en": "Find friends"
+  },
+  "collab.pending": {
+    "zh": "已邀请 · 等待接受",
+    "en": "Invited · waiting"
+  },
+  "collab.active": {
+    "zh": "已加入",
+    "en": "Joined"
+  },
+  "collab.simAccept": {
+    "zh": "模拟对方接受",
+    "en": "Simulate accept"
+  },
+  "collab.cancelInvite": {
+    "zh": "撤回邀请",
+    "en": "Cancel invite"
+  },
+  "collab.remove": {
+    "zh": "移出",
+    "en": "Remove"
+  },
+  "collab.simLeave": {
+    "zh": "模拟 TA 退出",
+    "en": "Simulate leaving"
+  },
+  "collab.removeConfirm": {
+    "zh": "把 {name} 移出这本共同手帐？TA 写过的页面会保留并标注作者。",
+    "en": "Remove {name} from this shared book? Pages they wrote stay, still marked with their name."
+  },
+  "collab.removed": {
+    "zh": "已移出 {name}",
+    "en": "{name} was removed"
+  },
+  "collab.leftToast": {
+    "zh": "{name} 退出了（模拟），TA 写的页面仍保留",
+    "en": "{name} left (simulated); their pages stay"
+  },
+  "collab.invited": {
+    "zh": "已邀请 {name}（模拟）",
+    "en": "Invited {name} (simulated)"
+  },
+  "collab.accepted": {
+    "zh": "{name} 接受了邀请，并写了一页（模拟）",
+    "en": "{name} accepted and wrote a page (simulated)"
+  },
+  "collab.roleSaved": {
+    "zh": "权限已更新",
+    "en": "Role updated"
+  },
+  "collab.sharedPages": {
+    "zh": "共同页面",
+    "en": "Shared pages"
+  },
+  "collab.write": {
+    "zh": "写一页",
+    "en": "Write a page"
+  },
+  "collab.noPages": {
+    "zh": "还没有共同页面。邀请好友，或先写下第一页。",
+    "en": "No shared pages yet. Invite a friend or write the first one."
+  },
+  "collab.wroteBy": {
+    "zh": "由 {name} 写下",
+    "en": "Written by {name}"
+  },
+  "collab.former": {
+    "zh": "已离开",
+    "en": "left"
+  },
+  "collab.editedBy": {
+    "zh": "{name} 修改过",
+    "en": "edited by {name}"
+  },
+  "collab.simConflict": {
+    "zh": "模拟同时编辑",
+    "en": "Simulate a clash"
+  },
+  "collab.conflictTitle": {
+    "zh": "有两个版本",
+    "en": "Two versions"
+  },
+  "collab.conflictBody": {
+    "zh": "你和 {name} 同时改了这一页。两边的文字都保留着，请选择怎么处理。",
+    "en": "You and {name} edited this page at the same time. Both texts are kept — choose what to do."
+  },
+  "collab.mine": {
+    "zh": "我的版本",
+    "en": "Mine"
+  },
+  "collab.keepMine": {
+    "zh": "保留我的",
+    "en": "Keep mine"
+  },
+  "collab.keepTheirs": {
+    "zh": "用 TA 的",
+    "en": "Use theirs"
+  },
+  "collab.keepBoth": {
+    "zh": "两份都留",
+    "en": "Keep both"
+  },
+  "collab.resolved": {
+    "zh": "已处理，记录在版本历史里",
+    "en": "Resolved and saved in version history"
+  },
+  "collab.history": {
+    "zh": "版本历史（{count}）",
+    "en": "Version history ({count})"
+  },
+  "collab.v.added": {
+    "zh": "新增页面",
+    "en": "added a page"
+  },
+  "collab.v.edited": {
+    "zh": "修改页面",
+    "en": "edited a page"
+  },
+  "collab.v.restored": {
+    "zh": "恢复旧版本",
+    "en": "restored a version"
+  },
+  "collab.v.resolved": {
+    "zh": "处理冲突",
+    "en": "resolved a clash"
+  },
+  "collab.pageCount": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "collab.restore": {
+    "zh": "恢复",
+    "en": "Restore"
+  },
+  "collab.current": {
+    "zh": "当前",
+    "en": "current"
+  },
+  "collab.restoreConfirm": {
+    "zh": "恢复到这个版本？现在的内容也会作为一个新版本保留，可以再恢复回来。",
+    "en": "Restore this version? The current pages are kept as a version too, so you can switch back."
+  },
+  "collab.restored": {
+    "zh": "已恢复（现在的内容也留在历史里）",
+    "en": "Restored (the previous pages stay in history)"
+  },
+  "collab.publish": {
+    "zh": "公开这本共同手帐",
+    "en": "Publish this shared book"
+  },
+  "collab.publishNeeds": {
+    "zh": "需要全部 {count} 位成员同意才能公开 · 未开放",
+    "en": "Needs consent from all {count} members · not available yet"
+  },
+  "collab.publishSolo": {
+    "zh": "公开需要服务端权限控制 · 未开放",
+    "en": "Publishing needs server access control · not available yet"
+  },
+  "collab.writeTitle": {
+    "zh": "写一页共同页面",
+    "en": "Write a shared page"
+  },
+  "collab.editTitle": {
+    "zh": "修改共同页面",
+    "en": "Edit shared page"
+  },
+  "collab.dialogNote": {
+    "zh": "只保存在这个浏览器的演示数据里",
+    "en": "Saved only in this browser's demo data"
+  },
+  "collab.pageTitle": {
+    "zh": "标题",
+    "en": "Title"
+  },
+  "collab.pageBody": {
+    "zh": "正文",
+    "en": "Text"
+  },
+  "collab.saved": {
+    "zh": "已保存，并记录了一个版本",
+    "en": "Saved, with a new version"
+  },
+  "collab.friendsOnly": {
+    "zh": "只能邀请好友",
+    "en": "Only friends can be invited"
+  },
+  "collab.already": {
+    "zh": "TA 已经在这本手帐里了",
+    "en": "Already a member"
+  },
+  "collab.badRole": {
+    "zh": "没有这个权限选项",
+    "en": "Unknown role"
+  },
+  "collab.noInvite": {
+    "zh": "没有待接受的邀请",
+    "en": "No pending invite"
+  },
+  "collab.notMember": {
+    "zh": "TA 不是成员",
+    "en": "Not a member"
+  },
+  "collab.viewerOnly": {
+    "zh": "只能看的成员不能编辑",
+    "en": "Viewers can't edit"
+  },
+  "collab.empty": {
+    "zh": "写点什么再保存吧",
+    "en": "Write something first"
+  },
+  "collab.noPage": {
+    "zh": "找不到这一页",
+    "en": "Page not found"
+  },
+  "collab.noVersion": {
+    "zh": "找不到这个版本",
+    "en": "Version not found"
+  },
+  "collab.noEditor": {
+    "zh": "需要一位已加入的可编辑成员，才能模拟同时编辑",
+    "en": "Needs a joined editor to simulate a clash"
+  },
+  "shelf.tab": {
+    "zh": "书架",
+    "en": "Shelf"
+  },
+  "me.tab": {
+    "zh": "我的主页",
+    "en": "My profile"
+  },
+  "me.title": {
+    "zh": "我的主页",
+    "en": "My profile"
+  },
+  "me.subtitle": {
+    "zh": "你的小日子都是私人的；想分享时，在这里决定谁能看到什么。",
+    "en": "Your days stay private; when you want to share, decide here who sees what."
+  },
+  "me.demoNote": {
+    "zh": "社交部分是本机演示：头像、展示的封面和发布都只保存在这个浏览器，不会上传，也不会真的公开。",
+    "en": "The social part is a local demo: your avatar, shown covers and posts stay in this browser — nothing is uploaded or made public."
+  },
+  "me.open": {
+    "zh": "打开我的主页",
+    "en": "Open my profile"
+  },
+  "me.short": {
+    "zh": "我的主页",
+    "en": "Me"
+  },
+  "shelf.hint": {
+    "zh": "轻点书脊抽出来看；按住拖动可以换位置",
+    "en": "Tap a spine to pull it out; hold and drag to move it"
+  },
+  "shelf.open": {
+    "zh": "打开这本",
+    "en": "Open"
+  },
+  "shelf.write": {
+    "zh": "写一页",
+    "en": "Write a page"
+  },
+  "shelf.putBack": {
+    "zh": "放回书架",
+    "en": "Put it back"
+  },
+  "who.title": {
+    "zh": "谁能看到",
+    "en": "Who can see what"
+  },
+  "who.help": {
+    "zh": "每本手帐默认只有你自己能看。你可以选择在主页上展示某本书的封面——只展示封面和书名，里面的页面仍然只有你能看。",
+    "en": "Every book is only visible to you by default. You can show a book's cover on your profile — only the cover and title; the pages inside stay yours alone."
+  },
+  "who.label": {
+    "zh": "谁能看到",
+    "en": "Visibility"
+  },
+  "who.private": {
+    "zh": "仅自己",
+    "en": "Only me"
+  },
+  "who.cover": {
+    "zh": "主页展示封面",
+    "en": "Show cover on profile"
+  },
+  "who.onlyMe": {
+    "zh": "仅自己可见",
+    "en": "Only you"
+  },
+  "who.coverShown": {
+    "zh": "主页展示封面",
+    "en": "Cover on profile"
+  },
+  "who.collab": {
+    "zh": "与 {count} 位好友共同创作 · 共同页面仅成员可见",
+    "en": "Shared with {count} friends · shared pages members-only"
+  },
+  "who.factPosts": {
+    "zh": "发布到社区的作品：{count} 篇（只有你逐页勾选确认的内容）",
+    "en": "Posts in the community: {count} (only pages you ticked and confirmed)"
+  },
+  "who.factMessages": {
+    "zh": "私信只在好友之间",
+    "en": "Messages are friends-only"
+  },
+  "who.factFriends": {
+    "zh": "好友不会因此看到你的私人手帐",
+    "en": "Being friends never opens your private journal"
+  },
+  "who.preview": {
+    "zh": "别人看到的我的主页（预览）",
+    "en": "My profile as others see it (preview)"
+  },
+  "who.previewCovers": {
+    "zh": "展示的封面",
+    "en": "Shown covers"
+  },
+  "who.noCovers": {
+    "zh": "没有展示任何封面",
+    "en": "No covers shown"
+  },
+  "who.previewWorks": {
+    "zh": "发布的作品",
+    "en": "Posts"
+  },
+  "who.previewNote": {
+    "zh": "这里没有出现的内容，别人都看不到。",
+    "en": "Anything not shown here stays hidden from others."
+  },
+  "who.confirm": {
+    "zh": "在主页展示这本书的封面和书名？里面的页面不会展示（演示，不会真的公开）。",
+    "en": "Show this book's cover and title on your profile? The pages inside are not shown (demo — nothing is really made public)."
+  },
+  "who.shownToast": {
+    "zh": "封面已展示在主页（演示）",
+    "en": "Cover shown on your profile (demo)"
+  },
+  "who.hiddenToast": {
+    "zh": "这本书现在仅自己可见",
+    "en": "This book is only visible to you"
+  },
+  "login.tagline": {
+    "zh": "小日子，慢慢记。记录生活的美好，也收藏一点点变好的自己。",
+    "en": "Collect little days, gently — and a little more of you."
+  },
+  "login.welcomeBack": {
+    "zh": "欢迎回来，{name}。你的手帐都还在这台设备上。",
+    "en": "Welcome back, {name}. Your journal is still on this device."
+  },
+  "login.avatar": {
+    "zh": "选一个头像",
+    "en": "Pick an avatar"
+  },
+  "login.name": {
+    "zh": "怎么称呼你",
+    "en": "What should we call you?"
+  },
+  "login.namePlaceholder": {
+    "zh": "比如：小满",
+    "en": "e.g. Mia"
+  },
+  "login.start": {
+    "zh": "在这台设备上开始",
+    "en": "Start on this device"
+  },
+  "login.continue": {
+    "zh": "继续",
+    "en": "Continue"
+  },
+  "login.or": {
+    "zh": "其他登录方式",
+    "en": "Other ways to sign in"
+  },
+  "login.apple": {
+    "zh": "通过 Apple 登录",
+    "en": "Sign in with Apple"
+  },
+  "login.email": {
+    "zh": "邮箱 / 手机号登录",
+    "en": "Email or phone"
+  },
+  "login.soon": {
+    "zh": "即将推出",
+    "en": "Coming soon"
+  },
+  "login.note": {
+    "zh": "现在是本机账号：手帐、照片和录音只保存在这台设备，不会上传。云端账号和同步需要服务端，正在开发。",
+    "en": "For now this is a local account: journals, photos and recordings stay on this device and are never uploaded. Cloud accounts and sync need a server and are in progress."
+  },
+  "login.welcomeToast": {
+    "zh": "欢迎回来，{name} ✿",
+    "en": "Welcome back, {name} ✿"
+  },
+  "login.signOutConfirm": {
+    "zh": "回到欢迎页？这不是退出账号——Little Days 没有云端账号。你的手帐、照片和录音都保留在这台设备上。",
+    "en": "Go back to the welcome page? This is not signing out of an account — Little Days has no cloud account. Your journal, photos and recordings stay on this device."
+  },
+  "tour.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "tour.prev": {
+    "zh": "上一步",
+    "en": "Back"
+  },
+  "tour.next": {
+    "zh": "下一步",
+    "en": "Next"
+  },
+  "tour.done": {
+    "zh": "开始记录",
+    "en": "Start writing"
+  },
+  "tour.finished": {
+    "zh": "想再看一次？在「设置」里可以重看介绍。",
+    "en": "Want to see it again? Replay the tour in Settings."
+  },
+  "tour.welcome.title": {
+    "zh": "你好，{name} ✿",
+    "en": "Hello, {name} ✿"
+  },
+  "tour.welcome.body": {
+    "zh": "Little Days 是一本放在手机里的手帐：每天记一点点，照片、文字、声音都可以。",
+    "en": "Little Days is a journal in your pocket: a little each day — photos, words and sounds."
+  },
+  "tour.write.title": {
+    "zh": "点中间的 ＋ 开始写",
+    "en": "Tap the ＋ to start"
+  },
+  "tour.write.body": {
+    "zh": "点「＋」选怎么记：照片 + 一句话、随手写或手绘。一天可以有好几页；封面用一句话总结这一天，可以不写。",
+    "en": "Tap ＋ and choose: photo + a line, just write, or draw. A day can have several pages; the cover sums it up in one line (optional)."
+  },
+  "tour.photo.title": {
+    "zh": "像修图一样编辑照片",
+    "en": "Edit photos like a pro"
+  },
+  "tour.photo.body": {
+    "zh": "选照片后可以加滤镜、裁剪比例、调亮度和色温，还能在图上加标题文字。原图一直保留，随时重新编辑。",
+    "en": "After picking photos, add filters, crop to a ratio, adjust light and warmth, and put a title on the picture. The original is kept so you can re-edit."
+  },
+  "tour.growth.title": {
+    "zh": "习惯，在今天里",
+    "en": "Habits, inside your day"
+  },
+  "tour.growth.body": {
+    "zh": "首页「今天」卡片里一点就打卡，打过的会出现在当天的「今日清单」上；成长之书和每周回顾在书架的「我的习惯」里。",
+    "en": "Check a habit with one tap on Home's “today” card; it shows on that day's list. The growth journey and weekly reflections live in “My habits” on the shelf."
+  },
+  "tour.shelf.title": {
+    "zh": "书架和我的主页",
+    "en": "Your shelf and profile"
+  },
+  "tour.shelf.body": {
+    "zh": "手帐本放在书架上，轻点书脊就能抽出来看。旁边的“我的主页”决定别人能看到什么。",
+    "en": "Your books stand on a shelf — tap a spine to pull one out. “My profile” next to it decides what others can see."
+  },
+  "tour.private.title": {
+    "zh": "默认只有你能看",
+    "en": "Private by default"
+  },
+  "tour.private.body": {
+    "zh": "所有手帐默认只有你能看。社区、好友和共同创作目前是本机演示；在「设置」里可以导出备份。",
+    "en": "Every journal is private by default. Community, friends and shared books are a local demo for now; export a backup in Settings."
+  },
+  "settings.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "settings.account": {
+    "zh": "账号",
+    "en": "Account"
+  },
+  "settings.accountLocal": {
+    "zh": "本机账号 · 数据只在这台设备",
+    "en": "Local account · data stays on this device"
+  },
+  "settings.replayTour": {
+    "zh": "再看一次功能介绍",
+    "en": "Replay the welcome tour"
+  },
+  "settings.signOut": {
+    "zh": "退出登录",
+    "en": "Sign out"
+  },
+  "settings.signOutNote": {
+    "zh": "退出不会删除任何手帐、照片或录音。",
+    "en": "Signing out never deletes your journal, photos or recordings."
+  },
+  "pe.heading": {
+    "zh": "编辑图片",
+    "en": "Edit photo"
+  },
+  "pe.open": {
+    "zh": "编辑图片",
+    "en": "Edit photo"
+  },
+  "pe.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "pe.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "pe.saving": {
+    "zh": "保存中…",
+    "en": "Saving…"
+  },
+  "pe.saved": {
+    "zh": "图片已更新，原图仍保留",
+    "en": "Photo updated — the original is kept"
+  },
+  "pe.tab.filter": {
+    "zh": "滤镜",
+    "en": "Filters"
+  },
+  "pe.tab.crop": {
+    "zh": "裁剪",
+    "en": "Crop"
+  },
+  "pe.tab.adjust": {
+    "zh": "调节",
+    "en": "Adjust"
+  },
+  "pe.tab.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "pe.filter.original": {
+    "zh": "原图",
+    "en": "Original"
+  },
+  "pe.filter.fresh": {
+    "zh": "清新",
+    "en": "Fresh"
+  },
+  "pe.filter.warm": {
+    "zh": "暖阳",
+    "en": "Sunny"
+  },
+  "pe.filter.cream": {
+    "zh": "奶油",
+    "en": "Cream"
+  },
+  "pe.filter.film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "pe.filter.cool": {
+    "zh": "冷调",
+    "en": "Cool"
+  },
+  "pe.filter.vintage": {
+    "zh": "复古",
+    "en": "Vintage"
+  },
+  "pe.filter.mono": {
+    "zh": "黑白",
+    "en": "Mono"
+  },
+  "pe.ratio.original": {
+    "zh": "原比例",
+    "en": "Original"
+  },
+  "pe.zoom": {
+    "zh": "放大",
+    "en": "Zoom"
+  },
+  "pe.rotate": {
+    "zh": "旋转",
+    "en": "Rotate"
+  },
+  "pe.reset": {
+    "zh": "还原",
+    "en": "Reset"
+  },
+  "pe.cropHint": {
+    "zh": "拖动图片，选择要保留的部分",
+    "en": "Drag the photo to choose what stays in the frame"
+  },
+  "pe.adjust.brightness": {
+    "zh": "亮度",
+    "en": "Brightness"
+  },
+  "pe.adjust.contrast": {
+    "zh": "对比度",
+    "en": "Contrast"
+  },
+  "pe.adjust.saturation": {
+    "zh": "饱和度",
+    "en": "Saturation"
+  },
+  "pe.adjust.warmth": {
+    "zh": "色温",
+    "en": "Warmth"
+  },
+  "pe.title": {
+    "zh": "在图上加标题",
+    "en": "Title on the photo"
+  },
+  "pe.titlePlaceholder": {
+    "zh": "比如：周末的咖啡店",
+    "en": "e.g. Weekend café"
+  },
+  "pe.titleDefault": {
+    "zh": "小日子",
+    "en": "Little days"
+  },
+  "pe.textStyle.handwritten": {
+    "zh": "手写",
+    "en": "Handwritten"
+  },
+  "pe.textStyle.label": {
+    "zh": "标签",
+    "en": "Label"
+  },
+  "pe.textStyle.tape": {
+    "zh": "胶带",
+    "en": "Tape"
+  },
+  "pe.textStyle.outline": {
+    "zh": "描边",
+    "en": "Outline"
+  },
+  "pe.textSize": {
+    "zh": "字号",
+    "en": "Size"
+  },
+  "pe.textRemove": {
+    "zh": "删除文字",
+    "en": "Remove text"
+  },
+  "pe.textHint": {
+    "zh": "拖动文字摆放位置",
+    "en": "Drag the text to place it"
+  },
+  "start.title": {
+    "zh": "今天想怎么开始？",
+    "en": "How do you want to start?"
+  },
+  "start.continue": {
+    "zh": "继续编辑今天的手帐",
+    "en": "Keep editing today's page"
+  },
+  "start.newMoment": {
+    "zh": "下面的方式会新建一个小故事，不会改动已经写好的内容。",
+    "en": "The options below start a new little story; nothing you wrote is changed."
+  },
+  "start.photos": {
+    "zh": "从照片开始",
+    "en": "Start with photos"
+  },
+  "start.photosHint": {
+    "zh": "选几张，加滤镜、裁剪、写标题",
+    "en": "Pick a few; filter, crop, add a title"
+  },
+  "start.words": {
+    "zh": "先写几句话",
+    "en": "Write a few words"
+  },
+  "start.wordsHint": {
+    "zh": "一句话也算一页",
+    "en": "One sentence is a page too"
+  },
+  "start.video": {
+    "zh": "放一段视频",
+    "en": "Add a video"
+  },
+  "start.videoHint": {
+    "zh": "视频直接贴在纸上播放",
+    "en": "It plays right on the paper"
+  },
+  "start.voice": {
+    "zh": "录一段声音",
+    "en": "Record a sound"
+  },
+  "start.voiceHint": {
+    "zh": "雨声、笑声、碎碎念",
+    "en": "Rain, laughter, a little note"
+  },
+  "start.template": {
+    "zh": "选一个版式",
+    "en": "Pick a layout"
+  },
+  "start.templateHint": {
+    "zh": "先定几张照片，再排版",
+    "en": "Choose how many photos, then a layout"
+  },
+  "start.growth": {
+    "zh": "记录一次成长",
+    "en": "Note some growth"
+  },
+  "start.growthHint": {
+    "zh": "把今天的打卡贴进手帐",
+    "en": "Put today's check-in on the page"
+  },
+  "start.ideas": {
+    "zh": "没想好写什么？",
+    "en": "Not sure what to write?"
+  },
+  "start.idea.meal": {
+    "zh": "今天的一顿好饭",
+    "en": "A good meal today"
+  },
+  "start.idea.walk": {
+    "zh": "路上的小风景",
+    "en": "Something seen on the way"
+  },
+  "start.idea.happy": {
+    "zh": "让我开心的一件事",
+    "en": "One thing that made me smile"
+  },
+  "start.idea.note": {
+    "zh": "想对自己说",
+    "en": "A note to myself"
+  },
+  "add.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "add.text": {
+    "zh": "加文字框",
+    "en": "Text box"
+  },
+  "add.video": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "add.sound": {
+    "zh": "声音",
+    "en": "Sound"
+  },
+  "add.record": {
+    "zh": "录一段",
+    "en": "Record"
+  },
+  "add.audioFile": {
+    "zh": "上传音频",
+    "en": "Upload audio"
+  },
+  "shape.title": {
+    "zh": "形状",
+    "en": "Shape"
+  },
+  "shape.free": {
+    "zh": "自由",
+    "en": "Free"
+  },
+  "shape.landscape": {
+    "zh": "横版",
+    "en": "Wide"
+  },
+  "shape.portrait": {
+    "zh": "竖版",
+    "en": "Tall"
+  },
+  "shape.square": {
+    "zh": "方形",
+    "en": "Square"
+  },
+  "shape.circle": {
+    "zh": "圆形",
+    "en": "Round"
+  },
+  "shape.arch": {
+    "zh": "拱门",
+    "en": "Arch"
+  },
+  "shape.heart": {
+    "zh": "心形",
+    "en": "Heart"
+  },
+  "shape.film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "theme.title": {
+    "zh": "主题颜色",
+    "en": "App theme"
+  },
+  "theme.note": {
+    "zh": "只改变 App 的颜色；手帐的纸张、封面和照片保持原样。只保存在这台设备。",
+    "en": "Changes the app's colors only; your paper, covers and photos stay as they are. Saved on this device."
+  },
+  "theme.changed": {
+    "zh": "已换成「{name}」主题",
+    "en": "Switched to “{name}”"
+  },
+  "theme.soft": {
+    "zh": "温柔",
+    "en": "Soft"
+  },
+  "theme.softHint": {
+    "zh": "奶油与鼠尾草绿",
+    "en": "Cream & sage"
+  },
+  "theme.minimal": {
+    "zh": "简约",
+    "en": "Minimal"
+  },
+  "theme.minimalHint": {
+    "zh": "黑白灰，干干净净",
+    "en": "Black, white, quiet"
+  },
+  "theme.elegant": {
+    "zh": "优雅",
+    "en": "Elegant"
+  },
+  "theme.elegantHint": {
+    "zh": "象牙白、藏青与金",
+    "en": "Ivory, navy & gold"
+  },
+  "theme.fresh": {
+    "zh": "清新",
+    "en": "Fresh"
+  },
+  "theme.freshHint": {
+    "zh": "薄荷与湖水蓝",
+    "en": "Mint & lake blue"
+  },
+  "theme.sakura": {
+    "zh": "樱花",
+    "en": "Sakura"
+  },
+  "theme.sakuraHint": {
+    "zh": "粉色与玫瑰",
+    "en": "Blossom pink"
+  },
+  "theme.cool": {
+    "zh": "酷炫",
+    "en": "Neon night"
+  },
+  "theme.coolHint": {
+    "zh": "深色背景配霓虹紫",
+    "en": "Dark with neon violet"
+  },
+  "tour.theme.title": {
+    "zh": "选一个喜欢的颜色",
+    "en": "Pick your colors"
+  },
+  "tour.theme.body": {
+    "zh": "温柔、简约、优雅、清新、樱花，或者深色的酷炫。之后在「设置」里随时可以换。",
+    "en": "Soft, minimal, elegant, fresh, sakura — or the dark neon night. Change it any time in Settings."
+  },
+  "layer.gestureHelpTouch": {
+    "zh": "拖动移动，双指缩放和旋转。",
+    "en": "Drag to move; pinch to resize and rotate."
+  },
+  "tour.welcome.titleAnon": {
+    "zh": "你好呀 ✿",
+    "en": "Hello ✿"
+  },
+  "media.local": {
+    "zh": "只存在本机",
+    "en": "On this device"
+  },
+  "studio.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "theme.habit.Learning": {
+    "zh": "学习",
+    "en": "Learning"
+  },
+  "theme.habit.Fitness": {
+    "zh": "运动",
+    "en": "Fitness"
+  },
+  "theme.habit.Wellness": {
+    "zh": "身心",
+    "en": "Wellness"
+  },
+  "theme.habit.Creative Life": {
+    "zh": "创作",
+    "en": "Creative life"
+  },
+  "category.Daily Life": {
+    "zh": "日常",
+    "en": "Daily life"
+  },
+  "category.Travel": {
+    "zh": "旅行",
+    "en": "Travel"
+  },
+  "category.Food": {
+    "zh": "美食",
+    "en": "Food"
+  },
+  "category.Pet": {
+    "zh": "宠物",
+    "en": "Pet"
+  },
+  "category.Parenting": {
+    "zh": "亲子",
+    "en": "Parenting"
+  },
+  "category.Fitness": {
+    "zh": "运动",
+    "en": "Fitness"
+  },
+  "category.Learning": {
+    "zh": "学习",
+    "en": "Learning"
+  },
+  "category.Seasonal": {
+    "zh": "季节",
+    "en": "Seasonal"
+  },
+  "minutesShort": {
+    "zh": "{count} 分钟",
+    "en": "{count} min"
+  },
+  "photo.remove": {
+    "zh": "移除照片",
+    "en": "Remove photo"
+  },
+  "poster.title": {
+    "zh": "选择视频封面",
+    "en": "Choose a video cover"
+  },
+  "poster.help": {
+    "zh": "拖动滑块选一帧当封面，或者上传一张自己的图片。",
+    "en": "Slide to pick a frame, or upload a picture of your own."
+  },
+  "poster.frame": {
+    "zh": "画面",
+    "en": "Frame"
+  },
+  "poster.useFrame": {
+    "zh": "用这一帧",
+    "en": "Use this frame"
+  },
+  "poster.upload": {
+    "zh": "上传图片",
+    "en": "Upload a picture"
+  },
+  "poster.short": {
+    "zh": "封面",
+    "en": "Cover"
+  },
+  "poster.saved": {
+    "zh": "封面已更新",
+    "en": "Cover updated"
+  },
+  "poster.failed": {
+    "zh": "这一帧取不出来，换一帧或上传图片试试。",
+    "en": "Couldn't grab that frame — try another one or upload a picture."
+  },
+  "layer.frontShort": {
+    "zh": "置顶",
+    "en": "To front"
+  },
+  "media.tapAgain": {
+    "zh": "再轻点一次播放",
+    "en": "Tap again to play"
+  },
+  "media.unsupported": {
+    "zh": "这个视频格式在当前浏览器里不能播放，可以转成 MP4 后再上传。",
+    "en": "This video format can't play in this browser — convert it to MP4 and upload again."
+  },
+  "photo.broken": {
+    "zh": "这张照片在这台设备上无法显示，可以点“替换照片”重新选择。",
+    "en": "This photo can't be shown on this device — use “Replace photo” to pick it again."
+  },
+  "layer.barHint": {
+    "zh": "替换、裁切、编辑和删除在底部那一排；点左边的 × 回到四个工具。",
+    "en": "Replace, crop, edit and delete are in the bottom row; × on the left returns to the four tools."
+  },
+  "growth.checkedHint": {
+    "zh": "打卡啦 🌱 想写心得、加照片，点旁边的 ✎",
+    "en": "Checked in 🌱 Tap ✎ to add a note or photo"
+  },
+  "growth.addShort": {
+    "zh": "心得",
+    "en": "Note"
+  },
+  "growth.noteShort": {
+    "zh": "已写",
+    "en": "Noted"
+  },
+  "scene.title": {
+    "zh": "照片素材",
+    "en": "Photo library"
+  },
+  "scene.note": {
+    "zh": "按心情和事件分好的真实照片，选一张最能代表今天的。放上去后还能用“编辑图片”加滤镜和文字。",
+    "en": "Real photos sorted by mood and moment — pick the one that sums up today. Then “Edit photo” for filters and words."
+  },
+  "scene.today": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "scene.added": {
+    "zh": "已放上「{name}」",
+    "en": "Added “{name}”"
+  },
+  "scene.ofDay": {
+    "zh": "今日照片",
+    "en": "Photo of the day"
+  },
+  "scene.useIt": {
+    "zh": "用它写一页",
+    "en": "Write with it"
+  },
+  "scene.pick": {
+    "zh": "或者从照片素材里挑一张",
+    "en": "Or pick from the photo library"
+  },
+  "community.accepted": {
+    "zh": "已加为好友",
+    "en": "You're now friends"
+  },
+  "community.declined": {
+    "zh": "已拒绝申请",
+    "en": "Request declined"
+  },
+  "more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "who.coverShort": {
+    "zh": "展示封面",
+    "en": "Show cover"
+  },
+  "level.xp": {
+    "zh": "经验",
+    "en": "XP"
+  },
+  "level.seed": {
+    "zh": "第一页",
+    "en": "First page"
+  },
+  "level.sprout": {
+    "zh": "随手记",
+    "en": "Note-taker"
+  },
+  "level.leaf": {
+    "zh": "贴纸控",
+    "en": "Sticker fan"
+  },
+  "level.bud": {
+    "zh": "手帐控",
+    "en": "Journaler"
+  },
+  "level.bloom": {
+    "zh": "小作者",
+    "en": "Storyteller"
+  },
+  "level.garden": {
+    "zh": "杂志主编",
+    "en": "Editor"
+  },
+  "level.forest": {
+    "zh": "出版人",
+    "en": "Publisher"
+  },
+  "level.meadow": {
+    "zh": "文具店主",
+    "en": "Shopkeeper"
+  },
+  "level.toNext": {
+    "zh": "再得 {count} 经验升到「{name}」",
+    "en": "{count} XP to “{name}”"
+  },
+  "level.max": {
+    "zh": "已经是最高等级啦",
+    "en": "Top level reached"
+  },
+  "level.activeDays": {
+    "zh": "活跃 {count} 天",
+    "en": "{count} active days"
+  },
+  "level.streak": {
+    "zh": "连续 {count} 天",
+    "en": "{count}-day streak"
+  },
+  "level.how": {
+    "zh": "怎么获得经验？",
+    "en": "How to earn XP"
+  },
+  "level.rule.activeDay": {
+    "zh": "每个记录过的日子",
+    "en": "Each day you wrote or checked in"
+  },
+  "level.rule.page": {
+    "zh": "写一页当日手帐",
+    "en": "A day page"
+  },
+  "level.rule.moment": {
+    "zh": "记一页",
+    "en": "A page"
+  },
+  "level.rule.photo": {
+    "zh": "放一张照片（最多 300）",
+    "en": "A photo (up to 300)"
+  },
+  "level.rule.check": {
+    "zh": "完成一次打卡",
+    "en": "A habit check-in"
+  },
+  "level.rule.note": {
+    "zh": "写一条打卡心得",
+    "en": "A check-in note"
+  },
+  "level.rule.reflection": {
+    "zh": "写一次周 / 月回顾",
+    "en": "A weekly or monthly reflection"
+  },
+  "level.rule.post": {
+    "zh": "发布一篇作品（演示）",
+    "en": "A community post (demo)"
+  },
+  "level.note": {
+    "zh": "经验只根据这台设备上你自己写的内容计算，示例内容不算，也不会上传。",
+    "en": "XP is worked out from what you wrote on this device (samples don't count) and is never uploaded."
+  },
+  "inbox.title": {
+    "zh": "消息通知",
+    "en": "Notifications"
+  },
+  "inbox.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "inbox.readAll": {
+    "zh": "全部已读",
+    "en": "Mark all read"
+  },
+  "inbox.allRead": {
+    "zh": "都标为已读了",
+    "en": "All marked as read"
+  },
+  "inbox.empty": {
+    "zh": "这里还没有消息。",
+    "en": "Nothing here yet."
+  },
+  "inbox.waiting": {
+    "zh": "等待处理",
+    "en": "Waiting"
+  },
+  "inbox.filter.all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "inbox.filter.system": {
+    "zh": "系统",
+    "en": "System"
+  },
+  "inbox.filter.friends": {
+    "zh": "好友申请",
+    "en": "Friends"
+  },
+  "inbox.filter.interaction": {
+    "zh": "互动",
+    "en": "Activity"
+  },
+  "inbox.filter.messages": {
+    "zh": "私信",
+    "en": "Messages"
+  },
+  "inbox.system.welcome": {
+    "zh": "欢迎来到 Little Days！每天记一点点，就是很好的开始。",
+    "en": "Welcome to Little Days! A little every day is a lovely start."
+  },
+  "inbox.system.backup": {
+    "zh": "小提醒：手帐只保存在这台设备上，记得在「设置」里定期导出备份。",
+    "en": "Tip: your journal lives on this device — export a backup in Settings now and then."
+  },
+  "inbox.goBackup": {
+    "zh": "去备份",
+    "en": "Back up"
+  },
+  "inbox.levelUp": {
+    "zh": "升级啦！你现在是「{name}」",
+    "en": "Level up! You're now “{name}”"
+  },
+  "inbox.seeLevel": {
+    "zh": "看看等级",
+    "en": "See level"
+  },
+  "inbox.friend": {
+    "zh": "{name} 想加你为好友",
+    "en": "{name} wants to be friends"
+  },
+  "inbox.message": {
+    "zh": "{name} 发来 {count} 条新私信：{text}",
+    "en": "{name} sent {count} new message(s): {text}"
+  },
+  "inbox.reply": {
+    "zh": "去回复",
+    "en": "Reply"
+  },
+  "inbox.like": {
+    "zh": "{name} 赞了你的作品「{work}」",
+    "en": "{name} liked “{work}”"
+  },
+  "inbox.comment": {
+    "zh": "{name} 评论了「{work}」：{text}",
+    "en": "{name} commented on “{work}”: {text}"
+  },
+  "scene.get": {
+    "zh": "使用",
+    "en": "Get"
+  },
+  "scene.useThis": {
+    "zh": "用这张",
+    "en": "Use this"
+  },
+  "scene.swipe": {
+    "zh": "左右滑动看更多",
+    "en": "Swipe for more"
+  },
+  "calendar.wall": {
+    "zh": "照片墙",
+    "en": "Photo wall"
+  },
+  "calendar.wrapped": {
+    "zh": "{year} · 这个月的小日子",
+    "en": "{year} · wrapped"
+  },
+  "calendar.wallStats": {
+    "zh": "这个月记录了 {days} 天 · {pictures} 张照片",
+    "en": "{days} days written · {pictures} pictures this month"
+  },
+  "choose.title": {
+    "zh": "添加照片",
+    "en": "Add a picture"
+  },
+  "choose.mainTitle": {
+    "zh": "选一张主照片",
+    "en": "Choose the main picture"
+  },
+  "choose.album": {
+    "zh": "从相册选择",
+    "en": "From your photos"
+  },
+  "choose.albumMany": {
+    "zh": "可以一次选好几张，之后能修图",
+    "en": "Pick several at once, then edit them"
+  },
+  "choose.albumOne": {
+    "zh": "选一张放在主照片位",
+    "en": "One for the main picture spot"
+  },
+  "choose.picks": {
+    "zh": "今日推荐",
+    "en": "Today's picks"
+  },
+  "sheet.grow": {
+    "zh": "向上拉开更多",
+    "en": "Pull up for more"
+  },
+  "sheet.shrink": {
+    "zh": "收起一点",
+    "en": "Make smaller"
+  },
+  "note.start": {
+    "zh": "随手记",
+    "en": "Quick note"
+  },
+  "note.startHint": {
+    "zh": "像备忘录一样，点开就写",
+    "en": "Like Notes — tap and type"
+  },
+  "note.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "note.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "note.titlePlaceholder": {
+    "zh": "标题",
+    "en": "Title"
+  },
+  "note.bodyPlaceholder": {
+    "zh": "记点什么……",
+    "en": "Write something…"
+  },
+  "note.help": {
+    "zh": "保存后会成为今天的一个小故事，之后可以再加照片和装饰。",
+    "en": "It becomes a little story on today's page; add pictures later if you like."
+  },
+  "note.saved": {
+    "zh": "已记下，放进了今天的手帐 ✿",
+    "en": "Saved to today's page ✿"
+  },
+  "backdrop.title": {
+    "zh": "页面背景",
+    "en": "Page background"
+  },
+  "backdrop.note": {
+    "zh": "风景照片、渐变和可爱图案铺满整页，文字会放在一块磨砂卡片上。",
+    "en": "Scenery photos, gradients and cute patterns across the whole page; the words sit on a frosted card."
+  },
+  "backdrop.none": {
+    "zh": "不用背景",
+    "en": "No background"
+  },
+  "backdrop.on": {
+    "zh": "背景图",
+    "en": "Background"
+  },
+  "backdrop.link": {
+    "zh": "换个页面背景",
+    "en": "Change the page background"
+  },
+  "backdrop.linkHint": {
+    "zh": "风景照片、渐变、可爱图案……",
+    "en": "Scenery, gradients, cute patterns …"
+  },
+  "home.today": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "home.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "home.inspire": {
+    "zh": "从一张照片开始",
+    "en": "Start from a photo"
+  },
+  "home.library": {
+    "zh": "照片素材",
+    "en": "Photo library"
+  },
+  "backdrop.photos": {
+    "zh": "照片氛围",
+    "en": "Photo mood"
+  },
+  "mode.label": {
+    "zh": "这一页怎么写",
+    "en": "How to make this page"
+  },
+  "mode.note": {
+    "zh": "随手写",
+    "en": "Just write"
+  },
+  "mode.layout": {
+    "zh": "自由排版",
+    "en": "Free layout"
+  },
+  "mode.noteOn": {
+    "zh": "随手写：点纸就能打字",
+    "en": "Just write: tap the paper and type"
+  },
+  "mode.layoutOn": {
+    "zh": "自由排版：文字变成了可以拖动的文字框",
+    "en": "Free layout: your words are now a box you can move"
+  },
+  "write.noteTip": {
+    "zh": "标题和内容直接写在上面的纸上，点一下就能打字。",
+    "en": "The title and words are on the paper above — tap it and type."
+  },
+  "write.pageName": {
+    "zh": "这一页的名字 · 显示在目录和日历里",
+    "en": "Page name · shown in the contents and calendar"
+  },
+  "write.caption": {
+    "zh": "页面下方的说明 · 可选，不会写到纸上",
+    "en": "Caption under the page · optional, not on the paper"
+  },
+  "write.layoutTip": {
+    "zh": "想在纸上写字：点「文字」加一个文字框，再点一下就能直接打字。",
+    "en": "To write on the paper: tap Text to add a box, then tap it again to type."
+  },
+  "cover.magazine-jp": {
+    "zh": "日系杂志",
+    "en": "Japanese magazine"
+  },
+  "cover.magazine-west": {
+    "zh": "欧美杂志",
+    "en": "Western magazine"
+  },
+  "books.coverPhotoPick": {
+    "zh": "封面照片（也可以上传自己的）",
+    "en": "Cover photo (or upload your own)"
+  },
+  "home.booksHint": {
+    "zh": "选一本，接着记",
+    "en": "Pick a journal and keep going"
+  },
+  "home.shelf": {
+    "zh": "书架",
+    "en": "Shelf"
+  },
+  "home.writeIn": {
+    "zh": "记一页",
+    "en": "Add a page"
+  },
+  "home.newBook": {
+    "zh": "新手帐",
+    "en": "New journal"
+  },
+  "book.writingIn": {
+    "zh": "写进「{name}」",
+    "en": "Writing in “{name}”"
+  },
+  "calendar.allBooks": {
+    "zh": "全部手帐",
+    "en": "All journals"
+  },
+  "calendar.bookEmpty": {
+    "zh": "这一天「{name}」里还没有记录。",
+    "en": "Nothing in “{name}” on this day."
+  },
+  "photo.landscape": {
+    "zh": "横图",
+    "en": "Landscape"
+  },
+  "photo.portrait": {
+    "zh": "竖图",
+    "en": "Portrait"
+  },
+  "photo.square": {
+    "zh": "方图",
+    "en": "Square"
+  },
+  "space.dress": {
+    "zh": "装扮空间",
+    "en": "Decorate"
+  },
+  "space.banner": {
+    "zh": "背景图",
+    "en": "Banner"
+  },
+  "space.accent": {
+    "zh": "主题色",
+    "en": "Accent colour"
+  },
+  "space.motto": {
+    "zh": "签名",
+    "en": "Motto"
+  },
+  "space.mottoPlaceholder": {
+    "zh": "一句话介绍你的空间",
+    "en": "One line about your space"
+  },
+  "space.mottoDefault": {
+    "zh": "收藏生活里的小日子",
+    "en": "Collecting little days"
+  },
+  "space.saved": {
+    "zh": "空间已装扮好",
+    "en": "Your space is updated"
+  },
+  "space.books": {
+    "zh": "出版的书",
+    "en": "Books out"
+  },
+  "space.posts": {
+    "zh": "动态",
+    "en": "Posts"
+  },
+  "space.myBooks": {
+    "zh": "我出的书",
+    "en": "My books"
+  },
+  "space.booksNote": {
+    "zh": "从书架挑一本“出书”：别人只看到封面和书名，里面的页面不公开。",
+    "en": "Pick a journal from your shelf to put out: others see only the cover and title, never the pages."
+  },
+  "space.fromShelf": {
+    "zh": "从书架出书",
+    "en": "From my shelf"
+  },
+  "space.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "space.isOut": {
+    "zh": "已出书 · 展示封面",
+    "en": "Out · cover shown"
+  },
+  "space.notOut": {
+    "zh": "在书架上 · 仅自己",
+    "en": "On the shelf · only me"
+  },
+  "space.publishBook": {
+    "zh": "出书",
+    "en": "Put out"
+  },
+  "space.takeBack": {
+    "zh": "收回",
+    "en": "Take back"
+  },
+  "space.feed": {
+    "zh": "我的动态",
+    "en": "My posts"
+  },
+  "space.post": {
+    "zh": "发一条",
+    "en": "New post"
+  },
+  "space.demoNote": {
+    "zh": "空间、出书和动态都只在这台设备上演示，未真正公开。",
+    "en": "Your space, books and posts are a demo on this device; nothing is really public."
+  },
+  "cover.magazine-mono": {
+    "zh": "黑白极简",
+    "en": "Mono"
+  },
+  "cover.magazine-film": {
+    "zh": "胶片",
+    "en": "Film"
+  },
+  "cover.magazine-minimal": {
+    "zh": "留白",
+    "en": "Minimal"
+  },
+  "cover.magazine-collage": {
+    "zh": "拼贴",
+    "en": "Collage"
+  },
+  "space.avatar": {
+    "zh": "头像",
+    "en": "Profile photo"
+  },
+  "space.avatarUpload": {
+    "zh": "上传自己的照片",
+    "en": "Upload a photo"
+  },
+  "space.avatarClear": {
+    "zh": "改回名字首字",
+    "en": "Use my initial"
+  },
+  "space.avatarPick": {
+    "zh": "从照片里选",
+    "en": "Pick a photo"
+  },
+  "space.manage": {
+    "zh": "只有你能看到 · 管理我的主页",
+    "en": "Only you see this · manage your page"
+  },
+  "space.isFriend": {
+    "zh": "好友",
+    "en": "Friend"
+  },
+  "space.blocked": {
+    "zh": "你已屏蔽对方。",
+    "en": "You blocked this person."
+  },
+  "space.otherNote": {
+    "zh": "虚拟用户的主页，关注、加好友和私信都只在这台设备上模拟。",
+    "en": "A demo person: following, friend requests and messages are simulated on this device."
+  },
+  "space.feedOther": {
+    "zh": "动态",
+    "en": "Posts"
+  },
+  "write.deleteStory": {
+    "zh": "删除这一页",
+    "en": "Delete this page"
+  },
+  "write.clearDay": {
+    "zh": "清空封面",
+    "en": "Clear cover"
+  },
+  "write.clearDayConfirm": {
+    "zh": "清空封面的一句话和照片？这一天的每一页都会保留，可以撤销。",
+    "en": "Clear the cover's line and photo? Every page of the day stays, and you can undo."
+  },
+  "write.dayCleared": {
+    "zh": "封面已清空",
+    "en": "Cover cleared"
+  },
+  "books.mine": {
+    "zh": "我的书",
+    "en": "My Books"
+  },
+  "books.ours": {
+    "zh": "共同的书",
+    "en": "Our Books"
+  },
+  "books.oursEmpty": {
+    "zh": "还没有共同的书。打开一本书，在「共同创作」里邀请好友一起写（本机演示）。",
+    "en": "No books with friends yet. Open a book and invite friends under Write together (demo)."
+  },
+  "quick.title": {
+    "zh": "今天怎么记？",
+    "en": "How shall we keep today?"
+  },
+  "quick.book": {
+    "zh": "记在哪本书",
+    "en": "Which journal"
+  },
+  "quick.photo": {
+    "zh": "选一张照片",
+    "en": "Choose a photo"
+  },
+  "quick.noPhoto": {
+    "zh": "不用",
+    "en": "None"
+  },
+  "quick.today": {
+    "zh": "今日推荐",
+    "en": "Pick of the day"
+  },
+  "quick.pick": {
+    "zh": "图库",
+    "en": "Library"
+  },
+  "quick.start": {
+    "zh": "开始写",
+    "en": "Start writing"
+  },
+  "write.inBook": {
+    "zh": "记到",
+    "en": "In"
+  },
+  "way.photo": {
+    "zh": "照片 + 一句话",
+    "en": "Photo + a line"
+  },
+  "way.photoHint": {
+    "zh": "挑一张好看的照片，写一句话",
+    "en": "A lovely photo and one sentence"
+  },
+  "way.write": {
+    "zh": "随手写",
+    "en": "Just write"
+  },
+  "way.writeHint": {
+    "zh": "像备忘录，点纸就打字",
+    "en": "Like a note: tap and type"
+  },
+  "way.draw": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "way.drawHint": {
+    "zh": "用手指或 Apple Pencil 画",
+    "en": "Finger or Apple Pencil"
+  },
+  "quick.mine": {
+    "zh": "我的相册",
+    "en": "My photos"
+  },
+  "quick.start.photo": {
+    "zh": "写一句话",
+    "en": "Write a line"
+  },
+  "quick.start.write": {
+    "zh": "开始写",
+    "en": "Start writing"
+  },
+  "quick.start.draw": {
+    "zh": "开始画",
+    "en": "Start drawing"
+  },
+  "quick.continue": {
+    "zh": "继续看今天的 {count} 页",
+    "en": "Open today's {count} page(s)"
+  },
+  "quick.more": {
+    "zh": "其他",
+    "en": "Also"
+  },
+  "mode.line": {
+    "zh": "照片+一句",
+    "en": "Photo + line"
+  },
+  "mode.lineOn": {
+    "zh": "照片就是这一页，写一句话吧",
+    "en": "The photo is the page — add one line"
+  },
+  "draw.title": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "draw.short": {
+    "zh": "手绘",
+    "en": "Draw"
+  },
+  "draw.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "draw.canvas": {
+    "zh": "画板：在这一页上画",
+    "en": "Drawing board on this page"
+  },
+  "draw.tools": {
+    "zh": "画笔",
+    "en": "Brushes"
+  },
+  "draw.colors": {
+    "zh": "颜色",
+    "en": "Colours"
+  },
+  "draw.size": {
+    "zh": "粗细",
+    "en": "Size"
+  },
+  "draw.clear": {
+    "zh": "清空",
+    "en": "Clear"
+  },
+  "draw.hint": {
+    "zh": "直接在这一页上画。用 Apple Pencil 时会按力度变粗细，手掌碰到屏幕也不会画上。画好后可以移动、缩放，也能接着画。",
+    "en": "Draw right on the page. With Apple Pencil, pressing harder draws thicker and your palm won't leave marks. Afterwards you can move, resize or draw more."
+  },
+  "draw.pen": {
+    "zh": "钢笔",
+    "en": "Pen"
+  },
+  "draw.marker": {
+    "zh": "马克笔",
+    "en": "Marker"
+  },
+  "draw.pencil": {
+    "zh": "铅笔",
+    "en": "Pencil"
+  },
+  "draw.eraser": {
+    "zh": "橡皮",
+    "en": "Eraser"
+  },
+  "draw.again": {
+    "zh": "接着画",
+    "en": "Draw more"
+  },
+  "draw.saved": {
+    "zh": "手绘已经放在这一页上",
+    "en": "Your drawing is on the page"
+  },
+  "line.pickPhoto": {
+    "zh": "选一张照片",
+    "en": "Choose a photo"
+  },
+  "line.placeholder": {
+    "zh": "写一句话…",
+    "en": "Write one line…"
+  },
+  "line.chooseTitle": {
+    "zh": "选一张照片做这一页",
+    "en": "Choose the photo for this page"
+  },
+  "space.dressTitle": {
+    "zh": "装扮我的空间",
+    "en": "Decorate my space"
+  },
+  "space.dressNote": {
+    "zh": "改动马上生效，别人来看时就是这个样子（本机演示）。",
+    "en": "Changes show right away — this is what visitors see (demo on this device)."
+  },
+  "dress.look": {
+    "zh": "套装",
+    "en": "Looks"
+  },
+  "dress.avatar": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "dress.banner": {
+    "zh": "背景图",
+    "en": "Banner"
+  },
+  "dress.color": {
+    "zh": "主题色",
+    "en": "Colour"
+  },
+  "dress.frame": {
+    "zh": "头像框",
+    "en": "Frame"
+  },
+  "dress.layout": {
+    "zh": "动态版式",
+    "en": "Post layout"
+  },
+  "dress.motto": {
+    "zh": "签名",
+    "en": "Motto"
+  },
+  "look.blush": {
+    "zh": "樱粉",
+    "en": "Blush"
+  },
+  "look.cafe": {
+    "zh": "咖啡馆",
+    "en": "Café"
+  },
+  "look.sea": {
+    "zh": "海边",
+    "en": "Seaside"
+  },
+  "look.night": {
+    "zh": "星夜",
+    "en": "Starry"
+  },
+  "look.meadow": {
+    "zh": "原野",
+    "en": "Meadow"
+  },
+  "look.mono": {
+    "zh": "极简",
+    "en": "Minimal"
+  },
+  "frame.plain": {
+    "zh": "无框",
+    "en": "None"
+  },
+  "frame.ring": {
+    "zh": "细环",
+    "en": "Ring"
+  },
+  "frame.double": {
+    "zh": "双环",
+    "en": "Double"
+  },
+  "frame.dashed": {
+    "zh": "虚线",
+    "en": "Dashed"
+  },
+  "frame.petal": {
+    "zh": "圆角方",
+    "en": "Rounded"
+  },
+  "spaceLayout.grid": {
+    "zh": "方格",
+    "en": "Grid"
+  },
+  "spaceLayout.magazine": {
+    "zh": "杂志",
+    "en": "Magazine"
+  },
+  "spaceLayout.list": {
+    "zh": "大图",
+    "en": "Large"
+  },
+  "cover.what": {
+    "zh": "一句话总结这一天",
+    "en": "The day in one line"
+  },
+  "cover.empty": {
+    "zh": "一句话总结（可选）",
+    "en": "One line (optional)"
+  },
+  "cover.hint": {
+    "zh": "封面：用一句话（和一张照片）总结这一天，可以不写。下面的「第 01 页」起记录发生了什么。",
+    "en": "Cover: the day in one line (and a photo) — optional. Pages 01, 02… keep what happened."
+  },
+  "day.pagesCount": {
+    "zh": "这一天的 {count} 页",
+    "en": "{count} pages this day"
+  },
+  "pages.manage": {
+    "zh": "整理",
+    "en": "Arrange"
+  },
+  "pages.title": {
+    "zh": "整理这一天",
+    "en": "Arrange this day"
+  },
+  "pages.help": {
+    "zh": "封面是这一天的一句话总结（可以不写）；下面每一页记录一件事，可以调整顺序或删除。",
+    "en": "The cover is the day in one line (optional); each page below keeps one thing — reorder or delete them here."
+  },
+  "pages.up": {
+    "zh": "上移",
+    "en": "Move up"
+  },
+  "pages.down": {
+    "zh": "下移",
+    "en": "Move down"
+  },
+  "pages.clearCover": {
+    "zh": "清空",
+    "en": "Clear"
+  },
+  "pages.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "quick.titleDate": {
+    "zh": "怎么记 {date}？",
+    "en": "How shall we keep {date}?"
+  },
+  "strip.summary": {
+    "zh": "这一天：封面 + {count} 页",
+    "en": "This day: cover + {count} pages"
+  },
+  "pages.manageLong": {
+    "zh": "整理顺序 / 删除",
+    "en": "Reorder / delete"
+  },
+  "quick.start.pick": {
+    "zh": "选照片（可多选）",
+    "en": "Choose photos"
+  },
+  "layout.smart": {
+    "zh": "按照片形状自动排",
+    "en": "Auto · fits each photo"
+  },
+  "layout.smartHint": {
+    "zh": "横的竖的都不裁掉，可以换三种样子",
+    "en": "Keeps every photo's shape; three looks to shuffle"
+  },
+  "result.title": {
+    "zh": "这一页好了",
+    "en": "Your page is ready"
+  },
+  "result.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "result.inBook": {
+    "zh": "放进《{name}》",
+    "en": "Goes into “{name}”"
+  },
+  "result.shuffle": {
+    "zh": "换一种",
+    "en": "Shuffle"
+  },
+  "result.addLine": {
+    "zh": "写一句话",
+    "en": "Add a line"
+  },
+  "result.editLine": {
+    "zh": "改这句话",
+    "en": "Edit the line"
+  },
+  "result.edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "result.help": {
+    "zh": "不喜欢这个排法就点「换一种」；想自己摆放、加贴纸就点「编辑」。",
+    "en": "Not quite right? Shuffle. Want to arrange it yourself or add stickers? Tap Edit."
+  },
+  "result.saved": {
+    "zh": "已放进《{name}》",
+    "en": "Saved in “{name}”"
+  },
+  "testlog.title": {
+    "zh": "测试记录",
+    "en": "Test log"
+  },
+  "testlog.note": {
+    "zh": "只在这台设备上记录用了哪些功能、用了多久，不含文字、照片和名字。参加测试时可以导出发给我们。",
+    "en": "Kept only on this device: which features you used and how long they took — no words, photos or names. If you're testing, you can export it and send it to us."
+  },
+  "testlog.export": {
+    "zh": "导出测试记录",
+    "en": "Export test log"
+  },
+  "testlog.saved": {
+    "zh": "已导出 {count} 条记录",
+    "en": "Exported {count} events"
+  },
+  "labs.title": {
+    "zh": "实验室",
+    "en": "Labs"
+  },
+  "labs.note": {
+    "zh": "正在测试核心体验时，这些功能先收起来：社区和私信、我的主页与装扮、等级、共同的书、颜色主题、登录页。打开后会重新出现；数据一直保留在这台设备上。",
+    "en": "While we test the core, these are tucked away: community and messages, my profile and decorating, levels, shared books, colour themes and the sign-in page. Turn them back on here; their data stays on this device."
+  },
+  "labs.turnOn": {
+    "zh": "打开实验室功能",
+    "en": "Turn Labs on"
+  },
+  "labs.turnOff": {
+    "zh": "收起实验室功能",
+    "en": "Turn Labs off"
+  },
+  "labs.on": {
+    "zh": "实验室功能已打开",
+    "en": "Labs on"
+  },
+  "labs.off": {
+    "zh": "实验室功能已收起",
+    "en": "Labs off"
+  },
+  "share.story": {
+    "zh": "分享",
+    "en": "Share"
+  },
+  "share.done": {
+    "zh": "已经分享",
+    "en": "Shared"
+  },
+  "share.saved": {
+    "zh": "已保存一张 Story 尺寸（9:16）的图片",
+    "en": "Saved a Story-size (9:16) picture"
+  },
+  "news.badge": {
+    "zh": "新版本 V{version}",
+    "en": "New · V{version}"
+  },
+  "news.see": {
+    "zh": "看看更新",
+    "en": "See what's new"
+  },
+  "news.title": {
+    "zh": "更新记录",
+    "en": "What's new"
+  },
+  "news.ok": {
+    "zh": "知道了",
+    "en": "Got it"
+  },
+  "news.new": {
+    "zh": "新",
+    "en": "New"
+  },
+  "news.all": {
+    "zh": "全部更新记录",
+    "en": "All updates"
+  },
+  "news.dotLabel": {
+    "zh": "设置 · 有新版本 V{version}",
+    "en": "Settings · new version V{version}"
+  },
+  "habits.none": {
+    "zh": "还没有习惯 · 想养成时再加",
+    "en": "None yet · add one when you like"
+  },
+  "news.current": {
+    "zh": "当前版本 V{version}。每次更新改了什么，都在这里。",
+    "en": "You're on V{version}. Every update's changes are listed here."
+  },
+  "category.Relationship": {
+    "zh": "我们俩",
+    "en": "Couple"
+  },
+  "bookShare.button": {
+    "zh": "分享给家人看（PDF）",
+    "en": "Share with family (PDF)"
+  },
+  "bookShare.help": {
+    "zh": "把整本书做成一个 PDF：封面 + 每一页，按日期排好。对方在微信、iMessage、WhatsApp 里直接就能翻看，不用装 App。",
+    "en": "Turns the whole book into one PDF — a cover, then every page by date. They can flip through it in Messages or WhatsApp, no app needed."
+  },
+  "bookShare.making": {
+    "zh": "正在做成《{name}》",
+    "en": "Making “{name}”"
+  },
+  "bookShare.progress": {
+    "zh": "第 {now} / {total} 页",
+    "en": "Page {now} of {total}"
+  },
+  "bookShare.pages": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "bookShare.empty": {
+    "zh": "这本书还没有页面，先记一页吧",
+    "en": "This book has no pages yet — add one first"
+  },
+  "bookShare.shared": {
+    "zh": "已分享 {count} 页",
+    "en": "Shared {count} pages"
+  },
+  "bookShare.saved": {
+    "zh": "已保存 PDF（{count} 页），可以发给家人",
+    "en": "Saved a PDF ({count} pages) to send to family"
+  },
+  "bookShare.skipped": {
+    "zh": "（太长了，只放了最近的页，前面 {count} 页没放）",
+    "en": "(Long book: only the latest pages; {count} earlier ones left out)"
+  },
+  "bookShare.failed": {
+    "zh": "没能做成 PDF，请再试一次",
+    "en": "Couldn't make the PDF — please try again"
+  },
+  "bookShare.thanks": {
+    "zh": "谢谢，你的选择会帮我们决定先做什么",
+    "en": "Thanks — this helps us decide what to build next"
+  },
+  "contribute.title": {
+    "zh": "想让 TA 也能往这本书里加照片吗？",
+    "en": "Would you like them to add photos to this book too?"
+  },
+  "contribute.note": {
+    "zh": "这个功能还在做，现在只能分享给对方看。你的选择只记在这台设备的测试记录里。",
+    "en": "This isn't built yet — for now they can look. Your answer is kept only in this device's test log."
+  },
+  "contribute.view": {
+    "zh": "只给 TA 看就够了",
+    "en": "Just let them look"
+  },
+  "contribute.viewHint": {
+    "zh": "我来记，家人看",
+    "en": "I keep it, family looks"
+  },
+  "contribute.add": {
+    "zh": "想让 TA 也能加照片",
+    "en": "Let them add photos"
+  },
+  "contribute.addHint": {
+    "zh": "比如另一半、爸妈、爷爷奶奶",
+    "en": "My partner, parents or grandparents"
+  },
+  "contribute.unsure": {
+    "zh": "还不确定",
+    "en": "Not sure yet"
+  },
+  "contribute.unsureHint": {
+    "zh": "先用用看",
+    "en": "I'll see"
+  },
+  "suggest.title": {
+    "zh": "和家人一起的书",
+    "en": "Books for the people you love"
+  },
+  "suggest.help": {
+    "zh": "一个人记，家人随时可以看（分享成 PDF）。",
+    "en": "You keep it; family can look any time (shared as a PDF)."
+  },
+  "suggest.relationship.title": {
+    "zh": "我们俩",
+    "en": "The two of us"
+  },
+  "suggest.relationship.hint": {
+    "zh": "情侣的日常和纪念日",
+    "en": "Everyday moments and anniversaries"
+  },
+  "suggest.relationship.description": {
+    "zh": "我们一起过的小日子。",
+    "en": "The little days we share."
+  },
+  "suggest.parenting.title": {
+    "zh": "宝宝成长",
+    "en": "Growing up"
+  },
+  "suggest.parenting.hint": {
+    "zh": "记录孩子长大，给家人看",
+    "en": "Your child growing up, for the family"
+  },
+  "suggest.parenting.description": {
+    "zh": "一点一点长大的你。",
+    "en": "Watching you grow, little by little."
+  },
+  "shelf.moved": {
+    "zh": "书架顺序已更新，首页也一样",
+    "en": "Shelf order updated — Home follows it too"
+  },
+  "shelf.moveLabel": {
+    "zh": "调整位置",
+    "en": "Move"
+  },
+  "shelf.moveEarlier": {
+    "zh": "往前放",
+    "en": "Earlier"
+  },
+  "shelf.moveLater": {
+    "zh": "往后放",
+    "en": "Later"
+  },
+  "journey.chip": {
+    "zh": "成长书 · {count} 页",
+    "en": "Growth book · {count}"
+  },
+  "growth.noNoteYet": {
+    "zh": "这次还没写感想，点「编辑」写几句。",
+    "en": "No reflection yet — tap Edit to add a few words."
+  },
+  "type.label": {
+    "zh": "文字样式",
+    "en": "Text style"
+  },
+  "type.smaller": {
+    "zh": "字小一点",
+    "en": "Smaller"
+  },
+  "type.bigger": {
+    "zh": "字大一点",
+    "en": "Bigger"
+  },
+  "samples.title": {
+    "zh": "示例内容",
+    "en": "Samples"
+  },
+  "samples.note": {
+    "zh": "手帐里有 {count} 天示例（标着「示例」），用来看看能做出什么样的页面。它们不会被分享，也可以全部移除；你自己写的不受影响。",
+    "en": "Your journal has {count} sample days (marked “Sample”) to show what pages can look like. They're never shared and can be removed; your own pages stay."
+  },
+  "samples.remove": {
+    "zh": "移除所有示例",
+    "en": "Remove all samples"
+  },
+  "samples.confirm": {
+    "zh": "移除所有示例天？你自己写的内容都会保留。",
+    "en": "Remove all sample days? Everything you wrote stays."
+  },
+  "samples.removed": {
+    "zh": "已移除 {count} 天示例",
+    "en": "Removed {count} sample days"
+  },
+  "tool.fields": {
+    "zh": "记录项目",
+    "en": "Record fields"
+  },
+  "read.addTitle": {
+    "zh": "加标题",
+    "en": "Add a title"
+  },
+  "read.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "read.titleHint": {
+    "zh": "双击标题就能改",
+    "en": "Double-click the title to change it"
+  },
+  "read.titleSaved": {
+    "zh": "标题已保存",
+    "en": "Title saved"
+  },
+  "read.pageMenu": {
+    "zh": "这一页",
+    "en": "This page"
+  },
+  "read.edit": {
+    "zh": "编辑这一页",
+    "en": "Edit this page"
+  },
+  "read.editHint": {
+    "zh": "打开写作页，换照片、文字和装饰",
+    "en": "Open it to change photos, words and decorations"
+  },
+  "read.rename": {
+    "zh": "改标题",
+    "en": "Rename"
+  },
+  "read.deleteHint": {
+    "zh": "可以撤销前先确认；照片和录音文件仍保留在本机",
+    "en": "You'll be asked first; media files stay on this device"
+  },
+  "weekdays.short": {
+    "zh": "一,二,三,四,五,六,日",
+    "en": "M,T,W,T,F,S,S"
+  },
+  "streak.chip": {
+    "zh": "连续 {count} 天 · 本周 {week} 天",
+    "en": "{count}-day streak · {week} this week"
+  },
+  "streak.start": {
+    "zh": "今天记一页，开始连续记录",
+    "en": "Add a page today to start a streak"
+  },
+  "streak.stampTop": {
+    "zh": "连续",
+    "en": "DAY"
+  },
+  "streak.stampBottom": {
+    "zh": "天",
+    "en": "STREAK"
+  },
+  "streak.title": {
+    "zh": "连续记录 {count} 天",
+    "en": "{count} days in a row"
+  },
+  "streak.none": {
+    "zh": "今天还没记",
+    "en": "Nothing yet today"
+  },
+  "streak.first": {
+    "zh": "今天也记下来了。小日子，一页一页攒起来。",
+    "en": "Today is kept. Little days add up, page by page."
+  },
+  "streak.keep": {
+    "zh": "又多了一页，明天见。",
+    "en": "One more page. See you tomorrow."
+  },
+  "streak.milestone.3": {
+    "zh": "三天了！一个小习惯正在长出来。",
+    "en": "Three days! A little habit is starting."
+  },
+  "streak.milestone.7": {
+    "zh": "整整一周！这一周都被好好收藏了。",
+    "en": "A whole week, kept."
+  },
+  "streak.milestone.14": {
+    "zh": "两周了，已经是一本小册子的厚度。",
+    "en": "Two weeks — that's a little booklet."
+  },
+  "streak.milestone.30": {
+    "zh": "一个月！这个月的你，都在书里。",
+    "en": "A month! All of this month is in your book."
+  },
+  "streak.milestone.50": {
+    "zh": "50 天，了不起的坚持。",
+    "en": "50 days — wonderful."
+  },
+  "streak.milestone.100": {
+    "zh": "100 天！值得为自己庆祝一下。",
+    "en": "100 days! Time to celebrate yourself."
+  },
+  "streak.milestone.200": {
+    "zh": "200 天，一大本生活之书。",
+    "en": "200 days — a big book of life."
+  },
+  "streak.milestone.365": {
+    "zh": "一整年！谢谢你一直记录。",
+    "en": "A whole year! Thank you for keeping it."
+  },
+  "streak.weekLabel": {
+    "zh": "本周记了 {count} 天",
+    "en": "{count} days this week"
+  },
+  "streak.thisWeek": {
+    "zh": "本周 {count} 天",
+    "en": "{count} this week"
+  },
+  "streak.next": {
+    "zh": "再 {count} 天到 {goal} 天",
+    "en": "{count} more to {goal}"
+  },
+  "streak.best": {
+    "zh": "最长 {count} 天",
+    "en": "Best {count}"
+  },
+  "streak.rest": {
+    "zh": "中间休息了一天，连续没有断。",
+    "en": "You took a rest day — the streak is still on."
+  },
+  "streak.restRule": {
+    "zh": "每周可以休息一天，连续不会断。",
+    "en": "One rest day a week won't break your streak."
+  },
+  "streak.ok": {
+    "zh": "好",
+    "en": "Nice"
+  },
+  "streak.write": {
+    "zh": "去记一页",
+    "en": "Add a page"
+  },
+  "streak.continue": {
+    "zh": "今天记一页，就到第 {count} 天了。",
+    "en": "Add a page today for day {count}."
+  },
+  "streak.begin": {
+    "zh": "今天记一页，从第 1 天开始。",
+    "en": "Add a page today to start at day 1."
+  },
+  "flip.label": {
+    "zh": "怎么看这本书",
+    "en": "How to read this book"
+  },
+  "flip.list": {
+    "zh": "列表",
+    "en": "List"
+  },
+  "flip.flip": {
+    "zh": "翻页",
+    "en": "Page by page"
+  },
+  "flip.start": {
+    "zh": "往后翻",
+    "en": "Turn the page"
+  },
+  "flip.hint": {
+    "zh": "左右滑动或点 ‹ › 翻页；电脑上可以用方向键。",
+    "en": "Swipe or tap ‹ › to turn pages; arrow keys work on a computer."
+  },
+  "flip.openDay": {
+    "zh": "打开这一天",
+    "en": "Open this day"
+  },
+  "music.title": {
+    "zh": "背景音乐",
+    "en": "Background music"
+  },
+  "music.short": {
+    "zh": "配乐",
+    "en": "Music"
+  },
+  "music.hint": {
+    "zh": "给这一页配一首轻音乐。看这一天、翻这本书时会轻轻循环播放；导出视频时也会带上。",
+    "en": "Give this page a soft piece of music. It loops quietly when you read the day or flip the book, and goes into the page's video."
+  },
+  "music.original": {
+    "zh": "全部是 Little Days 原创的轻音乐，可以放心用在你的页面、视频和书里。",
+    "en": "All original Little Days music — free to use in your pages, videos and books."
+  },
+  "music.use": {
+    "zh": "用这首",
+    "en": "Use"
+  },
+  "music.chosen": {
+    "zh": "✓ 已选",
+    "en": "✓ Chosen"
+  },
+  "music.none": {
+    "zh": "不要背景音乐",
+    "en": "No music"
+  },
+  "music.preview": {
+    "zh": "试听",
+    "en": "Listen"
+  },
+  "music.stopPreview": {
+    "zh": "暂停试听",
+    "en": "Pause"
+  },
+  "music.added": {
+    "zh": "已配上「{name}」",
+    "en": "Added “{name}”"
+  },
+  "music.removed": {
+    "zh": "这一页不放音乐了",
+    "en": "No music on this page"
+  },
+  "music.change": {
+    "zh": "换一首",
+    "en": "Change"
+  },
+  "music.toggle": {
+    "zh": "播放 / 暂停「{name}」",
+    "en": "Play / pause “{name}”"
+  },
+  "music.volume": {
+    "zh": "音乐音量",
+    "en": "Music volume"
+  },
+  "music.bookTitle": {
+    "zh": "这本书的音乐",
+    "en": "Music for this book"
+  },
+  "music.bookHint": {
+    "zh": "翻开《{name}》时轻轻循环播放；某一页自己选了音乐时，放那一页的。",
+    "en": "Plays softly while “{name}” is open; a page with its own music plays that instead."
+  },
+  "music.bookAdd": {
+    "zh": "给这本书配音乐",
+    "en": "Add music to this book"
+  },
+  "music.bookAdded": {
+    "zh": "这本书配上了「{name}」",
+    "en": "This book now plays “{name}”"
+  },
+  "music.bookRemoved": {
+    "zh": "这本书不放音乐了",
+    "en": "No music for this book"
+  },
+  "story.prompt": {
+    "zh": "今天有什么值得记录？",
+    "en": "What's worth keeping today?"
+  },
+  "story.promptHint": {
+    "zh": "选几张今天的照片，剩下的交给 Little Days。",
+    "en": "Pick a few photos from today — Little Days does the rest."
+  },
+  "story.pickPhotos": {
+    "zh": "选今天的照片",
+    "en": "Pick today's photos"
+  },
+  "story.justWrite": {
+    "zh": "只写几句",
+    "en": "Just write"
+  },
+  "story.justWriteHint": {
+    "zh": "不放照片，在纸上写一页",
+    "en": "No photos: write a page on paper"
+  },
+  "story.moreWays": {
+    "zh": "其他方式 ›",
+    "en": "More ways ›"
+  },
+  "story.noSetup": {
+    "zh": "不用先选手帐本、模板或字体 · 之后都能改",
+    "en": "No book, template or font to choose first — change anything later"
+  },
+  "story.photosTitle": {
+    "zh": "今天的 {count} 张照片",
+    "en": "Today's {count} photos"
+  },
+  "story.groupHint": {
+    "zh": "按拍摄时间分成了 {count} 个 Moment。点一张照片，可以把它移到前一个 / 后一个 Moment。",
+    "en": "Grouped by when they were taken into {count} Moments. Tap a photo to move it to the Moment before or after."
+  },
+  "story.splitHere": {
+    "zh": "在这里分开",
+    "en": "A new Moment"
+  },
+  "story.photos": {
+    "zh": "{count} 张",
+    "en": "{count} photos"
+  },
+  "story.photoActions": {
+    "zh": "这张照片",
+    "en": "This photo"
+  },
+  "story.toPrev": {
+    "zh": "前一个",
+    "en": "Earlier"
+  },
+  "story.toNext": {
+    "zh": "后一个",
+    "en": "Later"
+  },
+  "story.split": {
+    "zh": "从这张分开",
+    "en": "Split here"
+  },
+  "story.remove": {
+    "zh": "去掉",
+    "en": "Remove"
+  },
+  "story.keepOne": {
+    "zh": "至少留一张照片",
+    "en": "Keep at least one photo"
+  },
+  "story.layoutNow": {
+    "zh": "直接排版",
+    "en": "Lay out now"
+  },
+  "story.toLines": {
+    "zh": "下一步：每个 Moment 写一句",
+    "en": "Next: a line for each Moment"
+  },
+  "story.skipAll": {
+    "zh": "都可以跳过 · 不需要选模板",
+    "en": "Everything can be skipped — no template to pick"
+  },
+  "story.momentsTitle": {
+    "zh": "今天的 {count} 个 Moment",
+    "en": "Today's {count} Moments"
+  },
+  "story.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "story.into": {
+    "zh": "放进",
+    "en": "Into"
+  },
+  "story.lineLabel": {
+    "zh": "一句话",
+    "en": "A line"
+  },
+  "story.linePlaceholder": {
+    "zh": "写一句…（可以不写）",
+    "en": "A line… (optional)"
+  },
+  "story.make": {
+    "zh": "排成今天的故事",
+    "en": "Make today's story"
+  },
+  "story.previewTitle": {
+    "zh": "今天的故事",
+    "en": "Today's story"
+  },
+  "story.pages": {
+    "zh": "这几页",
+    "en": "Pages"
+  },
+  "story.page": {
+    "zh": "一页",
+    "en": "Page"
+  },
+  "story.adjust": {
+    "zh": "自己调整",
+    "en": "Adjust it myself"
+  },
+  "story.previewHelp": {
+    "zh": "每页都可以「换一种」；想自己挪照片、加贴纸就点「自己调整」。保存后会收进书里。",
+    "en": "“Shuffle” any page; “Adjust it myself” to move photos or add stickers. Saving puts it in your book."
+  },
+  "story.saved": {
+    "zh": "已收进《{name}》",
+    "en": "Saved in “{name}”"
+  },
+  "story.discard": {
+    "zh": "不做这个故事了吗？选的照片不会放进手帐。",
+    "en": "Leave this story? The photos won't go into your journal."
+  },
+  "story.more": {
+    "zh": "还有 {count} 个 Moment",
+    "en": "{count} more Moments"
+  },
+  "story.noTime": {
+    "zh": "没有时间",
+    "en": "No time"
+  },
+  "story.part.morning": {
+    "zh": "早上",
+    "en": "morning"
+  },
+  "story.part.afternoon": {
+    "zh": "下午",
+    "en": "afternoon"
+  },
+  "story.part.evening": {
+    "zh": "晚上",
+    "en": "evening"
+  },
+  "story.part.night": {
+    "zh": "夜里",
+    "en": "night"
+  },
+  "story.kit": {
+    "zh": "配色",
+    "en": "Style"
+  },
+  "story.style.editorial": {
+    "zh": "杂志",
+    "en": "Editorial"
+  },
+  "story.style.cozy": {
+    "zh": "手账",
+    "en": "Cozy"
+  },
+  "story.style.playful": {
+    "zh": "拼贴",
+    "en": "Collage"
+  },
+  "story.styleLabel": {
+    "zh": "风格",
+    "en": "Style"
+  },
+  "story.relayout": {
+    "zh": "重新排版",
+    "en": "Re-layout"
+  },
+  "story.addWords": {
+    "zh": "写一句",
+    "en": "Add words"
+  },
+  "story.editWords": {
+    "zh": "改文字",
+    "en": "Edit words"
+  },
+  "story.regroup": {
+    "zh": "调整分组",
+    "en": "Regroup"
+  },
+  "story.regroupDone": {
+    "zh": "完成，重新生成",
+    "en": "Done — make it again"
+  },
+  "story.customize": {
+    "zh": "自定义",
+    "en": "Customize"
+  },
+  "story.wordsTitle": {
+    "zh": "给这几个 Moment 写一句",
+    "en": "A line for these Moments"
+  },
+  "story.wordsHint": {
+    "zh": "都可以不写。写了会自动排进页面，看书时也会显示。",
+    "en": "All optional. Words go onto the page and show when you read the book."
+  },
+  "story.styleConfirm": {
+    "zh": "有 {count} 页是你自己调整过的。要一起换成新风格吗？（取消：保留这几页不动，只换其他页）",
+    "en": "{count} pages were adjusted by you. Restyle them too? (Cancel keeps them as they are and restyles the rest.)"
+  },
+  "story.relayoutConfirm": {
+    "zh": "这一页你自己调整过，重新排版会改掉你的调整。继续吗？",
+    "en": "You adjusted this page. Re-layout will undo your changes. Continue?"
+  },
+  "today.title": {
+    "zh": "今天",
+    "en": "Today"
+  },
+  "today.habits": {
+    "zh": "今天的小习惯",
+    "en": "Today's little habits"
+  },
+  "habits.book": {
+    "zh": "我的习惯",
+    "en": "My habits"
+  },
+  "habits.bookCount": {
+    "zh": "{count} 个习惯 · 本周打卡 {week} 次",
+    "en": "{count} habits · {week} check-ins this week"
+  },
+  "habits.bookHint": {
+    "zh": "成长之书、每周回顾、习惯设置都在这里",
+    "en": "The growth journey, weekly reflections and habit settings"
+  },
+  "habits.open": {
+    "zh": "打开",
+    "en": "Open"
+  },
+  "day.checklist": {
+    "zh": "今日清单",
+    "en": "Today's list"
+  },
+  "plan.title": {
+    "zh": "今天要做的事",
+    "en": "Today's plan"
+  },
+  "plan.hint": {
+    "zh": "写下今天要做的，做完打个勾 · 最多 8 件",
+    "en": "Write what's on today, tick it off · up to 8"
+  },
+  "plan.placeholder": {
+    "zh": "想做的一件事…",
+    "en": "Something to do…"
+  },
+  "plan.add": {
+    "zh": "加上",
+    "en": "Add"
+  },
+  "plan.remove": {
+    "zh": "删掉这件事",
+    "en": "Remove"
+  },
+  "plan.carry": {
+    "zh": "把昨天没做完的 {count} 件搬到今天",
+    "en": "Bring yesterday's {count} unfinished here"
+  },
+  "photo.swapped": {
+    "zh": "两张照片换了位置",
+    "en": "The two photos changed places"
+  },
+  "photo.replaceShort": {
+    "zh": "替换",
+    "en": "Replace"
+  },
+  "habit.manage": {
+    "zh": "编辑或删除这个习惯",
+    "en": "Edit or delete this habit"
+  },
+  "habit.manageShort": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "habit.deleteHint": {
+    "zh": "会先问你；它的打卡记录也会一起删除",
+    "en": "You're asked first; its check-ins go too"
+  },
+  "habit.edit": {
+    "zh": "编辑习惯",
+    "en": "Edit habit"
+  },
+  "habit.editHint": {
+    "zh": "改名字、类别或每周目标；已经打过的卡不会变。",
+    "en": "Change the name, theme or weekly goal; past check-ins stay."
+  },
+  "habit.delete": {
+    "zh": "删除这个习惯",
+    "en": "Delete this habit"
+  },
+  "habit.deleteConfirm": {
+    "zh": "删除「{name}」？它的 {count} 次打卡和心得也会一起删除，不能恢复。",
+    "en": "Delete “{name}”? Its {count} check-ins and notes go too, and can't be brought back."
+  },
+  "habit.deleted": {
+    "zh": "已删除「{name}」",
+    "en": "Deleted “{name}”"
+  },
+  "font.hei": {
+    "zh": "黑体（默认）",
+    "en": "Sans (default)"
+  },
+  "font.song": {
+    "zh": "宋体（默认）",
+    "en": "Serif (default)"
+  },
+  "font.kai": {
+    "zh": "楷体（默认）",
+    "en": "Kai (default)"
+  },
+  "settings.systemFonts": {
+    "zh": "黑体、宋体、楷体用的是你设备自带的字体（例如 iPhone 上的苹方、宋体），不随 App 分发，所以不需要另外的许可证；设备没有楷体时，会用 App 自带的霞鹜文楷代替。",
+    "en": "Sans, Serif and Kai use your device's own fonts (for example PingFang and Songti on iPhone), which are not shipped with the app, so no extra licence is needed; where the device has no Kai font, the bundled LXGW WenKai is used instead."
+  },
+  "story.datedFromPhotos": {
+    "zh": "这些照片是 {date} 拍的，已经记到那一天（预览里可以改日期）",
+    "en": "These photos were taken on {date}, so they go to that day (change the date in the preview)"
+  },
+  "story.previewTitleDay": {
+    "zh": "{date}的故事",
+    "en": "Story of {date}"
+  },
+  "story.day": {
+    "zh": "日期",
+    "en": "Day"
+  },
+  "story.backfill": {
+    "zh": "忘了记？补记昨天",
+    "en": "Forgot? Fill in yesterday"
+  },
+  "quick.start.lib": {
+    "zh": "用这张写一句话",
+    "en": "Write a line with this photo"
+  },
+  "quick.start.libPick": {
+    "zh": "先在上面选一张照片",
+    "en": "Pick a photo above first"
+  },
+  "quick.libFirst": {
+    "zh": "先选一张照片",
+    "en": "Pick a photo first"
+  },
+  "v9.pickPhotos": {
+    "zh": "选今天的照片",
+    "en": "Choose today's photos"
+  },
+  "v9.writeHint": {
+    "zh": "一句话也算一页",
+    "en": "One line is a page"
+  },
+  "v9.drawHint": {
+    "zh": "画下今天的颜色",
+    "en": "Draw today's colours"
+  },
+  "v9.moreHint": {
+    "zh": "模板 · 故事 · 声音",
+    "en": "Templates · stories · voice"
+  },
+  "v9.today": {
+    "zh": "今天的回忆",
+    "en": "Today's memories"
+  },
+  "v9.todayEmpty": {
+    "zh": "今天还没有记录",
+    "en": "Nothing kept today yet"
+  },
+  "add.background": {
+    "zh": "背景",
+    "en": "Background"
+  },
+  "paper.title": {
+    "zh": "纸张",
+    "en": "Paper"
+  },
+  "draft.saved": {
+    "zh": "已保存",
+    "en": "Saved"
+  },
+  "draft.saving": {
+    "zh": "保存中",
+    "en": "Saving"
+  },
+  "draft.failed": {
+    "zh": "保存失败",
+    "en": "Not saved"
+  },
+  "draft.retryOk": {
+    "zh": "已经重新保存好了。",
+    "en": "Saved again."
+  },
+  "draft.retryFailed": {
+    "zh": "还是没能保存，内容还在这一页上，请稍后再试。",
+    "en": "Still not saved. Your changes are kept on this page — try again in a moment."
+  },
+  "canvas.firstPhoto": {
+    "zh": "添加第一张照片",
+    "en": "Add your first photo"
+  },
+  "canvas.firstHint": {
+    "zh": "也可以点下面的「文字」直接写",
+    "en": "Or tap Text below and just write"
+  },
+  "strip.coverShort": {
+    "zh": "封",
+    "en": "C"
+  },
+  "studio.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "studio.preview": {
+    "zh": "预览",
+    "en": "Preview"
+  },
+  "studio.previewBack": {
+    "zh": "回到编辑",
+    "en": "Back to editing"
+  },
+  "studio.previewHint": {
+    "zh": "保存后就是这个样子",
+    "en": "This is how it will be kept"
+  },
+  "studio.pageOf": {
+    "zh": "第 {n} 页 · 共 {count} 页",
+    "en": "Page {n} of {count}"
+  },
+  "studio.coverOf": {
+    "zh": "这一天 · 共 {count} 页",
+    "en": "This day · {count} pages"
+  },
+  "studio.saveFailed": {
+    "zh": "没能保存。内容还在这一页上，可以再点一次「完成」。",
+    "en": "Could not save. Your changes are still on this page — tap Done again."
+  },
+  "studio.leaveUnsaved": {
+    "zh": "刚才的修改还没保存下来。现在离开，这些修改可能会丢失。仍然离开吗？",
+    "en": "Your latest changes are not saved yet. If you leave now they may be lost. Leave anyway?"
+  },
+  "tool.more": {
+    "zh": "更多工具",
+    "en": "More tools"
+  },
+  "tool.details": {
+    "zh": "页面信息",
+    "en": "Page details"
+  },
+  "dock.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "more.pages": {
+    "zh": "页面管理",
+    "en": "Pages"
+  },
+  "more.details": {
+    "zh": "页面信息",
+    "en": "Page details"
+  },
+  "more.mode": {
+    "zh": "换一种写法",
+    "en": "Change how this page is written"
+  },
+  "more.back": {
+    "zh": "回到更多工具",
+    "en": "Back to more tools"
+  },
+  "more.audio": {
+    "zh": "音频",
+    "en": "Audio"
+  },
+  "more.photos": {
+    "zh": "本页照片",
+    "en": "Photos here"
+  },
+  "more.media": {
+    "zh": "本页音视频",
+    "en": "Media here"
+  },
+  "sv.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "ctx.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "ctx.text": {
+    "zh": "文字",
+    "en": "Text"
+  },
+  "ctx.sticker": {
+    "zh": "贴纸",
+    "en": "Sticker"
+  },
+  "ctx.video": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "ctx.audio": {
+    "zh": "声音",
+    "en": "Sound"
+  },
+  "ctx.drawing": {
+    "zh": "手绘",
+    "en": "Drawing"
+  },
+  "ctx.growth": {
+    "zh": "打卡",
+    "en": "Check-in"
+  },
+  "ctx.deselect": {
+    "zh": "取消选择，回到工具",
+    "en": "Deselect, back to the tools"
+  },
+  "ctx.adjust": {
+    "zh": "调整",
+    "en": "Adjust"
+  },
+  "ctx.font": {
+    "zh": "字体",
+    "en": "Font"
+  },
+  "ctx.color": {
+    "zh": "颜色",
+    "en": "Colour"
+  },
+  "ctx.align": {
+    "zh": "对齐",
+    "en": "Align"
+  },
+  "ctx.layer": {
+    "zh": "图层",
+    "en": "Layer"
+  },
+  "type.align.left": {
+    "zh": "靠左",
+    "en": "Align left"
+  },
+  "type.align.center": {
+    "zh": "居中",
+    "en": "Centre"
+  },
+  "type.align.right": {
+    "zh": "靠右",
+    "en": "Align right"
+  },
+  "type.toBox": {
+    "zh": "转为自由文字框",
+    "en": "Make it a free text box"
+  },
+  "ts.title": {
+    "zh": "今天的故事",
+    "en": "Today's Story"
+  },
+  "ts.sub": {
+    "zh": "今天留下的 {count} 页",
+    "en": "Kept today · {count}"
+  },
+  "ts.subEmpty": {
+    "zh": "还没有记录",
+    "en": "Nothing kept yet"
+  },
+  "ts.open": {
+    "zh": "翻开这一页",
+    "en": "Read this page"
+  },
+  "ts.keptIn": {
+    "zh": "收藏于",
+    "en": "In"
+  },
+  "ts.also": {
+    "zh": "今天的其他页面",
+    "en": "Other pages today"
+  },
+  "ts.all": {
+    "zh": "今天的全部 {count} 页",
+    "en": "All of today · {count} pages"
+  },
+  "ts.sample": {
+    "zh": "示例",
+    "en": "Sample"
+  },
+  "ts.emptyTitle": {
+    "zh": "今天还没有写下故事。",
+    "en": "No story written today yet."
+  },
+  "ts.emptyBody": {
+    "zh": "或许可以从一张照片、一句话开始。",
+    "en": "Maybe start with one photo, or one line."
+  },
+  "ts.emptyGo": {
+    "zh": "选一张照片开始",
+    "en": "Start with a photo"
+  },
+  "ts.sceneGo": {
+    "zh": "或者用今日推荐的照片 · {name}",
+    "en": "Or use today's suggested photo · {name}"
+  },
+  "ts.recent": {
+    "zh": "最近的故事",
+    "en": "Latest story"
+  },
+  "ts.readRecent": {
+    "zh": "读最近的手帐",
+    "en": "Read the latest story"
+  },
+  "qu.title": {
+    "zh": "今天的小计划",
+    "en": "Today's little plans"
+  },
+  "qu.left": {
+    "zh": "还有 {count} 件事",
+    "en": "{count} left"
+  },
+  "qu.allDone": {
+    "zh": "都做完了",
+    "en": "All done"
+  },
+  "qu.none": {
+    "zh": "写一件想做的事",
+    "en": "Add one thing"
+  },
+  "qu.habits": {
+    "zh": "习惯",
+    "en": "Habits"
+  },
+  "lib.title": {
+    "zh": "我的手帐",
+    "en": "My Library"
+  },
+  "lib.sub": {
+    "zh": "{count} 本，慢慢写成书",
+    "en": "Journals in the making · {count}"
+  },
+  "lib.all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "lib.now": {
+    "zh": "正在记录",
+    "en": "Continuing"
+  },
+  "lib.start": {
+    "zh": "从这本开始",
+    "en": "Start here"
+  },
+  "lib.today": {
+    "zh": "今天更新",
+    "en": "updated today"
+  },
+  "lib.yesterday": {
+    "zh": "昨天更新",
+    "en": "updated yesterday"
+  },
+  "lib.on": {
+    "zh": "{date} 更新",
+    "en": "updated {date}"
+  },
+  "lib.write": {
+    "zh": "接着记一页",
+    "en": "Write the next page"
+  },
+  "lib.writeFirst": {
+    "zh": "写下第一页",
+    "en": "Write the first page"
+  },
+  "lib.emptyTitle": {
+    "zh": "书架还空着。",
+    "en": "The shelf is still empty."
+  },
+  "lib.emptyGo": {
+    "zh": "新建一本手帐",
+    "en": "Create a journal"
+  },
+  "kc.tap.none.0": {
+    "zh": "今天还没开张。有什么小事值得收一下吗？",
+    "en": "Nothing kept yet today. Any small thing worth saving?"
+  },
+  "kc.tap.none.1": {
+    "zh": "我在。今天要是只有一张照片，也算一页。",
+    "en": "I'm here. One photo counts as a page too."
+  },
+  "kc.tap.none.2": {
+    "zh": "本子今天还是空的，不急。",
+    "en": "Today's page is still blank. No hurry."
+  },
+  "kc.tap.none.3": {
+    "zh": "我刚数了一遍胶带。你那边今天怎么样？",
+    "en": "I just counted the tape again. How is your day going?"
+  },
+  "kc.tap.none.4": {
+    "zh": "想写的时候点上面那张卡片就行，我帮你收着。",
+    "en": "When you feel like it, tap the card above — I'll keep it safe."
+  },
+  "kc.tap.noneNight.0": {
+    "zh": "这么晚了。今天不写也没关系，明天再说。",
+    "en": "It's late. Skipping today is fine — tomorrow will do."
+  },
+  "kc.tap.noneNight.1": {
+    "zh": "我有点困了……要记的话，一句就够。",
+    "en": "I'm getting sleepy… if you want to keep something, one line is enough."
+  },
+  "kc.tap.noneNight.2": {
+    "zh": "夜里的小事也可以收进来，不过先睡也行。",
+    "en": "Night-time things can go in too. Or sleep first."
+  },
+  "kc.tap.back.0": {
+    "zh": "有 {days} 天没见到新页面了。不用补，想写的时候再写。",
+    "en": "No new pages for {days} days. Nothing to catch up on — write when you feel like it."
+  },
+  "kc.tap.back.1": {
+    "zh": "你来啦。这几天的事不记也没关系，从今天开始就好。",
+    "en": "You're here. The last few days don't need filling in — start from today."
+  },
+  "kc.tap.back.2": {
+    "zh": "我把书架看得好好的，一本都没少。",
+    "en": "I kept an eye on the shelf. Nothing is missing."
+  },
+  "kc.tap.first.0": {
+    "zh": "我是新来的，帮你看管这些本子。第一页想记点什么？",
+    "en": "I'm new here, looking after these journals. What goes on the first page?"
+  },
+  "kc.tap.first.1": {
+    "zh": "还没有页面呢。从一张照片开始怎么样？",
+    "en": "No pages yet. How about starting with one photo?"
+  },
+  "kc.tap.first.2": {
+    "zh": "第一页不用写得很好，写了就行。",
+    "en": "The first page doesn't have to be good. It just has to exist."
+  },
+  "kc.tap.one.0": {
+    "zh": "今天收了一页：「{title}」。我已经放好了。",
+    "en": "One page today: “{title}”. I've put it away safely."
+  },
+  "kc.tap.one.1": {
+    "zh": "今天有一页了，不错。",
+    "en": "There's a page today. Nice."
+  },
+  "kc.tap.one.2": {
+    "zh": "今天有一页了。再来一页也行，不来也行。",
+    "en": "One page today. Another would be nice; none is fine too."
+  },
+  "kc.tap.one.3": {
+    "zh": "「{title}」——这个名字我喜欢。",
+    "en": "“{title}” — I like that name."
+  },
+  "kc.tap.many.0": {
+    "zh": "今天收了 {count} 页，我一页一页放好了。",
+    "en": "{count} pages today. I put them away one by one."
+  },
+  "kc.tap.many.1": {
+    "zh": "今天 {count} 页，本子厚了一点点。",
+    "en": "{count} pages today. The journal got a little thicker."
+  },
+  "kc.tap.many.2": {
+    "zh": "{count} 页了。今天好像发生了不少事。",
+    "en": "{count} pages. Looks like a lot happened today."
+  },
+  "kc.tap.many.3": {
+    "zh": "今天的页面都放好了，一共 {count} 页，我数过。",
+    "en": "Today's pages are all in place — {count} of them. I counted."
+  },
+  "kc.tap.photos.0": {
+    "zh": "今天放进来 {photos} 张照片，相册热闹起来了。",
+    "en": "{photos} photos came in today. The album is getting lively."
+  },
+  "kc.tap.photos.1": {
+    "zh": "{photos} 张照片——今天很上镜。",
+    "en": "{photos} photos — today was photogenic."
+  },
+  "kc.tap.photos.2": {
+    "zh": "照片有 {photos} 张，胶带差点不够用。",
+    "en": "{photos} photos. I nearly ran out of tape."
+  },
+  "kc.saved.photos.0": {
+    "zh": "这页有 {photos} 张照片——今天很上镜。",
+    "en": "{photos} photos on this page — today was photogenic."
+  },
+  "kc.saved.photos.1": {
+    "zh": "{photos} 张照片都贴好了，一张没歪……大概。",
+    "en": "All {photos} photos are in. None crooked… probably."
+  },
+  "kc.saved.photos.2": {
+    "zh": "这页照片多，以后翻到会很热闹。",
+    "en": "Lots of photos here. It'll be lively to look back on."
+  },
+  "kc.saved.media.0": {
+    "zh": "这页会动、会响，以后翻到会很热闹。",
+    "en": "This page moves and makes sounds — it'll be lively to come back to."
+  },
+  "kc.saved.media.1": {
+    "zh": "声音也收进来了，以后可以再听。",
+    "en": "The sound is saved too. You can hear it again later."
+  },
+  "kc.saved.first.0": {
+    "zh": "今天的第一页，收好了。",
+    "en": "Today's first page is put away."
+  },
+  "kc.saved.first.1": {
+    "zh": "收到。今天开张了。",
+    "en": "Got it. Today is open for business."
+  },
+  "kc.saved.more.0": {
+    "zh": "今天第 {count} 页了，本子又厚了一点。",
+    "en": "Page {count} today. The journal is a little thicker."
+  },
+  "kc.saved.more.1": {
+    "zh": "又一页。今天的事还真不少。",
+    "en": "Another page. Quite a day."
+  },
+  "kc.saved.words.0": {
+    "zh": "这页只有字，安安静静的，我喜欢。",
+    "en": "Only words on this page. Quiet. I like it."
+  },
+  "kc.saved.words.1": {
+    "zh": "字我一个没动，原样收好了。",
+    "en": "I didn't touch a word. It's kept as written."
+  },
+  "kc.saved.words.2": {
+    "zh": "有时候几行字就够了。",
+    "en": "Sometimes a few lines are enough."
+  },
+  "kc.shelf.count.0": {
+    "zh": "这里有你的 {count} 本手帐，我都看着。",
+    "en": "Your {count} journals are here. I'm watching them all."
+  },
+  "kc.shelf.count.1": {
+    "zh": "{count} 本，一本都没乱跑。",
+    "en": "{count} journals. None of them wandered off."
+  },
+  "kc.shelf.latest.0": {
+    "zh": "最近写的是《{title}》。",
+    "en": "The one you wrote in most recently is “{title}”."
+  },
+  "kc.shelf.latest.1": {
+    "zh": "《{title}》最近常被翻开。",
+    "en": "“{title}” has been opened a lot lately."
+  },
+  "kc.shelf.untagged.0": {
+    "zh": "有 {untagged} 本还没有标签。加一个，找起来会快一点。",
+    "en": "{untagged} journals have no tags yet. One tag makes them quicker to find."
+  },
+  "kc.shelf.tidy.0": {
+    "zh": "每本都有标签，整整齐齐。",
+    "en": "Every journal has its tags. Very tidy."
+  },
+  "kc.shelf.tidy.1": {
+    "zh": "书架今天很整齐，不是我弄的，是你。",
+    "en": "The shelf is tidy today. That was you, not me."
+  },
+  "kp.entry": {
+    "zh": "找{name}",
+    "en": "Ask {name}"
+  },
+  "kp.sub": {
+    "zh": "My Little Keeper · {mode}",
+    "en": "My Little Keeper · {mode}"
+  },
+  "kp.say": {
+    "zh": "和{name}说点什么…",
+    "en": "Say something to {name}…"
+  },
+  "kp.do.organize": {
+    "zh": "整理今天的故事",
+    "en": "Sort out today's story"
+  },
+  "kp.do.organizeHint": {
+    "zh": "把今天的页面按时间理一理",
+    "en": "Put today's pages in order"
+  },
+  "kp.do.memory": {
+    "zh": "回顾以前的回忆",
+    "en": "Look back at a memory"
+  },
+  "kp.do.memoryHint": {
+    "zh": "在这台设备上翻一页旧手帐",
+    "en": "Open an old page, on this device"
+  },
+  "kp.do.write": {
+    "zh": "帮我写一句话",
+    "en": "Help me write a line"
+  },
+  "kp.do.writeHint": {
+    "zh": "需要 AI 小管家，还没有开放",
+    "en": "Needs the AI keeper, not available yet"
+  },
+  "kp.do.chat": {
+    "zh": "和{name}聊聊",
+    "en": "Chat with {name}"
+  },
+  "kp.do.chatHint": {
+    "zh": "它现在只会几件简单的事",
+    "en": "It only knows a few simple things for now"
+  },
+  "kp.local": {
+    "zh": "这些回应都在这台设备上生成，不会发送你的手帐。",
+    "en": "These replies are made on this device. Your journal is not sent anywhere."
+  },
+  "kp.writeLater": {
+    "zh": "代写要等 AI 小管家，现在还没有。我不想假装会——你写，我来收。",
+    "en": "Writing for you needs the AI keeper, which isn't here yet. I won't pretend — you write, I'll keep it."
+  },
+  "kp.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "kp.org.title": {
+    "zh": "今天的故事",
+    "en": "Today's story"
+  },
+  "kp.org.none": {
+    "zh": "今天还没有页面。等有了第一页，我再来理。",
+    "en": "No pages yet today. I'll sort them once the first one is in."
+  },
+  "kp.org.start": {
+    "zh": "选一张照片开始",
+    "en": "Start with a photo"
+  },
+  "kp.org.sum": {
+    "zh": "今天 {count} 页 · {photos} 张照片",
+    "en": "{count} pages today · {photos} photos"
+  },
+  "kp.org.sumMedia": {
+    "zh": "今天 {count} 页 · {photos} 张照片 · 有视频或声音",
+    "en": "{count} pages today · {photos} photos · with video or sound"
+  },
+  "kp.org.cover": {
+    "zh": "「{title}」有 {photos} 张照片，适合放在前面当今天的封面。",
+    "en": "“{title}” has {photos} photos — a good one to lead the day."
+  },
+  "kp.org.untitled": {
+    "zh": "有 {count} 页还没有名字，起一个以后好找。",
+    "en": "{count} pages have no name yet. A name makes them easier to find."
+  },
+  "kp.org.order": {
+    "zh": "我按时间排了一下（只是给你看，没有改动手帐）。",
+    "en": "I put them in time order (just for you to see — nothing in the journal was changed)."
+  },
+  "kp.org.open": {
+    "zh": "翻开今天",
+    "en": "Open today"
+  },
+  "kp.mem.title": {
+    "zh": "以前的一页",
+    "en": "A page from before"
+  },
+  "kp.mem.ask": {
+    "zh": "要让{name}翻看以前的页面吗？",
+    "en": "Let {name} look at earlier pages?"
+  },
+  "kp.mem.askBody": {
+    "zh": "只在这台设备上翻，不会发送到任何地方。随时可以在设置 → 角色与装扮里关掉。",
+    "en": "Only on this device; nothing is sent anywhere. You can turn it off in Settings → Character & look."
+  },
+  "kp.mem.allow": {
+    "zh": "可以，翻一页给我看",
+    "en": "Yes, show me a page"
+  },
+  "kp.mem.no": {
+    "zh": "先不用",
+    "en": "Not now"
+  },
+  "kp.mem.none": {
+    "zh": "以前的页面还不多，我们慢慢攒。",
+    "en": "There aren't many earlier pages yet. We'll build them up."
+  },
+  "kp.mem.found": {
+    "zh": "我翻到了这一页。",
+    "en": "I found this page."
+  },
+  "kp.mem.open": {
+    "zh": "翻开这一页",
+    "en": "Open this page"
+  },
+  "kp.mem.next": {
+    "zh": "换一页",
+    "en": "Another one"
+  },
+  "kp.untitled": {
+    "zh": "没有名字的一页",
+    "en": "A page with no name"
+  },
+  "s2.kicker": {
+    "zh": "设置",
+    "en": "Settings"
+  },
+  "s2.noName": {
+    "zh": "还没有名字",
+    "en": "No name yet"
+  },
+  "s2.localSpace": {
+    "zh": "本机个人空间 · 资料和手帐只保存在这台设备，没有云端账号",
+    "en": "Your space on this device · profile and journals stay here; there is no cloud account"
+  },
+  "s2.editProfile": {
+    "zh": "编辑资料",
+    "en": "Edit profile"
+  },
+  "s2.nameLabel": {
+    "zh": "名字",
+    "en": "Name"
+  },
+  "s2.namePlaceholder": {
+    "zh": "想让 Little Days 怎么称呼你",
+    "en": "What should Little Days call you?"
+  },
+  "s2.avatarLabel": {
+    "zh": "头像",
+    "en": "Avatar"
+  },
+  "s2.profileNote": {
+    "zh": "只保存在这台设备。第一个是名字的首字。",
+    "en": "Kept on this device only. The first one is the first letter of your name."
+  },
+  "s2.save": {
+    "zh": "保存",
+    "en": "Save"
+  },
+  "s2.profileSaved": {
+    "zh": "资料已保存在这台设备。",
+    "en": "Profile saved on this device."
+  },
+  "s2.keeper": {
+    "zh": "Little Keeper",
+    "en": "Little Keeper"
+  },
+  "s2.keeperLine": {
+    "zh": "{mode}陪伴 · {stage}",
+    "en": "{mode} · {stage}"
+  },
+  "s2.keeperManage": {
+    "zh": "角色与装扮",
+    "en": "Character & look"
+  },
+  "s2.keeperOff": {
+    "zh": "关闭",
+    "en": "Off"
+  },
+  "s2.keeperWhere": {
+    "zh": "聊天、装扮在 Captain 的小角落里；这里只管设置。",
+    "en": "Chat and looks are in Captain's Corner; this page is only for settings."
+  },
+  "s2.notInQuiet": {
+    "zh": "安静方式下不可用。",
+    "en": "Not available in Quiet mode."
+  },
+  "s2.look": {
+    "zh": "外观与偏好",
+    "en": "Look & Preferences"
+  },
+  "s2.data": {
+    "zh": "数据与隐私",
+    "en": "Data & Privacy"
+  },
+  "s2.storage": {
+    "zh": "本机存储",
+    "en": "On this device"
+  },
+  "s2.storageNote": {
+    "zh": "手帐、照片、视频和声音都只在这台设备上，不会上传。换手机或清理浏览器前请先备份。",
+    "en": "Journals, photos, video and sound stay on this device and are not uploaded. Back up before changing phones or clearing the browser."
+  },
+  "s2.backup": {
+    "zh": "备份与恢复",
+    "en": "Backup & restore"
+  },
+  "s2.ai": {
+    "zh": "AI 小管家",
+    "en": "AI Keeper"
+  },
+  "s2.aiNot": {
+    "zh": "尚未接入",
+    "en": "Not available yet"
+  },
+  "s2.aiNote": {
+    "zh": "现在没有任何 AI：Captain 的回应都在这台设备上生成，不会发送你的手帐。将来如果加入，会先单独征得你的同意。",
+    "en": "There is no AI at present: Captain's replies are made on this device and your journal is not sent anywhere. If it is added later, it will ask for your consent first."
+  },
+  "s2.privacyNotes": {
+    "zh": "隐私说明",
+    "en": "Privacy notes"
+  },
+  "s2.about": {
+    "zh": "关于与更多",
+    "en": "About & More"
+  },
+  "s2.tour": {
+    "zh": "功能介绍",
+    "en": "Feature tour"
+  },
+  "s2.tourAgain": {
+    "zh": "再看一次",
+    "en": "Replay"
+  },
+  "s2.sampleDays": {
+    "zh": "{count} 天示例",
+    "en": "{count} sample days"
+  },
+  "s2.on": {
+    "zh": "已开启",
+    "en": "On"
+  },
+  "s2.off": {
+    "zh": "未开启",
+    "en": "Off"
+  },
+  "s2.welcome": {
+    "zh": "回到欢迎页",
+    "en": "Back to the welcome page"
+  },
+  "s2.dataKept": {
+    "zh": "数据保留",
+    "en": "Data kept"
+  },
+  "kp.send": {
+    "zh": "发送",
+    "en": "Send"
+  },
+  "kp.sending": {
+    "zh": "正在发送…",
+    "en": "Sending…"
+  },
+  "kp.thinking": {
+    "zh": "正在想…",
+    "en": "Thinking…"
+  },
+  "type.marks": {
+    "zh": "文字格式",
+    "en": "Text format"
+  },
+  "type.mark.bold": {
+    "zh": "加粗",
+    "en": "Bold"
+  },
+  "type.mark.italic": {
+    "zh": "斜体",
+    "en": "Italic"
+  },
+  "type.mark.underline": {
+    "zh": "下划线",
+    "en": "Underline"
+  },
+  "type.mark.strike": {
+    "zh": "删除线",
+    "en": "Strikethrough"
+  },
+  "type.markNotHere": {
+    "zh": "这一行带时间或被截短显示，暂时不能只给一部分加格式。",
+    "en": "This line is shown with a time or cut short, so part of it cannot be formatted yet."
+  },
+  "rich.demoTitle": {
+    "zh": "文字格式示例",
+    "en": "Text format example"
+  },
+  "rich.demoAdded": {
+    "zh": "示例页已放进今天，可以随便改，也可以删掉。",
+    "en": "The example page is in today — change it freely, or delete it."
+  },
+  "status.draft": {
+    "zh": "草稿",
+    "en": "Draft"
+  },
+  "status.completed": {
+    "zh": "已完成",
+    "en": "Completed"
+  },
+  "exit.title": {
+    "zh": "要先收好这一页吗？",
+    "en": "Put this away first?"
+  },
+  "exit.note": {
+    "zh": "内容已经自动保存在这台设备（共 {count} 页）。现在可以把它收进手帐本，或者先留作草稿、下次接着做。",
+    "en": "Everything is already saved on this device ({count} page(s)). Finish it into your journal, or keep it as a draft to carry on later."
+  },
+  "exit.noteCompleted": {
+    "zh": "这篇手帐已经完成过。刚才的修改已自动保存在这台设备（共 {count} 页）。",
+    "en": "This entry was finished before. Your changes are already saved on this device ({count} page(s))."
+  },
+  "exit.complete": {
+    "zh": "完成手帐",
+    "en": "Finish entry"
+  },
+  "exit.completeHint": {
+    "zh": "收进手帐本；以后还可以再打开修改。不会发布或分享。",
+    "en": "Into your journal; you can open and change it later. Nothing is published or shared."
+  },
+  "exit.draft": {
+    "zh": "保存草稿",
+    "en": "Keep as draft"
+  },
+  "exit.draftHint": {
+    "zh": "封面、每一页、照片位置和文字格式都原样留着，下次从这里继续。",
+    "en": "The cover, every page, photo positions and text formatting stay as they are; carry on from here next time."
+  },
+  "exit.keepEditing": {
+    "zh": "继续编辑",
+    "en": "Keep editing"
+  },
+  "exit.draftKept": {
+    "zh": "草稿收好了，随时回来继续。",
+    "en": "Draft kept — come back to it any time."
+  },
+  "exit.draftFailed": {
+    "zh": "没能保存草稿。内容还在这一页上，请再试一次。",
+    "en": "The draft could not be saved. Your work is still on this page — please try again."
+  },
+  "look.title": {
+    "zh": "装扮",
+    "en": "Look"
+  },
+  "look.hat": {
+    "zh": "帽子",
+    "en": "Hats"
+  },
+  "look.accessory": {
+    "zh": "小配件",
+    "en": "Little things"
+  },
+  "look.note": {
+    "zh": "想换就换，不需要解锁。更多帽子和小配件画好后会出现在这里。",
+    "en": "Change it whenever you like — nothing to unlock. More hats and little things will appear here once they are drawn."
+  },
+  "look.say": {
+    "zh": "今天想让{name}是什么样子？",
+    "en": "How should {name} look today?"
+  },
+  "kc.chat.morning.0": {
+    "zh": "早安。我刚醒，胡子还是歪的。",
+    "en": "Morning. I just woke up — my whiskers are still crooked."
+  },
+  "kc.chat.morning.1": {
+    "zh": "早呀。今天也慢慢来。",
+    "en": "Morning. Let's take today slowly."
+  },
+  "kc.chat.night.0": {
+    "zh": "晚安。本子我会看好的。",
+    "en": "Good night. I'll keep an eye on the journals."
+  },
+  "kc.chat.night.1": {
+    "zh": "去睡吧，我也要把尾巴盘起来了。",
+    "en": "Off to sleep. I'm curling my tail up too."
+  },
+  "kc.chat.compliment.0": {
+    "zh": "嘿嘿，被你发现啦。",
+    "en": "Hehe, you noticed."
+  },
+  "kc.chat.compliment.1": {
+    "zh": "真的嘛？那我今天要多开心一会儿。",
+    "en": "Really? Then I'll stay happy a little longer today."
+  },
+  "kc.chat.compliment.2": {
+    "zh": "那……可以再摸摸我的头吗？",
+    "en": "Then… could you pat my head again?"
+  },
+  "kc.chat.hat.0": {
+    "zh": "这顶柠檬帽是我最喜欢的，你眼光真好。",
+    "en": "This lemon hat is my favourite. Good eye."
+  },
+  "kc.chat.hat.1": {
+    "zh": "嘿嘿，帽子上的叶子是我自己扶正的。",
+    "en": "Hehe, I straightened the leaf on it myself."
+  },
+  "kc.chat.hat.2": {
+    "zh": "真的好看吗？那我今天就不摘了。",
+    "en": "Does it really look nice? Then it's staying on today."
+  },
+  "kc.chat.hatOff.0": {
+    "zh": "今天没戴帽子，在抱毛线球呢。柠檬帽在「装扮」里，想看可以换回来。",
+    "en": "No hat today — I'm hugging my yarn ball. The lemon hat is under Look if you want it back."
+  },
+  "kc.chat.pet.0": {
+    "zh": "呼噜呼噜……再往左边一点。",
+    "en": "Purr… a little more to the left."
+  },
+  "kc.chat.pet.1": {
+    "zh": "嗯，耳朵后面最舒服。",
+    "en": "Mm, behind the ears is the best spot."
+  },
+  "kc.chat.pet.2": {
+    "zh": "好呀。抱一下，然后继续看本子。",
+    "en": "Okay. One hug, then back to minding the journals."
+  },
+  "kc.chat.play.0": {
+    "zh": "好呀！不过我的毛线球玩法还在练，先陪你坐一会儿？",
+    "en": "Yes! My yarn-ball game still needs practice though. Sit with me for a bit first?"
+  },
+  "kc.chat.play.1": {
+    "zh": "想玩……可我现在只会坐好、看本子。玩的部分还在准备。",
+    "en": "I'd love to… but for now I only know how to sit and mind the journals. Playing is still being got ready."
+  },
+  "kc.chat.care.0": {
+    "zh": "我在看书架，数到一半忘了数到哪儿了。",
+    "en": "I was looking at the shelf and lost count halfway."
+  },
+  "kc.chat.care.1": {
+    "zh": "我挺好的。你来了就更好了。",
+    "en": "I'm good. Better now you're here."
+  },
+  "kc.chat.care.2": {
+    "zh": "刚打了个盹，现在醒了。你呢？",
+    "en": "Just had a nap. Awake now. And you?"
+  },
+  "kc.chat.thanks.0": {
+    "zh": "不客气，我就是看本子的。",
+    "en": "Any time. Looking after journals is my job."
+  },
+  "kc.chat.thanks.1": {
+    "zh": "嗯，我也喜欢陪着你。",
+    "en": "Mm. I like keeping you company too."
+  },
+  "kc.chat.thanks.2": {
+    "zh": "不用谢，下次也叫我。",
+    "en": "No need. Call me next time too."
+  },
+  "kc.chat.happy.0": {
+    "zh": "真好。开心的日子值得记一笔。",
+    "en": "Lovely. A happy day is worth a line."
+  },
+  "kc.chat.happy.1": {
+    "zh": "听起来今天不错！我尾巴都翘起来了。",
+    "en": "Sounds like a good day! My tail's up."
+  },
+  "kc.chat.happy.2": {
+    "zh": "开心就好。要把这份开心收进本子里吗？",
+    "en": "I'm glad. Want to keep a little of it in the journal?"
+  },
+  "kc.chat.sad.0": {
+    "zh": "嗯……难过的时候不用急着说清楚。我在这儿。",
+    "en": "Mm… no need to explain when you're sad. I'm here."
+  },
+  "kc.chat.sad.1": {
+    "zh": "抱抱你。今天不写也没关系。",
+    "en": "A hug for you. It's fine not to write today."
+  },
+  "kc.chat.sad.2": {
+    "zh": "我陪你坐一会儿。想说的时候再说。",
+    "en": "I'll sit with you. Talk when you want to."
+  },
+  "kc.chat.tired.0": {
+    "zh": "听起来今天不太轻松。先歇一会儿吧。",
+    "en": "Sounds like today wasn't easy. Rest a little first."
+  },
+  "kc.chat.tired.1": {
+    "zh": "辛苦了。累的时候，一句话就够了。",
+    "en": "That sounds tiring. On tired days, one line is plenty."
+  },
+  "kc.chat.tired.2": {
+    "zh": "嗯。这样的日子，早点休息也很好。",
+    "en": "Mm. On a day like this, an early night is good too."
+  },
+  "kc.chat.done.0": {
+    "zh": "写完啦？那这一页我收好了。",
+    "en": "Done? Then I'll keep this page safe."
+  },
+  "kc.chat.done.1": {
+    "zh": "好耶，本子又厚了一点点。",
+    "en": "Yay — the journal got a little thicker."
+  },
+  "kc.chat.done.2": {
+    "zh": "收到。写完的感觉不错吧？",
+    "en": "Got it. Feels good to finish, doesn't it?"
+  },
+  "kc.chat.doneTired.0": {
+    "zh": "累的时候还写完了一页，真的很厉害。",
+    "en": "Tired, and you still finished a page — that's really something."
+  },
+  "kc.chat.doneTired.1": {
+    "zh": "辛苦了。写完了，就可以好好休息啦。",
+    "en": "Well done. It's written — now you can rest."
+  },
+  "kc.chat.doneTired.2": {
+    "zh": "累归累，这一页收好了。早点睡吧。",
+    "en": "Tired, yes, but the page is kept. Get some sleep."
+  },
+  "kc.chat.doneHappy.0": {
+    "zh": "开心，还写完了，今天满分。",
+    "en": "Happy, and it's written — full marks today."
+  },
+  "kc.chat.doneHappy.1": {
+    "zh": "真好！今天的本子一定很热闹。",
+    "en": "Lovely! Today's journal must be a lively one."
+  },
+  "kc.chat.notYet.0": {
+    "zh": "还没写也没关系，今天还没结束呢。",
+    "en": "Not written yet is fine — today isn't over."
+  },
+  "kc.chat.notYet.1": {
+    "zh": "不写也可以。想记的时候，一张照片就够。",
+    "en": "Skipping is fine too. When you want to, one photo is enough."
+  },
+  "kc.chat.notYet.2": {
+    "zh": "嗯，不急。本子会等你的。",
+    "en": "No rush. The journal will wait."
+  },
+  "kc.chat.notYetTired.0": {
+    "zh": "累的时候不写也没关系，先休息。",
+    "en": "When you're tired, it's fine not to write. Rest first."
+  },
+  "kc.chat.notYetTired.1": {
+    "zh": "辛苦了。今天就先这样，我帮你看着本子。",
+    "en": "You've done enough today. Leave it there — I'll mind the journal."
+  },
+  "kc.chat.planned.0": {
+    "zh": "好，我等你。",
+    "en": "Okay, I'll wait for you."
+  },
+  "kc.chat.planned.1": {
+    "zh": "嗯，到时候我在这儿。",
+    "en": "Mm. I'll be here when you do."
+  },
+  "kc.chat.abilities.0": {
+    "zh": "我会的不多：理一理今天的页面、翻一页以前的回忆、看看这周写了什么、看看书架。也可以陪你说说话。",
+    "en": "Not much yet: sort out today's pages, look back at an old page, see what you wrote this week, look at the shelf. And keep you company."
+  },
+  "kc.chat.unknown.0": {
+    "zh": "嗯……这句我没太懂，不过我在听。",
+    "en": "Hmm… I didn't quite get that, but I'm listening."
+  },
+  "kc.chat.unknown.1": {
+    "zh": "这个我不太确定。你多说一点？",
+    "en": "I'm not sure about that one. Tell me a bit more?"
+  },
+  "kc.chat.unknown.2": {
+    "zh": "唔，我还在想这句是什么意思。",
+    "en": "Mm, I'm still working out what that means."
+  },
+  "kc.chat.greet.0": {
+    "zh": "在呢。今天过得怎么样？",
+    "en": "Here. How's your day going?"
+  },
+  "kc.chat.greet.1": {
+    "zh": "嗨。我刚在数页码。",
+    "en": "Hi. I was just counting pages."
+  },
+  "kc.chat.greet.2": {
+    "zh": "我在。你说。",
+    "en": "Here. Go on."
+  },
+  "corner.chat": {
+    "zh": "聊天",
+    "en": "Chat"
+  },
+  "corner.play": {
+    "zh": "玩耍",
+    "en": "Play"
+  },
+  "corner.look": {
+    "zh": "装扮",
+    "en": "Look"
+  },
+  "corner.tabs": {
+    "zh": "Captain 的小角落",
+    "en": "Captain's Corner"
+  },
+  "corner.playTitle": {
+    "zh": "一起玩，还在准备",
+    "en": "Playing together is on its way"
+  },
+  "corner.playNote": {
+    "zh": "摸摸头、挠肚皮、玩毛线球都需要 Captain 的正式动画。画好之前，不做粗糙的版本。",
+    "en": "Head pats, belly rubs and the yarn ball all need Captain's real animation. Until it's drawn, there won't be a rough version."
+  },
+  "corner.playPat": {
+    "zh": "摸摸头",
+    "en": "Head pats"
+  },
+  "corner.playBelly": {
+    "zh": "挠肚皮",
+    "en": "Belly rubs"
+  },
+  "corner.playYarn": {
+    "zh": "玩毛线球",
+    "en": "Yarn ball"
+  },
+  "corner.soon": {
+    "zh": "准备中",
+    "en": "On its way"
+  },
+  "corner.playMeanwhile": {
+    "zh": "现在可以在「聊天」里说「摸摸你」。",
+    "en": "For now, you can say “pat you” in Chat."
+  },
+  "corner.expand": {
+    "zh": "展开",
+    "en": "Expand"
+  },
+  "corner.shrink": {
+    "zh": "收起",
+    "en": "Collapse"
+  },
+  "kp.short.organize": {
+    "zh": "整理今天",
+    "en": "Sort out today"
+  },
+  "kp.short.memory": {
+    "zh": "回顾回忆",
+    "en": "Look back"
+  },
+  "kp.short.write": {
+    "zh": "帮我写一句",
+    "en": "Write a line"
+  },
+  "kp.quick": {
+    "zh": "快捷操作",
+    "en": "Shortcuts"
+  },
+  "kc.tap.one.4": {
+    "zh": "今天这一页收好了。剩下的时间，慢慢过。",
+    "en": "Today's page is put away. Take the rest of the day slowly."
+  },
+  "kc.tap.one.5": {
+    "zh": "有一页了。我把它摆在书架最前面。",
+    "en": "One page in. I've put it at the front of the shelf."
+  },
+  "s2.myWorld": {
+    "zh": "我的小世界",
+    "en": "My little world"
+  },
+  "s2.nameWorld": {
+    "zh": "给这个世界起个名字吧",
+    "en": "Give this world a name"
+  },
+  "s2.keeperPlay": {
+    "zh": "和{name}玩一会儿",
+    "en": "Spend a moment with {name}"
+  },
+  "s2.backupShort": {
+    "zh": "手帐和照片只在这台设备上。换手机或清理浏览器前，先备份到文件。",
+    "en": "Journals and photos live only on this device. Back up to a file before changing phones or clearing the browser."
+  },
+  "s2.hideTodayShort": {
+    "zh": "首页「今天」只显示页数，不显示照片和文字。",
+    "en": "Home’s “Today” shows only the page count — no photos or words."
+  },
+  "s2.shareListShort": {
+    "zh": "默认关闭。打开后，导出的图片和 PDF 会带上当天清单。",
+    "en": "Off by default. When on, exported pictures and PDFs include the day’s list."
+  },
+  "s2.aiShort": {
+    "zh": "现在没有 AI，不会发送你的手帐。",
+    "en": "There is no AI now; your journal is never sent."
+  },
+  "reader.start": {
+    "zh": "开始翻阅",
+    "en": "Read Book"
+  },
+  "reader.continue": {
+    "zh": "继续翻阅 · 第 {n} 页",
+    "en": "Continue reading · page {n}"
+  },
+  "reader.fromCover": {
+    "zh": "从封面开始",
+    "en": "Start from the cover"
+  },
+  "reader.hint": {
+    "zh": "封面 + {count} 页 · 点封面也可以翻开",
+    "en": "Cover + {count} pages · tap the cover to open it"
+  },
+  "reader.last": {
+    "zh": "上次看到「{title}」",
+    "en": "Last read: “{title}”"
+  },
+  "reader.coverPos": {
+    "zh": "封面 · 共 {count} 页",
+    "en": "Cover · {count} pages"
+  },
+  "reader.pagePos": {
+    "zh": "第 {n} / {count} 页",
+    "en": "Page {n} of {count}"
+  },
+  "reader.coverEntry": {
+    "zh": "封面",
+    "en": "Cover"
+  },
+  "reader.back": {
+    "zh": "返回书本",
+    "en": "Back to the book"
+  },
+  "reader.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "reader.thumbs": {
+    "zh": "所有页面",
+    "en": "All pages"
+  },
+  "reader.thumbsHint": {
+    "zh": "封面 + {count} 页 · 点一页直接翻到那里",
+    "en": "Cover + {count} pages · tap one to go there"
+  },
+  "reader.edit": {
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  "reader.editBook": {
+    "zh": "编辑书本",
+    "en": "Edit book"
+  },
+  "reader.swipe": {
+    "zh": "向左滑动翻开 ›",
+    "en": "Swipe left to open ›"
+  },
+  "reader.empty": {
+    "zh": "这本书还没有页面",
+    "en": "This book has no pages yet"
+  },
+  "reader.full": {
+    "zh": "阅读全文",
+    "en": "Read the full text"
+  },
+  "reader.musicOn": {
+    "zh": "播放这本书的音乐",
+    "en": "Play this book's music"
+  },
+  "reader.musicOff": {
+    "zh": "暂停音乐",
+    "en": "Pause the music"
+  },
+  "reader.unzoom": {
+    "zh": "还原大小",
+    "en": "Reset zoom"
+  },
+  "reader.toCover": {
+    "zh": "回到封面",
+    "en": "Back to the cover"
+  },
+  "reader.label": {
+    "zh": "翻页",
+    "en": "Turn pages"
+  },
+  "guide.count": {
+    "zh": "{n} / {count}",
+    "en": "{n} / {count}"
+  },
+  "guide.skip": {
+    "zh": "跳过",
+    "en": "Skip"
+  },
+  "guide.next": {
+    "zh": "下一步",
+    "en": "Next"
+  },
+  "guide.prev": {
+    "zh": "上一步",
+    "en": "Back"
+  },
+  "guide.done": {
+    "zh": "知道了",
+    "en": "Got it"
+  },
+  "guide.move.title": {
+    "zh": "移动元素",
+    "en": "Move things around"
+  },
+  "guide.move.body": {
+    "zh": "按住并拖动，给照片和文字换个位置。",
+    "en": "Press and drag to give a photo or your words a new spot."
+  },
+  "guide.move.bodyEmpty": {
+    "zh": "放上照片或文字后，按住并拖动，就能给它们换个位置。",
+    "en": "Once a photo or some words are on the page, press and drag to move them."
+  },
+  "guide.type.title": {
+    "zh": "编辑文字",
+    "en": "Edit your words"
+  },
+  "guide.type.body": {
+    "zh": "双击文字，直接开始写。",
+    "en": "Double-tap the words and start writing."
+  },
+  "guide.type.bodyAdd": {
+    "zh": "先点下方的「文字」放一个文字框，再双击它，就能直接写。",
+    "en": "Tap Text below to add a text box, then double-tap it to start writing."
+  },
+  "guide.adjust.title": {
+    "zh": "调整布局",
+    "en": "Adjust the layout"
+  },
+  "guide.adjust.body": {
+    "zh": "轻点选中元素，用控制点调整：拖动上方的 ↻ 转角度，拖动角上的圆点改大小。",
+    "en": "Tap to select, then use the handles: drag ↻ above to turn it, the corner dot to resize."
+  },
+  "guide.adjust.bodyEmpty": {
+    "zh": "放上内容后，轻点选中它，再用控制点调整大小和角度。",
+    "en": "Once something is on the page, tap to select it and use the handles to resize and turn it."
+  },
+  "guide.tip.dblTap": {
+    "zh": "双击即可编辑文字",
+    "en": "Double-tap to edit the words"
+  },
+  "more.guide": {
+    "zh": "操作指南",
+    "en": "How to"
+  },
+  "type.colour.2b2622": {
+    "zh": "墨黑",
+    "en": "Ink"
+  },
+  "type.colour.6f675d": {
+    "zh": "灰褐",
+    "en": "Taupe"
+  },
+  "type.colour.6a7059": {
+    "zh": "橄榄绿",
+    "en": "Olive"
+  },
+  "type.colour.7d8e66": {
+    "zh": "鼠尾草绿",
+    "en": "Sage"
+  },
+  "type.colour.b5838d": {
+    "zh": "干玫瑰",
+    "en": "Dusty rose"
+  },
+  "type.colour.6d8299": {
+    "zh": "雾蓝",
+    "en": "Mist blue"
+  },
+  "type.colour.c08b5c": {
+    "zh": "焦糖",
+    "en": "Caramel"
+  },
+  "type.colour.fffdf8": {
+    "zh": "纸白",
+    "en": "Paper white"
+  },
+  "kp.localAI": {
+    "zh": "本机模型 · 开发",
+    "en": "Local model · dev"
   }
 }

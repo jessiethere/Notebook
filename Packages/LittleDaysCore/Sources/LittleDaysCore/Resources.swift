@@ -11,6 +11,9 @@ public struct NavigationTab: Decodable, Identifiable {
     public let title: String
     public let subtitle: String
     public let symbol: String
+    /// V6.6: false = a page without its own tab (Growth lives on Home's
+    /// "today" card and in the "My habits" book).
+    public let inNav: Bool?
 }
 
 public struct MaterialTemplate: Decodable, Identifiable {
@@ -42,6 +45,8 @@ public struct Seed: Decodable {
     public let habits: [Habit]
     public let books: [JournalBook]
     public let journals: [JournalSeed]
+    /// Scene ids for "scene:daily" (the sample page's picture of the day).
+    public let dailyScenes: [String]?
 }
 
 public struct FontAsset: Decodable, Identifiable {
@@ -66,10 +71,114 @@ public struct StickerAsset: Decodable, Identifiable {
     public let license: String
 }
 
+/// Original artwork used as page backgrounds (gradients, patterns, sky ...).
+/// The hand-drawn "life" scenes are `retired`: no longer offered, still shown
+/// on pages that already use them.
+public struct SceneAsset: Decodable, Identifiable {
+    public let id: String
+    /// life / color / ribbons / kaleido / pattern / sky
+    public let collection: String?
+    public let category: String
+    public let nameZh: String
+    public let nameEn: String
+    public let file: String
+    public let license: String
+    public let retired: Bool?
+    /// "dark": words on this background are set in white.
+    public let tone: String?
+}
+
+/// Real photos for a page's picture (Unsplash License; `source` is the original).
+/// Original background music (tools/make_music.py), played on a loop.
+public struct MusicAsset: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let moodZh: String
+    public let moodEn: String
+    public let bpm: Int
+    public let seconds: Double
+    public let file: String
+    public let source: String
+    public let license: String
+}
+
+/// V6.4: one style for a whole day (paper, fonts, ink, accent, stickers).
+public struct StoryKit: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let swatch: String
+    public let paper: String
+    public let titleFont: String
+    public let lineFont: String
+    public let ink: String
+    public let accent: String
+    public let stickers: [String]
+    public let playful: Bool
+}
+
+public struct PhotoAsset: Decodable, Identifiable {
+    public let id: String
+    public let collection: String
+    public let nameZh: String
+    public let nameEn: String
+    public let file: String
+    /// Pixel size of the bundled file (its own shape: landscape or portrait).
+    public let w: Int?
+    public let h: Int?
+    public let source: String
+    public let license: String
+    /// Also offered as a whole-page background ("照片氛围").
+    public let backdrop: Bool?
+    /// "dark": words on it as a background are set in white.
+    public let tone: String?
+}
+
+public struct SceneCollection: Decodable, Identifiable {
+    public let id: String
+    public let nameZh: String
+    public let nameEn: String
+    public let descZh: String
+    public let descEn: String
+}
+
+/// One cut-out of the approved Captain Character Reference (provided by the
+/// product owner; see Keepers/LD-keeper-LICENSE.txt).
+public struct KeeperAsset: Decodable, Identifiable {
+    public let id: String
+    public let animal: String
+    public let outfit: String
+    public let mood: String
+    public let file: String
+    public let license: String
+}
+
+/// V10.8: one look in Captain's wardrobe (library.json "keeperLooks"). `id`
+/// is a `KeeperAsset.outfit`; `kind` is "hat" or "accessory". Only looks with
+/// approved artwork are listed; nothing is unlocked or earned.
+public struct KeeperLook: Decodable, Identifiable {
+    public let id: String
+    public let animal: String
+    public let kind: String
+    public let nameZh: String
+    public let nameEn: String
+    public let noteZh: String?
+    public let noteEn: String?
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
     public let stickers: [StickerAsset]
+    public let scenes: [SceneAsset]?
+    public let sceneCollections: [SceneCollection]?
+    public let photos: [PhotoAsset]?
+    public let photoCollections: [SceneCollection]?
+    public let music: [MusicAsset]?
+    public let keepers: [KeeperAsset]?
+    public let keeperLooks: [KeeperLook]?
+    public let kits: [StoryKit]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
 }
@@ -81,6 +190,10 @@ public enum SharedResources {
         switch category {
         case "fonts": allowed = Set(catalog.fonts.flatMap { [$0.file, $0.license] })
         case "stickers": allowed = Set(catalog.stickers.flatMap { [$0.file, $0.nativeFile, $0.license] })
+        case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
+        case "photos": allowed = Set((catalog.photos ?? []).flatMap { [$0.file, $0.license] })
+        case "music": allowed = Set((catalog.music ?? []).flatMap { [$0.file, $0.license] })
+        case "keepers": allowed = Set((catalog.keepers ?? []).flatMap { [$0.file, $0.license] })
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

@@ -19,7 +19,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'Public'
 TARGET = ROOT / 'Native/Sources/LittleDaysUI/WebApp'
-SUFFIXES = {'.html', '.css', '.js', '.mjs'}
+SUFFIXES = {'.html', '.css', '.js', '.mjs', '.png'}  # .png: the web icons in Public/icons/
 
 
 def web_files():

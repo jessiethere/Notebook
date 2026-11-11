@@ -34,6 +34,13 @@ public struct GrowthReflection: Codable, Identifiable, Equatable {
     public var updatedAt: String?
 }
 
+/// V6.6 (Labs): one thing to do today; done ones show on the day's list.
+public struct DayPlan: Codable, Identifiable, Equatable {
+    public var id: String
+    public var text: String
+    public var done: Bool
+}
+
 public struct JournalBook: Codable, Identifiable, Equatable {
     public var id: String
     public var title: String
@@ -44,9 +51,16 @@ public struct JournalBook: Codable, Identifiable, Equatable {
     public var coverTemplate: String?
     public var coverFont: String?
     public var coverDecoration: String?
+    /// "media:<id>" (own upload) or "photo:<id>" (photo library); magazine covers use it.
     public var coverImage: String?
+    /// The sample journals were switched to magazine covers once.
+    public var coverRestyled: Bool?
     public var visibility: String?
     public var fields: [BookField]?
+    /// V6.2: music that plays while this book is open (library.json "music" id).
+    public var music: String?
+    /// V7.6: my own tags for this book ("阅读", "健身", …), for the shelf filter and search.
+    public var tags: [String]?
 }
 
 public struct BookField: Codable, Identifiable, Equatable {
@@ -69,6 +83,9 @@ public struct JournalMedia: Codable, Identifiable, Equatable {
     public var poster: String?
     /// "recording" for microphone voice notes.
     public var origin: String?
+    /// V3.8: a video's own pixel size, so portrait clips land upright.
+    public var width: Double?
+    public var height: Double?
 }
 
 public struct JournalTextStyle: Codable, Equatable {
@@ -76,6 +93,42 @@ public struct JournalTextStyle: Codable, Equatable {
     public var color: String?
     public var weight: Int?
     public var spacing: Double?
+    /// V10.1: "left" / "center" / "right" for a page's title or words (optional; absent = the page's own alignment).
+    public var align: String?
+}
+
+/// V10.6 rich text: bold / italic / underline / strikethrough on part of a
+/// text. The words stay a plain `String` (`title`, `body`, a text box's
+/// `text`); a mark is a range over that string. `start` / `end` are UTF-16
+/// offsets (end exclusive) — the same unit as a JavaScript string index in
+/// the Web app and as `NSRange` over `NSString` here, so
+/// `NSRange(location: start, length: end - start)` names the same characters
+/// on both sides. Stored lists are sorted and do not overlap; a page without
+/// formatting has no list at all. Absent flags mean "off".
+public struct TextMark: Codable, Equatable {
+    public var start: Int
+    public var end: Int
+    public var bold: Bool?
+    public var italic: Bool?
+    public var underline: Bool?
+    public var strike: Bool?
+
+    public init(start: Int, end: Int, bold: Bool? = nil, italic: Bool? = nil, underline: Bool? = nil, strike: Bool? = nil) {
+        self.start = start
+        self.end = end
+        self.bold = bold
+        self.italic = italic
+        self.underline = underline
+        self.strike = strike
+    }
+
+    /// The range in an `NSString` / `NSAttributedString` of `text`, clipped to it.
+    public func nsRange(in text: String) -> NSRange {
+        let length = (text as NSString).length
+        let from = max(0, min(start, length))
+        let to = max(from, min(end, length))
+        return NSRange(location: from, length: to - from)
+    }
 }
 
 public enum JSONValue: Codable, Equatable {
@@ -118,6 +171,8 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var weight: Int?
     public var spacing: Double?
     public var align: String?
+    /// V10.6: formatting on parts of `text` (kind == "text"); nil = plain.
+    public var marks: [TextMark]?
     // V3.1 free layout. x/y are the centre in % of the canvas, w is % of canvas width, h % of canvas height.
     public var w: Double?
     public var h: Double?
@@ -127,6 +182,31 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // kind == "growth": a live card that references a HabitCheck instead of copying it.
     public var habitId: String?
     public var checkDate: String?
+    // kind == "video" / "audio": a clip from the page's media placed on the paper.
+    public var clipId: String?
+    // kind == "photo", V3.6 photo editor: mediaRef is the edited picture,
+    // sourceRef the untouched original, edit the settings to re-edit from it.
+    public var sourceRef: String?
+    public var edit: PhotoEdit?
+    // V3.8: landscape / portrait / square / circle / arch / heart / film.
+    public var shape: String?
+    // V5.2: a hand drawing (kind == "photo", a transparent PNG trimmed to the
+    // ink); it keeps its place instead of joining photo layouts.
+    public var drawing: Bool?
+    // V5.3: the photo's own shape (width / height), for the smart layout.
+    public var aspect: Double?
+    // V6.4: a sticker the story kit placed in an empty corner (replaced when
+    // the page's look or kit changes).
+    public var deco: Bool?
+    // V6.5 (Quick Create V2): made by the layout engine (replaced on re-layout);
+    // a text bound to a Moment's own words ("title" / "time"), `of` the Moment
+    // id on the day spread, shown as an excerpt / after the time / on a chip.
+    public var gen: Bool?
+    public var bind: String?
+    public var of: String?
+    public var excerpt: Int?
+    public var prefix: String?
+    public var chip: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -137,6 +217,30 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
         self.scale = 1
         self.rotation = -12
     }
+}
+
+/// Photo editor settings (filters, crop ratio, adjustments, title on the picture).
+public struct PhotoEdit: Codable, Equatable {
+    public var filter: String?
+    public var brightness: Double?
+    public var contrast: Double?
+    public var saturation: Double?
+    public var warmth: Double?
+    public var ratio: String?
+    public var zoom: Double?
+    public var x: Double?
+    public var y: Double?
+    public var rotate: Int?
+    public var text: PhotoEditText?
+}
+
+public struct PhotoEditText: Codable, Equatable {
+    public var value: String
+    public var style: String?
+    public var color: String?
+    public var size: Double?
+    public var x: Double?
+    public var y: Double?
 }
 
 public struct LayerCrop: Codable, Equatable {
@@ -156,11 +260,32 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var bookId: String?
     public var template: String?
     public var font: String?
+    // V6.7: the words' own font (the type bar changes title and words apart).
+    public var bodyFont: String?
+    // V5.5: the look of this page's title and words (type bar).
+    public var textStyle: JournalTextStyle?
+    public var bodyStyle: JournalTextStyle?
+    /// V10.6: formatting on parts of `title` / `body`; nil = plain.
+    public var titleMarks: [TextMark]?
+    public var bodyMarks: [TextMark]?
     public var layers: [StickerLayer]?
     public var media: [JournalMedia]?
     public var collapsed: Bool?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
+    // three looks (clean / scrapbook / hero) is shown.
+    public var layoutVariant: Int?
+    /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
+    public var layoutStyle: String?
+    /// Page background, e.g. "scene:color-peach" (library.json "scenes").
+    public var backdrop: String?
+    /// V6.0: background music for this page, a library.json "music" id.
+    public var music: String?
+    /// V6.3: when this Moment's photos were taken (ISO 8601), from today's story.
+    public var capturedAt: String?
+    /// V6.4: the story kit (library.json "kits" id) this page is styled with.
+    public var kit: String?
     public var visibility: String?
     public var updatedAt: String?
     public var savedAt: String?
@@ -182,11 +307,30 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var media: [JournalMedia]?
     public var fieldValues: [String: JSONValue]?
     public var textStyle: JournalTextStyle?
+    // V5.5: size / colour chosen for the page's words in the type bar.
+    public var bodyStyle: JournalTextStyle?
     public var bodyFont: String?
+    /// V10.6: formatting on parts of `title` / `body`; nil = plain.
+    public var titleMarks: [TextMark]?
+    public var bodyMarks: [TextMark]?
+    /// V10.7: "draft" (still being made) or "completed" (finished). It belongs
+    /// to the whole record — the cover and all its pages — never to one page.
+    /// nil (records saved before V10.7) means completed. Being saved on the
+    /// device is a separate matter: a draft is saved too.
+    public var status: String?
+    /// V6.0: background music for the day's cover page (library.json "music" id).
+    public var music: String?
     public var visibility: String?
     public var moments: [JournalMoment]?
     public var layoutTemplate: String?
     public var layoutEdited: Bool?
+    // V5.3: layoutTemplate "smart" keeps each photo's own shape; which of its
+    // three looks (clean / scrapbook / hero) is shown.
+    public var layoutVariant: Int?
+    /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
+    public var layoutStyle: String?
+    /// Page background, e.g. "scene:color-peach" (library.json "scenes").
+    public var backdrop: String?
 
     public init(id: String = UUID().uuidString, date: String, title: String = "", body: String = "", mood: String = "☀️", bookId: String = "daily", photo: String = "", template: String = "cute", font: String = "serif", isDemo: Bool = false) {
         self.id = id
@@ -207,6 +351,11 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     }
 }
 
+public extension JournalEntry {
+    /// V10.7: true while the record is still being made.
+    var isDraft: Bool { status == "draft" }
+}
+
 public struct DayState: Codable {
     public var schemaVersion = 1
     public var habits: [Habit]
@@ -215,6 +364,10 @@ public struct DayState: Codable {
     public var checks: [HabitCheck]
     public var drafts: [String: JournalEntry]
     public var reflections: [GrowthReflection]?
+    /// V6.6 (Labs): things to do, by day ("yyyy-MM-dd"), at most 5 each.
+    public var plans: [String: [DayPlan]]?
+    /// V7.7: the optional Little Keeper companion (absent until chosen).
+    public var keeper: KeeperProfile?
 
     public init(seed: Seed, today: String = DayKey.string()) {
         habits = seed.habits
@@ -249,4 +402,31 @@ public struct DayState: Codable {
         let end = DayKey.adding(6, to: start)
         return checks.filter { $0.habitId == habitId && $0.date >= start && $0.date <= end }.count
     }
+}
+
+/// V7.7 Little Keeper: the companion's profile and permissions. Growth is
+/// derived from the journal (never stored); `revisits` only lists the days an
+/// "On this day" memory was opened. All optional, so older journals decode.
+public struct KeeperProfile: Codable, Equatable {
+    public var enabled: Bool?
+    /// "cat" (Captain) — the only companion since V8.0; older values read as Captain
+    public var animal: String?
+    /// A hat from the character art (library.json "keepers" outfit); nil = default.
+    public var outfit: String?
+    public var name: String?
+    /// "quiet" | "gentle" | "interactive"
+    public var mode: String?
+    /// May look at earlier pages (on the device), Interactive mode only.
+    public var allowMemories: Bool?
+    /// May speak first, Interactive mode only.
+    public var proactive: Bool?
+    /// May send a page to a secure AI service (none is connected yet).
+    public var aiConsent: Bool?
+    /// "shown" | "dismissed" — the one-time invitation on Today.
+    public var invite: String?
+    public var lastStage: Int?
+    public var revisits: [String]?
+    /// Ids of recently used reply phrases (to avoid repeating itself).
+    public var recent: [String]?
+    public var since: String?
 }

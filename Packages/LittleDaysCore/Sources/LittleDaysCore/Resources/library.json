@@ -367,6 +367,30 @@
   ],
   "coverTemplates": [
     {
+      "id": "magazine-jp",
+      "title": "Japanese Magazine"
+    },
+    {
+      "id": "magazine-west",
+      "title": "Western Magazine"
+    },
+    {
+      "id": "magazine-mono",
+      "title": "Mono Magazine"
+    },
+    {
+      "id": "magazine-film",
+      "title": "Film Magazine"
+    },
+    {
+      "id": "magazine-minimal",
+      "title": "Minimal Magazine"
+    },
+    {
+      "id": "magazine-collage",
+      "title": "Collage Magazine"
+    },
+    {
       "id": "minimal-linen",
       "title": "Minimal Linen"
     },
@@ -1018,6 +1042,1555 @@
           "options": []
         }
       ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "coffee-morning",
+      "collection": "life",
+      "category": "daily",
+      "nameZh": "早晨的咖啡",
+      "nameEn": "Morning coffee",
+      "file": "LD-scene-coffee-morning.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "sunrise-hills",
+      "collection": "life",
+      "category": "nature",
+      "nameZh": "山坡日出",
+      "nameEn": "Sunrise hills",
+      "file": "LD-scene-sunrise-hills.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "rainy-window",
+      "collection": "life",
+      "category": "daily",
+      "nameZh": "雨天窗边",
+      "nameEn": "Rainy window",
+      "file": "LD-scene-rainy-window.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "tulip-vase",
+      "collection": "life",
+      "category": "daily",
+      "nameZh": "一瓶郁金香",
+      "nameEn": "Tulips in a vase",
+      "file": "LD-scene-tulip-vase.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "beach-waves",
+      "collection": "life",
+      "category": "travel",
+      "nameZh": "海边的风",
+      "nameEn": "By the sea",
+      "file": "LD-scene-beach-waves.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "city-night",
+      "collection": "life",
+      "category": "travel",
+      "nameZh": "城市夜晚",
+      "nameEn": "City night",
+      "file": "LD-scene-city-night.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "picnic",
+      "collection": "life",
+      "category": "daily",
+      "nameZh": "草地野餐",
+      "nameEn": "Picnic",
+      "file": "LD-scene-picnic.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "book-tea",
+      "collection": "life",
+      "category": "daily",
+      "nameZh": "书和一杯茶",
+      "nameEn": "Book and tea",
+      "file": "LD-scene-book-tea.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "cat-window",
+      "collection": "life",
+      "category": "pets",
+      "nameZh": "窗台上的猫",
+      "nameEn": "Cat by the window",
+      "file": "LD-scene-cat-window.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "mountain-lake",
+      "collection": "life",
+      "category": "travel",
+      "nameZh": "山与湖",
+      "nameEn": "Mountain lake",
+      "file": "LD-scene-mountain-lake.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "autumn-leaves",
+      "collection": "life",
+      "category": "nature",
+      "nameZh": "秋天的树",
+      "nameEn": "Autumn leaves",
+      "file": "LD-scene-autumn-leaves.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "birthday-cake",
+      "collection": "life",
+      "category": "celebration",
+      "nameZh": "生日蛋糕",
+      "nameEn": "Birthday cake",
+      "file": "LD-scene-birthday-cake.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "color-peach",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "蜜桃晨光",
+      "nameEn": "Peach glow",
+      "file": "LD-scene-color-peach.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-ocean",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "海的颜色",
+      "nameEn": "Ocean",
+      "file": "LD-scene-color-ocean.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-lavender",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "薰衣草黄昏",
+      "nameEn": "Lavender dusk",
+      "file": "LD-scene-color-lavender.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-mint",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "薄荷清晨",
+      "nameEn": "Mint morning",
+      "file": "LD-scene-color-mint.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-rose",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "玫瑰金",
+      "nameEn": "Rose gold",
+      "file": "LD-scene-color-rose.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "color-midnight",
+      "collection": "color",
+      "category": "color",
+      "nameZh": "午夜霓虹",
+      "nameEn": "Midnight neon",
+      "file": "LD-scene-color-midnight.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark"
+    },
+    {
+      "id": "ribbons-aurora",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "极光丝带",
+      "nameEn": "Aurora ribbons",
+      "file": "LD-scene-ribbons-aurora.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "ribbons-sunset",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "落日丝带",
+      "nameEn": "Sunset ribbons",
+      "file": "LD-scene-ribbons-sunset.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "ribbons-candy",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "糖果丝带",
+      "nameEn": "Candy ribbons",
+      "file": "LD-scene-ribbons-candy.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "ribbons-ember",
+      "collection": "ribbons",
+      "category": "ribbons",
+      "nameZh": "余烬",
+      "nameEn": "Embers",
+      "file": "LD-scene-ribbons-ember.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "kaleido-lagoon",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "泻湖",
+      "nameEn": "Lagoon",
+      "file": "LD-scene-kaleido-lagoon.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "kaleido-garden",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "花园",
+      "nameEn": "Garden",
+      "file": "LD-scene-kaleido-garden.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "kaleido-sunrise",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "朝霞",
+      "nameEn": "Sunrise",
+      "file": "LD-scene-kaleido-sunrise.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "retired": true
+    },
+    {
+      "id": "kaleido-violet",
+      "collection": "kaleido",
+      "category": "kaleido",
+      "nameZh": "紫晶",
+      "nameEn": "Amethyst",
+      "file": "LD-scene-kaleido-violet.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "pattern-clouds",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "云朵和小蜜蜂",
+      "nameEn": "Clouds & bees",
+      "file": "LD-scene-pattern-clouds.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-flowers",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "满天小花",
+      "nameEn": "Little flowers",
+      "file": "LD-scene-pattern-flowers.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "pattern-stars",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "星星月亮",
+      "nameEn": "Stars & moons",
+      "file": "LD-scene-pattern-stars.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark"
+    },
+    {
+      "id": "pattern-hearts",
+      "collection": "pattern",
+      "category": "pattern",
+      "nameZh": "小爱心",
+      "nameEn": "Little hearts",
+      "file": "LD-scene-pattern-hearts.svg",
+      "license": "LittleDays-Original-Scenes.txt"
+    },
+    {
+      "id": "sky-blue-planet",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "蓝色星球",
+      "nameEn": "Blue planet",
+      "file": "LD-scene-sky-blue-planet.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "sky-ringed",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "土星环",
+      "nameEn": "Ringed planet",
+      "file": "LD-scene-sky-ringed.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    },
+    {
+      "id": "sky-moon",
+      "collection": "sky",
+      "category": "sky",
+      "nameZh": "月光",
+      "nameEn": "Moonlight",
+      "file": "LD-scene-sky-moon.svg",
+      "license": "LittleDays-Original-Scenes.txt",
+      "tone": "dark",
+      "retired": true
+    }
+  ],
+  "sceneCollections": [
+    {
+      "id": "color",
+      "nameZh": "渐变色彩",
+      "nameEn": "Color",
+      "descZh": "柔和的光与颜色，铺满整页。",
+      "descEn": "Soft light and color across the page."
+    },
+    {
+      "id": "pattern",
+      "nameZh": "可爱图案",
+      "nameEn": "Patterns",
+      "descZh": "云朵、小花、星星和爱心。",
+      "descEn": "Clouds, flowers, stars and hearts."
+    }
+  ],
+  "photos": [
+    {
+      "id": "coffee-cheers",
+      "collection": "coffee",
+      "nameZh": "一起喝咖啡",
+      "nameEn": "Coffee together",
+      "file": "LD-photo-coffee-cheers.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "latte-art",
+      "collection": "coffee",
+      "nameZh": "拉花拿铁",
+      "nameEn": "Latte art",
+      "file": "LD-photo-latte-art.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "latte-beans",
+      "collection": "coffee",
+      "nameZh": "咖啡豆与拿铁",
+      "nameEn": "Latte and beans",
+      "file": "LD-photo-latte-beans.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1511920170033-f8396924c348",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "corner-cafe",
+      "collection": "coffee",
+      "nameZh": "街角咖啡馆",
+      "nameEn": "Corner café",
+      "file": "LD-photo-corner-cafe.jpg",
+      "w": 1000,
+      "h": 661,
+      "source": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "workday-coffee",
+      "collection": "coffee",
+      "nameZh": "工作日的咖啡",
+      "nameEn": "Workday coffee",
+      "file": "LD-photo-workday-coffee.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1499750310107-5fef28a66643",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "desk-corner",
+      "collection": "coffee",
+      "nameZh": "桌面一角",
+      "nameEn": "Desk corner",
+      "file": "LD-photo-desk-corner.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "brunch",
+      "collection": "food",
+      "nameZh": "周末早午餐",
+      "nameEn": "Weekend brunch",
+      "file": "LD-photo-brunch.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "good-bowl",
+      "collection": "food",
+      "nameZh": "一碗元气",
+      "nameEn": "A bowl of goodness",
+      "file": "LD-photo-good-bowl.jpg",
+      "w": 1000,
+      "h": 681,
+      "source": "https://images.unsplash.com/photo-1490645935967-10de6ba17061",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "fresh-salad",
+      "collection": "food",
+      "nameZh": "清爽沙拉",
+      "nameEn": "Fresh salad",
+      "file": "LD-photo-fresh-salad.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "home-dinner",
+      "collection": "food",
+      "nameZh": "家常好菜",
+      "nameEn": "Home cooking",
+      "file": "LD-photo-home-dinner.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "pizza",
+      "collection": "food",
+      "nameZh": "分享披萨",
+      "nameEn": "Pizza to share",
+      "file": "LD-photo-pizza.jpg",
+      "w": 828,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "dinner-out",
+      "collection": "food",
+      "nameZh": "晚餐约会",
+      "nameEn": "Dinner out",
+      "file": "LD-photo-dinner-out.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "strawberry-cups",
+      "collection": "sweet",
+      "nameZh": "草莓杯",
+      "nameEn": "Strawberry cups",
+      "file": "LD-photo-strawberry-cups.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1488477181946-6428a0291777",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "donuts",
+      "collection": "sweet",
+      "nameZh": "甜甜圈",
+      "nameEn": "Donuts",
+      "file": "LD-photo-donuts.jpg",
+      "w": 800,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1551024601-bec78aea704b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "ice-cream",
+      "collection": "sweet",
+      "nameZh": "冰淇淋",
+      "nameEn": "Ice cream",
+      "file": "LD-photo-ice-cream.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "sundae",
+      "collection": "sweet",
+      "nameZh": "巧克力圣代",
+      "nameEn": "Chocolate sundae",
+      "file": "LD-photo-sundae.jpg",
+      "w": 562,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1563805042-7684c019e1cb",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "cookies",
+      "collection": "sweet",
+      "nameZh": "刚出炉的饼干",
+      "nameEn": "Fresh cookies",
+      "file": "LD-photo-cookies.jpg",
+      "w": 800,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "party-cake",
+      "collection": "sweet",
+      "nameZh": "彩虹蛋糕",
+      "nameEn": "Party cake",
+      "file": "LD-photo-party-cake.jpg",
+      "w": 1000,
+      "h": 912,
+      "source": "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "spring-blooms",
+      "collection": "flowers",
+      "nameZh": "春天小黄花",
+      "nameEn": "Spring blooms",
+      "file": "LD-photo-spring-blooms.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "bouquet",
+      "collection": "flowers",
+      "nameZh": "一束花",
+      "nameEn": "A bouquet",
+      "file": "LD-photo-bouquet.jpg",
+      "w": 1000,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1487530811176-3780de880c2d",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "sunflowers",
+      "collection": "flowers",
+      "nameZh": "向日葵",
+      "nameEn": "Sunflowers",
+      "file": "LD-photo-sunflowers.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1455659817273-f96807779a8a",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "cherry-blossom",
+      "collection": "flowers",
+      "nameZh": "樱花",
+      "nameEn": "Cherry blossom",
+      "file": "LD-photo-cherry-blossom.jpg",
+      "w": 1000,
+      "h": 662,
+      "source": "https://images.unsplash.com/photo-1522383225653-ed111181a951",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
+    },
+    {
+      "id": "little-cactus",
+      "collection": "flowers",
+      "nameZh": "小仙人掌",
+      "nameEn": "Little cactus",
+      "file": "LD-photo-little-cactus.jpg",
+      "w": 816,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "succulent",
+      "collection": "flowers",
+      "nameZh": "多肉",
+      "nameEn": "Succulent",
+      "file": "LD-photo-succulent.jpg",
+      "w": 1000,
+      "h": 666,
+      "source": "https://images.unsplash.com/photo-1485955900006-10f4d324d411",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "lazy-cat",
+      "collection": "pets",
+      "nameZh": "慵懒小猫",
+      "nameEn": "Lazy cat",
+      "file": "LD-photo-lazy-cat.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "happy-dog",
+      "collection": "pets",
+      "nameZh": "开心狗狗",
+      "nameEn": "Happy dog",
+      "file": "LD-photo-happy-dog.jpg",
+      "w": 1000,
+      "h": 750,
+      "source": "https://images.unsplash.com/photo-1543466835-00a7907e9de1",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "stair-cat",
+      "collection": "pets",
+      "nameZh": "楼梯上的猫",
+      "nameEn": "Cat on the stairs",
+      "file": "LD-photo-stair-cat.jpg",
+      "w": 750,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1495360010541-f48722b34f7d",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "running-pups",
+      "collection": "pets",
+      "nameZh": "一起奔跑",
+      "nameEn": "Running together",
+      "file": "LD-photo-running-pups.jpg",
+      "w": 1000,
+      "h": 668,
+      "source": "https://images.unsplash.com/photo-1548199973-03cce0bbc87b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "ginger-cat",
+      "collection": "pets",
+      "nameZh": "橘猫",
+      "nameEn": "Ginger cat",
+      "file": "LD-photo-ginger-cat.jpg",
+      "w": 714,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1573865526739-10659fec78a5",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "beach-dog",
+      "collection": "pets",
+      "nameZh": "海边狗狗",
+      "nameEn": "Beach dog",
+      "file": "LD-photo-beach-dog.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1587300003388-59208cc962cb",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "beach-sunset",
+      "collection": "sea",
+      "nameZh": "海边日落",
+      "nameEn": "Beach sunset",
+      "file": "LD-photo-beach-sunset.jpg",
+      "w": 1000,
+      "h": 665,
+      "source": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
+    },
+    {
+      "id": "waves",
+      "collection": "sea",
+      "nameZh": "浪花",
+      "nameEn": "Waves",
+      "file": "LD-photo-waves.jpg",
+      "w": 562,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1505142468610-359e7d316be0",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
+    },
+    {
+      "id": "beach-day",
+      "collection": "sea",
+      "nameZh": "沙滩墨镜",
+      "nameEn": "Beach day",
+      "file": "LD-photo-beach-day.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "holiday-pool",
+      "collection": "sea",
+      "nameZh": "度假泳池",
+      "nameEn": "Holiday pool",
+      "file": "LD-photo-holiday-pool.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "lake-boat",
+      "collection": "sea",
+      "nameZh": "湖上小船",
+      "nameEn": "Boat on the lake",
+      "file": "LD-photo-lake-boat.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "purple-dusk",
+      "collection": "sea",
+      "nameZh": "紫色黄昏",
+      "nameEn": "Purple dusk",
+      "file": "LD-photo-purple-dusk.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "valley-morning",
+      "collection": "views",
+      "nameZh": "山谷清晨",
+      "nameEn": "Valley morning",
+      "file": "LD-photo-valley-morning.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "golden-field",
+      "collection": "views",
+      "nameZh": "金色麦田",
+      "nameEn": "Golden field",
+      "file": "LD-photo-golden-field.jpg",
+      "w": 1000,
+      "h": 563,
+      "source": "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "cloud-sea",
+      "collection": "views",
+      "nameZh": "云海",
+      "nameEn": "Sea of clouds",
+      "file": "LD-photo-cloud-sea.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "pink-ridges",
+      "collection": "views",
+      "nameZh": "粉色山脊",
+      "nameEn": "Pink ridges",
+      "file": "LD-photo-pink-ridges.jpg",
+      "w": 1000,
+      "h": 643,
+      "source": "https://images.unsplash.com/photo-1500964757637-c85e8a162699",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "green-hills",
+      "collection": "views",
+      "nameZh": "绿色山丘",
+      "nameEn": "Green hills",
+      "file": "LD-photo-green-hills.jpg",
+      "w": 1000,
+      "h": 595,
+      "source": "https://images.unsplash.com/photo-1501854140801-50d01698950b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "mirror-lake",
+      "collection": "views",
+      "nameZh": "镜面湖",
+      "nameEn": "Mirror lake",
+      "file": "LD-photo-mirror-lake.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "milky-way",
+      "collection": "night",
+      "nameZh": "银河山顶",
+      "nameEn": "Milky Way peak",
+      "file": "LD-photo-milky-way.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1519681393784-d120267933ba",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "stargazing",
+      "collection": "night",
+      "nameZh": "看星星",
+      "nameEn": "Stargazing",
+      "file": "LD-photo-stargazing.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "starry-lake",
+      "collection": "night",
+      "nameZh": "湖上星夜",
+      "nameEn": "Starry lake",
+      "file": "LD-photo-starry-lake.jpg",
+      "w": 1000,
+      "h": 649,
+      "source": "https://images.unsplash.com/photo-1534447677768-be436bb09401",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "violet-lake",
+      "collection": "night",
+      "nameZh": "紫色湖面",
+      "nameEn": "Violet lake",
+      "file": "LD-photo-violet-lake.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "city-lights",
+      "collection": "night",
+      "nameZh": "城市夜色",
+      "nameEn": "City lights",
+      "file": "LD-photo-city-lights.jpg",
+      "w": 799,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "golden-city",
+      "collection": "night",
+      "nameZh": "城市黄昏",
+      "nameEn": "City at dusk",
+      "file": "LD-photo-golden-city.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "bookshelf",
+      "collection": "quiet",
+      "nameZh": "书架",
+      "nameEn": "Bookshelf",
+      "file": "LD-photo-bookshelf.jpg",
+      "w": 1000,
+      "h": 586,
+      "source": "https://images.unsplash.com/photo-1507842217343-583bb7270b66",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "open-book",
+      "collection": "quiet",
+      "nameZh": "摊开的书",
+      "nameEn": "An open book",
+      "file": "LD-photo-open-book.jpg",
+      "w": 1000,
+      "h": 751,
+      "source": "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "writing",
+      "collection": "quiet",
+      "nameZh": "写点什么",
+      "nameEn": "Writing something",
+      "file": "LD-photo-writing.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "todo-list",
+      "collection": "quiet",
+      "nameZh": "今日清单",
+      "nameEn": "Today's list",
+      "file": "LD-photo-todo-list.jpg",
+      "w": 1000,
+      "h": 665,
+      "source": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "rain-window",
+      "collection": "quiet",
+      "nameZh": "窗上的雨",
+      "nameEn": "Rain on the window",
+      "file": "LD-photo-rain-window.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "rainy-day",
+      "collection": "quiet",
+      "nameZh": "雨天",
+      "nameEn": "Rainy day",
+      "file": "LD-photo-rainy-day.jpg",
+      "w": 1000,
+      "h": 750,
+      "source": "https://images.unsplash.com/photo-1428592953211-077101b2021b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "above-clouds",
+      "collection": "travel",
+      "nameZh": "云上",
+      "nameEn": "Above the clouds",
+      "file": "LD-photo-above-clouds.jpg",
+      "w": 1000,
+      "h": 664,
+      "source": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "trip-plans",
+      "collection": "travel",
+      "nameZh": "旅行计划",
+      "nameEn": "Trip plans",
+      "file": "LD-photo-trip-plans.jpg",
+      "w": 1000,
+      "h": 790,
+      "source": "https://images.unsplash.com/photo-1488646953014-85cb44e25828",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "open-road",
+      "collection": "travel",
+      "nameZh": "公路",
+      "nameEn": "Open road",
+      "file": "LD-photo-open-road.jpg",
+      "w": 667,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "tent-view",
+      "collection": "travel",
+      "nameZh": "帐篷里的风景",
+      "nameEn": "Tent view",
+      "file": "LD-photo-tent-view.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "camper-night",
+      "collection": "travel",
+      "nameZh": "露营车",
+      "nameEn": "Camper night",
+      "file": "LD-photo-camper-night.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "hot-air-balloons",
+      "collection": "travel",
+      "nameZh": "热气球",
+      "nameEn": "Hot-air balloons",
+      "file": "LD-photo-hot-air-balloons.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1530789253388-582c481c54b0",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "confetti",
+      "collection": "celebrate",
+      "nameZh": "彩纸",
+      "nameEn": "Confetti",
+      "file": "LD-photo-confetti.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1513151233558-d860c5398176",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "balloons",
+      "collection": "celebrate",
+      "nameZh": "气球",
+      "nameEn": "Balloons",
+      "file": "LD-photo-balloons.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1530103862676-de8c9debad1d",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "happy-birthday",
+      "collection": "celebrate",
+      "nameZh": "生日快乐",
+      "nameEn": "Happy birthday",
+      "file": "LD-photo-happy-birthday.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1558636508-e0db3814bd1d",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "concert",
+      "collection": "celebrate",
+      "nameZh": "演唱会",
+      "nameEn": "Concert night",
+      "file": "LD-photo-concert.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1459749411175-04bf5292ceea",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "movie-night",
+      "collection": "celebrate",
+      "nameZh": "电影之夜",
+      "nameEn": "Movie night",
+      "file": "LD-photo-movie-night.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "music-party",
+      "collection": "celebrate",
+      "nameZh": "音乐派对",
+      "nameEn": "Music party",
+      "file": "LD-photo-music-party.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "morning-yoga",
+      "collection": "move",
+      "nameZh": "晨间瑜伽",
+      "nameEn": "Morning yoga",
+      "file": "LD-photo-morning-yoga.jpg",
+      "w": 860,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1506126613408-eca07ce68773",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "running",
+      "collection": "move",
+      "nameZh": "跑步",
+      "nameEn": "Running",
+      "file": "LD-photo-running.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "strength",
+      "collection": "move",
+      "nameZh": "力量训练",
+      "nameEn": "Strength",
+      "file": "LD-photo-strength.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "forest-walk",
+      "collection": "move",
+      "nameZh": "林间散步",
+      "nameEn": "Forest walk",
+      "file": "LD-photo-forest-walk.jpg",
+      "w": 1000,
+      "h": 666,
+      "source": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "sunset-stretch",
+      "collection": "move",
+      "nameZh": "日落瑜伽",
+      "nameEn": "Sunset stretch",
+      "file": "LD-photo-sunset-stretch.jpg",
+      "w": 1000,
+      "h": 630,
+      "source": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "evening-run",
+      "collection": "move",
+      "nameZh": "夜跑",
+      "nameEn": "Evening run",
+      "file": "LD-photo-evening-run.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1552674605-db6ffd4facb5",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "summer-tree",
+      "collection": "seasons",
+      "nameZh": "夏天的大树",
+      "nameEn": "Summer tree",
+      "file": "LD-photo-summer-tree.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "misty-hills",
+      "collection": "seasons",
+      "nameZh": "雾中山野",
+      "nameEn": "Misty hills",
+      "file": "LD-photo-misty-hills.jpg",
+      "w": 1000,
+      "h": 596,
+      "source": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "dark"
+    },
+    {
+      "id": "snowy-forest",
+      "collection": "seasons",
+      "nameZh": "雪中森林",
+      "nameEn": "Snowy forest",
+      "file": "LD-photo-snowy-forest.jpg",
+      "w": 1000,
+      "h": 639,
+      "source": "https://images.unsplash.com/photo-1491002052546-bf38f186af56",
+      "license": "Unsplash-Photos.txt",
+      "backdrop": true,
+      "tone": "light"
+    },
+    {
+      "id": "frost",
+      "collection": "seasons",
+      "nameZh": "窗上的霜",
+      "nameEn": "Frost",
+      "file": "LD-photo-frost.jpg",
+      "w": 750,
+      "h": 1000,
+      "source": "https://images.unsplash.com/photo-1478265409131-1f65c88f965c",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "winter-wreath",
+      "collection": "seasons",
+      "nameZh": "冬日花环",
+      "nameEn": "Winter wreath",
+      "file": "LD-photo-winter-wreath.jpg",
+      "w": 1000,
+      "h": 668,
+      "source": "https://images.unsplash.com/photo-1512389142860-9c449e58a543",
+      "license": "Unsplash-Photos.txt"
+    },
+    {
+      "id": "snowy-sunset",
+      "collection": "seasons",
+      "nameZh": "雪地夕阳",
+      "nameEn": "Snowy sunset",
+      "file": "LD-photo-snowy-sunset.jpg",
+      "w": 1000,
+      "h": 667,
+      "source": "https://images.unsplash.com/photo-1483664852095-d6cc6870702d",
+      "license": "Unsplash-Photos.txt"
+    }
+  ],
+  "photoCollections": [
+    {
+      "id": "coffee",
+      "nameZh": "咖啡时光",
+      "nameEn": "Coffee time",
+      "descZh": "一杯咖啡，一点慢下来的时间。",
+      "descEn": "A cup of coffee and a slower moment."
+    },
+    {
+      "id": "food",
+      "nameZh": "好好吃饭",
+      "nameEn": "Good food",
+      "descZh": "认真吃的每一顿饭。",
+      "descEn": "Every meal worth remembering."
+    },
+    {
+      "id": "sweet",
+      "nameZh": "甜甜的",
+      "nameEn": "Something sweet",
+      "descZh": "今天值得一点甜。",
+      "descEn": "Today deserves something sweet."
+    },
+    {
+      "id": "flowers",
+      "nameZh": "花与绿植",
+      "nameEn": "Flowers & plants",
+      "descZh": "一束花、一盆绿，心情就亮了。",
+      "descEn": "A bunch of flowers, a little green."
+    },
+    {
+      "id": "pets",
+      "nameZh": "毛孩子",
+      "nameEn": "Furry friends",
+      "descZh": "家里最可爱的那一位。",
+      "descEn": "The cutest one at home."
+    },
+    {
+      "id": "sea",
+      "nameZh": "海边晴天",
+      "nameEn": "Sea & sun",
+      "descZh": "海风、阳光和浪花。",
+      "descEn": "Sea breeze, sunshine and waves."
+    },
+    {
+      "id": "views",
+      "nameZh": "山野日落",
+      "nameEn": "Hills & sunsets",
+      "descZh": "走远一点，看看天空。",
+      "descEn": "Go a little further and look up."
+    },
+    {
+      "id": "night",
+      "nameZh": "夜晚星空",
+      "nameEn": "Night & stars",
+      "descZh": "星星、灯光和安静的夜。",
+      "descEn": "Stars, lights and a quiet night."
+    },
+    {
+      "id": "quiet",
+      "nameZh": "安静的一天",
+      "nameEn": "A quiet day",
+      "descZh": "读书、写字、听雨。",
+      "descEn": "Reading, writing, listening to the rain."
+    },
+    {
+      "id": "travel",
+      "nameZh": "出发旅行",
+      "nameEn": "Off we go",
+      "descZh": "在路上的日子。",
+      "descEn": "Days on the road."
+    },
+    {
+      "id": "celebrate",
+      "nameZh": "值得庆祝",
+      "nameEn": "Celebrate",
+      "descZh": "生日、派对和闪闪发光的夜晚。",
+      "descEn": "Birthdays, parties and bright nights."
+    },
+    {
+      "id": "move",
+      "nameZh": "动一动",
+      "nameEn": "Move a little",
+      "descZh": "跑步、瑜伽、出一身汗。",
+      "descEn": "Run, stretch, break a sweat."
+    },
+    {
+      "id": "seasons",
+      "nameZh": "四季",
+      "nameEn": "Seasons",
+      "descZh": "春花、夏树、冬雪。",
+      "descEn": "Spring blossom, summer trees, winter snow."
+    }
+  ],
+  "music": [
+    {
+      "id": "afternoon-coffee",
+      "nameZh": "午后咖啡",
+      "nameEn": "Afternoon coffee",
+      "moodZh": "轻松",
+      "moodEn": "Easy",
+      "bpm": 78,
+      "seconds": 49.3,
+      "file": "LD-music-afternoon-coffee.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "rainy-window",
+      "nameZh": "窗外下雨",
+      "nameEn": "Rain on the window",
+      "moodZh": "安静",
+      "moodEn": "Quiet",
+      "bpm": 70,
+      "seconds": 48.0,
+      "file": "LD-music-rainy-window.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "little-walk",
+      "nameZh": "出门散步",
+      "nameEn": "A little walk",
+      "moodZh": "明亮",
+      "moodEn": "Bright",
+      "bpm": 90,
+      "seconds": 42.7,
+      "file": "LD-music-little-walk.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "good-night",
+      "nameZh": "晚安",
+      "nameEn": "Good night",
+      "moodZh": "睡前",
+      "moodEn": "Bedtime",
+      "bpm": 62,
+      "seconds": 46.5,
+      "file": "LD-music-good-night.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "seaside",
+      "nameZh": "海边",
+      "nameEn": "By the sea",
+      "moodZh": "放空",
+      "moodEn": "Drift",
+      "bpm": 74,
+      "seconds": 45.5,
+      "file": "LD-music-seaside.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "morning-piano",
+      "nameZh": "清晨钢琴",
+      "nameEn": "Morning piano",
+      "moodZh": "钢琴",
+      "moodEn": "Piano",
+      "bpm": 72,
+      "seconds": 53.4,
+      "file": "LD-music-morning-piano.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "sunny-day",
+      "nameZh": "晴天",
+      "nameEn": "Sunny day",
+      "moodZh": "欢快",
+      "moodEn": "Cheerful",
+      "bpm": 108,
+      "seconds": 44.5,
+      "file": "LD-music-sunny-day.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    },
+    {
+      "id": "cafe-corner",
+      "nameZh": "咖啡馆一角",
+      "nameEn": "Café corner",
+      "moodZh": "咖啡馆",
+      "moodEn": "Café",
+      "bpm": 100,
+      "seconds": 38.4,
+      "file": "LD-music-cafe-corner.mp3",
+      "source": "original (tools/make_music.py)",
+      "license": "LittleDays-Original-Music.txt"
+    }
+  ],
+  "kits": [
+    {
+      "id": "cream",
+      "nameZh": "奶油",
+      "nameEn": "Cream",
+      "swatch": "#F8F5EF",
+      "paper": "minimal",
+      "titleFont": "elegant",
+      "lineFont": "zh-wenkai",
+      "ink": "#2F2A26",
+      "accent": "#5F6F52",
+      "stickers": [
+        "leaf",
+        "daisy",
+        "coffee"
+      ],
+      "playful": false
+    },
+    {
+      "id": "blush",
+      "nameZh": "樱花",
+      "nameEn": "Blush",
+      "swatch": "#E8CFCF",
+      "paper": "cute",
+      "titleFont": "decorative",
+      "lineFont": "zh-kuaile",
+      "ink": "#4A3535",
+      "accent": "#A0605F",
+      "stickers": [
+        "tulip",
+        "pink-tape",
+        "bunny"
+      ],
+      "playful": true
+    },
+    {
+      "id": "sage",
+      "nameZh": "鼠尾草",
+      "nameEn": "Sage",
+      "swatch": "#C9D7C1",
+      "paper": "grid",
+      "titleFont": "vintage-serif",
+      "lineFont": "zh-wenkai",
+      "ink": "#2F3A2A",
+      "accent": "#4F6447",
+      "stickers": [
+        "leaf",
+        "label",
+        "pencil"
+      ],
+      "playful": false
+    },
+    {
+      "id": "kraft",
+      "nameZh": "牛皮纸",
+      "nameEn": "Kraft",
+      "swatch": "#D9C3A0",
+      "paper": "kraft",
+      "titleFont": "handwritten",
+      "lineFont": "zh-wenkai",
+      "ink": "#3A2A1C",
+      "accent": "#7A5A3A",
+      "stickers": [
+        "ticket",
+        "postcard",
+        "gingham-tape"
+      ],
+      "playful": true
+    }
+  ],
+  "keepers": [
+    {
+      "id": "cat-lemon-normal",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "normal",
+      "file": "LD-keeper-cat-lemon-normal.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-happy",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "happy",
+      "file": "LD-keeper-cat-lemon-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-sleepy",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "sleepy",
+      "file": "LD-keeper-cat-lemon-sleepy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-lemon-peek",
+      "animal": "cat",
+      "outfit": "lemon",
+      "mood": "peek",
+      "file": "LD-keeper-cat-lemon-peek.png",
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "id": "cat-yarn-happy",
+      "animal": "cat",
+      "outfit": "yarn",
+      "mood": "happy",
+      "file": "LD-keeper-cat-yarn-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    }
+  ],
+  "keeperLooks": [
+    {
+      "id": "lemon",
+      "animal": "cat",
+      "kind": "hat",
+      "nameZh": "柠檬帽",
+      "nameEn": "Lemon hat"
+    },
+    {
+      "id": "yarn",
+      "animal": "cat",
+      "kind": "accessory",
+      "nameZh": "毛线球",
+      "nameEn": "Yarn ball",
+      "noteZh": "不戴帽子",
+      "noteEn": "no hat"
     }
   ]
 }

@@ -1,6 +1,15 @@
 // Relative so the same files work on localhost, in the iOS shell and as a hosted link.
 export const LIBRARY_BASE = "library/";
+// Simple defaults that use the device's own fonts (nothing bundled, no
+// licence needed): 黑体, 宋体, 楷体. 楷体 falls back to the bundled WenKai
+// where the device has no Kai font.
+export const SYSTEM_FONTS = {
+  hei: '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif',
+  song: '"Songti SC","STSong","SimSun","Noto Serif SC","Source Han Serif SC",Georgia,serif',
+  kai: '"Kaiti SC","STKaiti","KaiTi","BiauKai","LD-zh-wenkai",serif',
+};
 export function fontFamily(fontId, catalog) {
+  if (SYSTEM_FONTS[fontId]) return SYSTEM_FONTS[fontId];
   const font = catalog.fonts.find((f) => f.id === fontId);
   return font
     ? `"${font.family}","LD-chinese",serif`

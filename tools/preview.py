@@ -32,12 +32,12 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
         elif path.startswith('/library/'):
             parts = path.split('/')
-            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers'}:
+            if len(parts) != 4 or parts[2] not in {'fonts', 'stickers', 'scenes', 'photos', 'music', 'keepers'}:
                 self.send_error(404)
                 return
             category, name = parts[2:]
             catalog = json.loads((SHARED / 'library.json').read_text(encoding='utf-8'))
-            allowed = {item[key] for item in catalog[category] for key in ('file', 'nativeFile', 'license') if key in item}
+            allowed = {item[key] for item in catalog.get(category, []) for key in ('file', 'nativeFile', 'license') if key in item}
             if name not in allowed:
                 self.send_error(404)
                 return
@@ -46,7 +46,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
                 self.send_error(404)
                 return
             data = location.read_bytes()
-            content_type = {'.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8'}.get(location.suffix, 'application/octet-stream')
+            content_type = {'.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.txt': 'text/plain; charset=utf-8'}.get(location.suffix, 'application/octet-stream')
             self.send_response(200)
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(data)))

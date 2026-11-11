@@ -311,3 +311,49 @@ test("book days give one cover per date and filter by month or exact date", asyn
   assert.deepEqual(bookDays(state, "daily", { date: today }).map((d) => d.date), [today]);
   assert.deepEqual(bookDays(state, "food").map((d) => d.moments[0].title), ["Recipe"]);
 });
+
+test("templates by photo count add empty frames, fill them in order and support text-only pages", async () => {
+  const { applyPageTemplate, fillEmptySlots, TEMPLATES_BY_COUNT, autoLayout } = await import("../Public/js/day.mjs");
+  for (const [count, templates] of Object.entries(TEMPLATES_BY_COUNT))
+    for (const template of templates)
+      if (template !== "text") assert.equal(autoLayout(Math.max(1, Number(count)), template).length, Math.max(1, Number(count)), template);
+  const page = { layers: [{ id: "t", kind: "text", text: "hi", x: 10, y: 10, scale: 1, rotation: 0 }] };
+  applyPageTemplate(page, 3, "trio", { top: 4, bottom: 96 });
+  assert.equal(page.layers.filter((l) => l.kind === "photo" && !l.mediaRef).length, 3, "three empty frames");
+  assert.equal(page.layoutTemplate, "trio");
+  const rest = fillEmptySlots(page, [{ reference: ref(1), name: "a" }, { reference: ref(2), name: "b" }]);
+  assert.deepEqual(rest, []);
+  const photos = page.layers.filter((l) => l.kind === "photo");
+  assert.deepEqual(photos.map((l) => l.mediaRef), [ref(1), ref(2), ""]);
+  // Choosing fewer photos than already placed never deletes a photo.
+  applyPageTemplate(page, 1, "full", { top: 4, bottom: 96 });
+  assert.equal(page.layers.filter((l) => l.kind === "photo" && l.mediaRef).length, 2);
+  assert.equal(page.layers.filter((l) => l.kind === "photo" && !l.mediaRef).length, 0);
+  assert.throws(() => applyPageTemplate(page, 0, "text"), /layout.textHasPhotos/);
+  const words = { layers: [{ id: "s", kind: "photo", text: "slot", mediaRef: "", x: 1, y: 1, scale: 1, rotation: 0 }] };
+  applyPageTemplate(words, 0, "text");
+  assert.equal(words.layoutTemplate, "text");
+  assert.equal(words.layers.length, 0, "empty frames removed for a text-only page");
+  validateStateSnapshot({ ...createInitialState(seed, today), entries: [{ id: "x", date: today, title: "", body: "", layers: photos }] });
+});
+
+test("words-only can be forced over photos; video/audio go on the paper by reference", async () => {
+  const { applyPageTemplate, mediaLayer, isOnPage } = await import("../Public/js/day.mjs");
+  const page = { photo: ref(7), layers: [photoLayer(ref(8), "p"), { id: "t", kind: "text", text: "hi", x: 1, y: 1, scale: 1, rotation: 0 }], media: [] };
+  assert.throws(() => applyPageTemplate(page, 0, "text"), /layout.textHasPhotos/);
+  applyPageTemplate(page, 0, "text", undefined, { force: true });
+  assert.equal(page.photo, "");
+  assert.deepEqual(page.layers.map((l) => l.id), ["t"], "only photos leave; text stays");
+  const clip = { id: "c1", kind: "video", name: "walk.webm", mime: "video/webm", source: ref(9) };
+  const layer = mediaLayer(clip);
+  page.media.push(clip);
+  page.layers.push(layer);
+  assert.equal(layer.kind, "video");
+  assert.equal(layer.clipId, "c1");
+  assert.ok(layer.w && layer.h);
+  assert.ok(isOnPage(page, "c1"));
+  assert.equal(mediaLayer({ id: "a", kind: "audio", name: "voice" }).h, undefined);
+  validateStateSnapshot({ ...createInitialState(seed, today), entries: [{ id: "x", date: today, title: "", body: "", layers: page.layers, media: page.media }] });
+  const refs = (await import("../Public/js/media.mjs")).mediaReferences({ books: [], entries: [{ ...page }], drafts: {} });
+  assert.ok(refs.has(ref(9).slice(6)), "clip still referenced once for backup");
+});

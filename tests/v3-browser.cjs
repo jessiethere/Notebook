@@ -1,4 +1,7 @@
 const { chromium } = require("playwright");
+require("./signed-in.cjs")(chromium);
+const { studioTool, studioDetails, studioMode, studioPreview, studioEdit, studioClose, studioMore, studioMoreAction, momentField } = require("./signed-in.cjs");
+const { goTab } = require("./signed-in.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -58,12 +61,11 @@ async function streamBytes(download) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
-    const nav = (tab) =>
-      page.locator(`#navigation [data-page="${tab}"]`).click();
+    const nav = (tab) => goTab(page, tab);
     // Studio settings live in a summary menu; open one row (if closed).
     const toolOn = async (target, id) => {
-      const head = target.locator(`[data-action="tool"][data-tool="${id}"]`);
-      if ((await head.getAttribute("aria-expanded")) !== "true") await head.click();
+      if (id === "text") return; // writing is always open (write card)
+      await studioTool(target, id);
     };
     const tool = (id) => toolOn(page, id);
     const read = () =>
@@ -145,9 +147,9 @@ async function streamBytes(download) {
     assert.ok(book.coverImage.startsWith("media:"));
     await page.locator('[data-action="book-new-entry"]').click();
     await tool("text");
-    await page.locator("#entry-title").fill("我的第一片新叶 · My little leaf");
+    await page.locator('#journal-canvas [data-inline="title"]').fill("我的第一片新叶 · My little leaf");
     await page
-      .locator("#entry-body")
+      .locator('#journal-canvas [data-inline="body"]')
       .fill("这些是用户自己的文字，不应随语言切换改变。");
     await tool("book");
     await page
@@ -203,12 +205,12 @@ async function streamBytes(download) {
     await page.locator('[data-action="layer-copy"]').click();
     assert.equal(await page.locator(".layer img").count(), 2);
     await tool("stickers");
-    await page.locator('[data-action="add-text-layer"]').click();
+    await page.locator('[data-action="add-text-layer"]').first().click();
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("Grow gently");
     await page.locator('[data-layer-text="fontId"]').selectOption("decorative");
     await tool("stickers");
-    await page.locator('[data-action="add-text-layer"]').click();
+    await page.locator('[data-action="add-text-layer"]').first().click();
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("慢慢长大");
     await page.locator('[data-layer-text="fontId"]').selectOption("chinese");
@@ -244,17 +246,25 @@ async function streamBytes(download) {
         ),
       ];
     });
-    await tool("media");
+    // Video is added with 视频 under the paper (the dock lists clips once there are some).
     await page.locator("#video-input").setInputFiles({
       name: "A little moving moment.webm",
       mimeType: "video/webm",
       buffer: Buffer.from(video),
     });
+    await tool("media");
     await page.waitForSelector(".media-card video");
+    // A cover is grabbed automatically; the picker can replace it with a picture.
+    await page.waitForFunction(() => document.querySelector(".media-card video")?.poster.startsWith("blob:"));
+    const autoPoster = await page.locator(".media-card video").getAttribute("poster");
     await page.locator('[data-action="video-poster"]').click();
-    await page.locator("#attachment-image-input").setInputFiles(image);
-    await page.waitForFunction(() =>
-      document.querySelector(".media-card video")?.poster.startsWith("blob:"),
+    await page.waitForSelector("#poster-dialog[open]");
+    const posterChooser = page.waitForEvent("filechooser");
+    await page.locator('[data-poster="upload"]').click();
+    await (await posterChooser).setFiles(image);
+    await page.waitForFunction(
+      (old) => { const p = document.querySelector(".media-card video")?.poster; return p?.startsWith("blob:") && p !== old; },
+      autoPoster,
     );
     await page.locator("#audio-input").setInputFiles({
       name: "Original test voice.wav",
@@ -286,7 +296,7 @@ async function streamBytes(download) {
     await nav("studio");
     await tool("text");
     assert.equal(
-      await page.locator("#entry-title").inputValue(),
+      await page.locator('#journal-canvas [data-inline="title"]').innerText(),
       "我的第一片新叶 · My little leaf",
     );
     await tool("font");
@@ -310,13 +320,13 @@ async function streamBytes(download) {
       await video.play();
     });
     await page.waitForFunction(
-      () => document.querySelector("video").currentTime > 0.05,
+      () => document.querySelector(".media-card video").currentTime > 0.05,
     );
     await page
       .locator(".media-card audio")
       .first()
       .evaluate((audio) => audio.play());
-    await page.waitForFunction(() => document.querySelector("video").paused);
+    await page.waitForFunction(() => document.querySelector(".media-card video").paused);
     await page
       .locator(".media-card audio")
       .first()
@@ -329,12 +339,13 @@ async function streamBytes(download) {
       .last()
       .evaluate((audio) => audio.play());
     await page.waitForFunction(
-      () => document.querySelectorAll("audio")[1].currentTime > 0.05,
+      () => document.querySelectorAll(".media-card audio")[1].currentTime > 0.05,
     );
     await page
       .locator(".media-card audio")
       .last()
       .evaluate((audio) => audio.pause());
+    await studioPreview(page);
     const exportPromise = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();
     assert.ok((await streamBytes(await exportPromise)).length > 10000);
@@ -349,17 +360,19 @@ async function streamBytes(download) {
     assert.match(await page.title(), /Stationery Shop/);
     assert.equal(
       await page.locator('#navigation [data-page="books"]').innerText(),
-      "My Books",
+      "Books",
     );
     for (const tab of ["calendar", "growth", "books", "studio"]) {
       await nav(tab);
       assert.ok(
-        !/[\u3400-\u9fff]/.test(await page.locator(".page-title").innerText()),
+        // The Studio keeps its title as a screen-reader heading (compact bar).
+        !/[\u3400-\u9fff]/.test(await page.locator("#app h1").first().textContent()),
         tab,
       );
     }
     await nav("books");
-    await page.locator(`[data-book="${book.id}"]`).click();
+    await page.locator(`[data-action="pull-book"][data-book="${book.id}"]`).click();
+    await page.locator(`[data-action="book"][data-book="${book.id}"]`).click();
     assert.match(
       await page.locator(".book-detail-copy").innerText(),
       /小小植物园/,
@@ -418,7 +431,7 @@ async function streamBytes(download) {
       .locator(".media-card audio")
       .first()
       .evaluate((audio) => audio.play());
-    await page.waitForFunction(() => !document.querySelector("audio").paused);
+    await page.waitForFunction(() => !document.querySelector(".media-card audio").paused);
     await page
       .locator(".media-card audio")
       .first()
@@ -427,12 +440,12 @@ async function streamBytes(download) {
     const second = await context.newPage();
     await second.goto(base);
     await second.waitForSelector(".hero");
-    await second.locator('#navigation [data-page="studio"]').click();
-    await nav("home");
-    await page.locator('[data-action="check"][data-habit="move"]').click();
+    await goTab(second, "studio");
+    await nav("growth");
+    await page.locator('[data-action="check"][data-habit="move"]').first().click();
     const newer = JSON.stringify(await read());
     await toolOn(second, "text");
-    await second.locator("#entry-body").fill("Unsaved work in the older tab");
+    await second.locator('#journal-canvas [data-inline="body"]').fill("Unsaved work in the older tab");
     await second.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("Another tab"),
     );
@@ -503,9 +516,10 @@ async function streamBytes(download) {
     const denied = await deniedContext.newPage();
     await denied.goto(base);
     await denied.waitForSelector(".hero");
-    await denied.locator('#navigation [data-page="studio"]').click();
-    await toolOn(denied, "media");
-    await denied.locator('[data-action="record-audio"]').click();
+    await goTab(denied, "studio");
+    // Recording starts from 声音 under the paper.
+    await studioMoreAction(denied, "add-sound");
+    await denied.locator('[data-action="add-record"]').click();
     await denied.waitForFunction(() =>
       document.querySelector("#toast").textContent.includes("麦克风"),
     );
@@ -513,7 +527,7 @@ async function streamBytes(download) {
       await denied.locator('[data-action="stop-recording"]').count(),
       0,
     );
-    await denied.locator('#navigation [data-page="books"]').click();
+    await goTab(denied, "books");
     await deniedContext.close();
     console.log(
       "V3 E2E passed: custom books/8 fields/6 covers, real licensed fonts, original stickers/text boxes, Blob photos/video/audio/recording, playback after reload, backup cancel/restore, bilingual persistence, legacy migration, stale-tab protection, phone layouts. No page errors.",
