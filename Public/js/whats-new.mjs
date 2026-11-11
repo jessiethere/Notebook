@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.5",
+    date: "2026-11-11",
+    zh: {
+      title: "Captain 面板：发送更清楚，没发出去的话不会丢",
+      items: [
+        "输入框右边是一个明显的「发送 ↑」按钮（鼠尾草绿）；没有字的时候是灰的，点不了。",
+        "关闭只有右上角一个小小的 ×，也可以按住面板顶部往下拉；底部不再有任何会和「发送」混淆的关闭按钮。",
+        "打了字没发就关掉面板，文字会留着；下次打开 Captain 还在。关闭面板不会自动发送，只有真的发出去才清空。",
+        "回车是换行，不是发送；可以写几行。中文输入法还在选字时不会误发。",
+        "发送后会先显示「正在想」的小圆点，这时不能重复发送。",
+        "打字时面板里的快捷操作会先让开，输入框和发送按钮留在键盘上方。",
+        "Captain 的样子、陪伴方式和回应内容都没变；这一版仍然没有 AI。",
+      ],
+    },
+    en: {
+      title: "Captain's panel: a clearer Send, and unsent words are kept",
+      items: [
+        "A clear sage “Send ↑” button sits right beside the field; it is grey and inactive while the field is empty.",
+        "Closing is only the small × at the top right, or pulling the sheet down from its top; nothing at the bottom can be mistaken for Send any more.",
+        "Words you typed but did not send stay when the panel closes, and are back the next time you open Captain. Closing never sends; the field empties only after a real send.",
+        "Return adds a line instead of sending, so you can write a few lines. Nothing is sent while the Chinese input method is still choosing characters.",
+        "After sending, small “thinking” dots show first, and a second send is blocked meanwhile.",
+        "While typing, the shortcuts in the panel step aside so the field and Send stay above the keyboard.",
+        "Captain's look, companion modes and replies are unchanged; there is still no AI in this version.",
+      ],
+    },
+  },
+  {
     version: "10.4",
     date: "2026-11-11",
     zh: {

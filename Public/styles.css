@@ -17950,3 +17950,156 @@ html[data-shell="ios"] .phone.sv ~ .toast {
   width: 100%;
   min-height: 48px;
 }
+
+/* =====================================================================
+   V10.5 · Captain's composer — the field and a clear Send button sit
+   together at the bottom of the sheet; closing is only the quiet × at the
+   top (or pulling the sheet down). Nothing here competes with Send.
+   ===================================================================== */
+.kp .kp-input {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 5px 5px 5px 14px;
+  border-radius: 24px;
+}
+.kp .kp-input:focus-within {
+  border-color: var(--sageDeep);
+}
+.kp .kp-input textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  max-height: 112px;
+  padding: 11px 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: none;
+  font: 400 16px/1.4 var(--ui-sans);
+  color: var(--ink);
+}
+.kp .kp-input .kp-send {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+  min-width: 84px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 16px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+  font: 600 15px var(--ui-sans);
+  white-space: nowrap;
+}
+.kp .kp-send svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kp .kp-send:disabled {
+  background: var(--c-ebe4d7, #ebe4d7);
+  color: var(--t-8f867a, #8f867a);
+}
+.kp .kp-send .kp-spin {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--c-ffffff66, #ffffff66);
+  border-top-color: var(--c-ffffff, #ffffff);
+  border-radius: 50%;
+  animation: kp-spin 0.8s linear infinite;
+}
+.kp .kp-send.busy {
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+  opacity: 0.8;
+}
+.kp .kp-send.busy svg {
+  display: none;
+}
+.kp .kp-send.busy .kp-spin {
+  display: block;
+}
+@keyframes kp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.kp .keeper-msg {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.kp .keeper-msg.pending {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  min-height: 40px;
+}
+.kp .keeper-msg.pending i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--t-a39a8e, #a39a8e);
+  animation: kp-dot 1s ease-in-out infinite;
+}
+.kp .keeper-msg.pending i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.kp .keeper-msg.pending i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes kp-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* The × is small to look at but a full 44px to touch. */
+.kp-x,
+.kp-back {
+  position: relative;
+}
+.kp-x::after,
+.kp-back::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+.kp-head,
+.kp-title,
+.choose-grabber {
+  touch-action: none;
+}
+/* Typing on a phone: the sheet sits above the keyboard and the shortcuts
+   step aside, so the words, the field and Send stay in view. */
+#choose-dialog:has(.kp.composing) {
+  margin-bottom: var(--kb, 0px);
+  max-height: calc(var(--vv-h, 88dvh) - 8px);
+}
+.kp.composing .kp-acts,
+.kp.composing .keeper-local {
+  display: none;
+}
+.kp.composing .keeper-msgs {
+  max-height: 22dvh;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kp .kp-send .kp-spin,
+  .kp .keeper-msg.pending i {
+    animation: none;
+  }
+}

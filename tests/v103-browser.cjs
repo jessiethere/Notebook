@@ -72,9 +72,10 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".keeper-chat.kp");
     const say = async (text) => {
       await page.locator("[data-keeper-say]").fill(text);
-      await page.locator("[data-keeper-say]").press("Enter");
+      await page.locator(".kp-send").tap();
       // The reply follows my line (the sheet keeps the last few lines only).
       await page.waitForFunction((mine) => { const all = [...document.querySelectorAll(".kp .keeper-msg")]; const at = all.map((m) => m.textContent).lastIndexOf(mine); return at >= 0 && all[at + 1]?.classList.contains("them"); }, text);
+      await page.waitForSelector(".kp .keeper-msg.pending", { state: "detached" }); // V10.5: “thinking” dots first
       return page.locator(".kp .keeper-msg.them").last().innerText();
     };
     const tired = await say("今天有点累");
@@ -105,7 +106,7 @@ const shots = process.env.SHOTS || "";
     // Typing "整理" goes to the same place.
     await tag.tap();
     await page.locator("[data-keeper-say]").fill("帮我整理今天");
-    await page.locator("[data-keeper-say]").press("Enter");
+    await page.locator(".kp-send").tap();
     await page.waitForSelector('.kp[data-view="organize"]');
     await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().tap();
     passed.push("sort out today: today's pages in order, each opens its page; typing 整理 goes there too; no data changed");

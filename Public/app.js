@@ -1254,6 +1254,51 @@ function keeperPanelIcon(kind) {
   const paths = { organize: '<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>', memory: '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 5v4h4"/><path d="M12 8v4l3 2"/>', write: '<path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="m13 7 4 4"/>', chat: '<path d="M5 6h14v9H10l-4 3v-3H5Z"/>' };
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[kind]}</svg>`;
 }
+// V10.5 · the composer: a clear Send button beside the field, a draft that
+// survives closing the sheet, and a short "thinking" state so a second tap
+// cannot send twice. Closing the sheet never sends anything.
+const KEEPER_DRAFT_KEY = "little-days.keeperDraft";
+let keeperBusy = false; // a line was sent; the reply is on its way
+let keeperComposing = false; // the input method is still choosing characters
+function keeperUnsent() {
+  try {
+    return String(localStorage.getItem(KEEPER_DRAFT_KEY) || "").slice(0, 300);
+  } catch {
+    return "";
+  }
+}
+function keepKeeperUnsent(text) {
+  try {
+    if (text) localStorage.setItem(KEEPER_DRAFT_KEY, String(text).slice(0, 300));
+    else localStorage.removeItem(KEEPER_DRAFT_KEY);
+  } catch {}
+}
+function keeperLinesHTML() {
+  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  return lines + (keeperBusy ? `<p class="keeper-msg them pending" role="status" aria-label="${t("kp.thinking")}"><i></i><i></i><i></i></p>` : "");
+}
+// The field grows with the words (up to four lines); the button follows the field and the busy state.
+function syncKeeperComposer() {
+  const field = $("[data-keeper-say]");
+  const send = $('.kp-send[data-action="keeper-say"]');
+  if (!field || !send) return;
+  field.style.height = "auto";
+  field.style.height = `${Math.min(field.scrollHeight, 112)}px`;
+  send.disabled = keeperBusy || !field.value.trim();
+  send.classList.toggle("busy", keeperBusy);
+  send.setAttribute("aria-busy", String(keeperBusy));
+  send.setAttribute("aria-label", t(keeperBusy ? "kp.sending" : "kp.send"));
+}
+// New lines without rebuilding the sheet, so the caret (and the keyboard) stay where they are.
+function refreshKeeperChat() {
+  const dialog = $("#choose-dialog");
+  const box = dialog?.open ? dialog.querySelector('.kp[data-view="home"] .keeper-msgs') : null;
+  if (!box) return false;
+  box.innerHTML = keeperLinesHTML();
+  box.lastElementChild?.scrollIntoView({ block: "nearest" });
+  syncKeeperComposer();
+  return true;
+}
 function openKeeperPanel(view = keeperView) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "invite")) return;
@@ -1265,14 +1310,15 @@ function openKeeperPanel(view = keeperView) {
   if (view === "organize") body = top(t("kp.org.title")) + keeperOrganizeHTML();
   else if (view === "memory") body = top(t("kp.mem.title")) + keeperMemoryHTML();
   else {
-    const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}">${esc(m.text)}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
     const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
-    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${lines}</div><div class="keeper-say kp-input"><input data-keeper-say maxlength="120" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}"><button data-action="keeper-say" aria-label="${t("keeper.chat.send")}">↑</button></div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul><p class="save-help keeper-local">${t("kp.local")}</p>`;
+    const composer = `<div class="keeper-say kp-input"><textarea data-keeper-say rows="1" maxlength="300" enterkeyhint="enter" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}">${esc(keeperUnsent())}</textarea><button class="kp-send" data-action="keeper-say" aria-label="${t("kp.send")}" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5l6-6 6 6"/></svg><span>${t("kp.send")}</span><i class="kp-spin" aria-hidden="true"></i></button></div>`;
+    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
   }
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp" data-view="${view}"><div class="choose-grabber" aria-hidden="true"></div>${body}</div>`;
   if (!dialog.open) dialog.showModal();
   dialog.querySelector(".keeper-msgs")?.lastElementChild?.scrollIntoView({ block: "nearest" });
+  syncKeeperComposer();
 }
 const openKeeperChat = () => openKeeperPanel("home");
 // Sorting out today: the pages in time order with a few plain observations.
@@ -1312,16 +1358,33 @@ function keeperMemoryHTML() {
 // The small chat: a few things it really can do; anything else is answered
 // honestly instead of with the same sentence every time.
 function keeperAnswer(intent, said = "") {
-  const k = keeperNow();
-  const name = Keeper.keeperName(k, languageCode());
+  if (keeperBusy) return;
   if (said) {
     keeperChat.push({ who: "me", text: said });
     intent = Keeper.localIntent(said);
   } else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
-  if (intent === "organize" || (intent === "memory" && !said)) {
+  // The line is in the chat: only now is the field emptied (and its draft forgotten).
+  keeperBusy = true;
+  if (said) {
+    keepKeeperUnsent("");
+    const field = $("[data-keeper-say]");
+    if (field) field.value = "";
+  }
+  if (!refreshKeeperChat()) openKeeperPanel("home");
+  // Local replies are instant; the short pause shows that the line went and
+  // blocks a second send. (A future provider answers through this same step.)
+  setTimeout(() => keeperReply(intent, Boolean(said)), 420);
+}
+function keeperReply(intent, typed) {
+  keeperBusy = false;
+  const k = keeperNow();
+  const name = Keeper.keeperName(k, languageCode());
+  const open = Boolean($("#choose-dialog")?.open && $("#choose-dialog .kp"));
+  if (intent === "organize" || (intent === "memory" && !typed)) {
     keeperChat = keeperChat.slice(-12);
     if (intent === "memory") keeperMemory = null;
-    return openKeeperPanel(intent);
+    if (open) openKeeperPanel(intent);
+    return;
   }
   let reply;
   if (["memory", "week", "shelf"].includes(intent)) {
@@ -1333,7 +1396,8 @@ function keeperAnswer(intent, said = "") {
   else reply = { who: "keeper", text: keeperSay(`chat.${["greet", "thanks", "feel"].includes(intent) ? intent : "unknown"}`, {}) };
   keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);
-  openKeeperPanel("home");
+  // Closed meanwhile: the reply waits in the chat; the sheet is not reopened.
+  if (open && !refreshKeeperChat()) openKeeperPanel("home");
 }
 function openKeeperOnboarding() {
   const k = keeperNow();
@@ -1345,6 +1409,40 @@ function openKeeperOnboarding() {
   dialog.innerHTML = `<div class="choose-sheet keeper-onboard"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("keeper.onboard.title")}</h2><p class="save-help">${t("keeper.onboard.body")}</p>${intro}<h3>${t("keeper.onboard.name")}</h3><input class="name-input" data-keeper-name maxlength="12" value="${esc(d.name)}" placeholder="${esc(Keeper.defaultName(d.animal, languageCode()))}"><h3>${t("keeper.onboard.mode")}</h3><div class="keeper-modes">${modes}</div><p class="save-help keeper-local">🔒 ${t("keeper.onboard.privacy")}</p><button class="primary full-width" data-action="keeper-start">${t("keeper.onboard.start")}</button><button class="choose-cancel" data-action="keeper-onboard-later">${t("keeper.invite.later")}</button></div>`;
   if (!dialog.open) dialog.showModal();
 }
+document.addEventListener("input", (event) => {
+  if (!event.target.matches?.("[data-keeper-say]")) return;
+  if (event.isComposing === false) keeperComposing = false; // some keyboards skip compositionend
+  keepKeeperUnsent(event.target.value);
+  syncKeeperComposer();
+});
+// Tapping Send must not take the caret out of the field (the keyboard would
+// close). Only the mouse-down default is held back: holding back touchstart
+// would also swallow the tap itself.
+document.addEventListener("mousedown", (event) => {
+  if (event.target.closest?.(".kp-send") && document.activeElement?.matches?.("[data-keeper-say]")) event.preventDefault();
+});
+// While the field has the caret on a touch screen the shortcuts step aside.
+// They come back a moment after the caret leaves — not at once, or the sheet
+// would change shape under the finger that is tapping × or a shortcut.
+let keeperFieldTimer;
+document.addEventListener("focusin", (event) => {
+  if (!event.target.matches?.("[data-keeper-say]") || !matchMedia("(pointer: coarse)").matches) return;
+  clearTimeout(keeperFieldTimer);
+  event.target.closest(".kp")?.classList.add("composing");
+});
+document.addEventListener("focusout", (event) => {
+  if (!event.target.matches?.("[data-keeper-say]")) return;
+  const sheet = event.target.closest(".kp");
+  keeperFieldTimer = setTimeout(() => {
+    if (!sheet?.contains(document.activeElement) || !document.activeElement.matches("[data-keeper-say]")) sheet?.classList.remove("composing");
+  }, 350);
+});
+document.addEventListener("compositionstart", (event) => {
+  if (event.target.matches?.("[data-keeper-say]")) keeperComposing = true;
+});
+document.addEventListener("compositionend", (event) => {
+  if (event.target.matches?.("[data-keeper-say]")) keeperComposing = false;
+});
 document.addEventListener("change", (event) => {
   if (!event.target.matches?.("[data-keeper-rename]")) return;
   saveKeeper((k) => (k.name = event.target.value.trim().slice(0, 12)));
@@ -1353,8 +1451,14 @@ document.addEventListener("change", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
   if (event.target.matches?.("[data-keeper-say]")) {
-    event.preventDefault();
-    $('[data-action="keeper-say"]')?.click();
+    // Return is a new line (never "send"); ⌘ / Ctrl + Return sends — but not
+    // while the input method is still choosing characters.
+    if (event.isComposing || event.keyCode === 229 || keeperComposing) return;
+    if (event.metaKey || event.ctrlKey) {
+      event.preventDefault();
+      $('.kp-send[data-action="keeper-say"]')?.click();
+    }
+    return;
   }
   if (event.target.matches?.("[data-greeting-name]")) {
     event.preventDefault();
@@ -4863,8 +4967,12 @@ async function action(target) {
   if (actionName === "keeper-feedback") return openKeeperFeedback(target.dataset.date, target.dataset.moment || "");
   if (actionName === "keeper-chat") return keeperAnswer(target.dataset.intent);
   if (actionName === "keeper-say") {
-    const said = ($("[data-keeper-say]")?.value || "").trim();
+    if (keeperBusy || keeperComposing) return;
+    const said = ($("[data-keeper-say]")?.value || "").trim().slice(0, 300);
+    const typing = Boolean($(".kp.composing"));
     if (said) keeperAnswer("unknown", said);
+    // Still typing: the caret goes back to the field so the next line can follow.
+    if (said && typing) $("[data-keeper-say]")?.focus();
     return;
   }
   if (actionName === "keeper-set") {
@@ -7997,6 +8105,9 @@ function updateVisibleArea() {
   root.style.setProperty("--vv-top", `${Math.round(vv.offsetTop)}px`);
   if (keyboard > 80) root.style.setProperty("--vv-h", `${Math.round(vv.height)}px`);
   else root.style.removeProperty("--vv-h");
+  // How much of the bottom the keyboard covers (a bottom sheet lifts by this much).
+  if (keyboard > 80) root.style.setProperty("--kb", `${Math.round(keyboard)}px`);
+  else root.style.removeProperty("--kb");
 }
 function keepFieldInView() {
   const field = document.activeElement;
@@ -8053,7 +8164,7 @@ document.addEventListener(
     if (!document.body.classList.contains("typing")) return;
     // The text style bar and an open panel work on the caret: keep it.
     // The paper places the caret itself (a tap on blank paper starts typing).
-    if (event.target.closest?.(`${TYPING_FIELD}, #journal-canvas, #type-bar, .type-bar, .tool-sheet, label`)) return;
+    if (event.target.closest?.(`${TYPING_FIELD}, #journal-canvas, #type-bar, .type-bar, .tool-sheet, .kp-input, label`)) return;
     // The tap that put the caret in a panel's field moves that panel above the
     // keyboard, so its click can land on what is now under the finger: that
     // tap is not "a tap elsewhere".
@@ -8075,6 +8186,32 @@ document.addEventListener(
   },
   true,
 );
+
+// A bottom sheet (Captain's panel, Settings sheets, …) follows the finger
+// when its grabber or header is pulled down, and closes past a short way.
+// Closing this way is the same as ×: nothing is sent, a draft is kept.
+let sheetPull = null;
+document.addEventListener("pointerdown", (event) => {
+  const dialog = event.target.closest?.("#choose-dialog[open]");
+  if (!dialog || !event.target.closest(".choose-grabber, .kp-head, .kp-title") || event.target.closest("button, input, textarea, a")) return;
+  sheetPull = { y: event.clientY, dialog, dy: 0 };
+});
+document.addEventListener("pointermove", (event) => {
+  if (!sheetPull) return;
+  sheetPull.dy = Math.max(0, event.clientY - sheetPull.y);
+  sheetPull.dialog.style.transition = "none";
+  sheetPull.dialog.style.transform = `translateY(${sheetPull.dy}px)`;
+});
+const endSheetPull = () => {
+  if (!sheetPull) return;
+  const { dialog, dy } = sheetPull;
+  sheetPull = null;
+  dialog.style.transition = "";
+  dialog.style.transform = "";
+  if (dy > 70 && dialog.open) dialog.close();
+};
+document.addEventListener("pointerup", endSheetPull);
+document.addEventListener("pointercancel", endSheetPull);
 
 // Pull a panel's grabber up for more room, down to make it smaller or close it.
 let sheetDrag = null;

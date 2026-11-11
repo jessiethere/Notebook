@@ -7042,5 +7042,17 @@
   "s2.dataKept": {
     "zh": "数据保留",
     "en": "Data kept"
+  },
+  "kp.send": {
+    "zh": "发送",
+    "en": "Send"
+  },
+  "kp.sending": {
+    "zh": "正在发送…",
+    "en": "Sending…"
+  },
+  "kp.thinking": {
+    "zh": "正在想…",
+    "en": "Thinking…"
   }
 }

@@ -48,6 +48,22 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.5 Captain 面板：发送、关闭与未发送文字
+
+- 需求：用户实际使用时常把底部巨大的「关闭」当成「发送」。要求：去掉底部大关闭按钮，右上角低调的 ×，保留下滑关闭；明显的「发送」按钮（鼠尾草绿 + 向上箭头，紧邻输入框，空时禁用，发送中有处理状态，输入法选字时不误发）；保护未发送内容（关闭不丢、不自动发送、成功发送后才清空）；键盘不遮挡、可多行、换行不等于发送；不改美术、陪伴方式和本机回复逻辑；不接入 AI。
+- 审查结论：用户描述的「底部大关闭 + 小小的『说』」是 V10.3 之前的旧聊天面板；V10.3 的新面板已经只有右上角 ×，但发送仍是 40px 的小圆箭头、回车直接发送、没有草稿、没有输入法保护、面板不能下拉关闭。本版补齐这些。
+- 改动文件：
+  - Public/app.js：`keeperLinesHTML()`、`syncKeeperComposer()`、`refreshKeeperChat()`（只更新对话和按钮，不重建面板，光标不丢）、`keeperUnsent()` / `keepKeeperUnsent()`（`little-days.keeperDraft`）、`keeperAnswer()` 拆成发送 + `keeperReply()`（0.42 秒「正在想」，期间 `keeperBusy` 挡住重复发送；面板已关则回应留在对话里、不重新弹出）；输入区改为 `textarea` + `.kp-send`，移到面板底部；回车 = 换行，⌘ / Ctrl + 回车发送，`isComposing` / keyCode 229 / compositionstart–end 期间一律不发送；触屏聚焦时 `.kp.composing`（快捷操作让开，350ms 后恢复）；`--kb`（键盘高度）；`#choose-dialog` 的下拉关闭（`sheetPull`，70px 阈值）；发送时保留光标（只拦 mousedown 默认行为）。
+  - Public/styles.css：V10.5 块。i18n：`kp.send` / `kp.sending` / `kp.thinking`。whats-new 10.5。
+  - tests：新增 tests/v105-browser.cjs（7 组）与 `test:browser:v105`；v71、v103 改为点发送按钮（v103 的等待加上「正在想」气泡）。
+  - 文档：DESIGN_SYSTEM / PRODUCT_SPEC 的 V10.5 小节、README。
+- 过程中发现并修掉的两个真实问题：① 快捷操作的显示隐藏原来跟着 `:focus` 走，点 × 的一瞬间面板变形、点击落到别的按钮上（多行输入后点 × 关不掉）——改为延迟恢复的 `.composing`；② 为保留光标拦截了发送按钮的 touchstart，结果连点击也被拦掉——改为只拦 mousedown。
+- 决策与原因：回车换行而不是发送（手机键盘的回车最容易误触，也满足多行）；草稿放 localStorage 而不是手帐数据（不进备份、不触发手帐保存，刷新后仍在）；保存后「听听 Captain 怎么说」的回应面板底部的「谢谢」按钮保留——那里没有输入框，不存在与发送混淆。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari）：Node 153、Python 16 通过；浏览器 E2E 全量 49 套全部通过（48 套旧 + v105）。全量回归后只改了一处按钮文字颜色（纯样式），之后重跑 v105 通过。v105 覆盖：只有一个 ×（位置、44px 触摸区）、没有整行关闭；发送按钮位置 / 尺寸 / 颜色 / 禁用；回车换行、输入框长高上限、⌘/Ctrl+回车发送、气泡保留换行；合成的输入法事件期间不发送；发送中状态与防重复、发送后光标仍在输入框；× / 下拉 / Esc / 刷新后草稿仍在且未发送、短距离下拉不关闭；触屏打字时快捷操作隐藏、输入区在视口内、× 一次关闭；375×667 与 430×932 英文不溢出；无外部请求、`aiConsent` 为 false。
+- 没法在这里验证的：真实软键盘弹出时面板的位置（无头 Chromium 没有软键盘，`--kb` 的逻辑未被实际触发）、真实中文输入法（只用合成的 composition 事件）。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 67，V10.5；上传 app.js、styles.css、themes.css、js/whats-new.mjs、shared/i18n.json）。截图一张（四个画面）已发给用户。
+- 下一步：富文本格式（V10.6）。
+
 ### 2026-11-11 — V10.4 Settings V2（My Little Days · 本机个人空间）
 
 - 需求：用户同意 docs/SETTINGS_V2_PLAN.md 的四项修改（「退出登录」改为「回到欢迎页（数据保留）」且只在实验室登录页开启时显示；默认头像用名字首字的圆形纸片、已有头像保留；Keeper 细项收进「角色与装扮」；更新记录 / 许可证 / 示例内容 / 实验室改为二级页），并要求把顶部账号区域重新设计为「My Little Days · 本机个人空间」、减少大型卡片堆叠（Tactile Stationery × Cozy Editorial）。顺序在 Captain 无 AI 互动（V10.3）之后。

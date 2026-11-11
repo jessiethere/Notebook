@@ -343,3 +343,13 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 - **二级面板 `.choose-sheet.kp.s2-sheet[data-sheet]`**：沿用 Captain 面板的 Bottom Sheet（上圆角 28、底色 `#FFFCF6`、居中标题 + 右上关闭）；`profile`（名字输入 `.s2-field` + 头像一行 `.s2-avatars`，第一个是首字）、`keeper`、`privacy`、`licenses`（`.s2-links`）、`samples`、`testlog`、`labs`。
 - **规则**：所有可点区域 ≥ 44px；危险或不可逆操作（恢复备份、移除示例、回到欢迎页）一律先用页面内确认；文案不暗示云端账号或同步；不加与设置无关的装饰和动画。
 - 实测（Chromium，393 宽）：整页由约 4880px 降到约 2200px。未在 iPhone 真机 / Safari 验证。
+
+## 2026-11-11 V10.5 Captain 面板的输入区
+
+- **顺序**（首页视图）：头部（美术 72px + 名字 + 右上 ×）→ 对话 → 四个快捷操作 → 输入区 `.kp-input` → 一行本机说明。输入区在面板最下方，贴近键盘。
+- **输入区**：一个圆角 24 的白色容器（聚焦时描边变 `--sageDeep`），左边多行输入框 `textarea[data-keeper-say]`（16px，1 行起，随内容长高到约 4 行 / 112px 后内部滚动），右边发送按钮 `.kp-send`。
+- **发送按钮**：胶囊，44px 高、最小 84px 宽，`--sageDeep` 底白字，向上箭头图标 +「发送 / Send」。空（或只有空格）时禁用：`#EBE4D7` 底、`#8F867A` 字。发送中 `.busy`：箭头换成旋转小圈，`aria-busy="true"`，不可点。
+- **关闭**：只有右上角 36px 的 `.kp-x`（触摸区 44px）；按住顶部的小横条或头部往下拉超过 70px 也会关闭，拉得不够会弹回。面板里没有整行的关闭按钮。
+- **对话气泡**：保留换行（`white-space: pre-wrap`）；等待回应时显示三个小圆点的气泡 `.keeper-msg.pending`。
+- **打字时**（触屏）：面板加 `.composing`，快捷操作和本机说明先隐藏，对话区缩到 22dvh；面板下边距 = 键盘高度（`--kb`，来自 visualViewport）。光标离开 350ms 后才恢复，避免面板在手指点 × 时变形。
+- **减少动态效果**：小圆点和旋转圈不做动画。
