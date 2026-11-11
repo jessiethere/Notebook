@@ -30,6 +30,7 @@ import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
+import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
 import * as Rich from "./js/rich-text.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
@@ -1282,7 +1283,13 @@ function rememberKeeperLine(id) {
     localStorage.setItem(KEEPER_LINES_KEY, JSON.stringify([...recentKeeperLines().filter((x) => x.id !== id), { id, at: Date.now() }].slice(-40)));
   } catch {}
 }
-const keeperFacts = () => Keeper.dayFacts(state(), dateKey(), new Date().getHours());
+// What Captain may mention about today: counts always; a page's title only
+// with "look at earlier pages" switched on (it never quotes a page it was
+// not allowed to look at).
+const keeperFacts = () => {
+  const facts = Keeper.dayFacts(state(), dateKey(), new Date().getHours());
+  return Keeper.modeAllows(keeperNow(), "memories") ? facts : { ...facts, title: "" };
+};
 // "找 Captain" reads better than "找Captain"; a Chinese name needs no gaps.
 const keeperNameIn = (k) => {
   const name = Keeper.keeperName(k, languageCode());
@@ -1336,10 +1343,15 @@ function syncKeeperComposer() {
 // New lines without rebuilding the sheet, so the caret (and the keyboard) stay where they are.
 function refreshKeeperChat() {
   const dialog = $("#choose-dialog");
-  const box = dialog?.open ? dialog.querySelector('.kp[data-view="home"] .keeper-msgs') : null;
+  const sheet = dialog?.open ? dialog.querySelector('.kp[data-view="home"]') : null;
+  const box = sheet?.querySelector(".keeper-msgs");
   if (!box) return false;
   box.innerHTML = keeperLinesHTML();
-  box.lastElementChild?.scrollIntoView({ block: "nearest" });
+  // Once the chat has started, the four shortcuts fold into one line (the
+  // sheet keeps its height: the words get the room).
+  const acts = sheet.querySelector(".kp-acts");
+  if (acts && !acts.classList.contains("compact") && keeperChat.some((m) => m.who === "me")) acts.outerHTML = keeperActsHTML(keeperNow());
+  scrollKeeperChat();
   syncKeeperComposer();
   return true;
 }
@@ -1358,6 +1370,30 @@ function keeperLooksHTML() {
   };
   return `<div class="keeper-looks" role="group" aria-label="${t("look.title")}">${group("hat")}${group("accessory")}<p class="look-note">${t("look.note")}</p></div>`;
 }
+// V10.9 · Captain's Corner: one sheet with three ways to be with Captain —
+// Chat (ready), Play (needs Captain's real animation: shown as on its way,
+// never as a rough stand-in) and Look (the wardrobe). The sheet keeps one
+// height (medium, or expanded by pulling it up / tapping its grabber), so
+// sending a line never makes it jump.
+let kpTall = false;
+const CORNER_TABS = ["home", "play", "looks"];
+function cornerTabsHTML(view) {
+  const tab = (id, key) => `<button role="tab" class="kp-tab" data-action="keeper-view" data-view="${id}" aria-selected="${view === id}">${t(key)}</button>`;
+  return `<div class="kp-tabs" role="tablist" aria-label="${t("corner.tabs")}">${tab("home", "corner.chat")}${tab("play", "corner.play")}${tab("looks", "corner.look")}</div>`;
+}
+// The four shortcuts: full rows until the chat starts, then one compact line.
+function keeperActsHTML(k) {
+  if (keeperChat.some((m) => m.who === "me")) {
+    const chip = (kind, extra = "") => `<button class="kp-chip ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span>${t("kp.short." + kind)}</span></button>`;
+    return `<div class="kp-acts compact" role="group" aria-label="${t("kp.quick")}">${chip("organize")}${chip("memory")}${chip("write", "later")}</div>`;
+  }
+  const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
+  return `<ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>`;
+}
+function keeperPlayHTML() {
+  const item = (key) => `<li><span>${t(key)}</span><small class="s2-tag">${t("corner.soon")}</small></li>`;
+  return `<div class="kp-scroll"><div class="kp-play">${keeperArt("happy")}<h3>${t("corner.playTitle")}</h3><p>${t("corner.playNote")}</p><ul class="kp-soon">${item("corner.playPat")}${item("corner.playBelly")}${item("corner.playYarn")}</ul><p class="kp-hint">${t("corner.playMeanwhile")}</p></div></div>`;
+}
 function openKeeperPanel(view = keeperView) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "invite")) return;
@@ -1365,20 +1401,27 @@ function openKeeperPanel(view = keeperView) {
   const name = Keeper.keeperName(k, languageCode());
   if (!keeperChat.length) keeperChat = [{ who: "keeper", text: keeperSay("tap", keeperFacts()) }];
   const top = (title) => `<div class="kp-title"><button class="kp-back" data-action="keeper-view" data-view="home" aria-label="${t("kp.back")}">${icon("back")}</button><b>${title}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
+  const head = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${cornerTabsHTML(view)}`;
   let body;
-  if (view === "looks") body = top(t("look.title")) + `<div class="kp-note">${keeperArt("happy")}<p>${esc(tk("look.say", k))}</p></div>` + keeperLooksHTML();
-  else if (view === "organize") body = top(t("kp.org.title")) + keeperOrganizeHTML();
-  else if (view === "memory") body = top(t("kp.mem.title")) + keeperMemoryHTML();
+  if (view === "looks") body = head + `<div class="kp-scroll"><div class="kp-note">${keeperArt("happy")}<p>${esc(tk("look.say", k))}</p></div>${keeperLooksHTML()}</div>`;
+  else if (view === "play") body = head + keeperPlayHTML();
+  else if (view === "organize") body = top(t("kp.org.title")) + `<div class="kp-scroll">${keeperOrganizeHTML()}</div>`;
+  else if (view === "memory") body = top(t("kp.mem.title")) + `<div class="kp-scroll">${keeperMemoryHTML()}</div>`;
   else {
-    const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
     const composer = `<div class="keeper-say kp-input"><textarea data-keeper-say rows="1" maxlength="300" enterkeyhint="enter" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}">${esc(keeperUnsent())}</textarea><button class="kp-send" data-action="keeper-say" aria-label="${t("kp.send")}" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5l6-6 6 6"/></svg><span>${t("kp.send")}</span><i class="kp-spin" aria-hidden="true"></i></button></div>`;
-    body = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small><button class="kp-look-link" data-action="keeper-view" data-view="looks">${t("look.title")} ›</button></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div><ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+    body = `${head}<div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div>${keeperActsHTML(k)}${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
   }
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp" data-view="${view}"><div class="choose-grabber" aria-hidden="true"></div>${body}</div>`;
+  // Still typing (re-drawn while the field has the caret): keep the typing layout.
+  const composing = dialog.open && view === "home" && document.activeElement?.matches?.("[data-keeper-say]") && dialog.querySelector(".kp.composing");
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
   if (!dialog.open) dialog.showModal();
-  dialog.querySelector(".keeper-msgs")?.lastElementChild?.scrollIntoView({ block: "nearest" });
+  scrollKeeperChat();
   syncKeeperComposer();
+}
+function scrollKeeperChat() {
+  const box = $("#choose-dialog .kp .keeper-msgs");
+  if (box) box.scrollTop = box.scrollHeight;
 }
 const openKeeperChat = () => openKeeperPanel("home");
 // Sorting out today: the pages in time order with a few plain observations.
@@ -1421,7 +1464,7 @@ function keeperAnswer(intent, said = "") {
   if (keeperBusy) return;
   if (said) {
     keeperChat.push({ who: "me", text: said });
-    intent = Keeper.localIntent(said);
+    intent = understandChat(said).intent;
   } else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
   // The line is in the chat: only now is the field emptied (and its draft forgotten).
   keeperBusy = true;
@@ -1453,7 +1496,13 @@ function keeperReply(intent, typed) {
     if (values.date) values.date = friendlyDate(values.date);
     reply = { who: "keeper", text: t(answer.key, values), open: answer.open || null };
   } else if (intent === "write") reply = { who: "keeper", text: t("kp.writeLater") };
-  else reply = { who: "keeper", text: keeperSay(`chat.${["greet", "thanks", "feel"].includes(intent) ? intent : "unknown"}`, {}) };
+  else {
+    // A spoken reply that fits what was meant (a compliment, a finished page,
+    // a tired day…). The hat lines need Captain to be wearing one.
+    const wearingHat = keeperLooks(catalog, k.animal, languageCode()).find((look) => look.id === (k.outfit || DEFAULT_OUTFIT[k.animal]))?.kind === "hat";
+    const event = intent === "hat" && !wearingHat ? "hatOff" : Keeper.LINE_COUNTS[`chat.${intent}`] ? intent : "unknown";
+    reply = { who: "keeper", text: keeperSay(`chat.${event}`, {}) };
+  }
   keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);
   // Closed meanwhile: the reply waits in the chat; the sheet is not reopened.
@@ -5335,6 +5384,14 @@ async function action(target) {
     return openKeeperPanel("home");
   }
   if (actionName === "keeper-view") return openKeeperPanel(target.dataset.view || "home");
+  if (actionName === "kp-size") {
+    kpTall = !kpTall;
+    const sheet = $("#choose-dialog .kp");
+    sheet?.classList.toggle("tall", kpTall);
+    target.setAttribute("aria-label", t(kpTall ? "corner.shrink" : "corner.expand"));
+    scrollKeeperChat();
+    return;
+  }
   if (actionName === "keeper-do") {
     const what = target.dataset.do;
     if (what === "organize") return openKeeperPanel("organize");
@@ -8634,27 +8691,53 @@ document.addEventListener(
 // when its grabber or header is pulled down, and closes past a short way.
 // Closing this way is the same as ×: nothing is sent, a draft is kept.
 let sheetPull = null;
+let sheetPullClick = 0; // a drag on the grabber is not also a tap on it
 document.addEventListener("pointerdown", (event) => {
   const dialog = event.target.closest?.("#choose-dialog[open]");
-  if (!dialog || !event.target.closest(".choose-grabber, .kp-head, .kp-title") || event.target.closest("button, input, textarea, a")) return;
-  sheetPull = { y: event.clientY, dialog, dy: 0 };
+  if (!dialog || !event.target.closest(".choose-grabber, .kp-head, .kp-title")) return;
+  if (event.target.closest("button:not(.choose-grabber), input, textarea, a")) return;
+  sheetPull = { y: event.clientY, dialog, dy: 0, raw: 0 };
 });
 document.addEventListener("pointermove", (event) => {
   if (!sheetPull) return;
-  sheetPull.dy = Math.max(0, event.clientY - sheetPull.y);
+  sheetPull.raw = event.clientY - sheetPull.y;
+  sheetPull.dy = Math.max(0, sheetPull.raw);
   sheetPull.dialog.style.transition = "none";
   sheetPull.dialog.style.transform = `translateY(${sheetPull.dy}px)`;
 });
 const endSheetPull = () => {
   if (!sheetPull) return;
-  const { dialog, dy } = sheetPull;
+  const { dialog, dy, raw } = sheetPull;
   sheetPull = null;
   dialog.style.transition = "";
   dialog.style.transform = "";
+  if (Math.abs(raw) > 8) sheetPullClick = performance.now();
+  const corner = dialog.querySelector(".kp.corner");
+  // Captain's Corner: pull up for more room; pull down to the medium height, then to close.
+  if (corner && raw < -40) {
+    kpTall = true;
+    corner.classList.add("tall");
+    return scrollKeeperChat();
+  }
+  if (corner && dy > 70 && corner.classList.contains("tall")) {
+    kpTall = false;
+    corner.classList.remove("tall");
+    return scrollKeeperChat();
+  }
   if (dy > 70 && dialog.open) dialog.close();
 };
 document.addEventListener("pointerup", endSheetPull);
 document.addEventListener("pointercancel", endSheetPull);
+document.addEventListener(
+  "click",
+  (event) => {
+    if (event.target.closest?.(".choose-grabber") && performance.now() - sheetPullClick < 400) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  },
+  true,
+);
 
 // Pull a panel's grabber up for more room, down to make it smaller or close it.
 let sheetDrag = null;

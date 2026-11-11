@@ -1,3 +1,4 @@
+import { understand } from "./keeper-chat.mjs";
 // Little Keeper (V7.7): an optional little companion who lives in the journal.
 // "Your journal is the main character. Your little companion makes the
 // journey warmer." Pure functions, no DOM (the art pictures are picked in keeper-art.mjs).
@@ -321,11 +322,15 @@ export function dayFacts(state, today, hour = 12) {
 }
 // How many lines each situation has (the words are in i18n: kc.<event>.<situation>.<n>).
 export const LINE_COUNTS = {
-  "tap.none": 5, "tap.noneNight": 3, "tap.back": 3, "tap.first": 3, "tap.one": 4, "tap.many": 4, "tap.photos": 3,
+  "tap.none": 5, "tap.noneNight": 3, "tap.back": 3, "tap.first": 3, "tap.one": 6, "tap.many": 4, "tap.photos": 3,
   "saved.photos": 3, "saved.media": 2, "saved.first": 2, "saved.more": 2, "saved.words": 3,
   "shelf.count": 2, "shelf.latest": 2, "shelf.untagged": 1, "shelf.tidy": 2,
-  "chat.greet": 3, "chat.thanks": 2, "chat.feel": 3, "chat.unknown": 2,
+  "chat.greet": 3, "chat.morning": 2, "chat.night": 2, "chat.compliment": 3, "chat.hat": 3, "chat.hatOff": 1, "chat.pet": 3, "chat.play": 2, "chat.care": 3, "chat.thanks": 3, "chat.happy": 3, "chat.sad": 3, "chat.tired": 3, "chat.done": 3, "chat.doneTired": 3, "chat.doneHappy": 2, "chat.notYet": 3, "chat.notYetTired": 2, "chat.planned": 2, "chat.abilities": 1, "chat.unknown": 3,
 };
+// Lines that quote a page's title: only when Captain may look at pages
+// ("翻看以前的页面" switched on). Without it, `facts.title` is empty and
+// these are never chosen — no line pretends to have read anything.
+const TITLE_LINES = ["tap.one.0", "tap.one.3"];
 function situationsFor(event, facts) {
   if (event === "tap") {
     if (!facts.pages) return [facts.keptDays === 0 ? "first" : facts.gap != null && facts.gap >= 3 ? "back" : facts.night ? "noneNight" : "none"];
@@ -343,28 +348,19 @@ export function contextLine(event, facts = {}, { recent = [], seed = 0 } = {}) {
   const root = event.split(".")[0];
   const options = situationsFor(event, facts).flatMap((situation) => Array.from({ length: LINE_COUNTS[`${root}.${situation}`] || 0 }, (_, i) => `${root}.${situation}.${i}`));
   if (!options.length) return null;
-  const fresh = options.filter((id) => !recent.includes(id));
-  const pool = fresh.length ? fresh : options;
+  const allowed = facts.title ? options : options.filter((id) => !TITLE_LINES.includes(id));
+  const usable = allowed.length ? allowed : options;
+  const fresh = usable.filter((id) => !recent.includes(id));
+  const pool = fresh.length ? fresh : usable;
   const id = pool[Math.abs(seed) % pool.length];
   return { id, key: `kc.${id}`, values: { count: facts.pages ?? facts.count ?? 0, photos: facts.pagePhotos ?? facts.photos ?? 0, title: facts.title || "", days: facts.gap ?? 0, untagged: facts.untagged ?? 0 } };
 }
-// What a typed line is about, read on this device with a few plain patterns
-// (it is not understanding: anything else is answered honestly as "I can't do that yet").
-const INTENTS = [
-  ["organize", /整理|今天的故事|小结|总结|理一理|organi[sz]e|today'?s story|summar/i],
-  ["memory", /回忆|以前|那年|旧的|翻一页|回看|memor|look back|old page|revisit/i],
-  ["week", /这周|本周|最近写|这个星期|this week|lately/i],
-  ["shelf", /书架|手帐本|标签|shelf|journals\b|tags?\b/i],
-  ["write", /帮我写|写一句|润色|怎么写|代写|help me write|rewrite|polish|write (a|one) line/i],
-  ["thanks", /谢谢|多谢|thank/i],
-  ["greet", /^(你好|嗨|哈喽|在吗|在不在|hello|hi|hey)[\s!！。.,，~～?？]*$/i],
-];
+// What a typed line is about: see js/keeper-chat.mjs (replaceable later by a
+// local model with the same output). Kept for older callers: the feelings
+// map to "feel", social lines to their own intents.
 export function localIntent(text) {
-  const said = String(text || "").trim();
-  if (!said) return "unknown";
-  const hit = INTENTS.find(([, pattern]) => pattern.test(said));
-  if (hit) return hit[0];
-  return readCues(said).some((cue) => ["tired", "sad"].includes(cue)) ? "feel" : "unknown";
+  const { intent } = understand(text);
+  return ["tired", "sad", "notYetTired"].includes(intent) ? "feel" : intent;
 }
 // One earlier page to look back at (never a sample day), skipping the ones just shown.
 export function pickMemory(state, today, { exclude = [], seed = 0 } = {}) {

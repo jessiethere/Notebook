@@ -125,7 +125,7 @@ const shots = process.env.SHOTS_DIR || "";
     // Free text it cannot handle gets an honest answer (not the same sentence for everything).
     await page.locator("[data-keeper-say]").fill("今天想吃蛋糕");
     await page.locator(".kp-send").click();
-    await page.waitForFunction(() => /还不会|没听懂/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
+    await page.waitForFunction(() => /没太懂|不太确定|还在想/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
     // Replies are normal-width bubbles (they once shared the art's 64px class).
     assert.ok(await page.locator(".keeper-msg.them").last().evaluate((m) => m.getBoundingClientRect().width > 150));
     await page.locator('.keeper-chat [data-action="choose-close"]').first().click();

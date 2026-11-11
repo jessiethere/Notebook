@@ -6624,8 +6624,8 @@
     "en": "One page today: “{title}”. I've put it away safely."
   },
   "kc.tap.one.1": {
-    "zh": "今天那页我看到了，不错。",
-    "en": "I saw today's page. Not bad at all."
+    "zh": "今天有一页了，不错。",
+    "en": "There's a page today. Nice."
   },
   "kc.tap.one.2": {
     "zh": "今天有一页了。再来一页也行，不来也行。",
@@ -6636,8 +6636,8 @@
     "en": "“{title}” — I like that name."
   },
   "kc.tap.many.0": {
-    "zh": "今天收了 {count} 页。「{title}」那页，我偷偷多看了两眼。",
-    "en": "{count} pages today. I sneaked a second look at “{title}”."
+    "zh": "今天收了 {count} 页，我一页一页放好了。",
+    "en": "{count} pages today. I put them away one by one."
   },
   "kc.tap.many.1": {
     "zh": "今天 {count} 页，本子厚了一点点。",
@@ -6652,8 +6652,8 @@
     "en": "Today's pages are all in place — {count} of them. I counted."
   },
   "kc.tap.photos.0": {
-    "zh": "今天放进来 {photos} 张照片，我每张都看了。",
-    "en": "{photos} photos came in today. I looked at every one."
+    "zh": "今天放进来 {photos} 张照片，相册热闹起来了。",
+    "en": "{photos} photos came in today. The album is getting lively."
   },
   "kc.tap.photos.1": {
     "zh": "{photos} 张照片——今天很上镜。",
@@ -6676,8 +6676,8 @@
     "en": "Lots of photos here. It'll be lively to look back on."
   },
   "kc.saved.media.0": {
-    "zh": "这页会动、会响，我听了一小段。",
-    "en": "This page moves and makes sound. I listened to a little."
+    "zh": "这页会动、会响，以后翻到会很热闹。",
+    "en": "This page moves and makes sounds — it'll be lively to come back to."
   },
   "kc.saved.media.1": {
     "zh": "声音也收进来了，以后可以再听。",
@@ -6738,46 +6738,6 @@
   "kc.shelf.tidy.1": {
     "zh": "书架今天很整齐，不是我弄的，是你。",
     "en": "The shelf is tidy today. That was you, not me."
-  },
-  "kc.chat.greet.0": {
-    "zh": "在呢。想翻翻以前的，还是理一理今天的？",
-    "en": "I'm here. Look back at something, or sort out today?"
-  },
-  "kc.chat.greet.1": {
-    "zh": "嗨。我刚在数页码。",
-    "en": "Hi. I was just counting pages."
-  },
-  "kc.chat.greet.2": {
-    "zh": "我在。你说。",
-    "en": "Here. Go on."
-  },
-  "kc.chat.thanks.0": {
-    "zh": "不客气，我就是看本子的。",
-    "en": "Any time. Looking after journals is my job."
-  },
-  "kc.chat.thanks.1": {
-    "zh": "嗯，收到。",
-    "en": "Got it."
-  },
-  "kc.chat.feel.0": {
-    "zh": "听起来今天不太轻松。不用写很多——要不要只记一件还不错的小事？",
-    "en": "Sounds like today wasn't easy. No need to write much — maybe just one small good thing?"
-  },
-  "kc.chat.feel.1": {
-    "zh": "辛苦了。今天不写也没关系，我在这儿。",
-    "en": "That sounds tiring. Skipping today is fine. I'm here."
-  },
-  "kc.chat.feel.2": {
-    "zh": "嗯。这样的日子，写一句就很好了。",
-    "en": "Mm. On a day like this, one line is plenty."
-  },
-  "kc.chat.unknown.0": {
-    "zh": "这个我还不会。我现在会的是：理一理今天的页面、翻一页以前的回忆、看看这周写了什么、看看书架。",
-    "en": "I can't do that yet. What I can do now: sort out today's pages, look back at an old page, see what you wrote this week, check the shelf."
-  },
-  "kc.chat.unknown.1": {
-    "zh": "这句我没听懂——我不是很聪明的那种猫。下面这几件事我可以帮忙。",
-    "en": "I didn't get that — I'm not that clever a cat. I can help with the things below."
   },
   "kp.entry": {
     "zh": "找{name}",
@@ -7154,5 +7114,293 @@
   "look.say": {
     "zh": "今天想让{name}是什么样子？",
     "en": "How should {name} look today?"
+  },
+  "kc.chat.morning.0": {
+    "zh": "早安。我刚醒，胡子还是歪的。",
+    "en": "Morning. I just woke up — my whiskers are still crooked."
+  },
+  "kc.chat.morning.1": {
+    "zh": "早呀。今天也慢慢来。",
+    "en": "Morning. Let's take today slowly."
+  },
+  "kc.chat.night.0": {
+    "zh": "晚安。本子我会看好的。",
+    "en": "Good night. I'll keep an eye on the journals."
+  },
+  "kc.chat.night.1": {
+    "zh": "去睡吧，我也要把尾巴盘起来了。",
+    "en": "Off to sleep. I'm curling my tail up too."
+  },
+  "kc.chat.compliment.0": {
+    "zh": "嘿嘿，被你发现啦。",
+    "en": "Hehe, you noticed."
+  },
+  "kc.chat.compliment.1": {
+    "zh": "真的嘛？那我今天要多开心一会儿。",
+    "en": "Really? Then I'll stay happy a little longer today."
+  },
+  "kc.chat.compliment.2": {
+    "zh": "那……可以再摸摸我的头吗？",
+    "en": "Then… could you pat my head again?"
+  },
+  "kc.chat.hat.0": {
+    "zh": "这顶柠檬帽是我最喜欢的，你眼光真好。",
+    "en": "This lemon hat is my favourite. Good eye."
+  },
+  "kc.chat.hat.1": {
+    "zh": "嘿嘿，帽子上的叶子是我自己扶正的。",
+    "en": "Hehe, I straightened the leaf on it myself."
+  },
+  "kc.chat.hat.2": {
+    "zh": "真的好看吗？那我今天就不摘了。",
+    "en": "Does it really look nice? Then it's staying on today."
+  },
+  "kc.chat.hatOff.0": {
+    "zh": "今天没戴帽子，在抱毛线球呢。柠檬帽在「装扮」里，想看可以换回来。",
+    "en": "No hat today — I'm hugging my yarn ball. The lemon hat is under Look if you want it back."
+  },
+  "kc.chat.pet.0": {
+    "zh": "呼噜呼噜……再往左边一点。",
+    "en": "Purr… a little more to the left."
+  },
+  "kc.chat.pet.1": {
+    "zh": "嗯，耳朵后面最舒服。",
+    "en": "Mm, behind the ears is the best spot."
+  },
+  "kc.chat.pet.2": {
+    "zh": "好呀。抱一下，然后继续看本子。",
+    "en": "Okay. One hug, then back to minding the journals."
+  },
+  "kc.chat.play.0": {
+    "zh": "好呀！不过我的毛线球玩法还在练，先陪你坐一会儿？",
+    "en": "Yes! My yarn-ball game still needs practice though. Sit with me for a bit first?"
+  },
+  "kc.chat.play.1": {
+    "zh": "想玩……可我现在只会坐好、看本子。玩的部分还在准备。",
+    "en": "I'd love to… but for now I only know how to sit and mind the journals. Playing is still being got ready."
+  },
+  "kc.chat.care.0": {
+    "zh": "我在看书架，数到一半忘了数到哪儿了。",
+    "en": "I was looking at the shelf and lost count halfway."
+  },
+  "kc.chat.care.1": {
+    "zh": "我挺好的。你来了就更好了。",
+    "en": "I'm good. Better now you're here."
+  },
+  "kc.chat.care.2": {
+    "zh": "刚打了个盹，现在醒了。你呢？",
+    "en": "Just had a nap. Awake now. And you?"
+  },
+  "kc.chat.thanks.0": {
+    "zh": "不客气，我就是看本子的。",
+    "en": "Any time. Looking after journals is my job."
+  },
+  "kc.chat.thanks.1": {
+    "zh": "嗯，我也喜欢陪着你。",
+    "en": "Mm. I like keeping you company too."
+  },
+  "kc.chat.thanks.2": {
+    "zh": "不用谢，下次也叫我。",
+    "en": "No need. Call me next time too."
+  },
+  "kc.chat.happy.0": {
+    "zh": "真好。开心的日子值得记一笔。",
+    "en": "Lovely. A happy day is worth a line."
+  },
+  "kc.chat.happy.1": {
+    "zh": "听起来今天不错！我尾巴都翘起来了。",
+    "en": "Sounds like a good day! My tail's up."
+  },
+  "kc.chat.happy.2": {
+    "zh": "开心就好。要把这份开心收进本子里吗？",
+    "en": "I'm glad. Want to keep a little of it in the journal?"
+  },
+  "kc.chat.sad.0": {
+    "zh": "嗯……难过的时候不用急着说清楚。我在这儿。",
+    "en": "Mm… no need to explain when you're sad. I'm here."
+  },
+  "kc.chat.sad.1": {
+    "zh": "抱抱你。今天不写也没关系。",
+    "en": "A hug for you. It's fine not to write today."
+  },
+  "kc.chat.sad.2": {
+    "zh": "我陪你坐一会儿。想说的时候再说。",
+    "en": "I'll sit with you. Talk when you want to."
+  },
+  "kc.chat.tired.0": {
+    "zh": "听起来今天不太轻松。先歇一会儿吧。",
+    "en": "Sounds like today wasn't easy. Rest a little first."
+  },
+  "kc.chat.tired.1": {
+    "zh": "辛苦了。累的时候，一句话就够了。",
+    "en": "That sounds tiring. On tired days, one line is plenty."
+  },
+  "kc.chat.tired.2": {
+    "zh": "嗯。这样的日子，早点休息也很好。",
+    "en": "Mm. On a day like this, an early night is good too."
+  },
+  "kc.chat.done.0": {
+    "zh": "写完啦？那这一页我收好了。",
+    "en": "Done? Then I'll keep this page safe."
+  },
+  "kc.chat.done.1": {
+    "zh": "好耶，本子又厚了一点点。",
+    "en": "Yay — the journal got a little thicker."
+  },
+  "kc.chat.done.2": {
+    "zh": "收到。写完的感觉不错吧？",
+    "en": "Got it. Feels good to finish, doesn't it?"
+  },
+  "kc.chat.doneTired.0": {
+    "zh": "累的时候还写完了一页，真的很厉害。",
+    "en": "Tired, and you still finished a page — that's really something."
+  },
+  "kc.chat.doneTired.1": {
+    "zh": "辛苦了。写完了，就可以好好休息啦。",
+    "en": "Well done. It's written — now you can rest."
+  },
+  "kc.chat.doneTired.2": {
+    "zh": "累归累，这一页收好了。早点睡吧。",
+    "en": "Tired, yes, but the page is kept. Get some sleep."
+  },
+  "kc.chat.doneHappy.0": {
+    "zh": "开心，还写完了，今天满分。",
+    "en": "Happy, and it's written — full marks today."
+  },
+  "kc.chat.doneHappy.1": {
+    "zh": "真好！今天的本子一定很热闹。",
+    "en": "Lovely! Today's journal must be a lively one."
+  },
+  "kc.chat.notYet.0": {
+    "zh": "还没写也没关系，今天还没结束呢。",
+    "en": "Not written yet is fine — today isn't over."
+  },
+  "kc.chat.notYet.1": {
+    "zh": "不写也可以。想记的时候，一张照片就够。",
+    "en": "Skipping is fine too. When you want to, one photo is enough."
+  },
+  "kc.chat.notYet.2": {
+    "zh": "嗯，不急。本子会等你的。",
+    "en": "No rush. The journal will wait."
+  },
+  "kc.chat.notYetTired.0": {
+    "zh": "累的时候不写也没关系，先休息。",
+    "en": "When you're tired, it's fine not to write. Rest first."
+  },
+  "kc.chat.notYetTired.1": {
+    "zh": "辛苦了。今天就先这样，我帮你看着本子。",
+    "en": "You've done enough today. Leave it there — I'll mind the journal."
+  },
+  "kc.chat.planned.0": {
+    "zh": "好，我等你。",
+    "en": "Okay, I'll wait for you."
+  },
+  "kc.chat.planned.1": {
+    "zh": "嗯，到时候我在这儿。",
+    "en": "Mm. I'll be here when you do."
+  },
+  "kc.chat.abilities.0": {
+    "zh": "我会的不多：理一理今天的页面、翻一页以前的回忆、看看这周写了什么、看看书架。也可以陪你说说话。",
+    "en": "Not much yet: sort out today's pages, look back at an old page, see what you wrote this week, look at the shelf. And keep you company."
+  },
+  "kc.chat.unknown.0": {
+    "zh": "嗯……这句我没太懂，不过我在听。",
+    "en": "Hmm… I didn't quite get that, but I'm listening."
+  },
+  "kc.chat.unknown.1": {
+    "zh": "这个我不太确定。你多说一点？",
+    "en": "I'm not sure about that one. Tell me a bit more?"
+  },
+  "kc.chat.unknown.2": {
+    "zh": "唔，我还在想这句是什么意思。",
+    "en": "Mm, I'm still working out what that means."
+  },
+  "kc.chat.greet.0": {
+    "zh": "在呢。今天过得怎么样？",
+    "en": "Here. How's your day going?"
+  },
+  "kc.chat.greet.1": {
+    "zh": "嗨。我刚在数页码。",
+    "en": "Hi. I was just counting pages."
+  },
+  "kc.chat.greet.2": {
+    "zh": "我在。你说。",
+    "en": "Here. Go on."
+  },
+  "corner.chat": {
+    "zh": "聊天",
+    "en": "Chat"
+  },
+  "corner.play": {
+    "zh": "玩耍",
+    "en": "Play"
+  },
+  "corner.look": {
+    "zh": "装扮",
+    "en": "Look"
+  },
+  "corner.tabs": {
+    "zh": "Captain 的小角落",
+    "en": "Captain's Corner"
+  },
+  "corner.playTitle": {
+    "zh": "一起玩，还在准备",
+    "en": "Playing together is on its way"
+  },
+  "corner.playNote": {
+    "zh": "摸摸头、挠肚皮、玩毛线球都需要 Captain 的正式动画。画好之前，不做粗糙的版本。",
+    "en": "Head pats, belly rubs and the yarn ball all need Captain's real animation. Until it's drawn, there won't be a rough version."
+  },
+  "corner.playPat": {
+    "zh": "摸摸头",
+    "en": "Head pats"
+  },
+  "corner.playBelly": {
+    "zh": "挠肚皮",
+    "en": "Belly rubs"
+  },
+  "corner.playYarn": {
+    "zh": "玩毛线球",
+    "en": "Yarn ball"
+  },
+  "corner.soon": {
+    "zh": "准备中",
+    "en": "On its way"
+  },
+  "corner.playMeanwhile": {
+    "zh": "现在可以在「聊天」里说「摸摸你」。",
+    "en": "For now, you can say “pat you” in Chat."
+  },
+  "corner.expand": {
+    "zh": "展开",
+    "en": "Expand"
+  },
+  "corner.shrink": {
+    "zh": "收起",
+    "en": "Collapse"
+  },
+  "kp.short.organize": {
+    "zh": "整理今天",
+    "en": "Sort out today"
+  },
+  "kp.short.memory": {
+    "zh": "回顾回忆",
+    "en": "Look back"
+  },
+  "kp.short.write": {
+    "zh": "帮我写一句",
+    "en": "Write a line"
+  },
+  "kp.quick": {
+    "zh": "快捷操作",
+    "en": "Shortcuts"
+  },
+  "kc.tap.one.4": {
+    "zh": "今天这一页收好了。剩下的时间，慢慢过。",
+    "en": "Today's page is put away. Take the rest of the day slowly."
+  },
+  "kc.tap.one.5": {
+    "zh": "有一页了。我把它摆在书架最前面。",
+    "en": "One page in. I've put it at the front of the shelf."
   }
 }

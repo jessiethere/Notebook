@@ -376,3 +376,11 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 - **面板入口 `.kp-look-link`**：Captain 名字下面的 13px 文字链接「装扮 ›」（`--sageDeep`），不做成按钮，不抢发送和四个快捷操作的位置。点开是面板内的「装扮」视图（左上返回、右上关闭、Captain 一句话 + 选择器）。
 - **说明文字**：一行 12px「想换就换，不需要解锁。更多帽子和小配件画好后会出现在这里。」不放锁、进度条、数量角标或「即将推出」的灰色占位。
 - **画稿**：只用正式画稿的抠图（透明 PNG）。毛线球造型 320px 宽，来自 docs/brand/LD-captain-natural-yarn-original.png（tools/extract_captain_look.py）。
+
+## 2026-11-11 V10.9 Captain's Corner
+
+- **面板 `.choose-sheet.kp.corner`**：flex 竖排，高度 `--kp-h = min(620px, 100dvh − 120px)`；展开 `.tall` 为 `100dvh − 44px`。顶部小横条是按钮 `.kp-grab`（64×22 点击区，5px 横条）。
+- **标签 `.kp-tabs`**：三段式（聊天 / 玩耍 / 装扮），`#F1EADF` 底、选中为纸色 + 轻投影，每段 40px 高。
+- **对话区**：`flex: 1`，占用剩余高度；新消息自动滚到底。
+- **折叠的快捷操作 `.kp-acts.compact`**：一行可横向滚动的小胶囊 `.kp-chip`（40px 高、白底发丝线、18px 线条图标 + 13px 文字）；「帮我写一句」为灰色。
+- **玩耍页 `.kp-play`**：Captain 96px（开心）+ 标题 17px/600 + 一段说明 + 三行「准备中」列表（`.s2-tag`）+ 一行提示；没有按钮。

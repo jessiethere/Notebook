@@ -148,3 +148,10 @@ iOS 外壳 / 网页（Public/）
 - [Alibaba Cloud · Use Qwen by calling API](https://www.alibabacloud.com/help/en/model-studio/use-qwen-by-calling-api)
 - [eesel.ai · Qwen pricing in 2026](https://eesel.ai/blog/qwen-pricing)
 - [usagebox · Qwen API Pricing 2026](https://usagebox.com/articles/qwen-api-pricing-2026)
+
+## 11. V10.9：本机聊天理解的修正（2026-11-11，仍不用 AI）
+
+- 用户实测发现：「你好可爱呀」被当成功能请求，回「这个我还不会……」；「今天有点累，但是写完了一页」被回「今天不写也没关系」。
+- 处理：新模块 `Public/js/keeper-chat.mjs`，`understand(text) → { intent, mood, done, planned, notYet }`。只区分常见、明显的几类：功能请求（整理 / 回忆 / 这周 / 书架 / 代写）与「你会做什么」；关于今天（写完了 / 打算 / 还没写 + 累 / 难过 / 开心）；社交（问候、早安晚安、夸奖、夸帽子、谢谢、关心、摸摸抱抱、想玩）。其余为 unknown，回一句诚实的「没太懂」。
+- 刻意不做：不无限扩张关键词；不假装理解长句；功能列表只在被问到时出现。将来本地 Qwen 只需提供同样的输出结构即可替换 `understand()`，界面和回复选择不变。
+- 隐私：未开启「翻看以前的页面」时，`keeperFacts()` 不提供页面标题，引用标题的句子不会被选中；删去「偷偷多看了两眼」「每张都看了」「我听了一小段」等暗示偷看的表达。

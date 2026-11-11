@@ -18378,3 +18378,189 @@ html[data-shell="ios"] .phone.sv ~ .toast {
   content: "";
   position: absolute;
 }
+
+/* =====================================================================
+   V10.9 · Captain's Corner — one sheet, one steady height (medium, or
+   expanded), three tabs (Chat / Play / Look). The words take the room
+   that is left; nothing jumps when a line is sent.
+   ===================================================================== */
+.choose-sheet.kp.corner {
+  --kp-h: min(620px, calc(100dvh - 120px));
+  height: var(--kp-h);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+.choose-sheet.kp.corner.tall {
+  --kp-h: calc(100dvh - 44px);
+}
+#choose-dialog:has(.kp.corner) {
+  max-height: none;
+}
+.kp.corner > * {
+  flex: none;
+}
+/* The grabber is a real button: tap to expand / collapse, or pull it. */
+.kp.corner .kp-grab {
+  justify-self: center;
+  align-self: center;
+  width: 64px;
+  height: 22px;
+  min-height: 22px;
+  margin: -4px 0 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  position: relative;
+  touch-action: none;
+}
+.kp.corner .kp-grab::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 8px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--c-d6cfc2, #d6cfc2);
+}
+.kp-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin: 12px 0 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.kp-tab {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font: 500 14px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.kp-tab[aria-selected="true"] {
+  background: var(--c-fffcf6, #fffcf6);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px var(--c-46321e2e, #46321e2e);
+}
+.kp.corner .keeper-msgs {
+  flex: 1 1 auto;
+  min-height: 96px;
+  max-height: none;
+  align-content: start;
+  margin: 10px 0 0;
+  padding-bottom: 4px;
+  overscroll-behavior: contain;
+}
+.kp.corner .kp-acts {
+  margin-top: 10px;
+}
+.kp.corner .kp-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.kp.corner .keeper-local {
+  margin-top: 8px;
+}
+/* After the chat starts: the shortcuts fold into one line of chips. */
+.kp-acts.compact {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 2px 0;
+  border: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.kp-acts.compact::-webkit-scrollbar {
+  display: none;
+}
+.kp-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--c-ffffff, #ffffff);
+  font: 500 13px var(--ui-sans);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.kp-chip svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--sageDeep);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.kp-chip.later {
+  color: var(--t-8a8177, #8a8177);
+}
+.kp-chip.later svg {
+  stroke: var(--t-a39a8e, #a39a8e);
+}
+/* Typing: the sheet fits above the keyboard; the shortcuts step aside. */
+.kp.corner.composing {
+  height: min(var(--kp-h), calc(var(--vv-h, 100dvh) - 12px));
+}
+.kp.corner.composing .kp-tabs {
+  display: none;
+}
+/* Play: on its way — no stand-in interaction. */
+.kp-play {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+.kp-play .keeper-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+.kp-play h3 {
+  margin: 4px 0 0;
+  font: 600 17px var(--ui-sans);
+}
+.kp-play p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--t-675d54, #675d54);
+}
+.kp-soon {
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.kp-soon li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  border-bottom: 1px solid var(--line);
+  font: 500 15px var(--ui-sans);
+}
+.kp-play .kp-hint {
+  margin-top: 6px;
+  font-size: 13px;
+}

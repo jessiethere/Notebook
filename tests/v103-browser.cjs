@@ -81,7 +81,7 @@ const shots = process.env.SHOTS || "";
     const tired = await say("今天有点累");
     assert.match(tired, /不太轻松|辛苦|这样的日子/);
     const cake = await say("今天想吃蛋糕");
-    assert.match(cake, /还不会|没听懂/);
+    assert.match(cake, /没太懂|不太确定|还在想/);
     const write = await say("帮我写一句话");
     assert.match(write, /AI 小管家[\s\S]*不想假装/);
     const week = await say("这周我写了什么");
@@ -89,7 +89,7 @@ const shots = process.env.SHOTS || "";
     assert.equal(new Set([tired, cake, write, week]).size, 4, "different things get different answers");
     await page.evaluate(() => document.activeElement?.blur?.());
     await shot("v103-chat");
-    passed.push("chat: tired → a gentle line; this week → counted on the device; writing for me → says it needs the AI keeper; anything else → “I can't do that yet”");
+    passed.push("chat: tired → a gentle line; this week → counted on the device; writing for me → says it needs the AI keeper; anything else → an honest “not sure” (V10.9)");
 
     // 3. Sort out today: the pages in order, opened one by one; the journal is not changed.
     const before = JSON.stringify((await stored()).entries.find((e) => e.date === today));

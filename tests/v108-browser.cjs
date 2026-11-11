@@ -33,10 +33,9 @@ const shots = process.env.SHOTS || "";
     // 1. A light entry in the panel; the picker lists what has artwork, hats first.
     await page.locator(".keeper-entry").tap();
     await page.waitForSelector('.kp[data-view="home"]');
-    const link = page.locator(".kp-head .kp-look-link");
+    // V10.9: 装扮 is the third tab of Captain's Corner (聊天 / 玩耍 / 装扮).
+    const link = page.locator('.kp-tabs [data-view="looks"]');
     assert.match(await link.innerText(), /装扮/);
-    const linkBox = await link.boundingBox();
-    assert.ok(linkBox.height <= 34 && linkBox.width < 90, "a small text link, not a big button");
     await link.tap();
     await page.waitForSelector('.kp[data-view="looks"] .keeper-looks');
     const picker = await page.evaluate(() => ({ groups: [...document.querySelectorAll(".kp .look-group h4")].map((h) => h.textContent), looks: [...document.querySelectorAll(".kp .look-chip")].map((b) => [b.dataset.look, b.querySelector("b").textContent, b.getAttribute("aria-pressed"), b.querySelector("img")?.complete && b.querySelector("img").naturalWidth > 0, Math.round(b.getBoundingClientRect().height)]), text: document.querySelector(".kp").innerText }));
@@ -46,7 +45,7 @@ const shots = process.env.SHOTS || "";
     assert.doesNotMatch(picker.text, /金币|签到|亲密度|等级|积分|coin|level/i, "no game mechanics");
     assert.equal(await page.locator(".kp .look-chip[disabled], .kp .look-chip.locked").count(), 0, "nothing locked");
     await shot("01-picker");
-    passed.push("panel: a small “装扮 ›” link under the name opens the picker — 帽子 / 小配件, only looks with artwork, nothing locked, no coins or levels");
+    passed.push("panel: the 装扮 tab opens the picker — 帽子 / 小配件, only looks with artwork, nothing locked, no coins or levels");
 
     // 2. One tap changes the look everywhere and is remembered.
     await page.locator('.kp [data-action="keeper-look"][data-look="yarn"]').tap();
@@ -92,7 +91,7 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".keeper-home");
     assert.equal((await outfitOf(".keeper-home img.keeper-img")).outfit, "lemon");
     await page.locator(".keeper-entry").tap();
-    await page.locator(".kp-head .kp-look-link").tap();
+    await page.locator('.kp-tabs [data-view="looks"]').tap();
     await page.waitForSelector('.kp .look-chip[data-look="lemon"][aria-pressed="true"]');
     assert.equal(await page.locator('.kp .look-chip[data-look="frog"]').count(), 0);
     passed.push("a look without artwork is never offered; unknown stored looks fall back to the lemon hat");

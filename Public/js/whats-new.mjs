@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.9",
+    date: "2026-11-11",
+    zh: {
+      title: "Captain 更懂你在说什么了；面板变成 Captain 的小角落",
+      items: [
+        "夸它、谢谢它、想摸摸它、问它在干嘛，Captain 都会好好回应，不再一律说「这个我还不会」。只有问「你会做什么」时，它才介绍自己能做的事。",
+        "说「今天有点累，但是写完了一页」，它会先认可你写完了，而不是说「今天不写也没关系」。还没写、打算等会儿写、开心、难过也分开回应。",
+        "听不懂的话，它会老实说没太懂，不会编事实，也不会假装理解。",
+        "没有打开「翻看以前的页面」时，Captain 不会说出你页面的标题，也不再说「偷偷多看了两眼」这类话。",
+        "面板顶部有三个标签：聊天、玩耍、装扮。「玩耍」（摸摸头、挠肚皮、玩毛线球）还在准备，要等正式动画画好，现在只说明即将到来。",
+        "面板高度固定，发消息时不再跳动；点顶部的小横条或往上拉可以展开，往下拉先收回再关闭。聊起来以后，四个快捷操作会收成一行小按钮，自动滚到最新回复。",
+        "仍然没有 AI，也不会发送任何内容。",
+      ],
+    },
+    en: {
+      title: "Captain gets what you mean a little better; the panel becomes Captain's Corner",
+      items: [
+        "Compliment it, thank it, want to pat it, ask what it's up to — Captain answers in kind instead of “I can't do that yet”. It lists what it can do only when you ask what it can do.",
+        "Say “I'm tired, but I finished a page” and it recognises the page you finished rather than saying it's fine not to write. Not yet, later, happy and sad get their own replies too.",
+        "When it doesn't understand, it says so plainly — no made-up facts, no pretending.",
+        "Without “look at earlier pages” switched on, Captain never names your pages, and lines like “I sneaked a second look” are gone.",
+        "Three tabs at the top: Chat, Play, Look. Play (head pats, belly rubs, the yarn ball) waits for Captain's real animation — for now it only says what's coming.",
+        "The panel keeps one height, so it no longer jumps when you send; tap or pull up the little bar to expand, pull down to go back and then to close. Once you start chatting, the four shortcuts fold into one line and the newest reply stays in view.",
+        "Still no AI, and nothing is sent anywhere.",
+      ],
+    },
+  },
+  {
     version: "10.8",
     date: "2026-11-11",
     zh: {
