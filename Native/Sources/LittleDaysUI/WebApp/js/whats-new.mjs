@@ -4,6 +4,36 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.2",
+    date: "2026-11-11",
+    zh: {
+      title: "首页往下滑：今天的故事和我的手帐",
+      items: [
+        "顶部不变。往下是「今天的故事」：同一天写的几页会排成一页回忆——照片来自当天各页，下面是标题和感想；其他页面各占一行，带着自己的时间和所属手帐。这只是展示方式，每一页的内容都没有被合并或改动，点哪一页就打开哪一页。",
+        "只有文字的一页会显示成一张日记纸；长文字在首页折叠，点进去看全文。有视频或声音的页面会有标记。",
+        "卡片下方多了「收藏于 · 手帐名」，点书名直接进那本手帐。",
+        "今天还没记录时，会先请你开始写，再在下面放「最近的故事」（你自己最近的一篇，不会用示例冒充）。",
+        "「今天要做的事」和习惯收成一行「今天的小计划」，点开才展开；展开或收起会记住。待办和习惯的数据都没有变。",
+        "「我的手帐」：最近在写的那本放大，旁边只有一处「接着记一页」；其他手帐小一号立在旁边。「我的书 / 共同的书」切换在书架页。",
+        "标题跟随语言：中文是「今天的故事 / 我的手帐」，英文是 Today's Story / My Library。",
+        "修好：英文界面在小屏手机上，顶部「更多方式」下面的小字会把页面撑宽。",
+      ],
+    },
+    en: {
+      title: "Scrolling Home: Today's Story and My Library",
+      items: [
+        "The top is unchanged. Below it is Today's Story: the pages written on the same day are arranged as one memory — photos from across the day, then the title and words; each other page keeps its own line with its time and journal. It is only a way of showing them: no page is merged or changed, and each opens on its own.",
+        "A page with only words is shown as a sheet of diary paper; long text is folded on Home and opens in full. Pages with video or sound are marked.",
+        "Under the card, “In · journal name” opens that journal.",
+        "With nothing written today you are invited to start, and your latest story is shown underneath (your own latest page, never a sample).",
+        "To-dos and habits fold into one line, “Today's little plans”; it opens when tapped and remembers whether it was open. Their data is unchanged.",
+        "My Library: the journal you are writing in is larger, with the only “Write the next page” link; the others stand beside it. The My / Shared switch is on the bookshelf page.",
+        "Section titles follow the language: 今天的故事 / 我的手帐 in Chinese, Today's Story / My Library in English.",
+        "Fixed: in English on small phones, the hint under “More ways” at the top made the page wider than the screen.",
+      ],
+    },
+  },
+  {
     version: "10.1",
     date: "2026-11-11",
     zh: {

@@ -32,14 +32,20 @@ const shots = process.env.SHOTS_DIR || "";
     assert.ok(!tabs.includes("growth"), "no Growth tab");
     assert.deepEqual(tabs.filter((t) => t !== "community"), ["home", "calendar", "studio", "books"]);
     // V6.8: Home's today card is the day's planner; habits are one line to "My habits".
-    assert.match(await page.locator(".today-list h2").innerText(), /今天要做的事/);
+    // V10.2: folded into one quiet line by default (plans and habits summed up); it opens into the list.
+    assert.match(await page.locator(".today-list .qu-row").innerText(), /今天的小计划[\s\S]*写一件想做的事 · 习惯 0\/\d+/);
+    assert.equal(await page.locator('.today-planner.qu[data-open="false"]').count(), 1, "folded on first use");
+    assert.equal(await page.locator(".today-habits-link").isVisible(), false);
+    await require("./signed-in.cjs").openPlans(page);
     assert.equal(await page.locator(".today-list .habit-row").count(), 0, "no habit rows on Home");
     assert.match(await page.locator(".today-habits-link").innerText(), /我的习惯[\s\S]*0\/\d+ 已完成/);
     await page.locator(".today-habits-link").tap();
     await page.locator('[data-action="check"][data-habit="move"]').first().tap();
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).checks.some((c) => c.date === d && c.habitId === "move"), today);
     await menu(page, "home");
+    assert.equal(await page.locator('.today-planner.qu[data-open="true"]').count(), 1, "open is remembered when coming back to Home");
     assert.match(await page.locator(".today-habits-link").innerText(), /1\/\d+ 已完成/);
+    assert.match(await page.locator(".today-list .qu-row").innerText(), /习惯 1\/\d+/);
     if (shots) await page.screenshot({ path: `${shots}/v63-home.png` });
     passed.push("4 tabs (no Growth tab); Home shows the planner and one line to My habits (with today's count)");
 
@@ -157,8 +163,8 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('[data-action="privacy-toggle"][data-privacy="hideToday"]').tap();
     await page.waitForSelector('[data-privacy="hideToday"][aria-checked="true"]');
     await page.locator('#navigation [data-page="home"]').tap();
-    await page.waitForSelector(".today-peek-wrap .peek-private");
-    assert.equal(await page.locator(".today-peek-wrap img").count(), 0, "no photos on Home");
+    await page.waitForSelector(".hs-remember .peek-private");
+    assert.equal(await page.locator(".hs-remember img").count(), 0, "no photos on Home");
     assert.match(await page.locator(".peek-private").innerText(), /今天记了 \d+ 页[\s\S]*已在首页隐藏/);
     await page.locator(".peek-private").tap();
     await page.waitForSelector(".day-detail");

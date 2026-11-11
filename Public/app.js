@@ -500,59 +500,131 @@ function bookCard(book) {
   return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small></button>`;
 }
 
-// Home's today card: swipe through what was kept today — every photo put on
-// today's pages (one slide each, with its page's line), and the pages that
-// are only words — with a dot for each. Tapping one opens the day at that page.
-function todayPeekHTML(entry) {
-  const pages = [...(hasDayPageContent(entry) ? [entry] : []), ...(entry.moments || [])];
-  const date = entry.date || dateKey();
-  // Privacy: Home can keep today's photos and words out of sight.
-  if (privacyOn("hideToday") && pages.length)
-    return `<div class="today-peek-wrap"><button class="today-preview hero-photo peek-slide peek-words peek-private" data-action="open-day" data-date="${esc(date)}" aria-label="${t("home.readToday")}"><span class="peek-paper" aria-hidden="true"></span><span class="today-preview-copy"><b>${t("privacy.hiddenTitle", { count: pages.length })}</b><small>${t("privacy.hiddenHint")}</small></span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button></div>`;
+// ---------- Home · Today's Story (V10.2) ----------
+// The day's pages (Moments) are shown together as one arranged spread: photos
+// from across the day, the latest page's title and words, and where it is
+// kept. This is only a view: each page keeps its own content, time and
+// journal, nothing is merged or rewritten, and every page opens on its own.
+function storyPagesOf(entry) {
   const isPhoto = (ref) => /^(photo|media):/.test(String(ref || ""));
   const seen = new Set();
-  const slides = [];
-  for (const p of pages) {
-    const layers = p.layers || [];
-    const texts = layers.filter((l) => l.kind === "text" && !l.bind && !l.gen && String(l.text || "").trim()).map((l) => String(l.text).trim());
-    const title = (p.title || texts[0] || "").trim();
-    const words = (p.body || texts.find((x) => x !== title) || "").replace(/\s+/g, " ").trim();
-    // Copies on the day spread (gen) are the same photos as the pages': once.
-    const refs = [
-      ...(isPhoto(p.backdrop) ? [p.backdrop] : []),
-      ...(p === entry && entry.photo ? [entry.photo] : []),
-      ...layers.filter((l) => l.kind === "photo" && l.mediaRef && !l.drawing && !l.gen).map((l) => l.mediaRef),
-    ].filter((ref) => ref && !seen.has(ref) && seen.add(ref));
-    // The page's own fonts, so the card reads like the page (V7.6).
-    const base = { page: p, title, time: p === entry ? "" : p.time || "", titleFont: fontFamily(p.font || "serif", catalog), bodyFont: fontFamily(p.bodyFont || p.font || "serif", catalog) };
-    if (refs.length) refs.forEach((ref, i) => slides.push({ ...base, ref, words: i ? "" : words }));
-    else if (title || words) slides.push({ ...base, ref: "", words });
-  }
-  const shown = slides.slice(0, 12);
-  if (!shown.length) return "";
-  const n = shown.length;
-  const html = shown.map((slide, i) => {
-    const src = slide.ref ? safePhoto(slide.ref) : "";
-    const kicker = [t("home.today"), n > 1 ? `${i + 1} / ${n}` : "", slide.time, entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
-    const cls = `${i === 0 ? "today-preview " : ""}hero-photo peek-slide${src ? "" : " peek-words"}`;
-    const moment = slide.page === entry ? "" : ` data-moment="${esc(slide.page.id)}"`;
-    return `<button class="${cls}" data-action="open-day" data-date="${esc(date)}"${moment} aria-label="${t("home.readToday")} ${i + 1}/${n}">${src ? `<img src="${esc(src)}" alt="${t("photo.alt")}" loading="${i ? "lazy" : "eager"}"><span class="hero-shade" aria-hidden="true"></span>` : `<span class="peek-paper" aria-hidden="true"></span>`}<span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b style="font-family:${esc(slide.titleFont)}">${esc(slide.title || t("entry.untitled"))}</b>${slide.words ? `<small class="peek-words-text" style="font-family:${esc(slide.bodyFont)}">${esc(slide.words.slice(0, src ? 60 : 140))}</small>` : ""}</span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
-  });
-  const dots = n > 1 ? `<div class="peek-dots" aria-hidden="true">${shown.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : "";
-  return `<div class="today-peek-wrap"><div class="today-peek" role="group" aria-label="${t("home.readToday")}">${html.join("")}</div>${dots}</div>`;
+  const pages = [...(hasDayPageContent(entry) ? [entry] : []), ...(entry.moments || [])];
+  return pages
+    .map((p) => {
+      const layers = p.layers || [];
+      const texts = layers.filter((l) => l.kind === "text" && !l.bind && !l.gen && String(l.text || "").trim()).map((l) => String(l.text).trim());
+      const title = (p.title || texts[0] || "").trim();
+      const words = (p.body || texts.find((x) => x !== title) || "").replace(/\s+/g, " ").trim();
+      const clips = p.media || [];
+      const videos = layers.filter((l) => l.kind === "video").map((l) => clips.find((c) => c.id === l.clipId)).filter(Boolean);
+      const audios = layers.filter((l) => l.kind === "audio").map((l) => clips.find((c) => c.id === l.clipId)).filter(Boolean);
+      // Copies on the day spread (gen) are the same photos as the pages': once.
+      const refs = [
+        ...(isPhoto(p.backdrop) ? [p.backdrop] : []),
+        ...(p === entry && entry.photo ? [entry.photo] : []),
+        ...layers.filter((l) => l.kind === "photo" && l.mediaRef && !l.drawing && !l.gen).map((l) => l.mediaRef),
+        // A clip's cover picture stands in for a page that is only video.
+        ...videos.map((c) => c.poster).filter(isPhoto),
+      ].filter((ref) => ref && safePhoto(ref) && !seen.has(ref) && seen.add(ref));
+      return { page: p, id: p === entry ? "" : p.id, title, words, time: p === entry ? "" : p.time || "", bookId: p.bookId || entry.bookId || "", refs, videos, audios, titleFont: fontFamily(p.font || "serif", catalog), bodyFont: fontFamily(p.bodyFont || p.font || "serif", catalog) };
+    })
+    .filter((x) => x.refs.length || x.title || x.words || x.videos.length || x.audios.length);
 }
-// The dot under today's card follows the page in view.
-document.addEventListener(
-  "scroll",
-  (event) => {
-    const strip = event.target;
-    if (!strip?.classList?.contains("today-peek")) return;
-    const step = (strip.firstElementChild?.offsetWidth || strip.clientWidth) + 10;
-    const index = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 4 ? strip.children.length - 1 : Math.round(strip.scrollLeft / Math.max(1, step));
-    strip.parentElement?.querySelectorAll(".peek-dots i").forEach((dot, i) => dot.classList.toggle("on", i === index));
-  },
-  true,
-);
+const clipTime = (clip) => {
+  const sec = Math.round(Number(clip?.duration) || 0);
+  return sec ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : "";
+};
+function storyMediaChips(pg) {
+  const chip = (glyph, clips, label) => (clips.length ? `<span class="ts-chip">${glyph} ${clipTime(clips[0]) || t(label)}${clips.length > 1 ? ` ×${clips.length}` : ""}</span>` : "");
+  return chip("▶", pg.videos, "add.video") + chip("♪", pg.audios, "add.sound");
+}
+// One day as a card (+ a line for each of its other pages).
+function storyCardHTML(entry, { recent = false } = {}) {
+  const date = entry.date || dateKey();
+  const pages = storyPagesOf(entry);
+  if (!pages.length) return "";
+  const open = (pg) => `data-action="open-day" data-date="${esc(date)}"${pg?.id ? ` data-moment="${esc(pg.id)}"` : ""}`;
+  // Privacy: Home can keep today's photos and words out of sight.
+  if (privacyOn("hideToday"))
+    return `<article class="ts-card ts-paper ts-private"><button class="ts-open today-preview peek-private" ${open()} aria-label="${t("home.readToday")}"><b class="ts-title">${t("privacy.hiddenTitle", { count: pages.length })}</b><span class="ts-words">${t("privacy.hiddenHint")}</span></button><div class="ts-foot"><span></span><button class="ts-go" ${open()}>${t("ts.open")} →</button></div></article>`;
+  // The page with the most to show leads (pictures first, then words); a tie goes to the latest.
+  const weight = (x) => x.refs.length * 2 + (x.words ? 1 : 0) + (x.title ? 1 : 0);
+  const lead = pages.reduce((best, x) => (weight(x) >= weight(best) ? x : best), pages[0]);
+  const others = pages.filter((x) => x !== lead);
+  // Pictures from across the day: the lead's first, one from each other page, then the lead's rest.
+  const pool = [lead.refs[0], ...others.map((x) => x.refs[0]), ...lead.refs.slice(1), ...others.flatMap((x) => x.refs.slice(1))].filter(Boolean);
+  const shown = pool.slice(0, 3);
+  const pol = (ref, cls, eager) => `<span class="ts-pol ${cls}"><img src="${esc(safePhoto(ref))}" alt="" width="400" height="500" loading="${eager ? "eager" : "lazy"}" decoding="async"></span>`;
+  const photos = shown.length
+    ? `<span class="ts-photos" data-n="${shown.length}">${pol(shown[0], "main", !recent)}<i class="ts-tape" aria-hidden="true"></i>${shown[1] ? pol(shown[1], "s1") : ""}${shown[2] ? pol(shown[2], "s2") : ""}${pool.length > 3 ? `<span class="ts-more">+${pool.length - 3}</span>` : ""}${lead.videos.length ? '<span class="ts-play" aria-hidden="true">▶</span>' : ""}</span>`
+    : "";
+  const d = new Date(`${date}T12:00:00`);
+  const dayLabel = `${d.toLocaleDateString(locale(), { month: "short", day: "numeric" })} · ${d.toLocaleDateString(locale(), { weekday: "short" })}`;
+  const meta = `<span class="ts-meta"><span>${esc(dayLabel)}${entry.isDemo ? ` · ${t("ts.sample")}` : ""}</span><b>${esc(lead.time)}</b></span>`;
+  const chips = storyMediaChips(lead);
+  const book = state().books.find((bk) => bk.id === lead.bookId);
+  const count = pages.length;
+  const card = `<article class="ts-card ${shown.length ? "" : "ts-paper"} ${recent ? "ts-recent" : ""}" data-photos="${pool.length}"><button class="ts-open today-preview" ${open(lead)} aria-label="${t(recent ? "ts.readRecent" : "home.readToday")}">${meta}${photos}<b class="ts-title" style="font-family:${esc(lead.titleFont)}">${esc(lead.title || t("entry.untitled"))}</b>${lead.words ? `<span class="ts-words" style="font-family:${esc(lead.bodyFont)}">${esc(lead.words.slice(0, 220))}</span>` : ""}${chips ? `<span class="ts-chips">${chips}</span>` : ""}</button><div class="ts-foot">${book ? `<button class="ts-book" data-action="book" data-book="${esc(book.id)}"><small>${t("ts.keptIn")}</small><b>${esc(book.title)}</b></button>` : "<span></span>"}<button class="ts-go" ${open(lead)}>${count > 1 ? `<i>${String(pages.indexOf(lead) + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</i>` : ""}${t("ts.open")} →</button></div></article>`;
+  // Every other page of the day keeps its own line: name, time, journal.
+  const row = (pg) => {
+    const bk = state().books.find((x) => x.id === pg.bookId);
+    const marks = (pg.videos.length ? " ▶" : "") + (pg.audios.length ? " ♪" : "");
+    return `<li><button ${open(pg)}><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy" decoding="async">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b style="font-family:${esc(pg.titleFont)}">${esc(pg.title || pg.words || t("entry.untitled"))}</b>${!pg.refs[0] && pg.title && pg.words ? `<em style="font-family:${esc(pg.bodyFont)}">${esc(pg.words.slice(0, 80))}</em>` : ""}<small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${marks}</small></span><i class="ts-num">${String(pages.indexOf(pg) + 1).padStart(2, "0")}</i></button></li>`;
+  };
+  const also = others.length && !recent ? `<ul class="ts-also" aria-label="${t("ts.also")}">${others.slice(0, 3).map(row).join("")}</ul>${others.length > 3 ? `<button class="text-button ts-all" data-action="open-day" data-date="${esc(date)}">${t("ts.all", { count })} ›</button>` : ""}` : "";
+  return card + also;
+}
+// The most recent day the user really kept (never a sample day).
+function recentStoryEntry() {
+  const today = dateKey();
+  return state()
+    .entries.filter((e) => e.date < today && !e.isDemo && storyPagesOf(e).length)
+    .sort((x, y) => (x.date < y.date ? 1 : -1))[0];
+}
+function sectionTitleHTML(key, sub, aside = "") {
+  return `<div class="hs-head"><h2 class="hs-title ${languageCode()}">${t(key)}${sub ? `<small>${esc(sub)}</small>` : ""}</h2>${aside}</div>`;
+}
+function todayStoryHTML() {
+  const entry = todayEntry();
+  const card = entry ? storyCardHTML(entry) : "";
+  const count = entry ? storyPagesOf(entry).length : 0;
+  const head = sectionTitleHTML("ts.title", card ? t("ts.sub", { count }) : t("ts.subEmpty"), streakChipHTML());
+  if (card) return `<div class="v9-today hs-remember">${head}${card}</div>`;
+  // Nothing yet today: a quiet invitation, then the latest real story (if any).
+  const scene = todayScene();
+  const recent = privacyOn("hideToday") ? null : recentStoryEntry();
+  const when = recent ? new Date(`${recent.date}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric" }) : "";
+  return `<div class="v9-today hs-remember">${head}<div class="ts-empty"><i class="ts-ghost" aria-hidden="true"></i><b>${t("ts.emptyTitle")}</b><small>${t("ts.emptyBody")}</small><button class="ts-start" data-action="today-photos">${t("ts.emptyGo")} →</button>${scene ? `<button class="text-button today-scene" data-action="quick-open" data-way="photo" data-photo="today" data-scene="${esc(scene.id)}">${t("ts.sceneGo", { name: sceneName(scene) })} ›</button>` : ""}</div>${recent ? `<p class="ts-recent-head"><span>${t("ts.recent")}</span> · ${esc(when)}</p>${storyCardHTML(recent, { recent: true })}` : ""}</div>`;
+}
+// ---------- Home · My Library (V10.2) ----------
+// The user's own journals on one shelf: the one most recently written in is
+// larger (with the only "write a page" link); the others stand beside it.
+function bookLastWritten(bookId) {
+  let last = "";
+  for (const e of state().entries) {
+    if (e.isDemo) continue;
+    const stamps = [...(e.bookId === bookId && hasDayPageContent(e) ? [e.updatedAt || e.date] : []), ...(e.moments || []).filter((m) => (m.bookId || e.bookId) === bookId).map((m) => m.updatedAt || e.date)];
+    for (const stamp of stamps) if (String(stamp) > last) last = String(stamp);
+  }
+  return last;
+}
+function homeLibraryHTML() {
+  const mine = state().books.filter((bk) => !isOurBook(bk));
+  const head = (n) => sectionTitleHTML("lib.title", n ? t("lib.sub", { count: n }) : "", `<button class="hs-aside" data-action="nav" data-page="books">${t("lib.all")} ›</button>`);
+  if (!mine.length)
+    return `<section class="home-section home-books hs-collect">${head(0)}<div class="lib-empty"><div class="lib-shelf empty" aria-hidden="true"></div><b>${t("lib.emptyTitle")}</b><button class="ts-start home-book-new" data-action="new-book">${t("lib.emptyGo")} →</button></div></section>`;
+  const stamped = mine.map((bk, i) => ({ bk, i, last: bookLastWritten(bk.id) }));
+  // The one written in most recently leads; the others keep the shelf's order.
+  const first = [...stamped].sort((x, y) => (x.last === y.last ? x.i - y.i : x.last < y.last ? 1 : -1))[0];
+  const rest = stamped.filter((x) => x !== first);
+  const f = first.bk;
+  const count = bookEntryCount(state(), f.id);
+  const day = first.last.slice(0, 10);
+  const updated = !day ? "" : day === dateKey() ? t("lib.today") : day === addDays(dateKey(), -1) ? t("lib.yesterday") : t("lib.on", { date: new Date(`${day}T12:00:00`).toLocaleDateString(locale(), { month: "short", day: "numeric" }) });
+  const small = rest.slice(0, 2);
+  const book = (bk, cls = "") => `<button class="lib-book home-book-cover ${cls}" data-action="book" data-book="${esc(bk.id)}" aria-label="${esc(bk.title)}"><span class="lib-cover">${coverHTML(bk, ctx())}</span></button>`;
+  return `<section class="home-section home-books hs-collect">${head(mine.length)}<div class="lib"><div class="lib-shelf home-book"><div class="lib-slot">${book(f, "lib-feature")}</div><div class="lib-side"><div class="lib-now"><small>${t(first.last ? "lib.now" : "lib.start")}</small><b>${esc(f.title)}</b><span>${[t("entry.count", { count }), updated].filter(Boolean).join(" · ")}</span><button class="lib-write home-book-write" data-action="book-write" data-book="${esc(f.id)}">${t(count ? "lib.write" : "lib.writeFirst")} →</button></div><div class="lib-others">${small.map((x) => book(x.bk)).join("")}${rest.length > 2 ? `<button class="lib-count" data-action="nav" data-page="books" aria-label="${t("lib.all")}">+${rest.length - 2}</button>` : mine.length < 3 ? `<button class="lib-new home-book-new" data-action="new-book" aria-label="${t("home.newBook")}">${icon("plus")}</button>` : ""}</div></div></div>${small.length ? `<div class="lib-names" aria-hidden="true"><span></span><div>${small.map((x) => `<span>${esc(x.bk.title)}</span>`).join("")}</div></div>` : ""}</div></section>`;
+}
 
 function home() {
   // Photo-led home, like a magazine page: today's picture large, a row of
@@ -562,32 +634,10 @@ function home() {
   const now = new Date();
   const weekday = now.toLocaleDateString(locale(), { weekday: "long" });
   const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
-  const photo = safePhoto(coverPhoto(entry));
-  const moments = entry?.moments || [];
-  const scene = todayScene();
-  let hero;
-  const peek = entry ? todayPeekHTML(entry) : "";
-  if (peek) hero = peek;
-  else if (entry) {
-    const backdrop = photo || (scene ? safePhoto(`photo:${scene.id}`) : "");
-    const kicker = [t("home.today"), moments.length ? t("day.statMoments", { count: moments.length }) : "", entry.isDemo ? t("home.sample") : ""].filter(Boolean).join(" · ");
-    hero = `<button class="today-preview hero-photo" data-action="open-day" data-date="${dateKey()}" aria-label="${t("home.readToday")}">${backdrop ? `<img src="${esc(backdrop)}" alt="${t("photo.alt")}">` : ""}<span class="hero-shade" aria-hidden="true"></span><span class="today-preview-copy"><small class="hero-kicker">${esc(kicker)}</small><b>${esc(entry.title || moments[0]?.title || t("entry.untitled"))}</b><small>${esc((entry.body || moments[0]?.body || "").replace(/\s+/g, " ").slice(0, 60))}</small></span><span class="today-preview-go hero-go">${t("home.open")} ›</span></button>`;
-  } else if (scene)
-    hero = `<button class="today-scene hero-photo" data-action="quick-open" data-way="photo" data-photo="today" data-scene="${esc(scene.id)}"><img src="${esc(safePhoto(`photo:${scene.id}`))}" alt=""><span class="hero-shade" aria-hidden="true"></span><span class="hero-copy-block"><small class="hero-kicker">${t("scene.ofDay")} · ${esc(sceneName(scene))}</small><b>${t("home.prompt")}</b><em>${t("scene.useIt")} ›</em></span></button>`;
-  else hero = `<p class="today-blank">${t("home.blankBody")}</p>`;
-  // The journals, in the same order as on the shelf: open one, or add a page
-  // straight into it (a fitness, plants or family journal each keeps its own).
-  const ourBooks = state().books.filter(isOurBook);
-  const shown = homeBooks === "our" ? ourBooks : state().books;
-  const books = `<section class="home-section home-books"><div class="section-heading"><div><h2>${t("home.books")}</h2><small>${t("home.booksHint")}</small></div><button data-action="nav" data-page="books">${t("home.shelf")} ›</button></div>${labsOn() ? `<div class="home-book-tabs" role="tablist"><button role="tab" data-action="home-books" data-view="mine" aria-selected="${homeBooks !== "our"}">${t("books.mine")}</button><button role="tab" data-action="home-books" data-view="our" aria-selected="${homeBooks === "our"}">${t("books.ours")}${ourBooks.length ? ` · ${ourBooks.length}` : ""}</button></div>` : ""}${homeBooks === "our" && !ourBooks.length ? `<p class="save-help our-empty">${t("books.oursEmpty")}</p>` : ""}<div class="home-book-row">${shown
-    .map((book) => {
-      const count = bookEntryCount(state(), book.id);
-      return `<article class="home-book"><button class="home-book-cover" data-action="book" data-book="${esc(book.id)}" aria-label="${esc(book.title)}">${coverHTML(book, ctx())}</button><b>${esc(book.title)}</b><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small><button class="home-book-write" data-action="book-write" data-book="${esc(book.id)}">${icon("plus")} ${t("home.writeIn")}</button></article>`;
-    })
-    .join("")}${homeBooks === "our" ? "" : `<button class="home-book-new" data-action="new-book">${icon("plus")}<span>${t("home.newBook")}</span></button>`}</div></section>`;
+  const books = homeLibraryHTML();
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg></div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div>${keeperInviteHTML()}<div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div><div class="v9-today"><div class="v9-section-head"><small class="v9-kicker">${peek || entry ? t("v9.today") : t("v9.todayEmpty")}</small>${streakChipHTML()}</div>${hero}</div>${todayListHTML()}</section>${memoryHTML()}
- ${books}<p class="home-quote">Collect moments, grow gently.</p></div>`;
+ ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div>${keeperInviteHTML()}<div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
+ ${books}<p class="home-quote hs-colophon">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
 // Growth merged into the day (V6.6): check a habit with one tap here; what
@@ -612,7 +662,32 @@ function todayListHTML() {
   const carry = yesterday.length && !items.length ? `<button class="text-button plan-carry" data-action="plan-carry">${t("plan.carry", { count: yesterday.length })}</button>` : "";
   // Habits live in "My habits" on the shelf; Home keeps one line to them.
   const habitsLink = `<button class="today-habits-link" data-action="nav" data-page="growth"><span>${t("habits.book")}</span><small>${habits.length ? t("home.completed", { done, total: habits.length }) : t("habits.none")}</small><i aria-hidden="true">›</i></button>`;
-  return `<section class="today-list today-planner" aria-label="${t("plan.title")}"><div class="section-heading"><div><h2>${t("plan.title")}</h2><small>${t("plan.hint")}</small></div></div><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${habitsLink}</section>`;
+  // Quiet utility (V10.2): one line under today's story; it opens into the
+  // list. Folded or open is remembered on this device; the data is untouched.
+  const open = plansOpen();
+  const left = items.filter((p) => !p.done).length;
+  const summary = [items.length ? (left ? t("qu.left", { count: left }) : t("qu.allDone")) : t("qu.none"), habits.length ? `${t("qu.habits")} ${done}/${habits.length}` : ""].filter(Boolean).join(" · ");
+  return `<section class="today-list today-planner qu" data-open="${open}" aria-label="${t("qu.title")}"><button class="qu-row" data-action="plans-toggle" aria-expanded="${open}" aria-controls="qu-body"><i class="qu-box" aria-hidden="true"></i><b>${t("qu.title")}</b><small data-qu-summary>${esc(summary)}</small><span class="qu-chev" aria-hidden="true">▾</span></button><div class="qu-body" id="qu-body" ${open ? "" : "hidden"}><p class="qu-hint">${t("plan.hint")}</p><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${habitsLink}</div></section>`;
+}
+const PLANS_OPEN_KEY = "little-days.homePlans";
+function plansOpen() {
+  try {
+    return localStorage.getItem(PLANS_OPEN_KEY) === "open";
+  } catch {
+    return false;
+  }
+}
+function togglePlans() {
+  const open = !plansOpen();
+  try {
+    localStorage.setItem(PLANS_OPEN_KEY, open ? "open" : "closed");
+  } catch {}
+  // No re-render: the page keeps its place.
+  const section = $(".today-planner.qu");
+  if (!section) return;
+  section.dataset.open = String(open);
+  section.querySelector(".qu-row").setAttribute("aria-expanded", String(open));
+  section.querySelector(".qu-body").hidden = !open;
 }
 function savePlans(date, change) {
   store.update((next) => {
@@ -4852,6 +4927,7 @@ async function action(target) {
     soundMenu = false;
     $("#video-input").click();
   }
+  if (actionName === "plans-toggle") return togglePlans();
   if (actionName === "plan-add") return addPlan();
   if (actionName === "plan-toggle")
     return savePlans(dateKey(), (list) => {

@@ -6438,5 +6438,129 @@
   "type.toBox": {
     "zh": "转为自由文字框",
     "en": "Make it a free text box"
+  },
+  "ts.title": {
+    "zh": "今天的故事",
+    "en": "Today's Story"
+  },
+  "ts.sub": {
+    "zh": "今天留下的 {count} 页",
+    "en": "Kept today · {count}"
+  },
+  "ts.subEmpty": {
+    "zh": "还没有记录",
+    "en": "Nothing kept yet"
+  },
+  "ts.open": {
+    "zh": "翻开这一页",
+    "en": "Read this page"
+  },
+  "ts.keptIn": {
+    "zh": "收藏于",
+    "en": "In"
+  },
+  "ts.also": {
+    "zh": "今天的其他页面",
+    "en": "Other pages today"
+  },
+  "ts.all": {
+    "zh": "今天的全部 {count} 页",
+    "en": "All of today · {count} pages"
+  },
+  "ts.sample": {
+    "zh": "示例",
+    "en": "Sample"
+  },
+  "ts.emptyTitle": {
+    "zh": "今天还没有写下故事。",
+    "en": "No story written today yet."
+  },
+  "ts.emptyBody": {
+    "zh": "或许可以从一张照片、一句话开始。",
+    "en": "Maybe start with one photo, or one line."
+  },
+  "ts.emptyGo": {
+    "zh": "选一张照片开始",
+    "en": "Start with a photo"
+  },
+  "ts.sceneGo": {
+    "zh": "或者用今日推荐的照片 · {name}",
+    "en": "Or use today's suggested photo · {name}"
+  },
+  "ts.recent": {
+    "zh": "最近的故事",
+    "en": "Latest story"
+  },
+  "ts.readRecent": {
+    "zh": "读最近的手帐",
+    "en": "Read the latest story"
+  },
+  "qu.title": {
+    "zh": "今天的小计划",
+    "en": "Today's little plans"
+  },
+  "qu.left": {
+    "zh": "还有 {count} 件事",
+    "en": "{count} left"
+  },
+  "qu.allDone": {
+    "zh": "都做完了",
+    "en": "All done"
+  },
+  "qu.none": {
+    "zh": "写一件想做的事",
+    "en": "Add one thing"
+  },
+  "qu.habits": {
+    "zh": "习惯",
+    "en": "Habits"
+  },
+  "lib.title": {
+    "zh": "我的手帐",
+    "en": "My Library"
+  },
+  "lib.sub": {
+    "zh": "{count} 本，慢慢写成书",
+    "en": "Journals in the making · {count}"
+  },
+  "lib.all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "lib.now": {
+    "zh": "正在记录",
+    "en": "Continuing"
+  },
+  "lib.start": {
+    "zh": "从这本开始",
+    "en": "Start here"
+  },
+  "lib.today": {
+    "zh": "今天更新",
+    "en": "updated today"
+  },
+  "lib.yesterday": {
+    "zh": "昨天更新",
+    "en": "updated yesterday"
+  },
+  "lib.on": {
+    "zh": "{date} 更新",
+    "en": "updated {date}"
+  },
+  "lib.write": {
+    "zh": "接着记一页",
+    "en": "Write the next page"
+  },
+  "lib.writeFirst": {
+    "zh": "写下第一页",
+    "en": "Write the first page"
+  },
+  "lib.emptyTitle": {
+    "zh": "书架还空着。",
+    "en": "The shelf is still empty."
+  },
+  "lib.emptyGo": {
+    "zh": "新建一本手帐",
+    "en": "Create a journal"
   }
 }

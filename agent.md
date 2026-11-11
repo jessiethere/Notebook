@@ -48,6 +48,29 @@
 
 ## 更新日志
 
+### 2026-11-11 — V10.2 首页滚动体验实现（用户称 Home V9.1；Create → Remember → Collect）
+
+- 需求：用户确认设计方向并回答四个问题——① 段落标题跟随 App 语言（中文「今天的故事 / 我的手帐」，英文 Today's Story / My Library；中文不用缺字形的英文字体）；② 待办默认收起并记住展开 / 收起，有未完成事项也不强制展开，收起时显示摘要，不丢数据；③ 「共同的书」切换移到书架页，不删功能；④ 今天没记录 = 空状态 + 「最近的故事 · 日期」（真实的最近一篇，没有历史只显示空状态）。另外要求：Today's Story 把同一天多个 Moments 自动组合成一张预览，但保留每个 Moment 的原始内容、时间和所属手帐本，不修改或覆盖数据；显示「收藏于 · 书名」；纯文字像日记纸；375 / 430、中英文、长文字可读；My Library 突出最近在写的一本；顶部 Direction A 不动；不扩大到 Studio / Calendar。
+- 改动文件：
+  - Public/app.js：新增 `storyPagesOf()`（一天的页面 → 展示数据，只读）、`storyCardHTML()`（主故事 + 全天照片 + 媒体标记 + 「收藏于」+ 其他页面各一行；隐私隐藏、示例标记、「最近的故事」变体）、`recentStoryEntry()`、`todayStoryHTML()`、`sectionTitleHTML()`、`bookLastWritten()`、`homeLibraryHTML()`；`todayListHTML()` 改为一行可折叠的「今天的小计划」（`plansOpen()` / `togglePlans()`，本机键 `little-days.homePlans`，动作 `plans-toggle`，不重绘、不改数据）；`home()` 改用以上函数。删除 `todayPeekHTML()`（每张照片一屏的轮播）及其滚动监听；首页不再渲染「我的书 / 共同的书」切换（书架页的 `shelf-switch` 不变）。
+  - Public/styles.css：追加 V10.2 块（`.hs-*`、`.ts-*`、`.qu*`、`.lib*`、页尾）；顶部只加了一处溢出修复（次入口小字过长时省略）。tokens / themes 重新生成。
+  - Resources/i18n.json：31 个新键（ts.*、qu.*、lib.*）。Public/js/whats-new.mjs：10.2。
+  - tests：新增 tests/v102-browser.cjs（6 组）与 `test:browser:v102`；signed-in.cjs 新增 `openPlans`，`touchStore` / `openHabits` / `goTab("growth")` 先展开；迁移 v41、v45、v47、v54、v63、v65、v66、v68。
+  - 文档：docs/DESIGN_SYSTEM.md、docs/PRODUCT_SPEC.md（V10.2 小节）、docs/HOME_SCROLL_PLAN.md（第 7 节：用户决定、实现与设计稿差异）；删除 docs/prototypes/home-scroll/（原型已被正式实现取代）；README。
+- 决策与原因：
+  - 多页合并只在渲染时计算，不写任何数据；v102 用「查看前后该日 JSON 完全相同」来保证。
+  - 主故事 = 内容最多的一页（照片数 ×2 + 有感想 + 有标题，相同取较晚），照片取自全天各页——比设计稿的「最新一页」更符合「把多个 Moments 组合」。
+  - 中文段落标题用系统黑体（与顶部「照片手帐」一致），没有用宋体：项目已确认中文标题用无衬线，旧样式表也强制标题用 `--ui-sans`；只为两个标题换字体会破坏统一。英文用 `LD-elegant` 斜体。
+  - 「最近的故事」和书本「更新时间」都排除示例日（`isDemo`），不拿示例冒充用户内容；今天是示例日时仍显示但标「示例」。
+  - 首页只留一个「接着记一页」（最近在写的那本），其余书点封面进入；记录面板里仍可改选其他手帐。
+  - 小封面用 CSS `zoom` 缩放用户自己的封面（封面内部字号是固定像素），不另画一套小封面。
+- 运行 / 测试（Linux 容器 + Chromium 触屏模拟；不是 iPhone 真机 / Safari / Xcode，Swift 未编译）：Node 146 项、Python 16 项通过；浏览器 E2E 全量 46 套全部通过（45 套旧 + v102）。v102 覆盖：三页分属三本手帐的一天（主故事、全天照片、+N、声音标记、收藏于、每页一行带各自时间和手帐、各自可打开、数据前后完全一致）；纯文字（字号 ≥ 22 / 15、长文折叠、可进全文）；空状态 + 最近的故事（3 天前、可打开原文）与「只有示例日 → 只显示空状态」；小计划默认收起、展开 / 收起跨刷新和跨页面记住、三条待办不丢、收起高度 ≤ 60px；我的手帐（最近写的在前、唯一的记一页、封面进真实手帐、首页无切换、书架页有切换）；英文标题与字体、用户内容不翻译、375 和 430 无横向溢出。全量回归通过后只改了两处 CSS（顶部小字改为省略而不是换行、空状态链接居中），之后重跑了 v102、v45、v47、browser 四套，均通过。
+- 真实截图：393×852 整页 + 四个滚动位置；375×667、430×932 各四个滚动位置；英文 393 / 375；1 张 / 2 张 / 多页 / 纯文字 / 空 + 最近 / 仅空状态；小计划收起 / 展开。三张汇总图已发给用户。
+- 发布：固定链接 https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A （版本 64，V10.2；上传 app.js、styles.css、themes.css、js/whats-new.mjs、shared/i18n.json）。
+- 发现并修复：英文界面 375px 下顶部「More ways」下面的小字把页面撑宽 29px（原有问题）；测试数据里音频图层缺 `text` 字段导致启动校验失败（只是测试数据，App 校验按预期工作）。
+- 已知问题 / 未做：未在 iPhone 真机 / Safari / WKWebView 验证；未用真实相册的极端比例照片测试；纯文字卡片标题多行时与横线不是逐行对齐；5 张以上照片仍是「3 张 + N」而没有单独版式；Journal Studio 后续与 Calendar Phase 2 按用户要求不在本轮范围。
+- 下一步：等用户真机查看；再按用户安排继续 Calendar Phase 2 或 Studio 的页面管理 / 页面信息样式。
+
 ### 2026-11-11 — 设计探索（不改 App 代码）：Home Scroll Experience（Create → Remember → Collect）
 
 - 需求：用户认为首页顶部 Direction A 已成功，但往下滑审美下降——「今天的回忆」像博客文章卡片，待办和习惯让首页像任务管理 App，书架像电商商品列表。要求顶部不动，重做中下部，形成 Create → Remember → Collect 的连续体验；本轮先出设计（完整长页、至少三个连续滚动位置的真实 iPhone 尺寸预览、新旧对比、变化说明、Web 与 SwiftUI 可行性），确认前不做大规模代码修改。用户说附了三张截图，但这条消息里没有收到图片，按线上 V10.1 首页为准。

@@ -46,7 +46,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(await page.locator(".pulled-book").count(), 0, "dropping does not pull the book out");
     // Home lists the books in the same order.
     await menu(page, "home");
-    assert.deepEqual(await page.$$eval(".home-book-cover", (els) => els.map((el) => el.dataset.book)), await order());
+    // V10.2: Home shows the first few journals of the shelf (nothing written yet, so the first leads).
+    assert.deepEqual(await page.$$eval(".home-book-cover", (els) => els.map((el) => el.dataset.book)), (await order()).slice(0, 3));
     passed.push("drag a spine to a new place; Home follows the shelf order");
 
     // 2. A plain tap still pulls a book out; move it one step later.

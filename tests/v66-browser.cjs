@@ -85,23 +85,24 @@ const shots = process.env.SHOTS_DIR || "";
     }, today);
     await page.reload();
     await page.waitForSelector(".hero");
-    const strip = page.locator(".today-peek");
-    await strip.waitFor();
-    const slides = await page.locator(".today-peek .peek-slide").count();
-    // 图库 page (1 photo) + three photos + words only = 5.
-    assert.equal(slides, 5, "one slide per photo, plus the words-only page");
-    assert.equal(await page.locator(".peek-dots i").count(), slides, "one dot per slide");
-    const text = await page.locator(".today-peek").innerText();
-    assert.match(text, /图库里的一张[\s\S]*下午的咖啡[\s\S]*早点睡/, "photos with their page's line, then the words");
-    assert.equal((text.match(/下午的咖啡/g) || []).length, 3, "each of the three photos");
-    assert.ok(await page.locator(".today-peek .peek-slide b").first().evaluate((el) => el.style.fontFamily.length > 0), "the card uses the page's own font");
-    await strip.evaluate((el) => el.scrollTo({ left: el.children[2].offsetLeft, behavior: "instant" }));
-    await page.waitForFunction(() => document.querySelectorAll(".peek-dots i")[2]?.classList.contains("on"));
+    // V10.2: the day's pages are shown together as one story (a view only —
+    // every page keeps its own content and opens on its own).
+    await page.waitForSelector(".hs-remember .ts-card");
+    // 图库 page (1 photo) + three photos + words only: the page with the most to show leads.
+    assert.match(await page.locator(".ts-card .ts-title").innerText(), /下午的咖啡/);
+    assert.equal(await page.locator(".ts-card .ts-pol").count(), 3, "up to three photos on the spread");
+    assert.match(await page.locator(".ts-card .ts-more").innerText(), /\+1/, "four photos today: +1");
+    assert.equal(await page.locator(".ts-also li").count(), 2, "the other two pages each keep a line");
+    const text = await page.locator(".hs-remember").innerText();
+    for (const piece of [/下午的咖啡/, /图库里的一张/, /早点睡/]) assert.match(text, piece, `every page of the day is there (${piece}) in: ${text.replace(/\n/g, " | ")}`);
+    assert.match(text, /收藏于/);
+    assert.ok(await page.locator(".ts-card .ts-title").evaluate((el) => el.style.fontFamily.length > 0), "the card uses the page's own font");
+    assert.equal(await page.locator(".ts-also .ts-thumb.words").count(), 1, "the words-only page has a paper thumbnail");
     if (shots) await page.screenshot({ path: `${shots}/v66-peek.png` });
-    await page.locator(".today-peek .peek-slide").nth(2).click();
+    await page.locator(".ts-also li button").last().click();
     await page.waitForSelector(".day-detail");
     await page.locator('#navigation [data-page="home"]').click();
-    passed.push("Home: today's card has a slide for every photo kept today and for words-only pages, with dots; tap opens the day");
+    passed.push("Home: today's pages as one story — photos from across the day, a line for each other page; a tap opens that page");
 
     // 5. The type bar: a font chosen for the words leaves the title alone (and back).
     await page.locator('[data-action="today-write"]').tap();

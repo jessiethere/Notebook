@@ -32,8 +32,12 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     passed.push("Home: journals in shelf order as magazine covers; system-sans headings");
 
     // 2. 记一页 writes a page straight into that journal (typed on the paper).
-    await page.locator('.home-book-write[data-book="travel"]').tap();
-    // The record sheet opens with that journal chosen.
+    // V10.2: Home has one "write the next page" link, on the journal in front;
+    // the record sheet opens with that journal chosen, and any other can be picked there.
+    assert.equal(await page.locator(".home-book-write").count(), 1);
+    await page.locator('.home-book-write[data-book="daily"]').tap();
+    await page.waitForSelector('#choose-dialog[open] [data-action="quick-book"][data-book="daily"][aria-pressed="true"]');
+    await page.locator('#choose-dialog [data-action="quick-book"][data-book="travel"]').tap();
     await page.waitForSelector('#choose-dialog[open] [data-action="quick-book"][data-book="travel"][aria-pressed="true"]');
     await page.locator('[data-action="quick-way"][data-way="write"]').tap();
     await page.locator('[data-action="quick-start"]').tap();

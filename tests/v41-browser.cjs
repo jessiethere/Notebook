@@ -39,7 +39,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     }, today);
     await page.reload();
     await page.waitForSelector(".today-scene");
-    assert.match(await page.locator(".today-scene").innerText(), /今日照片[\s\S]*用它写一页/);
+    assert.match(await page.locator(".today-scene").innerText(), /今日推荐的照片/);
     const sceneId = await page.locator(".today-scene").getAttribute("data-scene");
     assert.ok(sceneId, "a picture of the day");
     await page.locator(".today-scene").tap();

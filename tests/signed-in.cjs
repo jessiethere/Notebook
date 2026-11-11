@@ -49,6 +49,7 @@ module.exports.goTab = async (page, tab) => {
   // Growth has no tab since V6.6: open "My habits" from Home's today card.
   if (tab === "growth") {
     await page.locator('#navigation [data-page="home"]').click();
+    await module.exports.openPlans(page);
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
     return;
   }
@@ -86,6 +87,7 @@ module.exports.menu = async (page, tab) => {
   }
   if (tab === "growth") {
     await page.locator('#navigation [data-page="home"]').click();
+    await module.exports.openPlans(page);
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
     return;
   }
@@ -101,13 +103,20 @@ module.exports.homeAfterSave = async (page) => {
 // Since V6.8, Home's today card is a planner; habit check-ins are in "My
 // habits". Suites that ticked a habit on Home only to write storage once add
 // and remove a plan instead; the others open "My habits" first.
+// V10.2: Home keeps the plans and habits folded into one line; open it first.
+module.exports.openPlans = async (page) => {
+  if (await page.locator('.today-planner.qu[data-open="false"]').count()) await page.locator('[data-action="plans-toggle"]').click();
+  await page.locator(".today-planner.qu .qu-body").waitFor();
+};
 module.exports.touchStore = async (page) => {
+  await module.exports.openPlans(page);
   await page.locator("[data-plan-input]").fill("·");
   await page.locator('[data-action="plan-add"]').click();
   await page.locator('[data-action="plan-remove"]').first().click();
   await page.waitForFunction(() => localStorage.getItem("little-days.v1"));
 };
 module.exports.openHabits = async (page) => {
+  await module.exports.openPlans(page);
   await page.locator('.today-list [data-action="nav"][data-page="growth"]').click();
   await page.waitForSelector(".growth-habit");
 };

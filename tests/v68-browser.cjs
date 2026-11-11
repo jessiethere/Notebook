@@ -89,7 +89,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("filler-")) localStorage.removeItem(k); });
     await page.reload();
     await page.waitForSelector(".hero");
-    assert.match(await page.locator(".today-peek").innerText(), /存储满了也能保存/, "still there after a reload (read from IndexedDB)");
+    assert.match(await page.locator(".hs-remember").innerText(), /存储满了也能保存/, "still there after a reload (read from IndexedDB)");
     passed.push("LocalStorage full: the page is saved to IndexedDB, and is still there after a reload");
 
     assert.deepEqual(errors, []);

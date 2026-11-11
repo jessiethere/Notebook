@@ -16316,3 +16316,860 @@ html[data-shell="ios"] .phone.sv ~ .toast {
     display: none;
   }
 }
+
+/* =====================================================================
+   V10.2 · Home scroll experience — Create → Remember → Collect
+   The top (Direction A) is unchanged. Below it: Today's Story (the day's
+   pages as one arranged spread), a quiet one-line utility (plans, habits)
+   and My Library (a small shelf of the user's own journals). Same paper,
+   type scale and photo style from top to bottom; no second solid button.
+   ===================================================================== */
+.hs-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 36px 2px 14px;
+}
+.hs-title {
+  margin: 0;
+  color: var(--ink);
+}
+.home-mag .hs-head h2.hs-title.en {
+  font: italic 500 27px/1.1 "LD-elegant", Georgia, serif !important;
+  font-style: italic !important;
+  letter-spacing: 0.005em;
+}
+/* Chinese: the same clear system sans as the top of the page (照片手帐),
+   never the Latin serif, which has no Chinese glyphs. */
+.home-mag .hs-head h2.hs-title.zh {
+  font: 600 23px/1.25 var(--ui-sans) !important;
+  font-style: normal !important;
+  letter-spacing: 0.02em;
+}
+.home-mag .hs-head h2.hs-title small,
+.hs-title small {
+  display: block;
+  margin-top: 6px;
+  font: 400 12px/1.3 var(--ui-sans);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--t-675d54, #675d54);
+}
+.hs-head .hs-aside {
+  flex: none;
+  min-height: 44px;
+  padding: 0 0 0 8px;
+  border: 0;
+  background: none;
+  font: 400 13px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.hs-head .streak-chip {
+  flex: none;
+  margin: 0 0 2px;
+  padding: 0;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-weight: 400;
+  color: var(--t-675d54, #675d54);
+}
+.home-mag .v9-today.hs-remember {
+  margin-top: 0;
+}
+/* ---- Today's Story ---- */
+.ts-card {
+  position: relative;
+  z-index: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1px var(--c-785f3c0d, #785f3c0d),
+    0 26px 44px -30px var(--c-46321e73, #46321e73);
+}
+.ts-card::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -7px;
+  height: 12px;
+  border-radius: 0 0 16px 16px;
+  background: var(--c-efe7da, #efe7da);
+  box-shadow: 0 10px 18px -12px var(--c-46321e59, #46321e59);
+  z-index: -1;
+}
+.ts-open {
+  display: block;
+  width: 100%;
+  padding: 22px 20px 4px;
+  border: 0;
+  border-radius: 22px 22px 0 0;
+  background: none;
+  text-align: left;
+  color: var(--ink);
+}
+.ts-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font: 500 12px/1 var(--ui-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-675d54, #675d54);
+}
+.ts-meta b {
+  font: italic 500 19px/1 "LD-elegant", Georgia, serif;
+  letter-spacing: 0;
+}
+.ts-photos {
+  position: relative;
+  display: block;
+  height: 236px;
+  margin: 16px 0 18px;
+}
+.ts-pol {
+  position: absolute;
+  display: block;
+  padding: 7px 7px 26px;
+  background: var(--c-ffffff, #ffffff);
+  box-shadow:
+    0 18px 26px -16px var(--c-32231499, #32231499),
+    0 0 0 1px var(--c-785f3c12, #785f3c12);
+}
+.ts-pol img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--c-ece4d6, #ece4d6);
+}
+.ts-pol.main {
+  left: 0;
+  top: 4px;
+  width: 62%;
+  height: 226px;
+  transform: rotate(-2deg);
+}
+.ts-pol.s1 {
+  right: 0;
+  top: 0;
+  width: 37%;
+  height: 124px;
+  padding: 5px 5px 18px;
+  transform: rotate(4deg);
+}
+.ts-pol.s2 {
+  right: 4%;
+  top: 118px;
+  width: 33%;
+  height: 112px;
+  padding: 5px 5px 16px;
+  transform: rotate(-3deg);
+}
+.ts-photos[data-n="1"] .ts-pol.main {
+  left: 11%;
+  width: 78%;
+}
+.ts-photos[data-n="2"] .ts-pol.s1 {
+  top: 84px;
+  width: 40%;
+  height: 142px;
+}
+.ts-tape {
+  position: absolute;
+  left: 22%;
+  top: -6px;
+  width: 74px;
+  height: 20px;
+  transform: rotate(-7deg);
+  background: var(--c-e9c9c4d9, #e9c9c4d9);
+}
+.ts-photos[data-n="1"] .ts-tape {
+  left: 38%;
+}
+.ts-more {
+  position: absolute;
+  right: 0;
+  bottom: -4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+  font: 500 12px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.ts-play {
+  position: absolute;
+  left: 14px;
+  bottom: 34px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-fffffff0, #fffffff0);
+  font-size: 11px;
+  color: var(--sageDeep);
+}
+.ts-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.ts-words {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--t-5d554b, #5d554b);
+  overflow-wrap: anywhere;
+}
+.ts-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ts-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--c-f1eadf, #f1eadf);
+  font: 400 12px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.ts-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 20px 0;
+  padding: 2px 0 8px;
+  border-top: 1px solid var(--line);
+}
+.ts-book,
+.ts-go {
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 400 13px/1.35 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  text-align: left;
+}
+.ts-book {
+  min-width: 0;
+  display: grid;
+}
+.ts-book small {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--t-675d54, #675d54);
+}
+.ts-book b {
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+  text-decoration-color: var(--c-cdbfa8, #cdbfa8);
+  text-underline-offset: 3px;
+}
+.ts-go {
+  flex: none;
+  font-weight: 600;
+  color: var(--sageDeep);
+  text-align: right;
+}
+.ts-go i {
+  margin-right: 10px;
+  font: italic 500 16px "LD-elegant", Georgia, serif;
+  color: var(--t-675d54, #675d54);
+}
+/* Words only: a sheet of diary paper — ruled lines, a margin, more room to read. */
+.ts-card.ts-paper {
+  background:
+    linear-gradient(90deg, transparent 33px, var(--c-e9c9c480, #e9c9c480) 33px, var(--c-e9c9c480, #e9c9c480) 34px, transparent 34px),
+    repeating-linear-gradient(var(--paper) 0 31px, var(--c-ece4d6, #ece4d6) 31px 32px);
+  background-color: var(--paper);
+}
+.ts-paper .ts-open {
+  padding: 24px 22px 6px 48px;
+}
+.ts-paper .ts-meta {
+  margin-bottom: 20px;
+}
+.ts-paper .ts-title {
+  -webkit-line-clamp: 3;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+}
+.ts-paper .ts-words {
+  -webkit-line-clamp: 6;
+  margin-top: 0;
+  padding-top: 32px;
+  font-size: 16px;
+  line-height: 32px;
+}
+.ts-paper .ts-foot {
+  margin-left: 48px;
+  border-top-color: transparent;
+}
+/* The other pages of the day: one line each. */
+.ts-also {
+  list-style: none;
+  margin: 16px 2px 0;
+  padding: 0;
+}
+.ts-also button {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  color: var(--ink);
+}
+.ts-thumb {
+  width: 40px;
+  height: 48px;
+  padding: 3px 3px 9px;
+  box-sizing: border-box;
+  background: var(--c-ffffff, #ffffff);
+  box-shadow:
+    0 6px 10px -6px var(--c-32231480, #32231480),
+    0 0 0 1px var(--c-785f3c12, #785f3c12);
+  transform: rotate(-3deg);
+}
+.ts-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--c-ece4d6, #ece4d6);
+}
+.ts-thumb.words {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 0 7px;
+}
+.ts-thumb.words i {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--c-d8cfc0, #d8cfc0);
+}
+.ts-thumb.words i:first-child {
+  width: 70%;
+  background: var(--c-8d8274, #8d8274);
+}
+.ts-row-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.ts-row-copy b {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ts-row-copy small {
+  font: 400 12px/1.4 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ts-num {
+  font: italic 500 16px "LD-elegant", Georgia, serif;
+  color: var(--t-675d54, #675d54);
+}
+.ts-all {
+  display: block;
+  margin: 4px auto 0;
+  min-height: 44px;
+  font-size: 13px;
+  color: var(--sageDeep);
+}
+/* Nothing today: an invitation; then the latest real story. */
+.ts-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 20px 22px;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--c-785f3c0d, #785f3c0d);
+  text-align: center;
+}
+.ts-ghost {
+  width: 84px;
+  height: 100px;
+  margin-bottom: 8px;
+  border: 1.5px dashed var(--c-cdbfa8, #cdbfa8);
+  transform: rotate(-3deg);
+}
+.ts-empty b {
+  font: 600 17px/1.4 var(--ui-sans);
+  color: var(--ink);
+}
+.ts-empty small {
+  font: 400 14px/1.6 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.ts-start {
+  min-height: 48px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: 600 15px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.ts-empty .today-scene {
+  min-height: 44px;
+  font-size: 13px;
+  color: var(--t-675d54, #675d54);
+}
+.ts-recent-head {
+  margin: 30px 2px 12px;
+  font: 400 13px/1.3 var(--ui-sans);
+  letter-spacing: 0.08em;
+  color: var(--t-675d54, #675d54);
+}
+.ts-recent-head span {
+  font-weight: 600;
+  color: var(--ink);
+}
+.ts-recent .ts-photos {
+  height: 184px;
+}
+.ts-recent .ts-pol.main {
+  height: 176px;
+}
+.ts-recent .ts-pol.s1 {
+  height: 100px;
+}
+.ts-recent .ts-pol.s2 {
+  top: 94px;
+  height: 88px;
+}
+.ts-recent .ts-photos[data-n="2"] .ts-pol.s1 {
+  top: 66px;
+  height: 112px;
+}
+.ts-recent .ts-title {
+  font-size: 19px;
+}
+/* ---- Quiet utility: plans and habits in one line ---- */
+.home-mag .v9-home .today-list.qu,
+.today-list.qu {
+  margin: 28px 0 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.qu-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--ink);
+}
+.qu-box {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--sageDeep);
+  border-radius: 4px;
+}
+.qu-row b {
+  font: 500 15px var(--ui-sans);
+}
+.qu-row small {
+  font: 400 13px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.qu-chev {
+  font-size: 11px;
+  color: var(--t-675d54, #675d54);
+  transition: transform 0.2s;
+}
+.qu[data-open="true"] .qu-chev {
+  transform: rotate(180deg);
+}
+.qu-body {
+  padding: 0 2px 12px;
+}
+.qu-body[hidden] {
+  display: none;
+}
+.qu-hint {
+  margin: 0 0 6px;
+  font: 400 12px/1.5 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.qu .today-plans,
+.qu .today-plans.empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.qu .today-plans ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.qu .today-plans li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  min-height: 46px;
+  border-bottom: 1px dashed var(--line);
+  font: 400 15px var(--ui-sans);
+  color: var(--ink);
+}
+.qu .today-plans li.done span {
+  color: var(--t-a39a8e, #a39a8e);
+  text-decoration: line-through;
+}
+.qu .plan-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+}
+.qu .plan-add input {
+  min-height: 46px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: 400 16px var(--ui-sans);
+}
+.qu .plan-add button {
+  min-height: 40px;
+  align-self: center;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font: 500 13px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.qu .today-habits-link {
+  margin-top: 10px;
+  min-height: 46px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+/* ---- My Library ---- */
+.home-mag .home-books.hs-collect {
+  margin-top: 0;
+}
+.lib {
+  padding: 4px 2px 0;
+}
+.lib-shelf {
+  position: relative;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  column-gap: 18px;
+  align-items: end;
+  padding: 0 6px;
+}
+.lib-shelf::after {
+  content: "";
+  grid-column: 1 / -1;
+  height: 9px;
+  margin: 0 -8px;
+  border-radius: 3px;
+  background: linear-gradient(var(--c-e6d9c4, #e6d9c4), var(--c-d9cab1, #d9cab1));
+  box-shadow: 0 14px 18px -12px var(--c-46321e80, #46321e80);
+}
+.lib-book {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.lib-cover {
+  display: block;
+  zoom: 0.5;
+}
+.lib-feature .lib-cover {
+  zoom: 1.1;
+}
+.lib-book .book-cover {
+  width: 136px;
+  height: 180px;
+  margin: 0;
+  box-shadow: none;
+}
+/* A spine on the left, the pages' edge on the right and bottom. */
+.lib-book::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: linear-gradient(90deg, var(--c-00000026, #00000026), var(--c-0000000a, #0000000a) 60%, var(--c-ffffff1f, #ffffff1f));
+  z-index: 2;
+  pointer-events: none;
+}
+.lib-book::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: -4px;
+  top: 3px;
+  bottom: -3px;
+  border-radius: 0 3px 3px 0;
+  background: repeating-linear-gradient(0deg, var(--c-fbf7ef, #fbf7ef) 0 1.5px, var(--c-e9e0d0, #e9e0d0) 1.5px 3px);
+  box-shadow: 0 16px 22px -14px var(--c-32231499, #32231499);
+  z-index: -1;
+}
+.lib-slot {
+  position: relative;
+  z-index: 0;
+}
+.lib-feature {
+  transform: rotate(-2.5deg);
+  transform-origin: 30% 100%;
+  margin-bottom: 1px;
+}
+.lib-side {
+  display: grid;
+  align-content: space-between;
+  height: 100%;
+  min-width: 0;
+}
+.lib-now {
+  padding: 2px 0 12px;
+}
+.lib-now small {
+  display: block;
+  font: 500 12px var(--ui-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-675d54, #675d54);
+}
+.lib-now b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 5px 0 4px;
+  font: 600 18px/1.35 var(--ui-sans);
+  color: var(--ink);
+}
+.lib-now span {
+  display: block;
+  font: 400 13px/1.4 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.lib-write {
+  margin-top: 4px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 14px var(--ui-sans);
+  color: var(--sageDeep);
+  text-align: left;
+}
+.lib-others {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 90px;
+}
+.lib-others .lib-book:nth-child(1) {
+  transform: rotate(2deg);
+  transform-origin: 50% 100%;
+}
+.lib-others .lib-book:nth-child(2) {
+  transform: rotate(-1.5deg);
+  transform-origin: 50% 100%;
+  margin-left: -4px;
+}
+.lib-count,
+.lib-new {
+  align-self: center;
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: italic 500 18px "LD-elegant", Georgia, serif;
+  color: var(--t-675d54, #675d54);
+}
+.lib-new {
+  width: 44px;
+  height: 58px;
+  align-self: flex-end;
+  margin: 0 0 2px auto;
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed var(--c-cdbfa8, #cdbfa8);
+  border-radius: 3px;
+  color: var(--sageDeep);
+}
+.lib-new svg {
+  width: 18px;
+  height: 18px;
+}
+.lib-names {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  column-gap: 18px;
+  margin: 12px 6px 0;
+  font: 400 12px/1.4 var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.lib-names div {
+  display: flex;
+  gap: 12px;
+}
+.lib-names div span {
+  width: 68px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lib-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 0 0;
+  text-align: center;
+}
+.lib-shelf.empty {
+  display: block;
+  width: 100%;
+  height: 96px;
+  padding: 0;
+  border-bottom: 9px solid var(--c-dfd1b9, #dfd1b9);
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent 20%, var(--c-cdbfa833, #cdbfa833) 20% 20.6%, transparent 20.6%);
+}
+.lib-shelf.empty::after {
+  display: none;
+}
+.lib-empty b {
+  margin-top: 12px;
+  font: 600 16px var(--ui-sans);
+  color: var(--ink);
+}
+.home-mag .home-quote.hs-colophon {
+  margin: 36px 0 8px;
+  text-align: center;
+  font: italic 500 17px "LD-elegant", Georgia, serif;
+  color: var(--t-675d54, #675d54);
+}
+.home-mag .home-quote.hs-colophon::before {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin: 0 auto 14px;
+  background: var(--c-cdbfa8, #cdbfa8);
+}
+.ts-pol img,
+.ts-thumb img {
+  border-radius: 0;
+}
+.home-mag .home-quote.hs-colophon {
+  font-family: "LD-elegant", Georgia, serif !important;
+}
+.ts-row-copy em {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--t-5d554b, #5d554b);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Top (Direction A) — overflow fix only: a long English hint under a
+   secondary entry is cut with … instead of pushing the page wider than the
+   screen (the Chinese hints fit and look as before). */
+.home-mag .v9-secondary .today-tile {
+  min-width: 0;
+}
+.home-mag .v9-secondary .today-tile small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ts-empty .text-button.today-scene {
+  justify-self: center;
+  width: auto;
+}
+/* Section head: the title never wraps; the streak note gives way on narrow screens. */
+.home-mag .hs-head h2.hs-title {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.hs-head .streak-chip,
+.hs-head .hs-aside {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ts-empty .text-button.today-scene {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: var(--c-cdbfa8, #cdbfa8);
+  text-underline-offset: 3px;
+}
