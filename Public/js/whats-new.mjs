@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.15",
+    date: "2026-11-11",
+    zh: {
+      title: "开发用的 Captain 本地对话：第 3 版（这个链接里看不到变化）",
+      items: [
+        "在 Mac 上用本机 Qwen 实测了三版说法：现在不再一直「喵」，也不会反复提帽子、尾巴和阳光，夸它时它知道是在夸自己。",
+        "如果模型的回复和你说的语言不一样（比如你说中文它回英文），App 不会显示这句，改用 Captain 原来的回答。",
+        "这些只在 Mac 上开发时使用，默认关闭；这个链接和 iPhone App 里的 Captain 不变。",
+      ],
+    },
+    en: {
+      title: "Captain's development-only local chat: version 3 (nothing changes in this link)",
+      items: [
+        "Three versions were tested with Qwen on the Mac: no more “meow” in every line, no more hat / tail / sunshine over and over, and a compliment is understood as being about Captain.",
+        "If the model answers in a different language from yours (you write Chinese, it answers in English), the app drops that line and Captain answers the usual way.",
+        "Only used while developing on a Mac and off by default; Captain in this link and the iPhone app is unchanged.",
+      ],
+    },
+  },
+  {
     version: "10.14",
     date: "2026-11-11",
     zh: {

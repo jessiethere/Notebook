@@ -114,7 +114,9 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, `${slug}.json`), JSON.stringify({ model, promptVersion: AI.PROMPT_VERSION, machine, params, runs, loadMs, memory, results }, null, 2) + "\n");
 const ms = results.filter((r) => r.reply).map((r) => r.reply.ms).sort((a, b) => a - b);
 const median = ms.length ? ms[Math.floor(ms.length / 2)] : null;
-const rows = results.map((r) => `| ${r.id}${runs > 1 ? `#${r.run}` : ""} | ${r.text} | ${(r.reply?.text ?? `（出错）${r.error}`).replace(/\|/g, "\\|")} | ${r.reply?.ms ?? "—"} | ${r.appRoute === "rules" ? "App 里走规则" : "模型"} |`).join("\n");
+// The app drops a reply that is not in the person's language (AI.sameLanguage) and answers with the rules.
+const route = (r) => (r.appRoute === "rules" ? "App 里走规则" : r.reply?.text && !AI.sameLanguage(r.text, r.reply.text) ? "语言不符 → App 改用规则" : "模型");
+const rows = results.map((r) => `| ${r.id}${runs > 1 ? `#${r.run}` : ""} | ${r.text} | ${(r.reply?.text ?? `（出错）${r.error}`).replace(/\|/g, "\\|")} | ${r.reply?.ms ?? "—"} | ${route(r)} |`).join("\n");
 writeFileSync(
   join(outDir, `${slug}.md`),
   `# Captain × ${model}（本机 Ollama）· ${date}

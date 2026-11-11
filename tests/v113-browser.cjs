@@ -148,7 +148,7 @@ function mockOllama() {
     reply = await say("Hello, you're adorable!");
     assert.match(reply, /^Oh! You found my good side\.\n/, "cleaned: no reasoning, no *purrs*, two sentences");
     assert.match(reply, /Local model · dev/);
-    assert.match(mock.seen.at(-1).body.messages[0].content, /language of the person.s latest message/);
+    assert.match(mock.seen.at(-1).body.messages[0].content, /Reply in the language the person writes in/);
     assert.equal(mock.seen.at(-1).body.messages.at(-1).content, "Hello, you're adorable!");
     passed.push("English: English prompt and reply");
 

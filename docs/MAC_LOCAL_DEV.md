@@ -21,7 +21,7 @@
 | 日常命令 | `sim-shots.sh` 已在 Mac 上运行；其余未全部运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop`；`bash tools/mac/sim-shots.sh`（构建 + 四个页面截图；靠只在 Debug 构建生效的启动参数 `-LittleDaysTap` 打开页面） |
 | Captain 测试集 | 已写好 | `docs/captain-ai/chat-cases.json`：12 句合成输入，包括你指定的 7 句。 |
 | Captain × Qwen 评测脚本 | **2026-11-11 已在 Mac 上运行（qwen3.5:4b，每句 3 次）** | 结果和人工评分在 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md`：145/168（86%），每句约 0.4–1.9 秒，约 32 tokens/s。主要问题是「喵」成了口头禅、偶尔编造手帐状态。 |
-| App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试）；**提示词第 2 版**（2026-11-11，按 Mac 上第一次评测修改：不说「喵」、不猜手帐内容、不劝写、不编按钮名；另有一层清理去掉句首 / 句尾的「喵」），待在 Mac 上重跑评测 | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
+| App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试）；**提示词第 3 版**（2026-11-11，在 Mac 上实测 v1 → v2 → v3：「喵」19→0→0，v2 带出的帽子 / 尾巴 / 阳光口癖在 v3 基本消失；回复语言和用户不一致时由代码拦截，改用规则回复；对比见 `docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md`），v3 还要用 `captain-eval.mjs` 正式跑一次 | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
 | `qwen3.5:4b` 这个标签 | **已确认存在**（2026-11-11） | 已经下载到 Mac 上（4.0 GB，ID `7f3251fa6878`），用 Ollama 的 MLX runner 运行，100% 在 GPU 上。 |
 
 ## 2. 第一步：检查 Mac（只读）

@@ -179,6 +179,12 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — 开发用 Captain 本地对话第 3 版（V10.15，在线链接里看不到变化）
+
+- 在你的 Mac 上用本机 Qwen 跑了三版对比：第 3 版不再「喵」，也不反复提帽子、尾巴和阳光，夸它时知道是在夸自己。对比和评分见 [docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md](docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md)。
+- 模型用错语言回答时（比如你说中文它回英文），App 不显示这句，改用 Captain 原来的回答。
+- 在模拟器里确认：操作指南的绿色圆环已经对准纸张。
+
 ### 2026-11-11 — iPhone App 第一次在模拟器里跑起来（V10.14）
 
 - 在你的 Mac 上用 Xcode 27.2 第一次构建 iPhone App：没改工程就成功，在 iPhone 18 Pro 模拟器里首页、日历、书架、写手帐都能打开。以后运行 `bash tools/mac/sim-shots.sh` 就能自动构建并截这四个页面。
