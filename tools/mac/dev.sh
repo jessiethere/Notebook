@@ -2,6 +2,7 @@
 # Little Days · everyday Mac commands. Nothing starts at login; the model loads only when asked.
 #   bash tools/mac/dev.sh web        # Web preview at http://127.0.0.1:8080 (this Mac only)
 #   bash tools/mac/dev.sh web-ai     # same, with Captain's local-model chat switched on (dev only)
+#   bash tools/mac/dev.sh open       # open the iPhone app in Xcode (LittleDays.xcworkspace), then ⌘R
 #   bash tools/mac/dev.sh sim [name] # build the iPhone app and run it in the Simulator (default: first iPhone)
 #   bash tools/mac/dev.sh ai         # is Ollama up? which models? (does not load a model)
 #   bash tools/mac/dev.sh eval [...] # Captain × local Qwen test set (tools/captain-eval.mjs)
@@ -22,6 +23,7 @@ web() {
 case "$cmd" in
   web) web "" ;;
   web-ai) web "?dev-local-ai=$MODEL" ;;
+  open) open LittleDays.xcworkspace ;;
   ai)
     curl -s --max-time 2 http://127.0.0.1:11434/api/version || { echo "Ollama is not running: open the Ollama app (or run: ollama serve)"; exit 1; }
     echo; ollama list; echo "-- loaded now:"; ollama ps ;;

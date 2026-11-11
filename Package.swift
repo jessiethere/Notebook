@@ -3,7 +3,15 @@ import PackageDescription
 
 let package = Package(
     name: "Notebook",
-    platforms: [.macOS(.v13)],
+    // iOS 17 is the minimum for every Little Days package (LittleDaysCore,
+    // Native/LittleDaysUI and the app target). This package is the local
+    // Vapor server, run on the Mac; the iOS line keeps the deployment target
+    // the same as LittleDaysCore's if Xcode builds it for an iPhone
+    // destination (without it SwiftPM assumed iOS 15 and the build failed with
+    // "LittleDaysCore-product requires minimum platform version 17.0").
+    // The iPhone app itself is Native/LittleDays.xcodeproj
+    // (open LittleDays.xcworkspace).
+    platforms: [.macOS(.v13), .iOS(.v17)],
     products: [.executable(name: "NotebookServer", targets: ["NotebookServer"])],
     dependencies: [
         .package(path: "Packages/LittleDaysCore"),
