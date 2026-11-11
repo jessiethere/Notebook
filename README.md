@@ -179,6 +179,10 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — 预览服务常驻
+
+- 云端会话里的预览服务（8080，名称「Little Days」）启动后会一直开着，可以在 App 会话的 environment / 预览里直接打开。容器重启后由 Claude 重新启动。
+
 ### 2026-11-11 — 准备在 Mac 上开发（V10.13，仅开发用，在线链接里看不到变化）
 
 - 新增 [docs/MAC_LOCAL_DEV.md](docs/MAC_LOCAL_DEV.md)：在你的 Mac 上检查环境（`bash tools/mac/doctor.sh`），在本机运行 Qwen（Ollama），运行 Captain 的中英文测试（`bash tools/mac/dev.sh eval`），在 Xcode iPhone 模拟器里运行真正的 App（`bash tools/mac/dev.sh sim`），以及每天的开发流程。
