@@ -179,6 +179,11 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-11 — iPhone App 在你的 Mac 上构建验证通过
+
+- iOS 17 的修复验证过了：服务端的包和 iPhone App（Debug、Release）都构建成功，模拟器里能看到新版编辑资料。
+- 每台模拟器都是一部独立的手机，App 要分别安装。在 Xcode 里选好机型再按 ⌘R，或者运行 `bash tools/mac/sim-shots.sh "iPhone 18 Pro Max"`。
+
 ### 2026-11-11 — Captain's Playroom 设计预览（等你确认）
 
 - 「玩耍」页的新设计：Captain 大大地在中间，气泡邀请你陪它玩毛线球，按钮在下面；还没画好的摸摸头和挠肚皮只占两个浅色小按钮，界面上不再写开发说明。方案见 [docs/CAPTAIN_PLAYROOM_PLAN.md](docs/CAPTAIN_PLAYROOM_PLAN.md)，里面有 5 个问题等你确认。

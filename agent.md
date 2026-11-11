@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-11 — P0 在用户 Mac 上验证通过：iOS 17 修复后各项构建成功，V10.16 在模拟器里运行
+
+- 你 Mac 上另一个会话先把它的修改（Debug 构建才有的 JS 日志和启动计时）提交并推送了（5115c61），是接在 81279ab、e523643、454207f 之后提交的，所以用户 Mac 上的副本已经是最新的，不需要再合并。只剩 `Package.resolved` 和 v2 评测结果还没提交，没有动。
+- 实际运行（Xcode 27.2，iOS 27.2 模拟器）：
+  - 在根目录用 `xcodebuild -workspace .swiftpm/xcode/package.xcworkspace -scheme Notebook -destination "generic/platform=iOS Simulator"` 构建：**BUILD SUCCEEDED**。之前「LittleDaysCore-product requires minimum platform version 17.0 … supports 15.0」的报错消失了。
+  - `xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays`：Debug 构建（iPhone 18 Pro）成功，17 条警告、没有错误；Release 构建（generic iOS Simulator）成功。
+  - 有了根目录的 `LittleDays.xcworkspace` 之后，在根目录直接运行 `xcodebuild` 默认就是 iPhone App。要构建服务端的包，需要显式指定 `.swiftpm/xcode/package.xcworkspace`。
+  - 装进 iPhone 18 Pro Max 并启动：V10.16 的编辑资料（小芽默认、五种字母印记）在原生 App 里正常显示。
+- 用户问「为什么只有 iPhone 17 能打开」：每台模拟器是一部独立的虚拟手机，App 要分别安装。iPhone 17 是另一个会话装的，18 Pro 是本会话装的，18 Pro Max 之前没有装过。现在三台都装了。以后在 Xcode 里先选目标机型再按 ⌘R，或者运行 `bash tools/mac/sim-shots.sh "iPhone 18 Pro Max"`。
+
 ### 2026-11-11 — Captain's Playroom 设计轮（只出设计，等确认）；用户提供的 Captain 动画素材入库
 
 - 需求：用户觉得「玩耍」页像功能路线图，要重新设计成 Captain's Playroom：大舞台、能直接摸 Captain、和它玩；三个轻量快捷玩法（摸摸头、挠肚皮、玩毛线球）；首次提示；装扮联动；删掉开发说明；先给设计，确认后再开发。

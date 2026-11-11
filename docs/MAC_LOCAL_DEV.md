@@ -125,6 +125,15 @@ open Native/LittleDays.xcodeproj                # 也可以在 Xcode 里选模�
 - 步骤：在工程的 Signing & Capabilities 里选择你的 Team（`DEVELOPMENT_TEAM` 现在是空的，可能需要改成唯一的 Bundle ID）。用 USB 连接 iPhone，在手机上「信任此电脑」。打开 iOS 16 及以上系统的「开发者模式」（设置 → 隐私与安全性），按提示重启。第一次运行后，在 设置 → 通用 → VPN 与设备管理 里信任开发者证书。配对过一次后可以通过 Wi-Fi 无线调试。
 - 这些步骤需要你本人操作（Apple ID 登录、手机上点信任），Claude 不能代替你完成。
 
+### 每台模拟器都要单独安装
+
+模拟器里的每台 iPhone 都是一部独立的虚拟手机，在一台上运行过，另一台上也不会有这个 App。在 Xcode 顶部选好机型（例如 iPhone 18 Pro Max）再按 ⌘R，就会装到那一台；也可以运行 `bash tools/mac/sim-shots.sh "iPhone 18 Pro Max"`。2026-11-11 已经在 iPhone 17、18 Pro、18 Pro Max 上装好并能运行。
+
+### 构建验证（2026-11-11）
+
+- 服务端的包（iOS 目标）：`xcodebuild -workspace .swiftpm/xcode/package.xcworkspace -scheme Notebook -destination "generic/platform=iOS Simulator" build` → 成功（iOS 17 修复之后）。
+- iPhone App：`xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays …` → Debug 和 Release 都成功。
+
 ## 8. 以后每天的流程
 
 ```bash
