@@ -64,7 +64,8 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     // 2. Shapes for videos and photos: round, heart, film… with true proportions.
     // Near its lower edge: on the larger V10.0 paper the note's text box crosses the clip's top corner.
     await page.locator(`[data-layer="${wide.id}"]`).tap({ position: { x: 6, y: wideBox.height - 10 } });
-    await studioTool(page, "layer");
+    // V10.20: shapes have their own 形状 sheet (no longer inside 图层).
+    await studioTool(page, "shape");
     const videoShapes = await page.$$eval('[data-action="layer-shape"]', (els) => els.map((el) => el.dataset.shape));
     assert.deepEqual(videoShapes, ["landscape", "portrait", "square", "circle", "arch", "heart", "film"]);
     await page.locator('[data-action="layer-shape"][data-shape="circle"]').tap();
@@ -81,7 +82,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     s = await story();
     const photo = s.layers.find((l) => l.kind === "photo");
     await page.locator(`[data-layer="${photo.id}"]`).tap();
-    await studioTool(page, "layer");
+    await studioTool(page, "shape"); // V10.20: 形状 sheet
     const photoShapes = await page.$$eval('[data-action="layer-shape"]', (els) => els.map((el) => el.dataset.shape));
     assert.ok(photoShapes[0] === "free" && !photoShapes.includes("film"));
     await page.locator('[data-action="layer-shape"][data-shape="heart"]').tap();

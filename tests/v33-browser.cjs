@@ -83,6 +83,8 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     assert.equal(moment.layoutTemplate, "trio");
     assert.deepEqual(moment.layers.filter((l) => l.kind === "photo").map((l) => Boolean(l.mediaRef)), [true, true, false]);
     // Fewer photos than already placed is not offered; words-only stays possible (with a confirm).
+    // V10.20: adding photos no longer reopens Layout; open it again from More.
+    await tool("layout");
     assert.equal(await page.locator('[data-action="template-count"][data-count="1"]').isDisabled(), true);
     assert.equal(await page.locator('[data-action="template-count"][data-count="0"]').isDisabled(), false);
     // A words-only Moment sets its title on the paper.

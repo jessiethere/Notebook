@@ -136,9 +136,12 @@ const shift = (key, days) => {
     await page.locator('[data-action="mood"][data-mood="✨"]').click();
     assert.equal(await page.locator('[data-tool-value="mood"]').innerText(), "✨");
     assert.equal(await page.locator("#journal-canvas .canvas-mood").innerText(), "✨");
-    // Adding photos opens Layout right away; the summary follows the template.
+    // Adding photos offers Layout; the summary follows the template.
+    // V10.20: several photos no longer force the Layout sheet open; a light
+    // 试试排版 chip above the dock opens it.
     await page.locator("#photos-input").setInputFiles([0, 1, 2].map((i) => ({ name: `p${i}.jpg`, mimeType: "image/jpeg", buffer: jpeg(i % 2 ? "lake.jpg" : "coffee.jpg") })));
     await skipPhotoEditor(page);
+    await page.locator('.layout-hint [data-action="layout-hint-open"]').click();
     await page.waitForSelector('[data-tool-row="layout"].open');
     await page.locator('[data-action="apply-layout"][data-template="polaroid"]').click();
     await page.waitForFunction(() => document.querySelector('[data-tool-value="layout"]').textContent.includes("拍立得"));
