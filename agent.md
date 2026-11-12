@@ -48,6 +48,28 @@
 
 ## 更新日志
 
+### 2026-11-12 — 合并：云端分支快进到 v33-write-first-community（139b306，V10.22），全量回归，在线链接第 86 版
+
+- 需求：用户说「合并代码」。
+- 做法：
+  - `origin/main`（896304b）是 `v33-write-first-community` 的祖先，所以没有冲突。云端分支 `claude/focused-johnson-6in87n` 依次快进到 49479dd、7bac0b9（V10.22 代码）、139b306（V10.22 日志），本地没有自己的代码改动。
+  - `python3 tools/sync_native_web.py` 运行后没有差异，iOS 外壳副本和 `Public/` 一致。
+  - 没有碰用户 Mac 上的工作区：Mac 会话正在查冷启动，请其他会话不要改 `LittleDaysWebShellView.swift`、`LittleDaysWebResources.swift`，也不要在 Mac 上执行 checkout / stash / reset。云端会话也没法给 Mac 会话回消息：发消息需要用户额外授权，所以没有申请。
+- 运行与测试（Ubuntu 容器，Node 22.23.4，Playwright 1.62.1，预装 Chromium 1243，模拟 iPhone 13）：
+  - 在 49479dd 上：`npm test` 206/206，`python3 -m unittest` 18/18，浏览器测试 61/61。
+  - 在 7bac0b9（V10.22）上：`npm test` 211/211，`python3 -m unittest` 18/18，浏览器测试 62/62（包括新的 v122）。139b306 只改了日志、文档和更新记录（whats-new）。
+  - 第一次全量跑时，从 v3 开始有多个测试在「等图片加载」时超时。原因是预览服务在快进之前就启动了，跑的是旧的 `tools/preview.py`，`library/photos/` 路径返回 404，不是 App 的问题。用新代码重启预览后，全部通过。**以后快进或切换分支后，要先重启预览服务再跑测试。**
+  - 容器里第一次 `npm test` 有 3 个文件失败，是因为还没 `npm install`（缺 `fake-indexeddb`）；装好后全部通过。
+- 发布：
+  - 发布前在线链接还是第 85 版（V10.21），V10.22 没有发布。
+  - 用 `tools/build_link.py` 构建后，在 Chromium 里打开构建结果，首页正常渲染，没有脚本错误。
+  - 发布为同一链接的第 86 版：上传 app.js、js/events.mjs、js/media.mjs、js/media-check.mjs、styles.css、themes.css、shared/i18n.json、js/whats-new.mjs。
+  - 读回检查：whats-new.mjs、media-check.mjs 的 sha256 和本地构建一致。
+- 未验证：iOS 构建、模拟器和真机（本会话连不到 Mac）；Windows 实机。
+- 下一步：
+  - 合并进 `main` 需要用户确认用哪种方式（见 README）；
+  - Mac 会话的冷启动排查还在进行，它的 Debug 改动没有提交，不在这次合并里。
+
 ### 2026-11-12 — Mac 上实测第 5 节：Captain × 本机 Qwen 在浏览器里可用；`dev.sh web` 发现 8080 被别的程序占用时会停下
 
 - 需求：用户确认「Yes, test web-ai」，按 docs/MAC_LOCAL_DEV.md 第 5 节在 Mac 上实际打开 App 里的本地 AI 聊天（Mac 本地时间 11-11 晚）。
