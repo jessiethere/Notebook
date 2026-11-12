@@ -38,6 +38,9 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             category, name = parts[2:]
             catalog = json.loads((SHARED / 'library.json').read_text(encoding='utf-8'))
             allowed = {item[key] for item in catalog.get(category, []) for key in ('file', 'nativeFile', 'license') if key in item}
+            if category == 'keepers':  # Captain's Playroom pictures (V10.17)
+                for play in catalog.get('keeperPlay', []):
+                    allowed |= {play['idle'], play['license']} | {(play.get(k) or {}).get('file') for k in ('happy', 'ball')} - {None}
             if name not in allowed:
                 self.send_error(404)
                 return

@@ -61,7 +61,8 @@
     "test:browser:v112": "node tests/v112-browser.cjs",
     "test:browser:v113": "node tests/v113-browser.cjs",
     "captain:eval": "node tools/captain-eval.mjs",
-    "test:browser:v116": "node tests/v116-browser.cjs"
+    "test:browser:v116": "node tests/v116-browser.cjs",
+    "test:browser:v117": "node tests/v117-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

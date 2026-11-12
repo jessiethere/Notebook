@@ -358,3 +358,14 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - `app.js`：新增常量 `BRAND_SPROUT`（首页字标和欢迎页共用的小芽 SVG）；`loginHTML()` 用 `.login-brand`（App 图标 + `h1.brand-title.login-title`）和 `.login-labs`（`role="group"`，未上线的登录按钮）。
 - `styles.css`：`.pmark` 增加 `--pm-cap`、`--pm-cjk`、`--pm-ring` 三个变量，各样式只覆盖变量；删除 `.login-art`、`.login-divider` 样式。
 - i18n：新增 `login.labsOnly`。`whats-new.mjs` 新增 10.16.1（版本号允许三段，`tests/v52-browser.cjs` 已放宽格式检查）。
+
+## 2026-11-12 V10.17 Captain's Playroom
+
+- 数据：`library.json` 新增 `keeperPlay`，每套造型一条：`idle`、`stage`，可选的 `happy`（`file`/`frames`/`frameMs`/`loops`/`still`）和 `ball`（`file`/`x`/`y`/`d`），还有 `license`。
+  - Swift：`KeeperPlay`、`KeeperPlayClip`、`KeeperPlayBall`（`AssetCatalog.keeperPlay` 是可选字段）。`SharedResources.libraryData(category: "keepers", …)` 的白名单也包含这些文件，`CoreTests` 新增了检查（还修正了旧测试里少写的无帽图）。
+  - `tools/preview.py` 和 `tools/build_link.py` 用同样的白名单。
+- 页面：`app.js` 新增 `wornLook`、`playSetOf`、`keeperPlayHTML`、`prHappy`、`prToss`、`prCatch`，以及毛线球的 pointer 拖动（document 级的 `pointerdown`/`pointermove`/`pointerup`，使用 `setPointerCapture`，毛线球设 `touch-action:none`）。
+  - 状态都在 DOM 上：`.pr[data-busy]`、`.pr.happy` / `.still` / `.hop`、`.pr-ball.caught`。
+  - 「玩耍」标签固定展开到最高。
+- 原生：`LittleDaysHaptics`（`WKScriptMessageHandler`，名字是 `littleDaysHaptics`）收到页面的 `postMessage` 后调用 `UIImpactFeedbackGenerator(.light)`。网页端检测不到这个 handler，就什么都不做。
+- 素材：`tools/make_captain_anim.py` 需要 Pillow 和 numpy：把毛线球从坐姿图里抠出来，用调和填充补上原位置，生成开心动画的雪碧图，并删除不再使用的带领巾雪碧图。

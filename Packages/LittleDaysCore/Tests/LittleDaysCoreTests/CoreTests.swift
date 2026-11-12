@@ -43,11 +43,20 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try SharedResources.libraryData(category: "music", filename: "LD-photo-latte-art.jpg"))
         // Little Keeper V8.0: Captain only (Normal, Happy, Sleepy, Peek), cut out of the approved reference.
         let keepers = try XCTUnwrap(catalog.keepers)
-        XCTAssertEqual(keepers.map(\.mood), ["normal", "happy", "sleepy", "peek"])
+        // V10.8 added the no-hat look (holding the yarn ball): one "happy" picture.
+        XCTAssertEqual(keepers.map(\.mood), ["normal", "happy", "sleepy", "peek", "happy"])
         XCTAssertEqual(Set(keepers.map(\.animal)), ["cat"])
         let keeperPNG = try SharedResources.libraryData(category: "keepers", filename: keepers[0].file)
         XCTAssertEqual(Array(keeperPNG.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
         XCTAssertThrowsError(try SharedResources.libraryData(category: "keepers", filename: "LD-photo-latte-art.jpg"))
+        // V10.17 Playroom: both looks have a stage; only the lemon hat has the
+        // hug animation and a ball of its own. Every file is served.
+        let play = try XCTUnwrap(catalog.keeperPlay)
+        XCTAssertEqual(play.map(\.outfit), ["lemon", "yarn"])
+        XCTAssertEqual(play[0].happy?.frames, 6)
+        XCTAssertNotNil(play[0].ball)
+        XCTAssertNil(play[1].happy)
+        for file in play.flatMap(\.files) { XCTAssertFalse(try SharedResources.libraryData(category: "keepers", filename: file).isEmpty, file) }
     }
 
     func testLegacyJournalWithoutV3FieldsStillDecodes() throws {

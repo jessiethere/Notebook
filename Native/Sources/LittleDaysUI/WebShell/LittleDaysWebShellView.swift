@@ -122,6 +122,19 @@ final class LittleDaysLockBridge: NSObject, WKScriptMessageHandler {
     }
 }
 
+/// V10.17 · Captain's Playroom: a light tap of the Taptic Engine when Captain
+/// catches the yarn ball or is poked. The page only asks; nothing is sent back.
+@MainActor
+final class LittleDaysHaptics: NSObject, WKScriptMessageHandler {
+    static let name = "littleDaysHaptics"
+    private let light = UIImpactFeedbackGenerator(style: .light)
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == Self.name else { return }
+        light.impactOccurred()
+    }
+}
+
 struct LittleDaysWebView: UIViewRepresentable {
     func makeCoordinator() -> LittleDaysWebCoordinator { LittleDaysWebCoordinator() }
 
@@ -144,6 +157,8 @@ struct LittleDaysWebView: UIViewRepresentable {
         configuration.userContentController.add(lockBridge, name: LittleDaysLockBridge.name)
         // Daily reminder: local notifications (V7.6).
         configuration.userContentController.add(LittleDaysReminders.shared, name: LittleDaysReminders.name)
+        // Captain's Playroom: a light tap (V10.17).
+        configuration.userContentController.add(LittleDaysHaptics(), name: LittleDaysHaptics.name)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         lockBridge.webView = webView

@@ -48,6 +48,59 @@
 
 ## 更新日志
 
+### 2026-11-12 — V10.17 Captain's Playroom MVP（用户确认五项决定后实现）；Mac 同步的安全检查点
+
+- 需求：用户确认 Playroom 五项决定：
+  1. 不用带绿领巾的版本；
+  2. 抱毛线球大笑作为开心反应，不冒充摸头或挠肚皮；
+  3. 摸头、挠肚皮在素材到位前隐藏；
+  4. 无帽是正式造型，与柠檬帽走同一套互动逻辑、各用各的素材，不突然换装扮；
+  5. ChatGPT 里的动画要用户手动导入。
+  MVP 要求：大舞台、点身体触发开心反应、粉色毛线球真实可互动（点或拖）、播完回到 Idle、两种造型都能用、不以自动循环 GIF 冒充互动。另外要把 iOS 17 修复和 V10.16 的提交安全同步到 Mac。
+- 素材审查（只算仓库里实际有的文件）：
+  - `docs/brand/captain-anim/` 只有三份：
+    - 柠檬帽坐姿 webp：静态，412px；
+    - 柠檬帽抱毛线球大笑 GIF：6 帧 × 180ms，循环，506px；
+    - 柠檬帽加绿领巾玩毛线球 GIF：9 帧 × 150ms，按决定不用。
+  - 无帽只有原有的静态抱毛线球 PNG（320px，透明）。
+  - 用户 Mac 上的同一目录也只有这三份。
+  - 对话里提到的 ChatGPT 无帽动画不在仓库里。需要的文件清单和导入要求写在 docs/ASSETS.md「2026-11-12」。
+- 修改：
+  - `tools/make_captain_anim.py`：重写，需要 numpy。
+    - 从坐姿图里把粉色毛线球和线抠出来，原位置用调和填充补上；球后面那只后爪本来就是虚焦，补完后是一片柔和的模糊。
+    - 底色按开心动画的纸色（#FEF5EA）统一。
+    - 生成 `LD-keeper-cat-lemon-play-idle.jpg`（23KB）和 `LD-keeper-yarn-ball.png`（19KB）；开心动画雪碧图没有变。
+    - 删除 `LD-keeper-cat-lemon-sit.jpg`、`LD-keeper-cat-lemon-play-anim.jpg`（带领巾的那张）。
+  - `library.json` 新增 `keeperPlay`：柠檬帽有 idle、happy、ball，无帽只有 idle。
+  - Swift：`Resources.swift` 新增 `KeeperPlay` / `KeeperPlayClip` / `KeeperPlayBall`，keepers 白名单加入这些文件；`CoreTests` 新增 Playroom 检查，并修正旧测试少算的无帽图。`LittleDaysWebShellView.swift` 新增 `LittleDaysHaptics`（轻触觉反馈）。
+  - `tools/preview.py`、`tools/build_link.py`：同步白名单。
+  - `tools/sync_tokens.py`：`.pr-stage` 加入 PAPER 列表，舞台在所有主题下保持纸色。
+  - `Public/app.js`：Playroom 舞台和交互（详见 ARCHITECTURE V10.17）；「玩耍」标签固定展开到最高。
+  - `Public/styles.css`：替换原来的 `.kp-play` / `.kp-soon`。
+  - i18n：删除 `corner.play*` / `corner.soon`，新增 `play.*`。
+  - `whats-new` 10.17。
+  - 测试：`tests/v117-browser.cjs`（新）；`tests/v109-browser.cjs` 的「玩耍」部分改为检查舞台；`package.json` 新增 `test:browser:v117`。
+  - 文档：CAPTAIN_PLAYROOM_PLAN §6、ASSETS、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、Keeper LICENSE。
+- 决策与原因：
+  - 毛线球单独抠出来，才能真正跟手拖动，而不只是「按一下就播放」。
+  - 接住后用的是开心反应那段动画：Captain 抱着球的姿势正好能接上。没有单独的「扑球」动画，就不假装有。
+  - 无帽版没有动画，就让它自己的画跳一下，不借柠檬帽的帧；也没有第二个毛线球，因为它手里已经抱着一个。
+  - 舞台下不放按钮，直接操作球和 Captain 本身。
+- Mac 同步（Part C）：
+  - 检查结果：分支 v33-write-first-community，HEAD 5115c61。未提交的是 `Package.resolved`（swift-async-algorithms 1.1.7→1.1.5，新增 swift-configuration，看起来是 Xcode 解析依赖时自动改的），未跟踪的是两份 prompt-v2 评测结果。
+  - 用 `ps` 查到 Claude 桌面 App 在运行。逐个检查进程打开的文件被自动模式拒绝了，所以无法确认另一个会话此刻有没有在编辑；但 git 状态里只有上面那三项。
+  - 要合并的提交（b979623、3a3f382 和本次提交）不碰这三个路径，fast-forward 不会覆盖它们。
+  - 已经建好检查点：分支 `checkpoint/pre-sync-2026-11-12`（指向 5115c61），并把 `uncommitted.patch`、`Package.resolved` 和两份评测结果复制到 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`。没有 stash、reset，也没有 commit 别人的修改。
+  - fetch 之后要先把提交 id 和两份 diff 给用户看，用户确认后才合并，然后跑测试和模拟器构建。
+- 运行 / 测试（Linux 容器，Chromium）：见本条末尾「结果」。没有在 iPhone 真机或 iOS 模拟器里试过 Playroom；Swift 改动在这里不能编译，要在 Mac 上合并后构建验证。
+- 已知问题：
+  - 舞台图只有 400px，iPhone 3 倍屏上偏软。
+  - 拖动毛线球时能看到它原来位置的模糊补丁。
+  - Captain 的视线不会跟着球走。
+  - 无帽版只有静态画。
+- 结果：`npm test` 190 项通过；`python3 -m unittest discover -s tests` 通过（包括外壳同步检查）；浏览器 v117（新）、v109、v108、v103 通过。全量浏览器测试的结果另记一条。
+- 未完成 / 下一步：等用户导入无帽动画和更高清的素材；摸头、挠肚皮等正式素材；Mac 合并、Core 测试和模拟器构建；Captain 本地模型 v3 正式评测。
+
 ### 2026-11-12 — V10.16.1 最后一次 UI 打磨：欢迎页品牌统一、五种字母印记细节统一、社区确认只在 Labs
 
 - 需求：用户认可 V10.16 方向，要求（1）欢迎页去掉像素风 ✿ 和散落表情，用已确认的品牌标识、小芽和文具元素，未上线的 Apple / 邮箱登录只在 Labs 环境展示；（2）五种 Monogram 统一字母大小、阴影、边框、纸片尺寸、选中状态，选中要清楚但克制；（3）确认社区是 Labs 界面，正式版不出现；（4）375 / 430、中英文、键盘、实时更新、保存后持久、旧头像无损、多页直达继续验证；已实现的只修问题，不重复开发。

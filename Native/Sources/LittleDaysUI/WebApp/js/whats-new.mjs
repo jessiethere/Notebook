@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.17",
+    date: "2026-11-12",
+    zh: {
+      title: "和 Captain 玩毛线球：拖一拖、点一点，Captain 会接住",
+      items: [
+        "Captain's Corner 的「玩耍」变成一个大舞台：按住粉色毛线球拖到 Captain 爪子边松手，Captain 会抱住它开心大笑；丢到别处，球会自己滚回来。",
+        "点一下毛线球，它会自己滚过去；戳戳 Captain 的身体，也会看到它开心的样子。",
+        "柠檬帽和无帽都能玩，各用各的画：无帽版现在只有静态画，戳它会开心地跳一下。不会突然换装扮。",
+        "还没画好的摸摸头、挠肚皮先收起来，不再显示「准备中」。",
+        "系统开了「减少动态效果」时，只显示一张开心的画，不播放动画。iPhone App 里接住毛线球时会有一下轻轻的震动。",
+      ],
+    },
+    en: {
+      title: "Play yarn with Captain: drag it, tap it — Captain catches it",
+      items: [
+        "Play in Captain's Corner is now a big stage: drag the pink yarn ball to Captain's paws and let go — Captain hugs it and giggles; drop it elsewhere and it rolls back.",
+        "Tap the ball and it rolls over by itself; poke Captain for a happy moment too.",
+        "Both the lemon hat and no hat can play, each with its own pictures — the no-hat look only has a still for now and gives a happy hop. The look never switches by itself.",
+        "Pat and tummy rub are tucked away until their art is ready — no more “coming soon”.",
+        "With Reduce Motion on, one happy picture is shown instead of the animation. The iPhone app gives a light tap when Captain catches the ball.",
+      ],
+    },
+  },
+  {
     version: "10.16.1",
     date: "2026-11-12",
     zh: {

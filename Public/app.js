@@ -1432,10 +1432,173 @@ function keeperActsHTML(k) {
   const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
   return `<ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>`;
 }
-function keeperPlayHTML() {
-  const item = (key) => `<li><span>${t(key)}</span><small class="s2-tag">${t("corner.soon")}</small></li>`;
-  return `<div class="kp-scroll"><div class="kp-play">${keeperArt("happy")}<h3>${t("corner.playTitle")}</h3><p>${t("corner.playNote")}</p><ul class="kp-soon">${item("corner.playPat")}${item("corner.playBelly")}${item("corner.playYarn")}</ul><p class="kp-hint">${t("corner.playMeanwhile")}</p></div></div>`;
+// V10.17 · Captain's Playroom (MVP): a big stage with Captain on it. Tap
+// Captain for a happy reaction; drag (or tap) the pink yarn ball to Captain
+// to have it caught. Each look plays only its own pictures (library.json
+// "keeperPlay"): an action without matching art is simply not offered —
+// never borrowed from the other look, never shown as "coming soon".
+const PLAY_HINT_KEY = "little-days.play-hint";
+function wornLook(k = keeperNow()) {
+  const looks = keeperLooks(catalog, k.animal, languageCode());
+  return looks.some((look) => look.id === k.outfit) ? k.outfit : DEFAULT_OUTFIT[k.animal] || looks[0]?.id || "";
 }
+function playSetOf(k = keeperNow()) {
+  const wear = wornLook(k);
+  return (catalog?.keeperPlay || []).find((p) => p.animal === k.animal && p.outfit === wear) || null;
+}
+function keeperPlayHTML() {
+  const k = keeperNow();
+  const set = playSetOf(k);
+  if (!set) return `<div class="kp-scroll"><div class="kp-note">${keeperArt("happy")}<p>${esc(tk("play.none", k))}</p></div></div>`;
+  const src = (file) => `library/keepers/${esc(file)}`;
+  let hinted = true;
+  try {
+    hinted = localStorage.getItem(PLAY_HINT_KEY) === "1";
+  } catch {}
+  const h = set.happy;
+  const happy = h ? `<div class="pr-anim" aria-hidden="true" style="background-image:url('${src(h.file)}');--pr-n:${h.frames};--pr-time:${h.frames * h.frameMs}ms;--pr-loops:${h.loops || 1};--pr-key:${((h.still || 0) / Math.max(1, h.frames - 1)) * 100}%"></div>` : "";
+  const b = set.ball;
+  const ball = b ? `<button class="pr-ball" style="--bx:${b.x}%;--by:${b.y}%;--bd:${b.d}%" aria-label="${esc(tk("play.ballLabel", k))}"><i class="pr-ring" aria-hidden="true"></i><img src="${src(b.file)}" alt="" draggable="false"></button>` : "";
+  return `<div class="kp-scroll pr-scroll"><div class="pr" data-outfit="${esc(set.outfit)}" data-stage="${esc(set.stage)}"${hinted ? " data-hinted" : ""}><div class="pr-stage"><img class="pr-idle" src="${src(set.idle)}" alt="" draggable="false">${happy}<button class="pr-body" data-action="pr-poke" aria-label="${esc(tk("play.pokeLabel", k))}"></button>${ball}<p class="pr-bubble" aria-live="polite">${esc(tk(b ? "play.invite" : "play.inviteSolo", k))}</p></div><p class="pr-line">${esc(tk(b ? "play.hint" : "play.hintSolo", k))}</p></div></div>`;
+}
+const prReduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+function prSay(keys) {
+  const bubble = $(".pr .pr-bubble");
+  if (!bubble) return;
+  bubble.textContent = tk(keys[Math.floor(Math.random() * keys.length)], keeperNow());
+  bubble.classList.remove("pop");
+  void bubble.offsetWidth;
+  bubble.classList.add("pop");
+}
+// The iPhone app gives a light tap (Swift: LittleDaysHaptics); the web page has none.
+function prHaptic() {
+  try {
+    window.webkit?.messageHandlers?.littleDaysHaptics?.postMessage("light");
+  } catch {}
+}
+function prPlayed(pr) {
+  if (pr.hasAttribute("data-hinted")) return;
+  pr.setAttribute("data-hinted", "");
+  try {
+    localStorage.setItem(PLAY_HINT_KEY, "1");
+  } catch {}
+}
+// The happy reaction: the look's own animation (twice), then back to rest.
+// A look with no happy animation yet gives a small hop of its own picture.
+function prHappy(keys) {
+  const pr = $(".pr");
+  if (!pr || pr.dataset.busy) return;
+  pr.dataset.busy = "1";
+  prPlayed(pr);
+  prHaptic();
+  prSay(keys);
+  const anim = pr.querySelector(".pr-anim");
+  let over = false;
+  const done = () => {
+    if (over) return;
+    over = true;
+    pr.classList.remove("happy", "still", "hop");
+    const ball = pr.querySelector(".pr-ball");
+    setTimeout(() => {
+      if (ball) {
+        ball.style.transition = "none";
+        ball.style.transform = "";
+        void ball.offsetWidth;
+        ball.style.transition = "";
+        ball.classList.remove("caught");
+      }
+      delete pr.dataset.busy;
+      if (anim) prSay(["play.again1", "play.again2"]);
+    }, 240);
+  };
+  if (!anim) {
+    if (!prReduced()) pr.classList.add("hop");
+    return setTimeout(done, 900);
+  }
+  const ms = parseFloat(getComputedStyle(anim).getPropertyValue("--pr-time")) * (Number(getComputedStyle(anim).getPropertyValue("--pr-loops")) || 1);
+  if (prReduced()) {
+    pr.classList.add("happy", "still");
+    return setTimeout(done, 1600);
+  }
+  pr.classList.add("happy");
+  anim.addEventListener("animationend", done, { once: true });
+  setTimeout(done, (ms || 2200) + 600); // in case animationend never comes
+}
+// The ball, dragged: it follows the finger and rolls; let go near Captain's
+// paws and Captain catches it; anywhere else it rolls back.
+let prDrag = null;
+function prBallMove(ball, dx, dy, r, ms = 0) {
+  ball.style.transition = ms && !prReduced() ? `transform ${ms}ms cubic-bezier(.3,.7,.35,1)` : "none";
+  ball.style.transform = dx || dy ? `translate(${dx}px, ${dy}px) rotate(${dx / r}rad)` : "";
+}
+function prCatch(ball) {
+  ball.classList.add("caught");
+  prHappy(["play.caught1", "play.caught2", "play.caught3"]);
+}
+// A tap (or Enter / Space) on the ball: it rolls over to Captain by itself.
+function prToss(ball) {
+  const pr = ball.closest(".pr");
+  if (!pr || pr.dataset.busy) return;
+  const stage = pr.querySelector(".pr-stage").getBoundingClientRect();
+  const b = ball.getBoundingClientRect();
+  const dx = stage.left + stage.width * 0.47 - (b.left + b.width / 2);
+  const dy = stage.top + stage.height * 0.8 - (b.top + b.height / 2);
+  pr.dataset.busy = "1";
+  prBallMove(ball, dx, dy, b.width / 2, 520);
+  setTimeout(() => {
+    delete pr.dataset.busy;
+    prCatch(ball);
+  }, prReduced() ? 0 : 520);
+}
+document.addEventListener("pointerdown", (event) => {
+  const ball = event.target.closest?.(".pr-ball");
+  if (!ball || (event.pointerType === "mouse" && event.button !== 0)) return;
+  const pr = ball.closest(".pr");
+  if (pr.dataset.busy) return;
+  event.preventDefault();
+  try {
+    ball.setPointerCapture(event.pointerId);
+  } catch {}
+  const b = ball.getBoundingClientRect();
+  prDrag = { ball, pr, id: event.pointerId, x0: event.clientX, y0: event.clientY, dx: 0, dy: 0, moved: false, stage: pr.querySelector(".pr-stage").getBoundingClientRect(), home: { x: b.left + b.width / 2, y: b.top + b.height / 2 }, r: b.width / 2 };
+  ball.classList.add("held");
+});
+document.addEventListener("pointermove", (event) => {
+  const d = prDrag;
+  if (!d || event.pointerId !== d.id) return;
+  // Keep the whole ball on the stage.
+  const x = Math.min(d.stage.right - d.r, Math.max(d.stage.left + d.r, d.home.x + event.clientX - d.x0));
+  const y = Math.min(d.stage.bottom - d.r, Math.max(d.stage.top + d.r, d.home.y + event.clientY - d.y0));
+  d.dx = x - d.home.x;
+  d.dy = y - d.home.y;
+  if (Math.hypot(d.dx, d.dy) > 6) d.moved = true;
+  if (d.moved) prBallMove(d.ball, d.dx, d.dy, d.r);
+});
+const prDrop = (event) => {
+  const d = prDrag;
+  if (!d || event.pointerId !== d.id) return;
+  prDrag = null;
+  d.ball.classList.remove("held");
+  d.ball.dataset.handled = String(performance.now());
+  if (event.type === "pointercancel") return prBallMove(d.ball, 0, 0, d.r, 420);
+  if (!d.moved) return prToss(d.ball);
+  prPlayed(d.pr);
+  const x = (d.home.x + d.dx - d.stage.left) / d.stage.width;
+  const y = (d.home.y + d.dy - d.stage.top) / d.stage.height;
+  // Captain's paws and lap: the left two thirds, lower half of the stage.
+  if (x < 0.64 && y > 0.42) return prCatch(d.ball);
+  prBallMove(d.ball, 0, 0, d.r, 480);
+  prSay(["play.missed1", "play.missed2"]);
+};
+document.addEventListener("pointerup", prDrop);
+document.addEventListener("pointercancel", prDrop);
+// Keyboard (and VoiceOver) activation of the ball: no pointer came first.
+document.addEventListener("click", (event) => {
+  const ball = event.target.closest?.(".pr-ball");
+  if (!ball) return;
+  if (performance.now() - Number(ball.dataset.handled || 0) < 600) return;
+  prToss(ball);
+});
 function openKeeperPanel(view = keeperView) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "invite")) return;
@@ -1456,7 +1619,8 @@ function openKeeperPanel(view = keeperView) {
   const dialog = $("#choose-dialog");
   // Still typing (re-drawn while the field has the caret): keep the typing layout.
   const composing = dialog.open && view === "home" && document.activeElement?.matches?.("[data-keeper-say]") && dialog.querySelector(".kp.composing");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
+  // Play takes the full height: the stage is the point of it.
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall || view === "play" ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
   if (!dialog.open) dialog.showModal();
   scrollKeeperChat();
   syncKeeperComposer();
@@ -6165,6 +6329,7 @@ async function action(target) {
     return openKeeperPanel("home");
   }
   if (actionName === "keeper-view") return openKeeperPanel(target.dataset.view || "home");
+  if (actionName === "pr-poke") return prHappy(["play.poke1", "play.poke2", "play.poke3"]);
   if (actionName === "kp-size") {
     kpTall = !kpTall;
     const sheet = $("#choose-dialog .kp");

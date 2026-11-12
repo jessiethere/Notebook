@@ -103,3 +103,32 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 
 - 已存入 `docs/brand/captain-anim/`：柠檬帽坐姿静态图、柠檬帽「抱毛线球大笑」（6 帧）、柠檬帽加绿领巾「玩毛线球」（9 帧）。`tools/make_captain_anim.py` 生成 JPEG 雪碧图，放在 `Resources/Keepers/`。**还没有登记进 library.json，也没有接到界面**，要等 Playroom 设计确认（docs/CAPTAIN_PLAYROOM_PLAN.md）。
 - 上表中「玩毛线球」的柠檬帽版本现在有了。摸摸头、挠肚皮、换衣服仍然缺失；无帽版的所有动画也缺失（对话里的无帽图没有存成文件）。
+
+### 2026-11-12 Captain's Playroom MVP：实际使用的素材与仍缺的素材
+
+**已导入并在 App 里真实播放**（全部来自用户提供的原图，没有重画）：
+
+| App 里的文件 | 来源 | 用在哪里 |
+|---|---|---|
+| LD-keeper-cat-lemon-play-idle.jpg | LD-captain-lemon-yarn-sit.webp。去掉毛线球和线后，原位置用周围像素平滑填补；底色已和开心动画对齐 | 柠檬帽的舞台静态画 |
+| LD-keeper-yarn-ball.png | 同一张图里的粉色毛线球，单独抠出，透明背景 | 可以拖动的毛线球 |
+| LD-keeper-cat-lemon-hug-anim.jpg | LD-captain-lemon-hug.gif，6 帧 × 180 ms | 开心反应：戳 Captain，或者 Captain 接住毛线球时播放 |
+| LD-keeper-cat-yarn-happy.png | 原有的无帽抱毛线球静态图 | 无帽版的舞台（只有静态画） |
+
+**没有使用**：LD-captain-lemon-play.gif（带绿领巾），按用户决定不进 App，原图留在 docs/brand 存档。原来生成的 `LD-keeper-cat-lemon-sit.jpg`、`LD-keeper-cat-lemon-play-anim.jpg` 已删除。
+
+**请从 ChatGPT 下载后放进 `Notebook/docs/brand/captain-anim/`**（ChatGPT 里的文件不会自动进入仓库）：
+
+1. 无帽版「开心反应」动画：抱着粉色毛线球笑，与 LD-captain-lemon-hug.gif 动作对应。建议命名 `LD-captain-natural-hug.gif`。
+2. 无帽版「坐在毛线球旁」的静态图：毛线球不被爪子挡住，与 LD-captain-lemon-yarn-sit.webp 构图一致，这样无帽版也能拖毛线球。建议命名 `LD-captain-natural-yarn-sit.png`。
+3. 如果有：无帽版「玩毛线球」动画（不带领巾）。建议命名 `LD-captain-natural-play.gif`。
+4. 如果有：柠檬帽、**不带领巾**的「玩毛线球」动画。建议命名 `LD-captain-lemon-play-nobandana.gif`。
+
+导入前请确认这几点：
+- 是真正会动的 GIF、WebP 或 MP4（用电脑打开能看到在动），不是九宫格预览图或截图；
+- 帧数 ≥ 6，并写明每帧多少毫秒；
+- 第一帧和最后一帧能接上（可以循环），或者明确只播一遍；
+- 背景要么透明，要么和现有素材一样是奶油色纸面；
+- 边长最好 ≥ 1024px（现在是 400–500px，iPhone 上略软）。
+
+导入后运行 `python3 tools/make_captain_anim.py`，检查每帧，再登记进 library.json 的 `keeperPlay`。

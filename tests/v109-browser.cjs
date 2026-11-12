@@ -141,10 +141,11 @@ const transcript = [];
     const tabH = await page.locator(".kp-tabs [role=tab]").first().evaluate((el) => el.getBoundingClientRect().height);
     assert.ok(tabH >= 38);
     await page.locator('.kp-tabs [data-view="play"]').tap();
-    await page.waitForSelector('.kp.corner[data-view="play"] .kp-play');
-    assert.equal(await height(), h0, "the same height on every tab");
-    assert.match(await page.locator(".kp-play").innerText(), /还在准备[\s\S]*摸摸头[\s\S]*准备中[\s\S]*挠肚皮[\s\S]*玩毛线球/);
-    assert.equal(await page.locator(".kp-play button").count(), 0, "no pretend play buttons");
+    // V10.17: Play is the Playroom (tests/v117-browser.cjs): it opens at full
+    // height for its stage, with no "coming soon" rows for unfinished play.
+    await page.waitForSelector('.kp.corner[data-view="play"] .pr-stage');
+    assert.ok((await height()) > h0, "Play takes the full height");
+    assert.doesNotMatch(await page.locator(".kp.corner").innerText(), /准备中|还在画|摸摸头|挠肚皮/);
     await shot("02-play");
     await page.locator('.kp-tabs [data-view="looks"]').tap();
     await page.waitForSelector('.kp.corner[data-view="looks"] .look-chip');
@@ -152,7 +153,7 @@ const transcript = [];
     await page.locator('.kp-tabs [data-view="home"]').tap();
     await page.waitForSelector('.kp.corner[data-view="home"]');
     await close();
-    passed.push("Chat / Play / Look tabs at one height; Play shows what is coming (准备中) with no stand-in interaction; Look is the wardrobe");
+    passed.push("Chat / Play / Look tabs (Chat and Look at one height, Play full height for its stage, no coming-soon rows); Look is the wardrobe");
 
     // 5. With permission switched on, Captain may mention the page by name.
     await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); s.keeper.allowMemories = true; localStorage.setItem("little-days.v1", JSON.stringify(s)); localStorage.removeItem("little-days.keeperLines"); });

@@ -7343,34 +7343,6 @@
     "zh": "Captain 的小角落",
     "en": "Captain's Corner"
   },
-  "corner.playTitle": {
-    "zh": "一起玩，还在准备",
-    "en": "Playing together is on its way"
-  },
-  "corner.playNote": {
-    "zh": "摸摸头、挠肚皮、玩毛线球都需要 Captain 的正式动画。画好之前，不做粗糙的版本。",
-    "en": "Head pats, belly rubs and the yarn ball all need Captain's real animation. Until it's drawn, there won't be a rough version."
-  },
-  "corner.playPat": {
-    "zh": "摸摸头",
-    "en": "Head pats"
-  },
-  "corner.playBelly": {
-    "zh": "挠肚皮",
-    "en": "Belly rubs"
-  },
-  "corner.playYarn": {
-    "zh": "玩毛线球",
-    "en": "Yarn ball"
-  },
-  "corner.soon": {
-    "zh": "准备中",
-    "en": "On its way"
-  },
-  "corner.playMeanwhile": {
-    "zh": "现在可以在「聊天」里说「摸摸你」。",
-    "en": "For now, you can say “pat you” in Chat."
-  },
   "corner.expand": {
     "zh": "展开",
     "en": "Expand"
@@ -7694,5 +7666,73 @@
   "login.labsOnly": {
     "zh": "实验室 · 还没有开放",
     "en": "Labs · not available yet"
+  },
+  "play.none": {
+    "zh": "这身装扮还没有可以玩的画。",
+    "en": "There are no play pictures for this look yet."
+  },
+  "play.invite": {
+    "zh": "陪我玩毛线球嘛！",
+    "en": "Play yarn with me!"
+  },
+  "play.inviteSolo": {
+    "zh": "戳戳我呀～",
+    "en": "Give me a poke!"
+  },
+  "play.hint": {
+    "zh": "把毛线球拖给{name}或者点一下毛线球，也可以戳戳{name}。",
+    "en": "Drag the yarn ball to {name}, or tap it — or give {name} a poke."
+  },
+  "play.hintSolo": {
+    "zh": "戳戳{name}，它会开心地跳一下。",
+    "en": "Poke {name} for a happy little hop."
+  },
+  "play.ballLabel": {
+    "zh": "毛线球：拖给{name}，或者点一下",
+    "en": "Yarn ball: drag it to {name}, or tap it"
+  },
+  "play.pokeLabel": {
+    "zh": "戳戳{name}",
+    "en": "Poke {name}"
+  },
+  "play.poke1": {
+    "zh": "嘿嘿～",
+    "en": "Hehe~"
+  },
+  "play.poke2": {
+    "zh": "好痒呀！",
+    "en": "That tickles!"
+  },
+  "play.poke3": {
+    "zh": "再戳一下嘛！",
+    "en": "Again!"
+  },
+  "play.caught1": {
+    "zh": "抓到啦！",
+    "en": "Got it!"
+  },
+  "play.caught2": {
+    "zh": "我的毛线球！",
+    "en": "My yarn ball!"
+  },
+  "play.caught3": {
+    "zh": "接住了，厉害吧？",
+    "en": "Caught it — not bad, right?"
+  },
+  "play.missed1": {
+    "zh": "差一点点～再丢过来嘛",
+    "en": "So close~ toss it here!"
+  },
+  "play.missed2": {
+    "zh": "这边、这边！",
+    "en": "Over here!"
+  },
+  "play.again1": {
+    "zh": "再来一次？",
+    "en": "Again?"
+  },
+  "play.again2": {
+    "zh": "还想玩！",
+    "en": "More, please!"
   }
 }
