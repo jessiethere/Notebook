@@ -179,6 +179,11 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-12 — Mac 同步完成，所有测试通过
+
+- 你的 Mac 已经同步到最新代码，你自己没提交的文件都没动。备份还在 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`，确认不需要后可以自己删除。
+- 在你的 Mac 上：Swift 核心测试 6/6、网页逻辑测试 191/191 全部通过，iPhone App 在模拟器里构建成功。
+
 ### 2026-11-12 — 你的 Mac 已同步到最新，iPhone App 构建成功
 
 - 你 Mac 上的 Notebook 已经快进到最新，你自己没提交的 `Package.resolved` 和两份评测结果都没有动（备份在 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`）。

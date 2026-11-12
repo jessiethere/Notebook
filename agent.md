@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-12 — Mac 同步收尾：34be8ed 已带入，Swift Core 测试 6/6 全部通过
+
+- 用户第三次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 34be8ed864692214d365b6b3b58a51a31f1052f0`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。检查点（分支 `checkpoint/pre-sync-2026-11-12` 和 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`）保留，由用户决定什么时候删除。
+- 在用户 Mac 上实际运行（Xcode 27.2）：
+  - `swift test`（Packages/LittleDaysCore）：**6/6 通过**；
+  - `npm test`：191/191；
+  - iPhone App Debug 构建（iPhone 18 Pro 模拟器）：**BUILD SUCCEEDED**。
+- 本条日志提交之后，用户 Mac 会落后一个只改文档（agent.md、README）的提交，下次同步时一起带过去。
+- 仍未验证：真机，轻震的手感。
+
 ### 2026-11-12 — Mac 上带入 2cb0fc1，Core 测试第一次能编译；修正共享导航里的社区标记
 
 - 用户第二次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 2cb0fc1fbba2246fbeab01e6c34394eb49e581a4`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。
