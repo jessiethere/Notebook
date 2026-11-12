@@ -14,7 +14,9 @@ import { validateStateSnapshot } from "./model.mjs";
 // A record's bytes as a Blob, whichever way it was stored.
 // A short, lower-case error name for the local log ("notreadableerror").
 export function errName(error) {
-  return String(error?.code || error?.name || "error").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 16) || "error";
+  // A string code is ours ("media-verify"); a DOMException's number code is not useful.
+  const raw = typeof error?.code === "string" && error.code ? error.code : error?.name || "error";
+  return String(raw).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 16) || "error";
 }
 export function kindOf(kind, mime = "") {
   if (["photo", "video", "audio", "voice", "drawing"].includes(kind)) return kind === "voice" ? "audio" : kind;

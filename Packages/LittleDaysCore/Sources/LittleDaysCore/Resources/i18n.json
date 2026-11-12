@@ -3312,8 +3312,8 @@
     "en": "Put on the page"
   },
   "media.offPage": {
-    "zh": "从纸上拿下",
-    "en": "Take off the page"
+    "zh": "不放在纸上",
+    "en": "Off the paper"
   },
   "layout.textConfirm": {
     "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
@@ -4356,12 +4356,12 @@
     "en": "Remove photo"
   },
   "poster.title": {
-    "zh": "选择视频封面",
-    "en": "Choose a video cover"
+    "zh": "更换封面",
+    "en": "Change the cover"
   },
   "poster.help": {
-    "zh": "拖动滑块选一帧当封面，或者上传一张自己的图片。",
-    "en": "Slide to pick a frame, or upload a picture of your own."
+    "zh": "拖动时间轴选一帧，上面会马上显示；也可以上传一张自己的图片。原视频不会被改动。",
+    "en": "Drag along the timeline to pick a frame — it shows above right away — or upload a picture. The video itself is not changed."
   },
   "poster.frame": {
     "zh": "画面",
@@ -8314,5 +8314,109 @@
   "check.e.media_check": {
     "zh": "运行了检查",
     "en": "Check run"
+  },
+  "import.titleVideo": {
+    "zh": "导入视频",
+    "en": "Importing a video"
+  },
+  "import.titleAudio": {
+    "zh": "导入声音",
+    "en": "Importing a sound"
+  },
+  "import.import": {
+    "zh": "正在读取视频信息…",
+    "en": "Reading the file…"
+  },
+  "import.read": {
+    "zh": "正在导入 {pct}%",
+    "en": "Importing {pct}%"
+  },
+  "import.write": {
+    "zh": "正在保存到本机…",
+    "en": "Saving to this device…"
+  },
+  "import.cover": {
+    "zh": "正在生成封面…",
+    "en": "Making a cover…"
+  },
+  "import.done": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
+  },
+  "import.failed": {
+    "zh": "保存失败",
+    "en": "Not saved"
+  },
+  "import.lockNote": {
+    "zh": "保存完成前，暂时不能切换页面或离开编辑。",
+    "en": "Pages can't be switched until it is saved."
+  },
+  "import.doneNote": {
+    "zh": "可以继续编辑、切换页面了。",
+    "en": "You can switch pages now."
+  },
+  "import.failedNote": {
+    "zh": "没有存进这台设备，页面没有变化。可以重试，文件还在。",
+    "en": "It was not stored on this device and the page is unchanged. You can retry — the file is still here."
+  },
+  "import.retry": {
+    "zh": "重试",
+    "en": "Retry"
+  },
+  "import.dismissVideo": {
+    "zh": "不要这个视频",
+    "en": "Discard this video"
+  },
+  "import.dismissAudio": {
+    "zh": "不要这个声音",
+    "en": "Discard this sound"
+  },
+  "import.busy": {
+    "zh": "视频正在保存到本机，完成后就可以切换页面。",
+    "en": "The video is being saved on this device — you can switch pages once it's done."
+  },
+  "import.tooBigVideo": {
+    "zh": "视频超过 50 MB，请先在相册里剪短再导入。",
+    "en": "The video is over 50 MB — trim it in Photos first."
+  },
+  "import.tooBigAudio": {
+    "zh": "声音文件超过 20 MB。",
+    "en": "The sound file is over 20 MB."
+  },
+  "import.failedToast": {
+    "zh": "没能保存到本机，可以点「重试」。",
+    "en": "Couldn't save it on this device — tap Retry."
+  },
+  "poster.change": {
+    "zh": "换封面",
+    "en": "Cover"
+  },
+  "poster.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "poster.current": {
+    "zh": "现在的封面",
+    "en": "Current cover"
+  },
+  "media.removeFromPage": {
+    "zh": "从页面移除",
+    "en": "Remove from page"
+  },
+  "media.removeShort": {
+    "zh": "移除",
+    "en": "Remove"
+  },
+  "media.removeConfirm": {
+    "zh": "把它从这一页移除？可以撤销；文件仍保存在这台设备上。",
+    "en": "Remove it from this page? You can undo; the file stays on this device."
+  },
+  "media.removed": {
+    "zh": "已从这一页移除，可以撤销。",
+    "en": "Removed from this page — undo brings it back."
+  },
+  "media.savedLocal": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
   }
 }

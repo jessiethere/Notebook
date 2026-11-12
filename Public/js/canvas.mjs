@@ -270,5 +270,12 @@ export function mediaCardHTML(clip, ctx, options = {}) {
           clip.size / 1024 / 1024,
         ) + " MB"
       : "";
-  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em>${editable ? `<button data-action="remove-media" data-clip="${esc(clip.id)}" aria-label="${t("media.remove")}">×</button>` : ""}</div>${body}<div class="media-card-foot"><small>${editable ? t("media.saved") + " · " : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}</small>${editable && clip.kind === "video" ? `<button data-action="video-poster" data-clip="${esc(clip.id)}">${t("media.poster")}</button>` : ""}${editable ? `<button data-action="clip-on-page" data-clip="${esc(clip.id)}" aria-pressed="${Boolean(options.onPage)}">${t(options.onPage ? "media.offPage" : "media.onPage")}</button>` : ""}</div></article>`;
+  // V10.23: the main things to do sit right under the preview (换封面 ·
+  // 从页面移除); length, size and "saved on this device" are the small print;
+  // putting it on / off the paper is a quiet text button.
+  const actions = editable
+    ? `<div class="media-card-actions">${clip.kind === "video" ? `<button class="primary-outline" data-action="video-poster" data-clip="${esc(clip.id)}">${t("poster.change")}</button>` : ""}<button class="danger-outline" data-action="remove-media-ask" data-clip="${esc(clip.id)}">${t("media.removeFromPage")}</button></div>`
+    : "";
+  const paperToggle = editable ? `<button class="text-button media-paper" data-action="clip-on-page" data-clip="${esc(clip.id)}" aria-pressed="${Boolean(options.onPage)}">${t(options.onPage ? "media.offPage" : "media.onPage")}</button>` : "";
+  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em></div>${body}${actions}<div class="media-card-foot"><small>${editable && clip.kind === "video" ? `<span class="clip-name">${esc(clip.name)}</span> · ` : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}${editable ? " · " + t("media.savedLocal") : ""}</small>${paperToggle}</div></article>`;
 }

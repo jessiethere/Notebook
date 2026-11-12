@@ -1,4 +1,4 @@
-import { MediaStore, migrateLegacyPhotos, mediaReferences } from "./js/media.mjs";
+import { MediaStore, migrateLegacyPhotos, mediaReferences, errName } from "./js/media.mjs";
 import * as MediaCheck from "./js/media-check.mjs";
 import {
   configureI18n,
@@ -3060,7 +3060,10 @@ function chapterChipsHTML() {
   // thing that happened. They sit side by side, cover first.
   const hasCover = hasDayPageContent(editor);
   const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><i class="chip-num" aria-hidden="true">${t("strip.coverShort")}</i>${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
-  return `<nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
+  // V10.23: while a file is being saved the strip is shown paused (not only a toast after a tap).
+  // (only while a video / sound is imported: that flow redraws when it starts and ends)
+  const locked = busyMedia && mediaImport && !["done", "failed"].includes(mediaImport.stage);
+  return `<nav class="chapter-chips page-strip${locked ? " locked" : ""}" aria-label="${t("moment.title")}"${locked ? ` aria-disabled="true" title="${esc(t("import.busy"))}"` : ""}>${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
         `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
@@ -3977,11 +3980,12 @@ function ctxDockHTML(tool) {
       : kind === "text"
         ? tool('data-action="ctx-edit-text"', "pen", t("edit")) + style("font", "font", "ctx.font") + style("color", "color", "ctx.color") + style("align", "align", "ctx.align")
         : kind === "video"
-          ? tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
+          ? // V10.23: 播放 · 换封面 · 形状 (frame) — the cover and the frame are separate things.
+            tool('data-action="ctx-play"', "play", t("media.play")) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.change")) + tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`)
           : kind === "drawing"
             ? tool('data-action="draw-edit"', "draw", t("draw.again"))
             : "";
-  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t("delete"), "danger")}</nav>`;
+  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t(kind === "video" || kind === "audio" ? "media.removeShort" : "delete"), "danger")}</nav>`;
 }
 // Font · size · colour · alignment for the selected text box (the same
 // controls as the bar that shows while typing).
@@ -5080,6 +5084,7 @@ function addChoicesHTML(className = "") {
 // more). Everything else opens in the bottom sheet.
 let studioPreview = false;
 const SV_ICONS = {
+  play: '<circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/>',
   shape: '<rect x="3.5" y="9" width="10" height="10" rx="2"/><circle cx="15" cy="9" r="5.5"/>',
   photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
   text: '<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
@@ -5131,7 +5136,7 @@ function studioPage() {
   if (studioPreview)
     return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-preview" aria-label="${t("studio.previewBack")}">${icon("back")}</button><div class="sv-title static"><b>${t("studio.preview")}</b><small>${t("studio.previewHint")}</small></div><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage large previewing">${paper}</div><div class="tool-dock-wrap"><nav class="sv-export" aria-label="${t("studio.preview")}"><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="export">${icon("download")}<b>${t("export.photo")}</b></button><button data-action="export-video"><span aria-hidden="true">▶</span><b>${t("export.video")}</b></button></nav></div>`;
   const status = draftDirty && draftState !== "failed" ? "saving" : draftState;
-  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${importCardHTML()}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -6331,7 +6336,7 @@ async function action(target) {
       "moment-delete",
     ].includes(actionName)
   ) {
-    toast(t("media.busy"));
+    toast(t(mediaImport && busyMedia ? "import.busy" : "media.busy"));
     return;
   }
   if (await v3Action(target)) return;
@@ -8649,8 +8654,19 @@ async function v31Action(target) {
     case "tool-close":
       openTool(null);
       return true;
+    case "import-retry":
+      runImport();
+      return true;
+    case "import-dismiss":
+      if (mediaImport?.thumb) URL.revokeObjectURL(mediaImport.thumb);
+      mediaImport = null;
+      refreshImportCard();
+      render();
+      return true;
+    case "ctx-play":
     case "layer-play": {
-      const element = target.closest(".media-layer")?.querySelector("video,audio");
+      // From the selected video's tools (V10.23) or the play button on the paper.
+      const element = name === "ctx-play" ? document.querySelector(`#journal-canvas [data-layer="${CSS.escape(selectedLayer || "")}"] :is(video,audio)`) : target.closest(".media-layer")?.querySelector("video,audio");
       if (!element) return true;
       if (element.paused)
         element.play().catch((error) => {
@@ -8957,7 +8973,7 @@ async function v31Action(target) {
 async function v3Action(target) {
   const name = target.dataset.action;
   if (busyMedia) {
-    toast(t("media.busy"));
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return true;
   }
   if (await v31Action(target)) return true;
@@ -9118,6 +9134,19 @@ async function v3Action(target) {
     const box = $('[data-layer-text="text"]');
     box?.focus({ preventScroll: true });
     box?.select();
+    return true;
+  }
+  if (name === "remove-media-ask") {
+    // V10.23 · 从页面移除: off this page (paper and list). Undo brings it back;
+    // the file itself stays on this device.
+    if (!(await askConfirm(t("media.removeConfirm")))) return true;
+    const clipId = target.dataset.clip;
+    changeTarget((entry) => {
+      entry.media = entry.media.filter((clip) => clip.id !== clipId);
+      entry.layers = entry.layers.filter((layer) => layer.clipId !== clipId);
+    });
+    flushDraft();
+    toast(t("media.removed"));
     return true;
   }
   if (name === "remove-media") {
@@ -9661,8 +9690,10 @@ async function autoCover(mediaId, duration) {
   }
 }
 async function attachClip(blob, kind, name, duration = 0, options = {}) {
+  options.onStage?.("write");
   const mediaId = await media.put(blob, { kind, name, duration }, "studio");
   // Videos get a first cover right away (changeable later).
+  options.onStage?.("cover");
   const poster = kind === "video" ? await autoCover(mediaId, duration) : "";
   const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
@@ -9691,29 +9722,117 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
   });
   flushDraft();
 }
+// V10.23 · Importing a video / sound file from this device: every step is
+// shown on the page (import → read, with real progress → save to this device
+// → cover → saved / failed), the file stays in memory until it is really
+// saved (so a failure can be retried), and switching pages is shown as
+// paused before anyone taps it. Nothing is uploaded anywhere.
+let mediaImport = null;
+const IMPORT_LIMIT = { video: 50, audio: 20 };
+function importCardHTML() {
+  const job = mediaImport;
+  if (!job || page !== "studio") return "";
+  const mb = (n) => new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(n / 1024 / 1024) + " MB";
+  const meta = [job.duration ? formatClock(job.duration) : "", job.size ? mb(job.size) : ""].filter(Boolean).join(" · ");
+  const pct = job.stage === "read" && job.progress != null ? Math.round(job.progress * 100) : null;
+  const label = job.stage === "read" ? t("import.read", { pct: pct ?? 0 }) : t("import." + job.stage);
+  const bar = ["done", "failed"].includes(job.stage) ? "" : `<div class="ic-bar ${pct == null ? "indeterminate" : ""}" role="progressbar" aria-label="${esc(label)}" ${pct == null ? "" : `aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"`}><i style="${pct == null ? "" : `width:${pct}%`}"></i></div>`;
+  const note = job.stage === "failed" ? `${t("import.failedNote")}${job.err ? ` <code>${esc(job.err)}</code>` : ""}` : job.stage === "done" ? t("import.doneNote") : t("import.lockNote");
+  const actions = job.stage === "failed" ? `<div class="ic-actions"><button class="primary" data-action="import-retry">${t("import.retry")}</button><button class="text-button" data-action="import-dismiss">${t(job.kind === "video" ? "import.dismissVideo" : "import.dismissAudio")}</button></div>` : "";
+  return `<div class="import-card" data-stage="${job.stage}" role="status" aria-live="polite"><span class="ic-thumb">${job.thumb ? `<img src="${esc(job.thumb)}" alt="">` : `<i aria-hidden="true">${job.kind === "video" ? "▶" : "♫"}</i>`}</span><span class="ic-main"><b>${t(job.kind === "video" ? "import.titleVideo" : "import.titleAudio")}</b><small>${esc(meta)}</small><span class="ic-stage">${label}</span>${bar}<span class="ic-note">${note}</span>${actions}</span></div>`;
+}
+function formatClock(seconds) {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function refreshImportCard() {
+  const html = importCardHTML();
+  const old = document.querySelector(".import-card");
+  if (old && html) old.outerHTML = html;
+  else if (old) old.remove();
+  else if (html) document.querySelector(".studio-stage")?.insertAdjacentHTML("beforeend", html);
+}
+function setImport(changes) {
+  if (!mediaImport) return;
+  Object.assign(mediaImport, changes);
+  refreshImportCard();
+}
+// The file's bytes with real progress (FileReader reports it as it reads).
+function readWithProgress(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error("read"));
+    reader.readAsArrayBuffer(file);
+  });
+}
 async function handleMediaUpload(event, kind) {
   const file = event.target.files[0];
+  event.target.value = "";
   if (!file) return;
   if (busyMedia || recorder) {
-    toast(t("media.busy"));
-    event.target.value = "";
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return;
   }
+  if (mediaImport?.stage === "failed" && mediaImport.thumb) URL.revokeObjectURL(mediaImport.thumb);
+  mediaImport = { file, kind, size: file.size, duration: 0, stage: "import", progress: null, thumb: "", err: "", targetId: activeMomentId, started: Date.now() };
+  await runImport();
+}
+async function runImport() {
+  const job = mediaImport;
+  if (!job) return;
+  const { file, kind } = job;
   busyMedia = true;
+  setDraftState("saving");
+  Object.assign(job, { stage: "import", progress: null, err: "" });
+  render();
+  let stage = "import";
   try {
-    if (
-      !file.type.startsWith(kind + "/") ||
-      file.size > (kind === "video" ? 50 : 20) * 1024 * 1024
-    )
-      throw new Error("Invalid media");
+    if (!file.type.startsWith(kind + "/")) throw Object.assign(new Error("type"), { code: "unsupported" });
+    if (file.size > IMPORT_LIMIT[kind] * 1024 * 1024) throw Object.assign(new Error("size"), { code: "too-big" });
     const metadata = await mediaMetadata(file, kind);
-    await attachClip(file, kind, file.name, metadata.duration, { width: metadata.width, height: metadata.height });
-    toast(t("media.saved"));
-  } catch {
-    toast(t("media.failed"));
-  } finally {
+    job.duration = metadata.duration;
+    if (kind === "video" && !job.thumb) {
+      // A first look at the video while it is being saved (not stored).
+      const url = URL.createObjectURL(file);
+      try {
+        job.thumb = URL.createObjectURL(await frameAt(url, Math.min(1, (metadata.duration || 2) * 0.25), 360));
+      } catch {}
+      URL.revokeObjectURL(url);
+    }
+    stage = "read";
+    setImport({ stage, progress: 0 });
+    const bytes = await readWithProgress(file, (progress) => setImport({ progress }));
+    await attachClip(new Blob([bytes], { type: file.type }), kind, file.name, metadata.duration, {
+      width: metadata.width,
+      height: metadata.height,
+      targetId: job.targetId,
+      onStage: (next) => {
+        stage = next;
+        setImport({ stage: next, progress: null });
+      },
+    });
+    logEvent("media_import", { kind, stage: "done", size: Math.round(file.size / 1024 / 1024), ms: Date.now() - job.started });
     busyMedia = false;
-    event.target.value = "";
+    setImport({ stage: "done" });
+    render();
+    setTimeout(() => {
+      if (mediaImport === job && job.stage === "done") {
+        if (job.thumb) URL.revokeObjectURL(job.thumb);
+        mediaImport = null;
+        refreshImportCard();
+      }
+    }, 2600);
+  } catch (error) {
+    busyMedia = false;
+    const err = error?.code === "too-big" || error?.code === "unsupported" ? error.code : errName(error);
+    logEvent("media_import_failed", { kind, stage, err, size: Math.round(file.size / 1024 / 1024) });
+    setImport({ stage: "failed", err });
+    render();
+    // Nothing of it was added to the page: the page's own state stays as it was.
+    confirmMediaSaved();
+    toast(t(err === "too-big" ? (kind === "video" ? "import.tooBigVideo" : "import.tooBigAudio") : err === "unsupported" ? "media.unsupported" : "import.failedToast"));
   }
 }
 async function startRecording() {

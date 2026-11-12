@@ -20834,3 +20834,182 @@ dialog.crop-editor::backdrop {
   margin-top: 10px;
   font: 11px/1.4 ui-monospace, Menlo, monospace;
 }
+
+/* ---------- V10.23 · importing a video / sound (saved on this device) ---------- */
+.studio-stage {
+  position: relative;
+}
+.import-card {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 40px));
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line), 0 18px 40px -22px var(--c-3c2d1e66, #3c2d1e66);
+}
+.import-card .ic-thumb {
+  flex: 0 0 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--sageDeep);
+  font-size: 22px;
+}
+.import-card .ic-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.import-card .ic-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.import-card b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.import-card small,
+.import-card .ic-note {
+  font: 12px/1.45 var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.import-card .ic-stage {
+  font: 600 13px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.import-card[data-stage="failed"] .ic-stage {
+  color: var(--t-a5524a, #a5524a);
+}
+.import-card .ic-bar {
+  position: relative;
+  height: 6px;
+  margin: 4px 0 2px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.import-card .ic-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 3px;
+  background: var(--sageDeep);
+  transition: width 0.2s ease;
+}
+.import-card .ic-bar.indeterminate i {
+  width: 36%;
+  animation: ic-slide 1.2s ease-in-out infinite;
+}
+@keyframes ic-slide {
+  from { left: -36%; }
+  to { left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .import-card .ic-bar.indeterminate i {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.45;
+  }
+}
+.import-card .ic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.import-card .ic-actions button {
+  min-height: 40px;
+}
+.import-card code {
+  font-size: 11px;
+}
+.page-strip.locked {
+  opacity: 0.45;
+}
+/* V10.23 · a clip's main actions right under its preview */
+.media-card-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px 2px;
+}
+.media-card-actions button {
+  min-height: 44px;
+  border-radius: 12px;
+  font: 600 15px var(--ui-sans);
+}
+.media-card-actions .primary-outline {
+  border: 1.5px solid var(--sageDeep);
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.media-card-actions .danger-outline {
+  border: 1.5px solid var(--c-e7c9c4, #e7c9c4);
+  background: var(--c-fffdf8, #fffdf8);
+  color: var(--t-a5524a, #a5524a);
+}
+.media-card .media-card-foot small {
+  font-size: 12px;
+}
+.media-card .media-card-foot .media-paper {
+  font-size: 13px;
+  min-height: 40px;
+}
+/* V10.23 · the cover picker shows the cover in use */
+.poster-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font: 13px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.poster-now img {
+  width: 56px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* V10.23 · in 本页媒体 the video preview leaves room for 换封面 / 从页面移除
+   (on a 375×667 phone they are seen without scrolling). */
+.tool-sheet .media-section > .section-heading {
+  display: none; /* the sheet's own title says it; each card says 已保存到本机 */
+}
+.tool-sheet .media-card video {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  max-height: min(14dvh, 150px);
+  object-fit: contain;
+  background: var(--c-2e2a25, #2e2a25);
+}
+.tool-sheet .media-card .media-card-title {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+/* (its name moves to the small print, so 换封面 / 从页面移除 fit on a 375×667 phone) */
+.tool-sheet .video-card .media-card-title {
+  display: none;
+}
+.media-card .media-card-foot .clip-name {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
