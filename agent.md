@@ -48,6 +48,17 @@
 
 ## 更新日志
 
+### 2026-11-12 — Captain 提示词 v3 正式评测（用户 Mac）；真机安装步骤
+
+- 需求：用户问怎样装到真机，并同意做正式评测。
+- 正式评测：在用户 Mac 上运行 `node tools/captain-eval.mjs --runs 3`（代码在 34be8ed，qwen3.5:4b，Ollama 0.40.16，Apple M5 24GB）。
+  - 结果文件 `docs/captain-ai/results/2026-11-12-qwen3.5_4b-prompt-v3.{md,json}` 在 Mac 工作区，未提交。把它们原样复制到本会话的操作被 Mac 的自动模式拒绝了，所以没有再试。
+  - 本仓库新增 `docs/captain-ai/results/2026-11-12-prompt-v3-formal.md`：逐字摘录 36 条回复，加上计数和 7 项评分。
+  - 结论：总分 144/168（试跑 148），走模型的 10 句 122/140（试跑 124），正式结果与试跑一致。没有「喵」和表情，不声称看过手帐；3 条换语言的回复全部被 `sameLanguage` 拦截。剩下的问题：不肯定「写完了」、仍说「别难过」、偶尔主动提柠檬帽。评分由本会话完成，需要用户复核。
+- 真机：`xcrun devicectl list devices` 只有 3 台模拟器，没有连接过真机。查询签名证书的命令被 Mac 拒绝（不允许云端会话读凭据），所以没有查。`docs/MAC_LOCAL_DEV.md` 改写成 8 步安装说明，并加上真机重点检查清单。工程的 `DEVELOPMENT_TEAM` 保持为空，由用户在 Xcode 里选自己的团队。
+- 已知问题：真机上的 Captain 只用规则回复（访问不到 Mac 上的 Ollama），这是预期行为。
+- 下一步：用户连上 iPhone 后，确认设备 → 构建安装 → 按清单检查；可以试 `qwen3.5:9b` 或写 v4 提示词。
+
 ### 2026-11-12 — Mac 同步收尾：34be8ed 已带入，Swift Core 测试 6/6 全部通过
 
 - 用户第三次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 34be8ed864692214d365b6b3b58a51a31f1052f0`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。检查点（分支 `checkpoint/pre-sync-2026-11-12` 和 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`）保留，由用户决定什么时候删除。

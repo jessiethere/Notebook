@@ -179,6 +179,11 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-12 — Captain 本地对话正式评测；装到你自己 iPhone 的步骤
+
+- 在你的 Mac 上正式跑了 Captain 本地模型（qwen3.5:4b）第 3 版说法：结果和之前的试跑一致。不再「喵」，不声称看过你的手帐，换语言的回复都会被 App 拦下改用规则回答。每句约 0.4 秒。详细回复和评分见 docs/captain-ai/results/2026-11-12-prompt-v3-formal.md，请你复核评分。
+- 装到自己 iPhone 的 8 个步骤写在 docs/MAC_LOCAL_DEV.md「安装到你自己的 iPhone」，用免费 Apple ID 就可以。
+
 ### 2026-11-12 — Mac 同步完成，所有测试通过
 
 - 你的 Mac 已经同步到最新代码，你自己没提交的文件都没动。备份还在 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`，确认不需要后可以自己删除。

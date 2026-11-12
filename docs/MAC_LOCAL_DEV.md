@@ -119,11 +119,32 @@ open Native/LittleDays.xcodeproj                # 也可以在 Xcode 里选模�
   - 所以看到空白页时，先等一会儿，或者开机后等 30 秒再按 ⌘R。
 - **Debug 构建的 JS 日志**：页面报错（未捕获异常、Promise 拒绝、`console.error/warn`、脚本或样式加载失败）和启动节点（web view created / document start / DOMContentLoaded / home rendered，单位是启动后的毫秒）会以 `[LittleDays JS]` 开头出现在 Xcode 控制台。在命令行看：`xcrun simctl spawn booted log show --last 5m --predicate 'eventMessage CONTAINS "[LittleDays JS]"'`。Release 构建里没有这段代码。
 
-### 安装到你自己的 iPhone（以后）
+### 安装到你自己的 iPhone（2026-11-12 更新：一步一步）
 
-- 需要：用 Apple ID 登录 Xcode（Settings → Accounts）。免费的 Personal Team 就能装到自己的手机，但证书 7 天后过期要重新安装，部分功能（如 iCloud、推送）不可用。付费的 Apple Developer Program 每年 99 美元，签名有效期更长，也可以用 TestFlight。
-- 步骤：在工程的 Signing & Capabilities 里选择你的 Team（`DEVELOPMENT_TEAM` 现在是空的，可能需要改成唯一的 Bundle ID）。用 USB 连接 iPhone，在手机上「信任此电脑」。打开 iOS 16 及以上系统的「开发者模式」（设置 → 隐私与安全性），按提示重启。第一次运行后，在 设置 → 通用 → VPN 与设备管理 里信任开发者证书。配对过一次后可以通过 Wi-Fi 无线调试。
-- 这些步骤需要你本人操作（Apple ID 登录、手机上点信任），Claude 不能代替你完成。
+2026-11-12 检查：`xcrun devicectl list devices` 只列出了 3 台模拟器，还没有连接过真机。
+
+**你需要准备**：一部 iOS 17 或更新的 iPhone、数据线、你的 Apple ID。免费账号就可以。
+
+1. **Xcode 登录 Apple ID**：Xcode → Settings → Accounts → 左下角「+」→ Apple ID。登录后会出现一个「(你的名字) (Personal Team)」。
+2. **打开工程**：在 Finder 里双击仓库根目录的 `LittleDays.xcworkspace`。
+3. **选签名团队**：左侧点最上面的蓝色工程图标 → TARGETS 选「LittleDays」→「Signing & Capabilities」：
+   - 勾上「Automatically manage signing」；
+   - Team 选你的 Personal Team；
+   - 如果提示 Bundle Identifier 已被占用或无法注册，把 `com.jessiethere.littledays` 改成只属于你的，例如 `com.你的名字.littledays`。这个改动只在你的 Mac 上，不要提交到仓库。
+4. **连接手机**：用数据线连接 iPhone → 手机上点「信任此电脑」并输入锁屏密码。
+5. **打开开发者模式**（第一次需要）：iPhone 设置 → 隐私与安全性 → 拉到最下面「开发者模式」→ 打开 → 按提示重启 → 重启后点「打开」。如果找不到这个开关，先做第 6 步，Xcode 尝试安装一次后它就会出现。
+6. **运行**：Xcode 顶部的设备菜单里选你的 iPhone（不要选模拟器）→ 按 ⌘R。第一次会花几分钟准备手机。
+7. **信任开发者**（第一次需要）：如果手机上提示「不受信任的开发者」，到 设置 → 通用 → VPN 与设备管理 → 你的 Apple ID → 信任。然后再按一次 ⌘R，或者直接点手机上的 App 图标。
+8. **以后**：免费账号签的 App 7 天后会打不开，再连上 Mac 按一次 ⌘R 就好，手帐数据还在。第一次连线成功后，可以在 Xcode → Window → Devices and Simulators 里勾选「Connect via network」，之后同一 Wi-Fi 下不插线也能安装。
+
+这些步骤需要你本人操作（Apple ID 登录、手机上点信任），Claude 不能代你完成。手机连上并信任之后，Claude 可以在 Mac 上用 `xcrun devicectl list devices` 确认手机已连接，并用命令行构建、安装。
+
+**装好后请重点试这些**（模拟器验证不了）：
+- Captain →「玩耍」：拖毛线球是否跟手；接住时有没有一下轻震；拖动舞台会不会误关面板。
+- 戳 Captain、点毛线球，动画是否流畅（3 倍屏上图会略软，这是素材分辨率的限制）。
+- 写手帐时键盘弹出：输入框和工具栏有没有被挡住。
+- 照片、相机、录音：第一次使用时系统会请求权限。
+- 真机上的 Captain 聊天只用规则回复：本地 Qwen 在 Mac 上，手机访问不到，这是预期行为。
 
 ### 每台模拟器都要单独安装
 
