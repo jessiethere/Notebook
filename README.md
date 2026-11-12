@@ -179,6 +179,12 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-12 — 你的 Mac 已同步到最新，iPhone App 构建成功
+
+- 你 Mac 上的 Notebook 已经快进到最新，你自己没提交的 `Package.resolved` 和两份评测结果都没有动（备份在 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`）。
+- iPhone App 在模拟器里构建成功，Captain 的「玩耍」在 App 里能玩：点毛线球，Captain 会接住并开心大笑。
+- Swift Core 的测试文件里有一处 11 月 9 日就存在的写法错误，导致测试一直没能编译，这次已经修好。
+
 ### 2026-11-12 — 和 Captain 玩毛线球（V10.17）
 
 - Captain's Corner 的「玩耍」变成一个大舞台：

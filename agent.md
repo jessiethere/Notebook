@@ -48,6 +48,20 @@
 
 ## 更新日志
 
+### 2026-11-12 — Mac 同步完成（用户确认合并）；iPhone App 构建并在模拟器里玩了 Playroom；修复多年未编译的 Core 测试
+
+- 用户回复「确认合并」后，先确认 Mac 状态与审查时一致（HEAD 5115c61，只有 `Package.resolved` 和两份评测结果），再执行 `git merge --ff-only 9ea3ccaefb93a10746d2ced7c413ea8ee7bbcde4`。合并后用 `cmp` 对比检查点副本，三个文件逐字节没有变化。没有冲突，也没有覆盖任何文件。
+- 在用户 Mac 上实际运行（Xcode 27.2）：
+  - `npm test`：190/190 通过；`python3 -m unittest discover -s tests`：通过。
+  - `xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays -configuration Debug -destination "platform=iOS Simulator,name=iPhone 18 Pro"`：**BUILD SUCCEEDED**，新的 `LittleDaysHaptics`、`KeeperPlay` 编译通过。
+  - 装进 iPhone 18 Pro 模拟器，用 Debug 专用的 `-LittleDaysTap` 依次打开 Captain →「玩耍」→ 点毛线球，连续截图（`build/sim-shots/10-playroom.png`、`build/sim-shots/burst/`）：
+    - 舞台、气泡、呼吸圈、底部提示都和网页一样；
+    - 点球后 Captain 抱住毛线球、开心动画在播（气泡「我的毛线球！」）；
+    - 播完回到原样，球回到原位，气泡变成「再来一次？」，呼吸圈消失。
+    - 这是模拟器，不是真机；轻震在模拟器里感觉不到，没有验证。
+  - `swift test`（Packages/LittleDaysCore）：**编译失败**。原因是 2026-11-09 V6.5 加的一行测试：原始字符串 `#"…"#` 里出现 `"chip":"#B4547A"`，其中的 `"#` 会提前结束字符串。从那以后 Core 测试一直没能编译，之前的日志里也没有跑过 Swift Core 测试。本次改成 `##"…"##` 修复，这个修复需要再按流程带到 Mac 上验证。
+- 未完成：用户确认后把修复提交带到 Mac，再跑 `swift test`。
+
 ### 2026-11-12 — V10.17 Captain's Playroom MVP（用户确认五项决定后实现）；Mac 同步的安全检查点
 
 - 需求：用户确认 Playroom 五项决定：

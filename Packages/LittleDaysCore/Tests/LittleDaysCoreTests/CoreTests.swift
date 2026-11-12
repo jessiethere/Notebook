@@ -160,7 +160,7 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(moment.kit, "blush")
         XCTAssertEqual(moment.layoutStyle, "cozy")
         // V6.5: a text layer bound to a Moment's words decodes too.
-        let bound = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"t","kind":"text","text":"","x":50,"y":90,"scale":1,"rotation":0,"bind":"title","of":"m1","excerpt":20,"gen":true,"chip":"#B4547A"}"#.utf8))
+        let bound = try JSONDecoder().decode(StickerLayer.self, from: Data(##"{"id":"t","kind":"text","text":"","x":50,"y":90,"scale":1,"rotation":0,"bind":"title","of":"m1","excerpt":20,"gen":true,"chip":"#B4547A"}"##.utf8))
         XCTAssertEqual(bound.bind, "title")
         XCTAssertEqual(bound.of, "m1")
         XCTAssertEqual(bound.gen, true)
