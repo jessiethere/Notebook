@@ -98,7 +98,9 @@ const transcript = [];
     assert.equal(reply8, "→ organize", "a request still opens its flow");
     await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().tap();
     await page.waitForSelector('.kp[data-view="home"]');
-    const unknown = await say("今天天气不错");
+    // V10.18: the weather has its own reply now; an odd sound is still honestly not understood.
+    assert.match(await say("今天天气不错"), /天气|走走|打盹/);
+    const unknown = await say("嗷呜");
     assert.match(unknown, /没太懂|不太确定|还在想/);
     assert.doesNotMatch(unknown, /书架|回忆|会的/, "unknown is honest and short — no feature list");
     passed.push("the review lines get fitting replies (compliment, hat, pet, tired-but-done, happy, thanks); only “你会做什么” lists abilities; 整理 opens its flow; unknown is an honest “not sure”; height steady; newest line in view; shortcuts fold into one line");

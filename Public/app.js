@@ -1318,7 +1318,7 @@ function keeperSay(event, facts) {
   const line = Keeper.contextLine(event, facts, { recent: recent.map((x) => x.id), seed: Math.floor(Math.random() * 1000) });
   if (!line) return "";
   rememberKeeperLine(line.id);
-  return t(line.key, { ...line.values, name: Keeper.keeperName(k, languageCode()) });
+  return cjkGap(t(line.key, { ...line.values, name: Keeper.keeperName(k, languageCode()) }));
 }
 function rememberKeeperLine(id) {
   try {
@@ -1333,11 +1333,11 @@ const keeperFacts = () => {
   return Keeper.modeAllows(keeperNow(), "memories") ? facts : { ...facts, title: "" };
 };
 // "找 Captain" reads better than "找Captain"; a Chinese name needs no gaps.
-const keeperNameIn = (k) => {
-  const name = Keeper.keeperName(k, languageCode());
-  return languageCode() !== "en" && /^[\x20-\x7e]+$/.test(name) ? ` ${name} ` : name;
-};
-const tk = (key, k, values = {}) => t(key, { ...values, name: keeperNameIn(k) }).trim();
+// V10.18: the gap goes only between a Chinese character and a Latin word —
+// never before Chinese punctuation ("戳戳 Captain。", not "Captain 。").
+const keeperNameIn = (k) => Keeper.keeperName(k, languageCode());
+const cjkGap = (text) => (languageCode() === "en" ? text : String(text).replace(/([\u4e00-\u9fff])([A-Za-z0-9])/g, "$1 $2").replace(/([A-Za-z0-9])([\u4e00-\u9fff])/g, "$1 $2"));
+const tk = (key, k, values = {}) => cjkGap(t(key, { ...values, name: keeperNameIn(k) })).trim();
 function keeperShelfFacts() {
   const mine = state().books.filter((bk) => !isOurBook(bk));
   const latest = [...mine].map((bk) => ({ bk, last: bookLastWritten(bk.id) })).sort((x, y) => (x.last < y.last ? 1 : -1))[0];
@@ -1666,11 +1666,15 @@ function keeperMemoryHTML() {
 }
 // The small chat: a few things it really can do; anything else is answered
 // honestly instead of with the same sentence every time.
+// The few words of the person's own line Captain echoes back ("火锅！…").
+let keeperTopic = "";
 function keeperAnswer(intent, said = "") {
   if (keeperBusy) return;
   if (said) {
     keeperChat.push({ who: "me", text: said });
-    intent = understandChat(said).intent;
+    const heard = understandChat(said);
+    intent = heard.intent;
+    keeperTopic = heard.topic || "";
   } else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
   // The line is in the chat: only now is the field emptied (and its draft forgotten).
   keeperBusy = true;
@@ -1738,7 +1742,9 @@ function keeperReply(intent, typed) {
     // a tired day…). The hat lines need Captain to be wearing one.
     const wearingHat = keeperLooks(catalog, k.animal, languageCode()).find((look) => look.id === (k.outfit || DEFAULT_OUTFIT[k.animal]))?.kind === "hat";
     const event = intent === "hat" && !wearingHat ? "hatOff" : Keeper.LINE_COUNTS[`chat.${intent}`] ? intent : "unknown";
-    reply = { who: "keeper", text: keeperSay(`chat.${event}`, {}) };
+    // A line that echoes what they did needs the words; without them, listen.
+    const echo = ["share", "shareHappy"].includes(event);
+    reply = { who: "keeper", text: keeperSay(`chat.${echo && !keeperTopic ? "listen" : event}`, echo ? { thing: keeperTopic } : {}) };
   }
   keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);

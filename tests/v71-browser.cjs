@@ -127,7 +127,7 @@ const shots = process.env.SHOTS_DIR || "";
     assert.match(await page.locator(".kp").innerText(), /翻看以前的页面吗/);
     await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().click();
     // Free text it cannot handle gets an honest answer (not the same sentence for everything).
-    await page.locator("[data-keeper-say]").fill("今天想吃蛋糕");
+    await page.locator("[data-keeper-say]").fill("嗷呜"); // V10.18: “今天想吃蛋糕” is understood now
     await page.locator(".kp-send").click();
     await page.waitForFunction(() => /没太懂|不太确定|还在想/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
     // Replies are normal-width bubbles (they once shared the art's 64px class).

@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.18",
+    date: "2026-11-12",
+    zh: {
+      title: "Captain 听得懂更多日常的话了",
+      items: [
+        "问 Captain 叫什么、几岁、喜欢吃什么，说你饿了、好忙、无聊、紧张、睡不着、想家，或者考砸了、升职了、过生日，Captain 都会接上对应的话。",
+        "告诉它你做了什么（比如「今天吃了火锅」），它会用你的话接着问：「火锅！听起来不错。最喜欢哪一刻？」",
+        "不知道写什么时跟它说一声，它会给你一个小题目；无聊时它会邀请你去「玩耍」丢毛线球。",
+        "答不上来的问题，它会老实说「这个问题难倒我了」；难过的日子不说「别难过」，只是陪着你。",
+        "这些都在你的设备上完成，不是 AI，也不会把你的话发到任何地方。",
+      ],
+    },
+    en: {
+      title: "Captain understands more everyday lines",
+      items: [
+        "Ask Captain's name, age or favourite food; say you're hungry, busy, bored, nervous, can't sleep, miss home, had a rough day, got good news or it's your birthday — Captain answers to fit.",
+        "Tell it what you did (“I had coffee with a friend”) and it picks up your words: “Oh, coffee! Sounds nice. What was the best moment?”",
+        "Not sure what to write? Say so and get a small prompt. Bored? Captain invites you to Play with the yarn ball.",
+        "Questions it can't answer get an honest “that one's beyond me”; on hard days it never says “don't be sad” — it just stays with you.",
+        "All on your device — not AI, and nothing you say is sent anywhere.",
+      ],
+    },
+  },
+  {
     version: "10.17",
     date: "2026-11-12",
     zh: {

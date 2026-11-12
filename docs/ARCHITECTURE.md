@@ -374,3 +374,15 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `features.json` 的 `tabs` 新增可选字段 `labs`（目前只有 `community: true`），Swift `FeatureTab.labs` 读取同一个字段。
 - 正式版导航 = `inNav != false && labs != true`。网页在 `labsOn()` 时才显示带 `labs` 的标签；`LAB_PAGES` 仍负责拦截直接跳转到这些页面。
+
+## 2026-11-12 V10.18 Captain 规则对话扩充
+
+- `js/keeper-chat.mjs`：
+  - `understand(text)` 新增 28 种意图，返回值多了 `topic`；新增导出函数 `topicOf(text)`，从「去了 / 吃了 / 看了…」或「I went to / had / watched…」后面取 1–10 个字。问句（含 哪 / 什么 / 怎么 / 吗 / ？）不取 topic。
+  - 判断顺序：灵感 → 请求 → 关于 Captain → 发生的事 / 情绪 → 天气 → 分享 → 寒暄 → 问句 / 倾听 / 未知。
+- `js/keeper.mjs`：`LINE_COUNTS` 加入新的 `chat.*` 条目；`contextLine` 的 values 多了 `thing`。
+- `app.js`：
+  - `keeperAnswer` 记下 `keeperTopic`；`share` / `shareHappy` 用它填 `{thing}`，没有 topic 时改用 `listen`。
+  - `cjkGap()`：只在中文字和英文 / 数字之间加空格，「戳戳 Captain。」不再变成「Captain 。」。
+- 文案：i18n 新增 `kc.chat.<意图>.<n>`，中文都不超过 40 字，没有表情。
+- 测试：新增 `tests/v118.test.mjs`；v109、v103 单元测试和 v109、v103、v71 浏览器测试里原来当作「未知」的例句改用「嗷呜」。

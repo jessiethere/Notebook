@@ -326,6 +326,8 @@ export const LINE_COUNTS = {
   "saved.photos": 3, "saved.media": 2, "saved.first": 2, "saved.more": 2, "saved.words": 3,
   "shelf.count": 2, "shelf.latest": 2, "shelf.untagged": 1, "shelf.tidy": 2,
   "chat.greet": 3, "chat.morning": 2, "chat.night": 2, "chat.compliment": 3, "chat.hat": 3, "chat.hatOff": 1, "chat.pet": 3, "chat.play": 2, "chat.care": 3, "chat.thanks": 3, "chat.happy": 3, "chat.sad": 3, "chat.tired": 3, "chat.done": 3, "chat.doneTired": 3, "chat.doneHappy": 2, "chat.notYet": 3, "chat.notYetTired": 2, "chat.planned": 2, "chat.abilities": 1, "chat.unknown": 3,
+  // V10.18 · everyday lines (see js/keeper-chat.mjs).
+  "chat.name": 2, "chat.age": 2, "chat.whatAreYou": 2, "chat.food": 2, "chat.likeMe": 3, "chat.tease": 3, "chat.laugh": 2, "chat.ack": 3, "chat.bored": 3, "chat.joke": 3, "chat.hungry": 3, "chat.nervous": 3, "chat.sleepless": 3, "chat.miss": 2, "chat.busy": 3, "chat.rough": 3, "chat.goodNews": 3, "chat.birthday": 2, "chat.rain": 2, "chat.cold": 2, "chat.hot": 2, "chat.sunny": 2, "chat.share": 3, "chat.shareHappy": 2, "chat.meh": 2, "chat.inspire": 4, "chat.question": 3, "chat.listen": 3,
 };
 // Lines that quote a page's title: only when Captain may look at pages
 // ("翻看以前的页面" switched on). Without it, `facts.title` is empty and
@@ -353,7 +355,7 @@ export function contextLine(event, facts = {}, { recent = [], seed = 0 } = {}) {
   const fresh = usable.filter((id) => !recent.includes(id));
   const pool = fresh.length ? fresh : usable;
   const id = pool[Math.abs(seed) % pool.length];
-  return { id, key: `kc.${id}`, values: { count: facts.pages ?? facts.count ?? 0, photos: facts.pagePhotos ?? facts.photos ?? 0, title: facts.title || "", days: facts.gap ?? 0, untagged: facts.untagged ?? 0 } };
+  return { id, key: `kc.${id}`, values: { count: facts.pages ?? facts.count ?? 0, photos: facts.pagePhotos ?? facts.photos ?? 0, title: facts.title || "", days: facts.gap ?? 0, untagged: facts.untagged ?? 0, thing: facts.thing || "" } };
 }
 // What a typed line is about: see js/keeper-chat.mjs (replaceable later by a
 // local model with the same output). Kept for older callers: the feelings

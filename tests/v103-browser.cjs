@@ -80,8 +80,11 @@ const shots = process.env.SHOTS || "";
     };
     const tired = await say("今天有点累");
     assert.match(tired, /不太轻松|辛苦|这样的日子/);
+    // V10.18: a craving has its own reply; an odd sound is still honestly not understood.
     const cake = await say("今天想吃蛋糕");
-    assert.match(cake, /没太懂|不太确定|还在想/);
+    assert.match(cake, /饿|吃/);
+    const odd = await say("嗷呜");
+    assert.match(odd, /没太懂|不太确定|还在想/);
     const write = await say("帮我写一句话");
     assert.match(write, /AI 小管家[\s\S]*不想假装/);
     const week = await say("这周我写了什么");

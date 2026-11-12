@@ -7734,5 +7734,293 @@
   "play.again2": {
     "zh": "还想玩！",
     "en": "More, please!"
+  },
+  "kc.chat.name.0": {
+    "zh": "我是{name}，你的手帐小伙伴。",
+    "en": "I'm {name}, your journal buddy."
+  },
+  "kc.chat.name.1": {
+    "zh": "叫我{name}就好。小名嘛……还在想。",
+    "en": "Just call me {name}. Still thinking about a nickname."
+  },
+  "kc.chat.age.0": {
+    "zh": "猫不说年龄。不过我的胡子很有经验。",
+    "en": "Cats don't tell their age. My whiskers are very experienced, though."
+  },
+  "kc.chat.age.1": {
+    "zh": "按猫的算法，刚好是最可爱的年纪。",
+    "en": "In cat years? Just the right age for cute."
+  },
+  "kc.chat.whatAreYou.0": {
+    "zh": "我是一只灰色的小猫，住在你的手帐里。",
+    "en": "I'm a little grey cat who lives in your journal."
+  },
+  "kc.chat.whatAreYou.1": {
+    "zh": "是猫，而且是会陪你写手帐的那种。",
+    "en": "A cat — the kind that keeps you company while you journal."
+  },
+  "kc.chat.food.0": {
+    "zh": "小鱼干！闻一闻蛋糕的香味也算。",
+    "en": "Little fish treats! Sniffing cake counts too."
+  },
+  "kc.chat.food.1": {
+    "zh": "我对牛奶很认真，对猫粮很挑剔。",
+    "en": "I'm serious about milk and fussy about kibble."
+  },
+  "kc.chat.likeMe.0": {
+    "zh": "喜欢呀。你来的时候我尾巴都会翘起来。",
+    "en": "Of course. My tail goes up whenever you're here."
+  },
+  "kc.chat.likeMe.1": {
+    "zh": "我一直在这儿，你打开本子我就在。",
+    "en": "I'm always here. Open the journal and there I am."
+  },
+  "kc.chat.likeMe.2": {
+    "zh": "当然。你是我最喜欢的人类。",
+    "en": "Of course. You're my favourite human."
+  },
+  "kc.chat.tease.0": {
+    "zh": "哼，我只是一只小猫嘛。会的话不多，但很认真。",
+    "en": "Hmph, I'm only a little cat. Not many words, but I mean them."
+  },
+  "kc.chat.tease.1": {
+    "zh": "笨笨的猫也是会陪着你的猫。",
+    "en": "A silly cat is still a cat who keeps you company."
+  },
+  "kc.chat.tease.2": {
+    "zh": "被你说中了。我就当你在撒娇啦。",
+    "en": "Fair. I'll take that as a cuddle."
+  },
+  "kc.chat.laugh.0": {
+    "zh": "嘿嘿，你一笑我也想笑。",
+    "en": "Hehe, when you laugh I want to laugh too."
+  },
+  "kc.chat.laugh.1": {
+    "zh": "什么这么好笑？我也要知道！",
+    "en": "What's so funny? I want to know too!"
+  },
+  "kc.chat.ack.0": {
+    "zh": "嗯，我在这儿。想说什么都可以。",
+    "en": "Mm, I'm here. Say anything you like."
+  },
+  "kc.chat.ack.1": {
+    "zh": "好。今天还有什么想告诉我的吗？",
+    "en": "Okay. Anything else from today?"
+  },
+  "kc.chat.ack.2": {
+    "zh": "收到！我在旁边舔舔爪子。",
+    "en": "Got it! I'll be here, licking my paw."
+  },
+  "kc.chat.bored.0": {
+    "zh": "无聊的话，来「玩耍」里丢毛线球给我吧！",
+    "en": "Bored? Come to Play and toss me the yarn ball!"
+  },
+  "kc.chat.bored.1": {
+    "zh": "要不翻翻以前的手帐？常常会遇到好笑的自己。",
+    "en": "Flip through an old page? You often meet a funny past you."
+  },
+  "kc.chat.bored.2": {
+    "zh": "我也有点无聊。我们一起发会儿呆吧。",
+    "en": "I'm a bit bored too. Let's stare into space together."
+  },
+  "kc.chat.joke.0": {
+    "zh": "我今天追了自己的尾巴三圈，差一点就赢了。",
+    "en": "I chased my tail three times today. Nearly won."
+  },
+  "kc.chat.joke.1": {
+    "zh": "我想在键盘上写手帐，结果写出了「；；；；」。",
+    "en": "I tried to journal on the keyboard. It came out as ';;;;'."
+  },
+  "kc.chat.joke.2": {
+    "zh": "我把毛线球藏起来了，然后忘了藏在哪儿。",
+    "en": "I hid my yarn ball. Then forgot where."
+  },
+  "kc.chat.hungry.0": {
+    "zh": "饿了就先吃点东西吧，手帐不会跑掉。",
+    "en": "Eat something first — the journal won't run away."
+  },
+  "kc.chat.hungry.1": {
+    "zh": "我也饿了！你吃什么？分我闻一口。",
+    "en": "Me too! What are you having? Let me sniff."
+  },
+  "kc.chat.hungry.2": {
+    "zh": "吃饱了心情会好一点。吃完回来告诉我好不好吃。",
+    "en": "Food helps. Come back and tell me if it was good."
+  },
+  "kc.chat.nervous.0": {
+    "zh": "紧张很正常，说明你很在乎。我陪着你。",
+    "en": "Nerves mean you care. I'm right here."
+  },
+  "kc.chat.nervous.1": {
+    "zh": "深呼吸一下？跟我一起：吸——呼——",
+    "en": "Deep breath? With me: in… and out…"
+  },
+  "kc.chat.nervous.2": {
+    "zh": "不管结果怎样，你都已经很努力了。",
+    "en": "However it goes, you've already worked hard."
+  },
+  "kc.chat.sleepless.0": {
+    "zh": "睡不着的话，我陪你躺一会儿。",
+    "en": "Can't sleep? I'll lie here with you for a bit."
+  },
+  "kc.chat.sleepless.1": {
+    "zh": "把脑子里转的事写一句下来，有时就安静了。",
+    "en": "Write down one line of what's spinning — sometimes it quiets down."
+  },
+  "kc.chat.sleepless.2": {
+    "zh": "我数毛线球给你听：一个、两个、三个……",
+    "en": "I'll count yarn balls for you: one, two, three…"
+  },
+  "kc.chat.miss.0": {
+    "zh": "想念的人，一定很重要吧。",
+    "en": "Someone you miss must matter a lot."
+  },
+  "kc.chat.miss.1": {
+    "zh": "想家的时候，我在这儿陪你。要不要跟我说说？",
+    "en": "When you miss home, I'm here. Want to tell me about it?"
+  },
+  "kc.chat.busy.0": {
+    "zh": "忙了一天，辛苦啦。先坐下歇一口气。",
+    "en": "A busy day — well done. Sit and breathe a moment."
+  },
+  "kc.chat.busy.1": {
+    "zh": "这么忙还记得来找我，我很开心。",
+    "en": "That busy, and you still came by. That makes me happy."
+  },
+  "kc.chat.busy.2": {
+    "zh": "忙完了吗？没忙完我就在旁边安静等你。",
+    "en": "All done? If not, I'll wait quietly."
+  },
+  "kc.chat.rough.0": {
+    "zh": "听起来好难受。我在这儿，不用急着好起来。",
+    "en": "That sounds hard. I'm here — no rush to feel better."
+  },
+  "kc.chat.rough.1": {
+    "zh": "抱抱你。今天辛苦了。",
+    "en": "A hug for you. Today was a lot."
+  },
+  "kc.chat.rough.2": {
+    "zh": "想说就说，不想说我就陪你坐着。",
+    "en": "Talk if you want; if not, I'll just sit with you."
+  },
+  "kc.chat.goodNews.0": {
+    "zh": "哇！太棒了！我在原地转了一圈。",
+    "en": "Wow! That's wonderful! I just spun in a circle."
+  },
+  "kc.chat.goodNews.1": {
+    "zh": "恭喜你！这个值得记在今天的页上。",
+    "en": "Congratulations! That deserves a spot on today's page."
+  },
+  "kc.chat.goodNews.2": {
+    "zh": "我就知道你可以！尾巴已经翘到天上了。",
+    "en": "I knew you could! My tail's up to the sky."
+  },
+  "kc.chat.birthday.0": {
+    "zh": "生日快乐！今天你是最重要的人。",
+    "en": "Happy birthday! Today you're the most important one."
+  },
+  "kc.chat.birthday.1": {
+    "zh": "生日快乐！送你一个毛线球（借你玩，要还我）。",
+    "en": "Happy birthday! Here's a yarn ball (on loan — I want it back)."
+  },
+  "kc.chat.rain.0": {
+    "zh": "下雨天适合窝着。你有带伞吗？",
+    "en": "Rainy days are for curling up. Did you bring an umbrella?"
+  },
+  "kc.chat.rain.1": {
+    "zh": "我喜欢听雨声，但不喜欢被淋湿。",
+    "en": "I like the sound of rain, not getting wet."
+  },
+  "kc.chat.cold.0": {
+    "zh": "好冷！多穿一点，我的尾巴借你当围巾。",
+    "en": "Brr! Wrap up — you can borrow my tail as a scarf."
+  },
+  "kc.chat.cold.1": {
+    "zh": "冷的时候抱一杯热的，会好很多。",
+    "en": "When it's cold, hold something warm. It helps."
+  },
+  "kc.chat.hot.0": {
+    "zh": "好热……我已经摊成一张猫饼了。",
+    "en": "So hot… I've melted into a cat pancake."
+  },
+  "kc.chat.hot.1": {
+    "zh": "记得多喝水，你也要，我也要。",
+    "en": "Drink water — you and me both."
+  },
+  "kc.chat.sunny.0": {
+    "zh": "好天气！要不要出去走走？",
+    "en": "Lovely weather! Fancy a little walk?"
+  },
+  "kc.chat.sunny.1": {
+    "zh": "这种天气，我只想找个暖和的地方打盹。",
+    "en": "Weather like this, I just want a warm spot to nap."
+  },
+  "kc.chat.share.0": {
+    "zh": "{thing}！听起来不错。最喜欢哪一刻？",
+    "en": "Oh, {thing}! Sounds nice. What was the best moment?"
+  },
+  "kc.chat.share.1": {
+    "zh": "哇，{thing}。是什么感觉呀？",
+    "en": "Ooh, {thing}. How did it feel?"
+  },
+  "kc.chat.share.2": {
+    "zh": "{thing}呀，跟我多说一点？",
+    "en": "{thing}? Tell me a bit more?"
+  },
+  "kc.chat.shareHappy.0": {
+    "zh": "{thing}，还这么开心，真好！",
+    "en": "Oh, {thing} — and so happy about it! Love that."
+  },
+  "kc.chat.shareHappy.1": {
+    "zh": "开心的{thing}，值得记一笔。",
+    "en": "A happy {thing} — worth a line in the journal."
+  },
+  "kc.chat.meh.0": {
+    "zh": "普普通通的一天也很好。有什么小事吗？",
+    "en": "An ordinary day is fine too. Any little thing?"
+  },
+  "kc.chat.meh.1": {
+    "zh": "嗯，平平淡淡的。那就安安静静地过吧。",
+    "en": "Mm, a quiet one. Let it be quiet then."
+  },
+  "kc.chat.inspire.0": {
+    "zh": "写写今天吃到的最好吃的一口？",
+    "en": "Write about the best bite you had today?"
+  },
+  "kc.chat.inspire.1": {
+    "zh": "今天有没有让你笑出来的瞬间？就写它。",
+    "en": "Was there a moment that made you smile today? Write that."
+  },
+  "kc.chat.inspire.2": {
+    "zh": "拍一张桌上的东西，配一句话就好。",
+    "en": "Snap whatever's on your desk and add one line."
+  },
+  "kc.chat.inspire.3": {
+    "zh": "写一句话给一年后的自己吧。",
+    "en": "Write one line to yourself a year from now."
+  },
+  "kc.chat.question.0": {
+    "zh": "这个问题难倒我了。我只是一只小猫嘛。",
+    "en": "That one's beyond me — I'm only a little cat."
+  },
+  "kc.chat.question.1": {
+    "zh": "唔，我不知道诶。你觉得呢？",
+    "en": "Hmm, I don't know. What do you think?"
+  },
+  "kc.chat.question.2": {
+    "zh": "我答不上来，但我想知道你怎么想。",
+    "en": "I can't answer that, but I'd like your take."
+  },
+  "kc.chat.listen.0": {
+    "zh": "嗯嗯，我在听。然后呢？",
+    "en": "Mm-hm, I'm listening. And then?"
+  },
+  "kc.chat.listen.1": {
+    "zh": "原来是这样。你现在感觉怎么样？",
+    "en": "I see. How do you feel about it now?"
+  },
+  "kc.chat.listen.2": {
+    "zh": "谢谢你告诉我。还有想说的吗？",
+    "en": "Thanks for telling me. Anything else?"
   }
 }

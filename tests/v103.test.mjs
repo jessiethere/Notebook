@@ -40,7 +40,7 @@ test("the line fits the situation and is not repeated while others remain", () =
   const used = [];
   for (let i = 0; i < 7; i++) used.push(K.contextLine("tap", { pages: 2, photos: 4 }, { recent: used, seed: 0 }).id);
   assert.equal(new Set(used).size, 7, "seven different lines before any repeats");
-  assert.deepEqual(K.contextLine("tap", { pages: 3, photos: 5, title: "咖啡" }).values, { count: 3, photos: 5, title: "咖啡", days: 0, untagged: 0 });
+  assert.deepEqual(K.contextLine("tap", { pages: 3, photos: 5, title: "咖啡" }).values, { count: 3, photos: 5, title: "咖啡", days: 0, untagged: 0, thing: "" });
   assert.match(K.contextLine("shelf", { count: 3, untagged: 2 }, { seed: 0 }).id, /^shelf\.untagged\./);
   for (let seed = 0; seed < 8; seed++) assert.doesNotMatch(K.contextLine("shelf", { count: 3, untagged: 0, latest: "旅行" }, { seed }).id, /untagged/, "no “add a tag” when every journal has tags");
 });
@@ -67,7 +67,9 @@ test("the small chat reads a few plain things; anything else is unknown (answere
   assert.equal(K.localIntent("你好"), "greet");
   assert.equal(K.localIntent("谢谢"), "thanks");
   assert.equal(K.localIntent("今天好累"), "feel");
-  assert.equal(K.localIntent("今天想吃蛋糕"), "unknown");
+  // V10.18: a craving has its own reply now; an odd short line is still unknown.
+  assert.equal(K.localIntent("今天想吃蛋糕"), "hungry");
+  assert.equal(K.localIntent("嗷"), "unknown");
   assert.equal(K.localIntent("Help me write a line"), "write");
   assert.equal(K.localIntent(""), "unknown");
 });
