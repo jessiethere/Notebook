@@ -1,6 +1,6 @@
 # Little Days · Mac 本地开发、本地 Qwen 与 iPhone 模拟器（2026-11-11）
 
-> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 7 节（Xcode / 模拟器）也已在 Mac 上跑通（见下表）。第 5 节（App 里的本地 AI 聊天）还没在 Mac 上实际打开过。
+> 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 7 节（Xcode / 模拟器）也已在 Mac 上跑通（见下表）。第 5 节（App 里的本地 AI 聊天）也已在 Mac 上实测通过（2026-11-12，见第 5 节末尾）。
 
 ## 0. 怎样让 Claude 直接在你的 Mac 上操作
 
@@ -18,7 +18,7 @@
 | 仓库里的原生工程 | **2026-11-11 第一次构建成功，并在模拟器里运行** | `Native/LittleDays.xcodeproj`：iOS 17，App target「LittleDays」，Bundle ID `com.jessiethere.littledays`，自动签名，`DEVELOPMENT_TEAM` 为空。依赖本地 Swift Package `Native/Package.swift`（LittleDaysUI）和 `Packages/LittleDaysCore`。Xcode 27.2 + iPhone 18 Pro 模拟器（iOS 27.2）：工程**没有改就 BUILD SUCCEEDED**（scheme 由 Xcode 自动生成，只有警告）；安装后首页、日历、书架、Journal Studio 都能打开（截图：`bash tools/mac/sim-shots.sh` → `build/sim-shots/`）。冷启动到首页约 15–20 秒（先空白，再「正在打开你的文具店…」），原因未查。这一版 Xcode 里没有单独的 Simulator.app，用 Xcode 打开工程按 ⌘R 才会显示模拟器窗口；命令行构建、安装、截图不受影响。 |
 | App 的界面 | Swift 外壳 + 同一套 Web 界面 | `LittleDaysApp` → `LittleDaysWebShellView`（WKWebView），加载打包进 App 的 `Public/` 副本（`tools/sync_native_web.py` 同步到 `Native/Sources/LittleDaysUI/WebApp/`）。Home、日历、书架、Journal Studio、阅读器、Captain 都是这套 Web 界面；原生 Swift 的部分是外壳、每日提醒（`LittleDaysReminders`）、资源加载。早期的 SwiftUI 原型视图（`HomeView`、`CalendarView`、`BooksView`、`StudioView` 等）还在，但 App 不用它们，功能落后于 Web。 |
 | 环境检查脚本 | **2026-11-11 已在 Mac 上运行，全部 ✅** | `bash tools/mac/doctor.sh`：只读。机器：Apple M5 / 24 GB / macOS 26.6；Xcode 27.2、iOS 27.2 模拟器；Ollama 0.40.16 只监听 127.0.0.1。当时缺 Homebrew 和 Node，经用户同意后装了 Homebrew 7.0.13 和 Node 26.13.0。 |
-| 日常命令 | `sim-shots.sh` 已在 Mac 上运行；其余未全部运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop`；`bash tools/mac/sim-shots.sh`（构建 + 四个页面截图；靠只在 Debug 构建生效的启动参数 `-LittleDaysTap` 打开页面） |
+| 日常命令 | `sim-shots.sh` 已在 Mac 上运行；`web-ai` 的功能已实测（2026-11-12，当时 8080 被 Xcode 里的服务端占着，改用 8081 手动启动；`dev.sh web-ai` 只验证了新加的「8080 被别的程序占用」提示）；其余未全部运行 | `bash tools/mac/dev.sh web / web-ai / sim / ai / eval / test / stop`；`bash tools/mac/sim-shots.sh`（构建 + 四个页面截图；靠只在 Debug 构建生效的启动参数 `-LittleDaysTap` 打开页面） |
 | Captain 测试集 | 已写好 | `docs/captain-ai/chat-cases.json`：12 句合成输入，包括你指定的 7 句。 |
 | Captain × Qwen 评测脚本 | **2026-11-11 已在 Mac 上运行（qwen3.5:4b，每句 3 次）** | 结果和人工评分在 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md`：145/168（86%），每句约 0.4–1.9 秒，约 32 tokens/s。主要问题是「喵」成了口头禅、偶尔编造手帐状态。 |
 | App 里的本地 AI 适配器 | 代码与测试完成（用模拟的 Ollama 测试）；**提示词第 3 版**（2026-11-11，在 Mac 上实测 v1 → v2 → v3：「喵」19→0→0，v2 带出的帽子 / 尾巴 / 阳光口癖在 v3 基本消失；回复语言和用户不一致时由代码拦截，改用规则回复；对比见 `docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md`），v3 还要用 `captain-eval.mjs` 正式跑一次 | `Public/js/captain-ai.mjs`。默认关闭，只在开发时、页面和模型都在本机时才启用（见第 4 节）。 |
@@ -88,12 +88,19 @@ Captain 聊天 → 规则判断意图（keeper-chat.mjs）
 - **不会自动调用**：只有你在 Captain 面板里主动发出一句话时才会调用。
 - 本地服务只监听 127.0.0.1：`tools/mac/dev.sh web` 用 `--host 127.0.0.1` 启动预览；Ollama 默认也只监听 127.0.0.1（doctor.sh 会检查有没有被改成对外开放）。
 - 没有改任何正式配置：在线链接和 iPhone App 外壳里没有写入任何开发地址。
+- **Mac 上实测（2026-11-12，qwen3.5:4b，提示词 v3，Claude 桌面 App 里的浏览器）**：
+  - 「你的柠檬帽真好看」「今天有点累，但是写完了一页」都由本机模型回复，旁边标着「本机模型 · 开发」，几秒内出现。
+  - 发给 Ollama 的内容只有：系统提示词、你打的字、Captain 的回复，以及 `think: false` 和推理参数；没有任何手帐内容。
+  - 「What can you do?」和「帮我整理今天的故事」走规则，不调用模型：前者回答真实的功能列表，后者直接打开「今天的故事」面板。
+  - 把模型地址指到一个没开的本机端口：请求失败，Captain 立刻改用规则回复，页面不报错。
+  - `?dev-local-ai=off`：开关从浏览器里删除，之后聊天不再发出任何请求。
+- **8080 被占用时**：如果在 Xcode 里运行过根目录的服务端（scheme「Notebook」，进程名 `NotebookServer`），它会一直占着 8080，打开的页面是 500 错误。`dev.sh web` / `web-ai` 现在会发现这种情况，打印占用的程序并停止；在 Xcode 里按 ■ Stop（或 `kill` 它打印的进程号）后再运行。也可以临时换端口：`python3 tools/preview.py --host 127.0.0.1 --port 8081`，再打开 `http://127.0.0.1:8081/?dev-local-ai=qwen3.5:4b`（换端口后浏览器里的数据和 8080 不共用）。
 
 ## 6. 三种「本地 AI」不是一回事
 
 | 情况 | 能不能用 | 说明 |
 |---|---|---|
-| **Mac 本地 AI**（Mac 上的浏览器预览 → Mac 上的 Ollama） | 可以（第 5 节，等你在 Mac 上实测） | 页面和模型都在 127.0.0.1。 |
+| **Mac 本地 AI**（Mac 上的浏览器预览 → Mac 上的 Ollama） | 可以（第 5 节，2026-11-12 在 Mac 上实测通过） | 页面和模型都在 127.0.0.1。 |
 | **iPhone 模拟器调用 Mac 上的服务** | 还没接通 | 模拟器和 Mac 共用网络，技术上能访问 127.0.0.1:11434。但 App 外壳是从打包进 App 的文件加载页面，地址不是 localhost，所以第 5 节的开关在模拟器里不会启用。要接通，需要在外壳里加一个只在 **DEBUG 构建**生效的开关，并确认 WKWebView 的 ATS（App Transport Security）是否允许访问 `http://127.0.0.1`。这一步要在 Mac 上实际调试，不能写进 Release 配置。 |
 | **真实 iPhone 上的 AI** | 没有 | 真机访问不到 Mac 的 127.0.0.1。让 Ollama 监听局域网会把服务暴露给同一 Wi-Fi 下的其他设备，不建议这样做。真机上可以考虑的方向是在手机本机运行小模型，或者以后做有隐私授权的后端；两者都需要单独评估，本轮不做。 |
 

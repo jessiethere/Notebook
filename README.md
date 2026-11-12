@@ -179,6 +179,12 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-12 — 在你的 Mac 上试通了 Captain × 本机 Qwen 聊天（仅开发用，在线链接里看不到变化）
+
+- 在浏览器里打开 `?dev-local-ai=qwen3.5:4b` 后，和 Captain 闲聊由你 Mac 上的 Qwen 回复，旁边标着「本机模型 · 开发」；发出去的只有聊天里的几句话，不含手帐内容。
+- 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
+- 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
+
 ### 2026-11-12 — 工具整理方案第二版 + 媒体保存问题的验证结果（App 未改）
 
 - 方案页（同一个链接，第 2 版）：https://claude.ai/artifact/5yrXLwKVD9cFvkjf6TPxKr 。已按你的六项决定更新，有 375 / 430 中英文预览、返回和删除的规则，以及键盘位置的对比。

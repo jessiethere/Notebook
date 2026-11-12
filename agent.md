@@ -48,6 +48,25 @@
 
 ## 更新日志
 
+### 2026-11-12 — Mac 上实测第 5 节：Captain × 本机 Qwen 在浏览器里可用；`dev.sh web` 发现 8080 被别的程序占用时会停下
+
+- 需求：用户确认「Yes, test web-ai」，按 docs/MAC_LOCAL_DEV.md 第 5 节在 Mac 上实际打开 App 里的本地 AI 聊天（Mac 本地时间 11-11 晚）。
+- 先重跑 `doctor.sh`：都齐了，没有安装任何东西。brew / node / npm 显示 ❌ 只是因为 Claude 的命令行 PATH 里没有 `/opt/homebrew/bin`；补上后全部 ✅。
+- 发现：8080 被 Xcode 里运行过的根目录服务端 `NotebookServer`（Debug-iphonesimulator，模拟器和 Mac 共用网络）占着，返回 500。原来的 `dev.sh web` 只看端口有没有人在听，会直接打开这个错误页面。没有停掉那个进程（是用户在 Xcode 里开的），改用 `python3 tools/preview.py --host 127.0.0.1 --port 8081`。
+- 实测（Claude 桌面 App 里的浏览器，新的浏览器数据，只用合成输入；qwen3.5:4b，提示词 v3）：
+  - 打开 `?dev-local-ai=qwen3.5:4b` 后 `little-days.dev.local-ai` 写入 `{on, endpoint: 127.0.0.1:11434, model}`；领养 Captain（温柔）后在聊天里发送。
+  - 「你的柠檬帽真好看」→「谢谢！帽子是我的小太阳呀。」；「今天有点累，但是写完了一页」→「累了就休息会儿吧，我在这儿陪着你呢。」两条都标着「本机模型 · 开发」，几秒内出现。
+  - 截获发给 Ollama 的请求：只有系统提示词 v3、用户的话和 Captain 的回复（开场白不在内），`think: false`、`keep_alive: "10m"`、temperature 0.7 / top_p 0.9 / top_k 40 / repeat_penalty 1.1 / num_predict 96；没有手帐内容。Ollama 对 `http://127.0.0.1:8081` 的 CORS 预检返回 204 并允许该来源。
+  - 「What can you do?」→ 规则回复真实功能列表，0 次模型调用；「帮我整理今天的故事」→ 直接打开「今天的故事」面板，0 次模型调用。
+  - 把模型地址改到没开的 `127.0.0.1:11999`：请求失败（Failed to fetch），立刻改用规则回复，页面没有异常（控制台只有浏览器自己的 ERR_CONNECTION_REFUSED）。
+  - `?dev-local-ai=off`：开关被删除，之后聊天不发出任何请求，规则回复正常。
+- 修改：`tools/mac/dev.sh` 的 `web()`：8080 有人在听但不是 `tools/preview.py` 时，打印占用的进程和停止方法，退出码 1，不再打开错误页面。验证：`bash -n` 通过；在 8080 被 `NotebookServer` 占用时运行 `dev.sh web-ai`（用假的 `open` 命令）打印提示并退出 1；确认 8081 上的 preview.py 进程能被识别为正常的预览。
+- 文档：MAC_LOCAL_DEV.md 顶部状态、第 1 节「日常命令」、第 5 节（实测结果、8080 被占用的处理）、第 6 节表格。
+- 没有修改 `Public/`，所以没有同步 iOS 外壳、没有重新发布固定链接。
+- 测试时 Mac 上的代码是 34be8ed（V10.17）；提交前 rebase 到 GitHub 上新的 14 个提交（V10.18 起 Captain 规则能听懂更多日常的话，可能让一部分闲聊改走规则），rebase 后在新代码上重跑了一遍：「你的柠檬帽真好看」「今天有点累，但是写完了一页」「我想摸摸你的头」仍然走本机模型（「哇！你发现了我的帽子！」「嗯……累了就歇会儿。」「好呀，给你挠下巴！」），「What can you do?」仍走规则、不调用模型。摸头那句又把角色说反了（提示词要求 Captain 是被摸的一方），评测时留意。
+- 未验证：`dev.sh web-ai` 在 8080 空闲时的完整流程（这次 8080 被占，用 8081 手动做的同样测试）；Safari / Chrome 等用户自己的浏览器；英文界面下的聊天。
+- 下一步：需要时试 9B（`LD_MODEL=qwen3.5:9b`）；模拟器里接本地 AI 需要只在 DEBUG 生效的外壳开关（第 6 节）。
+
 ### 2026-11-12 — IA 方案第二版（六项决定）+ P0 在 Mac WebKit 和 iOS 模拟器上的验证（App 代码未改）
 
 - 需求：用户确认了六项决定（← 返回 + 选中提示、保留视频形状、375 的「更多」用两档高度、不加页面主题和新数据、手绘放第一位、心情改名为 开心 / 温暖 / 平静 / 低落 / 雀跃），要求第二版的真实设计预览。同时要求先确认 P0 媒体问题的状态，没修好就先修 P0。

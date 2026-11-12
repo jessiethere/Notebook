@@ -14,9 +14,17 @@ MODEL="${LD_MODEL:-qwen3.5:4b}"
 cmd="${1:-help}"; shift || true
 
 web() {
-  if ! lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
+  local pid
+  pid=$(lsof -nP -t -iTCP:8080 -sTCP:LISTEN 2>/dev/null | head -1)
+  if [ -z "$pid" ]; then
     nohup python3 tools/preview.py --host 127.0.0.1 --port 8080 > /tmp/little-days-preview.log 2>&1 &
     sleep 1
+  elif ! ps -o command= -p "$pid" | grep -q "tools/preview.py"; then
+    # e.g. the Vapor server (NotebookServer) left running from Xcode: it answers 8080 with errors.
+    echo "Port 8080 is used by another program, not the Little Days preview:"
+    ps -o pid=,command= -p "$pid"
+    echo "Stop it (in Xcode: ■ Stop, or: kill $pid), then run this again."
+    exit 1
   fi
   open "http://127.0.0.1:8080/$1"
 }
