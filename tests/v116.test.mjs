@@ -49,3 +49,11 @@ test("the account keeps one avatar string: marks are accepted, old emoji too, an
   assert.equal(A.loadAccount(s).name, "Jess", "the name is kept");
   assert.throws(() => A.signIn({ getItem: () => null, setItem() { throw new Error("full"); } }, { name: "x" }), /full/, "a failed save is reported (the editor keeps the sheet open)");
 });
+
+test("release navigation: community is a Labs page in the shared features (Swift reads the same flag)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const features = JSON.parse(readFileSync(new URL("../Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/features.json", import.meta.url), "utf8"));
+  const release = features.tabs.filter((tab) => tab.inNav !== false && tab.labs !== true).map((tab) => tab.id);
+  assert.deepEqual(release, ["home", "calendar", "studio", "books"]);
+  assert.equal(features.tabs.find((tab) => tab.id === "community").labs, true);
+});

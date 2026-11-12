@@ -369,3 +369,8 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - 「玩耍」标签固定展开到最高。
 - 原生：`LittleDaysHaptics`（`WKScriptMessageHandler`，名字是 `littleDaysHaptics`）收到页面的 `postMessage` 后调用 `UIImpactFeedbackGenerator(.light)`。网页端检测不到这个 handler，就什么都不做。
 - 素材：`tools/make_captain_anim.py` 需要 Pillow 和 numpy：把毛线球从坐姿图里抠出来，用调和填充补上原位置，生成开心动画的雪碧图，并删除不再使用的带领巾雪碧图。
+
+## 2026-11-12 共享导航的 Labs 标记
+
+- `features.json` 的 `tabs` 新增可选字段 `labs`（目前只有 `community: true`），Swift `FeatureTab.labs` 读取同一个字段。
+- 正式版导航 = `inNav != false && labs != true`。网页在 `labsOn()` 时才显示带 `labs` 的标签；`LAB_PAGES` 仍负责拦截直接跳转到这些页面。

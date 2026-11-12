@@ -36,7 +36,8 @@
       "id": "community",
       "title": "Community",
       "subtitle": "社区",
-      "symbol": "users"
+      "symbol": "users",
+      "labs": true
     }
   ],
   "templates": [

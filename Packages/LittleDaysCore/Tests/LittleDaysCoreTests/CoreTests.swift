@@ -181,9 +181,10 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(tokens.colors["cream"], "#F8F5EF")
         XCTAssertGreaterThan(try SharedResources.mediaData(named: "coffee").count, 1000)
         let features = try SharedResources.decode(FeatureDefinition.self, named: "features")
-        XCTAssertEqual(features.tabs.map(\.id), ["home", "calendar", "studio", "growth", "books"])
-        // V6.6: Growth has no tab of its own (Home's "today" card + "My habits").
-        XCTAssertEqual(features.tabs.filter { $0.inNav != false }.map(\.id), ["home", "calendar", "studio", "books"])
+        XCTAssertEqual(features.tabs.map(\.id), ["home", "calendar", "studio", "growth", "books", "community"])
+        // V6.6: Growth has no tab of its own (Home's "today" card + "My habits");
+        // V10.17: community is a Labs page — the release app has four tabs.
+        XCTAssertEqual(features.tabs.filter { $0.inNav != false && $0.labs != true }.map(\.id), ["home", "calendar", "studio", "books"])
         XCTAssertEqual(DayKey.weekStart("2026-11-08"), "2026-11-02")
         XCTAssertEqual(DayKey.adding(1, to: "2026-12-31"), "2027-01-01")
     }

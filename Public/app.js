@@ -491,7 +491,7 @@ function navigation() {
   // "today" card and kept in the "My habits" book on the shelf.
   $("#navigation").innerHTML = features.tabs
     .filter((tab) => tab.inNav !== false)
-    .filter((tab) => labsOn() || !LAB_PAGES.includes(tab.id))
+    .filter((tab) => labsOn() || !(tab.labs || LAB_PAGES.includes(tab.id)))
     .map(
       (tab) =>
         `<button class="nav-item ${tab.id === current ? "active" : ""} ${tab.id}" data-action="nav" data-page="${tab.id}" aria-label="${t("nav." + tab.id)}" ${tab.id === current ? 'aria-current="page"' : ""}>${icon(tab.symbol)}<span>${t("nav." + tab.id)}</span></button>`,

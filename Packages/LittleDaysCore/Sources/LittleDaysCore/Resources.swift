@@ -14,6 +14,9 @@ public struct NavigationTab: Decodable, Identifiable {
     /// V6.6: false = a page without its own tab (Growth lives on Home's
     /// "today" card and in the "My habits" book).
     public let inNav: Bool?
+    /// true = only shown with Labs switched on (community: a local demo,
+    /// not a launched feature). The release app's tabs leave it out.
+    public let labs: Bool?
 }
 
 public struct MaterialTemplate: Decodable, Identifiable {

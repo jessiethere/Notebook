@@ -48,6 +48,19 @@
 
 ## 更新日志
 
+### 2026-11-12 — Mac 上带入 2cb0fc1，Core 测试第一次能编译；修正共享导航里的社区标记
+
+- 用户第二次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 2cb0fc1fbba2246fbeab01e6c34394eb49e581a4`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。
+- 在 Mac 上运行 `swift test`（Packages/LittleDaysCore，Xcode 27.2）：这是 11-09 以来 Core 测试第一次编译通过。共 6 个测试，4 个通过，2 个断言失败，都在 `testSharedResourcesAndDates`。
+  - 原因：共享的 `features.json` 从 2026-11-07 起多了 `community` 标签，但没有任何标记说明它只属于 Labs；网页靠 `app.js` 里的 `LAB_PAGES` 过滤，测试却还在比对旧的 5 个标签。
+- 修复：
+  - `features.json` 的 community 加上 `"labs": true`；
+  - Swift `FeatureTab` 新增可选字段 `labs`；
+  - `CoreTests`：全部标签包括 community，正式版导航（排除 `inNav == false` 和 `labs == true`）是 首页 / 日历 / 写手帐 / 书架；
+  - 网页导航的过滤也读取 `tab.labs`（`LAB_PAGES` 保留，用于页面跳转拦截）；
+  - `tests/v116.test.mjs` 新增同样的检查。
+- 测试（Linux 容器）：`npm test` 191/191；Python 测试通过；浏览器 v52、v116 通过。Swift 测试要在 Mac 上带入本次提交后重跑。
+
 ### 2026-11-12 — Mac 同步完成（用户确认合并）；iPhone App 构建并在模拟器里玩了 Playroom；修复多年未编译的 Core 测试
 
 - 用户回复「确认合并」后，先确认 Mac 状态与审查时一致（HEAD 5115c61，只有 `Package.resolved` 和两份评测结果），再执行 `git merge --ff-only 9ea3ccaefb93a10746d2ced7c413ea8ee7bbcde4`。合并后用 `cmp` 对比检查点副本，三个文件逐字节没有变化。没有冲突，也没有覆盖任何文件。
