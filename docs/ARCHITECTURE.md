@@ -407,3 +407,26 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - 点页面上的照片直接打开那张照片的说明（`pointerdown` 记录点击位置）；
   - Studio 里直接在纸上编辑 caption 图层时，写回对应照片的 caption。
 - **原生**：iPhone App 用 WKWebView 加载同一套网页，行为一致。早期的 SwiftUI 原型界面（`LittleDaysRootView` 等）没有杂志模式，也不显示照片说明，只是数据能完整解码、保存。
+
+## 2026-11-12 V10.20 照片工具与非破坏性裁剪
+
+- **新文件 `js/crop.mjs`**（纯函数）：
+  - `boxAspect`：照片窗口的比例，扣除相框留边；遮罩形状不留边。
+  - `coverRect` / `containIn` / `clampRect`。
+  - `rectToView` / `viewToRect`：保留的区域和旧的 `x / y / zoom` 互相转换，比例和外框一致时结果精确。
+  - `cropView`：有 `rect` 时由 `rect` 加当前外框比例计算，否则直接用旧字段。
+  - 还有 `withRatio` / `rotateRect90` / `frameFor` / `fixedShape`。
+  - `canvas.mjs` 的 `cropOf` 和 `export.mjs` 都改为调用 `cropView`，编辑器、阅读器和导出图片的显示一致。
+- **新文件 `js/crop-editor.mjs`**：全屏裁剪编辑器，用 Pointer Events 处理拖动、双指和角 / 边，返回 `{ rect, aspect, frameAspect, rotated }`；旋转交给 App 的回调完成。
+- **数据**（向下兼容）：
+  - `layer.crop` 新增可选的 `rect { x, y, w, h }`（照片的比例坐标）和 `aspect`；旧的 `x / y / zoom` 照常写入，旧的读取方式和校验都不受影响。
+  - Swift：`LayerCrop.rect` / `aspect`、`CropRect`；CoreTests 覆盖解码和来回编码。
+  - 在画布上用旧方式调整裁剪（拖动或滚轮）时，写入的新对象没有 `rect`，以旧字段为准。
+  - 替换照片时裁剪重置。
+- **`app.js`**：
+  - 照片工具行 `ctxDockHTML` 改为 `shape` / `crop-open` / `photo-edit` / `replace-photo`；
+  - 新增 `shapeSheetHTML`；`layerControls` 去掉形状和裁剪；
+  - `openCropFor`：90° 旋转复用 `normalizeEdit` + `renderEdited`，原图留在 `sourceRef`；所有修改在一次 `changeTarget` 里完成，因此是一次 Undo；
+  - `addPhotoLayers` 不再打开排版，改为设置 `layoutHint`；
+  - `render` 里同一个工具保留滚动位置，换工具从顶部开始；
+  - 「调整」打开图片编辑器时传 `tabs` 参数，去掉裁剪页。

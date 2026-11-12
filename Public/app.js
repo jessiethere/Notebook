@@ -62,7 +62,9 @@ import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
 import { openPhotoEditor } from "./js/photo-editor-ui.mjs";
-import { renderEdited, isIdentity } from "./js/photo-edit.mjs";
+import { renderEdited, isIdentity, normalizeEdit } from "./js/photo-edit.mjs";
+import { openCropEditor } from "./js/crop-editor.mjs";
+import * as Crop from "./js/crop.mjs";
 import { SHAPES, shapeSize, shapeForSize } from "./js/shapes.mjs";
 import { frameAt, openPosterPicker } from "./js/poster-picker.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
@@ -2958,7 +2960,23 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+  // V10.20: a photo's shape (and frame) has its own sheet; what shows inside
+  // it is the crop editor. This sheet keeps place, size, turn and order.
+  void shapes;
+  void photoTools;
+  return `<div class="layer-controls">${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+}
+
+// V10.20 · 形状: the frame's shape first (no scrolling), then its paper edge.
+function shapeSheetHTML(layer) {
+  const shapes = [...(layer.kind === "photo" ? ["free"] : []), ...SHAPES.filter((s) => layer.kind === "video" || s !== "film")];
+  const now = layer.shape || (layer.kind === "video" ? "landscape" : "free");
+  const chips = shapes.map((shape) => `<button data-action="layer-shape" data-shape="${shape}" class="${now === shape ? "selected" : ""}" aria-pressed="${now === shape}"><i class="shape-icon shape-icon-${shape}" aria-hidden="true"></i>${t("shape." + shape)}</button>`).join("");
+  const frames =
+    layer.kind === "photo"
+      ? `<div class="shape-frames" role="group" aria-label="${t("photo.frame")}"><span class="small-label">${t("photo.frame")}</span><div class="shape-frame-row"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label></div></div>`
+      : "";
+  return `<div class="shape-sheet"><div class="shape-picker" role="group" aria-label="${t("shape.title")}"><div class="shape-chips">${chips}</div></div><p class="save-help">${t("shape.hint")}</p>${frames}</div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -3732,6 +3750,9 @@ function studioTools() {
     paperAction = dayPage ? "template" : "moment-template",
     photoTotal = counts.photos + (dayPage && editor.photo ? 1 : 0);
   const tools = [];
+  const chosen = selectedLayerOf();
+  if (chosen && (chosen.kind === "photo" || chosen.kind === "video") && !chosen.drawing)
+    tools.push({ id: "shape", icon: "◐", label: "shape.title", value: t("shape." + (chosen.shape || (chosen.kind === "video" ? "landscape" : "free"))), body: () => shapeSheetHTML(chosen) });
   if (selectedLayerOf())
     tools.push({
       id: "layer",
@@ -3892,11 +3913,12 @@ function ctxDockHTML(tool) {
   const style = (tab, name, label) => tool(`data-action="text-style" data-tab="${tab}" aria-expanded="${on("textstyle", tab)}"`, name, t(label), on("textstyle", tab) ? "open" : "");
   const own =
     kind === "photo" && layer.mediaRef
-      ? tool('data-action="replace-photo"', "replace", t("photo.replaceShort")) + tool(`data-action="ctx-crop" aria-pressed="${cropMode}"`, "crop", t("photo.crop"), cropMode ? "open" : "") + tool('data-action="photo-edit"', "adjust", t("ctx.adjust"))
+      ? // V10.20: shape (the frame) · crop (what shows inside) · adjust · replace.
+        tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`) + tool('data-action="crop-open"', "crop", t("crop.tool")) + tool('data-action="photo-edit"', "adjust", t("ctx.adjust")) + tool('data-action="replace-photo"', "replace", t("photo.replaceShort"))
       : kind === "text"
         ? tool('data-action="ctx-edit-text"', "pen", t("edit")) + style("font", "font", "ctx.font") + style("color", "color", "ctx.color") + style("align", "align", "ctx.align")
         : kind === "video"
-          ? tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
+          ? tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
           : kind === "drawing"
             ? tool('data-action="draw-edit"', "draw", t("draw.again"))
             : "";
@@ -3948,10 +3970,13 @@ function toolMenuHTML() {
     ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
-  if (selectedLayerOf()) return sheet + ctxDockHTML(tool);
+  const photosHere = activePage().layers.filter(framedPhoto).length;
+  if (layoutHint && (studioTool || photosHere < 2)) layoutHint = false;
+  const hint = layoutHint ? `<div class="layout-hint" role="group"><button data-action="layout-hint-open">${svIcon("layout")}<span>${t("layout.hint", { count: photosHere })}</span><i aria-hidden="true">›</i></button><button class="layout-hint-x" data-action="layout-hint-close" aria-label="${t("layout.hintClose")}">×</button></div>` : "";
+  if (selectedLayerOf()) return sheet + hint + ctxDockHTML(tool);
   const moreOpen = Boolean(studioTool) && studioTool !== "stickers";
   const dock = `<nav class="tool-dock sv-tools" aria-label="${t("write.decorate")}">${tool('data-action="add-photos"', "photo", t("add.photo"))}${tool('data-action="add-text-layer"', "text", t("sv.text"))}${tool(`data-action="tool" data-tool="stickers" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("dock.stickers"), `dock-btn ${studioTool === "stickers" ? "open" : ""}`)}${tool(`data-action="tool" data-tool="more" aria-expanded="${moreOpen}"`, "more", t("dock.more"), `dock-btn ${moreOpen ? "open" : ""}`)}</nav>`;
-  return sheet + dock;
+  return sheet + hint + dock;
 }
 // Updates the one-line summaries without re-rendering open inputs.
 function refreshToolSummaries() {
@@ -4996,6 +5021,7 @@ function addChoicesHTML(className = "") {
 // more). Everything else opens in the bottom sheet.
 let studioPreview = false;
 const SV_ICONS = {
+  shape: '<rect x="3.5" y="9" width="10" height="10" rx="2"/><circle cx="15" cy="9" r="5.5"/>',
   photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
   text: '<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
   stickers: '<path d="M5 4.5h14a.5.5 0 0 1 .5.5v9l-5.5 5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5Z"/><path d="M14 19.5V15a1 1 0 0 1 1-1h4.5"/><path d="M9 10.5c.8 1.2 1.8 1.8 3 1.8s2.2-.6 3-1.8"/>',
@@ -5149,6 +5175,10 @@ function render() {
   }
   $("#phone").style.setProperty("--studio-h", $("#app-scroll").clientHeight + "px");
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
+  // V10.20: a sheet re-drawn for the same tool keeps its place; a different
+  // tool always opens at its top (its main controls first, no scrolling).
+  const sheetBefore = $(".tool-sheet");
+  const sheetKeep = sheetBefore ? { id: sheetBefore.dataset.toolRow, top: sheetBefore.scrollTop } : null;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
     $("#navigation").innerHTML = "";
@@ -5176,6 +5206,8 @@ function render() {
   applyShellLanguage();
   watchSaveButton();
   $("#app-scroll").scrollTop = scrollTop;
+  const sheetNow = $(".tool-sheet");
+  if (sheetNow) sheetNow.scrollTop = sheetKeep && sheetKeep.id === sheetNow.dataset.toolRow ? sheetKeep.top : 0;
   if (focused) {
     const again = $(`#app ${focused}`);
     if (again?.dataset.inlineLayer) editTextLayer(again.dataset.inlineLayer);
@@ -8707,6 +8739,18 @@ async function v31Action(target) {
       cropMode = !cropMode;
       render();
       return true;
+    case "crop-open":
+      studioTool = null;
+      openCropFor();
+      return true;
+    case "layout-hint-open":
+      layoutHint = false;
+      openTool("layout");
+      return true;
+    case "layout-hint-close":
+      layoutHint = false;
+      render();
+      return true;
     case "ctx-crop":
       // 裁剪 in the bottom row: crop mode with its sliders in the layer sheet.
       cropMode = !cropMode;
@@ -9167,12 +9211,12 @@ async function imageBlob(file) {
 const MAX_PHOTOS_PER_PICK = 20;
 // Opens the photo editor for saved originals; returns the pictures to use
 // (edited ones are new Blobs, originals kept as sourceRef) or null if cancelled.
-async function editPhotos(saved, mode) {
+async function editPhotos(saved, mode, tabs = null) {
   const items = saved
     .map((item) => ({ ref: item.sourceRef || item.reference, src: safePhoto(item.sourceRef || item.reference), name: item.name, edit: item.edit }))
     .filter((item) => item.src);
   if (!items.length) return null;
-  const result = await openPhotoEditor(items, { t, loadImage, mode });
+  const result = await openPhotoEditor(items, { t, loadImage, mode, ...(tabs ? { tabs } : {}) });
   if (!result) return null;
   const out = [];
   for (const item of result) {
@@ -9189,13 +9233,70 @@ async function editPhotos(saved, mode) {
   }
   return out;
 }
+// V10.20 · 裁剪画面: the full-screen crop editor for the selected photo.
+// Applied as one undo step; the layer's place, turn and order stay; its frame
+// changes only when a different ratio was chosen (the editor says so first).
+async function openCropFor() {
+  const layer = selectedLayerOf();
+  if (layer?.kind !== "photo" || !layer.mediaRef || busyMedia) return;
+  let image;
+  try {
+    image = await loadImage(safePhoto(layer.mediaRef));
+  } catch {
+    return toast(t("media.missing"));
+  }
+  // Turning 90° re-draws the picture from its untouched original (as 调整
+  // does); nothing is kept unless 完成 is pressed.
+  let pending = null;
+  const rotate = async () => {
+    const source = pending?.sourceRef || layer.sourceRef || layer.mediaRef;
+    const edit = normalizeEdit(pending?.edit || layer.edit || {});
+    edit.rotate = (edit.rotate + 90) % 360;
+    const original = await loadImage(safePhoto(source));
+    let reference = source,
+      aspect = original.width / original.height;
+    if (!isIdentity(edit)) {
+      const canvas = renderEdited(original, edit);
+      const blob = await new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Image encoding failed"))), "image/jpeg", 0.88));
+      reference = `media:${await media.put(blob, { kind: "photo", name: layer.text, edited: true })}`;
+      aspect = canvas.width / canvas.height;
+    }
+    pending = { reference, sourceRef: isIdentity(edit) ? null : source, edit: isIdentity(edit) ? null : edit, aspect };
+    return { src: safePhoto(reference), aspect };
+  };
+  const result = await openCropEditor({ src: safePhoto(layer.mediaRef), imgAspect: image.width / image.height, layer: structuredClone(layer), t, rotate });
+  if (!result) return;
+  changeTarget((page) => {
+    const target = page.layers.find((item) => item.id === layer.id);
+    if (!target) return;
+    if (pending) {
+      target.mediaRef = pending.reference;
+      if (pending.sourceRef) {
+        target.sourceRef = pending.sourceRef;
+        target.edit = pending.edit;
+      } else {
+        delete target.sourceRef;
+        delete target.edit;
+      }
+      target.aspect = Math.round(pending.aspect * 1000) / 1000;
+    }
+    if (result.frameAspect) {
+      Object.assign(target, Crop.frameFor(target, result.frameAspect));
+      page.layoutEdited = true;
+    }
+    target.crop = { ...Crop.rectToView(result.rect, result.aspect, Crop.boxAspect(target)), rect: result.rect, aspect: result.aspect };
+  });
+  flushDraft();
+  logEvent("photo_crop", { frame: Boolean(result.frameAspect), rotated: result.rotated || 0 });
+  toast(t("crop.saved"));
+}
 async function reEditPhotoLayer() {
   const layer = selectedLayerOf();
   if (layer?.kind !== "photo" || !layer.mediaRef) return;
   busyMedia = true;
   try {
     const [result] =
-      (await editPhotos([{ reference: layer.mediaRef, sourceRef: layer.sourceRef, edit: layer.edit, name: layer.text }], "edit")) || [];
+      (await editPhotos([{ reference: layer.mediaRef, sourceRef: layer.sourceRef, edit: layer.edit, name: layer.text }], "edit", ["filter", "adjust", "text"])) || [];
     if (!result) return;
     changeTarget((page) => {
       const target = page.layers.find((item) => item.id === layer.id);
@@ -9344,9 +9445,12 @@ async function handleImageUpload(event, target) {
 // New photos never overwrite existing ones. While the page still follows an
 // auto layout, all photos are re-flowed; after manual edits, new photos are
 // cascaded on top so the user's arrangement is preserved.
+let layoutHint = false; // V10.20: "try a layout" after adding several photos (ignorable)
 function addPhotoLayers(saved) {
-  // Open Layout with the new photos so arranging them is one tap away.
-  studioTool = "layout";
+  // V10.20: adding photos never opens Layout by itself. One photo is simply
+  // selected (its own tools: shape, crop, adjust…); with several, a small
+  // "try a layout" chip offers the arrangements and can be ignored.
+  studioTool = null;
   if (editorMode !== "creative") editorMode = "creative";
   changeTarget((page) => {
     if (page === editor) freeMainPhoto(page);
@@ -9370,12 +9474,13 @@ function addPhotoLayers(saved) {
       }),
     );
     page.layers.push(...added);
+    const total = existing + added.length;
     if (!page.layoutEdited) {
-      const total = existing + added.length;
       if (page.layoutTemplate === "smart") applyLayout(page, "smart");
       else applyLayout(page, suggestLayout(total), photoRegion());
     }
-    selectedLayer = added.at(-1).id;
+    selectedLayer = added.length === 1 ? added[0].id : null;
+    layoutHint = total >= 2;
   });
 }
 async function mediaMetadata(file, kind) {

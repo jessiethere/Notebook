@@ -48,6 +48,29 @@
 
 ## 更新日志
 
+### 2026-11-12 — V10.20（进行中）Journal Studio 照片工具：形状 / 裁剪画面 / 排版分开，全屏非破坏性裁剪
+
+- 需求（用户的整合需求 Part 1–11）：
+  - Part 1–2（每张照片写一句、在杂志模式里直接改字体）已在 V10.19 完成，本轮只做回归；
+  - 本轮做 Part 3–7：加照片后不强推排版；照片工具改为 形状、裁剪画面、调整、替换、图层、删除；面板标题和滚动位置；全屏可视化自由裁剪（角、边、比例、移动取景、双指缩放、旋转、取消 / 完成 / Undo / Redo，不改动原图）；统一手势。
+- 审查结论：
+  - 「裁剪」打开的是标题为「选中的图层」的通用面板：形状在顶部，缩放和 X/Y 滑块在底部，还会被自动滚到底，所以看不到形状。
+  - 旧的裁剪只有 `crop {x, y, zoom}`。「调整」里的图片编辑器另有一套比例裁剪（重新生成图片，原图留在 `sourceRef`），形成两套裁剪概念。
+  - 加照片后代码会强制 `studioTool = "layout"`。
+- 修改：
+  - 新增 `js/crop.mjs`、`js/crop-editor.mjs`；
+  - `canvas.mjs` / `export.mjs` 统一使用 `cropView`；
+  - `app.js`：照片工具行、形状面板、图层面板瘦身、`openCropFor`（旋转复用原有流程）、`layoutHint`、面板滚动位置、「调整」去掉裁剪页；
+  - `photo-editor-ui.mjs` 支持 `tabs` 参数；
+  - `styles.css` 的 V10.20 区块；`sync_tokens` 的 PAPER 列表加入 `.crop-editor`；
+  - i18n：`crop.*`、`shape.hint`、`layout.hint*`，`tool.layer` 改为「图层」；
+  - Swift：`LayerCrop.rect` / `aspect`、`CropRect`，CoreTests 补充对应检查；
+  - 测试：v120 单元测试（5 项）、v120 浏览器测试（9 组）；
+  - 文档：PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE。
+- 事故记录：一次 Python 修改脚本的最后一行 `open(P,'w').write(open(P).read())` 把未提交的 `app.js` 清空了。已用 `git checkout HEAD -- Public/app.js` 恢复（这时还没有提交任何本轮改动），再重新应用本轮修改，没有丢失已提交的内容。
+- 已验证（Chromium 模拟 iPhone 13 触控，不是真机，也不是 iOS 模拟器）：v120 浏览器测试 9 组全部通过，包括取消不改变任何东西、完成后照片文件不变 / 位置角度不变 / 层级不变、Undo / Redo、换成圆形和拱门后仍是同一块画面、旋转后原图保留、保存刷新后仍保持、阅读器显示同一块画面、两张照片时只裁剪其中一张、375 / 430。
+- 待办：旧的浏览器测试回归（全量运行中）、更新记录、发布、在 Mac 上编译 Swift 和模拟器验证（Mac 本轮未连接）。
+
 ### 2026-11-12 — V10.19 杂志模式：每张照片写一句，直接换字体
 
 - 需求：

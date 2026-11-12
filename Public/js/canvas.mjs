@@ -3,6 +3,7 @@
 import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
 import { isShape } from "./shapes.mjs";
+import { cropView } from "./crop.mjs";
 import { captionFit } from "./story-style.mjs";
 import { boundText, boundMarks } from "./scrapbook-layout.mjs";
 import { richHTML } from "./rich-text.mjs";
@@ -47,13 +48,10 @@ export function styleExtra(style = {}) {
   if (/^#[0-9a-f]{6}$/i.test(style?.color || "")) css += `;color:${style.color}`;
   return css + alignCSS(style);
 }
+// V10.20: what shows inside the frame — from the chosen part of the picture
+// (crop.rect, js/crop.mjs) when there is one, else the older x / y / zoom.
 export function cropOf(layer) {
-  const crop = layer.crop || {};
-  return {
-    x: clamp(num(crop.x, 50), 0, 100),
-    y: clamp(num(crop.y, 50), 0, 100),
-    zoom: clamp(num(crop.zoom, 1), 1, 4),
-  };
+  return cropView(layer);
 }
 export function cropStyle(layer) {
   const crop = cropOf(layer);

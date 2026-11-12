@@ -20427,3 +20427,327 @@ button.book-detail-showcase {
 .sw-type {
   gap: 6px;
 }
+
+/* =====================================================================
+   V10.20 · Photo tools: 形状 / 裁剪画面 / 调整 / 替换 / 图层 / 删除.
+   ===================================================================== */
+.shape-sheet {
+  display: grid;
+  gap: 10px;
+}
+.shape-sheet .shape-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shape-frame-row {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.shape-frame-row .field {
+  flex: 1 1 140px;
+}
+/* After adding several photos: a light, ignorable layout suggestion. */
+.layout-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px 8px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line), 0 6px 14px -10px var(--c-3c2d1e66, #3c2d1e66);
+}
+.layout-hint button {
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.layout-hint > button:first-child {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0;
+  font: 600 14px var(--ui-sans);
+  text-align: left;
+}
+.layout-hint .sv-icon {
+  width: 20px;
+  height: 20px;
+}
+.layout-hint i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--t-8a8178, #8a8178);
+}
+.layout-hint-x {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  color: var(--t-8a8178, #8a8178);
+}
+
+/* ---------- The crop editor (full screen, dark like a photo app) ---------- */
+dialog.crop-editor {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--c-161412, #161412);
+  color: var(--t-f4efe6, #f4efe6);
+}
+dialog.crop-editor::backdrop {
+  background: var(--c-161412, #161412);
+}
+.ce {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  height: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.ce-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+}
+.ce-top b {
+  font: 600 16px var(--ui-sans);
+}
+.ce-top .text-button {
+  min-height: 44px;
+  color: var(--t-f4efe6, #f4efe6);
+}
+.ce-top .primary {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+}
+.ce-stage {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ce-img {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+.ce-box {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax var(--c-000000a6, #000000a6);
+  outline: 1.5px solid var(--c-fffdf8, #fffdf8);
+  pointer-events: none;
+}
+.ce-anim .ce-img,
+.ce-anim .ce-box {
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.ce-grid {
+  position: absolute;
+  background: var(--c-fffdf866, #fffdf866);
+}
+.ce-grid.v1,
+.ce-grid.v2 {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.ce-grid.v1 {
+  left: 33.33%;
+}
+.ce-grid.v2 {
+  left: 66.66%;
+}
+.ce-grid.h1,
+.ce-grid.h2 {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.ce-grid.h1 {
+  top: 33.33%;
+}
+.ce-grid.h2 {
+  top: 66.66%;
+}
+/* Big, easy handles: corners always; edges in Free only. */
+.ce-h {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+}
+.ce-corner {
+  width: 44px;
+  height: 44px;
+}
+.ce-corner::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 0 solid var(--c-fffdf8, #fffdf8);
+}
+.ce-corner.nw {
+  left: -22px;
+  top: -22px;
+}
+.ce-corner.nw::before {
+  left: 19px;
+  top: 19px;
+  border-width: 4px 0 0 4px;
+}
+.ce-corner.ne {
+  right: -22px;
+  top: -22px;
+}
+.ce-corner.ne::before {
+  right: 19px;
+  top: 19px;
+  border-width: 4px 4px 0 0;
+}
+.ce-corner.sw {
+  left: -22px;
+  bottom: -22px;
+}
+.ce-corner.sw::before {
+  left: 19px;
+  bottom: 19px;
+  border-width: 0 0 4px 4px;
+}
+.ce-corner.se {
+  right: -22px;
+  bottom: -22px;
+}
+.ce-corner.se::before {
+  right: 19px;
+  bottom: 19px;
+  border-width: 0 4px 4px 0;
+}
+.ce-edge {
+  display: none;
+}
+.ce[data-ratio="free"] .ce-edge {
+  display: block;
+}
+.ce-edge.n,
+.ce-edge.s {
+  left: 30%;
+  right: 30%;
+  height: 32px;
+}
+.ce-edge.n {
+  top: -16px;
+}
+.ce-edge.s {
+  bottom: -16px;
+}
+.ce-edge.e,
+.ce-edge.w {
+  top: 30%;
+  bottom: 30%;
+  width: 32px;
+}
+.ce-edge.e {
+  right: -16px;
+}
+.ce-edge.w {
+  left: -16px;
+}
+.ce-edge::before {
+  content: "";
+  position: absolute;
+  background: var(--c-fffdf8, #fffdf8);
+  border-radius: 2px;
+}
+.ce-edge.n::before,
+.ce-edge.s::before {
+  left: 50%;
+  top: 14px;
+  width: 26px;
+  height: 4px;
+  margin-left: -13px;
+}
+.ce-edge.e::before,
+.ce-edge.w::before {
+  top: 50%;
+  left: 14px;
+  width: 4px;
+  height: 26px;
+  margin-top: -13px;
+}
+.ce-note {
+  min-height: 18px;
+  margin: 6px 16px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--t-d8cfc2, #d8cfc2);
+}
+.ce-tools {
+  display: grid;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.ce-ratios {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-height: 38px;
+}
+.ce-ratios button {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--c-ffffff2e, #ffffff2e);
+  border-radius: 999px;
+  background: none;
+  color: var(--t-f4efe6, #f4efe6);
+  font: 600 13px var(--ui-sans);
+}
+.ce-ratios [aria-checked="true"] {
+  background: var(--c-f4efe6, #f4efe6);
+  color: var(--t-161412, #161412);
+}
+.ce-ratios button:disabled {
+  opacity: 0.35;
+}
+.ce-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ce-row button {
+  flex: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--c-ffffff2e, #ffffff2e);
+  border-radius: 12px;
+  background: none;
+  color: var(--t-f4efe6, #f4efe6);
+}
+.ce-zoom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--t-d8cfc2, #d8cfc2);
+}
+.ce-zoom input {
+  flex: 1;
+}
+.ce-top .text-button {
+  font: 500 16px var(--ui-sans);
+  text-decoration: none;
+}

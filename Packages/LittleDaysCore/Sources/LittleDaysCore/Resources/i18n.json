@@ -2340,8 +2340,8 @@
     "en": "Watercolor"
   },
   "tool.layer": {
-    "zh": "选中的图层",
-    "en": "Selected layer"
+    "zh": "图层",
+    "en": "Layer"
   },
   "tool.photos": {
     "zh": "照片",
@@ -8070,5 +8070,61 @@
   "sw.fontAuto": {
     "zh": "自动",
     "en": "Auto"
+  },
+  "crop.tool": {
+    "zh": "裁剪画面",
+    "en": "Crop"
+  },
+  "shape.hint": {
+    "zh": "形状只改变外框；想换保留的画面，用「裁剪画面」。",
+    "en": "Shape changes the frame only; to choose what shows, use Crop."
+  },
+  "layout.hint": {
+    "zh": "{count} 张照片 · 试试排版",
+    "en": "{count} photos · try a layout"
+  },
+  "layout.hintClose": {
+    "zh": "不用了",
+    "en": "No thanks"
+  },
+  "crop.title": {
+    "zh": "裁剪画面",
+    "en": "Crop"
+  },
+  "crop.ratio": {
+    "zh": "比例",
+    "en": "Ratio"
+  },
+  "crop.ratio.frame": {
+    "zh": "外框",
+    "en": "Frame"
+  },
+  "crop.ratio.free": {
+    "zh": "自由",
+    "en": "Free"
+  },
+  "crop.ratio.original": {
+    "zh": "原比例",
+    "en": "Original"
+  },
+  "crop.rotate": {
+    "zh": "旋转 90°",
+    "en": "Rotate 90°"
+  },
+  "crop.reset": {
+    "zh": "还原",
+    "en": "Reset"
+  },
+  "crop.fixedShape": {
+    "zh": "这个形状的比例是固定的；想换比例，先在「形状」里选「原图」。",
+    "en": "This shape keeps its own proportions; to change them, choose Original in Shape first."
+  },
+  "crop.frameWillChange": {
+    "zh": "完成后，照片外框会变成这个比例，位置和角度不变。",
+    "en": "When you tap Done, the photo's frame takes this ratio; its place and angle stay."
+  },
+  "crop.saved": {
+    "zh": "已裁剪，原图仍保留",
+    "en": "Cropped — the original is kept"
   }
 }

@@ -172,6 +172,10 @@ final class CoreTests: XCTestCase {
         let typed = try JSONDecoder().decode(PageTypeStyle.self, from: Data(##"{"fontId":"song","color":"#6D8299","bold":true,"align":"left","scale":1.15}"##.utf8))
         XCTAssertEqual(typed.fontId, "song")
         XCTAssertEqual(try JSONDecoder().decode(StickerLayer.self, from: JSONEncoder().encode(captioned)).caption, captioned.caption, "survives a Swift round trip")
+        // V10.20: a crop chosen in the crop editor (non-destructive) survives a Swift round trip.
+        let cropped = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"p2","kind":"photo","text":"b.jpg","x":50,"y":40,"scale":1,"rotation":0,"mediaRef":"media:p2","crop":{"x":56.04,"y":87.3,"zoom":1.243,"rect":{"x":0.3365,"y":0.1705,"w":0.3995,"h":0.8047},"aspect":1.5106}}"#.utf8))
+        XCTAssertEqual(cropped.crop?.rect?.w, 0.3995)
+        XCTAssertEqual(try JSONDecoder().decode(StickerLayer.self, from: JSONEncoder().encode(cropped)).crop, cropped.crop)
         XCTAssertEqual(moment.media?.first?.origin, "recording")
         // Page backgrounds and library photos keep their references.
         XCTAssertEqual(moment.backdrop, "scene:color-peach")

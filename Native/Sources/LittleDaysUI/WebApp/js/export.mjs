@@ -1,6 +1,7 @@
 import { MASK_SHAPES, shapePath } from "./shapes.mjs";
 import { captionFit } from "./story-style.mjs";
 import { boundText, boundMarks } from "./scrapbook-layout.mjs";
+import { cropView } from "./crop.mjs";
 import { runsOf } from "./rich-text.mjs";
 const safePhoto = (photo) =>
   typeof photo !== "string"
@@ -120,9 +121,9 @@ function drawPhotoLayer(ctx, image, layer) {
   const w = ((Number(layer.w) || 42) / 100) * 1080,
     h = ((Number(layer.h) || 34) / 100) * 1350;
   if (MASK_SHAPES.includes(layer.shape)) {
-    const crop = layer.crop || {};
+    const crop = cropView(layer);
     drawMasked(ctx, layer.shape, w, h, (x, y, dw, dh) =>
-      drawCover(ctx, image, image.width, image.height, x, y, dw, dh, (Number(crop.x ?? 50) || 0) / 100, (Number(crop.y ?? 50) || 0) / 100, Math.max(1, Number(crop.zoom) || 1)),
+      drawCover(ctx, image, image.width, image.height, x, y, dw, dh, crop.x / 100, crop.y / 100, crop.zoom),
     );
     return;
   }
@@ -143,10 +144,10 @@ function drawPhotoLayer(ctx, image, layer) {
   }
   const iw = w - pad * 2,
     ih = h - pad - bottom,
-    crop = layer.crop || {},
-    zoom = Math.max(1, Number(crop.zoom) || 1),
-    px = (Number(crop.x ?? 50) || 0) / 100,
-    py = (Number(crop.y ?? 50) || 0) / 100;
+    crop = cropView(layer),
+    zoom = crop.zoom,
+    px = crop.x / 100,
+    py = crop.y / 100;
   const cover = Math.max(iw / image.width, ih / image.height) * zoom;
   const dw = image.width * cover,
     dh = image.height * cover;

@@ -262,6 +262,18 @@ public struct LayerCrop: Codable, Equatable {
     public var x: Double
     public var y: Double
     public var zoom: Double
+    /// V10.20: the part of the picture chosen in the crop editor (fractions of
+    /// the picture) and the picture's width / height then; x / y / zoom above
+    /// are what the current frame shows of it. The picture is never re-cut.
+    public var rect: CropRect?
+    public var aspect: Double?
+}
+
+public struct CropRect: Codable, Equatable {
+    public var x: Double
+    public var y: Double
+    public var w: Double
+    public var h: Double
 }
 
 /// V3.1: an ordered chapter inside one day (JournalEntry stays the date container).
