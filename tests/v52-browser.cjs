@@ -45,7 +45,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.locator('.s2-about [data-action="whats-new"]').tap();
     await first.waitForSelector("#choose-dialog[open] .news-sheet");
     const latest = await first.locator(".news-entry .news-version").first().innerText();
-    assert.match(latest, /^V\d+\.\d+$/);
+    assert.match(latest, /^V\d+\.\d+(\.\d+)?$/);
     await first.locator('#choose-dialog [data-action="choose-close"]').tap();
     assert.equal(await first.evaluate(() => localStorage.getItem("little-days.seen-version")), latest.slice(1), "seen on this device");
     await first.locator('#navigation [data-page="home"]').tap();

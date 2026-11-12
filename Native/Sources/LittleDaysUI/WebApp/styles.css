@@ -5914,43 +5914,29 @@ details.check-history[open] > summary > span:first-child::after {
   padding: 18px 2px 30px;
   text-align: center;
 }
-.login-art {
-  position: relative;
-  width: 132px;
-  height: 132px;
-  margin: 6px auto 2px;
-  border-radius: 40px;
-  background: radial-gradient(circle at 30% 30%, var(--c-f6e3df, #f6e3df), var(--c-e7ebdf, #e7ebdf));
+/* V10.16 polish: the official app icon and the Home wordmark with its sprout
+   (no pixel ✿, no loose emoji). */
+.login-brand {
   display: grid;
-  place-items: center;
-  box-shadow: 0 10px 30px var(--c-5d493c1a, #5d493c1a);
+  justify-items: center;
+  gap: 12px;
+  margin: 8px 0 0;
 }
-.login-art span {
-  font-size: 56px;
-  color: var(--t-b07c7c, #b07c7c);
+.login-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
+  border: 4px solid var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 1px 0 var(--line), 0 10px 24px var(--c-5d493c1a, #5d493c1a);
+  transform: rotate(-2deg);
 }
-.login-art i {
-  position: absolute;
-  font-style: normal;
-  font-size: 22px;
-}
-.login-art i:nth-of-type(1) {
-  top: -8px;
-  right: -10px;
-  transform: rotate(10deg);
-}
-.login-art i:nth-of-type(2) {
-  bottom: -6px;
-  left: -12px;
-}
-.login-art i:nth-of-type(3) {
-  bottom: 10px;
-  right: -18px;
-  transform: rotate(-12deg);
-}
-.login-title {
-  font: 600 34px "LD-elegant", Georgia, serif;
-  margin: 6px 0 0;
+.login .login-title {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+  font: 400 34px/1.1 "LD-elegant", Georgia, serif;
+  letter-spacing: -0.4px;
+  margin: 0;
 }
 .login-tag {
   font: 13px/1.7 "LD-handwritten", "LD-chinese", serif;
@@ -5979,19 +5965,29 @@ details.check-history[open] > summary > span:first-child::after {
   flex-wrap: wrap;
   gap: 6px;
 }
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 10px;
-  color: var(--t-a3957f, #a3957f);
-  margin-top: 4px;
+/* Apple / email sign-in are not live: shown only inside Labs, in a dashed
+   "not available yet" tray so they never read as working entrances. */
+.login-labs {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 22px 12px 12px;
+  position: relative;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
 }
-.login-divider::before,
-.login-divider::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid var(--line);
+.login-labs-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--t-8d857b, #8d857b);
 }
 .login-provider {
   display: flex;
@@ -19614,6 +19610,11 @@ button.book-detail-showcase {
   --pm: 48px;
   --pm-paper: var(--c-fbf6ec, #fbf6ec);
   --pm-ink: var(--sageDeep);
+  /* V10.16 polish: one optical letter size and one ring weight for all five;
+     each face only corrects for its own cap height. */
+  --pm-cap: 0.52;
+  --pm-cjk: 0.4;
+  --pm-ring: max(1px, calc(var(--pm) * 0.02));
   position: relative;
   flex: none;
   display: inline-grid;
@@ -19637,63 +19638,67 @@ button.book-detail-showcase {
   display: block;
   /* Cap height sits a touch high in most faces: nudge down to look centred. */
   transform: translateY(calc(var(--pm) * 0.03));
-  font: 600 calc(var(--pm) * 0.5) / 1 "LD-elegant", Georgia, serif;
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-elegant", Georgia, serif;
   letter-spacing: 0;
 }
 .pmark.pm-wide .pm-letter {
   transform: none;
-  font: 500 calc(var(--pm) * 0.42) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font: 500 calc(var(--pm) * var(--pm-cjk)) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
 }
 /* 1 · Paper: ivory, sage ink, Cormorant. */
-.pm-paper .pm-letter {
-  font-size: calc(var(--pm) * 0.54);
+.pm-paper {
+  --pm-cap: 0.54;
 }
 /* 2 · Seal: blush paper, a vermilion double ring, Baskerville. */
 .pm-seal {
   --pm-paper: var(--c-f6e7df, #f6e7df);
   --pm-ink: var(--c-a9483a, #a9483a);
+  --pm-cap: 0.4;
+  --pm-cjk: 0.36;
 }
 .pm-seal::before,
 .pm-seal::after {
   content: "";
   position: absolute;
   border-radius: 50%;
-  border: max(1px, calc(var(--pm) * 0.028)) solid var(--pm-ink);
-  opacity: 0.85;
+  border: var(--pm-ring) solid var(--pm-ink);
+  opacity: 0.7;
 }
 .pm-seal::before {
   inset: calc(var(--pm) * 0.1);
 }
 .pm-seal::after {
   inset: calc(var(--pm) * 0.155);
-  border-width: max(0.5px, calc(var(--pm) * 0.012));
-  opacity: 0.6;
+  border-width: max(0.5px, calc(var(--pm) * 0.01));
+  opacity: 0.45;
 }
 .pm-seal .pm-letter {
-  font: 700 calc(var(--pm) * 0.36) / 1 "LD-vintage-serif", Georgia, serif;
+  font: 700 calc(var(--pm) * var(--pm-cap)) / 1 "LD-vintage-serif", Georgia, serif;
   transform: translateY(calc(var(--pm) * 0.02));
 }
 .pm-seal.pm-wide .pm-letter {
-  font: 700 calc(var(--pm) * 0.34) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font: 700 calc(var(--pm) * var(--pm-cjk)) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", serif;
 }
 /* 3 · Kraft: a kraft tag with a stitched edge, DM Sans capitals. */
 .pm-kraft {
   --pm-paper: var(--c-e8d8bd, #e8d8bd);
   --pm-ink: var(--c-4a3b2e, #4a3b2e);
+  --pm-cap: 0.44;
+  --pm-cjk: 0.38;
 }
 .pm-kraft::before {
   content: "";
   position: absolute;
   inset: calc(var(--pm) * 0.085);
   border-radius: 50%;
-  border: max(1px, calc(var(--pm) * 0.022)) dashed var(--c-4a3b2e59, #4a3b2e59);
+  border: var(--pm-ring) dashed var(--c-4a3b2e59, #4a3b2e59);
 }
 .pm-kraft .pm-letter {
-  font: 600 calc(var(--pm) * 0.38) / 1 "LD-minimal-sans", var(--ui-sans);
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-minimal-sans", var(--ui-sans);
   transform: none;
 }
 .pm-kraft.pm-wide .pm-letter {
-  font: 600 calc(var(--pm) * 0.36) / 1 var(--ui-sans);
+  font: 600 calc(var(--pm) * var(--pm-cjk)) / 1 var(--ui-sans);
 }
 /* 4 · Sage: sage paper, ivory letter. */
 .pm-sage {
@@ -19703,28 +19708,31 @@ button.book-detail-showcase {
     radial-gradient(circle at 32% 24%, var(--c-ffffff2e, #ffffff2e), transparent 58%),
     var(--pm-paper);
 }
-.pm-sage .pm-letter {
-  font-size: calc(var(--pm) * 0.52);
+.pm-sage {
+  --pm-cap: 0.54;
 }
 /* 5 · Script: mist paper, navy ink, Caveat and a terracotta stroke. */
 .pm-script {
   --pm-paper: var(--c-e6ecee, #e6ecee);
   --pm-ink: var(--c-3c4a5b, #3c4a5b);
+  --pm-cap: 0.56;
+  --pm-cjk: 0.36;
 }
 .pm-script .pm-letter {
-  font: 600 calc(var(--pm) * 0.6) / 1 "LD-handwritten", cursive;
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-handwritten", cursive;
   transform: translateY(calc(var(--pm) * -0.02)) rotate(-4deg);
 }
 .pm-script.pm-wide .pm-letter {
-  font: 400 calc(var(--pm) * 0.44) / 1 "Kaiti SC", "STKaiti", "KaiTi", serif;
+  transform: translateY(calc(var(--pm) * -0.04));
+  font: 400 calc(var(--pm) * var(--pm-cjk)) / 1 "Kaiti SC", "STKaiti", "KaiTi", serif;
 }
 .pm-script::after {
   content: "";
   position: absolute;
   left: 32%;
   right: 30%;
-  bottom: 21%;
-  height: max(1px, calc(var(--pm) * 0.03));
+  bottom: 20%;
+  height: var(--pm-ring);
   border-radius: 99px;
   background: var(--c-b8734f, #b8734f);
   transform: rotate(-4deg);
@@ -19847,8 +19855,9 @@ button.book-detail-showcase {
   background: none;
   transition: transform 0.15s ease;
 }
+/* Selected: one quiet sage ring, clear of the paper (no double border). */
 .pf-choice[aria-pressed="true"] .pmark {
-  outline: 2px solid var(--sageDeep);
+  outline: 1.5px solid var(--sageDeep);
   outline-offset: 3px;
 }
 .pf-choice:active {
@@ -19872,7 +19881,7 @@ button.book-detail-showcase {
   color: var(--ink);
 }
 .pf-pill[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--sageDeep);
+  box-shadow: 0 0 0 1.5px var(--sageDeep);
 }
 .pf-pill[aria-pressed="true"] .pmark {
   outline: none;

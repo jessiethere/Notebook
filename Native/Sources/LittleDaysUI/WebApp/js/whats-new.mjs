@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.16.1",
+    date: "2026-11-12",
+    zh: {
+      title: "细节打磨：欢迎页换上 App 图标和小芽字标，五种字母印记更统一",
+      items: [
+        "欢迎页（实验室里才会出现）用 App 图标和带小芽的 Little Days 字标，去掉了像素小花和散落的表情。",
+        "Apple 登录、邮箱登录还没有开放，只放在欢迎页底部标着「实验室 · 还没有开放」的虚线框里，不能点。",
+        "五种字母印记的字母大小、边框粗细统一了：牛皮纸的字母变大，朱印的双圈变轻，手写体的中文不再压到下划线。",
+        "选中的印记只有一圈细细的绿色描边，不再显得太重。",
+      ],
+    },
+    en: {
+      title: "Polish: the welcome page wears the app icon and sprout wordmark; the five monograms match",
+      items: [
+        "The welcome page (only in Labs) now shows the app icon and the Little Days wordmark with its sprout, instead of a pixel flower and scattered emoji.",
+        "Apple and email sign-in are not available yet: they sit, disabled, in a dashed tray labelled “Labs · not available yet”.",
+        "The five monograms now share one letter size and ring weight: Kraft's letter is larger, Seal's double ring lighter, and Script's Chinese no longer touches its stroke.",
+        "The chosen monogram has one thin sage ring instead of a heavy outline.",
+      ],
+    },
+  },
+  {
     version: "10.16",
     date: "2026-11-11",
     zh: {

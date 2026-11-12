@@ -352,3 +352,9 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - `syncMusic()`：`day:` 和 `book:` 情境都需要点按（`musicAsked`）才会出声。
 - 书本详情的 `dayCoverHTML()`：多页的日子渲染 `.day-group` 和 `.day-page-thumb`（`data-key = Reader.keyOf(item)`），`reader-open` 收到 `data-key` 时直接用这个位置打开。
 - 构建：根目录 `Package.swift` 声明 `.iOS(.v17)`；`LittleDays.xcworkspace` 指向 `Native/LittleDays.xcodeproj`。
+
+## 2026-11-12 V10.16.1
+
+- `app.js`：新增常量 `BRAND_SPROUT`（首页字标和欢迎页共用的小芽 SVG）；`loginHTML()` 用 `.login-brand`（App 图标 + `h1.brand-title.login-title`）和 `.login-labs`（`role="group"`，未上线的登录按钮）。
+- `styles.css`：`.pmark` 增加 `--pm-cap`、`--pm-cjk`、`--pm-ring` 三个变量，各样式只覆盖变量；删除 `.login-art`、`.login-divider` 样式。
+- i18n：新增 `login.labsOnly`。`whats-new.mjs` 新增 10.16.1（版本号允许三段，`tests/v52-browser.cjs` 已放宽格式检查）。

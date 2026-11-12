@@ -7690,5 +7690,9 @@
   "reader.pageShort": {
     "zh": "第 {n} 页",
     "en": "p. {n}"
+  },
+  "login.labsOnly": {
+    "zh": "实验室 · 还没有开放",
+    "en": "Labs · not available yet"
   }
 }

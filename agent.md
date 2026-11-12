@@ -48,6 +48,23 @@
 
 ## 更新日志
 
+### 2026-11-12 — V10.16.1 最后一次 UI 打磨：欢迎页品牌统一、五种字母印记细节统一、社区确认只在 Labs
+
+- 需求：用户认可 V10.16 方向，要求（1）欢迎页去掉像素风 ✿ 和散落表情，用已确认的品牌标识、小芽和文具元素，未上线的 Apple / 邮箱登录只在 Labs 环境展示；（2）五种 Monogram 统一字母大小、阴影、边框、纸片尺寸、选中状态，选中要清楚但克制；（3）确认社区是 Labs 界面，正式版不出现；（4）375 / 430、中英文、键盘、实时更新、保存后持久、旧头像无损、多页直达继续验证；已实现的只修问题，不重复开发。
+- 检查结论：
+  - 社区：`LAB_PAGES = ["community","inbox"]`，没有 Labs 时 `start()` 自动以本机账号进入，底部只有 4 个标签；`tests/v52-browser.cjs` 已覆盖「新安装没有欢迎页、没有社区」，本轮通过。没有改社区代码。
+  - 欢迎页也只在 Labs 里出现（同上）。
+  - 实时更新、旧 Emoji 无损、多页直达、375×667 在 V10.16 已实现并有测试，本轮只补测试，没有重写。
+- 修改：
+  - `Public/app.js`：抽出 `BRAND_SPROUT`；欢迎页 `.login-art`（✿ + 📔🌷📷）换成 `.login-brand`（App 图标 icon-192 + Little Days 字标 + 小芽）；「其他登录方式」分隔线和两个 disabled 登录按钮放进 `.login-labs` 虚线框，标签「实验室 · 还没有开放」。
+  - `Public/styles.css`：删 `.login-art*`、`.login-divider*`，加 `.login-brand`、`.login-icon`、`.login-labs`、`.login-labs-tag`；`.pmark` 改为 `--pm-cap` / `--pm-cjk` / `--pm-ring` 变量（牛皮纸字母 0.38→0.44、朱印 0.36→0.40、手写 0.6→0.56、朱印双圈变轻、手写中文上移不压线、所有线条同一粗细）；选中描边 2px → 1.5px，胶囊同样。
+  - i18n `login.labsOnly`；`whats-new.mjs` 10.16.1；`tests/v116-browser.cjs` 新增检查；`tests/v52-browser.cjs` 允许三段版本号。
+  - 文档：DESIGN_SYSTEM、PRODUCT_SPEC、PROFILE_EDITOR_PLAN §9、ARCHITECTURE。
+- 决策：版本号用 10.16.1（属于 V10.16 的打磨，但要让设置齿轮出现小红点、更新记录里看得到）。字母大小是在 Chromium 里把五种印记并排截图对比后调的，不是逐字体测量。
+- 运行 / 测试（Linux 容器，Chromium）：`npm test` 190 通过；`python3 -m unittest discover -s tests` 通过；浏览器 v116、v36、v52、v38、v104、v110 全部通过。没有在 iPhone 真机或 iOS 模拟器里看这次的改动。
+- 已知问题：键盘状态是在 Chromium 里用触屏模拟 + 聚焦输入框验证的，不是真机软键盘；用户 Mac 上的副本还停在 5115c61，本轮提交需要按 fetch → 看 diff → 确认 → 合并的流程带过去。
+- 未完成 / 下一步：Captain's Playroom 等用户回答 `docs/CAPTAIN_PLAYROOM_PLAN.md` §5 的五个问题；Captain 本地 Qwen v3 正式评测；原生触觉反馈桥接。
+
 ### 2026-11-11 — P0 在用户 Mac 上验证通过：iOS 17 修复后各项构建成功，V10.16 在模拟器里运行
 
 - 你 Mac 上另一个会话先把它的修改（Debug 构建才有的 JS 日志和启动计时）提交并推送了（5115c61），是接在 81279ab、e523643、454207f 之后提交的，所以用户 Mac 上的副本已经是最新的，不需要再合并。只剩 `Package.resolved` 和 v2 评测结果还没提交，没有动。

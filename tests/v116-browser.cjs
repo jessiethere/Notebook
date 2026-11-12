@@ -70,7 +70,60 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".s2-avatar .pm-script");
     assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "J");
     assert.deepEqual([(await accountNow()).name, (await accountNow()).avatar], ["jess", "mono:script"]);
-    passed.push("editor: sprout by default, 5 monograms + sprout offered (no emoji), the card and letters follow typing, a choice saves; fits 375×667");
+    // Kept after a reload (persisted, not only on screen).
+    await page.reload();
+    await page.waitForSelector(".hero");
+    await settings();
+    await page.waitForSelector(".s2-avatar .pm-script");
+    assert.equal((await page.locator(".s2-avatar").innerText()).trim(), "J");
+    passed.push("editor: sprout by default, 5 monograms + sprout offered (no emoji), the card and letters follow typing, a choice saves and survives a reload; fits 375×667");
+
+    // V10.16 polish: one letter scale / ring weight for all five; a quiet single selected ring.
+    await SS.settingsSheet(page, "profile");
+    const look = await page.evaluate(() => {
+      const marks = [...document.querySelectorAll(".pf-row .pmark")];
+      const css = (el, p) => getComputedStyle(el).getPropertyValue(p).trim();
+      const sel = document.querySelector('.pf-choice[aria-pressed="true"] .pmark');
+      return {
+        sizes: [...new Set(marks.map((m) => m.getBoundingClientRect().width))],
+        rings: [...new Set(marks.map((m) => css(m, "--pm-ring")))],
+        outline: [css(sel, "outline-style"), parseFloat(css(sel, "outline-width"))],
+        others: marks.filter((m) => m !== sel).map((m) => css(m, "outline-style")),
+      };
+    });
+    assert.equal(look.sizes.length, 1, "five papers, one size");
+    assert.equal(look.rings.length, 1, "one ring weight");
+    assert.equal(look.outline[0], "solid");
+    assert.ok(look.outline[1] > 0 && look.outline[1] <= 1.5, "the selected ring is a single, thin one: " + look.outline[1]);
+    assert.ok(look.others.every((o) => o === "none"), "only the chosen one is ringed");
+    // 430 wide, in English: the labels change, the name does not; nothing sideways; Save in view.
+    await page.locator('#choose-dialog [data-action="choose-close"]').tap().catch(() => {});
+    await page.evaluate(() => localStorage.setItem("little-days.language", "en"));
+    await page.setViewportSize({ width: 430, height: 932 });
+    await page.reload();
+    await page.waitForSelector(".hero");
+    await settings();
+    await SS.settingsSheet(page, "profile");
+    assert.match(await page.locator(".s2-sheet .kp-title").innerText(), /A little world of your own/);
+    assert.equal(await page.locator("[data-profile-name]").inputValue(), "jess", "the name is not translated");
+    const fit430 = await page.evaluate(() => {
+      const sheet = document.querySelector(".s2-sheet");
+      const save = document.querySelector('[data-action="profile-save"]').getBoundingClientRect();
+      return { save: save.bottom <= innerHeight + 1 && save.top >= 0, side: sheet.scrollWidth <= sheet.clientWidth + 1, page: document.documentElement.scrollWidth <= innerWidth + 1 };
+    });
+    assert.ok(fit430.save && fit430.side && fit430.page, JSON.stringify(fit430));
+    // Keyboard up (typing): the card, the field and Save stay, Save still reachable.
+    await page.locator("[data-profile-name]").focus();
+    assert.equal(await page.locator(".pf-marks").isVisible(), false);
+    assert.equal(await page.locator('[data-action="profile-save"]').isVisible(), true);
+    await shot("02b-profile-430-en");
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator('#choose-dialog [data-action="choose-close"]').tap();
+    await page.evaluate(() => localStorage.setItem("little-days.language", "zh-CN"));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    await page.waitForSelector(".hero");
+    passed.push("polish: one paper size and ring weight, a single thin selected ring; 430 English fits, the name is not translated, typing keeps Save in reach");
 
     // An emoji chosen before V10.16 is kept: shown as it is, offered as 现在的头像.
     await page.evaluate(() => {
@@ -126,11 +179,18 @@ const shots = process.env.SHOTS || "";
     assert.equal(await page.locator('[data-action="login-avatar"]').count(), 0, "no picker on the welcome page");
     assert.equal(await page.locator(".login-me .pm-seal").count(), 1, "the same mark as Settings");
     assert.equal(await page.locator("#login-name").inputValue(), "小满");
+    // The brand: the app icon and the Little Days wordmark with its sprout (no pixel ✿, no emoji art).
+    assert.equal(await page.locator(".login-brand .login-icon").count(), 1);
+    assert.equal(await page.locator(".login-brand .brand-sprout").count(), 1);
+    assert.equal(await page.locator(".login-art").count(), 0);
+    // Apple / email are not live: only inside the Labs tray, disabled and labelled.
+    assert.equal(await page.locator(".login-provider").count(), await page.locator(".login-labs .login-provider[disabled]").count());
+    assert.match(await page.locator(".login-labs-tag").innerText(), /实验室/);
     await shot("04-welcome");
     await page.locator('[data-action="login-local"]').tap();
     await page.waitForSelector(".hero");
     assert.deepEqual([(await accountNow()).name, (await accountNow()).avatar, (await accountNow()).signedIn], ["小满", "mono:seal", true], "signing in again keeps the mark");
-    passed.push("welcome page: name + the current mark from the same record, no picker; signing in keeps the mark");
+    passed.push("welcome page (Labs): app icon + wordmark, name + the current mark from the same record, no picker, Apple/email only in the labelled Labs tray; signing in keeps the mark");
 
     // ---------------------------------------------------------------- P2: the day's music
     const bgm = () => page.evaluate(() => { const a = document.querySelector("#background-music"); return { playing: Boolean(a && !a.paused), music: a?.dataset.music || "" }; });
