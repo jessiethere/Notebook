@@ -20492,6 +20492,12 @@ button.book-detail-showcase {
   color: var(--t-8a8178, #8a8178);
 }
 
+/* V10.21: the hint sits above the tools — the paper makes room for it, so
+   the page strip (undo · pages · ＋) is never covered. */
+.phone.sv #app:has(.layout-hint) .studio-stage.large .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 260px) * 0.8));
+}
+
 /* ---------- The crop editor (full screen, dark like a photo app) ---------- */
 dialog.crop-editor {
   width: 100%;
@@ -20750,4 +20756,21 @@ dialog.crop-editor::backdrop {
 .ce-top .text-button {
   font: 500 16px var(--ui-sans);
   text-decoration: none;
+}
+
+/* V10.21 · A photo whose bytes can't be read says so (never a fake picture). */
+.photo-missing {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6cqw;
+  text-align: center;
+}
+.photo-missing small {
+  font: 500 2.4cqw/1.3 var(--ui-sans);
+  color: var(--t-6f675d, #6F675D);
+}
+.media-broken img,
+.media-broken video {
+  opacity: 0.25;
 }

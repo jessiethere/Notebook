@@ -1,4 +1,4 @@
-import { MediaStore, migrateLegacyPhotos } from "./js/media.mjs";
+import { MediaStore, migrateLegacyPhotos, mediaReferences } from "./js/media.mjs";
 import {
   configureI18n,
   t,
@@ -180,6 +180,32 @@ const shortDate = (key) =>
 const themeIcon = (theme) =>
   icon({ Learning: "book", Fitness: "pulse", Wellness: "cloud", "Creative Life": "palette" }[theme] || "leaf");
 let calendarBook = "";
+// V10.21: a picture / clip that fails to load gets one fresh URL from its
+// stored bytes; if the bytes are gone it is shown as missing (never faked).
+document.addEventListener(
+  "error",
+  async (event) => {
+    const el = event.target;
+    if (!(el instanceof HTMLImageElement || el instanceof HTMLVideoElement || el instanceof HTMLAudioElement)) return;
+    const src = el.getAttribute("src") || "";
+    if (!src.startsWith("blob:")) return;
+    const id = media.idOfUrl(src);
+    if (!id) return;
+    if (await media.refresh(id)) {
+      el.setAttribute("src", media.resolve(`media:${id}`));
+      logEvent("media_reloaded", {});
+    } else {
+      el.closest(".photo-layer, .media-layer")?.classList.add("media-broken");
+      logEvent("media_unreadable", {});
+    }
+  },
+  true,
+);
+// Ask the browser to keep this device's journal and media (best effort; on
+// iPhone, Safari may still clear sites unused for a long time).
+try {
+  navigator.storage?.persist?.().catch(() => {});
+} catch {}
 let media = new MediaStore(),
   catalog,
   bookDraft = null,
@@ -279,7 +305,28 @@ function flushDraft() {
     s.drafts[editor.date] = structuredClone(editor);
   });
   draftDirty = false;
-  setDraftState("saved");
+  // V10.21: "已保存" only once every photo / video / sound this day uses is
+  // really in this device's media store (not only the page's words).
+  confirmMediaSaved();
+}
+let mediaCheck = 0;
+async function confirmMediaSaved() {
+  const run = ++mediaCheck;
+  const ids = [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })];
+  if (!ids.length) return setDraftState("saved");
+  setDraftState("saving");
+  let missing = [];
+  try {
+    missing = await media.missing(ids);
+  } catch {
+    missing = ids;
+  }
+  if (run !== mediaCheck) return;
+  if (missing.length) {
+    setDraftState("failed");
+    toast(t("media.notSaved", { count: missing.length }));
+    logEvent("media_not_saved", { count: missing.length });
+  } else setDraftState("saved");
 }
 function scheduleDraft() {
   draftDirty = true;

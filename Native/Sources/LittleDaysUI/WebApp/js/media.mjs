@@ -1,5 +1,22 @@
 // Media bytes live in IndexedDB, never in LocalStorage metadata.
+//
+// V10.21 (P0, media that showed "Error" after leaving Studio): records are
+// written as their bytes (ArrayBuffer + mime), not as Blob / File objects.
+// iOS Safari / WKWebView can lose the file behind a stored Blob — notably a
+// File straight from the photo / video picker — so a page kept its
+// reference ("saved") while the bytes could no longer be read
+// ("WebKitBlobResource error 1"). Every write is read back and its size
+// checked before it counts as saved. Older Blob records are converted in
+// place the first time they are read (same id, nothing deleted); one that
+// cannot be read any more is reported as missing, never replaced.
 import { validateStateSnapshot } from "./model.mjs";
+
+// A record's bytes as a Blob, whichever way it was stored.
+export function blobOf(record) {
+  if (!record) return null;
+  if (record.bytes instanceof ArrayBuffer) return new Blob([record.bytes], { type: record.mime || "" });
+  return record.blob instanceof Blob ? record.blob : null;
+}
 export class MediaStore {
   constructor(indexedDBFactory = globalThis.indexedDB) {
     this.factory = indexedDBFactory;
@@ -7,6 +24,9 @@ export class MediaStore {
     // Object URLs are reference-counted by view scope ("app", "studio",
     // "day"). Leaving a view releases its scope and revokes unused URLs.
     this.holders = new Map();
+    // Ids whose bytes could not be read (reported, never invented).
+    this.broken = new Set();
+    this.retried = new Set();
   }
   async open() {
     if (this.db) return this;
@@ -30,26 +50,98 @@ export class MediaStore {
   }
   async put(blob, metadata = {}, scope = "app") {
     await this.open();
+    // The bytes themselves (a File from the picker may be backed by a
+    // temporary file the system deletes later).
+    const bytes = await blob.arrayBuffer();
+    const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : fallbackId();
     const record = {
       ...metadata,
-      id: crypto.randomUUID(),
-      blob,
+      id,
+      bytes,
       mime: blob.type,
-      size: blob.size,
+      size: bytes.byteLength,
       createdAt: new Date().toISOString(),
     };
+    await this.write(record, "add");
+    // Read it back: only a record whose bytes are really there counts as saved.
+    const check = await this.get(id);
+    if (!(check?.bytes instanceof ArrayBuffer) || check.bytes.byteLength !== bytes.byteLength) {
+      const error = new Error("media-verify");
+      error.code = "media-verify";
+      throw error;
+    }
+    if (scope) {
+      this.urls.set(id, URL.createObjectURL(new Blob([bytes], { type: blob.type })));
+      this.hold(id, scope);
+    }
+    return id;
+  }
+  async write(record, mode = "put") {
     await new Promise((resolve, reject) => {
       const tx = this.db.transaction("media", "readwrite");
-      tx.objectStore("media").add(record);
+      tx.objectStore("media")[mode](record);
       tx.oncomplete = resolve;
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error || new Error("Media save aborted"));
     });
-    if (scope) {
-      this.urls.set(record.id, URL.createObjectURL(blob));
-      this.hold(record.id, scope);
+  }
+  // A record's bytes, converting an older Blob record in place (same id).
+  // Returns null when the bytes are gone (the id is then reported broken).
+  async readable(id) {
+    const record = await this.get(id);
+    if (!record) return null;
+    if (record.bytes instanceof ArrayBuffer) return record;
+    if (!(record.blob instanceof Blob)) {
+      this.broken.add(id);
+      return null;
     }
-    return record.id;
+    let bytes;
+    try {
+      bytes = await record.blob.arrayBuffer();
+    } catch {
+      this.broken.add(id);
+      return null;
+    }
+    const upgraded = { ...record, bytes, mime: record.mime || record.blob.type, size: bytes.byteLength };
+    delete upgraded.blob;
+    try {
+      await this.write(upgraded);
+    } catch {
+      // Could not rewrite (space?): still show it this time from the bytes read.
+    }
+    return upgraded;
+  }
+  // Which of these ids have no readable record (for an honest "saved").
+  async missing(ids) {
+    await this.open();
+    const out = [];
+    for (const id of ids) {
+      const key = await new Promise((resolve, reject) => {
+        const r = this.db.transaction("media").objectStore("media").getKey(id);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      if (key === undefined || this.broken.has(id)) out.push(id);
+    }
+    return out;
+  }
+  // A shown picture / clip failed to load: make a fresh URL from the stored
+  // bytes once. Returns true when there is something new to show.
+  async refresh(id) {
+    if (this.retried.has(id)) return false;
+    this.retried.add(id);
+    const record = await this.readable(id).catch(() => null);
+    const blob = blobOf(record);
+    if (!blob) return false;
+    const old = this.urls.get(id);
+    if (old) URL.revokeObjectURL(old);
+    this.urls.set(id, URL.createObjectURL(blob));
+    if (!this.holders.has(id)) this.hold(id, "app");
+    return true;
+  }
+  idOfUrl(url) {
+    for (const [id, value] of this.urls) if (value === url) return id;
+    return "";
   }
   hold(id, scope) {
     if (!this.holders.has(id)) this.holders.set(id, new Set());
@@ -61,10 +153,10 @@ export class MediaStore {
   async acquire(ids, scope) {
     for (const id of ids) {
       if (!this.urls.has(id)) {
-        const record = await this.get(id);
-        if (!record?.blob) continue;
+        const blob = blobOf(await this.readable(id).catch(() => null));
+        if (!blob) continue;
         if (!this.urls.has(id))
-          this.urls.set(id, URL.createObjectURL(record.blob));
+          this.urls.set(id, URL.createObjectURL(blob));
       }
       this.hold(id, scope);
     }
@@ -92,7 +184,7 @@ export class MediaStore {
       if (!record) missing++;
       else {
         count++;
-        bytes += record.blob?.size || 0;
+        bytes += record.bytes?.byteLength ?? record.blob?.size ?? 0;
       }
     }
     return { bytes, count, missing };
@@ -135,21 +227,26 @@ export class MediaStore {
     const media = [];
     let totalSize = 0;
     for (const id of mediaReferences(state)) {
-      const record = await this.get(id);
-      if (!record) throw new Error("A referenced media file is missing.");
-      totalSize += record.blob.size;
+      // Size first (from the record), so an oversize backup stops before
+      // any bytes are read or encoded.
+      const stored = await this.get(id);
+      if (!stored) throw new Error("A referenced media file is missing.");
+      totalSize += stored.bytes?.byteLength ?? stored.blob?.size ?? stored.size ?? 0;
       if (totalSize > MAX_BACKUP_MEDIA_BYTES) {
         const error = new Error("error.backupSize");
         error.code = "backup-size";
         throw error;
       }
+      const record = await this.readable(id);
+      const blob = blobOf(record);
+      if (!blob) throw new Error("A referenced media file is missing.");
       const data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(record.blob);
+        reader.readAsDataURL(blob);
       });
-      media.push({ ...record, blob: undefined, data });
+      media.push({ ...record, blob: undefined, bytes: undefined, data });
     }
     return {
       format: "little-days-backup",
@@ -261,6 +358,7 @@ export async function migrateLegacyPhotos(store, media) {
   return changes.length;
 }
 
+const fallbackId = () => "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => ((c === "x" ? Math.random() * 16 : (Math.random() * 4) | 8) | 0).toString(16));
 export const MAX_BACKUP_MEDIA_BYTES = 100 * 1024 * 1024;
 export const MAX_BACKUP_FILES = 2000;
 // visit(reference, type): type is "image" or "clip" (audio/video bytes).

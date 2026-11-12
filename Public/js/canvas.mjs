@@ -107,7 +107,7 @@ export function layerHTML(layer, ctx, options = {}) {
     if (!layer.mediaRef && readOnly) return "";
     const empty = !layer.mediaRef;
     classes += ` art-layer photo-layer frame-${layer.drawing ? "bare drawing-layer" : frame}${isShape(layer.shape) && !layer.drawing ? ` shape-${layer.shape}` : ""}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
-    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
+    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing" role="img" aria-label="${esc(t("media.photoMissing"))}">📷<small>${t("media.photoMissing")}</small></span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
   } else if (layer.kind === "video" || layer.kind === "audio") {

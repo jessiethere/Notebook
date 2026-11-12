@@ -8126,5 +8126,13 @@
   "crop.saved": {
     "zh": "已裁剪，原图仍保留",
     "en": "Cropped — the original is kept"
+  },
+  "media.notSaved": {
+    "zh": "有 {count} 个照片或视频没能存进这台设备，请重新添加它们。文字已保存。",
+    "en": "{count} photo(s) or video(s) could not be stored on this device — please add them again. Your words are saved."
+  },
+  "media.photoMissing": {
+    "zh": "照片读取不到",
+    "en": "Photo can't be read"
   }
 }

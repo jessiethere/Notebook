@@ -51,6 +51,7 @@ async function leaveStudio(page) {
   await page.waitForSelector("#phone:not(.in-studio)");
 }
 module.exports.leaveStudio = leaveStudio;
+module.exports.seed = seedAccount; // for persistent profiles (launchPersistentContext)
 // V10.11: saving opens the full-screen reader (no bottom menu there): ‹ goes back to the book.
 async function leaveReader(page) {
   if (!(await page.locator("#phone.in-reader").count())) return;

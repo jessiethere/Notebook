@@ -31,7 +31,10 @@ test("IndexedDB stores real media bytes and reopens them after object URLs are d
   assert.ok(first.resolve("media:" + id).startsWith("blob:"));
   first.close();
   const second = new MediaStore(factory);
-  assert.equal(await (await second.get(id)).blob.text(), "test-audio-bytes");
+  // V10.21: stored as the bytes themselves (not a Blob / File object).
+  const saved = await second.get(id);
+  assert.ok(saved.bytes instanceof ArrayBuffer && !saved.blob);
+  assert.equal(new TextDecoder().decode(saved.bytes), "test-audio-bytes");
   const snapshot = {
     books: [],
     entries: [{ media: [{ source: "media:" + id }] }],
@@ -191,4 +194,55 @@ test("nested malformed backup records are rejected before any media write or met
   assert.equal(writes, 0);
   assert.equal(state.books[0].fields.length, 0);
   media.close();
+});
+
+// V10.21 · P0: media that showed "Error" after leaving Studio on iPhone.
+test("older Blob records are converted to bytes in place (same id) the first time they are read", async () => {
+  const factory = new IDBFactory();
+  const store = new MediaStore(factory);
+  await store.open();
+  // A record as V10.20 and earlier wrote it.
+  await store.write({ id: "legacy-1", blob: new Blob(["old-photo"], { type: "image/jpeg" }), mime: "image/jpeg", size: 9, kind: "photo" }, "add");
+  await store.acquire(["legacy-1"], "app");
+  assert.ok(store.resolve("media:legacy-1").startsWith("blob:"), "still shown");
+  const after = await store.get("legacy-1");
+  assert.ok(after.bytes instanceof ArrayBuffer && !after.blob, "rewritten as bytes");
+  assert.equal(new TextDecoder().decode(after.bytes), "old-photo");
+  assert.equal(after.kind, "photo", "its other fields kept");
+  store.close();
+});
+
+test("a record whose bytes are gone is reported missing — never replaced, never deleted", async () => {
+  const factory = new IDBFactory();
+  const store = new MediaStore(factory);
+  await store.open();
+  await store.write({ id: "gone-1", mime: "image/jpeg", size: 9, kind: "photo" }, "add");
+  await store.acquire(["gone-1"], "app");
+  assert.equal(store.resolve("media:gone-1"), "", "nothing invented");
+  assert.deepEqual(await store.missing(["gone-1", "no-such-id"]), ["gone-1", "no-such-id"]);
+  assert.ok(await store.get("gone-1"), "the record itself is left as it was");
+  // A good one is not reported.
+  const id = await store.put(new Blob(["ok"], { type: "image/png" }), { kind: "photo" });
+  assert.deepEqual(await store.missing([id]), []);
+  store.close();
+});
+
+test("a write counts as saved only when it reads back with the same size", async () => {
+  const store = new MediaStore(new IDBFactory());
+  await store.open();
+  const realGet = store.get.bind(store);
+  store.get = async (id) => ({ ...(await realGet(id)), bytes: new ArrayBuffer(1) }); // a short read
+  await assert.rejects(store.put(new Blob(["twelve bytes"], { type: "video/webm" }), { kind: "video" }), (e) => e.code === "media-verify");
+  store.close();
+});
+
+test("a picture that failed to load gets one fresh URL from its stored bytes", async () => {
+  const store = new MediaStore(new IDBFactory());
+  const id = await store.put(new Blob(["x"], { type: "image/png" }), { kind: "photo" });
+  const first = store.resolve("media:" + id);
+  assert.equal(store.idOfUrl(first), id);
+  assert.equal(await store.refresh(id), true);
+  assert.notEqual(store.resolve("media:" + id), first);
+  assert.equal(await store.refresh(id), false, "only once");
+  store.close();
 });
