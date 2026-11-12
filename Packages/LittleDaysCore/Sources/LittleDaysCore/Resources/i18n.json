@@ -8022,5 +8022,53 @@
   "kc.chat.listen.2": {
     "zh": "谢谢你告诉我。还有想说的吗？",
     "en": "Thanks for telling me. Anything else?"
+  },
+  "sw.title": {
+    "zh": "写字 · 改字体",
+    "en": "Words & type"
+  },
+  "sw.moments": {
+    "zh": "这一天的 Moment",
+    "en": "Moments of this day"
+  },
+  "sw.strip": {
+    "zh": "写给谁",
+    "en": "Write for"
+  },
+  "sw.whole": {
+    "zh": "整个 Moment 的一句话",
+    "en": "A line for the whole Moment"
+  },
+  "sw.wholeShort": {
+    "zh": "整体",
+    "en": "Whole"
+  },
+  "sw.wholeHint": {
+    "zh": "排在这一页的标题位置",
+    "en": "Goes where the page's headline is"
+  },
+  "sw.photoOf": {
+    "zh": "照片 {n} / {count}",
+    "en": "Photo {n} / {count}"
+  },
+  "sw.photoHint": {
+    "zh": "这句会排在这张照片旁边",
+    "en": "This line sits right by this photo"
+  },
+  "sw.photoPlaceholder": {
+    "zh": "给这张照片写一句…（可以不写）",
+    "en": "A line for this photo… (optional)"
+  },
+  "sw.written": {
+    "zh": "已写",
+    "en": "written"
+  },
+  "sw.type": {
+    "zh": "这一页的文字样式",
+    "en": "Type for this page"
+  },
+  "sw.fontAuto": {
+    "zh": "自动",
+    "en": "Auto"
   }
 }

@@ -386,3 +386,24 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - `cjkGap()`：只在中文字和英文 / 数字之间加空格，「戳戳 Captain。」不再变成「Captain 。」。
 - 文案：i18n 新增 `kc.chat.<意图>.<n>`，中文都不超过 40 字，没有表情。
 - 测试：新增 `tests/v118.test.mjs`；v109、v103 单元测试和 v109、v103、v71 浏览器测试里原来当作「未知」的例句改用「嗷呜」。
+
+## 2026-11-12 V10.19 照片说明与快速字体
+
+- **数据**（都是可选字段，向下兼容）：
+  - 照片图层 `caption`；
+  - 文字图层 `bind: "caption"` 加 `captionOf`（照片图层 id）；
+  - Moment 和当天封面的 `typeStyle`：`{ fontId, color, bold, align, scale }`。
+  - Swift 对应：`StickerLayer.caption` / `captionOf`、`PageTypeStyle`、`JournalMoment.typeStyle`、`JournalEntry.typeStyle`。CoreTests 覆盖了解码和来回编码。
+- **`scrapbook-layout.mjs`**：
+  - `layoutMoment` 对有说明的照片先排一遍，按每张照片的尺寸算出说明的高度，再把「照片 + 说明」当作一个单元重排；
+  - `settleCaptions` 依次尝试：收窄到照片宽、放到照片上方、缩小照片；
+  - `applyType` / `typeScale` / `TYPE_SCALES`；
+  - `boundText` 支持 `bind: "caption"`，按 `captionOf` 读取照片的 caption。
+- **`app.js`**：
+  - `layoutStoryPage` 把 caption 和 typeStyle 传给排版，封面用 `applyType` 处理；
+  - `makeStory` 从分组数据带上 caption 和 typeStyle；`story-regroup` 按 mediaRef 带回 caption、按第一张照片带回 typeStyle；
+  - 新面板：`storyWordsHTML` / `storyTypeHTML` / `openStoryText` / `storyWordsInput`（立即写入，260ms 后重排并刷新预览）/ `relayoutStoryWords` / `storyType` / `addMissingCaptions`（手动调整过的页面只补一行说明）；
+  - `sw-*` 按钮事件；
+  - 点页面上的照片直接打开那张照片的说明（`pointerdown` 记录点击位置）；
+  - Studio 里直接在纸上编辑 caption 图层时，写回对应照片的 caption。
+- **原生**：iPhone App 用 WKWebView 加载同一套网页，行为一致。早期的 SwiftUI 原型界面（`LittleDaysRootView` 等）没有杂志模式，也不显示照片说明，只是数据能完整解码、保存。

@@ -240,3 +240,24 @@ module.exports.closeSheet = async (page) => {
   if (await page.locator("#choose-dialog[open]").count()) await page.locator('#choose-dialog [data-action="choose-close"]').first().click();
   await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
 };
+
+// V10.19: the magazine view's words sheet edits one Moment (or one photo) at
+// a time. Writes each Moment's own line (null = leave it), in order.
+module.exports.storyLines = async (page, lines) => {
+  await page.locator('.story-tools [data-action="story-text"]').tap();
+  await page.waitForSelector("#choose-dialog[open] [data-sw-text]");
+  const tabs = page.locator('#choose-dialog [data-action="sw-moment"]');
+  const n = await tabs.count();
+  for (const [i, line] of lines.entries()) {
+    if (line == null) continue;
+    if (n) {
+      await tabs.nth(i).tap();
+      await page.waitForFunction((at) => document.querySelectorAll('#choose-dialog [data-action="sw-moment"]')[at]?.getAttribute("aria-selected") === "true", i);
+    }
+    await page.locator('#choose-dialog [data-action="sw-target"][data-target="moment"]').tap();
+    await page.waitForSelector('#choose-dialog [data-target="moment"][aria-selected="true"]');
+    await page.locator("#choose-dialog [data-sw-text]").fill(line);
+  }
+  await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
+  await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
+};

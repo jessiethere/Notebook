@@ -20149,3 +20149,281 @@ button.book-detail-showcase {
 .day-page-thumb:active .reader-thumb-paper {
   transform: scale(0.97);
 }
+
+/* =====================================================================
+   V10.19 · Magazine view: words photo by photo, and quick type.
+   One sheet (no nesting), low enough that the page above stays in view
+   and updates as you type; the photo being written for is shown and
+   numbered.
+   ===================================================================== */
+#choose-dialog.see-through::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.choose-sheet.sw {
+  max-height: min(62dvh, 560px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 30px -18px var(--c-3c2d1e66, #3c2d1e66);
+}
+.sw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sw-head h2 {
+  margin: 0;
+  font: 600 17px var(--ui-sans);
+}
+.sw-done {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-fffdf8, #fffdf8);
+  font: 600 14px var(--ui-sans);
+}
+.sw-body {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sw-moments {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sw-moments button {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  font: 600 13px var(--ui-sans);
+  color: var(--ink);
+}
+.sw-moments button small {
+  font-weight: 400;
+  color: var(--t-8a8178, #8a8178);
+}
+.sw-moments [aria-selected="true"] {
+  border-color: var(--sageDeep);
+  box-shadow: inset 0 0 0 1px var(--sageDeep);
+}
+/* The strip: the whole Moment, then each photo with its number. */
+.sw-strip {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  padding: 4px 2px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--paper);
+}
+.sw-item {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--c-f1eadf, #f1eadf);
+  box-shadow: 0 0 0 1px var(--line);
+  overflow: visible;
+}
+.sw-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+.sw-item[aria-selected="true"] {
+  box-shadow: 0 0 0 2px var(--sageDeep);
+}
+.sw-num {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-fffdf8e6, #fffdf8e6);
+  font: 700 11px/18px var(--ui-sans);
+  color: var(--ink);
+}
+.sw-dot {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sageDeep);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.sw-all {
+  display: grid;
+  place-content: center;
+  gap: 2px;
+}
+.sw-all small {
+  font: 600 9.5px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.sw-glyph {
+  font: 500 19px/1 "LD-elegant", Georgia, serif;
+  color: var(--sageDeep);
+}
+/* The one being written for. */
+.sw-edit {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.sw-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sw-now img,
+.sw-now .sw-glyph {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.sw-now .sw-glyph {
+  display: grid;
+  place-items: center;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.sw-now b {
+  display: block;
+  font: 600 14px var(--ui-sans);
+}
+.sw-now small {
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+.sw-edit textarea {
+  min-height: 48px;
+  resize: none;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.sw-count {
+  justify-self: end;
+  font-size: 11px;
+  color: var(--t-8a8178, #8a8178);
+}
+/* Quick type: fonts in one scrolling row, then size / bold / align, colours. */
+.sw-type {
+  display: grid;
+  gap: 8px;
+}
+.sw-fonts {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sw-fonts button,
+.sw-row button {
+  flex: none;
+  min-height: 38px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--c-fffdf8, #fffdf8);
+  font-size: 15px;
+  color: var(--ink);
+}
+.sw-fonts [aria-pressed="true"],
+.sw-row [aria-pressed="true"] {
+  border-color: var(--sageDeep);
+  background: var(--c-eef1e8, #eef1e8);
+  box-shadow: inset 0 0 0 1px var(--sageDeep);
+}
+.sw-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.sw-row button:disabled {
+  opacity: 0.4;
+}
+.sw-align {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.sw-align button {
+  min-width: 40px;
+  padding: 0;
+}
+.sw-colors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sw-colors button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px var(--c-00000014, #00000014);
+}
+.sw-colors [aria-pressed="true"] {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 2px;
+}
+/* Typing on a phone: the keyboard needs the room, so the type tools step aside. */
+@media (pointer: coarse) {
+  body.typing .choose-sheet.sw .sw-type {
+    display: none;
+  }
+}
+/* Scroll rows (strip, Moments, fonts) may shrink to nothing inside a short
+   sheet: keep their own height, the sheet body scrolls instead. */
+.sw-strip {
+  min-height: 66px;
+}
+.sw-moments {
+  min-height: 38px;
+}
+.sw-fonts {
+  min-height: 40px;
+}
+.sw-strip {
+  background: var(--c-f7f4ee, #f7f4ee);
+}
+.sw-fonts button,
+.sw-row button {
+  min-height: 34px;
+}
+.sw-type {
+  gap: 6px;
+}

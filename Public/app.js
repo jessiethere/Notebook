@@ -39,7 +39,7 @@ import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
-import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
+import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -3583,7 +3583,15 @@ function inlineInput(target, event) {
       const layer = page.layers.find((l) => l.id === layerId);
       if (!layer) return;
       const field = richField({ kind: "layer", id: layerId }, page);
-      if (layer.bind) {
+      if (layer.bind === "caption") {
+        // V10.19: a photo's own words live on that photo (found by its id).
+        const photo = page.layers.find((l) => l.id === layer.captionOf);
+        shown = text.slice(0, 120);
+        if (photo) {
+          if (shown.trim()) photo.caption = shown;
+          else delete photo.caption;
+        }
+      } else if (layer.bind) {
         // Words bound to a Moment: edit the Moment itself (one source of truth).
         const source = layer.of ? findMoment(editor, layer.of) : page;
         shown = text.slice(0, layer.bind === "time" ? 12 : 70);
@@ -4273,13 +4281,16 @@ function layoutStoryPage(target, isCover) {
       more: (n) => t("story.more", { count: n }),
       makeId: id,
     });
+    applyType(result.layers, target.typeStyle);
     target.layers = target.layers.filter((l) => !l.gen && !l.deco).concat(result.layers);
   } else {
     const visuals = visualLayers(target);
     const audio = target.layers.filter((l) => l.kind === "audio");
     const day = new Date(`${story.date}T12:00:00`);
     const folio = `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`;
-    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l) })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio }, style, variant);
+    // V10.19: each photo's own words (on the photo layer, by its id) are laid
+    // out right by that photo; the page's quick type comes along.
+    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio, type: target.typeStyle }, style, variant);
     target.layers = target.layers.filter((l) => !l.gen && !l.deco);
     for (const layer of target.layers) if (result.place[layer.id]) Object.assign(layer, result.place[layer.id]);
     target.layers.push(...result.layers.map((l) => ({ id: id(), ...l })));
@@ -4329,7 +4340,8 @@ function makeStory() {
       created.layoutStyle = story.style;
       created.layoutVariant = 0;
       if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
-      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
+      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, { ...(item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}), ...(item.caption ? { caption: item.caption } : {}) }));
+      if (group.typeStyle) created.typeStyle = { ...group.typeStyle };
       entry.moments.push(created);
     }, false);
     ids.push(created.id);
@@ -4385,41 +4397,203 @@ function storyPage() {
   const title = story.date === dateKey() ? t("story.previewTitle") : t("story.previewTitleDay", { date: friendlyDate(story.date) });
   return `<header class="story-bar">${back}<h1>${esc(title)}</h1><span></span></header><div class="story-where"><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><label class="story-day"><span>${t("story.day")}</span><input type="date" data-story-date value="${esc(story.date)}" max="${dateKey()}" aria-label="${t("story.day")}"></label></div>${tabs}<button class="story-canvas" data-action="story-text" aria-label="${t("story.addWords")}">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</button><div class="story-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("story.relayout")}</button><button data-action="story-text">Aa ${t(words ? "story.editWords" : "story.addWords")}</button>${total > 1 ? `<button data-action="story-group">${t("story.regroup")}</button>` : ""}</div><div class="story-actions"><button class="secondary" data-action="story-adjust">✎ ${t("story.customize")}</button><button class="primary" data-action="story-save">${t("save")}</button></div>`;
 }
-// Words for the Moments on this page, in a small sheet (all optional).
-function openStoryText() {
+document.addEventListener("input", (event) => {
+  if (event.target.matches?.("[data-sw-text]") && story) storyWordsInput(event.target);
+});
+// Where the magazine page was tapped (in % of the paper), to open that photo's words.
+document.addEventListener(
+  "pointerdown",
+  (event) => {
+    const box = event.target.closest?.(".story-canvas");
+    const paper = box?.firstElementChild;
+    if (!paper) return;
+    const r = paper.getBoundingClientRect();
+    window.__storyTapAt = { x: ((event.clientX - r.left) / r.width) * 100, y: ((event.clientY - r.top) / r.height) * 100 };
+  },
+  true,
+);
+// ---------- V10.19 · Words, photo by photo, and quick type ----------
+// One sheet, no nesting: the Moment's own line or one photo's line at a
+// time (its real thumbnail, "照片 2 / 3"), and a compact row of type for
+// this page. Every keystroke is kept on the spot (the photo's words live on
+// that photo layer, found by its id), so switching photos loses nothing; the
+// magazine page behind updates as you type.
+let storyWords = null; // { momentId, target: "moment" | <photo layer id> }
+let storyWordsTimer = 0;
+const storyPhotosOf = (m) => (m?.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing && !l.deco);
+function storyTypePage() {
+  const current = storyPages()[story.index];
+  return current ? (current.cover ? editor : findMoment(editor, current.page.id)) : null;
+}
+function storyWordsHTML() {
+  const current = storyPages()[story.index];
+  const moments = storyMomentsOf(current);
+  if (!storyWords || !moments.some((m) => m.id === storyWords.momentId)) storyWords = { momentId: moments[0]?.id, target: "moment" };
+  const m = moments.find((x) => x.id === storyWords.momentId);
+  const photos = storyPhotosOf(m);
+  if (storyWords.target !== "moment" && !photos.some((p) => p.id === storyWords.target)) storyWords.target = "moment";
+  const target = storyWords.target;
+  const said = (text) => Boolean(String(text || "").trim());
+  const momentTabs =
+    moments.length > 1
+      ? `<div class="sw-moments" role="tablist" aria-label="${t("sw.moments")}">${moments.map((x) => `<button role="tab" data-action="sw-moment" data-moment="${esc(x.id)}" aria-selected="${x.id === m.id}">${esc(x.time || t("story.page"))}<small>${t("story.photos", { count: storyPhotosOf(x).length })}</small></button>`).join("")}</div>`
+      : "";
+  const items = [
+    `<button class="sw-item sw-all" role="tab" data-action="sw-target" data-target="moment" aria-selected="${target === "moment"}" aria-label="${esc(t("sw.whole") + (said(m.title) ? ` · ${t("sw.written")}` : ""))}"><span class="sw-glyph" aria-hidden="true">Aa</span><small>${t("sw.wholeShort")}</small>${said(m.title) ? '<i class="sw-dot" aria-hidden="true"></i>' : ""}</button>`,
+    ...photos.map((p, i) => `<button class="sw-item" role="tab" data-action="sw-target" data-target="${esc(p.id)}" aria-selected="${target === p.id}" aria-label="${esc(t("sw.photoOf", { n: i + 1, count: photos.length }) + (said(p.caption) ? ` · ${t("sw.written")}` : ""))}"><img src="${esc(safePhoto(p.mediaRef))}" alt=""><b class="sw-num" aria-hidden="true">${i + 1}</b>${said(p.caption) ? '<i class="sw-dot" aria-hidden="true"></i>' : ""}</button>`),
+  ].join("");
+  const photo = photos.find((p) => p.id === target);
+  const index = photo ? photos.indexOf(photo) : -1;
+  const value = photo ? photo.caption || "" : m.title || "";
+  const max = photo ? 120 : 70;
+  const now = photo
+    ? `<img src="${esc(safePhoto(photo.mediaRef))}" alt=""><span><b>${t("sw.photoOf", { n: index + 1, count: photos.length })}</b><small>${t("sw.photoHint")}</small></span>`
+    : `<span class="sw-glyph" aria-hidden="true">Aa</span><span><b>${t("sw.whole")}</b><small>${t("sw.wholeHint")}</small></span>`;
+  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea><small class="sw-count" aria-live="polite">${[...value].length} / ${max}</small></div>${storyTypeHTML()}`;
+}
+// The type for this page: the same fonts and colours as Journal Studio.
+function storyTypeHTML() {
+  const type = storyTypePage()?.typeStyle || {};
+  const en = languageCode() === "en";
+  const fonts = TYPE_FONTS.map(([fid, zh, enName]) => `<button type="button" data-action="sw-font" data-font="${fid}" aria-pressed="${type.fontId === fid}" style="font-family:${esc(fontFamily(fid, catalog))}">${en ? enName : zh}</button>`).join("");
+  const scale = typeScale(type);
+  const colors = TYPE_COLORS.filter((c) => c !== "#FFFDF8").map((c) => `<button type="button" data-action="sw-color" data-color="${c}" style="--swatch:${c}" aria-pressed="${(type.color || "").toUpperCase() === c}" aria-label="${t("type.colour." + c.slice(1).toLowerCase())}"></button>`).join("");
+  const align = ["left", "center", "right"].map((a) => `<button type="button" data-action="sw-align" data-align="${a}" aria-pressed="${type.align === a}" aria-label="${t("type.align." + a)}"><i class="align-glyph ${a}" aria-hidden="true"></i></button>`).join("");
+  return `<div class="sw-type" role="group" aria-label="${t("sw.type")}"><div class="sw-fonts"><button type="button" data-action="sw-font" data-font="" aria-pressed="${!type.fontId}">${t("sw.fontAuto")}</button>${fonts}</div><div class="sw-row"><button type="button" data-action="sw-size" data-dir="-1" aria-label="${t("type.smaller")}" ${scale <= TYPE_SCALES[0] ? "disabled" : ""}>A−</button><button type="button" data-action="sw-size" data-dir="1" aria-label="${t("type.bigger")}" ${scale >= TYPE_SCALES.at(-1) ? "disabled" : ""}>A+</button><button type="button" class="sw-bold" data-action="sw-bold" aria-pressed="${Boolean(type.bold)}" aria-label="${t("type.mark.bold")}"><b>B</b></button><span class="sw-align">${align}</span></div><div class="sw-colors" role="group" aria-label="${t("ctx.color")}">${colors}</div></div>`;
+}
+function openStoryText(target = null) {
   const current = storyPages()[story.index];
   const moments = storyMomentsOf(current);
   if (!moments.length) return;
+  if (target) storyWords = target;
+  else if (!storyWords || !moments.some((m) => m.id === storyWords.momentId)) storyWords = { momentId: moments[0].id, target: "moment" };
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet story-text-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("story.wordsTitle")}</h2><p class="save-help">${t("story.wordsHint")}</p>${moments
-    .map((m) => `<label class="story-word"><span>${esc(m.time || t("story.page"))}</span><input type="text" maxlength="70" data-story-word="${esc(m.id)}" value="${esc(m.title || "")}" placeholder="${t("story.linePlaceholder")}"></label>`)
-    .join("")}<button class="primary full-width" data-action="story-text-done">${t("pages.done")}</button></div>`;
-  dialog.showModal();
-  dialog.querySelector("input")?.focus();
+  dialog.classList.add("see-through");
+  dialog.innerHTML = `<div class="choose-sheet story-text-sheet sw"><div class="choose-grabber" aria-hidden="true"></div><div class="sw-head"><h2>${t("sw.title")}</h2><button class="sw-done" data-action="story-text-done">${t("pages.done")}</button></div><div class="sw-body">${storyWordsHTML()}</div></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.addEventListener("close", () => dialog.classList.remove("see-through"), { once: true });
+  revealStoryTarget();
 }
-async function saveStoryText() {
-  const inputs = [...document.querySelectorAll("[data-story-word]")];
-  const changed = [];
+function refreshStoryWords(focus = false) {
+  const body = $("#choose-dialog .sw-body");
+  if (!body) return;
+  body.innerHTML = storyWordsHTML();
+  if (focus) body.querySelector("[data-sw-text]")?.focus();
+  revealStoryTarget();
+}
+// Keep the photo being written for (or the page's line) in view above the sheet.
+function revealStoryTarget() {
+  const scroll = $("#app-scroll"),
+    canvas = $(".story-canvas");
+  if (!scroll || !canvas || !storyWords) return;
+  const current = storyPages()[story.index];
+  const page = current?.cover ? editor : current?.page;
+  const layer = (page?.layers || []).find((l) => (storyWords.target === "moment" ? l.bind === "title" && (!l.of || l.of === storyWords.momentId) : l.id === storyWords.target || (l.gen && l.mediaRef && l.mediaRef === findMoment(editor, storyWords.momentId)?.layers.find((p) => p.id === storyWords.target)?.mediaRef)));
+  const rect = canvas.getBoundingClientRect();
+  const y = layer ? rect.top + (rect.height * (Number(layer.y) || 50)) / 100 : rect.top;
+  const sheetTop = $("#choose-dialog .sw")?.getBoundingClientRect().top || innerHeight * 0.55;
+  const room = sheetTop - 12;
+  if (y < 70 || y > room) scroll.scrollBy({ top: y - Math.max(90, room * 0.45), behavior: "smooth" });
+}
+// Typed words: kept at once on the Moment / photo; the page follows shortly.
+function storyWordsInput(field) {
+  const value = field.value.slice(0, Number(field.maxLength) || 120);
+  const count = $("#choose-dialog .sw-count");
+  if (count) count.textContent = `${[...value].length} / ${field.maxLength}`;
+  const { momentId, target } = storyWords;
+  const m = findMoment(editor, momentId);
+  if (!m) return;
+  if (target === "moment") {
+    m.title = value;
+    const group = story.groups[story.made.ids.indexOf(momentId)];
+    if (group) group.line = value.trim();
+  } else {
+    const photo = m.layers.find((l) => l.id === target);
+    if (!photo) return;
+    if (value.trim()) photo.caption = value;
+    else delete photo.caption;
+  }
+  m.updatedAt = new Date().toISOString();
+  scheduleDraft();
+  // The little dot on the thumbnail follows what is written.
+  const item = $(`#choose-dialog .sw-item[data-target="${CSS.escape(target)}"]`);
+  if (item) {
+    const dot = item.querySelector(".sw-dot");
+    if (value.trim() && !dot) item.insertAdjacentHTML("beforeend", '<i class="sw-dot" aria-hidden="true"></i>');
+    if (!value.trim() && dot) dot.remove();
+  }
+  clearTimeout(storyWordsTimer);
+  storyWordsTimer = setTimeout(() => relayoutStoryWords([momentId]), 260);
+}
+// Lay the touched pages out again (words take room) and redraw the preview.
+// Pages arranged by hand keep their places; a photo's new words are put
+// under it there.
+function relayoutStoryWords(momentIds = []) {
+  if (!story?.made) return;
   changeEditor((entry) => {
-    for (const input of inputs) {
-      const m = findMoment(entry, input.dataset.storyWord);
-      const value = input.value.trim().slice(0, 70);
-      if (m && (m.title || "") !== value) {
-        m.title = value;
-        m.updatedAt = new Date().toISOString();
-        changed.push(m.id);
-        const group = story.groups[story.made.ids.indexOf(m.id)];
-        if (group) group.line = value;
-      }
+    for (const momentId of momentIds) {
+      const m = findMoment(entry, momentId);
+      if (m) m.title = (m.title || "").slice(0, 70);
+      if (m?.layoutEdited) addMissingCaptions(m);
     }
   }, false);
-  $("#choose-dialog").close();
-  if (!changed.length) return render();
-  // Words take room: lay out those pages again (and the day spread), except
-  // pages edited by hand, which keep their places (the words still show).
-  layoutStory({ which: [...changed, "cover"] });
+  layoutStory({ which: [...momentIds, "cover"] });
   flushDraft();
-  logEvent("story_words", { count: changed.length });
+  refreshStoryCanvas();
+}
+function refreshStoryCanvas() {
+  const current = storyPages()[story.index];
+  const canvas = $(".story-canvas");
+  if (canvas && current) canvas.innerHTML = sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover });
+}
+// A page arranged by hand: a photo that got words but has no line on the
+// page yet gets one right under it (nothing else moves).
+function addMissingCaptions(page) {
+  const look = STYLE_LOOK[styleOf(page.layoutStyle)];
+  for (const photo of storyPhotosOf(page)) {
+    if (!(photo.caption || "").trim() || page.layers.some((l) => l.bind === "caption" && l.captionOf === photo.id)) continue;
+    const w = Math.min(86, Math.max(26, Number(photo.w) || 40));
+    const size = 10.5 * typeScale(page.typeStyle);
+    const h = textBlock(photo.caption, size, w).height;
+    const y = Math.min(99 - h / 2, (Number(photo.y) || 50) + (Number(photo.h) || 30) / 2 + 1.2 + h / 2);
+    const layer = { id: id(), kind: "text", bind: "caption", captionOf: photo.id, text: photo.caption, x: Number(photo.x) || 50, y, w, scale: 1, rotation: 0, fontId: pickFont(photo.caption, look), fontSize: size, color: look.muted, weight: 400, spacing: 0, align: "center" };
+    applyType([layer], page.typeStyle);
+    page.layers.push(layer);
+  }
+}
+// Quick type: changes this page's typeStyle and the words already on it.
+function storyType(change) {
+  const current = storyPages()[story.index];
+  if (!current) return;
+  const key = current.cover ? "cover" : current.page.id;
+  let before = null;
+  changeEditor((entry) => {
+    const target = current.cover ? entry : findMoment(entry, current.page.id);
+    if (!target) return;
+    before = { ...(target.typeStyle || {}) };
+    const next = change({ ...before });
+    for (const k of Object.keys(next)) if (next[k] == null || next[k] === "") delete next[k];
+    target.typeStyle = next;
+    // Pages arranged by hand keep their places: only the words' look changes.
+    if (target.layoutEdited) {
+      applyType(target.layers, next);
+      if (typeScale(next) !== typeScale(before)) for (const l of target.layers) if (l.kind === "text" && ["title", "caption"].includes(l.bind)) l.fontSize = Math.round(((Number(l.fontSize) || 14) * typeScale(next)) / typeScale(before) * 10) / 10;
+      if (next.bold == null && before.bold != null) for (const l of target.layers) if (l.kind === "text" && ["title", "caption"].includes(l.bind)) l.weight = l.bind === "title" ? 500 : 400;
+    }
+  }, false);
+  layoutStory({ which: [key] });
+  flushDraft();
+  refreshStoryCanvas();
+  const tools = $("#choose-dialog .sw-type");
+  if (tools) tools.outerHTML = storyTypeHTML();
+  logEvent("story_type", {});
+}
+async function saveStoryText() {
+  clearTimeout(storyWordsTimer);
+  const ids = storyWords?.momentId ? [storyWords.momentId] : [];
+  $("#choose-dialog").close();
+  relayoutStoryWords(ids);
+  logEvent("story_words", { photos: storyMomentsOf(storyPages()[story.index]).reduce((n, m) => n + storyPhotosOf(m).filter((p) => (p.caption || "").trim()).length, 0) });
   render();
 }
 function finishStory() {
@@ -4494,7 +4668,18 @@ async function storyAction(actionName, target) {
       const first = story.groups[i]?.items[0]?.reference;
       if (m?.title && first) lines.set(first, m.title);
     }
-    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "" }));
+    // V10.19: each photo's own words go with that photo (its media id — the
+    // photo itself, not its time or its place in the row); the page's type
+    // stays with the Moment of its first photo.
+    const captions = new Map();
+    const types = new Map();
+    for (const momentId of story.made?.ids || []) {
+      const m = findMoment(editor, momentId);
+      for (const l of m?.layers || []) if (l.kind === "photo" && l.mediaRef && (l.caption || "").trim()) captions.set(l.mediaRef, l.caption);
+      const first = (m?.layers || []).find((l) => l.kind === "photo" && l.mediaRef && !l.gen);
+      if (m?.typeStyle && first) types.set(first.mediaRef, m.typeStyle);
+    }
+    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "", typeStyle: types.get(g.items[0]?.reference) || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
     story.selected = null;
     return makeStory();
   }
@@ -4518,7 +4703,22 @@ async function storyAction(actionName, target) {
     story.selected = null;
   }
   if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
-  if (actionName === "story-text") return openStoryText();
+  if (actionName === "story-text") {
+    // Tapped on a photo of the page: open the words for that very photo.
+    const current = storyPages()[story.index];
+    const at = target.classList.contains("story-canvas") ? window.__storyTapAt : null;
+    window.__storyTapAt = null;
+    if (at && current) {
+      const page = current.cover ? editor : current.page;
+      const hit = [...(page.layers || [])].reverse().find((l) => l.kind === "photo" && l.mediaRef && Math.abs(at.x - Number(l.x)) <= Number(l.w) / 2 && Math.abs(at.y - Number(l.y)) <= (Number(l.h) || 30) / 2);
+      if (hit) {
+        const owner = current.cover ? storyMomentsOf(current).find((m) => storyPhotosOf(m).some((p) => p.mediaRef === hit.mediaRef)) : current.page;
+        const photo = storyPhotosOf(owner).find((p) => p.id === hit.id || p.mediaRef === hit.mediaRef);
+        if (owner && photo) return openStoryText({ momentId: owner.id, target: photo.id });
+      }
+    }
+    return openStoryText();
+  }
   if (actionName === "story-text-done") return saveStoryText();
   if (actionName === "story-style") {
     const next = styleOf(target.dataset.style);
@@ -6685,6 +6885,28 @@ async function action(target) {
   }
   if (actionName.startsWith("story-")) {
     await storyAction(actionName, target);
+    return;
+  }
+  // V10.19 · the words sheet of the magazine view.
+  if (actionName.startsWith("sw-") && story) {
+    if (actionName === "sw-moment" || actionName === "sw-target") {
+      clearTimeout(storyWordsTimer);
+      const leaving = storyWords?.momentId;
+      if (actionName === "sw-moment") storyWords = { momentId: target.dataset.moment, target: "moment" };
+      else storyWords = { ...storyWords, target: target.dataset.target };
+      if (leaving) relayoutStoryWords([leaving]);
+      return refreshStoryWords(true);
+    }
+    if (actionName === "sw-font") return storyType((x) => ({ ...x, fontId: target.dataset.font || null }));
+    if (actionName === "sw-color") return storyType((x) => ({ ...x, color: x.color === target.dataset.color ? null : target.dataset.color }));
+    if (actionName === "sw-align") return storyType((x) => ({ ...x, align: x.align === target.dataset.align ? null : target.dataset.align }));
+    if (actionName === "sw-bold") return storyType((x) => ({ ...x, bold: x.bold ? null : true }));
+    if (actionName === "sw-size")
+      return storyType((x) => {
+        const at = TYPE_SCALES.indexOf(typeScale(x));
+        const next = TYPE_SCALES[Math.max(0, Math.min(TYPE_SCALES.length - 1, at + Number(target.dataset.dir)))];
+        return { ...x, scale: next === 1 ? null : next };
+      });
     return;
   }
   if (actionName === "music-sheet") {

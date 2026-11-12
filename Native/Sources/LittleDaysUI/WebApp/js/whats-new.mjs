@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.19",
+    date: "2026-11-12",
+    zh: {
+      title: "杂志模式：每张照片写一句，直接换字体",
+      items: [
+        "「Aa 改文字」现在以照片为主：上面一排是这个 Moment 的真实照片缩略图，标着 1、2、3，点哪张就给哪张写一句；也可以写一句给整个 Moment。",
+        "拍摄时间相同的照片也分得清：每句话都跟着那张照片走，排版时就放在那张照片的下面（放不下时放在上面），不会跑到别的照片旁边。",
+        "切换照片、换杂志 / 手账 / 拼贴、重新排版、调整分组，写好的字都还在，并且仍然对着原来的照片。",
+        "在同一个面板里直接换字体（宋体、黑体、楷体、文楷……）、大小、加粗、颜色和对齐，上面的页面马上就变；进入「自定义」后这些样式也都保留。",
+        "直接点页面上的某张照片，就会打开那张照片的文字。",
+      ],
+    },
+    en: {
+      title: "Magazine view: a line for each photo, and fonts right there",
+      items: [
+        "“Aa Edit words” is now photo by photo: a row of the Moment's real thumbnails, numbered 1, 2, 3 — tap one to write its line, or write one line for the whole Moment.",
+        "Photos taken at the same minute are told apart: each line belongs to its photo and is laid out right under it (or above when there's no room), never beside another one.",
+        "Switching photos, styles (Editorial / Cozy / Collage), re-layout or regrouping keeps every line with its own photo.",
+        "Change the font (Song, Hei, Kai, WenKai…), size, bold, colour and alignment in the same sheet and see the page change at once; Customize keeps it all.",
+        "Tap a photo on the page to open its line directly.",
+      ],
+    },
+  },
+  {
     version: "10.18",
     date: "2026-11-12",
     zh: {

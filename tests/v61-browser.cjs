@@ -34,9 +34,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page");
     assert.equal(await page.locator(".story-tabs button").count(), 5, "a spread + 4 Moment pages");
-    await page.locator(".story-canvas").tap();
-    for (const [i, w] of words.entries()) await page.locator("[data-story-word]").nth(i).fill(w);
-    await page.locator('[data-action="story-text-done"]').tap();
+    await require("./signed-in.cjs").storyLines(page, words);
     await page.waitForFunction(() => /Morning run/.test(document.querySelector(".story-canvas").innerText));
     const d = await page.evaluate((t) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[t], today);
     const pages = d.moments.slice(-4);

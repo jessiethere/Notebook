@@ -192,11 +192,123 @@ function centreVertically(place, layers, top = 8, bottom = 95) {
   for (const l of texts) l.y = round(l.y + shift);
 }
 
+// ---------- V10.19 · words for one photo, and the page's own type ----------
+// A photo's own line (photo.caption) sits right under that photo: the photo
+// and its words are laid out as one unit, so photo 1's words can never land
+// beside photo 2. The layer is bound to the photo by the photo layer's id
+// (`captionOf`), never by its time or its place in the row.
+const CAPTION_SIZE = { editorial: 10.5, cozy: 13, playful: 11.5 };
+const captionWidth = (w) => Math.min(86, Math.max(26, w));
+const capBox = (l) => ({ x: l.x, y: l.y, w: l.w, h: textBlock(l.text, l.fontSize, l.w).height });
+// The page's quick type (the Moment's / day's `typeStyle`, chosen in the
+// magazine view): { fontId, color, bold, align, scale }. Only the page's
+// own words follow it (its line and the photos' lines) — not the small
+// time, folio or date labels.
+export const TYPE_SCALES = [0.85, 1, 1.15, 1.3];
+export const typeScale = (type) => (TYPE_SCALES.includes(Number(type?.scale)) ? Number(type.scale) : 1);
+export function applyType(layers, type) {
+  if (!type) return layers;
+  for (const layer of layers) {
+    if (layer.kind !== "text" || !["title", "caption"].includes(layer.bind) || layer.prefix) continue;
+    if (type.fontId) layer.fontId = type.fontId;
+    if (/^#[0-9a-f]{6}$/i.test(type.color || "")) layer.color = type.color;
+    if (type.bold != null) layer.weight = type.bold ? 700 : layer.bind === "title" ? 500 : 400;
+    if (["left", "center", "right"].includes(type.align)) layer.align = type.align;
+  }
+  return layers;
+}
+
 // ---------- One Moment's page ----------
-// input: { visuals: [{ id, aspect }], title, time, audio: [{ id }] }
+// input: { visuals: [{ id, aspect, caption? }], title, time, audio: [{ id }], type? }
 // Returns { place: { [id]: { x, y, w, h, rotation, frame, tape } },
 //           layers: [generated text layers], paper, backdrop }.
 export function layoutMoment(input, styleId = "editorial", variant = 0) {
+  const style = styleOf(styleId);
+  const look = STYLE_LOOK[style];
+  const scale = typeScale(input.type);
+  const said = (v) => String(v.caption || "").trim();
+  const visuals = input.visuals || [];
+  if (!visuals.some(said)) return applyResult(layoutCore(input, style, variant, scale), input.type);
+  // Pass 1 sizes each photo; pass 2 lays out "photo + its words" units of
+  // that height, so the words get their own room under their photo.
+  const size = CAPTION_SIZE[style] * scale;
+  const first = layoutCore(input, style, variant, scale);
+  const frame = look.frame;
+  const [px, py] = PAD[frame] || PAD.bare;
+  const capOf = new Map();
+  const units = visuals.map((v) => {
+    const text = said(v);
+    const box = first.place[v.id];
+    if (!text || !box) return v;
+    const fit = fitText(text, size, captionWidth(box.w), 5, 9);
+    const capH = fit.height + 1.8;
+    capOf.set(v.id, { text, fit, capH });
+    const unitAspect = ((box.w - px) * PAGE_RATIO) / Math.max(4, box.h + capH - py);
+    return { ...v, aspect: unitAspect };
+  });
+  const second = layoutCore({ ...input, visuals: units }, style, variant, scale);
+  const made = [];
+  for (const v of visuals) {
+    const cap = capOf.get(v.id);
+    const unit = second.place[v.id];
+    if (!cap || !unit) continue;
+    const photoH = frameHeight(v.aspect, unit.w, frame);
+    const top = unit.y - unit.h / 2;
+    second.place[v.id] = { ...unit, h: round(photoH), y: round(top + photoH / 2) };
+    // Words re-measured at the photo's final width (never cut: fewer lines
+    // only by a slightly smaller size, then more lines).
+    const w = captionWidth(unit.w);
+    const fit = fitText(cap.text, size, w, 5, 9);
+    const x = Math.min(96 - w / 2, Math.max(4 + w / 2, unit.x));
+    const layer = textLayer(look, { bind: "caption", captionOf: v.id, text: cap.text, x: round(x), y: round(top + photoH + 1.2 + fit.height / 2), w: round(w), fontId: pickFont(cap.text, look), fontSize: fit.size, align: "center", rotation: round((unit.rotation || 0) / 2), color: style === "editorial" ? look.muted : look.ink });
+    second.layers.push(layer);
+    made.push({ layer, v, size });
+  }
+  settleCaptions(second, made, frame);
+  return applyResult(second, input.type);
+}
+// Words that would sit on another photo (tilted Polaroids, a loose collage)
+// or run off the page: first keep them to their photo's width, then try
+// above the photo, then make that photo a little smaller. Never cut.
+function settleCaptions(result, made, frame) {
+  const others = (self) => [
+    ...Object.entries(result.place).filter(([id, o]) => id !== self.v.id && o.h).map(([, o]) => o),
+    ...made.filter((m) => m !== self).map((m) => capBox(m.layer)),
+    ...result.layers.filter((l) => l.kind === "text" && l.bind !== "caption" && l.w).map(capBox),
+  ];
+  const ok = (m) => {
+    const box = capBox(m.layer);
+    if (box.y - box.h / 2 < 1 || box.y + box.h / 2 > 99.5 || box.x - box.w / 2 < 1 || box.x + box.w / 2 > 99) return false;
+    return others(m).every((o) => overlapArea(box, o) <= 0.06 * box.w * box.h);
+  };
+  const place = (m, where = "below") => {
+    const p = result.place[m.v.id];
+    const fit = fitText(m.layer.text, m.size, m.layer.w, 5, 9);
+    m.layer.fontSize = fit.size;
+    m.layer.x = round(Math.min(99 - m.layer.w / 2, Math.max(1 + m.layer.w / 2, p.x)));
+    m.layer.y = round(where === "below" ? p.y + p.h / 2 + 1.2 + fit.height / 2 : p.y - p.h / 2 - 1.2 - fit.height / 2);
+  };
+  for (const m of made) {
+    for (let attempt = 0; attempt < 8 && !ok(m); attempt++) {
+      const p = result.place[m.v.id];
+      if (attempt === 0) {
+        m.layer.w = round(Math.max(18, Math.min(m.layer.w, p.w)));
+        place(m);
+      } else if (attempt === 1) place(m, "above");
+      else {
+        // A smaller photo, same top-left feel (its centre moves up and in).
+        const w = p.w * 0.88;
+        const h = frameHeight(m.v.aspect, w, frame);
+        result.place[m.v.id] = { ...p, w: round(w), h: round(h), y: round(p.y - p.h / 2 + h / 2) };
+        m.layer.w = round(Math.max(18, Math.min(captionWidth(w), w + 6)));
+        place(m);
+      }
+    }
+  }
+}
+const applyResult = (result, type) => (applyType(result.layers, type), result);
+
+function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
   const style = styleOf(styleId);
   const look = STYLE_LOOK[style];
   const visuals = input.visuals || [];
@@ -225,7 +337,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
   if (style === "editorial") {
     const textW = n === 1 && v !== 0 ? 50 : 86;
     // A headline, not a caption: big serif for short lines, smaller for long.
-    const base = textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 19;
+    const base = (textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 19) * typeSize;
     const fit = title ? fitText(title, base, textW, 4) : { size: base, lines: 0, height: 0 };
     const textH = title ? fit.height + 4 : 0;
     const bottom = 94 - textH - audioBand;
@@ -240,7 +352,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
         const left = v === 1;
         put(visuals[0], { ...box, x: left ? 7 + box.w / 2 : 93 - box.w / 2, y: 8 + box.h / 2 }, 0);
         const colW = 86 - box.w - 5;
-        const f = fitText(title, 20, colW, 8);
+        const f = fitText(title, 20 * typeSize, colW, 8);
         caption({ x: left ? 93 - colW / 2 : 7 + colW / 2, y: 8 + box.h - f.height / 2 - 2, w: colW, fontSize: f.size, align: left ? "left" : "right" });
       } else {
         // A single landscape photo opens edge to edge (the magazine look).
@@ -272,7 +384,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
           put(rest[0], { ...second, x: 93 - second.w / 2, y: region.top + second.h / 2 }, 1);
           if (title) {
             const colW = 86 - second.w - 4;
-            const f = fitText(title, 18, colW, 6);
+            const f = fitText(title, 18 * typeSize, colW, 6);
             caption({ x: 7 + colW / 2, y: region.top + f.height / 2 + 1, w: colW, fontSize: f.size });
           }
           top = -1;
@@ -281,7 +393,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
       if (title && top !== -1) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size, weight: 500 });
     }
   } else if (style === "cozy") {
-    const fit = title ? fitText(title, 22, 76, 3, 13) : { size: 22, lines: 0, height: 0 };
+    const fit = title ? fitText(title, 22 * typeSize, 76, 3, 13) : { size: 22, lines: 0, height: 0 };
     const textH = title ? fit.height + 5 : 0;
     const bottom = 95 - textH - audioBand;
     if (input.time) meta({ x: v === 1 ? 20 : 80, y: 5, w: 30, align: v === 1 ? "left" : "right", rotation: v === 1 ? 3 : -3 });
@@ -304,7 +416,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
     if (title) caption({ x: v === 1 ? 46 : 54, y: bottom + 3 + fit.height / 2, w: 76, fontSize: fit.size, align: "center", rotation: v === 1 ? 1.5 : -1.5 });
   } else {
     // playful
-    const fit = title ? fitText(title, 22, 80, 3, 13) : { size: 22, lines: 0, height: 0 };
+    const fit = title ? fitText(title, 22 * typeSize, 80, 3, 13) : { size: 22, lines: 0, height: 0 };
     const headH = title ? fit.height + 6 : 4;
     const top = 6 + headH;
     const bottom = 95 - audioBand;
@@ -437,6 +549,11 @@ export function boundText(layer, page) {
   if (layer.prefix === "kicker") {
     const time = String(source.time || "").trim();
     return time ? `— ${time}${partWord(time) ? ` · ${partWord(time)}` : ""}` : "";
+  }
+  if (layer.bind === "caption") {
+    // A photo's own words, read from that photo (by its layer id).
+    const photo = (page?.layers || []).find((l) => l.id === layer.captionOf);
+    return String(photo?.caption || "").trim();
   }
   let text = String((layer.bind === "time" ? source.time : source.title) || "").trim();
   if (layer.prefix === "time" && source.time && text) text = `${source.time} ${text}`;

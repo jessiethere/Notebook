@@ -164,6 +164,14 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(bound.bind, "title")
         XCTAssertEqual(bound.of, "m1")
         XCTAssertEqual(bound.gen, true)
+        // V10.19: a photo's own words and the line bound to them, and a page's quick type.
+        let captioned = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"p1","kind":"photo","text":"a.jpg","x":50,"y":40,"scale":1,"rotation":0,"mediaRef":"media:p1","caption":"第一杯：拉花是一只小熊"}"#.utf8))
+        XCTAssertEqual(captioned.caption, "第一杯：拉花是一只小熊")
+        let captionLine = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"c1","kind":"text","text":"","x":50,"y":60,"scale":1,"rotation":0,"bind":"caption","captionOf":"p1","gen":true}"#.utf8))
+        XCTAssertEqual(captionLine.captionOf, "p1")
+        let typed = try JSONDecoder().decode(PageTypeStyle.self, from: Data(##"{"fontId":"song","color":"#6D8299","bold":true,"align":"left","scale":1.15}"##.utf8))
+        XCTAssertEqual(typed.fontId, "song")
+        XCTAssertEqual(try JSONDecoder().decode(StickerLayer.self, from: JSONEncoder().encode(captioned)).caption, captioned.caption, "survives a Swift round trip")
         XCTAssertEqual(moment.media?.first?.origin, "recording")
         // Page backgrounds and library photos keep their references.
         XCTAssertEqual(moment.backdrop, "scene:color-peach")

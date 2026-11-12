@@ -117,9 +117,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await page.waitForTimeout(1300);
     assert.equal((await story()).layoutVariant, 1);
     assert.notEqual(await look(), before);
-    await page.locator('.story-tools [data-action="story-text"]').tap();
-    await page.locator("[data-story-word]").fill("和朋友喝咖啡的下午");
-    await page.locator('[data-action="story-text-done"]').tap();
+    await require("./signed-in.cjs").storyLines(page, ["和朋友喝咖啡的下午"]);
     await page.waitForFunction(() => /和朋友喝咖啡的下午/.test(document.querySelector(".story-canvas").innerText));
     await page.locator('[data-action="story-save"]').tap();
     await page.waitForSelector(".flip-page:not(.is-cover)");
