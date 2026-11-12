@@ -466,3 +466,14 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 入口：设置 → 数据与隐私 →「检查照片和视频」（`data-action="media-check"`，复制按钮是 `media-check-copy`）。
 - 测试：`tests/v122.test.mjs`、`tests/v122-browser.cjs`（`BROWSER=webkit` 时用 WebKit；它自己启动预览服务，端口用 `PORT` 指定，默认 8093）。
 
+## 2026-11-12 V10.23 导入视频 / 声音（保存到本机）
+
+- 状态 `mediaImport = { file, kind, size, duration, stage, progress, thumb, err, targetId }`。阶段依次是：`import`（`mediaMetadata` + `frameAt` 缩略图，只在内存里）→ `read`（`FileReader.readAsArrayBuffer`，`onprogress` 给出真实百分比）→ `write`（`media.put`，读回核对）→ `cover`（`autoCover`）→ `done` 或 `failed`。
+- 页面数据只在 `attachClip` 写入成功之后才引用这个文件。失败时文件留在 `mediaImport.file` 里，点「重试」再跑一次 `runImport()`；「不要这个视频」清掉它。
+- 导入期间 `busyMedia` 为真，所有编辑操作会被拦下，提示 `import.busy`。页面条 `.page-strip.locked`（`aria-disabled`）只在视频或声音导入时出现，因为这个流程开始和结束时都会重画。顶部状态为 `saving`；结束后由 `confirmMediaSaved()` 重新判断。
+- 卡片 `.import-card`（`importCardHTML` / `refreshImportCard`）放在 `.studio-stage` 里，压在纸的上方；进度条在 `read` 阶段有百分比，其余阶段是不确定进度条。
+- 事件：`media_import{kind,stage:"done",size(MB),ms}`、`media_import_failed{kind,stage,err,size}`。
+- 视频卡片（`mediaCardHTML`，可编辑时）：「换封面」（`video-poster`）和「从页面移除」（`remove-media-ask`：先确认，用 `changeTarget` 记入撤销历史）放在视频正下方，下面是小字和「不放在纸上」（`clip-on-page`）。
+- 选中视频后的工具：`ctx-play` · `video-cover` · `shape` · `layer` · `layer-delete`（显示为「移除」）。
+- 测试：`tests/v123-browser.cjs`（需要 `VIDEO_DIR`；WebKit 用 mp4，Chromium 用 webm）。
+

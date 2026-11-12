@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.23",
+    date: "2026-11-12",
+    zh: {
+      title: "导入视频时看得到每一步，换封面更好找",
+      items: [
+        "导入视频时，页面上会出现一张卡片：先读取视频信息，再显示导入进度，然后是「正在保存到本机」「正在生成封面」，最后显示「已保存到本机」。",
+        "保存过程中，页面条会变淡，卡片上写明「保存完成前，暂时不能切换页面」，不用等点了才知道；顶部只会显示「保存中」，不会提前显示「已保存」。",
+        "没存进这台设备时，卡片会写明「保存失败」和原因，并提供「重试」；视频超过 50 MB 时会直接说明，页面不会被改动。",
+        "选中视频后，下面依次是：播放、换封面、形状、图层、移除。",
+        "「本页媒体」里，换封面和从页面移除两个大按钮就在视频正下方，375 和 430 宽的手机上都不用滚动；时长、大小和「已保存到本机」放在下面的小字里。",
+        "换封面会显示现在的封面，拖动时间轴选一帧，点完成保存；原视频不会被改动，阅读模式里也用新封面。",
+        "「从纸上拿下」改为两个更清楚的操作：「从页面移除」（会先确认，可以撤销），以及「不放在纸上」（仍保留在本页媒体里）。",
+      ],
+    },
+    en: {
+      title: "See every step of importing a video, and find the cover easily",
+      items: [
+        "Importing a video shows a card on the page: reading the file, importing with progress, saving to this device, making a cover, then “Saved on this device”.",
+        "While it saves, the page strip dims and the card says pages can't be switched until it's saved — before you tap; the top only says “Saving”, never “Saved” too early.",
+        "If it can't be stored on this device, the card says “Not saved” and why, with Retry; a video over 50 MB is refused right away and the page is unchanged.",
+        "A selected video's tools are: Play, Cover, Shape, Layer, Remove.",
+        "In the page's media list, Cover and Remove from page are big buttons right under the video — no scrolling on 375 or 430-wide phones; length, size and “Saved on this device” are the small print.",
+        "Cover shows the cover in use; drag the timeline to pick a frame and tap Done. The video itself is never changed, and the reader uses the new cover.",
+        "“Take off the page” is now two clear actions: “Remove from page” (asks first, undo works) and “Off the paper” (stays in the page's media list).",
+      ],
+    },
+  },
+  {
     version: "10.22",
     date: "2026-11-12",
     zh: {
