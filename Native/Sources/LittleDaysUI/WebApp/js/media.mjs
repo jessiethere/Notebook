@@ -12,6 +12,16 @@
 import { validateStateSnapshot } from "./model.mjs";
 
 // A record's bytes as a Blob, whichever way it was stored.
+// A short, lower-case error name for the local log ("notreadableerror").
+export function errName(error) {
+  return String(error?.code || error?.name || "error").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 16) || "error";
+}
+export function kindOf(kind, mime = "") {
+  if (["photo", "video", "audio", "voice", "drawing"].includes(kind)) return kind === "voice" ? "audio" : kind;
+  if (/^video\//.test(mime)) return "video";
+  if (/^audio\//.test(mime)) return "audio";
+  return "photo";
+}
 export function blobOf(record) {
   if (!record) return null;
   if (record.bytes instanceof ArrayBuffer) return new Blob([record.bytes], { type: record.mime || "" });
@@ -25,6 +35,10 @@ export class MediaStore {
     // "day"). Leaving a view releases its scope and revokes unused URLs.
     this.holders = new Map();
     // Ids whose bytes could not be read (reported, never invented).
+    // V10.22: what went wrong is reported (kind of failure and the error's
+    // name only — never names, words or bytes) to the local event log.
+    this.onEvent = () => {};
+    this.reported = new Set();
     this.broken = new Set();
     this.retried = new Set();
   }
@@ -49,32 +63,48 @@ export class MediaStore {
     return this;
   }
   async put(blob, metadata = {}, scope = "app") {
-    await this.open();
-    // The bytes themselves (a File from the picker may be backed by a
-    // temporary file the system deletes later).
-    const bytes = await blob.arrayBuffer();
-    const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : fallbackId();
-    const record = {
-      ...metadata,
-      id,
-      bytes,
-      mime: blob.type,
-      size: bytes.byteLength,
-      createdAt: new Date().toISOString(),
-    };
-    await this.write(record, "add");
-    // Read it back: only a record whose bytes are really there counts as saved.
-    const check = await this.get(id);
-    if (!(check?.bytes instanceof ArrayBuffer) || check.bytes.byteLength !== bytes.byteLength) {
-      const error = new Error("media-verify");
-      error.code = "media-verify";
+    let stage = "open";
+    try {
+      await this.open();
+      // The bytes themselves (a File from the picker may be backed by a
+      // temporary file the system deletes later).
+      stage = "read";
+      const bytes = await blob.arrayBuffer();
+      const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : fallbackId();
+      const record = {
+        ...metadata,
+        id,
+        bytes,
+        mime: blob.type,
+        size: bytes.byteLength,
+        createdAt: new Date().toISOString(),
+      };
+      stage = "write";
+      await this.write(record, "add");
+      // Read it back: only a record whose bytes are really there counts as saved.
+      stage = "verify";
+      const check = await this.get(id);
+      if (!(check?.bytes instanceof ArrayBuffer) || check.bytes.byteLength !== bytes.byteLength) {
+        const error = new Error("media-verify");
+        error.code = "media-verify";
+        throw error;
+      }
+      if (scope) {
+        this.urls.set(id, URL.createObjectURL(new Blob([bytes], { type: blob.type })));
+        this.hold(id, scope);
+      }
+      return id;
+    } catch (error) {
+      this.onEvent("media_save_failed", { kind: kindOf(metadata.kind, blob?.type), stage, err: errName(error) });
       throw error;
     }
-    if (scope) {
-      this.urls.set(id, URL.createObjectURL(new Blob([bytes], { type: blob.type })));
-      this.hold(id, scope);
-    }
-    return id;
+  }
+  // Reported once per id and kind of problem (a page re-renders often).
+  report(name, id, data = {}) {
+    const key = name + ":" + id;
+    if (this.reported.has(key)) return;
+    this.reported.add(key);
+    this.onEvent(name, data);
   }
   async write(record, mode = "put") {
     await new Promise((resolve, reject) => {
@@ -89,25 +119,32 @@ export class MediaStore {
   // Returns null when the bytes are gone (the id is then reported broken).
   async readable(id) {
     const record = await this.get(id);
-    if (!record) return null;
+    if (!record) {
+      this.report("media_missing", id);
+      return null;
+    }
     if (record.bytes instanceof ArrayBuffer) return record;
     if (!(record.blob instanceof Blob)) {
       this.broken.add(id);
+      this.report("media_read_failed", id, { kind: kindOf(record.kind, record.mime), stage: "nodata" });
       return null;
     }
     let bytes;
     try {
       bytes = await record.blob.arrayBuffer();
-    } catch {
+    } catch (error) {
       this.broken.add(id);
+      this.report("media_read_failed", id, { kind: kindOf(record.kind, record.mime), stage: "blob", err: errName(error) });
       return null;
     }
     const upgraded = { ...record, bytes, mime: record.mime || record.blob.type, size: bytes.byteLength };
     delete upgraded.blob;
     try {
       await this.write(upgraded);
-    } catch {
+      this.report("media_converted", id, { kind: kindOf(record.kind, record.mime) });
+    } catch (error) {
       // Could not rewrite (space?): still show it this time from the bytes read.
+      this.report("media_convert_failed", id, { err: errName(error) });
     }
     return upgraded;
   }

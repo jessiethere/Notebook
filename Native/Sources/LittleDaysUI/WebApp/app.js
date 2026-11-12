@@ -1,4 +1,5 @@
 import { MediaStore, migrateLegacyPhotos, mediaReferences } from "./js/media.mjs";
+import * as MediaCheck from "./js/media-check.mjs";
 import {
   configureI18n,
   t,
@@ -182,6 +183,12 @@ const themeIcon = (theme) =>
 let calendarBook = "";
 // V10.21: a picture / clip that fails to load gets one fresh URL from its
 // stored bytes; if the bytes are gone it is shown as missing (never faked).
+// V10.22: the local log tells the kinds of failure apart —
+//   media_url_failed     the page's temporary address stopped working, the
+//                        stored data was fine and a new address fixed it
+//   media_decode_failed  the stored data is there but will not open
+//   media_unreadable     the stored data cannot be read (or is gone)
+const mediaTag = (el) => (el instanceof HTMLImageElement ? "photo" : el instanceof HTMLVideoElement ? "video" : "audio");
 document.addEventListener(
   "error",
   async (event) => {
@@ -191,12 +198,15 @@ document.addEventListener(
     if (!src.startsWith("blob:")) return;
     const id = media.idOfUrl(src);
     if (!id) return;
+    const kind = mediaTag(el);
     if (await media.refresh(id)) {
       el.setAttribute("src", media.resolve(`media:${id}`));
-      logEvent("media_reloaded", {});
+      logEvent("media_url_failed", { kind, stage: el.closest("#journal-canvas") ? "studio" : "view" });
     } else {
       el.closest(".photo-layer, .media-layer")?.classList.add("media-broken");
-      logEvent("media_unreadable", {});
+      const record = await media.get(id).catch(() => null);
+      const hasData = record?.bytes?.byteLength > 0;
+      logEvent(hasData ? "media_decode_failed" : "media_unreadable", { kind, err: el.error ? "mediaerror" + el.error.code : "" });
     }
   },
   true,
@@ -218,6 +228,8 @@ let media = new MediaStore(),
   recordingStarted = 0,
   attachmentTarget = null,
   recordingTargetId = null;
+// V10.22: what went wrong with a file goes to the local log (see media-check.mjs).
+media.onEvent = (name, data) => logEvent(name, data);
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
@@ -5571,7 +5583,7 @@ function settingsPageHTML() {
   const privacyRow = (id) => toggle(`data-action="privacy-toggle" data-privacy="${id}"`, privacyOn(id), t("privacy." + id), t("s2." + id + "Short"));
   // V10.10: backup first and easy to find; one short line each; the full
   // notes (what a backup holds, size limits) stay in 隐私说明.
-  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack s2-backup"><span><b>${t("s2.backup")}</b><small>${t("s2.backupShort")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button class="primary-outline" data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div><p id="media-usage" class="s2-usage" role="status"></p></div>${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiShort"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
+  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack s2-backup"><span><b>${t("s2.backup")}</b><small>${t("s2.backupShort")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button class="primary-outline" data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div><p id="media-usage" class="s2-usage" role="status"></p></div>${more('data-action="media-check"', t("check.title"), t("check.short"))}${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiShort"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
   // -- About & more.
   const samples = state().entries.filter((e) => e.isDemo).length;
   const about = `<section class="s2-sec s2-about">${title("s2.about")}${more('data-action="whats-new"', t("news.title"), `V${esc(LATEST)}`, hasUnseen())}${more('data-action="tour-replay"', t("s2.tour"), t("s2.tourAgain"))}${more('data-action="settings-sheet" data-sheet="licenses"', t("settings.licenses"))}${samples ? more('data-action="settings-sheet" data-sheet="samples"', t("samples.title"), t("s2.sampleDays", { count: samples })) : ""}${more('data-action="settings-sheet" data-sheet="testlog"', t("testlog.title"))}${more('data-action="settings-sheet" data-sheet="labs"', t("labs.title"), t(labsOn() ? "s2.on" : "s2.off"))}${labsOn() && account ? more('data-action="sign-out"', t("s2.welcome"), t("s2.dataKept")) : ""}</section>`;
@@ -5907,6 +5919,12 @@ function accountAction(target) {
     case "guide-prev":
     case "guide-next":
       return guideAction(name);
+    case "media-check":
+      openMediaCheck();
+      return true;
+    case "media-check-copy":
+      copyMediaCheck();
+      return true;
     case "settings-sheet":
       profileDraft = null;
       openSettingsSheet(target.dataset.sheet);
@@ -6092,6 +6110,52 @@ function openExitSheet() {
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet kp exit-sheet" data-status="${status}"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("exit.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("exit.keepEditing")}">×</button></div><p class="exit-note">${t(status === "completed" ? "exit.noteCompleted" : "exit.note", { count: pages })}</p><button class="exit-choice primary" data-action="save-entry"><b>${t("exit.complete")}</b><small>${t("exit.completeHint")}</small></button><button class="exit-choice" data-action="studio-draft-exit"><b>${t("exit.draft")}</b><small>${t("exit.draftHint")}</small></button><button class="exit-stay" data-action="choose-close">${t("exit.keepEditing")}</button></div>`;
   if (!dialog.open) dialog.showModal();
+}
+// V10.22 · 检查照片和视频: a read-only check (nothing is written, converted,
+// deleted or sent). The report has no names or words, so it can be copied.
+let mediaCheckReport = "";
+async function openMediaCheck() {
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp media-check" role="document"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("check.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><p class="check-note">${t("check.hint")}</p><div class="check-body" aria-live="polite"><p class="check-running">${t("check.running")}</p></div></div>`;
+  if (!dialog.open) dialog.showModal();
+  const body = dialog.querySelector(".check-body");
+  let env, result;
+  try {
+    env = await MediaCheck.environment();
+    result = await MediaCheck.inspectMedia(media, state());
+  } catch (error) {
+    body.innerHTML = `<p class="check-bad">${t("check.failed")} · ${esc(String(error?.name || error))}</p>`;
+    return;
+  }
+  const events = readEvents().filter((e) => MediaCheck.MEDIA_EVENTS.test(e.e)).slice(-40);
+  mediaCheckReport = MediaCheck.reportText({ env, result, events, version: UPDATES[0].version });
+  if (!body.isConnected) return;
+  const row = (label, value, bad = false) => `<div class="check-row${bad ? " bad" : ""}"><span>${label}</span><b>${esc(String(value))}</b></div>`;
+  const yesNo = (v) => (v == null ? "?" : t(v ? "check.yes" : "check.no"));
+  const mb = (n) => (n == null ? "?" : `${(n / 1024 / 1024).toFixed(1)} MB`);
+  const envHTML = `<h3>${t("check.env")}</h3>${row(t("check.browser"), `${env.browser} · ${env.engine} · ${env.platform}`)}${row(t("check.address"), env.address)}${row(t("check.embedded"), env.embedded ? `${t("check.yes")}${env.parent ? " · " + env.parent : ""}` : t("check.no"))}${row(t("check.persisted"), yesNo(env.persisted), env.persisted === false)}${row(t("check.space"), `${mb(env.usage)} / ${mb(env.quota)}`)}${row("IndexedDB · localStorage", `${env.idb} · ${env.localStorage}`, env.idb !== "ok" || env.localStorage !== "ok")}`;
+  const counts = result.counts;
+  const problems = result.items.filter((i) => i.status !== "ok");
+  const mediaHTML = `<h3>${t("check.media")}</h3>${result.referenced || problems.length ? `${row(t("check.used"), result.referenced)}${row(t("check.stored"), result.stored)}${MediaCheck.STATUSES.map((s) => row(t("check.s." + s), counts[s], s !== "ok" && counts[s] > 0)).join("")}${result.legacy ? row(t("check.legacy"), result.legacy) : ""}${result.unused ? row(t("check.unused"), result.unused) : ""}` : `<p class="check-note">${t("check.none")}</p>`}${problems.length ? `<ul class="check-list">${problems.slice(0, 60).map((i) => `<li><b>${t("check.s." + i.status)}</b> · ${t(i.kind === "video" ? "media.kindVideo" : i.kind === "audio" || i.kind === "clip" ? "check.clip" : "check.photo")} · ${esc(i.date || "")}${i.page ? " · " + t("check.page", { n: i.page }) : ""}${i.draft ? " · " + t("check.draft") : ""}${i.err ? ` · <code>${esc(i.err)}</code>` : ""}</li>`).join("")}</ul>` : ""}`;
+  const eventsHTML = `<h3>${t("check.events")}</h3>${events.length ? `<ul class="check-list">${events.slice(-12).reverse().map((e) => `<li>${esc(new Date(e.t).toLocaleString(locale(), { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))} · ${t("check.e." + e.e) || esc(e.e)}${e.kind ? " · " + esc(e.kind) : ""}${e.stage ? " · " + esc(e.stage) : ""}${e.err ? ` · <code>${esc(e.err)}</code>` : ""}</li>`).join("")}</ul>` : `<p class="check-note">${t("check.noEvents")}</p>`}`;
+  body.innerHTML = `${mediaHTML}${envHTML}${eventsHTML}<button class="primary full-width" data-action="media-check-copy">${t("check.copy")}</button><textarea class="check-text" readonly aria-label="${t("check.copy")}" hidden></textarea>`;
+  logEvent("media_check", { count: problems.length });
+}
+async function copyMediaCheck() {
+  const area = $("#choose-dialog .check-text");
+  try {
+    await navigator.clipboard.writeText(mediaCheckReport);
+    toast(t("check.copied"));
+  } catch {
+    // Some web views refuse the clipboard: show the text to select instead.
+    if (area) {
+      area.hidden = false;
+      area.value = mediaCheckReport;
+      area.focus();
+      area.select();
+    }
+    toast(t("check.selectToCopy"));
+  }
 }
 // Which page of a draft was open when it was put away (this device only).
 const DRAFT_PAGE_KEY = "little-days.draft-page";

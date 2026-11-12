@@ -8134,5 +8134,185 @@
   "media.photoMissing": {
     "zh": "照片读取不到",
     "en": "Photo can't be read"
+  },
+  "check.title": {
+    "zh": "检查照片和视频",
+    "en": "Check photos & videos"
+  },
+  "check.short": {
+    "zh": "只读，不改动任何东西",
+    "en": "Read-only"
+  },
+  "check.hint": {
+    "zh": "只读取和检查，不会修改、转换、删除或上传任何东西。结果里没有名字和文字，可以复制发给开发者。",
+    "en": "Only reads and checks — nothing is changed, converted, deleted or uploaded. The result has no names or words, so it can be copied to the developer."
+  },
+  "check.running": {
+    "zh": "正在检查……",
+    "en": "Checking…"
+  },
+  "check.failed": {
+    "zh": "检查没能完成",
+    "en": "The check could not finish"
+  },
+  "check.env": {
+    "zh": "运行环境",
+    "en": "Where it runs"
+  },
+  "check.browser": {
+    "zh": "浏览器",
+    "en": "Browser"
+  },
+  "check.address": {
+    "zh": "运行地址",
+    "en": "Address"
+  },
+  "check.embedded": {
+    "zh": "嵌在其他页面里",
+    "en": "Embedded in another page"
+  },
+  "check.persisted": {
+    "zh": "长期保存（不被自动清理）",
+    "en": "Kept long-term (not auto-cleared)"
+  },
+  "check.space": {
+    "zh": "已用 / 可用空间",
+    "en": "Used / available"
+  },
+  "check.yes": {
+    "zh": "是",
+    "en": "Yes"
+  },
+  "check.no": {
+    "zh": "否",
+    "en": "No"
+  },
+  "check.media": {
+    "zh": "照片和视频",
+    "en": "Photos & videos"
+  },
+  "check.used": {
+    "zh": "页面用到的文件",
+    "en": "Files used by pages"
+  },
+  "check.stored": {
+    "zh": "这台设备上存着的文件",
+    "en": "Files stored on this device"
+  },
+  "check.s.ok": {
+    "zh": "正常",
+    "en": "OK"
+  },
+  "check.s.missing": {
+    "zh": "文件不在（没存进来，或已丢失）",
+    "en": "Missing (never saved, or lost)"
+  },
+  "check.s.unreadable": {
+    "zh": "文件在，但读不出来",
+    "en": "Stored but can't be read"
+  },
+  "check.s.empty": {
+    "zh": "文件在，但是空的",
+    "en": "Stored but empty"
+  },
+  "check.s.decode": {
+    "zh": "读得出，但打不开（解码失败）",
+    "en": "Read but won't open (decode failed)"
+  },
+  "check.s.badref": {
+    "zh": "页面里的引用格式不对",
+    "en": "Page points to an invalid reference"
+  },
+  "check.legacy": {
+    "zh": "旧的存储格式（还能读）",
+    "en": "Older storage format (still readable)"
+  },
+  "check.unused": {
+    "zh": "没有被页面用到的文件",
+    "en": "Stored files no page uses"
+  },
+  "check.none": {
+    "zh": "这台设备上的手帐还没有用到照片或视频。",
+    "en": "No page on this device uses a photo or video yet."
+  },
+  "check.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "check.clip": {
+    "zh": "声音 / 视频",
+    "en": "Sound / video"
+  },
+  "check.page": {
+    "zh": "第 {n} 页",
+    "en": "page {n}"
+  },
+  "check.draft": {
+    "zh": "草稿",
+    "en": "draft"
+  },
+  "check.events": {
+    "zh": "最近的媒体记录",
+    "en": "Recent media events"
+  },
+  "check.noEvents": {
+    "zh": "还没有记录到媒体问题。",
+    "en": "No media problems recorded yet."
+  },
+  "check.copy": {
+    "zh": "复制检查结果",
+    "en": "Copy the result"
+  },
+  "check.copied": {
+    "zh": "已复制，可以粘贴发给开发者",
+    "en": "Copied — paste it to the developer"
+  },
+  "check.selectToCopy": {
+    "zh": "这里不能直接复制：已显示文字，请长按全选后复制",
+    "en": "Can't copy here: the text is shown — select it and copy"
+  },
+  "check.e.media_save_failed": {
+    "zh": "保存失败",
+    "en": "Save failed"
+  },
+  "check.e.media_missing": {
+    "zh": "文件不在",
+    "en": "File missing"
+  },
+  "check.e.media_read_failed": {
+    "zh": "读不出来",
+    "en": "Could not read"
+  },
+  "check.e.media_converted": {
+    "zh": "旧格式已转换",
+    "en": "Older format converted"
+  },
+  "check.e.media_convert_failed": {
+    "zh": "旧格式转换失败（仍可显示）",
+    "en": "Conversion failed (still shown)"
+  },
+  "check.e.media_url_failed": {
+    "zh": "临时地址失效，已重新读取",
+    "en": "Temporary address failed, read again"
+  },
+  "check.e.media_decode_failed": {
+    "zh": "打不开（解码失败）",
+    "en": "Won't open (decode failed)"
+  },
+  "check.e.media_unreadable": {
+    "zh": "读取失败",
+    "en": "Unreadable"
+  },
+  "check.e.media_not_saved": {
+    "zh": "保存时有文件没存上",
+    "en": "Some files were not saved"
+  },
+  "check.e.media_reloaded": {
+    "zh": "已重新读取",
+    "en": "Read again"
+  },
+  "check.e.media_check": {
+    "zh": "运行了检查",
+    "en": "Check run"
   }
 }
