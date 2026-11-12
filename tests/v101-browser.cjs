@@ -157,27 +157,33 @@ const shots = process.env.SHOTS || "";
     assert.deepEqual(await dock(), ["add-photos", "add-text-layer", "stickers", "more"]);
     assert.equal(await page.locator("#journal-canvas [data-layer].active").count(), 0);
 
-    // 5. Photo selected: replace · crop · adjust · layer · delete.
+    // 5. Photo selected: shape · crop · adjust · replace · layer · delete.
     await page.locator('.tool-dock [data-action="add-photos"]').tap();
     await page.locator('#choose-dialog [data-action="use-scene"]').first().tap();
     await page.waitForSelector("#journal-canvas .photo-layer img");
     await page.waitForSelector('.tool-dock.ctx[data-ctx="photo"]');
     if (await page.locator(".tool-sheet").count()) await studioClose(page);
-    assert.deepEqual(await dock(), ["layer-deselect", "replace-photo", "ctx-crop", "photo-edit", "layer", "layer-delete"]);
+    // V10.20: 形状 joins the row and 裁剪画面 opens the full-screen crop editor.
+    assert.deepEqual(await dock(), ["layer-deselect", "shape", "crop-open", "photo-edit", "replace-photo", "layer", "layer-delete"]);
     await shot("v101-photo");
     await settle();
     s = await story();
     const photo = s.layers.find((l) => l.kind === "photo");
-    // Crop: its sliders open in the sheet; the photo is cropped, not moved.
-    await page.locator('.tool-dock [data-action="ctx-crop"]').tap();
-    await page.waitForSelector(".tool-sheet .crop-sliders");
-    await page.locator('[data-crop-field="zoom"]').evaluate((el) => { el.value = "1.6"; el.dispatchEvent(new Event("input", { bubbles: true })); });
-    await settle();
+    // Crop: the photo is cropped, not moved.
+    // V10.20: the zoom slider is in the full-screen crop editor; 完成 saves it
+    // (crop.rect plus the older x / y / zoom).
+    await page.locator('.tool-dock [data-action="crop-open"]').tap();
+    await page.waitForSelector("#crop-editor[open] .ce-box");
+    await page.waitForFunction(() => document.querySelector("#crop-editor .ce-box").getBoundingClientRect().width > 50);
+    await page.locator("#crop-editor [data-ce-zoom]").evaluate((el) => { el.value = "1.6"; el.dispatchEvent(new Event("input", { bubbles: true })); });
     await shot("v101-photo-crop");
-    await page.locator('.tool-dock [data-action="ctx-crop"]').tap();
-    await page.waitForSelector(".tool-sheet", { state: "detached" });
+    await page.locator('#crop-editor [data-ce="done"]').tap();
+    await page.waitForSelector("#crop-editor:not([open])", { state: "attached" });
+    await settle();
     s = await story();
-    assert.equal(s.layers.find((l) => l.id === photo.id).crop.zoom, 1.6);
+    const cropped = s.layers.find((l) => l.id === photo.id);
+    assert.ok(Math.abs(cropped.crop.zoom - 1.6) < 0.01 && cropped.crop.rect, `zoomed crop saved (${JSON.stringify(cropped.crop)})`);
+    assert.deepEqual([cropped.x, cropped.y, cropped.w, cropped.h, cropped.scale, cropped.rotation], [photo.x, photo.y, photo.w, photo.h, photo.scale, photo.rotation], "cropped, not moved");
     // Adjust opens the photo editor; cancel leaves the photo alone.
     await page.locator('.tool-dock [data-action="photo-edit"]').tap();
     await page.waitForSelector("#photo-editor[open] .pe-frame");
@@ -218,7 +224,7 @@ const shots = process.env.SHOTS || "";
     await page.locator('.stage-bar [data-action="undo"]').tap();
     await settle();
     assert.equal((await story()).layers.some((l) => l.id === photo.id), true, "undo restores the photo");
-    passed.push("photo: × · replace · crop · adjust · layer · delete; crop sliders, photo editor, stacking order, drag and pinch all work; delete can be undone; × returns to the four tools");
+    passed.push("photo: × · shape · crop · adjust · replace · layer · delete; crop editor zoom, photo editor, stacking order, drag and pinch all work; delete can be undone; × returns to the four tools");
 
     // 6. Sticker selected: only what applies to a sticker.
     if (await page.locator(".tool-dock.ctx").count()) await page.locator('.tool-dock.ctx [data-action="layer-deselect"]').tap();
@@ -260,7 +266,7 @@ const shots = process.env.SHOTS || "";
     assert.equal(savedText.text, "下午的咖啡好治愈");
     assert.equal(savedText.fontId, "zh-wenkai");
     assert.equal(savedText.align, "center");
-    assert.equal(saved.layers.find((l) => l.id === photo.id).crop.zoom, 1.6);
+    assert.deepEqual(saved.layers.find((l) => l.id === photo.id).crop, cropped.crop); // V10.20: the crop editor's crop, as saved
     assert.equal(saved.layers.filter((l) => l.kind === "text").length, 2);
     assert.equal(await page.locator(".flip-page .layer-handle, .flip-page .tool-dock").count(), 0, "read-only page");
     passed.push("完成 keeps the text look, the crop and the stickers");

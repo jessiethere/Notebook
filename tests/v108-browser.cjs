@@ -38,6 +38,10 @@ const shots = process.env.SHOTS || "";
     assert.match(await link.innerText(), /装扮/);
     await link.tap();
     await page.waitForSelector('.kp[data-view="looks"] .keeper-looks');
+    // Let the chips' pictures finish loading (or fail) before checking them:
+    // reading them straight away raced the second picture's load (flaky, not
+    // a V10.20 change). The check below still needs naturalWidth > 0.
+    await page.waitForFunction(() => [...document.querySelectorAll(".kp .look-chip img")].every((img) => img.complete));
     const picker = await page.evaluate(() => ({ groups: [...document.querySelectorAll(".kp .look-group h4")].map((h) => h.textContent), looks: [...document.querySelectorAll(".kp .look-chip")].map((b) => [b.dataset.look, b.querySelector("b").textContent, b.getAttribute("aria-pressed"), b.querySelector("img")?.complete && b.querySelector("img").naturalWidth > 0, Math.round(b.getBoundingClientRect().height)]), text: document.querySelector(".kp").innerText }));
     assert.deepEqual(picker.groups, ["帽子", "小配件"]);
     assert.deepEqual(picker.looks.map((l) => l.slice(0, 4)), [["lemon", "柠檬帽", "true", true], ["yarn", "毛线球", "false", true]]);
