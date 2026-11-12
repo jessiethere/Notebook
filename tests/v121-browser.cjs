@@ -243,7 +243,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
     assert.match(await page.locator("#toast").innerText(), /没能存进这台设备/);
     st = await store();
     assert.equal(st.missing, 1, "reported, not replaced");
-    passed.push("a file that is really gone: the page says 照片读取不到 (no fake picture), and saving shows 未保存 with a clear message instead of 已保存");
+    passed.push("a file that is really gone: the page says 照片读取不到 (no fake picture), and saving shows 保存失败 with a clear message instead of 已保存");
 
     // ------------------------------------------------ backup: export with the media, restore on an empty device
     const backupJSON = await page.evaluate(async () => {

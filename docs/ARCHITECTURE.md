@@ -430,3 +430,16 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - `addPhotoLayers` 不再打开排版，改为设置 `layoutHint`；
   - `render` 里同一个工具保留滚动位置，换工具从顶部开始；
   - 「调整」打开图片编辑器时传 `tabs` 参数，去掉裁剪页。
+
+## 2026-11-12 V10.21 媒体持久化（P0）
+
+- **存储格式**：`little-days-media` / `media` 的新记录为 `{ id, bytes: ArrayBuffer, mime, size, kind, name, duration?, createdAt }`，不再存 `Blob` / `File`（iOS WebKit 中 IndexedDB 里的 Blob 可能失效，推断，未在 WebKit 验证）。`blobOf(record)` 统一把字节或旧 `blob` 变成 Blob。
+- **写入**：`put()` 先 `arrayBuffer()`，`add` 写入，再 `get` 读回核对 `byteLength`；不一致抛 `code: "media-verify"`。
+- **旧记录**：`readable(id)` 遇到旧 `blob` 字段时读出字节并原地改写（同 id、保留字段、删除 `blob`），改写失败不影响本次显示；读不出时记入 `broken`，不删除。
+- **可信的「已保存」**：`flushDraft()` → `confirmMediaSaved()`：用 `mediaReferences()` 取当前草稿的所有 `media:` 引用，`media.missing(ids)`（`getKey` + `broken`）为空才设为 `saved`，否则 `failed` + `media.notSaved` 提示。
+- **加载失败恢复**：全局捕获 `img / video / audio` 的 `error`，`media.idOfUrl(src)` 找回 id，`media.refresh(id)` 重新读取并换新的 object URL（每个 id 一次），否则 `.media-broken`。
+- **缺失显示**：画布 `.photo-missing`（📷 + `media.photoMissing`），不生成替代内容。
+- **备份**：大小按记录（`bytes.byteLength ?? blob.size ?? size`）累计，超过 `MAX_BACKUP_MEDIA_BYTES`（100MB）抛 `error.backupSize`；导出 `data:` URL；恢复经 `put()`，同样以字节存储。
+- **持久化请求**：启动时 `navigator.storage.persist()`（尽力而为）。
+- **测试**：`tests/media.test.mjs`（单元）、`tests/v121-browser.cjs`（Chromium 持久化资料：离开 / 刷新 / 关闭重开 / 阅读器 / 旧记录 / 缺失 / 备份恢复 / 杂志模式）。
+

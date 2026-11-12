@@ -4,6 +4,58 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.21",
+    date: "2026-11-12",
+    zh: {
+      title: "照片和视频存得更牢，出问题会如实告诉你",
+      items: [
+        "新加的照片和视频现在按原始文件内容存进这台设备，存完会马上读回来核对一遍，确认无误才算存好。",
+        "以前存下的照片和视频照常打开，第一次打开时会悄悄换成更稳的存法：同一个文件、同一个编号，不删除任何东西。",
+        "右上角的「已保存」只有在这一页用到的照片和视频都确实存在时才会出现；有文件没存进去时会显示「保存失败」，告诉你是几个照片或视频，请你重新添加；文字照常保存。",
+        "如果某张照片真的读取不到，页面上会写着「照片读取不到」，不会换成别的图片；页面里的文字和其他内容都不受影响。",
+        "照片或视频偶尔加载失败时会自动重新读取一次。",
+        "备份会把照片和视频本身一起导出；恢复到另一台设备后都能打开。",
+      ],
+    },
+    en: {
+      title: "Photos and videos are kept more safely — and you're told if one is missing",
+      items: [
+        "New photos and videos are stored on this device as their original file contents, read back and checked right after saving.",
+        "Photos and videos saved before open as usual, and move to the safer storage the first time they open — same file, same id, nothing deleted.",
+        "“Saved” at the top only appears when every photo and video on the page is really there; if one isn't, it says “Not saved”, how many photos or videos to add again, and that your words are kept.",
+        "A photo that really can't be read says “Photo can't be read” on the page instead of showing another picture; the words and everything else stay.",
+        "A photo or video that fails to load is read again once, automatically.",
+        "Backups include the photos and videos themselves, and open after restoring on another device.",
+      ],
+    },
+  },
+  {
+    version: "10.20",
+    date: "2026-11-12",
+    zh: {
+      title: "照片的形状、裁剪和排版分开了",
+      items: [
+        "加照片后不会再自动弹出排版：一张照片会直接选中；多张时下面会出现一条「试试排版」的小提示，不想用点 × 就好。",
+        "选中照片后，下面依次是：形状、裁剪画面、调整、替换、图层、删除。",
+        "「形状」只改照片框的样子（圆形、拱形、心形、相框、胶带……），不会改动照片里显示的部分。",
+        "「裁剪画面」是全屏的：拖四个角和四条边选范围，单指拖动画面、双指缩放，可选原比例、1:1、3:4、16:9 等，也能旋转 90°。",
+        "裁剪不会改动原图，随时可以重新裁或恢复；可以撤销 / 重做，阅读模式和导出也会按裁好的样子显示。",
+        "多张照片时，「试试排版」的提示不会再挡住下面的页面条。",
+      ],
+    },
+    en: {
+      title: "Shape, crop and layout are now separate",
+      items: [
+        "Adding photos no longer opens Layout: one photo is selected right away; with several, a small “Try a layout” hint appears — tap × to ignore it.",
+        "A selected photo's tools are: Shape, Crop, Adjust, Replace, Layer, Delete.",
+        "Shape only changes the frame (circle, arch, heart, frames, tape…), never which part of the photo shows.",
+        "Crop is full screen: drag the corners and edges, move the picture with one finger, pinch to zoom, pick Original, 1:1, 3:4, 16:9… and rotate 90°.",
+        "Cropping never changes the original photo — re-crop or reset any time; undo / redo work, and the reader and exports show the crop.",
+        "With several photos, the layout hint no longer covers the page strip.",
+      ],
+    },
+  },
+  {
     version: "10.19",
     date: "2026-11-12",
     zh: {
