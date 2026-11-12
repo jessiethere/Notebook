@@ -443,3 +443,26 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - **持久化请求**：启动时 `navigator.storage.persist()`（尽力而为）。
 - **测试**：`tests/media.test.mjs`（单元）、`tests/v121-browser.cjs`（Chromium 持久化资料：离开 / 刷新 / 关闭重开 / 阅读器 / 旧记录 / 缺失 / 备份恢复 / 杂志模式）。
 
+## 2026-11-12 V10.22 只读的媒体检查（P0 排查）
+
+- `js/media-check.mjs`：
+  - `mediaUses(state)` → 每个 `media:` 引用的位置（日期、页码、是否草稿）和格式不对的引用；
+  - `inspectMedia(media, state)` 把每个文件分为 `ok / missing / unreadable / empty / decode / badref`：
+    - 旧的 Blob 记录只读不改写；
+    - 图片用 `createImageBitmap` 解码，视频和音频读元数据，各有 8 秒超时；
+  - `environment()` 返回 engine / browser / platform / shell / address / embedded / parent（`location.ancestorOrigins` 或 `referrer`）/ persisted / usage / quota / idb / localStorage / ua；
+  - `reportText()` 生成不含标题和正文的报告。
+- 事件（本机 `little-days.events`，不上传）：
+  - `media_save_failed{kind,stage,err}`
+  - `media_missing`
+  - `media_read_failed{kind,stage,err}`
+  - `media_converted` / `media_convert_failed`
+  - `media_url_failed{kind,stage}`（地址失效，重新读取后恢复）
+  - `media_decode_failed{kind,err}`
+  - `media_unreadable{kind}`
+  - `media_not_saved{count}`
+  - `media_check{count}`
+  - `cleanData` 允许 `count`、`stage`、`err` 三个字段。
+- 入口：设置 → 数据与隐私 →「检查照片和视频」（`data-action="media-check"`，复制按钮是 `media-check-copy`）。
+- 测试：`tests/v122.test.mjs`、`tests/v122-browser.cjs`（`BROWSER=webkit` 时用 WebKit；它自己启动预览服务，端口用 `PORT` 指定，默认 8093）。
+

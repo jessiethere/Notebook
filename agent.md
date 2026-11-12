@@ -67,6 +67,60 @@
 - 未验证：`dev.sh web-ai` 在 8080 空闲时的完整流程（这次 8080 被占，用 8081 手动做的同样测试）；Safari / Chrome 等用户自己的浏览器；英文界面下的聊天。
 - 下一步：需要时试 9B（`LD_MODEL=qwen3.5:9b`）；模拟器里接本地 AI 需要只在 DEBUG 生效的外壳开关（第 6 节）。
 
+### 2026-11-12 — V10.22（P0）只读的「检查照片和视频」+ 多引擎回归；Mac 合并状态核对；心情决定记录
+
+- 需求：
+  - 用户确认了心情的处理方式；
+  - 说明媒体 Error 出现在 iPhone 上的 Web Preview（可能是 Claude App 里打开的预览），并要求根据实际地址、日志和环境确认浏览器类型，不要猜；
+  - 按一张照片 / 多张 / 视频 / 草稿后重进 / 完成后重进 / 刷新 / 关闭重开 / 开发服务器重启分别测试，分清五类失败（保存失败、文件丢失、URL 失效、引用错误、解码失败），记录真实错误日志；
+  - 原则上同意 Mac 合并，但先做 7 项检查；
+  - 优先级：P0 → P1 基础编辑 → P2 IA → P3 Playroom。
+- Mac 合并核对（已完成，没有需要我合并的东西）：
+  - Mac 和远端都在 49479dd。reflog 显示用户 Mac 上在 14:32 把 e529a0e rebase 到了 9b70507 上，并推送了。
+  - 逐行比较 e529a0e 和 49479dd 的增删：49479dd 包含 e529a0e 的全部内容，另外多了一行 rebase 说明。没有丢失。
+  - Mac 上未提交的东西：`project.pbxproj`（Xcode 把工程文件格式从 objectVersion 56 升级到了 60）、`Package.resolved`、4 个 Qwen 评测结果文件。都不是本会话的工作，没有动。
+  - ListAgents 没有看到其他会话。
+  - 容器快进合并到 49479dd。
+- V10.22 的改动：
+  - `js/media-check.mjs`（新增，只读）：
+    - `mediaUses` 记录每个引用的位置（日期、第几页、是否草稿），并找出格式不对的引用；
+    - `inspectMedia` 把每个文件分成 ok / missing / unreadable / empty / decode / badref，旧的 Blob 记录只读不转换，图片用 `createImageBitmap` 实际解码，视频和音频读元数据；
+    - `environment()` 实测内核、浏览器、平台、运行地址、是否被嵌入（`ancestorOrigins` / `referrer`）、持久存储、空间、IndexedDB 和 localStorage 是否可用；
+    - `reportText` 生成可复制的文字报告，不含标题和正文。
+  - `js/media.mjs`：
+    - `put` 分阶段（open / read / write / verify），失败时记录 `media_save_failed`；
+    - `readable` 记录 `media_missing`、`media_read_failed`（带错误名）、`media_converted`、`media_convert_failed`，每个 id 只记一次；
+    - 新增 `errName`、`kindOf`；`onEvent` 钩子。
+  - `js/events.mjs`：允许记录 `count`、`stage`、`err` 三个字段（错误名只保留小写字母、数字和连字符，最多 16 个字符）。
+  - `app.js`：
+    - 加载出错时分三种记录：`media_url_failed`（数据在，换新地址后恢复）、`media_decode_failed`（数据在但打不开）、`media_unreadable`；
+    - 设置 → 数据与隐私新增一行「检查照片和视频」，打开一个只读面板，有复制按钮（剪贴板被拒绝时显示文字让用户自己选）。
+  - i18n 新增 `check.*` 共 45 个键；`styles.css` 新增 V10.22 区块；更新记录 10.22。
+  - 测试：`tests/v122.test.mjs`（5 项）、`tests/v122-browser.cjs`（自己启动预览服务，跑在 Chromium 或 WebKit 上）。
+- 事故：第一版把 `media.onEvent = …` 写在了 `let media` 声明之前，App 启动时报「Cannot access 'media' before initialization」，一直停在「正在打开你的文具店…」。单元测试没发现，v122 浏览器测试发现了，已把这行移到声明之后。
+- 测试结果（每一步都运行 App 自己的检查，要求每个文件都是 ok、每张图真的加载出来、视频没有错误、没有记录到任何媒体失败）：
+  - **Chromium（Linux 容器）**：v122 共 23 个检查点全部通过。依次是：从选择器加 1 张、第二页加 3 张、第三页加视频；然后草稿后重进、完成进阅读器、完成后重进、刷新、关闭页面重开、关闭浏览器重开、重启开发服务器，每一步都检查 1 张照片页、3 张照片页和视频页；最后从设置打开检查面板。
+  - **WebKit（Mac 上的 Playwright WebKit，代码是 7bac0b9 导出到 `/tmp/ld-p0/v122`）**：同样 23 个检查点全部通过。
+  - `npm test` 211/211；`python3 -m unittest` 18/18；受影响的旧浏览器测试 v110、v103、v3、v36 通过；全量浏览器测试见下一条记录。
+  - **iOS 模拟器**（Mac，Xcode 27.2，iOS 27.2，新建的设备「LD P0 Verify」）：
+    - 7bac0b9 构建成功（Debug），Swift Core `swift test` 6/6；
+    - 安装后用 Debug 的 `LittleDaysTap` 打开「设置 → 检查照片和视频」，截图显示：浏览器 in-app web view · WebKit · iOS，运行地址 `littledays://app`，**长期保存：否**，IndexedDB 和 localStorage 正常；
+    - 这台设备上没有加过照片，所以没有文件可查。
+  - **iOS 模拟器里的 Safari**：试过用 safaridriver 自动化（`safari:useSimulator`），会话建立失败（找不到可用的会话主机）。可能需要用户在模拟器的 Safari 里打开「远程自动化」，并在 Mac 上执行 `safaridriver --enable`（需要管理员密码），所以没有继续。在模拟器里写入了 `RemoteAutomationEnabled` 等设置，只影响「LD P0 Verify」这一台。
+- 结论（如实写）：
+  - Chromium 和 macOS WebKit 上，8 种情况都**没有复现**；
+  - 根因仍未确认；
+  - 用户的环境（iPhone 上的 Web Preview，可能在 Claude App 里）还没有测过；
+  - 下一步要用户在出问题的 iPhone 上打开 V10.22 的「检查照片和视频」并复制结果，这是第一次能拿到用户设备上的真实日志。
+- 风险：
+  - iOS WKWebView 里持久存储没有被批准（模拟器显示「否」），系统可能清理存储；
+  - 从 iOS 相册选的文件（由系统临时文件支撑）这条路径还没有测，自动测试用的是 Playwright 的文件选择器。
+- 心情决定（已确认，本轮没有改代码，按优先级放在 P1 / P2 里做）：
+  - 以后只在每一页上记录心情，默认不选；
+  - 旧的整天心情不迁移，不把以前自动填的 ☀️ 当成「开心」；
+  - 新建的一天不再自动填 ☀️；
+  - 页面心情可以修改、清除；旧数据照常读取。
+
 ### 2026-11-12 — IA 方案第二版（六项决定）+ P0 在 Mac WebKit 和 iOS 模拟器上的验证（App 代码未改）
 
 - 需求：用户确认了六项决定（← 返回 + 选中提示、保留视频形状、375 的「更多」用两档高度、不加页面主题和新数据、手绘放第一位、心情改名为 开心 / 温暖 / 平静 / 低落 / 雀跃），要求第二版的真实设计预览。同时要求先确认 P0 媒体问题的状态，没修好就先修 P0。

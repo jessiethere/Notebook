@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.22",
+    date: "2026-11-12",
+    zh: {
+      title: "新增「检查照片和视频」，帮我们找到照片打不开的原因",
+      items: [
+        "设置 → 数据与隐私里新增「检查照片和视频」：逐个检查这台设备上手帐用到的照片、视频和声音，分清是「文件不在」「文件在但读不出来」「读得出但打不开」还是「页面引用不对」。",
+        "同时显示运行环境：浏览器内核、运行地址、是不是嵌在其他页面里、存储会不会被系统自动清理、还剩多少空间。",
+        "检查只读取，不会修改、转换、删除或上传任何东西；结果里没有名字和文字，可以一键复制发给开发者。",
+        "照片或视频出问题时，本机记录会写下是哪一步出的问题（保存、读取、临时地址失效、解码）和错误类型，方便查原因。",
+      ],
+    },
+    en: {
+      title: "New “Check photos & videos” to find out why a photo won't open",
+      items: [
+        "Settings → Data & privacy has a new “Check photos & videos”: every photo, video and sound your pages use is checked and sorted into missing, stored but unreadable, read but won't open, or an invalid reference.",
+        "It also shows where the app runs: browser engine, address, whether it is embedded in another page, whether storage may be cleared by the system, and space left.",
+        "The check only reads — nothing is changed, converted, deleted or uploaded — and the result has no names or words, so it can be copied to the developer.",
+        "When a photo or video fails, the local log now notes which step failed (save, read, temporary address, decode) and the error type.",
+      ],
+    },
+  },
+  {
     version: "10.21",
     date: "2026-11-12",
     zh: {
