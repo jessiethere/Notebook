@@ -179,6 +179,15 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-12 — 工具整理方案第二版 + 媒体保存问题的验证结果（App 未改）
+
+- 方案页（同一个链接，第 2 版）：https://claude.ai/artifact/5yrXLwKVD9cFvkjf6TPxKr 。已按你的六项决定更新，有 375 / 430 中英文预览、返回和删除的规则，以及键盘位置的对比。
+- 媒体保存问题：
+  - 在 Mac 的 WebKit（Safari 引擎）里，新旧两版代码都复现不出 Error，所以根因还没确认；
+  - 防护性修复（V10.21）已经上线；
+  - iOS 模拟器里新版本能启动，但「从相册加照片」这一步还没测。
+- 需要你回答三件事：在哪里看到 Error、整天心情的旧数据怎么处理、Mac 上要不要合并。
+
 ### 2026-11-12 — Journal Studio 工具整理方案（等确认，App 未改）
 
 - 预览页：https://claude.ai/artifact/5yrXLwKVD9cFvkjf6TPxKr ；文字版：`docs/STUDIO_IA_PLAN.md`。
