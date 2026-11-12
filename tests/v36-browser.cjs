@@ -179,7 +179,8 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
         });
       const stats = async (ref) => {
         const record = await get(ref);
-        const bitmap = await createImageBitmap(record.blob);
+        // V10.21: files are stored as bytes (older records as a Blob).
+        const bitmap = await createImageBitmap(record.bytes ? new Blob([record.bytes], { type: record.mime }) : record.blob);
         const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
         const ctx = canvas.getContext("2d");
         ctx.drawImage(bitmap, 0, 0);
