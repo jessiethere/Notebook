@@ -4,6 +4,24 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.26",
+    date: "2026-11-13",
+    zh: {
+      title: "「检查照片和视频」说得更准确",
+      items: [
+        "在 iPhone 上，视频要先点一下才会被读取，所以检查时打不开视频不再算作「解码失败」，而是单独写成「视频没有打开检查」，不代表文件坏了。",
+        "导入视频或音频失败时，本机记录里会写明是「等了 10 秒还没读到」还是播放器给出的具体错误编号，方便找原因。记录里没有文件名和内容。",
+      ],
+    },
+    en: {
+      title: "Check photos & videos is more precise",
+      items: [
+        "On iPhone a video is only read after a tap, so a video the check could not open is no longer counted as “decode failed”; it is listed as “video not opened”, which does not mean the file is broken.",
+        "When importing a video or sound fails, the local log now says whether nothing loaded within 10 seconds or which player error code came back. The log has no file names or content.",
+      ],
+    },
+  },
+  {
     version: "10.25",
     date: "2026-11-13",
     zh: {

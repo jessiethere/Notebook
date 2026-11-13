@@ -40,7 +40,7 @@ test("each kind of failure is told apart; ok files stay ok", async () => {
     },
   };
   const result = await inspectMedia(media, state, { decode: false });
-  assert.deepEqual(STATUSES.map((s) => result.counts[s]), [1, 1, 1, 1, 0, 1], JSON.stringify(result.counts));
+  assert.deepEqual(STATUSES.map((s) => result.counts[s]), [1, 1, 1, 1, 0, 1, 0], JSON.stringify(result.counts));
   assert.equal(result.referenced, 4);
   assert.equal(result.stored, 4);
   assert.equal(result.unused, 1);
