@@ -362,6 +362,12 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var typeStyle: PageTypeStyle?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
+    /// V10.44 (D3): the day cover is hidden from reading and counting (a
+    /// display choice; the cover's layers stay). nil / false = shown.
+    public var dayCoverHidden: Bool?
+    /// V10.44 (S4-B): the photo the person chose for the day cover, per
+    /// Moment id (from the day, the book or Photos); the Moment keeps its own.
+    public var coverPhotos: [String: DayCoverPhoto]?
 
     public init(id: String = UUID().uuidString, date: String, title: String = "", body: String = "", mood: String = "☀️", bookId: String = "daily", photo: String = "", template: String = "cute", font: String = "serif", isDemo: Bool = false) {
         self.id = id
@@ -380,6 +386,13 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
         self.fieldValues = [:]
         self.visibility = "private"
     }
+}
+
+/// V10.44: a photo chosen for a day cover (`JournalEntry.coverPhotos`).
+public struct DayCoverPhoto: Codable, Equatable {
+    public var reference: String
+    public var name: String?
+    public var aspect: Double?
 }
 
 public extension JournalEntry {

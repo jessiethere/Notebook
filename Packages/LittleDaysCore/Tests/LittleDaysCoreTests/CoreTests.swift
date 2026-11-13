@@ -216,4 +216,19 @@ final class CoreTests: XCTestCase {
         let encoded = try JSONEncoder().encode(state)
         XCTAssertEqual(try JSONDecoder().decode(DayState.self, from: encoded).entries.first?.title, "今天读了书")
     }
+
+    // V10.44: a day cover hidden from reading, and the cover's own photo per Moment, survive a round trip.
+    func testDayCoverHiddenAndCoverPhotosRoundTrip() throws {
+        let json = #"{"id":"d","date":"2026-11-13","title":"","body":"","mood":"","bookId":"daily","photo":"","template":"minimal","font":"system","layers":[],"isDemo":false,"updatedAt":"2026-11-13T00:00:00.000Z","media":[],"fieldValues":{},"visibility":"private","layoutTemplate":"scrapbook","dayCoverHidden":true,"coverPhotos":{"m1":{"reference":"media:abc","name":"latte","aspect":1.5}}}"#
+        let entry = try JSONDecoder().decode(JournalEntry.self, from: Data(json.utf8))
+        XCTAssertEqual(entry.dayCoverHidden, true)
+        XCTAssertEqual(entry.coverPhotos?["m1"]?.reference, "media:abc")
+        XCTAssertEqual(entry.coverPhotos?["m1"]?.aspect, 1.5)
+        let again = try JSONDecoder().decode(JournalEntry.self, from: JSONEncoder().encode(entry))
+        XCTAssertEqual(again, entry)
+        // Older entries without them decode as before.
+        let older = try JSONDecoder().decode(JournalEntry.self, from: Data(#"{"id":"o","date":"2026-11-01","title":"","body":"","mood":"","bookId":"daily","photo":"","template":"minimal","font":"system","layers":[],"isDemo":false,"updatedAt":"2026-11-01T00:00:00.000Z"}"#.utf8))
+        XCTAssertNil(older.dayCoverHidden)
+        XCTAssertNil(older.coverPhotos)
+    }
 }

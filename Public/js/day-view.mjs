@@ -1,4 +1,4 @@
-import { dayCounts } from "./pages.mjs";
+import { dayCounts, isDayCover } from "./pages.mjs";
 // Calendar "Day Detail": a read-only, magazine-like view of a finished day.
 import { richHTML } from "./rich-text.mjs";
 import { pageLine, pageCoverRef } from "./page-label.mjs";
@@ -107,8 +107,11 @@ export function dayDetailHTML(date, ctx, helpers) {
     summary.audios ? t("day.statAudios", { count: summary.audios }) : "",
     summary.growth ? t("day.statGrowth", { count: summary.growth }) : "",
   ].filter(Boolean);
-  const dayPage =
-    entry && hasDayPageContent(entry)
+  // D3 (V10.44): a hidden day cover is not shown; a quiet row brings it back.
+  const coverHidden = entry && isDayCover(entry) && entry.dayCoverHidden === true;
+  const dayPage = coverHidden
+    ? `<p class="day-cover-hidden"><span>${t("cover.hiddenNote")}</span><button class="text-button" data-action="day-cover-toggle" data-date="${esc(date)}" data-hide="">${t("cover.show")}</button></p>`
+    : entry && hasDayPageContent(entry)
       ? `<section class="day-page"><div class="chapter-head"><span class="chapter-no">${t("day.cover")}</span><span class="chapter-time">${t("cover.what")}</span>${entry.isDemo ? "" : `<button class="chapter-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="" aria-label="${t("read.edit")}">✎ ${t("day.edit")}</button>`}<button class="chapter-more" data-action="page-menu" data-date="${esc(date)}" data-moment="" aria-label="${t("read.more")}">⋯</button>${entry.mood ? `<span class="chapter-mood">${esc(entry.mood)}</span>` : ""}</div><div class="chapter-canvas">${canvasHTML(entry, ctx, { readOnly: true, dayPage: true })}</div>${(entry.body || "").length > 60 || (entry.body || "").includes("\n") ? pageBodyHTML(entry, ctx) : ""}${fieldsHTML(entry, ctx)}${mediaListHTML(entry, ctx)}<footer class="chapter-foot">${bookBadge(entry.bookId, ctx)}${entry.isDemo ? `<span class="badge">${t("entry.sample")}</span>` : ""}</footer></section>`
       : "";
   // The day's music plays while it is read; a page with another piece has its own chip.

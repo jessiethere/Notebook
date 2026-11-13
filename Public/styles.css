@@ -21775,3 +21775,6 @@ body.typing .ctx-caption {
 .ps-hint, .ps-empty { font-size: 13px; opacity: 0.75; margin: 0; }
 .ps-album { min-height: 46px; }
 .ps-album { font-size: 15px; }
+/* S4 (V10.44): the optional day cover. */
+.story-tabs .story-cover-add { border-style: dashed; opacity: 0.85; }
+.day-cover-hidden { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; margin: 8px 0; border: 1px dashed var(--c-dfdfd0, #dfdfd0); border-radius: 12px; font-size: 14px; }

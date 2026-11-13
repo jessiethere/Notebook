@@ -48,6 +48,19 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.44 S4-A / S4-B：每日封面默认不生成；可选添加；旧封面可隐藏和恢复
+
+- **数据结构核对**：每日封面不是独立的 Page 记录，而是当天 entry 自己的图层（`gen:true`）加 `layoutTemplate:"scrapbook"`，由 `makeStory` 在 ≥2 段时间时自动用 `layoutDay` 生成；阅读器 / PDF 通过 `bookSharePages` 把它算作一页。最小兼容方案：不改它的结构，只加两个可选字段。
+- **S4-A（单独提交 772b323）**：`makeStory` 只在 `story.wantCover` 时生成封面。
+- **S4-B**：
+  - 快速编辑页签最后的虚线「＋ 封面（可选）」→ `storyAddCover()`：用当天照片排版（不新增媒体），提示里有「不要封面」；封面页的版式面板里有「移除这一天的封面」（只删生成的图层和封面字段）。重新分组时保留这个选择。
+  - 封面上的照片：在封面页「换照片」走 S3 面板，结果写进新字段 `entry.coverPhotos[momentId] = {reference,name,aspect}`，只改封面，Moment 页的照片不变；也可以从相册添加。
+  - 旧封面：阅读器「···」→「在阅读器隐藏每日封面」/「重新显示每日封面」，日详情 ⋯ 菜单里也可以隐藏；隐藏后日详情显示一行「这一天的封面已隐藏 · 重新显示每日封面」。字段 `entry.dayCoverHidden: true`（显示设置；图层、照片都保留；完整备份照常包含）。`pages.mjs` 的 `dayPageShown` 让阅读器、PDF、日历、书本计数一起排除隐藏的封面。
+  - Swift：`JournalEntry.dayCoverHidden: Bool?`、`coverPhotos: [String: DayCoverPhoto]?` + `DayCoverPhoto` 结构；`CoreTests.testDayCoverHiddenAndCoverPhotosRoundTrip`。
+- **测试**：新 `tests/v144-browser.cjs` 6 项（zh 375 / en 430：A 新的一天 3 个 Moment = 3 页，没有封面，有可选入口；B 添加封面不新增媒体，封面照片从相册换且 Moment 照片不变，4 页，重启后仍在；C 阅读器隐藏 → 3 页，图层与标记保留、完整备份包含，日详情重新显示）；Swift 测试结果见下一条日志。
+- **PDF**：按可见页导出（隐藏的封面不导出）；没有加「包含隐藏封面」选项。
+- **回退**：`git revert` 本提交（S4-A 可以单独 revert）；新字段都是可选的，旧版本读到会忽略。
+
 ### 2026-11-13 — V10.43 S3：换照片时复用已导入的照片
 
 - **根因**：快速编辑 `story-replace` 和 Studio `replace-photo` 都直接 `chooseAttachment()` 打开系统相册；页面上的缩略图只用来选目标。

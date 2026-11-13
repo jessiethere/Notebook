@@ -30,7 +30,7 @@ import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
-import { isSampleDay, dayOf, dayCounts, bookCounts, visiblePages } from "./js/pages.mjs";
+import { isSampleDay, dayOf, dayCounts, bookCounts, visiblePages, isDayCover } from "./js/pages.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
@@ -2723,9 +2723,12 @@ function openReaderMore() {
   const firstOfDay = item && (flipIndex === 1 || pages[flipIndex - 2].date !== item.date);
   const checklist = firstOfDay && listed.length ? `<div class="reader-list flip-checklist"><b>${t("day.checklist")}</b>${listed.map((x) => `<span>✓ ${esc(x)}</span>`).join("")}</div>` : "";
   const track = findTrack(catalog, readerMusicId());
-  const demo = item && (item.entry.isDemo || item.moment?.isDemo);
+  const demo = item && isSampleDay(item.entry);
+  // D3 (V10.44): a day cover can be hidden from reading, and shown again
+  // (a display choice only: nothing is deleted).
+  const coverRow = item && isDayCover(item.entry) ? row(`data-action="day-cover-toggle" data-date="${esc(item.date)}" data-hide="${item.entry.dayCoverHidden ? "" : "1"}"`, t(item.entry.dayCoverHidden ? "cover.show" : "cover.hide")) : "";
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet kp reader-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${item ? esc(Reader.positionLabel(flipIndex, pages.length, t)) : t("reader.more")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${checklist}${item ? row(`data-action="open-day" data-date="${esc(item.date)}"`, t("flip.openDay")) : ""}${row('data-action="music-sheet" data-target="book"', t("music.bookTitle"), track ? esc(trackName(track, languageCode())) : "")}${flipIndex > 0 ? row('data-action="reader-go" data-at="0"', t("reader.toCover")) : ""}${item && !demo ? `<div class="reader-keeper">${keeperAskHTML(item.date, item.moment?.id || "")}</div>` : ""}</div>`;
+  dialog.innerHTML = `<div class="choose-sheet kp reader-sheet"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${item ? esc(Reader.positionLabel(flipIndex, pages.length, t)) : t("reader.more")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${checklist}${item ? row(`data-action="open-day" data-date="${esc(item.date)}"`, t("flip.openDay")) : ""}${coverRow}${row('data-action="music-sheet" data-target="book"', t("music.bookTitle"), track ? esc(trackName(track, languageCode())) : "")}${flipIndex > 0 ? row('data-action="reader-go" data-at="0"', t("reader.toCover")) : ""}${item && !demo ? `<div class="reader-keeper">${keeperAskHTML(item.date, item.moment?.id || "")}</div>` : ""}</div>`;
   if (!dialog.open) dialog.showModal();
 }
 // The whole words of a page that do not fit on the paper (read only; from the journal itself).
@@ -4626,6 +4629,9 @@ function layoutStoryPage(target, isCover) {
       .map((m) => {
         const photos = visualLayers(m).filter((l) => l.kind === "photo");
         const hero = photos[heroIndex(photos.map((l) => ({ aspect: layerAspect(l) })))];
+        // S4-B: a photo the person chose for the cover (from the day or Photos) for this Moment.
+        const own = target.coverPhotos?.[m.id];
+        if (own?.reference) return { id: m.id, time: m.time, title: m.title, photo: { reference: own.reference, name: own.name || "", aspect: Number(own.aspect) || 1 } };
         return hero ? { id: m.id, time: m.time, title: m.title, photo: { reference: hero.mediaRef, name: hero.text, aspect: layerAspect(hero) } } : null;
       })
       .filter(Boolean);
@@ -4681,7 +4687,7 @@ function undoStory() {
     for (const momentId of made.ids) removeMoment(entry, momentId);
     if (made.cover) {
       entry.layers = [];
-      for (const key of ["layoutTemplate", "layoutVariant", "layoutStyle", "backdrop"]) delete entry[key];
+      for (const key of ["layoutTemplate", "layoutVariant", "layoutStyle", "backdrop", "coverPhotos"]) delete entry[key];
     }
   }, false);
   story.made = null;
@@ -4754,7 +4760,9 @@ function storyPage() {
   const pages = storyPages();
   story.index = Math.max(0, Math.min(pages.length - 1, story.index));
   const current = pages[story.index];
-  const tabs = pages.length > 1 ? `<div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("")}</div>` : "";
+  // S4-B: a day cover only when asked for (a dashed tab after the pages).
+  const canAddCover = !story.made.cover && !hasDayPageContent(editor);
+  const tabs = pages.length > 1 || canAddCover ? `<div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("")}${canAddCover ? `<button class="story-cover-add" data-action="story-cover-add">＋ ${t("cover.addOptional")}</button>` : ""}</div>` : "";
   const books = state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === story.book ? "selected" : ""}>${esc(b.title)}</option>`).join("");
   const title = story.date === dateKey() ? t("story.previewTitle") : t("story.previewTitleDay", { date: friendlyDate(story.date) });
   // V10.29 · Quick Edit: every quick change happens right here — change a
@@ -4856,7 +4864,7 @@ function storySplitHTML(current, { force = false } = {}) {
   return `<section class="qe-panel qe-split" aria-label="${esc(t("qe.split.title", { n }))}"><header><span><b>${t("qe.split.title", { n })}</b><small>${t(s.texts ? "qe.split.wordsHint" : "qe.split.hint")}</small></span></header><div class="qe-split-pages"><figure class="now">${mini(s.m)}<figcaption>${t("qe.split.now")}</figcaption></figure>${pages.join("")}</div><div class="qe-row"><button class="secondary" data-action="story-keep-one">${t("qe.split.keep")}</button><button class="primary" data-action="story-split-pages">${t("qe.split.do", { n })}</button></div><p class="qe-hint">${t(s.texts ? "qe.split.keepWordsNote" : "qe.split.keepNote")}</p></section>`;
 }
 function storyPanelHTML(current, total) {
-  const notice = (story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "") + storySplitHTML(current);
+  const notice = (story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}${story.notice.coverUndo ? `<button data-action="story-cover-remove">${t("cover.dontWant")}</button>` : ""}</div>` : "") + storySplitHTML(current);
   if (!current || !story.panel) return notice;
   const done = `<button class="qe-done" data-action="story-panel" data-panel="">${t("qe.done")}</button>`;
   if (story.panel === "photo") {
@@ -4884,7 +4892,7 @@ function storyPanelHTML(current, total) {
     })
     .join("");
   const styles = STYLES.map((s) => `<button data-action="story-style" data-style="${s}" aria-pressed="${s === styleOf(target?.layoutStyle || story.style)}">${STYLE_ICONS[s]}<b>${t("story.style." + s)}</b></button>`).join("");
-  return `${notice}<section class="qe-panel qe-layout" aria-label="${t("qe.layoutTitle")}"><header><span><b>${t("qe.layoutTitle")}</b><small>${t(hand ? "qe.layoutHand" : "qe.layoutHint")}</small></span>${done}</header><div class="qe-variants">${variants}</div><div class="story-styles qe-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div>${storySplitFor(current) ? `<button class="qe-regroup" data-action="story-split-show">${t("qe.split.do", { n: storySplitFor(current).parts.length })}</button>` : ""}${total > 1 ? `<button class="qe-regroup" data-action="story-group">${t("qe.regroup")}</button>` : ""}</section>`;
+  return `${notice}<section class="qe-panel qe-layout" aria-label="${t("qe.layoutTitle")}"><header><span><b>${t("qe.layoutTitle")}</b><small>${t(hand ? "qe.layoutHand" : "qe.layoutHint")}</small></span>${done}</header><div class="qe-variants">${variants}</div><div class="story-styles qe-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div>${current.cover ? `<button class="qe-regroup" data-action="story-cover-remove">${t("cover.remove")}</button>` : ""}${storySplitFor(current) ? `<button class="qe-regroup" data-action="story-split-show">${t("qe.split.do", { n: storySplitFor(current).parts.length })}</button>` : ""}${total > 1 ? `<button class="qe-regroup" data-action="story-group">${t("qe.regroup")}</button>` : ""}</section>`;
 }
 // Keep the chosen photo in view above the Quick Edit panel.
 function revealStoryPick() {
@@ -4958,6 +4966,49 @@ function storyReplacePhoto(target, item) {
   flushDraft();
   story.notice = { text: kept ? t("qe.replacedKept", { n }) : t("qe.replaced"), undo };
   logEvent("qe_replace", { kept, hand });
+}
+// ---------- S4-B (V10.44) · A day cover only when the person adds one ----------
+function storyAddCover() {
+  if (!story?.made || story.made.cover || hasDayPageContent(editor)) return;
+  story.wantCover = true;
+  story.made.cover = true;
+  changeEditor((entry) => {
+    entry.layoutTemplate = "scrapbook";
+    entry.layoutStyle = story.style;
+    entry.layoutVariant = 0;
+    entry.bookId = story.book;
+  }, false);
+  layoutStory({ which: ["cover"], force: true });
+  story.index = 0;
+  story.panel = null;
+  story.notice = { text: t("cover.added"), coverUndo: true };
+  flushDraft();
+  logEvent("day_cover_add", {});
+}
+function storyRemoveCover() {
+  if (!story?.made?.cover) return;
+  story.wantCover = false;
+  story.made.cover = false;
+  changeEditor((entry) => {
+    entry.layers = entry.layers.filter((l) => !l.gen && !l.deco);
+    for (const key of ["layoutTemplate", "layoutVariant", "layoutStyle", "backdrop", "coverPhotos", "layoutEdited"]) delete entry[key];
+  }, false);
+  story.index = 0;
+  story.panel = null;
+  story.notice = { text: t("cover.removed") };
+  flushDraft();
+  logEvent("day_cover_remove", {});
+}
+// The cover's photo for one Moment: from the day, the book or Photos. Only
+// the cover changes; the Moment page keeps its photo.
+function storyCoverPhoto(momentId, item) {
+  if (!story?.made?.cover) return;
+  changeEditor((entry) => {
+    entry.coverPhotos = { ...(entry.coverPhotos || {}), [momentId]: { reference: item.reference, name: item.name || "", aspect: Math.round((Number(item.aspect) || 1) * 1000) / 1000 } };
+  }, false);
+  layoutStory({ which: ["cover"] });
+  story.notice = { text: t("cover.photoChanged") };
+  flushDraft();
 }
 function storyUndoReplace() {
   const undo = story?.notice?.undo;
@@ -5335,8 +5386,18 @@ async function storyAction(actionName, target) {
   }
   if (actionName === "story-replace") {
     const pick = storyPicked(storyPages()[story.index]);
-    if (pick) openPhotoSource({ mode: "story", target: { kind: "story-replace", momentId: pick.m.id, layerId: pick.p.id }, n: pick.n, ref: pick.p.mediaRef });
+    // On the day cover the choice is the cover's own (the Moment page keeps its photo).
+    const onCover = storyPages()[story.index]?.cover;
+    if (pick) openPhotoSource({ mode: "story", target: onCover ? { kind: "story-cover", momentId: pick.m.id } : { kind: "story-replace", momentId: pick.m.id, layerId: pick.p.id }, n: pick.n, ref: pick.p.mediaRef });
     return;
+  }
+  if (actionName === "story-cover-add") {
+    storyAddCover();
+    return render();
+  }
+  if (actionName === "story-cover-remove") {
+    storyRemoveCover();
+    return render();
   }
   if (actionName === "story-undo") {
     storyUndoReplace();
@@ -6150,7 +6211,7 @@ document.addEventListener("click", (event) => {
 function openPageMenu(date, momentId) {
   const dialog = $("#choose-dialog");
   const isCover = !momentId;
-  dialog.innerHTML = `<div class="choose-sheet page-menu-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(isCover ? "day.cover" : "read.pageMenu")}</h2><button class="contribute-option" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>✎ ${t("read.edit")}</b><small>${t("read.editHint")}</small></button>${isCover ? "" : `<button class="contribute-option" data-action="read-rename" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>Aa ${t("read.rename")}</b><small>${t("read.titleHint")}</small></button>`}<button class="contribute-option danger-option" data-action="read-delete" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>${t(isCover ? "write.clearDay" : "write.deleteStory")}</b><small>${t("read.deleteHint")}</small></button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  dialog.innerHTML = `<div class="choose-sheet page-menu-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t(isCover ? "day.cover" : "read.pageMenu")}</h2><button class="contribute-option" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>✎ ${t("read.edit")}</b><small>${t("read.editHint")}</small></button>${isCover && isDayCover(dayOf(state(), date) || {}) ? `<button class="contribute-option" data-action="day-cover-toggle" data-date="${esc(date)}" data-hide="1"><b>${t("cover.hide")}</b><small>${t("cover.hideHint")}</small></button>` : ""}${isCover ? "" : `<button class="contribute-option" data-action="read-rename" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>Aa ${t("read.rename")}</b><small>${t("read.titleHint")}</small></button>`}<button class="contribute-option danger-option" data-action="read-delete" data-date="${esc(date)}" data-moment="${esc(momentId)}"><b>${t(isCover ? "write.clearDay" : "write.deleteStory")}</b><small>${t("read.deleteHint")}</small></button><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
   dialog.showModal();
 }
 async function deleteReadPage(date, momentId) {
@@ -7257,6 +7318,29 @@ async function action(target) {
     openStudio(target.dataset.date);
     selectMoment(momentId || null);
     if (from.page === "day" || from.page === "books" || from.page === "reader") readReturn = { ...from, date: from.page === "day" ? target.dataset.date : from.date };
+  }
+  if (actionName === "day-cover-toggle") {
+    const date = target.dataset.date;
+    const hide = target.dataset.hide === "1";
+    if ($("#choose-dialog").open) $("#choose-dialog").close();
+    const key = page === "reader" ? readerKey() : "";
+    store.update((next) => {
+      for (const day of readCopies(date)(next)) {
+        if (hide) day.dayCoverHidden = true;
+        else delete day.dayCoverHidden;
+      }
+    });
+    if (page === "reader") {
+      // Stay on this day: on its first page that is still shown.
+      const pages = readerPages();
+      const same = pages.findIndex((p) => Reader.keyOf(p) === key);
+      const first = pages.findIndex((p) => p.date === date);
+      flipIndex = (same >= 0 ? same : first >= 0 ? first : 0) + (same >= 0 || first >= 0 ? 1 : 0);
+    }
+    render();
+    toast(t(hide ? "cover.hidden" : "cover.shown"));
+    logEvent(hide ? "day_cover_hide" : "day_cover_show", {});
+    return;
   }
   if (actionName === "read-rename") {
     $("#choose-dialog").close();
@@ -8751,7 +8835,10 @@ function photoSourceAction(name, target) {
     if (!layer) return true;
     const { mode, target: into } = photoSource;
     $("#choose-dialog").close();
-    if (mode === "story") {
+    if (mode === "story" && into.kind === "story-cover") {
+      storyCoverPhoto(into.momentId, sourceItem(layer));
+      render();
+    } else if (mode === "story") {
       storyReplacePhoto(into, sourceItem(layer));
       render();
       revealStoryPick();
@@ -10404,6 +10491,9 @@ async function handleImageUpload(event, target) {
         if (clip) clip.poster = reference;
       });
       flushDraft();
+    } else if (target?.kind === "story-cover") {
+      storyCoverPhoto(target.momentId, saved[0]);
+      render();
     } else if (target?.kind === "story-replace") {
       storyReplacePhoto(target, saved[0]);
       render();
@@ -10421,7 +10511,7 @@ async function handleImageUpload(event, target) {
     }
     // V10.24: photos added to the page in Studio need no "added" message — they are
     // right there on the paper (the message also covered its top); failures still say so.
-    if (failed || !(["quick", "story-replace"].includes(target?.kind) || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
+    if (failed || !(["quick", "story-replace", "story-cover"].includes(target?.kind) || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1

@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.44",
+    date: "2026-11-13",
+    zh: {
+      title: "每日封面变成可选的",
+      items: [
+        "新的一天不再自动生成每日封面，阅读时直接从第一页开始，页数也不再多算一页。",
+        "想要封面时，在「今天的故事」页签最后点「＋ 封面（可选）」，会用当天已有的照片排好，不会重复导入。封面上的照片也可以换成这一天、这本书里的照片，或从相册添加；那一页本身的照片不变。",
+        "以前的每日封面都保留着。在阅读器右下角「···」里可以「在阅读器隐藏每日封面」，只是不显示，封面和照片都不删除；随时可以「重新显示每日封面」（日详情里也有）。",
+        "完整备份照样包含隐藏的封面。书本封面不受影响，也不算在页数里。",
+      ],
+    },
+    en: {
+      title: "Day covers are now optional",
+      items: [
+        "A new day no longer gets a day cover on its own: reading starts on its first page, and the page count isn't one higher.",
+        "Want one? Tap \"＋ Cover (optional)\" after the pages in Today's Story: it's laid out from the day's photos, nothing imported again. A cover photo can be swapped for one from this day, this book or Photos; the page itself keeps its photo.",
+        "Earlier day covers are all kept. In the Reader's ··· menu, \"Hide this day's cover when reading\" only hides it (cover and photos stay); \"Show this day's cover again\" brings it back (also in Day Detail).",
+        "A full backup still includes hidden covers. Book covers are unchanged and never count as pages.",
+      ],
+    },
+  },
+  {
     version: "10.43",
     date: "2026-11-13",
     zh: {

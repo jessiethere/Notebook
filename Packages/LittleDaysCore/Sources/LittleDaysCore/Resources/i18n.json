@@ -9070,5 +9070,53 @@
   "ps.replacedStudio": {
     "zh": "已换成这张照片 · 可以撤销",
     "en": "Photo replaced · you can undo"
+  },
+  "cover.addOptional": {
+    "zh": "封面（可选）",
+    "en": "Cover (optional)"
+  },
+  "cover.added": {
+    "zh": "已加上这一天的封面（用当天的照片）。",
+    "en": "Added a cover for this day (from today's photos)."
+  },
+  "cover.dontWant": {
+    "zh": "不要封面",
+    "en": "No cover"
+  },
+  "cover.remove": {
+    "zh": "移除这一天的封面",
+    "en": "Remove this day's cover"
+  },
+  "cover.removed": {
+    "zh": "已移除封面，这一天直接从第一页开始。",
+    "en": "Cover removed — the day starts on its first page."
+  },
+  "cover.photoChanged": {
+    "zh": "封面上换成了这张照片；那一页的照片不变。",
+    "en": "The cover now shows this photo; the page itself keeps its photo."
+  },
+  "cover.hide": {
+    "zh": "在阅读器隐藏每日封面",
+    "en": "Hide this day's cover when reading"
+  },
+  "cover.hideHint": {
+    "zh": "只是不显示，封面和照片都保留，随时可以重新显示。",
+    "en": "Only hidden — the cover and photos stay; show it again any time."
+  },
+  "cover.show": {
+    "zh": "重新显示每日封面",
+    "en": "Show this day's cover again"
+  },
+  "cover.hidden": {
+    "zh": "已隐藏这一天的封面（没有删除）。",
+    "en": "This day's cover is hidden (nothing deleted)."
+  },
+  "cover.shown": {
+    "zh": "已重新显示这一天的封面。",
+    "en": "This day's cover is shown again."
+  },
+  "cover.hiddenNote": {
+    "zh": "这一天的封面已隐藏。",
+    "en": "This day's cover is hidden."
   }
 }
