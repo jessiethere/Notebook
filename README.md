@@ -186,6 +186,17 @@ npm run test:browser:v65
 - 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
 - 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
 
+### 2026-11-13 — Meme 与贴纸工作室：最终设计 v2（还没开始做）
+
+- 设计板第 2 版：https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （9 个画面，375 / 430，中文 / English）；文字版 `docs/MEME_STICKER_PLAN.md`。
+- 改动：
+  - ★ 统一：贴纸、Captain、我的 Meme 都能收藏；最近用过的不会自动收藏；
+  - 第一阶段只导入静态图（PNG / JPG / WebP），选到 GIF 会说明「下一版支持」，不会偷偷转成静态图；
+  - Captain 先做原色 6 个小反应，现在都是占位。
+- 查到：现在的照片导入会把 GIF 转成只剩一帧的 JPG；iOS 模拟器的相册本身不会转换。iPhone 上的选择器还没测，可以用设计板第 9 节的「GIF 选择测试」在 Claude App 里试。
+- 设计板第 9 节还有「存储保持测试」，用来确认关掉 Claude App 后本地数据还在不在。
+- App 本身这次没有变化，固定链接仍是第 89 版。
+
 ### 2026-11-13 — Meme 与贴纸工作室：设计稿（还没开始做）
 
 - 设计板：https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （375 / 430，中文 / 英文）；文字版 `docs/MEME_STICKER_PLAN.md`。

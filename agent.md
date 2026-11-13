@@ -48,6 +48,37 @@
 
 ## 更新日志
 
+### 2026-11-13 — Meme & Sticker Studio 最终设计 v2（D1–D8 已确认）；GIF 选择器验证；P0 截图记录（仍未改 App 代码）
+
+- 需求：用户确认 D1–D8 并补充要求，要求先写进设计方案（设计板、图层结构、收藏机制、Captain 动画素材规格、静态 MVP 流程、Phase B GIF 方案、持久化与测试计划），确认后再开发；单独验证「从相册选 GIF 会不会被转成 JPG」；Captain 本轮只做原色 6 个；P0 没确认前不正式实施新的 Meme 媒体存储。
+- 文件：`docs/MEME_STICKER_PLAN.md` 改写为 v2（含版本记录）；设计板 https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK 第 2 版（9 个画面 × 375/430 × 中/英 = 36 张；v1 折叠对照；Captain 6 张占位封面；两个 iPhone 自测工具）。`Public/`、Swift、测试都没改，固定链接仍是第 89 版。
+- v2 的关键决定：
+  - ★ 统一成一个 `collection` 数组（官方素材只存 ID；我的 Meme 存 `media:` 引用和元数据，不存文件名）；「最近使用」每次从页面图层算出来，不自动加收藏；
+  - `kind:"meme"` 同时承载我的 Meme、以后的 GIF 和 Captain，必填 `text` 作为兼容兜底；
+  - 原创贴纸保持 `kind:"sticker"`；
+  - Phase A 文件选择器只接受 PNG / JPG / WebP，看文件头发现 GIF、动态 WebP、APNG 时说明「下一版支持」，不保存也不转换；
+  - 解码内存估算超过 300 MB 也拒绝；
+  - 统一的动态贴纸接口：精灵图驱动 + 图片驱动 + 同时最多 2 个。
+- 代码核对：
+  - `model.mjs` 校验要求每个图层有字符串 `id` 和 `text`，不校验 `kind`；
+  - `canvas.mjs` 遇到不认识的 kind 会把 `text` 当文字显示（不丢数据）；
+  - 没有透明度字段；`layerGeometry` 只给 photo / video 加宽高，Meme 需要加进去。
+- **GIF 验证（真实运行）**：
+  - iOS 模拟器（LD P0 Verify）用 `simctl addmedia` 加入测试 GIF（仓库里的 LD-captain-lemon-hug.gif，396,833 B，sha256 bfbb9b38…）→ 图库里是 IMG_0011.GIF，sha256 完全相同，**系统图库不转换**；
+  - 当前照片导入：Chromium（容器）里 `image/gif` 396,833 B → 存成 `image/jpeg` 32,381 B（FF D8）；WebKit（Mac Playwright，Safari 26.5 内核，Mac 上的 49479dd 代码，`imageBlob()` 没变）里 → `image/jpeg` 60,756 B。**是我们自己的 `imageBlob()` 把 GIF 转成了单帧 JPG。**
+  - 相册 / 文件选择器 → WKWebView 这一步**没验证**：需要界面点选，用 AppleScript 控制模拟器时卡在 macOS 权限请求（2 分钟超时），已放弃这条路。改为在设计板里放「GIF 选择测试」，在 iPhone 的 Claude App 里测；模拟器相册里已经有 IMG_0011.GIF，可以在外壳里手动点选。
+- **P0 截图（用户，8:54）**：
+  - Claude iOS App 内嵌网页，persisted=否；0.0 MB / 983.0 MB；IndexedDB、localStorage 都正常；没有媒体错误；「还没有用到照片或视频」。
+  - 还不能判断：如果截图前加过照片再强制退出，说明那一页连同照片引用一起没了，很可能是宿主（Claude App）重启时清掉了内嵌网页的存储；如果没加过，说明这次只是没东西可查。
+  - 设计板里放了「存储保持测试」来分清这两种情况（写标记 → 划掉 Claude → 重开看标记）。
+- Captain 素材：我不能画正式的 3D 形象。交付的是规格、动作说明、命名和 ID、JSON 元数据、验收清单、6 张写明 PLACEHOLDER 的灰色剪影封面（只在设计板里，没提交进仓库）。Phase A 能用的正式 Captain 图只有原色抱毛线球（320×325）。
+- Mac：只在 /tmp/ld-gif 放了测试文件，用 8092 端口跑过一次预览服务（测完就停）；Mac 上其它会话没提交的修改没有动；模拟器相册里多了 IMG_0011.GIF。
+- 运行：设计板截图脚本；自测工具在 Chromium 里试过（GIF 帧数 6，和 PIL 一致；JPG 识别正确；存储标记读写正常；没有控制台错误；手机宽度没有横向滚动）。没有 App 测试，因为没改 App 代码。
+- 下一步：
+  1. 用户在 iPhone 的 Claude App 里做两个自测；
+  2. 用户确认 v2 后开始 Phase A：先做界面、图层、收藏，媒体写入等存储保持测试有结论再接上；
+  3. Captain 原色 6 个正式图按第 5 节出图。
+
 ### 2026-11-13 — Meme & Sticker Studio 设计轮（只出设计，未改 App 代码，等用户确认）
 
 - 需求：在 Journal Studio 的贴纸系统里加入「Captain 的小反应」、我自己的 Meme 收藏、GIF；交付 7 项设计（架构、流程 A–E、设计板、Captain 反应素材规格、媒体保存方案、Phase A–E 路线、风险与取舍），设计确认前不实现。
