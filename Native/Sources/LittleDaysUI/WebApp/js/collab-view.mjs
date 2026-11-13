@@ -1,6 +1,7 @@
 // Collaborative Journal demo section shown inside a book's detail page.
 // Always labelled "演示 · 未联网"; the private pages above it are never shared.
 import { escapeHTML as esc } from "./personal-ui.mjs";
+import { pageLabel } from "./page-label.mjs";
 import * as C from "./community.mjs";
 import * as K from "./collab.mjs";
 
@@ -29,7 +30,7 @@ function pageCard(demo, item, ctx, collab) {
   const by = person(demo, item.authorId, ctx);
   const edited = item.editedBy && item.editedBy !== item.authorId ? person(demo, item.editedBy, ctx) : null;
   const stillMember = item.authorId === "me" || K.memberOf(collab, item.authorId);
-  return `<article class="collab-page" data-collab-page="${esc(item.id)}"><header><span class="collab-mark" title="${esc(t("collab.wroteBy", { name: by.name }))}">${esc(by.avatar)} ${esc(by.name)}${stillMember ? "" : ` · ${t("collab.former")}`}</span>${item.mood ? `<i>${esc(item.mood)}</i>` : ""}</header><h3>${esc(item.title || t("entry.untitled"))}</h3>${item.body ? `<p>${esc(item.body)}</p>` : ""}<footer><small>${esc(when(item.updatedAt, ctx))}${edited ? ` · ${t("collab.editedBy", { name: edited.name })}` : ""}</small><span><button class="text-button" data-action="collab-edit-page" data-page="${esc(item.id)}">${t("edit")}</button><button class="text-button" data-action="collab-conflict" data-page="${esc(item.id)}">${t("collab.simConflict")}</button></span></footer></article>`;
+  return `<article class="collab-page" data-collab-page="${esc(item.id)}"><header><span class="collab-mark" title="${esc(t("collab.wroteBy", { name: by.name }))}">${esc(by.avatar)} ${esc(by.name)}${stillMember ? "" : ` · ${t("collab.former")}`}</span>${item.mood ? `<i>${esc(item.mood)}</i>` : ""}</header><h3>${esc(item.title || pageLabel(item, { t, words: !item.body }).label)}</h3>${item.body ? `<p>${esc(item.body)}</p>` : ""}<footer><small>${esc(when(item.updatedAt, ctx))}${edited ? ` · ${t("collab.editedBy", { name: edited.name })}` : ""}</small><span><button class="text-button" data-action="collab-edit-page" data-page="${esc(item.id)}">${t("edit")}</button><button class="text-button" data-action="collab-conflict" data-page="${esc(item.id)}">${t("collab.simConflict")}</button></span></footer></article>`;
 }
 
 function conflictHTML(demo, collab, ctx) {

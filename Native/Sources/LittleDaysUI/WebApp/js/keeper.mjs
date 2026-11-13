@@ -275,7 +275,7 @@ export function localChat(intent, { state, keeper, language = "zh", today, seed 
     if (!days.length) return { key: "keeper.chat.noMemories" };
     const [date, entry] = days[Math.abs(seed) % days.length];
     const page = pagesOf(entry).find((p) => p.title) || pagesOf(entry)[0];
-    return { key: "keeper.chat.memory", values: { date, title: page?.title || (en ? "an untitled page" : "没有标题的一页") }, open: { date, momentId: page && page !== entry ? page.id : null } };
+    return { key: "keeper.chat.memory", values: { date, title: page?.title || (en ? "a page" : "那一页") }, open: { date, momentId: page && page !== entry ? page.id : null } };
   }
   if (intent === "week") {
     const start = new Date(`${today}T12:00:00`);

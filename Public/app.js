@@ -52,6 +52,7 @@ import {
   growthCardInner,
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
+import * as PL from "./js/page-label.mjs";
 import { habitJourneyHTML, journeyPageCount } from "./js/journey-view.mjs";
 import { communityHTML, profileHTML, inboxHTML, bellHTML } from "./js/community-view.mjs";
 import { experience } from "./js/levels.mjs";
@@ -599,7 +600,7 @@ function dayCoverHTML(day) {
   const date = new Date(`${day.date}T12:00:00`);
   const titles = [
     day.dayPage && entry.title ? entry.title : "",
-    ...moments.map((m) => `${m.time ? m.time + " · " : ""}${m.title || t("moment.untitled")}`),
+    ...moments.map((m) => PL.pageLine(m, { t, index: (entry.moments || []).indexOf(m) })),
   ].filter(Boolean);
   const shots = photos
     .map((ref) => safePhoto(ref))
@@ -615,7 +616,7 @@ function dayCoverHTML(day) {
   // itself opens it. (The pages are the reader's own list — nothing copied.)
   const all = selectedBook ? flipPages(selectedBook) : [];
   const ofDay = all.map((item, i) => ({ item, at: i + 1 })).filter(({ item }) => item.date === day.date);
-  const card = `<button class="day-cover" data-action="reader-open" data-book="${esc(selectedBook || "")}" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
+  const card = `<button class="day-cover" data-action="reader-open" data-book="${esc(selectedBook || "")}" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || PL.dayLabel(entry, { t }))}</strong>${titles.length > 1 ? `<ul>${titles
     .slice(1, 4)
     .map((title) => `<li>${esc(title)}</li>`)
     .join("")}</ul>` : ""}${extras.length ? `<small>${esc(extras.join(" · "))}</small>` : ""}</span></button>`;
@@ -699,12 +700,12 @@ function storyCardHTML(entry, { recent = false } = {}) {
   const chips = storyMediaChips(lead);
   const book = state().books.find((bk) => bk.id === lead.bookId);
   const count = pages.length;
-  const card = `<article class="ts-card ${shown.length ? "" : "ts-paper"} ${recent ? "ts-recent" : ""}" data-photos="${pool.length}"><button class="ts-open today-preview" ${open(lead)} aria-label="${t(recent ? "ts.readRecent" : "home.readToday")}">${meta}${photos}<b class="ts-title" style="font-family:${esc(lead.titleFont)}">${esc(lead.title || t("entry.untitled"))}</b>${lead.words ? `<span class="ts-words" style="font-family:${esc(lead.bodyFont)}">${esc(lead.words.slice(0, 220))}</span>` : ""}${chips ? `<span class="ts-chips">${chips}</span>` : ""}</button><div class="ts-foot">${book ? `<button class="ts-book" data-action="book" data-book="${esc(book.id)}"><small>${t("ts.keptIn")}</small><b>${esc(book.title)}</b></button>` : "<span></span>"}<button class="ts-go" ${open(lead)}>${count > 1 ? `<i>${String(pages.indexOf(lead) + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</i>` : ""}${t("ts.open")} →</button></div></article>`;
+  const card = `<article class="ts-card ${shown.length ? "" : "ts-paper"} ${recent ? "ts-recent" : ""}" data-photos="${pool.length}"><button class="ts-open today-preview" ${open(lead)} aria-label="${t(recent ? "ts.readRecent" : "home.readToday")}">${meta}${photos}<b class="ts-title" style="font-family:${esc(lead.titleFont)}">${esc(lead.title || PL.pageLabel(lead.page, { t, dayPage: lead.page === entry, words: !lead.words }).label)}</b>${lead.words ? `<span class="ts-words" style="font-family:${esc(lead.bodyFont)}">${esc(lead.words.slice(0, 220))}</span>` : ""}${chips ? `<span class="ts-chips">${chips}</span>` : ""}</button><div class="ts-foot">${book ? `<button class="ts-book" data-action="book" data-book="${esc(book.id)}"><small>${t("ts.keptIn")}</small><b>${esc(book.title)}</b></button>` : "<span></span>"}<button class="ts-go" ${open(lead)}>${count > 1 ? `<i>${String(pages.indexOf(lead) + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</i>` : ""}${t("ts.open")} →</button></div></article>`;
   // Every other page of the day keeps its own line: name, time, journal.
   const row = (pg) => {
     const bk = state().books.find((x) => x.id === pg.bookId);
     const marks = (pg.videos.length ? " ▶" : "") + (pg.audios.length ? " ♪" : "");
-    return `<li><button ${open(pg)}><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy" decoding="async">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b style="font-family:${esc(pg.titleFont)}">${esc(pg.title || pg.words || t("entry.untitled"))}</b>${!pg.refs[0] && pg.title && pg.words ? `<em style="font-family:${esc(pg.bodyFont)}">${esc(pg.words.slice(0, 80))}</em>` : ""}<small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${marks}</small></span><i class="ts-num">${String(pages.indexOf(pg) + 1).padStart(2, "0")}</i></button></li>`;
+    return `<li><button ${open(pg)}><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy" decoding="async">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b style="font-family:${esc(pg.titleFont)}">${esc(pg.title || pg.words || PL.pageLabel(pg.page, { t, dayPage: pg.page === entry }).label)}</b>${!pg.refs[0] && pg.title && pg.words ? `<em style="font-family:${esc(pg.bodyFont)}">${esc(pg.words.slice(0, 80))}</em>` : ""}<small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${marks}</small></span><i class="ts-num">${String(pages.indexOf(pg) + 1).padStart(2, "0")}</i></button></li>`;
   };
   const also = others.length && !recent ? `<ul class="ts-also" aria-label="${t("ts.also")}">${others.slice(0, 3).map(row).join("")}</ul>${others.length > 3 ? `<button class="text-button ts-all" data-action="open-day" data-date="${esc(date)}">${t("ts.all", { count })} ›</button>` : ""}` : "";
   return card + also;
@@ -877,8 +878,8 @@ function memoryCard(entry, moment = null) {
   const clips = moment ? moment.media || [] : clipsOf(entry);
   const momentCount = moment ? 0 : entry.moments?.length || 0;
   const title = moment
-    ? `${moment.time ? moment.time + " · " : ""}${moment.title || t("moment.untitled")}`
-    : entry.title || entry.moments?.[0]?.title || t("entry.untitled");
+    ? PL.pageLine(moment, { t, index: (entry.moments || []).indexOf(moment) })
+    : PL.dayLabel(entry, { t });
   const extras = [
     momentCount ? `✦ ${t("day.statMoments", { count: momentCount })}` : "",
     clips.some((clip) => clip.kind === "video") ? "◈" : "",
@@ -1705,15 +1706,19 @@ function keeperOrganizeHTML() {
   const photos = pages.reduce((n, x) => n + x.refs.length, 0);
   const media = pages.some((x) => x.videos.length || x.audios.length);
   const most = [...pages].sort((x, y) => y.refs.length - x.refs.length)[0];
-  const untitled = pages.filter((x) => !x.title).length;
-  const notes = [sorted.some((x, i) => x !== pages[i]) ? t("kp.org.order") : "", most.refs.length >= 2 && most !== sorted[0] ? t("kp.org.cover", { title: most.title || t("kp.untitled"), photos: most.refs.length }) : "", untitled ? t("kp.org.untitled", { count: untitled }) : ""].filter(Boolean);
+  const notes = [sorted.some((x, i) => x !== pages[i]) ? t("kp.org.order") : "", most.refs.length >= 2 && most !== sorted[0] ? t("kp.org.cover", { title: most.title || PL.pageLine(most.page, { t }), photos: most.refs.length }) : ""].filter(Boolean);
   const rows = sorted
     .map((pg, i) => {
       const bk = state().books.find((x) => x.id === pg.bookId);
-      return `<li><button data-action="open-day" data-date="${esc(entry.date)}"${pg.id ? ` data-moment="${esc(pg.id)}"` : ""}><i class="ts-num">${String(i + 1).padStart(2, "0")}</i><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b>${esc(pg.title || t("kp.untitled"))}</b><small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${pg.videos.length ? " ▶" : ""}${pg.audios.length ? " ♪" : ""}</small></span></button></li>`;
+      return `<li><button data-action="open-day" data-date="${esc(entry.date)}"${pg.id ? ` data-moment="${esc(pg.id)}"` : ""}><i class="ts-num">${String(i + 1).padStart(2, "0")}</i><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b>${esc(pg.title || PL.pageLabel(pg.page, { t, dayPage: pg.page === entry }).label)}</b><small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${pg.videos.length ? " ▶" : ""}${pg.audios.length ? " ♪" : ""}</small></span></button></li>`;
     })
     .join("");
   return `<p class="kp-sum">${t(media ? "kp.org.sumMedia" : "kp.org.sum", { count: pages.length, photos })}</p><ul class="kp-pages">${rows}</ul>${notes.length ? `<div class="kp-note">${keeperArt("idle")}<p>${notes.map(esc).join("<br>")}</p></div>` : ""}<button class="kp-main" data-action="open-day" data-date="${esc(entry.date)}">${t("kp.org.open")} →</button><p class="save-help keeper-local">${t("kp.local")}</p>`;
+}
+// The page a Captain memory points at (for its display label when untitled).
+function memoryPageOf(m) {
+  const entry = state().entries.find((x) => x.date === m.date && (!m.momentId || x.moments?.some((p) => p.id === m.momentId)));
+  return (m.momentId ? entry?.moments?.find((p) => p.id === m.momentId) : entry) || {};
 }
 // Looking back: one earlier page, found on this device. It asks once before
 // it may look at earlier pages; the choice is kept in Settings.
@@ -1727,7 +1732,7 @@ function keeperMemoryHTML() {
   if (!keeperSeen.includes(m.key)) keeperSeen.push(m.key);
   const bk = state().books.find((x) => x.id === m.bookId);
   const src = m.photo ? safePhoto(m.photo) : "";
-  return `<div class="kp-note">${keeperArt("idle")}<p>${t("kp.mem.found")}</p></div><button class="kp-memory" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${src ? `<span class="ts-thumb"><img src="${esc(src)}" alt="" width="80" height="96"></span>` : ""}<span><small>${esc([friendlyDate(m.date), bk?.title].filter(Boolean).join(" · "))}</small><b>${esc(m.title || t("kp.untitled"))}</b>${m.words ? `<em>${esc(m.words)}</em>` : ""}</span></button><button class="kp-main" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${t("kp.mem.open")} →</button>${m.more ? `<button class="kp-quiet" data-action="keeper-memory-next">${t("kp.mem.next")}</button>` : ""}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+  return `<div class="kp-note">${keeperArt("idle")}<p>${t("kp.mem.found")}</p></div><button class="kp-memory" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${src ? `<span class="ts-thumb"><img src="${esc(src)}" alt="" width="80" height="96"></span>` : ""}<span><small>${esc([friendlyDate(m.date), bk?.title].filter(Boolean).join(" · "))}</small><b>${esc(m.title || PL.pageLabel(memoryPageOf(m), { t, words: !m.words }).label)}</b>${m.words ? `<em>${esc(m.words)}</em>` : ""}</span></button><button class="kp-main" data-action="open-day" data-date="${esc(m.date)}"${m.momentId ? ` data-moment="${esc(m.momentId)}"` : ""}>${t("kp.mem.open")} →</button>${m.more ? `<button class="kp-quiet" data-action="keeper-memory-next">${t("kp.mem.next")}</button>` : ""}<p class="save-help keeper-local">${t("kp.local")}</p>`;
 }
 // The small chat: a few things it really can do; anything else is answered
 // honestly instead of with the same sentence every time.
@@ -1944,7 +1949,7 @@ function searchResultsHTML() {
     .map((hit) => {
       const src = hit.photo ? safePhoto(hit.photo) : "";
       const when = [new Date(`${hit.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "short", day: "numeric" }), hit.time, hit.kind === "list" ? "" : bookName(hit.bookId)].filter(Boolean).join(" · ");
-      return `<button class="search-hit" data-action="open-day" data-date="${esc(hit.date)}"${hit.momentId ? ` data-moment="${esc(hit.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : `<span class="search-hit-mark" aria-hidden="true">${hit.kind === "list" ? "✓" : "Aa"}</span>`}<span><small>${esc(when)}</small><b>${hit.title ? marked(hit.title, words) : esc(t(hit.kind === "list" ? "day.checklist" : "entry.untitled"))}</b>${hit.snippet && hit.snippet !== hit.title ? `<em>${marked(hit.snippet, words)}</em>` : ""}</span></button>`;
+      return `<button class="search-hit" data-action="open-day" data-date="${esc(hit.date)}"${hit.momentId ? ` data-moment="${esc(hit.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : `<span class="search-hit-mark" aria-hidden="true">${hit.kind === "list" ? "✓" : "Aa"}</span>`}<span><small>${esc(when)}</small><b>${hit.title ? marked(hit.title, words) : esc(t(hit.kind === "list" ? "day.checklist" : "label.page"))}</b>${hit.snippet && hit.snippet !== hit.title ? `<em>${marked(hit.snippet, words)}</em>` : ""}</span></button>`;
     })
     .join("");
   return `${bookRows}${pages.length ? `<h3 class="search-group">${t("search.pages", { count: total })}</h3>${rows}` : ""}`;
@@ -1981,7 +1986,7 @@ function memoryHTML() {
   const label = first.years ? t("memory.yearsAgo", { count: first.years }) : t("memory.monthAgo");
   const src = first.photo ? safePhoto(first.photo) : "";
   const others = more.length ? `<div class="memory-more">${more.slice(0, 4).map((m) => `<button data-action="open-day" data-date="${esc(m.date)}">${t("memory.yearsAgo", { count: m.years })}</button>`).join("")}</div>` : "";
-  return `<section class="memory-card" aria-label="${esc(label)}"><div class="section-heading"><div><h2>${esc(label)}</h2><small>${esc(new Date(`${first.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" }))}</small></div><button class="memory-close" data-action="memory-dismiss" aria-label="${t("memory.dismiss")}">×</button></div><button class="memory-open ${src ? "has-photo" : ""}" data-action="open-day" data-revisit="1" data-date="${esc(first.date)}"${first.momentId ? ` data-moment="${esc(first.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : ""}<span><b>${esc(first.title || t("entry.untitled"))}</b>${first.words ? `<small>${esc(first.words)}</small>` : ""}<i>${t("memory.open", { count: first.pages })} ›</i></span></button>${others}</section>`;
+  return `<section class="memory-card" aria-label="${esc(label)}"><div class="section-heading"><div><h2>${esc(label)}</h2><small>${esc(new Date(`${first.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" }))}</small></div><button class="memory-close" data-action="memory-dismiss" aria-label="${t("memory.dismiss")}">×</button></div><button class="memory-open ${src ? "has-photo" : ""}" data-action="open-day" data-revisit="1" data-date="${esc(first.date)}"${first.momentId ? ` data-moment="${esc(first.momentId)}"` : ""}>${src ? `<img src="${esc(src)}" alt="">` : ""}<span><b>${esc(first.title || PL.dayLabel(first.entry, { t }))}</b>${first.words ? `<small>${esc(first.words)}</small>` : ""}<i>${t("memory.open", { count: first.pages })} ›</i></span></button>${others}</section>`;
 }
 // ---------- A gentle daily reminder (V7.6) ----------
 // The iPhone app schedules local notifications (nothing goes online): the
@@ -2330,7 +2335,7 @@ function readerHTML() {
     const { date, entry, moment } = pages[flipIndex - 1];
     const pageData = moment || entry;
     const demo = entry.isDemo || moment?.isDemo;
-    paper = `<article class="flip-page reader-page ${turn}"><div class="flip-canvas">${sharedCanvasHTML(pageData, ctx(), { readOnly: true, dayPage: !moment })}</div></article>`;
+    paper = `<article class="flip-page reader-page ${turn}"><div class="flip-canvas">${sharedCanvasHTML(pageData, ctx(), { readOnly: true, dayPage: !moment }).replace(/ tabindex="0"/g, ' tabindex="-1"')}</div></article>`;
     const title = pageData.title && !["line", "smart", "text"].includes(pageData.layoutTemplate) && moment ? `<b class="reader-title-line">${esc(pageData.title)}</b>` : "";
     caption = `<div class="reader-caption flip-head"><span>${esc(when(date))}${moment?.time ? ` · ${esc(moment.time)}` : ""}${demo ? ` <span class="badge">${t("entry.sample")}</span>` : draftTagHTML(date)}</span>${title}<button class="reader-full" data-action="reader-full" hidden>${t("reader.full")} ›</button></div>`;
     edit = demo ? "" : `<button class="reader-edit flip-edit" data-action="read-edit" data-date="${esc(date)}" data-moment="${esc(moment?.id || "")}">✎ ${t("reader.edit")}</button>`;
@@ -3073,7 +3078,7 @@ function chapterChipsHTML() {
   return `<nav class="chapter-chips page-strip${locked ? " locked" : ""}" aria-label="${t("moment.title")}"${locked ? ` aria-disabled="true" title="${esc(t("import.busy"))}"` : ""}>${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
-        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
+        `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(PL.pageLabel(moment, { t, index }).label)}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
     )
     .join("")}<button class="chapter-chip add" data-action="add-moment" aria-label="${t("moment.addShort")}"><i class="chip-num" aria-hidden="true">＋</i><span class="chip-text">＋ ${t("moment.addShort")}</span></button></nav>`;
 }
@@ -3099,7 +3104,7 @@ function renderPagesManage() {
   $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
     .map(
       (m, i) =>
-        `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
+        `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(PL.pageLabel(m, { t, index: i }).label)}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
     )
     .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="text-button pages-more" data-action="pages-more">${t("pages.more")} ›</button><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
@@ -3134,7 +3139,7 @@ function chaptersOutlineHTML() {
   }<div class="chapter-list">${moments
     .map(
       (moment, index) =>
-        `<div class="chapter-item ${moment.id === activeMomentId ? "active" : ""} ${moment.collapsed ? "collapsed" : ""}" data-chapter="${esc(moment.id)}"><button class="chapter-select" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><span class="chapter-index">${String(index + 1).padStart(2, "0")}</span><span class="chapter-copy"><b>${esc((moment.time ? moment.time + " · " : "") + (moment.title || t("moment.untitled")))}</b><small>${esc(counts(moment) || moment.body?.slice(0, 30) || t("moment.empty"))}</small></span></button><span class="chapter-tools"><button data-action="moment-up" data-moment="${esc(moment.id)}" aria-label="${t("moment.up")}" ${index ? "" : "disabled"}>↑</button><button data-action="moment-down" data-moment="${esc(moment.id)}" aria-label="${t("moment.down")}" ${index < moments.length - 1 ? "" : "disabled"}>↓</button><button data-action="moment-collapse" data-moment="${esc(moment.id)}" aria-expanded="${!moment.collapsed}" aria-label="${t(moment.collapsed ? "moment.expand" : "moment.collapse")}">${moment.collapsed ? "▸" : "▾"}</button></span>${moment.collapsed ? "" : `<div class="chapter-preview">${thumbs(moment)}${moment.body ? `<p>${esc(moment.body.slice(0, 80))}</p>` : ""}</div>`}</div>`,
+        `<div class="chapter-item ${moment.id === activeMomentId ? "active" : ""} ${moment.collapsed ? "collapsed" : ""}" data-chapter="${esc(moment.id)}"><button class="chapter-select" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><span class="chapter-index">${String(index + 1).padStart(2, "0")}</span><span class="chapter-copy"><b>${esc(PL.pageLine(moment, { t, index }))}</b><small>${esc(counts(moment) || moment.body?.slice(0, 30) || t("moment.empty"))}</small></span></button><span class="chapter-tools"><button data-action="moment-up" data-moment="${esc(moment.id)}" aria-label="${t("moment.up")}" ${index ? "" : "disabled"}>↑</button><button data-action="moment-down" data-moment="${esc(moment.id)}" aria-label="${t("moment.down")}" ${index < moments.length - 1 ? "" : "disabled"}>↓</button><button data-action="moment-collapse" data-moment="${esc(moment.id)}" aria-expanded="${!moment.collapsed}" aria-label="${t(moment.collapsed ? "moment.expand" : "moment.collapse")}">${moment.collapsed ? "▸" : "▾"}</button></span>${moment.collapsed ? "" : `<div class="chapter-preview">${thumbs(moment)}${moment.body ? `<p>${esc(moment.body.slice(0, 80))}</p>` : ""}</div>`}</div>`,
     )
     .join("") || `<p class="subtext">${t("moment.none")}</p>`}</div><button class="add-moment" data-action="add-moment">＋ ${t("moment.add")}</button>`;
 }
@@ -3715,7 +3720,7 @@ function inlineInput(target, event) {
   } else {
     const moment = activePage();
     const label = document.querySelector(`[data-chapter-label="${CSS.escape(moment.id)}"]`);
-    if (label) label.textContent = moment.title || t("moment.untitled");
+    if (label) label.textContent = PL.pageLabel(moment, { t, index: (editor.moments || []).indexOf(moment) }).label;
     refreshStudioTitle();
   }
   syncTypeBar();
@@ -4054,7 +4059,7 @@ function toolMenuHTML() {
   const sheets = [
     ...tools,
     { id: "more", icon: "", label: "tool.more", value: "", body: () => moreSheetHTML(tools) },
-    { id: "details", icon: "", label: "tool.details", value: isDayPage() ? t("day.cover") : activePage().title || t("moment.untitled"), body: detailsSheetHTML },
+    { id: "details", icon: "", label: "tool.details", value: isDayPage() ? t("day.cover") : activePage().title || t("label.titleOptional"), body: detailsSheetHTML },
   ];
   if (selectedLayerOf()?.kind === "text") sheets.push({ id: "textstyle", icon: "", label: "ctx." + textTab, value: "", body: textStyleSheetHTML });
   if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
@@ -5161,13 +5166,18 @@ function studioTitleHTML() {
   const moments = editor.moments || [];
   const day = isDayPage();
   const current = activePage();
-  const name = day ? t("day.cover") : current.title || t("moment.untitled");
+  const name = day ? t("day.cover") : current.title || studioDateLabel();
   const count = day ? t("studio.coverOf", { count: moments.length }) : t("studio.pageOf", { n: moments.indexOf(current) + 1, count: moments.length });
   return `<button class="sv-title" data-action="pages-manage" aria-label="${t("pages.title")}"><b data-studio-title>${esc(name)}</b><small>${esc(count)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></small></button>`;
 }
 function refreshStudioTitle() {
   const el = document.querySelector("[data-studio-title]");
-  if (el && !isDayPage()) el.textContent = activePage().title || t("moment.untitled");
+  if (el && !isDayPage()) el.textContent = activePage().title || studioDateLabel();
+}
+// V10.27: a page without a title is named by its day in the editor's top bar
+// ("11月12日"; the page number is right under it) — never "未命名的一页".
+function studioDateLabel() {
+  return new Date(`${editor?.date || dateKey()}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric" });
 }
 function studioPage() {
   const dayPage = isDayPage();
@@ -6459,6 +6469,17 @@ async function action(target) {
     page = "calendar";
     render();
   }
+  // V10.27: a page in the day's list opens the reader at that page (its own
+  // journal); a page that is only a draft is not in the reader yet, so the
+  // list scrolls to it on the day page instead.
+  if (actionName === "read-page") {
+    const entry = state().entries.find((item) => item.date === target.dataset.date && item.moments?.some((m) => m.id === target.dataset.moment));
+    const moment = entry?.moments.find((m) => m.id === target.dataset.moment);
+    const bookId = moment ? moment.bookId || entry.bookId : "";
+    if (bookId && flipPages(bookId).some((p) => p.date === entry.date && p.moment?.id === moment.id)) return openReader(bookId, `${entry.date}|${moment.id}`);
+    document.getElementById(`moment-${target.dataset.moment}`)?.scrollIntoView({ block: "start", behavior: "smooth" });
+    return;
+  }
   if (actionName === "jump-moment")
     document
       .getElementById(`moment-${target.dataset.moment}`)
@@ -7286,9 +7307,7 @@ document.addEventListener("input", (event) => {
       `[data-chapter-label="${CSS.escape(moment.id)}"]`,
     );
     if (label)
-      label.textContent =
-        (moment.time ? moment.time + " · " : "") +
-        (moment.title || t("moment.untitled"));
+      label.textContent = PL.pageLabel(moment, { t, index: (editor.moments || []).indexOf(moment) }).label;
     refreshStudioTitle();
   }
 });

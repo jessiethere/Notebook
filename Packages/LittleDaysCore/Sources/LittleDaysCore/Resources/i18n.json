@@ -235,10 +235,6 @@
     "zh": "有手帐",
     "en": "Has a journal"
   },
-  "entry.untitled": {
-    "zh": "未命名的小日子",
-    "en": "An untitled little day"
-  },
   "entry.continue": {
     "zh": "点击继续记录",
     "en": "Tap to keep writing"
@@ -1891,10 +1887,6 @@
     "zh": "新的一页已经翻开 ✿",
     "en": "A new page is ready ✿"
   },
-  "moment.untitled": {
-    "zh": "未命名的一页",
-    "en": "Untitled page"
-  },
   "moment.empty": {
     "zh": "还没有内容",
     "en": "Nothing here yet"
@@ -1924,12 +1916,12 @@
     "en": "Collapse"
   },
   "moment.titleLabel": {
-    "zh": "小标题",
-    "en": "Title"
+    "zh": "标题（选填）",
+    "en": "Title (optional)"
   },
   "moment.titlePlaceholder": {
-    "zh": "给这一刻起个名字",
-    "en": "Name this moment"
+    "zh": "给这一页起个名字（选填）",
+    "en": "Name this page (optional)"
   },
   "moment.time": {
     "zh": "时间（可选）",
@@ -4796,8 +4788,8 @@
     "en": "The title and words are on the paper above — tap it and type."
   },
   "write.pageName": {
-    "zh": "这一页的名字 · 显示在目录和日历里",
-    "en": "Page name · shown in the contents and calendar"
+    "zh": "这一页的名字（选填）· 不写也可以，日历里会显示时间和照片数",
+    "en": "Page name (optional) · without one, the calendar shows the time and photos"
   },
   "write.caption": {
     "zh": "页面下方的说明 · 可选，不会写到纸上",
@@ -5636,8 +5628,8 @@
     "en": "Record fields"
   },
   "read.addTitle": {
-    "zh": "加标题",
-    "en": "Add a title"
+    "zh": "起个名字（选填）",
+    "en": "Add a name (optional)"
   },
   "read.more": {
     "zh": "更多",
@@ -6819,10 +6811,6 @@
     "zh": "「{title}」有 {photos} 张照片，适合放在前面当今天的封面。",
     "en": "“{title}” has {photos} photos — a good one to lead the day."
   },
-  "kp.org.untitled": {
-    "zh": "有 {count} 页还没有名字，起一个以后好找。",
-    "en": "{count} pages have no name yet. A name makes them easier to find."
-  },
   "kp.org.order": {
     "zh": "我按时间排了一下（只是给你看，没有改动手帐）。",
     "en": "I put them in time order (just for you to see — nothing in the journal was changed)."
@@ -6866,10 +6854,6 @@
   "kp.mem.next": {
     "zh": "换一页",
     "en": "Another one"
-  },
-  "kp.untitled": {
-    "zh": "没有名字的一页",
-    "en": "A page with no name"
   },
   "s2.kicker": {
     "zh": "设置",
@@ -8530,5 +8514,57 @@
   "pages.more": {
     "zh": "更多页面操作（只保存这一页、折叠）",
     "en": "More page actions (save one page, fold)"
+  },
+  "label.photo1": {
+    "zh": "1 张照片",
+    "en": "1 photo"
+  },
+  "label.photos": {
+    "zh": "{count} 张照片",
+    "en": "{count} photos"
+  },
+  "label.video1": {
+    "zh": "1 段视频",
+    "en": "1 video"
+  },
+  "label.videos": {
+    "zh": "{count} 段视频",
+    "en": "{count} videos"
+  },
+  "label.audio1": {
+    "zh": "1 段声音",
+    "en": "1 sound"
+  },
+  "label.audios": {
+    "zh": "{count} 段声音",
+    "en": "{count} sounds"
+  },
+  "label.morning": {
+    "zh": "晨间记录",
+    "en": "Morning notes"
+  },
+  "label.afternoon": {
+    "zh": "午后记录",
+    "en": "Afternoon notes"
+  },
+  "label.evening": {
+    "zh": "傍晚记录",
+    "en": "Evening notes"
+  },
+  "label.night": {
+    "zh": "晚间记录",
+    "en": "Night notes"
+  },
+  "label.page": {
+    "zh": "一页记录",
+    "en": "A page"
+  },
+  "label.day": {
+    "zh": "这一天",
+    "en": "This day"
+  },
+  "label.titleOptional": {
+    "zh": "给这一页起个名字（选填）",
+    "en": "Name this page (optional)"
   }
 }

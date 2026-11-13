@@ -1,5 +1,6 @@
 // Calendar "Day Detail": a read-only, magazine-like view of a finished day.
 import { richHTML } from "./rich-text.mjs";
+import { pageLine, pageCoverRef } from "./page-label.mjs";
 import { findTrack, musicChipHTML, dayMusic } from "./music.mjs";
 import { canvasHTML, mediaCardHTML, growthCardInner } from "./canvas.mjs";
 import { escapeHTML as esc, fieldLabel } from "./personal-ui.mjs";
@@ -122,7 +123,7 @@ export function dayDetailHTML(date, ctx, helpers) {
         ? `<div class="draft-banner is-draft"><span class="draft-tag">${t("status.draft")}</span>${t("day.draftOnly")} ${resume}</div>`
         : "";
   const contents = (entry?.moments || []).length
-    ? `<div class="day-pages-head"><b>${t("day.pagesCount", { count: entry.moments.length })}</b><button class="text-button" data-action="pages-manage" data-date="${date}">${t("pages.manage")}</button></div><nav class="day-contents" aria-label="${t("day.contents")}">${entry.moments.map((moment, index) => `<button type="button" data-action="jump-moment" data-moment="${esc(moment.id)}"><span>${String(index + 1).padStart(2, "0")}</span>${esc(moment.time ? moment.time + " · " : "")}${esc(moment.title || t("moment.untitled"))}</button>`).join("")}</nav>`
+    ? `<div class="day-pages-head"><b>${t("day.pagesCount", { count: entry.moments.length })}</b><button class="text-button" data-action="pages-manage" data-date="${date}">${t("pages.manage")}</button></div><nav class="day-contents" aria-label="${t("day.contents")}">${entry.moments.map((moment, index) => `<button type="button" data-action="read-page" data-date="${esc(date)}" data-moment="${esc(moment.id)}"><span>${String(index + 1).padStart(2, "0")}</span>${(() => { const src = pageCoverRef(moment) ? ctx.media?.resolve?.(pageCoverRef(moment)) : ""; return src ? `<img class="day-contents-thumb" src="${esc(src)}" alt="" loading="lazy">` : `<i class="day-contents-thumb words" aria-hidden="true"></i>`; })()}<b>${esc(pageLine(moment, { t, index }))}</b></button>`).join("")}</nav>`
     : "";
   const empty =
     !dayPage && !moments && !growth

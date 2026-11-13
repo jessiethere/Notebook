@@ -93,6 +93,7 @@ py -3 tools\preview.py --open
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | 当前架构/兼容策略，以及未部署的社交后端和权限设计 |
 | [ROADMAP](docs/ROADMAP.md) | Phase 1–5 的详细任务与验收清单 |
 | [STRATEGY](docs/STRATEGY.md) | 产品战略、竞品、优先级与待确认提案（任务 G） |
+| [QUICK_EDIT_PLAN](docs/QUICK_EDIT_PLAN.md) | Quick Create / Quick Edit：标题选填（已实施）、换照片 · 写文字 · 换个排版、双照片排版（方案）；预览 https://claude.ai/artifact/Bj5uD5vtZAmtq9pwgv5f3B |
 | [MEME_STICKER_PLAN](docs/MEME_STICKER_PLAN.md) | Meme 与贴纸工作室：Captain 小反应、我的 Meme 收藏、GIF（设计轮，待确认）；设计板 https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK |
 | [QUICK_CREATE_PLAN](docs/QUICK_CREATE_PLAN.md) | 差异化与 Quick Create v3 方案（待确认）；设计稿 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt |
 | [ASSETS](docs/ASSETS.md) | 素材来源、SIL OFL 和原创许可 |
@@ -185,6 +186,15 @@ npm run test:browser:v65
 - 在浏览器里打开 `?dev-local-ai=qwen3.5:4b` 后，和 Captain 闲聊由你 Mac 上的 Qwen 回复，旁边标着「本机模型 · 开发」；发出去的只有聊天里的几句话，不含手帐内容。
 - 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
 - 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
+
+### 2026-11-13 — 标题完全可选（V10.27，第 91 版）
+
+- 不起标题也是完整的一页：日历、书架、首页、编辑器、阅读器里都不再出现「未命名的一页」。
+- 没有标题时按内容显示，比如「11:05 · 2 张照片」或你写的那句话的开头；这只是显示方式，不会替你填标题。
+- 日历里这一天的每页都有小图，点一行直接打开阅读器里的那一页。
+- 想起名字时点「起个名字（选填）」；删掉标题后又会按内容显示。
+- 阅读器里的照片不再出现蓝色焦点框。
+- 换照片 / 写文字 / 换个排版的快速编辑，以及两张照片的新排版，还只是方案：https://claude.ai/artifact/Bj5uD5vtZAmtq9pwgv5f3B ，等你确认。
 
 ### 2026-11-13 — 先把「一分钟做出一页手帐」做稳：P0 验证、检查更准确（V10.26，第 90 版）、核心流程 Audit
 

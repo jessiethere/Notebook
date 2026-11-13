@@ -1,5 +1,6 @@
 // Community demo views. Every screen carries the "demo / not online" label.
 import { escapeHTML as esc } from "./personal-ui.mjs";
+import { pageLabel } from "./page-label.mjs";
 import { stickerURL, coverColor } from "./library.mjs";
 import { coverHTML } from "./personal-ui.mjs";
 import * as C from "./community.mjs";
@@ -321,7 +322,7 @@ function publishHTML(demo, view, journal, ctx) {
               return `<label class="pub-media"><input type="checkbox" data-publish-media="${esc(item.id)}" ${p.media.includes(item.id) ? "checked" : ""} ${checked ? "" : "disabled"}>${src ? `<img src="${esc(src)}" alt="">` : `<span>${item.kind === "video" ? "◈" : "♫"}</span>`}</label>`;
             })
             .join("");
-          return `<li class="pub-page ${page.private ? "locked" : ""}"><label class="check-label"><input type="checkbox" data-publish-page="${esc(page.id)}" ${checked ? "checked" : ""} ${page.private ? "disabled" : ""}> <b>${esc(page.id === "day" ? t("day.cover") : page.title || t("moment.untitled"))}</b></label>${page.private ? `<small>🔒 ${t("community.moneyLocked")}</small>` : `<small>${esc(page.body.slice(0, 60))}</small>`}${media ? `<div class="pub-media-row">${media}</div>` : ""}</li>`;
+          return `<li class="pub-page ${page.private ? "locked" : ""}"><label class="check-label"><input type="checkbox" data-publish-page="${esc(page.id)}" ${checked ? "checked" : ""} ${page.private ? "disabled" : ""}> <b>${esc(page.id === "day" ? t("day.cover") : page.title || pageLabel(page, { t }).label)}</b></label>${page.private ? `<small>🔒 ${t("community.moneyLocked")}</small>` : `<small>${esc(page.body.slice(0, 60))}</small>`}${media ? `<div class="pub-media-row">${media}</div>` : ""}</li>`;
         })
         .join("")
     : "";

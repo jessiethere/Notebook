@@ -74,7 +74,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator(`[data-action="select-date"][data-date="${d1}"]`).first().tap();
     await page.waitForSelector(".day-detail");
     const title = page.locator(`.day-detail [data-title-edit][data-moment="page-${d1}"]`);
-    assert.match(await title.innerText(), /加标题/);
+    assert.match(await title.innerText(), /起个名字（选填）/); // V10.27: titles are optional
     await title.tap();
     await page.keyboard.type("傍晚散步");
     await page.keyboard.press("Enter");
@@ -84,7 +84,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.keyboard.type("傍晚和猫一起散步");
     await page.locator(".day-masthead").click();
     await page.waitForFunction((d) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d).moments[0].title === "傍晚和猫一起散步", d1);
-    passed.push("reading a day: tap 加标题 / double-click the title to write it");
+    passed.push("reading a day: tap 起个名字（选填） / double-click the title to write it");
 
     // 4. ⋯ on a page: edit (opens that page) or delete.
     await page.locator(`.day-detail .chapter-more[data-moment="page-${d1}"]`).tap();

@@ -477,3 +477,19 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 选中视频后的工具：`ctx-play` · `video-cover` · `shape` · `layer` · `layer-delete`（显示为「移除」）。
 - 测试：`tests/v123-browser.cjs`（需要 `VIDEO_DIR`；WebKit 用 mp4，Chromium 用 webm）。
 
+
+
+## 2026-11-13 V10.27 页面展示名（标题选填）
+
+- `Public/js/page-label.mjs`：纯函数，只用于显示，从不修改数据。
+  - `pageLabel(page, { t, index, max, dayPage, words })` → `{ title, label, source }`；
+  - `pageLine` 在前面加时间；
+  - `dayLabel(entry)` 给一整天用；
+  - `pageWords`、`pageMedia`、`pageCoverRef` 是辅助函数。
+- 调用方：
+  - `app.js`：书架的每天封面卡、首页今天的故事、回忆卡、搜索、Captain、编辑器顶栏、页面切换条、页面目录、目录面板、页面信息；
+  - `day-view.mjs`：日历这一天的页面列表，带缩略图，点击用 `read-page` 打开阅读器；
+  - `collab-view.mjs`、`community-view.mjs`。
+- 删掉的文案：`moment.untitled`、`entry.untitled`、`kp.untitled`、`kp.org.untitled`。
+- 阅读器（`readerHTML`）把只读画布里的 `tabindex="0"` 改成 `-1`：照片在阅读器里不接收键盘焦点。只读画布的焦点框用 `--accent`，不用系统蓝。
+- 测试：`tests/page-label.test.mjs`、`tests/v126-browser.cjs`。

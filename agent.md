@@ -48,6 +48,42 @@
 
 ## 更新日志
 
+### 2026-11-13 — Quick Create UX Sprint：V10.27 标题完全可选 + 阅读器蓝框修复（固定链接第 91 版）；Quick Edit 和双照片排版方案（等确认）
+
+- 需求（用户）：
+  - 定位 *Your life, a little world growing with you.*；不需要懂设计，不需要起标题、写字或进「自定义」；
+  - 问题 A：换照片不直观；问题 B：双照片一大一小、留白没有意图；问题 C：日历里三条一样的「未命名的一页」；Reader 有蓝色选中框；
+  - 要求按 Step 1 标题 → Step 2 Quick Edit → Step 3 双照片排版 → Step 4 Reader → Step 5 回归推进；
+  - 小范围的标题 bug 可以先做；Quick Edit 大改先给方案；第一阶段交付 7 项。
+- **P0 前提**：模拟器里照片按真实路径保存后杀掉 App 仍然正常；Claude App 里的手动验证（`P0_MEDIA_TEST.md`）还在等。本轮没有改媒体保存代码。
+- **Step 1 标题选填（已实施）**：
+  - 新增 `Public/js/page-label.mjs`（展示名规则见 `docs/QUICK_EDIT_PLAN.md` 第 3 节）；替换了约 20 处 `moment.untitled` / `entry.untitled` 后备文案；
+  - 编辑器顶栏没有标题时显示日期（下一行仍是「第 N 页 · 共 M 页」）；
+  - 日历这一天的页面列表：缩略图 + `时间 · 2 张照片`，点一行用新的 `read-page` 打开阅读器的那一页（草稿页滚动到页面上）；
+  - 标题入口文案改为「（选填）」；去掉 Captain「有 N 页还没有名字」的提醒；Captain 回忆里的「没有标题的一页」改为「那一页」；
+  - 展示名不写进 title；旧数据不迁移。
+- **Step 4 阅读器蓝框（已修复）**：
+  - 在 Mac WebKit（Playwright）里复现：阅读器的照片 `tabindex="0"`，键盘焦点落上去时 WebKit 画默认蓝色焦点框（`outline: auto`）。Chromium 里点击不会出现；
+  - 修复：阅读器页的照片改成 `tabindex="-1"`，并去掉焦点框；其它只读页面的焦点框用 `--accent`；
+  - 阅读器里没有选中描边、控制点或选中框，v126 有检查。
+- **Step 2 / 3（方案，没改代码）**：`docs/QUICK_EDIT_PLAN.md`，预览页 https://claude.ai/artifact/Bj5uD5vtZAmtq9pwgv5f3B 。
+  - 问题 B 的根因：`scrapbook-layout.mjs` 杂志风格两张照片时，即使没写字也给「那句话」留一栏；
+  - 原型 `pairLayout`：三种排法打分，在 scratchpad 的 dist/link 副本里跑，**没有提交**；
+  - 用 6 组手机常见比例做了「现在 vs 建议」对比，并预览了 Quick Edit 的 6 个关键状态（375 中文 / 430 英文）；
+  - 待确认 4 件事：先做 Step 3 还是 Step 2、替换照片时文字是否保留、「换个排版」放什么、「自定义」放右上角。
+- 修改文件：
+  - `Public/app.js`、`Public/js/page-label.mjs`（新）、`day-view.mjs`、`collab-view.mjs`、`community-view.mjs`、`keeper.mjs`、`whats-new.mjs`（10.27）、`styles.css`；
+  - i18n；Native WebApp 同步；
+  - `tests/page-label.test.mjs`（新，8 项）、`tests/v126-browser.cjs`（新）、`tests/v55-browser.cjs`（「加标题」→「起个名字（选填）」）、`package.json`；
+  - 文档：`docs/QUICK_EDIT_PLAN.md`（新）、PRODUCT_SPEC、ARCHITECTURE。
+- 运行：
+  - `npm test` 219 通过；`python3 -m unittest` 18 通过；
+  - **全量浏览器回归 67 / 67 通过**（Chromium，含 v126）；
+  - v126：中文 375 和英文 430 下，三页没标题的记录、日历列表、阅读器、补标题 / 删标题、编辑器顶栏、书架都没有「未命名 / Untitled」。
+- 发布：固定链接**第 91 版**。线上 day-view / collab-view / community-view / keeper 先读回，sha256 和 3bc6ee9 一致才覆盖。
+- 未验证：iPhone 真机、Xcode 模拟器里的 V10.27 界面。
+- 下一步：等用户确认 Quick Edit 方案和 4 个问题；P0 手动测试结果。
+
 ### 2026-11-13 — 优先级调整：P0 原生模拟器真实路径验证 + V10.26 检查更准确（固定链接第 90 版）；核心流程 Audit；Meme Phase A 只做拆分
 
 - 需求（用户）：

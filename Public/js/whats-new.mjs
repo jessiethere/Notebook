@@ -4,6 +4,32 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.27",
+    date: "2026-11-13",
+    zh: {
+      title: "标题完全可选：不再显示「未命名的一页」",
+      items: [
+        "不起标题也是完整的一页。日历、书架、首页、编辑器和阅读器里不会再出现「未命名的一页」「未命名的小日子」。",
+        "没有标题时，按你已有的内容显示，比如「11:05 · 2 张照片」，或你写的那句话的开头。这只是显示方式，不会替你填标题。",
+        "日历里这一天的页面列表多了小图，同一天的几页一眼就能分清；点一行直接打开阅读器里的那一页。",
+        "想起名字时，点「起个名字（选填）」；删掉标题后，又会按内容显示。照片和文字都不受影响。",
+        "Captain 不再提醒「有几页还没有名字」。",
+        "阅读器里的照片不会再出现蓝色的焦点框。",
+      ],
+    },
+    en: {
+      title: "Titles are optional: no more “Untitled page”",
+      items: [
+        "A page without a title is a whole page. The calendar, your books, Home, the editor and the reader no longer say “Untitled page” or “An untitled little day”.",
+        "Without a title a page is shown by what it has — “11:05 · 2 photos”, or the start of the line you wrote. This is only how it's shown; your title stays empty.",
+        "The day's page list in the calendar has a small picture for each page, so pages on the same day are easy to tell apart; tap one to open that page in the reader.",
+        "To name a page, tap “Add a name (optional)”; delete the name and the page is shown by what it has again. Photos and words are untouched.",
+        "Captain no longer reminds you that pages have no name.",
+        "Photos in the reader no longer show a blue focus ring.",
+      ],
+    },
+  },
+  {
     version: "10.26",
     date: "2026-11-13",
     zh: {
