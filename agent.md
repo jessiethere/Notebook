@@ -48,6 +48,21 @@
 
 ## 更新日志
 
+### 2026-11-13 — S1–S4 收尾：iOS 模拟器验证、全量回归、发布 V10.44 到固定链接
+
+- **需求**：S1–S4 规范第九节测试 1–19；模拟器和网页的结果分开写；真机没测过的不写通过。
+- **模拟器**（Mac，「LD B2 Check」iPhone 17e / iOS 27.2，Debug 构建，`Public/` 来自提交 1076ce9；结果表见 `docs/DEVICE_TEST_PLAN.md` 2.3）：
+  - `tools/mac/ios-sprint-check.js`（先删除再安装）：D1 / S4-A / S3 / S4-B / D3 / S1 共 6 项，中文和英文都通过。
+  - 新增 `tools/mac/ios-sprint-restart.js`（不重装，只结束进程再打开）：保存的 3 个 Moment、共用的照片（媒体仍是 3 个）、隐藏的封面都还在；日详情显示「封面已隐藏」一行，4 张图都画出来；「重新显示」后封面回来、图层数不变。中文和英文都通过。
+  - 第一次失败是脚本的问题：用错了输入框 `#photos-input`，iOS 弹出了原生菜单。首页实际用的是 `#attachment-image-input`，与 `ios-layout-check.js` 一样把它的 `click()` 换成空函数后通过。英文结果里的 `zh-CN` 是脚本读 `<html lang>` 太早，已改成等首页出现后再读。
+  - 每个脚本先在容器的 Chromium 里干跑过一次（中英文都通过），再上模拟器。
+  - **没有测**：真实的 iOS 相册选择界面、Studio 换照片、删除共用照片的一页、PDF、375 宽（这台 Mac 没装 iPhone SE 模拟器）。**真机：没有做任何测试。**
+- **全量浏览器回归**（81 个套件，用快照代码，在测试迁移之前跑的）：71 个通过，12 个失败。12 个在当前代码上重跑：v116、v129、v3、v33 等都通过；v31 的日历角标从 3 变成 4，是 V10.42 的计数规则（这一天自己的页有 5 张照片，算 1 页，加 3 个 Moment），所以只改测试的期望值，App 没有改。剩余结果见下一条日志。
+- **其他测试**：`npm test` 281/281；`tests/test_native_shell.py` OK；`sync_native_web.py` 无变化。
+- **发布**：`build_link.py` 后和 V10.40 发布时的构建逐个文件比较，变的只有 10 个文件（app.js、js/pages.mjs、book-share、day、day-view、keeper、search、whats-new、styles.css、shared/i18n.json），只上传这 10 个到同一个固定链接。
+- **文件**：`tools/mac/ios-sprint-check.js`、`tools/mac/ios-sprint-restart.js`（新）、`tests/v31-browser.cjs`、`docs/DEVICE_TEST_PLAN.md`、`docs/MAC_LOCAL_DEV.md`、本文件、README。
+- **下一步**：S1–S4 真机步骤（DEVICE_TEST_PLAN 2.4）；S2 仍在待办。
+
 ### 2026-11-13 — V10.44 S4-A / S4-B：每日封面默认不生成；可选添加；旧封面可隐藏和恢复
 
 - **数据结构核对**：每日封面不是独立的 Page 记录，而是当天 entry 自己的图层（`gen:true`）加 `layoutTemplate:"scrapbook"`，由 `makeStory` 在 ≥2 段时间时自动用 `layoutDay` 生成；阅读器 / PDF 通过 `bookSharePages` 把它算作一页。最小兼容方案：不改它的结构，只加两个可选字段。

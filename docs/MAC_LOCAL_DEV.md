@@ -198,3 +198,19 @@ bash tools/mac/dev.sh stop         # 结束：停止预览、把模型从内存�
 快速编辑（今天的故事）的例子：`[data-action="today-photos"]||upload:#attachment-image-input|/路径/a.jpg,/路径/b.jpg|image/jpeg||.qe-tools [data-panel="photo"]||.qe-thumbs button:nth-child(2)||[data-action="story-replace"]||upload:#attachment-image-input|/路径/c.jpg|image/jpeg`。用脚本点击不是真的触摸，所以 iOS 不会弹出键盘；键盘要用手点着测。
 
 注意：iOS WebKit 只在用户点击后加载视频数据，用脚本交给 `#video-input` 的视频会在读取信息时超时（`media-timeout`），所以不能用来判断真实选择器的结果。完整步骤见 `docs/P0_MEDIA_TEST.md`。
+
+## S1–S4 模拟器检查（V10.41–V10.44，2026-11-13）
+
+两个脚本，都用 `-LittleDaysCheck <文件>`（只在 Debug 构建生效），各打印一行 `LittleDaysCheck: {json}`：
+
+1. `tools/mac/ios-sprint-check.js`：**先删除再安装 App**，然后跑：新安装只有一本空书 → 三张图库照片（08:10 / 12:40 / 19:20）做今天的故事 → 没有自动封面 → 从「这一天」复用照片 → 加可选封面 → 保存 → 阅读器隐藏封面。
+2. `tools/mac/ios-sprint-restart.js`：**不重装**，只 `simctl terminate` 再 `launch`：检查保存的内容、共用的照片、隐藏的封面重启后都还在，然后重新显示封面。
+
+```
+xcrun simctl uninstall <设备> com.jessiethere.littledays && xcrun simctl install <设备> <构建>/LittleDays.app
+xcrun simctl launch --console-pty <设备> com.jessiethere.littledays -AppleLanguages "(zh-Hans)" -AppleLocale zh_CN -LittleDaysCheck <路径>/ios-sprint-check.js
+xcrun simctl terminate <设备> com.jessiethere.littledays
+xcrun simctl launch --console-pty <设备> com.jessiethere.littledays -AppleLanguages "(zh-Hans)" -AppleLocale zh_CN -LittleDaysCheck <路径>/ios-sprint-restart.js
+```
+
+首页「选照片」用的是 `#attachment-image-input`（不是 `#photos-input`）；脚本把这个输入框的 `click()` 换成空函数，所以不会弹出 iOS 原生菜单，**真实的相册选择界面没有被测试**。结果记录在 `docs/DEVICE_TEST_PLAN.md` 2.3。

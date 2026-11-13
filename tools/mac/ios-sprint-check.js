@@ -3,7 +3,7 @@
 // (simctl uninstall + install first). It goes through the app's real flow:
 // first start → Today's story from three library photos (taken 08:10 /
 // 12:40 / 19:20; the photo picker is skipped: the files go to the page's own
-// file input) → reuse a photo from "this day" → add the optional day cover
+// attachment input) → reuse a photo from "this day" → add the optional day cover
 // → save → hide the cover in the Reader. Prints one JSON report. Library
 // photos only; nothing is sent anywhere.
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -31,10 +31,15 @@ async function photo(name, hhmm) {
   const res = await fetch(`library/photos/LD-photo-${name}.jpg`);
   return new File([await res.blob()], `LD-photo-${name}.jpg`, { type: "image/jpeg", lastModified: at(hhmm) });
 }
-const report = { lang: document.documentElement.lang, steps: [] };
+const report = { lang: "", steps: [] };
+// The picker is skipped: the file input's own click() opens nothing during the check
+// (Home's 选照片 uses #attachment-image-input — the same as tools/mac/ios-layout-check.js).
+const input = $("#attachment-image-input");
+input.click = () => {};
 const step = (name, ok, detail = "") => report.steps.push({ name, ok: Boolean(ok), detail });
 try {
   await until(() => $(".hero"), 60000);
+  report.lang = document.documentElement.lang;
   // S1 / D1: the first start.
   await tap('#navigation [data-page="books"]');
   const books = $$('[data-action="pull-book"]').length;
@@ -43,7 +48,6 @@ try {
   await tap('#navigation [data-page="home"]');
   // Today's story from three photos at three times.
   await tap('[data-action="today-photos"]');
-  const input = $("#photos-input");
   const files = new DataTransfer();
   for (const f of [await photo("latte-art", "08:10"), await photo("golden-field", "12:40"), await photo("city-lights", "19:20")]) files.items.add(f);
   input.files = files.files;

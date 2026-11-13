@@ -377,7 +377,8 @@ async function noOverflow(page, label) {
     const cell = page.locator(`[data-action="select-date"][data-date="${D1}"]`);
     for (const dot of ["dot-photo", "dot-video", "dot-audio"])
       assert.equal(await cell.locator(`.${dot}`).count(), 1, dot);
-    assert.equal(await cell.locator(".day-dots b").innerText(), "3");
+    // V10.42 (counts): the badge counts pages — this day's own page (5 photos) + 3 Moments.
+    assert.equal(await cell.locator(".day-dots b").innerText(), "4");
     await cell.click();
     await page.waitForSelector(".day-detail");
     const chapterTitles = await page.$$eval(".moment-chapter .chapter-title", (els) => els.map((el) => el.textContent));
