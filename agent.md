@@ -48,6 +48,18 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.25 发布到固定链接（第 89 版）；全量回归
+
+- 需求：收尾 V10.25，跑全量浏览器回归，再发布。
+- 第一次全量（Chromium 模拟手机）：63 通过 / 3 失败。
+  - v41、v43：它们打开「更多 → 本页照片」，这个图块在 V10.25 已按计划去掉。迁移：v41 的照片素材库改从「＋照片 → 照片素材」进入（同一个 13 个合集 → 滑动选图），v43 的面板把手改用「背景与纸张」面板测；
+  - v100：「更多」打开时纸只剩 116px 高（要求 > 120）。原因是 `--sheet-max-more` 的「屏高 − 320px」在 390×664 / 375×667 上太高。改为 **屏高 − 340px**：375×667 上更多面板 292px、纸 136px；430×932 不变（面板 440px、纸 253px）。代价：短屏上「媒体与创作」最后一行需要在面板里稍微滚动。
+- 修改文件：`Public/styles.css`（及同步的 `Native/Sources/LittleDaysUI/WebApp/styles.css`）、`tests/v41-browser.cjs`、`tests/v43-browser.cjs`、`tests/v100-browser.cjs`（断言信息里带上实际高度）。
+- 运行：重跑 v41、v43、v100、v124、v125 全部通过；`npm test` 211 通过；`python3 -m unittest discover -s tests` 18 通过（含外壳一致性）。容器没有 pytest。
+- 发布：`tools/build_link.py` 后发布 app.js、styles.css、js/studio-guide.mjs、js/whats-new.mjs、shared/i18n.json 到固定链接，**第 89 版**。线上旧的 studio-guide.mjs 先读回来核对，sha256 与 6d29c10（V10.24）一致，才覆盖。
+- 未验证：iPhone 实机 / Xcode 模拟器都没看 V10.25；键盘上方的打字条仍只在 Chromium 里模拟过。
+- 下一步：Meme & Sticker Studio 设计轮（只出设计，等用户确认）；P0 仍等用户在 Claude iOS App 里按步骤复现；P3 等素材。
+
 ### 2026-11-12 — Mac 上实测第 5 节：Captain × 本机 Qwen 在浏览器里可用；`dev.sh web` 发现 8080 被别的程序占用时会停下
 
 - 需求：用户确认「Yes, test web-ai」，按 docs/MAC_LOCAL_DEV.md 第 5 节在 Mac 上实际打开 App 里的本地 AI 聊天（Mac 本地时间 11-11 晚）。

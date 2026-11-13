@@ -15631,8 +15631,8 @@ dialog h2,
 /* A sheet never squeezes the paper under 170px tall: it scrolls inside. */
 .phone.sv {
   --sheet-max: min(40dvh, 340px, calc(var(--studio-h, 100dvh - 40px) - 374px));
-  /* V10.25: 更多 is a little taller so 页面外观 + 媒体与创作 show without scrolling (the paper stays visible above) */
-  --sheet-max-more: min(52dvh, 440px, calc(var(--studio-h, 100dvh - 40px) - 320px));
+  /* V10.25: 更多 is a little taller so 页面外观 + 媒体与创作 show without much scrolling; on a short phone (375×667) it stops where the paper still has ≥ 120px */
+  --sheet-max-more: min(52dvh, 440px, calc(var(--studio-h, 100dvh - 40px) - 340px));
 }
 .phone.sv .studio-stage:not(.large) .canvas-wrap {
   width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max)) * 0.8));

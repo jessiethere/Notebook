@@ -78,7 +78,7 @@ function wav(seconds = 1) {
     assert.equal(await page.locator(".more-mode [data-action='page-mode']").count(), 3, "换一种写法: three ways");
     g = await geometry();
     assert.ok(g.scroll <= 2, "still fits with More open");
-    assert.ok(g.paper.height > 120, "the paper stays in view above the sheet");
+    assert.ok(g.paper.height > 120, `the paper stays in view above the sheet (${Math.round(g.paper.height)}px)`);
     await shot("v100-more");
     await page.locator('.more-grid [data-tool="paper"]').tap();
     await page.waitForSelector('.tool-sheet[data-tool-row="paper"]');
