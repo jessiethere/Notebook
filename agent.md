@@ -48,6 +48,13 @@
 
 ## 更新日志
 
+### 2026-11-13 — 方案文档：C1/C4 备份格式、模拟器/真机测试计划、Track B Editorial；模拟器验证 B2（没有改 `Public/`）
+
+- **需求**：C1 分卷与 C4 恢复快照先给兼容方案；准备真机步骤，区分模拟器和真机，说明 TestFlight 和 Xcode 直接安装的区别；Track B 先做 Editorial 设计确认、接入引擎分析、验收标准，评估 Story 复用；风格绑定按「书默认 + 页覆盖」。
+- **文件**：新 `docs/BACKUP_FORMAT_PLAN.md`（分卷 version 2 只在超过 60 MB 时用，小于时仍输出 version 1；恢复前快照写入 `little-days.v1.before-restore`，写入成功才替换，可撤销；兼容表；3 个待确认点）、`docs/DEVICE_TEST_PLAN.md`（模拟器/真机分工表、模拟器结果、7 步真机流程、TestFlight 对比）、`docs/EDITORIAL_SYSTEM_PLAN.md`（现有 editorial 与设计板的差别；网格/照片角色/文字四级/1–5 张候选；复用 measuredBlock / checkQuality / layoutChecked / 分页建议；`book.layoutStyle` 默认 + `moment.layoutStyle` 覆盖，改书默认不重排已保存页、`layoutEdited` 永远不自动变；自动规则 + 人工评分验收；Story 作为同引擎的另一组候选；3 个待确认点）。
+- **模拟器（Mac，`git archive` 导出 cc46e8d 到 /tmp/ld-build4，新建模拟器「LD B2 Check」iPhone 17e iOS 27.2，没有碰 Mac 工作区里其他会话的未提交修改）**：`-AppleLanguages (en)` → `navigator.languages ["en-US"]`、界面英文；`(zh-Hans)` → `["zh-CN"]`、中文；两次都没有示例页、没有连续记录和 Keeper 邀请，「选今天的照片」在首屏（448/773、423/739 px）。截图 `/tmp/ld-build4/en-home.png`（Mac 上）。
+- **未做**：真机（尚无可用设备）；iPhone SE 尺寸模拟器未安装；Editorial 尚未实施（等确认）。
+
 ### 2026-11-13 — V10.40 C2 / C3：备份失败与状态（P0 第五批）
 
 - **需求**：一个媒体文件异常不能让整份备份失败，但也不能悄悄漏掉；部分失败要有清单和状态，不能把不完整备份标成完整。取消分享不能被记成已备份。
