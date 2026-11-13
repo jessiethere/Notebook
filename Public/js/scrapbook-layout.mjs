@@ -333,6 +333,7 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
     layers.push(textLayer(look, { bind: "title", text: title, fontId: pickFont(title, look), ...values }));
   };
   const audioBand = (input.audio || []).length ? 9 : 0;
+  let arrangement = "";
 
   if (style === "editorial") {
     const textW = n === 1 && v !== 0 ? 50 : 86;
@@ -363,6 +364,14 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
         put(visuals[0], { ...box, x, y }, 0);
         if (title) caption({ x: full ? 50 : v === 1 ? 7 + textW / 2 : 93 - textW / 2, y: y + box.h / 2 + 3 + fit.height / 2, w: full ? 80 : textW, fontSize: fit.size, align: full ? "center" : v === 1 ? "left" : "right" });
       }
+    } else if (n === 2 && !title) {
+      // V10.28 · Two photos and no words: a balanced pair, never a big one,
+      // a small one and an empty column kept for words that were not
+      // written. Side by side, one above the other, or staggered — the best
+      // for these two shapes first; "换个排版" takes the next ones.
+      const pair = pairLayout(visuals, { top: 8, bottom, left: 7, right: 93 }, frame, v);
+      pair.boxes.forEach((box, i) => put(visuals[i], box, i));
+      arrangement = pair.kind;
     } else {
       const hero = v === 2 ? -1 : heroIndex(visuals);
       const rest = visuals.filter((_, i) => i !== hero);
@@ -425,11 +434,85 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
     const boxes = n > 7 ? scatter(visuals, { top, bottom, side: 6 }, frame, v) : collage(visuals, { top, bottom, side: 6 }, frame, v);
     boxes.forEach((box, i) => put(visuals[i], box, i, { tape: i === 0 || i === 3 }));
   }
-  if (style !== "playful") centreVertically(place, layers, style === "cozy" ? 10 : 8, 95 - audioBand);
+  // (A pair is centred on the page itself: the folio line at the foot does
+  // not count as content.)
+  if (style !== "playful") centreVertically(place, arrangement ? layers.filter((l) => l.y < 95) : layers, style === "cozy" ? 10 : 8, 95 - audioBand);
   (input.audio || []).forEach((clip, i) => {
     place[clip.id] = { x: 50, y: 95 - audioBand / 2 - i * 0.5, w: 70, rotation: 0 };
   });
-  return { place, layers, paper: look.paper, backdrop: style === "playful" ? PLAYFUL_BACKDROPS[v] : null };
+  return { place, layers, paper: look.paper, backdrop: style === "playful" ? PLAYFUL_BACKDROPS[v] : null, ...(arrangement ? { arrangement } : {}) };
+}
+
+// ---------- V10.28 · Two photos as a pair ----------
+// Three arrangements, each keeping both photos whole (no crop):
+//   row     side by side;
+//   column  one above the other;
+//   stagger side by side, the second set a third lower.
+// Two photos of very different shapes would come out one big and one tiny
+// at the same height / width, so the smaller one is given a little more of
+// the shared side (halfway to equal sizes). Each arrangement is scored by
+// how much of the region the photos fill, how even their sizes are and how
+// much of the width they span; a pair where one photo is under 35% of the
+// other's size is marked down. `variant` 0 is the best, 1 and 2 the next
+// ones. Returns { kind, boxes, order } (order: all three kinds, best first).
+export const PAIR_KINDS = ["row", "column", "stagger"];
+export function pairLayout(visuals, region, frame = "bare", variant = 0) {
+  const W = region.right - region.left,
+    H = region.bottom - region.top,
+    gap = 2.4;
+  const a = visuals.slice(0, 2).map((v) => safeAspect(v.aspect));
+  const wAt = (i, h) => fitPhoto(a[i], 999, h, frame).w;
+  const hAt = (i, w) => frameHeight(a[i], w, frame);
+  const cx = region.left + W / 2;
+  // Same height → sizes differ by a1/a0; same width → by a0/a1. Halfway
+  // (in proportion) to equal: the second side is k times the first.
+  const kRow = Math.pow(a[0] / a[1], 0.25),
+    kCol = Math.pow(a[1] / a[0], 0.25);
+  const shrink = (fits, start) => {
+    let s = start;
+    for (let k = 0; k < 120 && !fits(s); k++) s *= 0.97;
+    return s;
+  };
+  const cands = [];
+  {
+    const h = shrink((h0) => wAt(0, h0) + wAt(1, h0 * kRow) + gap <= W && Math.max(h0, h0 * kRow) <= H, H / Math.max(1, kRow));
+    const w0 = wAt(0, h),
+      w1 = wAt(1, h * kRow),
+      x0 = cx - (w0 + w1 + gap) / 2;
+    const h0 = hAt(0, w0),
+      h1 = hAt(1, w1),
+      mid = region.top + Math.max(h0, h1) / 2;
+    cands.push({ kind: "row", boxes: [{ x: x0 + w0 / 2, y: mid, w: w0, h: h0 }, { x: x0 + w0 + gap + w1 / 2, y: mid, w: w1, h: h1 }] });
+  }
+  {
+    const w = shrink((w0) => Math.max(w0, w0 * kCol) <= W && hAt(0, w0) + hAt(1, w0 * kCol) + gap <= H, W / Math.max(1, kCol));
+    const w1 = w * kCol,
+      h0 = hAt(0, w),
+      h1 = hAt(1, w1);
+    cands.push({ kind: "column", boxes: [{ x: cx, y: region.top + h0 / 2, w, h: h0 }, { x: cx, y: region.top + h0 + gap + h1 / 2, w: w1, h: h1 }] });
+  }
+  {
+    const drop = (w0) => hAt(0, w0) * 0.32;
+    const w = shrink((w0) => w0 + w0 * kCol + gap <= W && Math.max(hAt(0, w0), drop(w0) + hAt(1, w0 * kCol)) <= H, (W - gap) / (1 + kCol));
+    const w1 = w * kCol,
+      h0 = hAt(0, w),
+      h1 = hAt(1, w1),
+      x0 = cx - (w + w1 + gap) / 2;
+    cands.push({ kind: "stagger", boxes: [{ x: x0 + w / 2, y: region.top + h0 / 2, w, h: h0 }, { x: x0 + w + gap + w1 / 2, y: region.top + drop(w) + h1 / 2, w: w1, h: h1 }] });
+  }
+  for (const c of cands) {
+    const areas = c.boxes.map((b) => b.w * b.h);
+    const cover = (areas[0] + areas[1]) / (W * H);
+    const balance = Math.min(...areas) / Math.max(...areas);
+    const xs = c.boxes.flatMap((b) => [b.x - b.w / 2, b.x + b.w / 2]);
+    const hfill = (Math.max(...xs) - Math.min(...xs)) / W;
+    c.balance = balance;
+    c.score = cover * (0.55 + 0.45 * balance) * (0.6 + 0.4 * hfill) * (balance < 0.35 ? 0.5 : 1);
+  }
+  // Stable: equal scores keep the row → column → stagger order.
+  const ranked = cands.map((c, i) => ({ c, i })).sort((x, y) => y.c.score - x.c.score || x.i - y.i).map(({ c }) => c);
+  const pick = ranked[((variant % 3) + 3) % 3];
+  return { kind: pick.kind, boxes: pick.boxes, order: ranked.map((c) => c.kind) };
 }
 
 // ---------- The day spread (cover) ----------

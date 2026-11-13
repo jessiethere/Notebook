@@ -493,3 +493,13 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 删掉的文案：`moment.untitled`、`entry.untitled`、`kp.untitled`、`kp.org.untitled`。
 - 阅读器（`readerHTML`）把只读画布里的 `tabindex="0"` 改成 `-1`：照片在阅读器里不接收键盘焦点。只读画布的焦点框用 `--accent`，不用系统蓝。
 - 测试：`tests/page-label.test.mjs`、`tests/v126-browser.cjs`。
+
+## 2026-11-13 V10.28 双照片排版（`pairLayout`）
+
+- `scrapbook-layout.mjs` 的 `layoutCore` 杂志风格分支：`n === 2 && !title` 时调用 `pairLayout`。
+  - `pairLayout` 是新导出的纯函数，没有随机。
+  - 它返回 `{ kind, boxes, order }`，`kind` 是 row / column / stagger。
+- `layoutMoment` 的结果在这种情况下多一个 `arrangement` 字段；其它情况没有这个字段。
+- 页面数据不新增字段：选哪种排法由 `layoutVariant`（0–2，按得分排名）决定，图层位置照常保存。
+- 已保存的页面不会重算位置：只有「今天的故事」里新建或重排时才调用排版引擎。
+- 测试：`tests/v128.test.mjs`、`tests/v128-browser.cjs`。

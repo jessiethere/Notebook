@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.28",
+    date: "2026-11-13",
+    zh: {
+      title: "两张照片的排版更均衡",
+      items: [
+        "杂志风格里放两张照片、没有写标题时，不再一张大一张小，旁边也不再给没写的字留一栏空白。",
+        "会在并排、上下、错落三种排法里，按照片形状、占满页面的程度和两张大小是否均衡，自动选最合适的一种；照片不裁切，截图上的字完整保留。",
+        "两张照片形状差很多时（比如横图配竖的截图），小的那张会适当放大，两张看起来差不多大。",
+        "点「重新排版」可以在三种排法之间切换，照片都保留。",
+        "已经保存的页面、你自己在「自定义」里调整过的页面不会被自动重排。",
+      ],
+    },
+    en: {
+      title: "Two photos, better balanced",
+      items: [
+        "In the magazine style, two photos with no title are no longer one big and one small, with an empty column kept for words you didn't write.",
+        "The page picks the best of three arrangements — side by side, stacked, or staggered — by the photos' shapes, how much of the page they fill and how even their sizes are. Photos are never cropped; the words in a screenshot stay whole.",
+        "When the two shapes are very different (a landscape photo and a tall screenshot), the smaller one is given a little more room so the two look about the same size.",
+        "“Re-layout” goes through the three arrangements; both photos always stay.",
+        "Pages you already saved, and pages you arranged yourself in Customize, are never laid out again by themselves.",
+      ],
+    },
+  },
+  {
     version: "10.27",
     date: "2026-11-13",
     zh: {
