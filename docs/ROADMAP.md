@@ -1,5 +1,12 @@
 # Little Days V3 · 多阶段任务清单
 
+> **2026-11-13 用户调整优先级**：核心承诺是「Turn everyday photos into beautiful journal pages in under a minute.」先证明这一条成立，再做创作增强。
+> 1. **P0 媒体持久化**：按 [P0_MEDIA_TEST.md](P0_MEDIA_TEST.md) 在 Claude App 内嵌链接和原生 iOS（模拟器 / 真机）分别验证；根因未定。
+> 2. **核心流程**：选 1–5 张照片 → 自动排版 → 可选写一句 → 一键保存 → 重新打开。审查见 [CORE_FLOW_AUDIT.md](CORE_FLOW_AUDIT.md)，最小修复 F1–F7 等用户确认。
+> 3. Meme & Sticker Studio：设计 v2 已通过（[MEME_STICKER_PLAN.md](MEME_STICKER_PLAN.md)），Phase A 只做低风险准备，暂不展开实施；GIF 在 Phase B。
+> 4. Captain 原色 6 个小反应素材：与开发分开准备。
+> Captain、Meme、GIF 是增强体验，不是核心流程的前提。
+
 > **2026-11-09 已确认**：优先级以 [STRATEGY.md](STRATEGY.md) 为准。暂停扩展社区 / 私信 / 等级 / 装扮 / 协作演示与素材（默认收进「实验室」，代码和数据保留）。
 >
 > ## V5.2 · 验证核心（进行中）

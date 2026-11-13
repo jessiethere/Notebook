@@ -8219,6 +8219,10 @@
     "zh": "读得出，但打不开（解码失败）",
     "en": "Read but won't open (decode failed)"
   },
+  "check.s.unchecked": {
+    "zh": "视频没有打开检查（iOS 要先点一下才读取视频，不代表坏了）",
+    "en": "Video not opened (iOS loads video only after a tap; not a fault)"
+  },
   "check.s.badref": {
     "zh": "页面里的引用格式不对",
     "en": "Page points to an invalid reference"

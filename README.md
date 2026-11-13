@@ -186,6 +186,19 @@ npm run test:browser:v65
 - 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
 - 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
 
+### 2026-11-13 — 先把「一分钟做出一页手帐」做稳：P0 验证、检查更准确（V10.26，第 90 版）、核心流程 Audit
+
+- 固定链接第 90 版：「检查照片和视频」不再把 iPhone 上没打开检查的视频说成「解码失败」；导入视频失败时，本机记录会写清具体原因。
+- 在 iOS 模拟器里用 App 自己的保存路径测过：
+  - 照片保存后，关掉 App 再打开，照片还在；
+  - 用备份恢复的视频，关掉 App 再打开，文件还在，封面也正常。
+  - 用脚本导入视频没成功：iOS 要求用户先点击，真实操作还要手动验证。
+- Claude App 里的验证步骤见 `docs/P0_MEDIA_TEST.md`（约 5 分钟，只用测试照片和视频）。根因还没确定。
+- 核心流程 Audit：https://claude.ai/artifact/XQudn5EW31Nc7jb6kWFgEw （`docs/CORE_FLOW_AUDIT.md`）。
+  - 现在 5 次点击就能完成，估计 30–45 秒；
+  - 7 个小问题等你确认后再改，例如「写一句」被挡住、写好的一句话太小。
+- Meme 设计 v2 已通过，按新的优先级暂不实施，只做了任务拆分。
+
 ### 2026-11-13 — Meme 与贴纸工作室：最终设计 v2（还没开始做）
 
 - 设计板第 2 版：https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （9 个画面，375 / 430，中文 / English）；文字版 `docs/MEME_STICKER_PLAN.md`。

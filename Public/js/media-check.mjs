@@ -11,7 +11,10 @@ import { visitMediaReferences, blobOf, errName, kindOf } from "./media.mjs";
 //   empty      a file is there with no data
 //   decode     the data is read but the picture / clip will not open
 //   badref     the page points at something that is not a valid reference
-export const STATUSES = ["ok", "missing", "unreadable", "empty", "decode", "badref"];
+// unchecked: a video / sound whose data never loaded within the time limit.
+// iOS WebKit only loads media after a tap, so this is "not checked", not
+// "broken" (V10.26, seen in the iOS Simulator with a readable test video).
+export const STATUSES = ["ok", "missing", "unreadable", "empty", "decode", "badref", "unchecked"];
 
 const VALID = /^(media:[a-f0-9-]{36}|photo:[a-z0-9-]+|scene:[a-z0-9-]+|\/assets\/[a-z0-9-]+\.jpg|data:image\/(jpeg|png|webp);base64,)/i;
 
@@ -140,7 +143,8 @@ export async function inspectMedia(media, state, { decode = true, limit = 300 } 
         try {
           await opens(blob, item.kind);
         } catch (error) {
-          item.status = "decode";
+          const clip = item.kind === "video" || item.kind === "audio" || item.kind === "clip";
+          item.status = clip && error?.name === "timeout" ? "unchecked" : "decode";
           item.err = errName(error);
         }
       }

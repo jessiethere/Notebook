@@ -48,6 +48,53 @@
 
 ## 更新日志
 
+### 2026-11-13 — 优先级调整：P0 原生模拟器真实路径验证 + V10.26 检查更准确（固定链接第 90 版）；核心流程 Audit；Meme Phase A 只做拆分
+
+- 需求（用户）：
+  - Meme v2 设计通过，D1–D8 不变，但先证明核心承诺「一分钟把照片变成漂亮的一页」；
+  - P0 继续查，用实际 App 的保存 / 读取路径验证，Claude 内嵌链接和原生模拟器分开测；不要只凭 persisted 推断，不要未经验证断言原生不受影响，不清理用户数据；
+  - GIF 相册 → File 这一步继续标为未验证；Meme Phase A 只做低风险准备和拆分；Captain 原色 6 个静态反应与开发分开；
+  - 做核心流程 Audit 和最小修复清单，不重写首页和编辑器。
+- **P0（原生 iOS 模拟器，真实保存路径）**：
+  - 新增只在 Debug 构建生效的 `-LittleDaysTap "upload:<input>|<文件>|<mime>"` 和 `wait:<ms>`（`LittleDaysWebShellView.swift`，提交 c539dfc）。它把 Mac 上的测试文件交给页面自己的文件输入框，之后走 App 真实的导入 / 保存代码，只跳过系统选择器；Release 不读这个参数。
+  - 构建方式：在 Mac 上 `git fetch` 后用 `git archive` 导出到 `/tmp/ld-build/src` 构建（Debug，模拟器「LD P0 Verify」iOS 27.2），**没有动 Mac 工作区和其它会话没提交的修改**（project.pbxproj、Package.resolved、Qwen 结果文件仍原样）。
+  - 结果：
+    - 测试照片（图库 latte-art）→ 杀掉 App 重开 → 正常（用到 1 · 存着 1 · 正常 1）；
+    - 测试视频（第一次是分片 mp4，第二次是模拟器录屏 H.264 0.1 MB / 5.8 秒）→ 导入在 import 阶段失败：第一次只记了 `error`，加诊断后是 `media-timeout`。同一个文件在 Mac 桌面 WebKit 里 0.1 秒就能读到。推断：iOS WebKit 只在用户点击后加载媒体，脚本交文件没有点击，所以不代表真实选择器也会失败（未证实）；
+    - 用 App 的「备份」在 Mac WebKit 里做一个含测试照片和测试视频的备份 → 在模拟器里「恢复备份」→ 杀掉 App 重开 → 用到 3 · 不在 0 · 读不出 0，照片显示，视频显示封面和「0:05 · 0.1 MB · 已保存到本机」；
+    - 旧检查把这个可读的视频报成「解码失败 · timeout」。
+  - 修改（V10.26）：
+    - `media-check.mjs` 新增状态 `unchecked`：视频 / 声音在时限内没加载时，写成「视频没有打开检查（iOS 要先点一下才读取视频，不代表坏了）」，不标红；
+    - `app.js` 的 `mediaMetadata` 失败时记录 `media-timeout` 或 `media-err-<MediaError 编号>`；
+    - i18n、whats-new 10.26、`v122.test.mjs` 同步更新。
+  - 模拟器里重装后确认新文案显示正常（截图 11-check-v1026）。
+  - 读日志的办法：从模拟器的 WebKit LocalStorage sqlite 读 `little-days.events`（只有事件名、阶段、错误名）。模拟器剪贴板读不到，因为脚本点击不算用户手势。
+  - 新文档 `docs/P0_MEDIA_TEST.md`：Claude App 内嵌链接的 5 分钟手动步骤（用 `P0-TEST-时间` 文字区分「整页没了」和「只是媒体读不出」）、模拟器手动步骤、已证实 / 未确定 / 可能的修复。
+  - **根因仍未确定**：你最早看到的 Error 当时的数据已经不在；原生真机没测；真实选择器导入视频没测。
+- **发布**：
+  - V10.26 → 固定链接第 90 版（app.js、js/media-check.mjs、js/whats-new.mjs、shared/i18n.json）；
+  - 线上旧的 media-check.mjs 先读回，sha256 1b64459f… 和 HEAD~1 一致才覆盖。
+- **核心流程 Audit**（`docs/CORE_FLOW_AUDIT.md`，页面 https://claude.ai/artifact/XQudn5EW31Nc7jb6kWFgEw ）：
+  - Chromium 模拟 390 / 375，1 / 3 / 5 张都实测：App 内 5 次点击（选照片、写一句、点输入框、完成、保存），不写字 2 次；
+  - 自动排版 0.13–0.26 秒（电脑，非真机）；保存后进阅读器约 1.5 秒；刷新后从首页卡片 1 次点击重开，照片和文字都在；
+  - 问题：「写一句」被底部按钮条挡住、输入框不自动聚焦、那句话变成照片下的灰色小字、写一句面板选项太多、书和日期是原生下拉框、没有拍摄时间时显示导入时刻；
+  - 最小修复 F1–F7 等用户确认，**没有改代码**。
+  - 另外在原生模拟器里看到：同一天已有内容时，首页「只写字」会再加一页（不在核心照片流程上，记下待查）。
+- 文档：
+  - ROADMAP 顶部写入新优先级；
+  - MEME_STICKER_PLAN 状态改为「v2 通过、Phase A 暂不实施」，新增第 10 节 Phase A 拆分（A0 纯函数可以先做，A4 媒体写入等 P0）和第 11 节 Captain 素材说明（Claude 不能生成正式 3D 图）。
+- 运行：
+  - `npm test` 211 通过；`python3 -m unittest` 18 通过；
+  - 浏览器 v121、v122、v123 通过（Chromium）；
+  - 模拟器构建成功（只有警告）。
+- 未完成：
+  - 用户按 P0_MEDIA_TEST.md 在 Claude App 里测；
+  - 原生真机测；
+  - 真实选择器导入视频；
+  - F1–F7 等确认；
+  - Captain 素材等出图。
+- Mac 上留下的测试文件：`/tmp/ld-gif`、`/tmp/ld-build`、`/tmp/ld-p0`；模拟器「LD P0 Verify」里有测试数据。
+
 ### 2026-11-13 — Meme & Sticker Studio 最终设计 v2（D1–D8 已确认）；GIF 选择器验证；P0 截图记录（仍未改 App 代码）
 
 - 需求：用户确认 D1–D8 并补充要求，要求先写进设计方案（设计板、图层结构、收藏机制、Captain 动画素材规格、静态 MVP 流程、Phase B GIF 方案、持久化与测试计划），确认后再开发；单独验证「从相册选 GIF 会不会被转成 JPG」；Captain 本轮只做原色 6 个；P0 没确认前不正式实施新的 Meme 媒体存储。
