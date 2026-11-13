@@ -93,6 +93,7 @@ py -3 tools\preview.py --open
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | 当前架构/兼容策略，以及未部署的社交后端和权限设计 |
 | [ROADMAP](docs/ROADMAP.md) | Phase 1–5 的详细任务与验收清单 |
 | [STRATEGY](docs/STRATEGY.md) | 产品战略、竞品、优先级与待确认提案（任务 G） |
+| [MEME_STICKER_PLAN](docs/MEME_STICKER_PLAN.md) | Meme 与贴纸工作室：Captain 小反应、我的 Meme 收藏、GIF（设计轮，待确认）；设计板 https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK |
 | [QUICK_CREATE_PLAN](docs/QUICK_CREATE_PLAN.md) | 差异化与 Quick Create v3 方案（待确认）；设计稿 https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt |
 | [ASSETS](docs/ASSETS.md) | 素材来源、SIL OFL 和原创许可 |
 | [Windows 指南](docs/WINDOWS_PREVIEW.md) | 无 Git 下载、启动、更新与故障排查 |
@@ -184,6 +185,13 @@ npm run test:browser:v65
 - 在浏览器里打开 `?dev-local-ai=qwen3.5:4b` 后，和 Captain 闲聊由你 Mac 上的 Qwen 回复，旁边标着「本机模型 · 开发」；发出去的只有聊天里的几句话，不含手帐内容。
 - 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
 - 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
+
+### 2026-11-13 — Meme 与贴纸工作室：设计稿（还没开始做）
+
+- 设计板：https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （375 / 430，中文 / 英文）；文字版 `docs/MEME_STICKER_PLAN.md`。
+- 打算：贴纸面板分成 贴纸 / Captain / Meme & GIF / 我的收藏；可以导入自己的表情图（先静态，再 GIF），导入后先预览，再选「放到这一页」或「只存进收藏」；GIF 默认不动，点了才播。
+- Captain 的 6 个小反应还没有正式素材，设计稿里都是标明「素材制作中」的占位。
+- App 本身这次没有变化，固定链接仍是第 89 版。有 8 个决定等你确认。
 
 ### 2026-11-13 — V10.25 已发布到固定链接（第 89 版）
 
