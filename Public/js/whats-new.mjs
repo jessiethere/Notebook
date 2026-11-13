@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.30",
+    date: "2026-11-13",
+    zh: {
+      title: "多张照片配一段长文字时，照片不再被挤得很小",
+      items: [
+        "两张照片配一段比较长的话：照片按并排 / 上下 / 错落排成均衡的一对，那段话放在照片下面（以前第二张会被挤得很小）。",
+        "很多张照片配一段长话时：所有照片排成整齐的几行，不会再有照片缩成邮票大小。",
+        "只影响新做的页面和你在「今天的故事」里换排版的页面；已经保存的页面不会变。",
+      ],
+    },
+    en: {
+      title: "Many photos and a long line: no more tiny photos",
+      items: [
+        "Two photos with a longer line: the photos make an even pair (side by side, stacked or staggered) and the line goes under them. Before, the second photo was squeezed small.",
+        "Many photos with a long line: every photo goes into neat rows — none shrinks to the size of a stamp.",
+        "Only new pages, and pages you re-lay out in Today's story, change; pages you already saved stay as they are.",
+      ],
+    },
+  },
+  {
     version: "10.29",
     date: "2026-11-13",
     zh: {

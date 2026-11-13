@@ -364,14 +364,17 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
         put(visuals[0], { ...box, x, y }, 0);
         if (title) caption({ x: full ? 50 : v === 1 ? 7 + textW / 2 : 93 - textW / 2, y: y + box.h / 2 + 3 + fit.height / 2, w: full ? 80 : textW, fontSize: fit.size, align: full ? "center" : v === 1 ? "left" : "right" });
       }
-    } else if (n === 2 && !title) {
+    } else if (n === 2 && (!title || textUnits(title) > 24)) {
       // V10.28 · Two photos and no words: a balanced pair, never a big one,
       // a small one and an empty column kept for words that were not
       // written. Side by side, one above the other, or staggered — the best
       // for these two shapes first; "换个排版" takes the next ones.
+      // V10.30: a long line (too long for the column beside a photo) goes
+      // under the pair the same way (before, the second photo shrank).
       const pair = pairLayout(visuals, { top: 8, bottom, left: 7, right: 93 }, frame, v);
       pair.boxes.forEach((box, i) => put(visuals[i], box, i));
       arrangement = pair.kind;
+      if (title) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size, weight: 500 });
     } else {
       const hero = v === 2 ? -1 : heroIndex(visuals);
       const rest = visuals.filter((_, i) => i !== hero);
@@ -397,7 +400,16 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
             caption({ x: 7 + colW / 2, y: region.top + f.height / 2 + 1, w: colW, fontSize: f.size });
           }
           top = -1;
-        } else rowsIn(rest, region, frame).forEach((box2, i) => box2 && put(rest[i], box2, i + 1));
+        } else {
+          const boxes = rowsIn(rest, region, frame);
+          // V10.29 (Step 5): with many photos and a long line the room under
+          // the big photo can get so short that the others shrink to stamps
+          // (seen: 3% of the page wide). Then every photo goes in even rows.
+          if (boxes.some((b) => !b || b.w < 14)) {
+            delete place[visuals[hero].id];
+            rowsIn(visuals, { top: 8, bottom, left: 7, right: 93 }, frame).forEach((box2, i) => box2 && put(visuals[i], box2, i));
+          } else boxes.forEach((box2, i) => box2 && put(rest[i], box2, i + 1));
+        }
       } else rowsIn(visuals, { top: 8, bottom, left: 7, right: 93 }, frame).forEach((box2, i) => box2 && put(visuals[i], box2, i));
       if (title && top !== -1) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size, weight: 500 });
     }

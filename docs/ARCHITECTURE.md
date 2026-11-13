@@ -526,3 +526,9 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - 风格按钮还是原来的 `story-style`。
 - 写文字：`openStoryText` 打开时就聚焦输入框。字体与样式放进 `<details class="sw-more">`，打开或收起的状态记在 `swTypeOpen`。
 - 旧的 `story-shuffle`、`story-text` 动作还保留，不过界面上已经没有对应的按钮了。
+
+## 2026-11-13 V10.30 排版修复（Step 5 回归发现）
+
+- `layoutCore` 杂志风格：双照片排版的条件改为 `n === 2 && (!title || textUnits(title) > 24)`；有长文字时，文字放在这一对照片下面。
+- 两张以上照片：大照片下面的照片里，只要有一张不到页面宽的 14%（或者放不下），就去掉大照片，所有照片用 `rowsIn` 排成几行。
+- 测试：`tests/v130.test.mjs`（864 种组合）、`tests/v130-browser.cjs`。
