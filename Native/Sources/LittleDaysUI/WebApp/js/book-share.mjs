@@ -7,32 +7,16 @@ export const MAX_SHARE_PAGES = 60;
 // PDF page size in points: the journal page is 4:5 (1080 × 1350 px).
 export const PDF_PAGE = { width: 432, height: 540 };
 
-const hasCover = (entry) =>
-  Boolean(
-    entry &&
-      ((entry.title || "").trim() ||
-        (entry.body || "").trim() ||
-        entry.photo ||
-        (entry.layers || []).length ||
-        (entry.media || []).length),
-  );
+import { visiblePages } from "./pages.mjs";
 
-// The pages of one book, oldest first: each day's cover (if it belongs to
-// this book and has something on it), then that day's pages in their order.
-// Saved days are used; a day that only exists as a draft is included too.
-// Sample (demo) days are left out.
-// (Reading the book in the app may include the sample days; sharing never does.)
+// The pages of one book, oldest first: each day's own page (if it belongs to
+// this book, has something on it and is not a hidden day cover), then that
+// day's pages in their order. Saved days are used; a day that only exists as
+// a draft is included too. V10.41: the rules live in pages.mjs, shared with
+// the Reader, Calendar and My Books; sample days are left out unless
+// includeDemo (kept for older callers) asks for them.
 export function bookSharePages(state, bookId, { includeDemo = false } = {}) {
-  const days = new Map();
-  for (const entry of state.entries || []) if (includeDemo || !entry.isDemo) days.set(entry.date, entry);
-  for (const [date, draft] of Object.entries(state.drafts || {})) if (!days.has(date) && (includeDemo || !draft.isDemo)) days.set(date, draft);
-  const pages = [];
-  for (const date of [...days.keys()].sort()) {
-    const entry = days.get(date);
-    if (entry.bookId === bookId && hasCover(entry)) pages.push({ date, entry, moment: null });
-    for (const moment of entry.moments || []) if ((moment.bookId || entry.bookId) === bookId) pages.push({ date, entry, moment });
-  }
-  return pages;
+  return visiblePages(state, { bookId, samples: includeDemo ? "include" : "exclude" });
 }
 // Too many pages for one file: keep the most recent ones.
 export function limitPages(pages, max = MAX_SHARE_PAGES) {

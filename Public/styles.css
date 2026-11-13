@@ -21750,3 +21750,9 @@ body.typing .ctx-caption {
 .backup-when.partial { color: var(--danger, #b4483c); }
 .backup-missing .save-help, .backup-kept .save-help { font-size: 14px; line-height: 1.55; text-align: left; color: inherit; opacity: 0.85; }
 .backup-missing .primary, .backup-kept .primary { font-size: 15px; }
+/* V10.41 (D2): Settings → 示例内容, the earlier samples, each marked. */
+.samples-h { font-size: 14px; margin: 14px 0 6px; }
+.samples-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.samples-day { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 8px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--c-dfdfd0, #dfdfd0); background: var(--paper, #fffdf8); color: inherit; font-size: 14px; }
+.samples-day small { opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.samples-day .badge { margin: 0; }

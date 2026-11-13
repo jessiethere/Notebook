@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.41",
+    date: "2026-11-13",
+    zh: {
+      title: "你的手帐只装你自己的记录",
+      items: [
+        "新装的 App 只有一本空的「我的手帐」，0 页，可以改名、换封面或删除。书架上不再出现「和家人一起的书」建议卡片。",
+        "以前版本放进手帐的示例都还保存着，但不再出现在你的书、日历、阅读、搜索和统计里，Captain 也不会把它们当成你的回忆。",
+        "想看以前的示例：设置 → 示例内容 → 查看以前的示例，每一天都标着「示例」。",
+        "你改过并保存过的示例那几天，算你自己的记录，照常显示、可以搜索。",
+      ],
+    },
+    en: {
+      title: "Your journal holds only what you kept",
+      items: [
+        "A new install starts with one empty book, My Journal (0 pages) — rename it, give it another cover or delete it. The family book suggestions no longer sit on the shelf.",
+        "Samples an earlier version added are still stored, but they no longer appear in your books, Calendar, reading, search or counts, and Captain never treats them as your memories.",
+        "To look at them: Settings → Samples → See the earlier samples, each day marked Sample.",
+        "Sample days you changed and saved count as your own and show as usual.",
+      ],
+    },
+  },
+  {
     version: "10.40",
     date: "2026-11-13",
     zh: {

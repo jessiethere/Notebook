@@ -79,8 +79,8 @@ function ownDays(state) {
   for (const [date, draft] of Object.entries(state.drafts || {})) if (!days.has(date) && !draft.isDemo) days.set(date, draft);
   return days;
 }
-const keptDay = (entry) => Boolean(entry && (hasDayPageContent(entry) || (entry.moments || []).some((m) => !m.isDemo)));
-const pagesOf = (entry) => [entry, ...(entry.moments || [])].filter((p) => (p === entry ? hasDayPageContent(p) : !p.isDemo));
+const keptDay = (entry) => Boolean(entry && (hasDayPageContent(entry) || (entry.moments || []).length > 0));
+const pagesOf = (entry) => [entry, ...(entry.moments || [])].filter((p) => (p === entry ? hasDayPageContent(p) : true));
 const hasPhoto = (page) => isPhoto(page.backdrop) || isPhoto(page.photo) || (page.layers || []).some((l) => l.kind === "photo" && l.mediaRef && !l.gen);
 
 // Growth from everyday documentation. Each day can add at most `dayCap`

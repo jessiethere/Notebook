@@ -65,7 +65,9 @@ const ACCOUNT = JSON.stringify({ version: 1, method: "local", name: "", avatar: 
       await page.waitForTimeout(400);
       assert.equal(await page.locator(".shelf-habit-book").count(), 0, `${where}: no 我的习惯 book on the shelf`);
       const shelf = await page.locator("#app").innerText();
-      if (!run.zh) assert.ok(shelf.includes("Little Joys of Ordinary Days") && !/平凡日子/.test(shelf), `${where}: the starting books are named in English`);
+      // V10.41 (D1): one empty book, named in the interface language; no family suggestion cards.
+      assert.ok(shelf.includes(run.zh ? "我的手帐" : "My Journal") && !/平凡日子|Little Joys/.test(shelf), `${where}: one starting book, ${run.zh ? "我的手帐" : "My Journal"}`);
+      assert.equal(await page.locator(".suggested-books").count(), 0, `${where}: no family suggestion cards on the shelf`);
       // The first page: written and kept.
       await page.locator('#navigation [data-page="home"]').tap();
       await page.waitForSelector(".hero");

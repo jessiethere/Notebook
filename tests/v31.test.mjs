@@ -133,6 +133,7 @@ test("saving a single moment updates the saved day without committing other draf
 test("moment books link My Books to the right chapter without duplicating days", () => {
   const state = createInitialState(seed, today);
   const entry = state.entries.find((e) => e.date === today);
+  entry.isDemo = false; // V10.41 (S1): the person's own day (saving clears isDemo); unsaved sample days are not in books
   entry.moments.push(createMoment(entry, { title: "Recipe", bookId: "food" }));
   const pages = bookPages(state, "food");
   assert.ok(pages.some((page) => page.moment?.title === "Recipe"));
@@ -298,6 +299,7 @@ test("book days give one cover per date and filter by month or exact date", asyn
   const { bookDays, bookMonths } = await import("../Public/js/day.mjs");
   const state = createInitialState(seed, today);
   const sample = state.entries.find((e) => e.date === today);
+  sample.isDemo = false; // V10.41 (S1): saved by the person, so it is theirs
   sample.moments.push(
     createMoment(sample, { title: "Coffee", bookId: "daily", layers: [photoLayer(ref(5), "c")] }),
     createMoment(sample, { title: "Recipe", bookId: "food" }),

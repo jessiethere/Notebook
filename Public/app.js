@@ -30,6 +30,7 @@ import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
+import { isSampleDay, dayOf } from "./js/pages.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
@@ -310,7 +311,7 @@ let dialogKind = null,
   toastTimer;
 const state = () => store.state;
 const todayEntry = () =>
-  state().entries.find((entry) => entry.date === dateKey());
+  state().entries.find((entry) => entry.date === dateKey() && !isSampleDay(entry));
 
 function toast(message) {
   $("#toast").textContent = message;
@@ -951,7 +952,7 @@ function calendarWallHTML() {
   const only = calendarBookDays();
   const cells = Array.from({ length: count }, (_, i) => {
     const key = dateKey(new Date(year, monthIndex, i + 1));
-    const entry = only ? (only.has(key) ? state().entries.find((e) => e.date === key) : null) : state().entries.find((e) => e.date === key) || state().drafts[key];
+    const entry = only ? (only.has(key) ? dayOf(state(), key) : null) : dayOf(state(), key);
     const photo = only ? (only.get(key)?.photos[0] ? safePhoto(only.get(key).photos[0]) : "") : entry ? safePhoto(coverPhoto(entry)) : "";
     const has = entry && (only ? true : hasDayPageContent(entry) || entry.moments?.length);
     if (has) days++;
@@ -973,7 +974,8 @@ function calendarPage() {
     monthIndex = month.getMonth(),
     count = new Date(year, monthIndex + 1, 0).getDate(),
     offset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
-  const entry = state().entries.find((e) => e.date === selectedDate),
+  // V10.41 (S1): a sample day is not one of the person's days here.
+  const entry = state().entries.find((e) => e.date === selectedDate && !isSampleDay(e)),
     checks = state().checks.filter((c) => c.date === selectedDate);
   const weekdays =
     languageCode() === "en"
@@ -982,7 +984,7 @@ function calendarPage() {
   const only = calendarMode === "memory" ? calendarBookDays() : null;
   const cells = Array.from({ length: count }, (_, i) => {
     const key = dateKey(new Date(year, monthIndex, i + 1)),
-      recorded = only && !only.has(key) ? null : state().entries.find((e) => e.date === key),
+      recorded = only && !only.has(key) ? null : state().entries.find((e) => e.date === key && !isSampleDay(e)),
       total = state().checks.filter((c) => c.date === key).length,
       marks = only && !only.has(key) ? { html: "", label: "", hasContent: false } : dayMarks(key),
       thumb = only ? (only.get(key)?.photos[0] ? safePhoto(only.get(key).photos[0]) : "") : safePhoto(coverPhoto(recorded));
@@ -1521,7 +1523,7 @@ const CAPTAIN_LINES = { A: 3, Bnew: 2, Bsaid: 2, C: 2, D: 2 };
 const captainLine = (key) => t(`cp.${key}.${(Math.max(0, (captainSeen[key] || 1) - 1) % CAPTAIN_LINES[key]) + 1}`);
 function captainCardData() {
   const today = dateKey();
-  const entryOf = (d) => state().entries.find((e) => e.date === d) || state().drafts[d];
+  const entryOf = (d) => dayOf(state(), d);
   const fresh = (x, min) => x && Date.now() - x.at < min * 60000;
   const btn = (label, attrs, primary = false) => `<button class="${primary ? "primary" : "secondary"}" ${attrs}>${label}</button>`;
   const saved = fresh(captainSaved, 15) && captainSaved.date === today && entryOf(today)?.moments?.some((x) => x.id === captainSaved.momentId) ? captainSaved : null;
@@ -1541,7 +1543,7 @@ function captainCardData() {
     return said ? { state: "B", key: "Bsaid", acts: btn(t("cp.keepEditing"), `data-action="read-edit" ${at}`, true) + look } : { state: "B", key: "Bnew", acts: btn(t("cp.addLine"), `data-action="read-edit" ${at}`, true) + look };
   }
   if (keptToday()) {
-    const n = (entryOf(today)?.moments || []).filter((x) => !x.isDemo).length;
+    const n = (entryOf(today)?.moments || []).length;
     return { state: "C", key: "C", meta: n > 1 ? t("cp.todayPages", { n }) : "", acts: btn(t("cp.openToday"), `data-action="cp-today"`, true) };
   }
   return { state: "A", key: "A", acts: btn(t("cp.photos"), `data-action="cp-go" data-go="today-photos"`, true) + btn(t("cp.write"), `data-action="cp-go" data-go="today-write"`) };
@@ -2067,7 +2069,7 @@ function saveReminder(next) {
 }
 function keptToday() {
   const today = state().entries.find((e) => e.date === dateKey()) || state().drafts[dateKey()];
-  return Boolean(today && !today.isDemo && (hasDayPageContent(today) || today.moments?.some((m) => !m.isDemo)));
+  return Boolean(today && !isSampleDay(today) && (hasDayPageContent(today) || today.moments?.length));
 }
 // Tell the iPhone app what to schedule (it does nothing on the Web).
 function syncReminder() {
@@ -2181,7 +2183,7 @@ const writeKey = (key, value) => {
 };
 const daysBetween = (a, b) => Math.round((new Date(`${b}T12:00:00`) - new Date(`${a}T12:00:00`)) / 86400000);
 function ownDays() {
-  return state().entries.filter((e) => !e.isDemo && (hasDayPageContent(e) || e.moments?.some((m) => !m.isDemo))).length;
+  return state().entries.filter((e) => !isSampleDay(e) && (hasDayPageContent(e) || e.moments?.length)).length;
 }
 function backupDue() {
   const last = readKey(BACKUP_AT_KEY).slice(0, 10);
@@ -2409,7 +2411,8 @@ document.addEventListener("visibilitychange", () => {
 let flipIndex = 0,
   flipTurn = 0;
 function flipPages(bookId) {
-  return bookSharePages(state(), bookId, { includeDemo: true });
+  // V10.41 (S1): sample days are not part of reading a book.
+  return bookSharePages(state(), bookId);
 }
 // ---------- V10.11 · The full-screen Book Reader ----------
 // Opening a book reads it like a book: one page at a time on a full screen
@@ -2847,7 +2850,7 @@ function booksPage() {
   const more = rest.length ? `<button class="shelf-tags-more" data-action="shelf-tags-more" aria-expanded="${shelfTagsOpen}">${t(shelfTagsOpen ? "books.tagsLess" : "books.tagsMore", { count: rest.length })}</button>` : "";
   const panel = rest.length && shelfTagsOpen ? `<div class="shelf-tags-panel"><input type="search" data-tag-search maxlength="20" placeholder="${t("books.tagsSearch")}" aria-label="${t("books.tagsSearch")}"><div class="shelf-tags-all">${rest.map(chip).join("")}</div></div>` : "";
   const tagRow = tags.length ? `<div class="shelf-tags" role="group" aria-label="${t("books.tags")}"><button data-action="shelf-tag" data-tag="" aria-pressed="${!shelfTag}">${t("books.allTags")}</button>${top.map(chip).join("")}${more}</div>${panel}` : "";
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours ? "" : keeperShelfHTML(all)}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours || !labsOn() ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours ? "" : keeperShelfHTML(all)}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours || !labsOn() ? "" : habitBookHTML()}${""/* V10.41 (D1): suggestion cards no longer sit on the shelf */}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
@@ -6241,8 +6244,17 @@ function settingsSheetHTML(kind) {
   if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li><li>${t("settings.backupNote")}</li><li>${t("privacy.hideTodayHint")}</li><li>${t("privacy.shareListHint")}</li><li>${t("s2.aiNote")}</li></ul>`;
   if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></div>`;
   if (kind === "samples") {
-    const samples = state().entries.filter((e) => e.isDemo).length;
-    return `${head("samples.title")}<div class="samples-card"><p class="s2-hint">${t("samples.note", { count: samples })}</p>${samples ? `<button class="kp-main" data-action="samples-remove">${t("samples.remove")}</button>` : ""}</div>`;
+    // V10.41 (D2): samples stay in storage but out of books, Calendar and
+    // reading; they are looked at only here, each day marked 示例.
+    const days = state().entries.filter((e) => isSampleDay(e)).sort((a, b) => b.date.localeCompare(a.date));
+    const samples = days.length;
+    const list = days
+      .map((e) => {
+        const first = [e, ...(e.moments || [])].find((p) => (p.title || "").trim());
+        return `<button class="samples-day" data-action="open-day" data-date="${esc(e.date)}"><span class="badge">${t("entry.sample")}</span><b>${esc(friendlyDate(e.date))}</b><small>${esc(first?.title || "")}</small><i aria-hidden="true">›</i></button>`;
+      })
+      .join("");
+    return `${head("samples.title")}<div class="samples-card"><p class="s2-hint">${t(samples ? "samples.noteKept" : "samples.none", { count: samples })}</p>${samples ? `<h3 class="samples-h">${t("samples.view")}</h3><div class="samples-list">${list}</div><button class="kp-quiet" data-action="samples-remove">${t("samples.remove")}</button>` : ""}</div>`;
   }
   if (kind === "testlog") return `${head("testlog.title")}<div class="test-log"><p class="s2-hint">${t("testlog.note")}</p><button class="kp-main" data-action="export-events">${t("testlog.export")}</button></div>`;
   if (kind === "labs") {
@@ -10837,7 +10849,10 @@ async function start() {
   const withSamples = localStorage.getItem("little-days.with-samples") === "1";
   // The three starting books are named in the interface language when the
   // journal is new (preset names, not the person's words; existing books keep theirs).
-  const startBooks = responses[2].books.map((b) => ({ ...b, title: t(`book.default.${b.id}`) === `book.default.${b.id}` ? b.title : t(`book.default.${b.id}`) }));
+  // V10.41 (D1): one empty book, 我的手帐 / My Journal (the preset "daily"
+  // book's look and id, so every page has a home without asking first).
+  // It can be renamed, given another cover or deleted like any book.
+  const startBooks = [{ ...responses[2].books[0], title: t("book.default.mine") }];
   const journalSeed = withSamples ? responses[2] : { ...responses[2], books: startBooks, journals: [], sampleDays: [], habits: [] };
   store = new Store(localStorage, journalSeed, undefined, {
     durableRaw,

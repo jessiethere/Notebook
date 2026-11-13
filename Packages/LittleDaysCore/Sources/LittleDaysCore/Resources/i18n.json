@@ -8986,5 +8986,21 @@
   "backup.lastComplete": {
     "zh": "上次完整备份：{date}。",
     "en": "Last complete backup: {date}."
+  },
+  "samples.noteKept": {
+    "zh": "以前版本放进手帐的 {count} 天示例都还保存着，但不会出现在你的书、日历、阅读和统计里，Captain 也不会把它们当成你的回忆。你改过并保存的那几天算你自己的，照常显示。",
+    "en": "The {count} sample days an earlier version added are still stored, but they don't appear in your books, Calendar, reading or counts, and Captain never treats them as your memories. Days you changed and saved count as your own and show as usual."
+  },
+  "samples.none": {
+    "zh": "这本手帐里没有示例内容。",
+    "en": "There are no samples in this journal."
+  },
+  "samples.view": {
+    "zh": "查看以前的示例",
+    "en": "See the earlier samples"
+  },
+  "book.default.mine": {
+    "zh": "我的手帐",
+    "en": "My Journal"
   }
 }

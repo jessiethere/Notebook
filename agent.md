@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.41 S1 + D1：示例与用户记录隔离；新用户一本空的「我的手帐」（P0）
+
+- **决定（用户确认）**：D1 新用户只建一本空书；D2 旧示例保留在存储里，但不进入书、日历、阅读、搜索、统计和 Captain，只在 设置 → 示例内容 查看；改过的示例按用户内容保护；本轮不删除任何历史示例；S2 清理工具暂缓。
+- **识别规则（检查了真实数据结构）**：稳定标记是 `entry.isDemo`。App 生成时为 true，用户保存那一天时 `saveEntry` / `saveMoment` 把它改成 false；示例 id 都是 `sample-*`；没有逐页编辑记录。所以只有「当天 isDemo:true」= 原始示例。用户保存过的那天里，仍带 isDemo 的页面无法可靠判断改没改过，一律当用户内容（保护优先）。不和 seed 内容比对。
+- **文件**：新 `Public/js/pages.mjs`（共享规则：`isSampleDay`、`isDayCover`、`dayPageShown`、`daysOf`、`dayOf`、`visiblePages`、`dayCounts`、`bookCounts`）；`book-share.mjs`（`bookSharePages` 改用 `visiblePages`）；`day.mjs`（`daySummary` 默认跳过示例日，`{samples:true}` 给示例查看用；`bookPages` / `bookEntryCount` / `bookDays` 跳过示例日）；`day-view.mjs`；`search.mjs`、`keeper.mjs`（从「逐页 isDemo」改为「整天」规则，修正用户改过的示例页被搜索/Captain 跳过的问题）；`app.js`（今天、阅读器 `flipPages` 不再 includeDemo、日历、Captain 卡片、设置 → 示例内容列表、首次一本「我的手帐」、书架不再显示建议卡）；i18n 4 个键；styles；whats-new 10.41。
+- **测试**：新 `tests/v141-browser.cjs` 10 项（zh 375 / en 430 × A 新安装 / B 自己的手帐，打开后存储逐字节不变 / C 只有旧示例，存储不变、首页搜索日历阅读器都没有、设置里 8 天全部列出并标「示例」/ D 改过的示例可搜索 / E 数据库读不出 → A1 面板）；v139 改为断言一本书；`tests/v31.test.mjs` 两个单元测试原本往未保存的示例日加页面，改为「用户保存过的一天」；`npm test` 278 通过。
+- **风险**：用户保存过的示例日里，没改过的示例页也会显示为用户内容（保护优先的代价）。「移除所有示例」按钮是以前就有的、需确认的手动操作，没有改动，只删整天 isDemo:true 的示例。
+- **回退**：`git revert`；没有改数据。
+
 ### 2026-11-13 — 方案轮：照片复用 · 每日封面可选 · 示例数据隔离（只出方案和预览，没有改 App 代码）
 
 - **方案板**：https://claude.ai/artifact/AKgX2gu88hRidRkKB9fQGo （「现在的 App」是 V10.40 浏览器真实截图；「设计概念」是 HTML 画的预览）。

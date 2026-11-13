@@ -53,7 +53,6 @@ export function searchJournal(state, query, { limit = 60 } = {}) {
   for (const [date, entry] of ownDays(state)) {
     const list = [entry, ...(entry.moments || [])].filter((page) => page !== entry || hasDayPageContent(entry));
     for (const page of list) {
-      if (page.isDemo) continue;
       const texts = pageTexts(page);
       const book = books.get(page.bookId || entry.bookId);
       const haystack = fold([...texts, book?.title || "", ...(book?.tags || []).map((t) => `#${t}`)].join("\n"));
@@ -94,7 +93,7 @@ export function searchJournal(state, query, { limit = 60 } = {}) {
 export function onThisDay(state, today) {
   const [y, m, d] = today.split("-").map(Number);
   const days = ownDays(state);
-  const has = (entry) => entry && (hasDayPageContent(entry) || (entry.moments || []).some((page) => !page.isDemo));
+  const has = (entry) => entry && (hasDayPageContent(entry) || (entry.moments || []).length > 0);
   const found = [];
   for (let back = 1; back <= 20; back++) {
     const date = `${y - back}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -109,7 +108,7 @@ export function onThisDay(state, today) {
     }
   }
   return found.map((item) => {
-    const pages = [item.entry, ...(item.entry.moments || [])].filter((page) => (page === item.entry ? hasDayPageContent(page) : !page.isDemo));
+    const pages = [item.entry, ...(item.entry.moments || [])].filter((page) => (page === item.entry ? hasDayPageContent(page) : true));
     const withPhoto = pages.find((page) => pagePhoto(page, item.entry)) || pages[0];
     const words = pages.map((page) => pageTexts(page)).flat();
     return { ...item, momentId: withPhoto && withPhoto !== item.entry ? withPhoto.id : null, photo: withPhoto ? pagePhoto(withPhoto, item.entry) : "", title: withPhoto?.title || words[0] || "", words: (withPhoto?.body || words.find((w) => w !== withPhoto?.title) || "").replace(/\s+/g, " ").slice(0, 80), pages: pages.length };

@@ -96,7 +96,7 @@ export function dayDetailHTML(date, ctx, helpers) {
   const saved = state.entries.find((entry) => entry.date === date);
   const draft = state.drafts[date];
   const entry = saved || draft;
-  const summary = daySummary(state, date);
+  const summary = daySummary(state, date, { samples: true });
   const stats = [
     summary.moments ? t("day.statMoments", { count: summary.moments }) : "",
     summary.photos ? t("day.statPhotos", { count: summary.photos }) : "",

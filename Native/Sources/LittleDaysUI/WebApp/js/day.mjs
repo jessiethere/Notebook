@@ -152,8 +152,10 @@ export function clipsOf(entry) {
   return pagesOf(entry).flatMap((page) => page.media || []);
 }
 
-export function daySummary(state, date) {
-  const entry = state.entries.find((item) => item.date === date);
+// V10.41 (S1): a sample day (isDemo, never saved by the person) counts as
+// nothing here unless `samples` is asked for (Settings → 示例内容 → a day).
+export function daySummary(state, date, { samples = false } = {}) {
+  const entry = state.entries.find((item) => item.date === date && (samples || item.isDemo !== true));
   const clips = clipsOf(entry);
   const checks = state.checks.filter((check) => check.date === date);
   return {
@@ -170,6 +172,7 @@ export function daySummary(state, date) {
 export function bookPages(state, bookId) {
   const result = [];
   for (const entry of state.entries) {
+    if (entry.isDemo === true) continue;
     if (entry.bookId === bookId && hasDayPageContent(entry))
       result.push({ entry, moment: null });
     for (const moment of entry.moments || [])
@@ -181,8 +184,9 @@ export function bookPages(state, bookId) {
 export function bookEntryCount(state, bookId) {
   return state.entries.filter(
     (entry) =>
-      entry.bookId === bookId ||
-      (entry.moments || []).some((moment) => moment.bookId === bookId),
+      entry.isDemo !== true &&
+      (entry.bookId === bookId ||
+        (entry.moments || []).some((moment) => moment.bookId === bookId)),
   ).length;
 }
 
@@ -573,6 +577,7 @@ export function habitJourney(state, habitId, today) {
 export function bookDays(state, bookId, filter = {}) {
   const days = [];
   for (const entry of state.entries) {
+    if (entry.isDemo === true) continue; // V10.41 (S1): sample days are not the person's
     const dayPage = entry.bookId === bookId && hasDayPageContent(entry);
     const moments = (entry.moments || []).filter((moment) => moment.bookId === bookId);
     if (!dayPage && !moments.length) continue;
