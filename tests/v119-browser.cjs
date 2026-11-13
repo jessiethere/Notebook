@@ -53,14 +53,17 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
-    assert.equal(await page.locator(".story-tabs button").count(), 3, "a spread + 2 Moments (three photos at one minute stay one Moment)");
+    // V10.44 (S4-A): the day spread is optional now — this suite adds it, as a person would.
+    await page.locator('[data-action="story-cover-add"]').tap();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('.story-tabs [data-action="story-page"]').count(), 3, "a spread + 2 Moments (three photos at one minute stay one Moment)");
     let a = await momentA();
     assert.equal(photosOf(a).length, 3);
     const ids = photosOf(a).map((p) => p.id);
     const refs = photosOf(a).map((p) => p.mediaRef);
 
     // ---------------------------------------------------------- the sheet
-    await page.locator(".story-tabs button").nth(1).tap(); // Moment 14:18
+    await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap(); // Moment 14:18
     await page.locator('.qe-tools [data-action="story-text"]').tap();
     await page.waitForSelector("#choose-dialog[open] .sw [data-sw-text]");
     const strip = await page.$$eval("#choose-dialog .sw-item", (els) => els.map((el) => [el.dataset.target, el.getAttribute("aria-label"), Boolean(el.querySelector("img"))]));
@@ -162,7 +165,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // ---------------------------------------------------------- 375 / 430
     for (const [w, h] of [[375, 667], [430, 932]]) {
       await page.setViewportSize({ width: w, height: h });
-      await page.locator(".story-tabs button").nth(1).tap();
+      await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
       await page.locator('.qe-tools [data-action="story-text"]').tap();
       await page.waitForSelector("#choose-dialog[open] .sw");
       const fit = await page.evaluate(() => {
@@ -180,7 +183,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     passed.push("375×667 and 430×932: the page stays in view above the sheet; the field and Done fit; nothing sideways");
 
     // ---------------------------------------------------------- Customize keeps it
-    await page.locator(".story-tabs button").nth(1).tap();
+    await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
     await page.locator('[data-action="story-adjust"]').tap();
     await page.waitForSelector("#journal-canvas");
     const studioWords = await page.$$eval("#journal-canvas .layer-text", (els) => els.map((el) => el.textContent));

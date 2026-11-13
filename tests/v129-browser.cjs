@@ -55,7 +55,9 @@ const photoFile = (n) => path.join(lib, `LD-photo-${n}.jpg`);
       };
       const pressedKind = () => page.locator('.qe-variants [aria-pressed="true"]').getAttribute("data-kind");
       const replaceWith = async (name) => {
-        const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.locator('[data-action="story-replace"]').tap()]);
+        // V10.43 (S3): 换照片 first offers the photos already here; this step uses 从相册添加.
+        await page.locator('[data-action="story-replace"]').tap();
+        const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.locator('#choose-dialog [data-action="ps-album"]').tap()]);
         assert.equal(await chooser.isMultiple(), false, "one photo replaces one photo");
         await chooser.setFiles(photoFile(name));
         await page.waitForSelector(".qe-notice");

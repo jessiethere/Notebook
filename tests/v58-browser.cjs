@@ -19,6 +19,7 @@ const shots = process.env.SHOTS_DIR || "";
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").ownSamples(page); // V10.41: the sample days as the person's own (see signed-in.cjs)
     const key = (n) => page.evaluate((n) => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }, n);
     const [d1, d2] = [await key(40), await key(39)];
     // Make the store real, then add two days of my own pages in the food book.
@@ -85,7 +86,7 @@ const shots = process.env.SHOTS_DIR || "";
       assert.equal(await page.locator(".flip-edit").count(), sample ? 0 : 1, "✎ only on my own pages");
       sampleChecked ||= sample;
     }
-    assert.ok(sampleChecked, "the book has sample pages to check");
+    // (V10.41: sample pages are no longer read in a book — tests/v141; here every page is the person's own.)
     passed.push(`book page by page: ✎ edits that page; Save and ‹ come back to the same page${sampleChecked ? "; sample pages have no ✎" : ""}`);
 
     // 2. Reading a day: every page of mine has ✎ Edit; Save comes back to the day.

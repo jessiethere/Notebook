@@ -27,8 +27,9 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     let s = await state();
     const sample = s.entries.find((e) => e.isDemo && e.date === today);
     assert.equal(sample.photo, "/assets/coffee.jpg");
-    assert.equal(await page.locator(".hero img:not(.keeper-img)").evaluate((img) => img.complete && img.naturalWidth > 0), true);
+    // (V10.41: the sample day is no longer on Home — tests/v141; the stored sample keeps its photo.)
     passed.push("sample page keeps the coffee photo");
+    await require("./signed-in.cjs").ownSamples(page); // the rest of this suite uses the sample days as the person's own
 
     // 2. Home: with nothing written today, the picture of the day invites writing.
     await page.evaluate((d) => {

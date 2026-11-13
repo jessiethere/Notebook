@@ -21,6 +21,7 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").ownSamples(page); // V10.41: the sample days as the person's own (see signed-in.cjs)
     const nav = (tab) => goTab(page, tab);
     // "Me" moved to My Books → 我的主页.
     const openMe = async () => {

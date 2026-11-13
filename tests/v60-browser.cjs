@@ -45,7 +45,10 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
-    assert.equal(await page.locator(".story-tabs button").count(), 4, "a day spread + one page per Moment");
+    // V10.44 (S4-A): the day spread is optional now — this suite adds it, as a person would.
+    await page.locator('[data-action="story-cover-add"]').tap();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('.story-tabs [data-action="story-page"]').count(), 4, "a day spread + one page per Moment");
     await require("./signed-in.cjs").storyLayoutPanel(page);
     assert.equal(await page.locator('.qe-styles [aria-pressed="true"]').getAttribute("data-style"), "editorial", "Editorial by default");
     await require("./signed-in.cjs").closeStoryPanel(page);
@@ -106,7 +109,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // 5. Customize: drag a photo on the 08:10 page; back in the preview a
     //    style change asks first, and Cancel keeps that page as it is.
-    await page.locator(".story-tabs button").nth(1).tap();
+    await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
     await page.locator('[data-action="story-adjust"]').tap();
     await page.waitForSelector("#journal-canvas .photo-layer");
     const layer = page.locator("#journal-canvas .photo-layer").first();

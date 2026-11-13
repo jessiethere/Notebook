@@ -117,9 +117,9 @@ const wordsBox = (page, scope) => page.evaluate((scope) => {
       assert.ok(made.slice(1).every((m) => m.photos === 0), "the words continue on pages of words");
       assert.ok(made.every((m) => m.title.trim()), "no empty page");
       // Each page: its words on the page, nothing clipped.
-      const tabs = await page.locator(".story-tabs button").count();
+      const tabs = await page.locator('.story-tabs [data-action="story-page"]').count();
       for (let i = 0; i < tabs; i++) {
-        await page.locator(".story-tabs button").nth(i).tap();
+        await page.locator('.story-tabs [data-action="story-page"]').nth(i).tap();
         await page.waitForTimeout(350);
         if (i === 0 && tabs > made.length) continue; // the day spread
         const b = await wordsBox(page, ".story-canvas .journal-canvas");

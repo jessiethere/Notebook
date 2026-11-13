@@ -30,6 +30,12 @@ const shots = process.env.SHOTS || "";
     };
     await page.goto(base);
     await page.waitForSelector(".hero");
+    // V10.41 (S1): sample days are no longer in books. This suite reads book
+    // days, so the sample days become days the person saved (scenario D).
+    await require("./signed-in.cjs").touchStore(page);
+    await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); for (const e of s.entries) e.isDemo = false; localStorage.setItem("little-days.v1", JSON.stringify(s)); });
+    await page.reload();
+    await page.waitForSelector(".hero");
     let before = null; // taken once the journal is in storage (after the book's music is chosen)
 
     // ---------------------------------------------------------------- P1

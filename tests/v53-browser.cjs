@@ -25,11 +25,11 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
     await page.goto(base);
     await page.waitForSelector(".hero");
 
-    // 1. Suggested books on the shelf: 我们俩 and 宝宝成长.
+    // 1. The 我们俩 / 宝宝成长 presets (V10.41 D1: no longer cards on the shelf).
     await menu(page, "books");
-    await page.waitForSelector(".suggested-books");
-    assert.deepEqual(await page.$$eval('[data-action="book-suggest"]', (els) => els.map((el) => el.dataset.preset)), ["relationship", "parenting"]);
-    await page.locator('[data-action="book-suggest"][data-preset="relationship"]').tap();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator(".suggested-books").count(), 0, "no suggestion cards on the shelf");
+    await require("./signed-in.cjs").suggestBook(page, "relationship");
     await page.waitForSelector("#form-dialog[open]");
     assert.equal(await page.locator('#dialog-form [name="title"]').inputValue(), "我们俩");
     await page.locator('#dialog-form [type="submit"]').tap();
@@ -39,8 +39,8 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
     assert.equal(book.category, "Relationship");
     assert.equal(book.visibility, "private");
     await menu(page, "books");
-    assert.deepEqual(await page.$$eval('[data-action="book-suggest"]', (els) => els.map((el) => el.dataset.preset)), ["parenting"], "a made book is no longer suggested");
-    passed.push("suggested books for couples and families; the made one stays private");
+    assert.equal(await page.locator('[data-action="book-suggest"]').count(), 0, "still no suggestion cards on the shelf");
+    passed.push("the 我们俩 preset makes a private book; no suggestion cards on the shelf (V10.41)");
 
     // 2. An empty book cannot be shared yet.
     await page.locator(`[data-action="book"][data-book="${bookId}"], [data-book="${bookId}"]`).first().tap();

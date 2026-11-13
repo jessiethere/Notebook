@@ -143,10 +143,10 @@ function checkPage({ photos, texts }, where) {
           if (process.env.SHOTS) await page.locator(".qe-bar").screenshot({ path: `${process.env.SHOTS}/v133-${run.lang}-split.png` });
           await page.locator('[data-action="story-split-pages"]').tap();
           await page.waitForSelector(".story-tabs");
-          const tabs = await page.locator(".story-tabs button").count();
+          const tabs = await page.locator('.story-tabs [data-action="story-page"]').count();
           let seenWords = [];
           for (let i = 0; i < tabs; i++) {
-            await page.locator(".story-tabs button").nth(i).tap();
+            await page.locator('.story-tabs [data-action="story-page"]').nth(i).tap();
             await page.waitForTimeout(400);
             if (i === 0 && tabs > 2) continue; // the day spread
             const boxes = await pageBoxes(page, ".story-canvas .journal-canvas", words);

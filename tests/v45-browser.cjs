@@ -17,6 +17,7 @@ const shots = process.env.SHOTS_DIR || "";
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".home-mag .hero");
+    await require("./signed-in.cjs").ownSamples(page); // V10.41: the sample days as the person's own (see signed-in.cjs)
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
 
     // 1. Today's page as a large story card (V10.2: photos arranged on paper, the words under them); no emoji on Home.
@@ -25,7 +26,8 @@ const shots = process.env.SHOTS_DIR || "";
     const box = await hero.boundingBox();
     assert.ok(box.width > 330 && box.height > 330, `large story ${box.width}×${box.height}`);
     assert.match(await hero.innerText(), /把日子过成喜欢的样子/);
-    assert.match(await hero.innerText(), /示例/, "a sample day says so");
+    // (V10.41: an unsaved sample day is no longer on Home; here it is the person's own — tests/v141 covers samples.)
+    assert.doesNotMatch(await hero.innerText(), /示例/, "the person's own day is not marked as a sample");
     const homeText = await page.locator(".home-mag").innerText();
     assert.doesNotMatch(homeText, /[✿📖🌿☁️🎨🌱✎🖼]/u, "no emoji in Home's text");
     assert.equal(await page.locator(".home-mag .habit-symbol svg").count(), await page.locator(".home-mag .habit-row").count(), "habits use line icons");

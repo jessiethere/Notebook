@@ -20,7 +20,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     const order = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")).books.map((b) => b.id));
     // A fourth book with an English title.
     await menu(page, "books");
-    await page.locator('[data-action="book-suggest"][data-preset="relationship"]').click();
+    await require("./signed-in.cjs").suggestBook(page, "relationship"); // (V10.41: not a shelf card any more)
     await page.locator('#dialog-form [name="title"]').fill("The two of us");
     await page.locator('#dialog-form [type="submit"]').click();
     await menu(page, "books");

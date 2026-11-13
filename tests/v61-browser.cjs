@@ -33,7 +33,10 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page");
-    assert.equal(await page.locator(".story-tabs button").count(), 5, "a spread + 4 Moment pages");
+    // V10.44 (S4-A): the day spread is optional now — this suite adds it, as a person would.
+    await page.locator('[data-action="story-cover-add"]').tap();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('.story-tabs [data-action="story-page"]').count(), 5, "a spread + 4 Moment pages");
     await require("./signed-in.cjs").storyLines(page, words);
     await page.waitForFunction(() => /Morning run/.test(document.querySelector(".story-canvas").innerText));
     const d = await page.evaluate((t) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[t], today);
@@ -48,7 +51,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
       await require("./signed-in.cjs").storyStyle(page, style);
       await page.waitForSelector(`.story-canvas .scrapbook-page.style-${style}`);
       for (let i = 0; i < 5; i++) {
-        await page.locator(".story-tabs button").nth(i).tap();
+        await page.locator('.story-tabs [data-action="story-page"]').nth(i).tap();
         await page.waitForTimeout(250);
         const found = await page.evaluate(() => {
           const canvas = document.querySelector(".story-canvas .journal-canvas").getBoundingClientRect();

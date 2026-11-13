@@ -292,7 +292,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
     await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(PHOTOS.slice(0, 3));
     await page.waitForSelector(".story-canvas .scrapbook-page");
-    if (await page.locator(".story-tabs button").count() > 1) await page.locator(".story-tabs button").nth(1).tap();
+    if (await page.locator('.story-tabs [data-action="story-page"]').count() > 1) await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
     await page.locator('[data-action="story-adjust"]').tap();
     await page.waitForSelector("#journal-canvas .photo-layer img");
     await settle();

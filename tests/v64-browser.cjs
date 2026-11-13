@@ -33,8 +33,11 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles([photo("beach-sunset", "08:10"), photo("latte-art", "08:20"), photo("home-dinner", "19:05")]);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
+    // V10.44 (S4-A): the day spread is optional now — this suite adds it, as a person would.
+    await page.locator('[data-action="story-cover-add"]').tap();
+    await page.waitForTimeout(300);
     assert.match(await page.locator(".story-canvas").innerText(), /LITTLE DAYS[\s\S]*NO\. \d\d/, "the spread's masthead");
-    await page.locator(".story-tabs button").nth(1).tap();
+    await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
     const text = await page.locator(".story-canvas").innerText();
     assert.match(text, /— 08:10 · MORNING/, "a magazine kicker");
     assert.match(text, /LITTLE DAYS · NO\. \d\d/, "a folio");
@@ -73,6 +76,8 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     const before = (await page0()).layers.find((l) => l.id === a.id);
     const pick = page.waitForEvent("filechooser");
     await page.locator('.tool-dock.ctx [data-action="replace-photo"]').click();
+    // V10.43 (S3): 替换 first offers the photos already here; this step uses 从相册添加.
+    await page.locator('#choose-dialog [data-action="ps-album"]').click();
     await (await pick).setFiles({ name: "portrait.jpg", mimeType: "image/jpeg", buffer: fs.readFileSync(path.join(lib, "LD-photo-latte-beans.jpg")) });
     await skipPhotoEditor(page);
     await page.waitForFunction(([t, id, ref]) => JSON.parse(localStorage.getItem("little-days.v1")).drafts[t].moments.find((x) => x.time === "08:10").layers.find((l) => l.id === id).mediaRef !== ref, [today, a.id, before.mediaRef]);

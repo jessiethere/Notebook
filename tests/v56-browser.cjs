@@ -16,6 +16,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
+    await require("./signed-in.cjs").ownSamples(page); // V10.41: the sample days as the person's own (see signed-in.cjs)
     // V10.11: the book page lists its days; reading opens the full-screen reader.
     await page.locator('.home-book-cover[data-book="food"]').tap();
     await page.waitForSelector(".reader-start");

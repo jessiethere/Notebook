@@ -38,8 +38,8 @@ const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String
       const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.locator('[data-action="today-photos"]').first().tap()]);
       await chooser.setFiles([timed("latte-art", "08:10"), timed("corner-cafe", "08:11"), timed("cookies", "08:12"), timed("golden-field", "12:40")]);
       await page.waitForSelector('[data-action="story-save"]');
-      const tabs = await page.locator(".story-tabs button").count();
-      if (tabs > 2) await page.locator(".story-tabs button").nth(1).tap(); // the 08:10 page (after the day spread, if any)
+      const tabs = await page.locator('.story-tabs [data-action="story-page"]').count();
+      if (tabs > 2) await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap(); // the 08:10 page (after the day spread, if any)
       await page.waitForTimeout(300);
       // Words for photo 2 and photo 3.
       await page.locator('.qe-tools [data-panel="photo"]').tap();

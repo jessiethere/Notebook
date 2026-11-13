@@ -322,3 +322,25 @@ module.exports.closeStoryPanel = async (page) => {
   if (await page.locator(".qe-panel").count()) await page.locator('.qe-panel .qe-done').tap();
   await page.waitForFunction(() => !document.querySelector(".qe-panel"));
 };
+
+// V10.41 (S1): sample days are kept out of books, Home, the Calendar and
+// reading. Older suites were written with the sample days shown as part of
+// the journal; this turns them into days the person saved (scenario D), so
+// those suites keep testing what they were written for. (The sample cover
+// gets one changed character: an untouched sample cover saved as the
+// person's own is cleared on load, model.mjs — a real edit is kept.)
+module.exports.ownSamples = async (page) => {
+  await module.exports.touchStore(page);
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); for (const e of s.entries) { e.isDemo = false; if (e.id === "sample-today") e.body = (e.body || "") + " "; } localStorage.setItem("little-days.v1", JSON.stringify(s)); });
+  await page.reload();
+  await page.waitForSelector(".hero");
+};
+
+// V10.41 (D1): the family book suggestions are no longer cards on the shelf.
+// The private book presets they made (我们俩 / 宝宝成长) still exist; older
+// suites start one through its action.
+module.exports.suggestBook = async (page, preset) => {
+  await page.evaluate((preset) => { const b = document.createElement("button"); b.dataset.action = "book-suggest"; b.dataset.preset = preset; b.id = "test-suggest"; document.body.append(b); }, preset);
+  await page.locator("#test-suggest").click();
+  await page.evaluate(() => document.querySelector("#test-suggest")?.remove());
+};
