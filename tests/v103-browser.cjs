@@ -24,7 +24,9 @@ const shots = process.env.SHOTS || "";
     const shot = async (name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }); };
     const home = async () => { await require("./signed-in.cjs").leaveReader(page); await page.locator('#navigation [data-page="home"]').tap(); await page.waitForSelector(".hero"); };
     const closePanel = async () => { await page.locator('.kp [data-action="choose-close"]').first().tap(); await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" }); };
-    const firstLine = () => page.locator(".kp .keeper-msg.them").first().innerText();
+    // V10.35: the panel opens on Captain's card (one line for this moment and
+    // buttons that really do it), not on a status line in the chat.
+    const firstLine = () => page.locator(".kp .cp-card p").innerText();
 
     // Captain on (Gentle), and one page written today.
     await page.locator('.keeper-invite [data-action="keeper-onboard"]').tap();
@@ -54,18 +56,19 @@ const shots = process.env.SHOTS || "";
       await page.waitForSelector(".keeper-chat.kp");
       lines.push(await firstLine());
       if (lines.length === 1) {
-        assert.deepEqual(await page.$$eval(".kp-acts .kp-do", (els) => els.map((el) => el.dataset.do)), ["organize", "memory", "write", "chat"]);
-        assert.match(await page.locator(".kp .keeper-local").innerText(), /这台设备上生成/);
+        assert.equal(await page.locator(".kp .kp-do, .kp .kp-chip").count(), 0, "no fixed list of shortcuts (V10.35)");
+        assert.deepEqual(await page.$$eval(".kp .cp-card button", (els) => els.map((el) => el.textContent)), ["继续编辑", "看看成品"], "a page just finished, with words");
+        assert.match(await page.locator(".kp .keeper-local").innerText(), /简单聊天[\s\S]*这台设备上/);
         await shot("v103-panel");
       }
       await closePanel();
     }
-    assert.equal(new Set(lines).size, 3, `three openings, three different lines: ${lines.join(" / ")}`);
+    assert.notEqual(lines[0], lines[1], `opening again shows another line: ${lines.join(" / ")}`);
     for (const line of lines) {
-      assert.match(line, /一页|「下午的咖啡」|那页|名字/, `it knows a page was kept today: ${line}`);
+      assert.match(line, /收好啦/, `it knows a page was just kept: ${line}`);
       assert.doesNotMatch(line, /有什么想记录的吗|（|\(/, "no stock question, no stage direction");
     }
-    passed.push("the tag beside Captain and a tap open the same panel; the first line fits the day and is different each time");
+    passed.push("the tag beside Captain and a tap open the same panel; the card fits the moment (a page just kept) and its line changes when opened again (V10.35)");
 
     // 2. The small chat: a few things it can do; honest about the rest.
     await tag.tap();
@@ -86,17 +89,20 @@ const shots = process.env.SHOTS || "";
     const odd = await say("嗷呜");
     assert.match(odd, /没太懂|不太确定|还在想/);
     const write = await say("帮我写一句话");
-    assert.match(write, /AI 小管家[\s\S]*不想假装/);
+    assert.match(write, /我还不会替你写/, "honest: it does not write for me");
+    assert.equal(await page.locator('.kp .keeper-msg [data-action="cp-go"]').count(), 2, "and offers buttons that really start a page");
     const week = await say("这周我写了什么");
     assert.match(week, /这周你记了 1 天/);
     assert.equal(new Set([tired, cake, write, week]).size, 4, "different things get different answers");
     await page.evaluate(() => document.activeElement?.blur?.());
     await shot("v103-chat");
-    passed.push("chat: tired → a gentle line; this week → counted on the device; writing for me → says it needs the AI keeper; anything else → an honest “not sure” (V10.9)");
+    passed.push("chat: tired → a gentle line; this week → counted on the device; writing for me → says it can't, with 选照片 / 随手写 buttons (V10.35); anything else → an honest “not sure” (V10.9)");
 
     // 3. Sort out today: the pages in order, opened one by one; the journal is not changed.
     const before = JSON.stringify((await stored()).entries.find((e) => e.date === today));
-    await page.locator('[data-action="keeper-do"][data-do="organize"]').tap();
+    // V10.35: no fixed row for it any more; asking in the chat goes there.
+    await page.locator("[data-keeper-say]").fill("帮我整理今天");
+    await page.locator(".kp-send").tap();
     await page.waitForSelector('.kp[data-view="organize"] .kp-pages');
     assert.match(await page.locator(".kp-sum").innerText(), /今天 1 页/);
     assert.match(await page.locator(".kp-pages").innerText(), /下午的咖啡/);
@@ -106,22 +112,31 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".day-detail");
     assert.match(await page.locator(".day-detail").innerText(), /下午的咖啡/);
     await home();
-    // Typing "整理" goes to the same place.
     await tag.tap();
-    await page.locator("[data-keeper-say]").fill("帮我整理今天");
-    await page.locator(".kp-send").tap();
-    await page.waitForSelector('.kp[data-view="organize"]');
-    await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().tap();
-    passed.push("sort out today: today's pages in order, each opens its page; typing 整理 goes there too; no data changed");
+    passed.push("sort out today (asked in the chat): today's pages in order, each opens its page; no data changed");
 
-    // 4. Look back: asks once, then finds one of my own earlier pages (not a sample) and opens it.
-    await page.locator('[data-action="keeper-do"][data-do="memory"]').tap();
-    await page.waitForSelector('.kp[data-view="memory"] [data-action="keeper-allow-memories"]');
+    // 4. Look back (V10.35: asked in the chat — no fixed row any more). Without
+    // permission it says how to give it; with it, one of my own earlier pages
+    // (never a sample), which opens.
+    const recall = async () => {
+      await page.locator("[data-keeper-say]").fill("看看以前的回忆");
+      await page.locator(".kp-send").tap();
+      await page.waitForSelector(".kp .keeper-msg.pending", { state: "detached" });
+      return page.locator(".kp .keeper-msg.them").last().innerText();
+    };
+    assert.match(await recall(), /还没有翻看你以前页面的许可[\s\S]*设置/);
     assert.equal((await stored()).keeper.allowMemories, false);
     await shot("v103-memory-ask");
-    await page.locator('[data-action="keeper-allow-memories"]').tap();
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.v1")).keeper.allowMemories === true);
-    assert.match(await page.locator(".kp").innerText(), /还不多，我们慢慢攒/, "sample days are not offered as my memories");
+    await closePanel();
+    await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem("little-days.v1"));
+      s.keeper.allowMemories = true;
+      localStorage.setItem("little-days.v1", JSON.stringify(s));
+    });
+    await page.reload();
+    await page.waitForSelector(".keeper-home");
+    await tag.tap();
+    assert.match(await recall(), /还不多，我们慢慢攒/, "sample days are not offered as my memories");
     await closePanel();
     await page.evaluate(() => {
       const s = JSON.parse(localStorage.getItem("little-days.v1"));
@@ -134,15 +149,13 @@ const shots = process.env.SHOTS || "";
     await page.reload();
     await page.waitForSelector(".keeper-home");
     await tag.tap();
-    await page.locator('[data-action="keeper-do"][data-do="memory"]').tap();
-    await page.waitForSelector(".kp-memory");
-    assert.match(await page.locator(".kp-memory").innerText(), /去看更大的世界[\s\S]*湖边的早晨[\s\S]*风很轻/);
+    assert.match(await recall(), /湖边的早晨/);
     await shot("v103-memory");
-    await page.locator(".kp-memory").tap();
+    await page.locator('.kp .keeper-msg [data-action="open-day"]').last().tap();
     await page.waitForSelector(".day-detail");
     assert.match(await page.locator(".day-detail").innerText(), /湖边的早晨/);
     await home();
-    passed.push("look back: asks before looking at earlier pages; shows one of my own (never a sample) with its journal and date; opens the original page");
+    passed.push("look back (asked in the chat): without permission it says where to give it; with it, one of my own pages (never a sample), which opens");
 
     // 5. Quiet: no tag, a tap does not open anything.
     await page.locator('[data-action="nav"][data-page="settings"]').first().tap();

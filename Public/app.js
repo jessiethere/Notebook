@@ -1434,7 +1434,7 @@ function keepKeeperUnsent(text) {
   } catch {}
 }
 function keeperLinesHTML() {
-  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}${m.local ? " local-ai" : ""}">${esc(m.text)}${m.local ? `<small class="kp-local-ai">${t("kp.localAI")}</small>` : ""}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}</p>`).join("");
+  const lines = keeperChat.map((m) => `<p class="keeper-msg ${m.who === "me" ? "me" : "them"}${m.local ? " local-ai" : ""}">${esc(m.text)}${m.local ? `<small class="kp-local-ai">${t("kp.localAI")}</small>` : ""}${m.open ? ` <button class="text-button" data-action="open-day" data-date="${esc(m.open.date)}"${m.open.momentId ? ` data-moment="${esc(m.open.momentId)}"` : ""}>${t("keeper.chat.open")} ›</button>` : ""}${m.go ? `<span class="cp-acts in-chat">${m.go.map((g, i) => `<button class="${i ? "secondary" : "primary"}" data-action="cp-go" data-go="${g}">${t(g === "today-photos" ? "cp.photos" : "cp.write")}</button>`).join("")}</span>` : ""}${m.fallback ? `<small class="kp-local-ai">${t("kp.localDown")}</small>` : ""}</p>`).join("");
   return lines + (keeperBusy ? `<p class="keeper-msg them pending" role="status" aria-label="${t("kp.thinking")}"><i></i><i></i><i></i></p>` : "");
 }
 // The field grows with the words (up to four lines); the button follows the field and the busy state.
@@ -1456,10 +1456,8 @@ function refreshKeeperChat() {
   const box = sheet?.querySelector(".keeper-msgs");
   if (!box) return false;
   box.innerHTML = keeperLinesHTML();
-  // Once the chat has started, the four shortcuts fold into one line (the
-  // sheet keeps its height: the words get the room).
-  const acts = sheet.querySelector(".kp-acts");
-  if (acts && !acts.classList.contains("compact") && keeperChat.some((m) => m.who === "me")) acts.outerHTML = keeperActsHTML(keeperNow());
+  // A conversation gets the room it needs.
+  if (keeperChat.length) sheet.classList.remove("quiet");
   scrollKeeperChat();
   syncKeeperComposer();
   return true;
@@ -1491,13 +1489,49 @@ function cornerTabsHTML(view) {
   return `<div class="kp-tabs" role="tablist" aria-label="${t("corner.tabs")}">${tab("home", "corner.chat")}${tab("play", "corner.play")}${tab("looks", "corner.look")}</div>`;
 }
 // The four shortcuts: full rows until the chat starts, then one compact line.
-function keeperActsHTML(k) {
-  if (keeperChat.some((m) => m.who === "me")) {
-    const chip = (kind, extra = "") => `<button class="kp-chip ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span>${t("kp.short." + kind)}</span></button>`;
-    return `<div class="kp-acts compact" role="group" aria-label="${t("kp.quick")}">${chip("organize")}${chip("memory")}${chip("write", "later")}</div>`;
+// V10.35 · Captain's card: one line that fits the moment and at most two
+// buttons that really do it. Chosen in this order:
+//   1. the most recent of "just made a page" (15 min, the page still there)
+//      and "just looked at an older day in the reader" (30 min);
+//   2. otherwise today is kept (C) or not yet (A).
+// Each state has a few lines; opening Captain again shows the next one.
+// Only facts from the journal (the date, the page's name, how many pages);
+// nothing made up, no score, no check-in. Kept in memory only.
+let captainSaved = null; // { date, momentId, at }: the page just made
+let captainRead = null; // { book, key, date, momentId, at }: the page last open in the reader
+const captainSeen = {};
+const CAPTAIN_LINES = { A: 3, Bnew: 2, Bsaid: 2, C: 2, D: 2 };
+const captainLine = (key) => t(`cp.${key}.${(Math.max(0, (captainSeen[key] || 1) - 1) % CAPTAIN_LINES[key]) + 1}`);
+function captainCardData() {
+  const today = dateKey();
+  const entryOf = (d) => state().entries.find((e) => e.date === d) || state().drafts[d];
+  const fresh = (x, min) => x && Date.now() - x.at < min * 60000;
+  const btn = (label, attrs, primary = false) => `<button class="${primary ? "primary" : "secondary"}" ${attrs}>${label}</button>`;
+  const saved = fresh(captainSaved, 15) && captainSaved.date === today && entryOf(today)?.moments?.some((x) => x.id === captainSaved.momentId) ? captainSaved : null;
+  const read = fresh(captainRead, 30) && captainRead.date !== today && entryOf(captainRead.date) ? captainRead : null;
+  if (read && (!saved || read.at > saved.at)) {
+    const e = entryOf(read.date);
+    const m = e.moments?.find((x) => x.id === read.momentId);
+    const when = new Date(`${read.date}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric" });
+    const label = m ? PL.pageLabel(m, { t }).label : PL.dayLabel(e, { t });
+    return { state: "D", key: "D", meta: `${when} · ${label}`, acts: btn(t("cp.readOn"), `data-action="cp-read-on"`, true) };
   }
-  const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
-  return `<ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>`;
+  if (saved) {
+    const m = entryOf(today).moments.find((x) => x.id === saved.momentId);
+    const said = String(m.title || "").trim() || PL.pageWords(m) || m.layers?.some((l) => l.kind === "photo" && String(l.caption || "").trim());
+    const at = `data-date="${today}" data-moment="${esc(m.id)}"`;
+    const look = btn(t("cp.seePage"), `data-action="cp-page" ${at}`);
+    return said ? { state: "B", key: "Bsaid", acts: btn(t("cp.keepEditing"), `data-action="read-edit" ${at}`, true) + look } : { state: "B", key: "Bnew", acts: btn(t("cp.addLine"), `data-action="read-edit" ${at}`, true) + look };
+  }
+  if (keptToday()) {
+    const n = (entryOf(today)?.moments || []).filter((x) => !x.isDemo).length;
+    return { state: "C", key: "C", meta: n > 1 ? t("cp.todayPages", { n }) : "", acts: btn(t("cp.openToday"), `data-action="cp-today"`, true) };
+  }
+  return { state: "A", key: "A", acts: btn(t("cp.photos"), `data-action="cp-go" data-go="today-photos"`, true) + btn(t("cp.write"), `data-action="cp-go" data-go="today-write"`) };
+}
+function keeperActsHTML() {
+  const card = captainCardData();
+  return `<section class="cp-card" data-state="${card.state}" aria-label="${t("cp.card")}"><p>${esc(captainLine(card.key))}</p>${card.meta ? `<small class="cp-meta">${esc(card.meta)}</small>` : ""}<div class="cp-acts">${card.acts}</div></section>`;
 }
 // V10.17 · Captain's Playroom (MVP): a big stage with Captain on it. Tap
 // Captain for a happy reaction; drag (or tap) the pink yarn ball to Captain
@@ -1671,9 +1705,13 @@ function openKeeperPanel(view = keeperView) {
   if (!Keeper.modeAllows(k, "invite")) return;
   keeperView = view;
   const name = Keeper.keeperName(k, languageCode());
-  if (!keeperChat.length) keeperChat = [{ who: "keeper", text: keeperSay("tap", keeperFacts()) }];
+  // Opening the panel (not a redraw while it is open) moves that state to its next line.
+  if (view === "home" && !$("#choose-dialog")?.open) {
+    const key = captainCardData().key;
+    captainSeen[key] = (captainSeen[key] || 0) + 1;
+  }
   const top = (title) => `<div class="kp-title"><button class="kp-back" data-action="keeper-view" data-view="home" aria-label="${t("kp.back")}">${icon("back")}</button><b>${title}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
-  const head = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${cornerTabsHTML(view)}`;
+  const head = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${cornerTabsHTML(view)}`;
   let body;
   if (view === "looks") body = head + `<div class="kp-scroll"><div class="kp-note">${keeperArt("happy")}<p>${esc(tk("look.say", k))}</p></div>${keeperLooksHTML()}</div>`;
   else if (view === "play") body = head + keeperPlayHTML();
@@ -1681,13 +1719,13 @@ function openKeeperPanel(view = keeperView) {
   else if (view === "memory") body = top(t("kp.mem.title")) + `<div class="kp-scroll">${keeperMemoryHTML()}</div>`;
   else {
     const composer = `<div class="keeper-say kp-input"><textarea data-keeper-say rows="1" maxlength="300" enterkeyhint="enter" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}">${esc(keeperUnsent())}</textarea><button class="kp-send" data-action="keeper-say" aria-label="${t("kp.send")}" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5l6-6 6 6"/></svg><span>${t("kp.send")}</span><i class="kp-spin" aria-hidden="true"></i></button></div>`;
-    body = `${head}<div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div>${keeperActsHTML(k)}${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+    body = `${head}${keeperActsHTML()}<div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div>${composer}<p class="save-help keeper-local">${t(CaptainAI.devSettings() ? "kp.local" : "kp.simple")}</p>`;
   }
   const dialog = $("#choose-dialog");
   // Still typing (re-drawn while the field has the caret): keep the typing layout.
   const composing = dialog.open && view === "home" && document.activeElement?.matches?.("[data-keeper-say]") && dialog.querySelector(".kp.composing");
   // Play takes the full height: the stage is the point of it.
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall || view === "play" ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall || view === "play" ? "tall" : ""} ${composing ? "composing" : ""} ${view === "home" && !keeperChat.length && !kpTall ? "quiet" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
   if (!dialog.open) dialog.showModal();
   scrollKeeperChat();
   syncKeeperComposer();
@@ -1787,10 +1825,10 @@ async function askLocalModel(settings, said, intent) {
     if (open && !refreshKeeperChat()) openKeeperPanel("home");
   } catch {
     logEvent("keeper_local_ai_fallback", {});
-    keeperReply(intent, true);
+    keeperReply(intent, true, true);
   }
 }
-function keeperReply(intent, typed) {
+function keeperReply(intent, typed, fallback = false) {
   keeperBusy = false;
   const k = keeperNow();
   const name = Keeper.keeperName(k, languageCode());
@@ -1807,7 +1845,7 @@ function keeperReply(intent, typed) {
     const values = { ...(answer.values || {}), name };
     if (values.date) values.date = friendlyDate(values.date);
     reply = { who: "keeper", text: t(answer.key, values), open: answer.open || null };
-  } else if (intent === "write") reply = { who: "keeper", text: t("kp.writeLater") };
+  } else if (intent === "write") reply = { who: "keeper", text: t("kp.writeHelp"), go: ["today-photos", "today-write"] };
   else {
     // A spoken reply that fits what was meant (a compliment, a finished page,
     // a tired day…). The hat lines need Captain to be wearing one.
@@ -1817,6 +1855,7 @@ function keeperReply(intent, typed) {
     const echo = ["share", "shareHappy"].includes(event);
     reply = { who: "keeper", text: keeperSay(`chat.${echo && !keeperTopic ? "listen" : event}`, echo ? { thing: keeperTopic } : {}) };
   }
+  if (fallback) reply.fallback = true;
   keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);
   // Closed meanwhile: the reply waits in the chat; the sheet is not reopened.
@@ -2308,6 +2347,8 @@ function openReader(bookId, key = "resume") {
 }
 function closeReader() {
   Reader.savePosition(readerBook, readerKey());
+  const at = flipPages(readerBook)[flipIndex];
+  if (at?.date) captainRead = { book: readerBook, key: readerKey(), date: at.date, momentId: at.moment?.id || "", at: Date.now() };
   document.querySelectorAll("#app audio, #app video").forEach((m) => m.pause());
   page = "books";
   selectedBook = readerBook;
@@ -5022,6 +5063,8 @@ async function saveStoryText() {
 }
 function finishStory() {
   const { book, date } = story;
+  const lastId = story.made?.ids?.at(-1);
+  if (lastId) captainSaved = { date, momentId: lastId, at: Date.now() };
   clearTimeout(draftTimer);
   store.update((s) => saveEntry(s, editor));
   draftDirty = false;
@@ -7134,6 +7177,32 @@ async function action(target) {
     scrollKeeperChat();
     return;
   }
+  // Captain's card: each button does what it says (the same actions as Home
+  // and the reader), after the panel closes.
+  if (actionName === "cp-go") {
+    $("#choose-dialog").close();
+    const go = document.createElement("button");
+    go.dataset.action = target.dataset.go === "today-write" ? "today-write" : "today-photos";
+    return action(go);
+  }
+  if (actionName === "cp-page") {
+    $("#choose-dialog").close();
+    const go = document.createElement("button");
+    Object.assign(go.dataset, { action: "read-page", date: target.dataset.date, moment: target.dataset.moment });
+    return action(go);
+  }
+  if (actionName === "cp-today") {
+    $("#choose-dialog").close();
+    const d = dateKey();
+    const e = state().entries.find((x) => x.date === d);
+    const book = e?.moments?.find((m) => m.bookId)?.bookId || e?.bookId || state().books[0]?.id;
+    const first = flipPages(book).find((p) => p.date === d);
+    return openReader(book, first ? Reader.keyOf(first) : Reader.COVER);
+  }
+  if (actionName === "cp-read-on" && captainRead) {
+    $("#choose-dialog").close();
+    return openReader(captainRead.book, captainRead.key);
+  }
   if (actionName === "keeper-do") {
     const what = target.dataset.do;
     if (what === "organize") return openKeeperPanel("organize");
@@ -7563,6 +7632,8 @@ async function action(target) {
     }
     draftDirty = false;
     setDraftState("saved");
+    // Captain's card: a page of today just finished in the editor counts as "just made".
+    if (activeMomentId && editor.date === dateKey()) captainSaved = { date: editor.date, momentId: activeMomentId, at: Date.now() };
     studioPreview = false;
     studioTool = null;
     syncReminder();

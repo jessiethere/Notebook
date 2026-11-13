@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.35",
+    date: "2026-11-13",
+    zh: {
+      title: "Captain：打开就知道现在可以做什么",
+      items: [
+        "打开 Captain，最上面是一张小卡片：一句适合现在的话，加上一两个点了就会做的按钮。还没记录时是〔选照片〕〔随手写〕；刚收好一页时是〔写一句话〕或〔继续编辑〕和〔看看成品〕；今天已经记过时是〔翻翻今天〕；刚翻完以前的一天时是〔继续翻阅〕。",
+        "不再列四行固定的功能。想整理今天、回顾以前，直接在聊天里说就好。",
+        "请 Captain 代写时，它会直说还不会，并给你能直接开始的按钮。",
+        "每次打开换一句话，不会一直重复同一句。",
+        "在 Mac 上试本机模型时，如果模型没有回应，回复下面会写明这是简单回复。",
+      ],
+    },
+    en: {
+      title: "Captain: what you can do now, right when you open it",
+      items: [
+        "Captain opens on a small card: one line for this moment and one or two buttons that really do it — Pick photos / Just write before anything is kept; Add a line (or Keep editing) / See the page right after a page; Open today once today is kept; Keep reading after looking back at an older day.",
+        "No fixed list of four any more. To sort out today or look back, just say so in the chat.",
+        "Asked to write for you, Captain says it can't yet and offers buttons that start a page.",
+        "A different line each time you open it.",
+        "When the model on your Mac doesn't answer, the reply says it's the simple one.",
+      ],
+    },
+  },
+  {
     version: "10.34",
     date: "2026-11-13",
     zh: {

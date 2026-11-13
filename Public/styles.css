@@ -21660,3 +21660,62 @@ body.typing .ctx-caption {
   color: var(--t-6f675d, #6F675D);
   text-align: center;
 }
+
+/* V10.35 · Captain's card: one line for this moment and one or two buttons
+   that really do it. Before any chat, the panel is only as tall as what it
+   holds; a conversation gets the room it needs. */
+.kp .cp-card {
+  margin: 6px 0 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--c-f7f4ee, #f7f4ee);
+  display: grid;
+  gap: 10px;
+  flex: none;
+}
+.kp .cp-card p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.kp .cp-meta {
+  margin-top: -6px;
+  font-size: 13px;
+  color: var(--t-6f675d, #6f675d);
+}
+.cp-acts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cp-acts button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.keeper-msg .cp-acts.in-chat {
+  margin-top: 8px;
+}
+.keeper-msg .cp-acts.in-chat button {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.choose-sheet.kp.corner.quiet {
+  height: auto;
+  max-height: var(--kp-h);
+}
+/* Typing with a conversation on screen: the card steps aside for the words
+   (it comes back when the keyboard goes away). */
+.kp.corner.composing:not(.quiet) .cp-card {
+  display: none;
+}
+.choose-sheet.kp.corner.quiet .keeper-msgs {
+  display: none;
+}
+.choose-sheet.kp.corner.quiet .keeper-say {
+  margin-top: 4px;
+}

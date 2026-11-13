@@ -552,3 +552,9 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 
 - `LittleDaysWebShellView.swift`：Debug 版读启动参数 `-LittleDaysCheck <.js 路径>`，用 `callAsyncJavaScript` 在页面里运行这个文件，把返回值打印出来；返回后不再处理 `-LittleDaysTap`。Release 编译不包含这段代码。
 - `tools/mac/ios-layout-check.js`（v133 的 8 个案例，走 App 的真实流程）和 `tools/mac/ios-layout-check.sh`（安装、启动、截图、取结果）。结果见 `docs/LAYOUT_QUALITY_PLAN.md`「L4」。
+
+## 2026-11-13 V10.35 Captain 卡片（Contextual Actions）
+
+- `app.js`：`captainCardData()` 按「刚收好一页 / 刚看完以前的一天 / 今天已记 / 还没记」选一张卡片；`keeperActsHTML()` 画卡片（取代原来的四行 `kp-do` 和折叠的 `kp-chip`）。`captainSaved` 在 `finishStory()` 和编辑器「完成」时设置，`captainRead` 在 `closeReader()` 设置，都只在内存里。
+- 卡片按钮 `cp-go` / `cp-page` / `cp-today` / `cp-read-on` 先关面板，再走已有的 `today-photos`、`today-write`、`read-page`、`openReader`；`read-edit` 直接用已有动作。
+- 聊天行可以带 `go`（可执行按钮）和 `fallback`（本机模型没有回应）。详见 `docs/CAPTAIN_UX_PLAN.md`「实施记录」。

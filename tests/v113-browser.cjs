@@ -133,10 +133,11 @@ function mockOllama() {
     await page.waitForSelector('.kp[data-view="home"]');
     mock.state.down = true;
     reply = await say("今天有点累，但是写完了一页");
-    assert.doesNotMatch(reply, /嘿嘿|本机模型/, "the rules' reply (one of the doneTired lines), not the model's");
+    assert.doesNotMatch(reply, /嘿嘿|本机模型 · 开发/, "the rules' reply (one of the doneTired lines), not the model's");
+    // V10.35: and it says so — the model did not answer, this is the simple reply.
+    assert.match(reply, /本机模型没有回应，这句是简单回复/);
     assert.equal(await page.locator(".kp .keeper-msg.local-ai").count(), 2, "no new model line");
-    assert.doesNotMatch(reply, /本机模型/);
-    passed.push("model server down → the rules' reply, quietly");
+    passed.push("model server down → the rules' reply, marked as the simple reply (V10.35)");
 
     // 5. English.
     mock.state.down = false;

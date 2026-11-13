@@ -70,8 +70,9 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(await page.locator('.keeper-home [data-action="keeper-panel"]').count(), 1);
     await page.locator('.keeper-home [data-action="keeper-tap"]').click();
     await page.waitForSelector(".keeper-chat.kp");
-    // A normal-width speech bubble (V9.1: it once collapsed to one character per line).
-    const bubbleBox = await page.locator(".kp .keeper-msg.them").first().boundingBox();
+    // A normal-width line (V9.1: it once collapsed to one character per line).
+    // V10.35: the panel opens on Captain's card.
+    const bubbleBox = await page.locator(".kp .cp-card p").boundingBox();
     assert.ok(bubbleBox.width > 100 && bubbleBox.height < 120, `bubble ${bubbleBox.width}×${bubbleBox.height}`);
     await page.locator('.kp [data-action="choose-close"]').click();
     await page.waitForFunction(() => document.querySelector(".keeper-home img.keeper-img")?.naturalWidth > 0);
@@ -121,11 +122,10 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#navigation [data-page="home"]').click();
     await page.locator('.keeper-home [data-action="keeper-tap"]').click();
     await page.waitForSelector(".keeper-chat");
-    // "Look back at a memory" asks before it may look at earlier pages.
-    await page.locator('[data-action="keeper-do"][data-do="memory"]').click();
-    await page.waitForSelector('.kp[data-view="memory"] [data-action="keeper-allow-memories"]');
-    assert.match(await page.locator(".kp").innerText(), /翻看以前的页面吗/);
-    await page.locator('.kp [data-action="keeper-view"][data-view="home"]').first().click();
+    // "Look back at a memory" (V10.35: asked in the chat) says it needs permission first.
+    await page.locator("[data-keeper-say]").fill("看看以前的回忆");
+    await page.locator(".kp-send").click();
+    await page.waitForFunction(() => /翻看你以前页面的许可/.test(document.querySelector(".keeper-msgs")?.textContent || ""));
     // Free text it cannot handle gets an honest answer (not the same sentence for everything).
     await page.locator("[data-keeper-say]").fill("嗷呜"); // V10.18: “今天想吃蛋糕” is understood now
     await page.locator(".kp-send").click();

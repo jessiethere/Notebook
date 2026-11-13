@@ -8738,5 +8738,97 @@
   "qe.split.kept": {
     "zh": "好的，保持一页。之后想分开，可以在「换个排版」里找到。",
     "en": "One page it is. To split it later, look in Layout."
+  },
+  "cp.A.1": {
+    "zh": "今天有什么小瞬间想收藏吗？",
+    "en": "Any little moment you'd like to keep today?"
+  },
+  "cp.A.2": {
+    "zh": "今天遇到了什么，想放进书里吗？",
+    "en": "Anything from today you'd like to tuck into your book?"
+  },
+  "cp.A.3": {
+    "zh": "有一张想留下来的照片吗？",
+    "en": "A photo from today you'd like to keep?"
+  },
+  "cp.Bnew.1": {
+    "zh": "这页收好啦！还想给它留句话吗？",
+    "en": "This page is tucked away! Want to leave a line with it?"
+  },
+  "cp.Bnew.2": {
+    "zh": "收好啦～要不要给它写一句？不写也很好看。",
+    "en": "All tucked in! A line to go with it? It looks lovely without one, too."
+  },
+  "cp.Bsaid.1": {
+    "zh": "这页收好啦！",
+    "en": "This page is tucked away!"
+  },
+  "cp.Bsaid.2": {
+    "zh": "收好啦，照片和字都在一起。",
+    "en": "Tucked in — photos and words together."
+  },
+  "cp.C.1": {
+    "zh": "今天的小日子已经收好啦 ♡",
+    "en": "Today's little day is tucked away ♡"
+  },
+  "cp.C.2": {
+    "zh": "今天已经放进书里啦 ♡",
+    "en": "Today is already in your book ♡"
+  },
+  "cp.D.1": {
+    "zh": "又翻到这一天啦，要不要再看看？",
+    "en": "Back on this day again — want another look?"
+  },
+  "cp.D.2": {
+    "zh": "这一天还在书里等你呢，要不要再翻翻？",
+    "en": "This day is still waiting in your book. Keep looking?"
+  },
+  "cp.photos": {
+    "zh": "选照片",
+    "en": "Pick photos"
+  },
+  "cp.write": {
+    "zh": "随手写",
+    "en": "Just write"
+  },
+  "cp.addLine": {
+    "zh": "写一句话",
+    "en": "Add a line"
+  },
+  "cp.keepEditing": {
+    "zh": "继续编辑",
+    "en": "Keep editing"
+  },
+  "cp.seePage": {
+    "zh": "看看成品",
+    "en": "See the page"
+  },
+  "cp.openToday": {
+    "zh": "翻翻今天",
+    "en": "Open today"
+  },
+  "cp.readOn": {
+    "zh": "继续翻阅",
+    "en": "Keep reading"
+  },
+  "cp.todayPages": {
+    "zh": "今天 {n} 页",
+    "en": "{n} pages today"
+  },
+  "cp.card": {
+    "zh": "现在可以做的事",
+    "en": "What you can do now"
+  },
+  "kp.writeHelp": {
+    "zh": "我还不会替你写，不过可以陪你开始：选几张照片，或者随手写一句。",
+    "en": "I can't write it for you yet, but I can help you start: pick a few photos, or just write."
+  },
+  "kp.simple": {
+    "zh": "现在是简单聊天：Captain 能陪你说几句，也能帮你开始记录、翻开手帐。内容都留在这台设备上。",
+    "en": "Simple chat for now: Captain answers a few words, and can start a page or open your book with you. Nothing leaves this device."
+  },
+  "kp.localDown": {
+    "zh": "本机模型没有回应，这句是简单回复。",
+    "en": "The model on this Mac didn't answer — this is a simple reply."
   }
 }

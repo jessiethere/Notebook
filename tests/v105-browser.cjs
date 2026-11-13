@@ -106,7 +106,9 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".kp .keeper-msg.pending", { state: "detached" });
     assert.equal(await mine(), 2, "sent once");
     assert.equal(await page.locator(".kp-send.busy").count(), 0);
-    assert.ok((await page.locator(".kp .keeper-msg.them").count()) >= 3, "a reply for each line");
+    // V10.35: no status line first (the card says what fits now), so the
+    // replies are the only lines from Captain.
+    assert.ok((await page.locator(".kp .keeper-msg.them").count()) >= 2, "a reply for each line");
     passed.push("sending: “thinking” dots + busy button; a second tap cannot send twice; the field empties only after the line is sent");
 
     // 5. Unsent words: × / pulling down / Esc / a reload never send and never lose them.

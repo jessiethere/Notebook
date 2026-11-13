@@ -54,7 +54,8 @@ const transcript = [];
     // 1. Without permission Captain never quotes the page (and never says it peeked).
     for (let i = 0; i < 6; i++) {
       await openCorner();
-      const first = await page.locator(".kp .keeper-msg.them").first().innerText();
+      // V10.35: the first line is Captain's card.
+      const first = await page.locator(".kp .cp-card p").innerText();
       assert.doesNotMatch(first, /只给自己看的标题|偷偷|多看/, first);
       await close();
     }
@@ -64,7 +65,11 @@ const transcript = [];
 
     // 2. The ten lines from the review, typed into the real panel.
     await openCorner();
-    const h0 = await height();
+    // V10.35: before any chat the panel is only as tall as the card and the
+    // field; the first line gives the conversation its full height, which
+    // then stays the same.
+    const quiet = await height();
+    let h0 = 0;
     const expect = [
       ["你好可爱呀", /被你发现|多开心|摸摸我/],
       ["你的柠檬帽好好看", /柠檬帽|叶子|不摘/],
@@ -78,6 +83,10 @@ const transcript = [];
       const reply = await say(text);
       assert.match(reply, pattern, `${text} → ${reply}`);
       if (text !== "你会做什么") assert.doesNotMatch(reply, /会的是|我会的不多|还不会/, `no feature list for “${text}”`);
+      if (!h0) {
+        h0 = await height();
+        assert.ok(h0 > quiet, `the chat gets its room (${quiet} → ${h0})`);
+      }
       assert.equal(await height(), h0, `the sheet keeps its height after “${text}”`);
     }
     const tired = transcript.find(([t]) => t.startsWith("今天有点累"))[1];
@@ -85,14 +94,15 @@ const transcript = [];
     // Auto-scroll: the newest reply is in view.
     const scroll = await page.locator(".kp .keeper-msgs").evaluate((box) => box.scrollHeight - box.scrollTop - box.clientHeight);
     assert.ok(scroll <= 2, `scrolled to the newest line (${scroll})`);
-    // The shortcuts folded into one line once the chat started.
+    // V10.35: no folded shortcuts any more — Captain's card comes back above the chat.
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.waitForTimeout(450);
-    assert.equal(await page.locator(".kp-acts.compact .kp-chip").count(), 3);
-    // V10.10: once the keyboard closes and the shortcuts come back, the newest line is still in view.
+    assert.equal(await page.locator(".kp .cp-card").isVisible(), true);
+    assert.equal(await page.locator(".kp .kp-chip, .kp .kp-do").count(), 0);
+    // V10.10: once the keyboard closes and the card comes back, the newest line is still in view.
     const after = await page.locator(".kp .keeper-msgs").evaluate((box) => box.scrollHeight - box.scrollTop - box.clientHeight);
     assert.ok(after <= 2, `still at the newest line after the keyboard closes (${after})`);
-    assert.equal(await page.locator(".kp-acts:not(.compact)").count(), 0);
+
     await shot("01-chat");
     const reply8 = await say("帮我整理今天的故事");
     assert.equal(reply8, "→ organize", "a request still opens its flow");
@@ -161,14 +171,15 @@ const transcript = [];
     await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); s.keeper.allowMemories = true; localStorage.setItem("little-days.v1", JSON.stringify(s)); localStorage.removeItem("little-days.keeperLines"); });
     await page.reload();
     await page.waitForSelector(".keeper-home");
-    let quoted = false;
-    for (let i = 0; i < 8 && !quoted; i++) {
+    // V10.35: the panel opens on Captain's card, whose line never quotes a
+    // page (the page's name is shown only as a fact, under the line, when
+    // coming back from the reader); the chat can still look back when asked.
+    for (let i = 0; i < 3; i++) {
       await openCorner();
-      quoted = /只给自己看的标题/.test(await page.locator(".kp .keeper-msg.them").first().innerText());
+      assert.doesNotMatch(await page.locator(".kp .cp-card p").innerText(), /只给自己看的标题|偷偷/);
       await close();
     }
-    assert.ok(quoted, "allowed: a line may name the page");
-    passed.push("with “look at earlier pages” on, Captain may name today's page");
+    passed.push("with “look at earlier pages” on, the card's line still states only what fits now (V10.35)");
 
     // 6. English interface: the English review lines.
     const en = await browser.newContext({ ...devices["iPhone 13"] });
