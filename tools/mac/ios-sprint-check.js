@@ -48,6 +48,12 @@ try {
   for (const f of [await photo("latte-art", "08:10"), await photo("golden-field", "12:40"), await photo("city-lights", "19:20")]) files.items.add(f);
   input.files = files.files;
   input.dispatchEvent(new Event("change", { bubbles: true }));
+  // The photo editor may open first (编辑图片 1/3): 跳过 keeps the photos as they are.
+  const next = await until(() => $('[data-action="story-save"]') || $('#photo-editor[open] [data-pe-action="cancel"]'), 20000);
+  if (next?.matches?.('[data-pe-action="cancel"]')) {
+    next.click();
+    await wait(500);
+  }
   if (!(await until(() => $('[data-action="story-save"]'), 20000))) throw new Error("Today's story did not open");
   await wait(800);
   const pageTabs = $$('.story-tabs [data-action="story-page"]').length;
