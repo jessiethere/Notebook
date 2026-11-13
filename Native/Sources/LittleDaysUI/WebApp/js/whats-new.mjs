@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.32",
+    date: "2026-11-13",
+    zh: {
+      title: "「今天怎么记？」：视频、声音、自由排版一打开就能看到",
+      items: [
+        "视频、声音、自由排版移到三张主卡片正下方，打开就能看到，不用往下找。",
+        "「照片 + 一句话」仍然是第一张、最显眼的卡片；第一次打开时默认选它，之后记得你上次用的方式。",
+        "选「视频」后，照片相关的选项会换成视频说明，按钮变成「选一段视频」，直接打开视频导入；选好的书和日期都保留。声音、自由排版也一样。",
+      ],
+    },
+    en: {
+      title: "\u201cHow shall we keep today?\u201d: video, sound and free layout right there",
+      items: [
+        "Video, sound and free layout now sit right under the three main cards — visible as soon as the sheet opens.",
+        "\u201cPhoto + a line\u201d is still the first and biggest card; it is chosen the first time, and after that the sheet remembers the way you used last.",
+        "Choose Video and the photo options give way to a short note and a \u201cPick a video\u201d button that opens the video import; your book and date stay. Sound and free layout work the same way.",
+      ],
+    },
+  },
+  {
     version: "10.31",
     date: "2026-11-13",
     zh: {

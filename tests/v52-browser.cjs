@@ -170,6 +170,8 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     // 5. The shape-aware layout is also a choice in the layout tool.
     await page.locator(".settings-nav .back-button, [data-action='settings-back']").first().tap();
     await menu(page, "studio");
+    // V10.32: 自由排版 is chosen in the row under the three ways, then started.
+    await page.locator('#choose-dialog .quick-also [data-way="layout"]').tap();
     await page.locator('[data-action="quick-more"][data-more="layout"]').tap();
     const add = page.waitForEvent("filechooser");
     await page.locator('#journal-canvas [data-action="first-photo"]').tap();

@@ -44,6 +44,8 @@ const photos = (n) => Array.from({ length: n }, (_, i) => ({ name: `p${i}.jpg`, 
     // 1. One tap from Home starts a Moment; writing is the first thing on screen.
     // It opens as a note: the title on the paper is ready for typing.
     await page.locator('.moment-cta[data-action="quick-open"]').click();
+    // V10.32: 照片 + 一句话 is the default way; 随手写 is one tap.
+    await page.locator('#choose-dialog .quick-way[data-way="write"]').click();
     await page.locator('#choose-dialog [data-action="quick-start"]').click();
     await page.waitForSelector('#journal-canvas [data-inline="title"]');
     assert.equal(await page.evaluate(() => document.activeElement?.dataset.inline), "title", "title on the paper is focused");

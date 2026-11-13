@@ -187,6 +187,13 @@ npm run test:browser:v65
 - 问「你会做什么」或「帮我整理今天的故事」仍然走原来的规则；模型没开或连不上时，Captain 自动改用原来的回复；`?dev-local-ai=off` 可以关掉。
 - 如果 Xcode 里还开着服务端（`NotebookServer`），它会占着 8080：`bash tools/mac/dev.sh web` 现在会提示你先在 Xcode 里按 ■ Stop，不再打开一个错误页面。
 
+### 2026-11-13 — 「今天怎么记？」视频、声音、自由排版一打开就能看到（V10.32，第 96 版）
+
+- 视频、声音、自由排版在三张主卡片正下方，打开就能看到。
+- 「照片 + 一句话」还是第一张、最显眼的卡片。第一次打开时默认选它，之后会记得你上次用的方式。
+- 选「视频」后按钮变成「选一段视频」，直接打开视频导入；书和日期不变。
+- Captain 新版设计（按你的文案）在设计页：https://claude.ai/artifact/KgAuNDg4mgsgKYhUbDyj1A ，确认后再做。
+
 ### 2026-11-13 — 设计方案：照片不再被挤小、放不下时建议分页；Captain 四种状态；视频入口不用往下找（还没开始做）
 
 - 方案和真实截图：https://claude.ai/artifact/KgAuNDg4mgsgKYhUbDyj1A （可以切换 375 中文 / 430 English）。

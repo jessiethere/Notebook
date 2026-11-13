@@ -4199,6 +4199,17 @@ function lastQuickBook() {
 }
 const QUICK_WAY_KEY = "little-days.quick-way";
 const QUICK_WAYS = ["photo", "write", "draw"];
+// V10.32 · The other ways (video, sound, free layout): a compact row right
+// under the three, on the first screen — lighter than the photo card, never
+// hidden. Choosing one shows its own short note and Start button instead of
+// the photo options; the book and date stay. They are not remembered as the
+// default way (only the three are).
+const QUICK_ALSO = ["video", "voice", "layout"];
+const QUICK_ALSO_LABEL = { video: "add.video", voice: "add.sound", layout: "mode.layout" };
+const QUICK_ALSO_GLYPH = { video: "▶", voice: "♪", layout: "▦" };
+function quickAlsoHTML() {
+  return `<div class="quick-also" role="group" aria-label="${t("quick.also")}"><span>${t("quick.also")}</span>${QUICK_ALSO.map((w) => `<button data-action="quick-way" data-way="${w}" aria-pressed="${quick.way === w}"><i aria-hidden="true">${QUICK_ALSO_GLYPH[w]}</i>${t(QUICK_ALSO_LABEL[w])}</button>`).join("")}</div>`;
+}
 function lastQuickWay() {
   try {
     const way = localStorage.getItem(QUICK_WAY_KEY);
@@ -4217,7 +4228,7 @@ function openQuickRecord({ way = "", photo = "", book = "", date = "" } = {}) {
   quick = {
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : dateKey(),
     book: state().books.some((b) => b.id === book) ? book : lastQuickBook() || todayEntry()?.bookId || state().books[0]?.id || "daily",
-    way: QUICK_WAYS.includes(way) ? way : lastQuickWay() || "write",
+    way: QUICK_WAYS.includes(way) ? way : lastQuickWay() || "photo",
     photo: photo || "mine",
   };
   renderQuickRecord();
@@ -4249,9 +4260,9 @@ function renderQuickRecord() {
           .map((p) => `<button class="${quick.lib === p.id ? "selected" : ""}" data-action="quick-lib" data-photo-id="${esc(p.id)}" aria-pressed="${quick.lib === p.id}" aria-label="${esc(sceneName(p))}"><img src="${esc(safePhoto(`photo:${p.id}`))}" alt="" loading="lazy"></button>`)
           .join("")}</div>`
       : "";
-  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}${library}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
+  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${quickAlsoHTML()}${photos}${QUICK_ALSO.includes(quick.way) ? `<p class="quick-also-say">${t("quick.say." + quick.way)}</p>` : ""}${library}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
     .books.map((book) => `<button data-action="quick-book" data-book="${esc(book.id)}" class="${quick.book === book.id ? "selected" : ""}" aria-pressed="${quick.book === book.id}">${coverHTML(book, ctx())}<span>${esc(book.title)}</span></button>`)
-    .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t(quick.way === "photo" && quick.photo === "mine" ? "quick.start.pick" : quick.way === "photo" && quick.photo === "pick" ? (quick.lib ? "quick.start.lib" : "quick.start.libPick") : "quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+    .join("")}</div><button class="primary full-width quick-start" data-action="${QUICK_ALSO.includes(quick.way) ? "quick-more" : "quick-start"}" data-more="${QUICK_ALSO.includes(quick.way) ? quick.way : ""}">${QUICK_ALSO.includes(quick.way) ? t("quick.start." + quick.way) : t(quick.way === "photo" && quick.photo === "mine" ? "quick.start.pick" : quick.way === "photo" && quick.photo === "pick" ? (quick.lib ? "quick.start.lib" : "quick.start.libPick") : "quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
 }
 // Every record is a new page of today, in the chosen journal.
 function startPage(book, date = dateKey()) {

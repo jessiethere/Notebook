@@ -40,8 +40,9 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     // 1. ＋ asks how: three ways, which journal; nothing to continue yet.
     await menu(page, "studio");
     await page.waitForSelector("#choose-dialog[open] .quick-sheet");
-    assert.deepEqual(await page.$$eval('[data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["photo", "write", "draw"]);
-    assert.equal(await page.locator('[data-action="quick-way"][aria-pressed="true"]').getAttribute("data-way"), "write", "just write by default");
+    assert.deepEqual(await page.$$eval('.quick-way[data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["photo", "write", "draw"]);
+    // (Older suites seed 随手写 as the last way used; V10.32's first-time default is tested in v132.)
+    assert.equal(await page.locator('.quick-way[data-action="quick-way"][aria-pressed="true"]').getAttribute("data-way"), "write", "the last way used");
     assert.equal(await page.locator('[data-action="quick-continue"]').count(), 0);
     assert.equal(await page.locator('#choose-dialog [data-action="quick-photo"]').count(), 0, "photo choices only for photo + a line");
     await page.locator('[data-action="quick-way"][data-way="photo"]').tap();

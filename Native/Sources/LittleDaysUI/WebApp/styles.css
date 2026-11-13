@@ -21584,3 +21584,52 @@ body.typing .ctx-caption {
 #app > .story-canvas {
   flex: none;
 }
+
+/* V10.32 · 今天怎么记: video, sound and free layout right under the three
+   ways (first screen, lighter than the photo card). The three cards are a
+   little shorter; their names and hints stay readable. */
+.quick-sheet .way-art {
+  aspect-ratio: 4 / 3;
+}
+.quick-also {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--t-9a8f80, #9a8f80);
+}
+.quick-also > span {
+  flex: none;
+}
+.quick-also button {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
+  border: 1px solid var(--c-e6dfd3, #e6dfd3);
+  border-radius: 12px;
+  background: var(--c-ffffff, #ffffff);
+  font-size: 13px;
+  color: var(--t-2b2622, #2b2622);
+  white-space: nowrap;
+}
+.quick-also button[aria-pressed="true"] {
+  border-color: var(--c-2b2622, #2b2622);
+  box-shadow: 0 2px 10px var(--c-3c2d1e1f, #3c2d1e1f);
+}
+.quick-also i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--t-6f675d, #6f675d);
+}
+.quick-also-say {
+  margin: 4px 2px 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--t-6f675d, #6f675d);
+}

@@ -92,7 +92,9 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     // 4. The record sheet: three ways in, open today's pages, or close.
     await menu(page, "studio");
     await page.waitForSelector("#choose-dialog[open] .quick-sheet");
-    assert.deepEqual(await page.$$eval('[data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["photo", "write", "draw"]);
+    assert.deepEqual(await page.$$eval('.quick-way[data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["photo", "write", "draw"]);
+    // V10.32: the other ways sit right under the three.
+    assert.deepEqual(await page.$$eval('.quick-also [data-action="quick-way"]', (els) => els.map((el) => el.dataset.way)), ["video", "voice", "layout"]);
     assert.equal(await page.locator('[data-action="quick-continue"]').count(), 1, "today already has a page");
     await page.locator('#choose-dialog [data-action="choose-close"]').click();
     await page.waitForSelector(".hero");
@@ -110,6 +112,8 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
 
     // 5. Photos on a free layout page → editor: filter, 1:1 crop, warmth, title.
     await menu(page, "studio");
+    // V10.32: 自由排版 is chosen in the row under the three ways, then started.
+    await page.locator('#choose-dialog .quick-also [data-way="layout"]').click();
     await page.locator('[data-action="quick-more"][data-more="layout"]').click();
     await page.locator('#journal-canvas [data-action="first-photo"]').click();
     await page.waitForSelector("#choose-dialog[open]");

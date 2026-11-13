@@ -8678,5 +8678,33 @@
   "qe.optional": {
     "zh": "可以不写，直接保存",
     "en": "Words are optional — you can just save"
+  },
+  "quick.also": {
+    "zh": "也可以",
+    "en": "Or"
+  },
+  "quick.start.video": {
+    "zh": "选一段视频",
+    "en": "Pick a video"
+  },
+  "quick.start.voice": {
+    "zh": "开始记声音",
+    "en": "Start a sound"
+  },
+  "quick.start.layout": {
+    "zh": "打开空白页",
+    "en": "Open a blank page"
+  },
+  "quick.say.video": {
+    "zh": "从相册选一段视频，放进这一页。",
+    "en": "Pick a video from your library for this page."
+  },
+  "quick.say.voice": {
+    "zh": "录一段声音，或选一个音频文件。",
+    "en": "Record a sound, or pick an audio file."
+  },
+  "quick.say.layout": {
+    "zh": "空白的一页，照片、文字、贴纸自己摆。",
+    "en": "A blank page — place photos, words and stickers yourself."
   }
 }

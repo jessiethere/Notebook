@@ -11,6 +11,9 @@ function seedAccount() {
       const d = new Date();
       localStorage.setItem("little-days.celebrated", `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
     }
+    // V10.32: the record sheet opens on 照片 + 一句话 the first time. Older
+    // suites were written when it opened on 随手写 (tests/v132 checks the new default).
+    if (localStorage.getItem("little-days.quick-way") === null) localStorage.setItem("little-days.quick-way", "write");
     // The Studio guide (V10.12) is tested in v112; older suites have seen it.
     if (localStorage.getItem("little-days.studio-guide") === null)
       localStorage.setItem("little-days.studio-guide", JSON.stringify({ tour: "skipped", tips: { dblTap: true } }));
