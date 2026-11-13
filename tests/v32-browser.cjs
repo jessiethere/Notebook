@@ -97,7 +97,8 @@ const shift = (key, days) => {
     const rows = [...(await page.$$eval(".more-grid [data-action='tool']", (els) => els.map((el) => el.dataset.tool))), "stickers"];
     await studioClose(page);
     assert.equal(await page.locator('#journal-canvas [data-inline="title"]').count(), 1, "the title is typed on the paper (always open)");
-    for (const id of ["photos", "layout", "font", "paper", "mood", "stickers", "chapters"])
+    // V10.24: 心情 is a shortcut into 页面信息 on a page (not a tool of the cover).
+    for (const id of ["photos", "layout", "font", "paper", "stickers", "chapters"])
       assert.ok(rows.includes(id), `menu has ${id}`);
     // No second place to choose the journal or add media: those are the line
     // above the paper and 视频 / 声音 under it.
@@ -132,10 +133,9 @@ const shift = (key, days) => {
     await studioClose(page);
     await page.waitForFunction((w) => document.querySelector("#journal-canvas").getBoundingClientRect().width > w * 1.3, small);
     // Mood change is visible in the summary and on the page at once.
-    await tool("mood");
-    await page.locator('[data-action="mood"][data-mood="✨"]').click();
-    assert.equal(await page.locator('[data-tool-value="mood"]').innerText(), "✨");
-    assert.equal(await page.locator("#journal-canvas .canvas-mood").innerText(), "✨");
+    // V10.24: the cover has no mood picker any more, but an older day keeps
+    // and shows the mood it already had (here 🌷, seeded above) — nothing rewritten.
+    assert.equal(await page.locator("#journal-canvas .canvas-mood").innerText(), "🌷");
     // Adding photos offers Layout; the summary follows the template.
     // V10.20: several photos no longer force the Layout sheet open; a light
     // 试试排版 chip above the dock opens it.

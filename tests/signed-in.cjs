@@ -158,6 +158,14 @@ const dockReady = async (target) => {
   });
 };
 module.exports.studioTool = async (target, id) => {
+  // V10.24: mood is chosen in 页面信息 (More → 心情 opens it at the picker).
+  if (id === "mood") {
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="mood-open"]').click();
+    const details = target.locator('.tool-sheet[data-tool-row="details"]');
+    await details.locator("#mood-picker").waitFor();
+    return details;
+  }
   const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
   if (await sheet.count()) return sheet;
   await dockReady(target);

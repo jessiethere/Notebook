@@ -21013,3 +21013,81 @@ dialog.crop-editor::backdrop {
   white-space: nowrap;
   vertical-align: bottom;
 }
+
+/* ---------- V10.24 · mood stamps (page details) ---------- */
+.mood-picker {
+  margin: 0 0 14px;
+}
+.mood-picker .mood-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mood-picker .mood-head b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-picker .mood-head small {
+  font: 12px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+  text-align: right;
+}
+.mood-stamps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+.mood-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: 12px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-stamp i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px dashed var(--line);
+  font-style: normal;
+  font-size: 20px;
+  background: var(--c-fffdf8, #fffdf8);
+}
+.mood-stamp[aria-pressed="true"] i {
+  border: 2px solid var(--sageDeep);
+  background: var(--c-e3ebdc, #e3ebdc);
+  box-shadow: 0 0 0 3px var(--c-e3ebdc, #e3ebdc);
+}
+.mood-stamp[aria-pressed="true"] span {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.mood-stamp.mood-clear i {
+  color: var(--t-8a8178, #8a8178);
+}
+.mood-stamp:disabled {
+  opacity: 0.4;
+}
+
+/* V10.24 · while typing with the keyboard up, the type bar sits right above
+   the keyboard (it used to float under the paper, which a 375-wide phone's
+   keyboard can cover). Same measure the open sheets use (V3.8). */
+@media (pointer: coarse) {
+  html[style*="--vv-h"] body.typing #type-bar:not([hidden]) {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: calc(var(--vv-top, 0px) + var(--vv-h, 52dvh) - 6px);
+    transform: translateY(-100%);
+    z-index: 41;
+  }
+}

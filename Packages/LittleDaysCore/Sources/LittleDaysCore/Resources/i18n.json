@@ -2368,8 +2368,8 @@
     "en": "Mood"
   },
   "tool.stickers": {
-    "zh": "贴纸与文字框",
-    "en": "Stickers & text boxes"
+    "zh": "贴纸",
+    "en": "Stickers"
   },
   "tool.media": {
     "zh": "声音与影像",
@@ -3328,7 +3328,7 @@
     "en": "Photos"
   },
   "dock.layout": {
-    "zh": "版式",
+    "zh": "排版",
     "en": "Layout"
   },
   "dock.font": {
@@ -8418,5 +8418,37 @@
   "media.savedLocal": {
     "zh": "已保存到本机",
     "en": "Saved on this device"
+  },
+  "mood.happy": {
+    "zh": "开心",
+    "en": "Happy"
+  },
+  "mood.warm": {
+    "zh": "温暖",
+    "en": "Warm"
+  },
+  "mood.calm": {
+    "zh": "平静",
+    "en": "Calm"
+  },
+  "mood.low": {
+    "zh": "低落",
+    "en": "Low"
+  },
+  "mood.excited": {
+    "zh": "雀跃",
+    "en": "Excited"
+  },
+  "mood.hint": {
+    "zh": "可选 · 只记在这一页，不会画到纸上",
+    "en": "Optional · kept with this page, never drawn on it"
+  },
+  "mood.clear": {
+    "zh": "清除",
+    "en": "Clear"
+  },
+  "mood.coverNote": {
+    "zh": "心情记在每一页上：打开某一页，在「页面信息」里选。",
+    "en": "Mood belongs to each page: open a page and choose it in Page details."
   }
 }

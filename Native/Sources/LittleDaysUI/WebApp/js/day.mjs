@@ -77,7 +77,7 @@ export function saveMoment(state, draft, momentId) {
       date: draft.date,
       title: "",
       body: "",
-      mood: draft.mood || "☀️",
+      mood: draft.mood || "", // V10.24: no mood unless chosen (older days keep theirs)
       bookId: draft.bookId || "daily",
       photo: "",
       template: draft.template || "cute",

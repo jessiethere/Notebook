@@ -98,8 +98,9 @@ const path = require("node:path");
     await page.locator("[data-day-book]").selectOption(bookId);
     await tool("font");
     await page.locator('[data-editor-field="font"]').selectOption("rounded");
-    await tool("mood");
-    await page.locator('[data-action="mood"][data-mood="🌷"]').click();
+    // V10.24: the cover (the whole day) has no mood any more — mood belongs to each page.
+    await studioMore(page);
+    assert.equal(await page.locator('.more-grid [data-action="mood-open"]').count(), 0, "no 心情 on the cover");
     await tool("paper");
     await page
       .locator('[data-action="template"][data-template="vintage"]')

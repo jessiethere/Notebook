@@ -514,7 +514,7 @@ function openStudio(date = dateKey()) {
         date,
         title: "",
         body: "",
-        mood: "☀️",
+        mood: "",
         bookId: "daily",
         photo: "",
         template: "cute",
@@ -3864,15 +3864,14 @@ function studioTools() {
       label: "tool.paper",
       value: page.backdrop ? t("backdrop.on") : t("template." + (page.template || "minimal")),
       body: () =>
-        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id ? "selected" : ""}" aria-pressed="${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
     },
     {
       id: "mood",
       icon: "☺",
       label: "tool.mood",
-      value: page.mood || t("tool.none"),
-      body: () =>
-        `<div class="mood-list">${features.moods.map((m) => `<button data-action="${moodAction}" data-mood="${m}" class="${page.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${page.mood === m}">${m}</button>`).join("")}</div>`,
+      value: page.mood ? `${page.mood} ${moodName(page.mood)}` : t("tool.none"),
+      body: () => moodPickerHTML(page) || `<p class="save-help">${t("mood.coverNote")}</p>`,
     },
     {
       id: "stickers",
@@ -3936,7 +3935,7 @@ function moreSheetHTML(tools) {
     tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw") +
     tile('data-action="add-video"', "video", t("add.video")) +
     tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
-    toolTile("mood") +
+    (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
     toolTile("photos") +
     toolTile("media") +
     toolTile("growth") +
@@ -3951,8 +3950,24 @@ function moreSheetHTML(tools) {
   return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
 }
 // Page details: date, journal, time, name, caption, tags, delete.
+// V10.24 · Mood is optional memory metadata for one page (a Moment): it is
+// chosen in 页面信息 (More → 心情 opens the same place), can be changed or
+// cleared, and is never drawn on the paper. The stored values stay the five
+// emoji (☀️ 🌷 ☁️ 🌧️ ✨); only their names are shown. The cover (the whole day)
+// has no mood picker any more: older days keep what they have.
+const MOOD_NAMES = { "☀️": "happy", "🌷": "warm", "☁️": "calm", "🌧️": "low", "✨": "excited" };
+function moodName(mood) {
+  const key = MOOD_NAMES[mood];
+  return key ? t("mood." + key) : "";
+}
+function moodPickerHTML(page = activePage()) {
+  if (isDayPage()) return "";
+  const now = page.mood || "";
+  const stamp = (m) => `<button class="mood-stamp mood-${MOOD_NAMES[m] || "other"}" data-action="moment-mood" data-mood="${esc(m)}" aria-pressed="${now === m}"><i aria-hidden="true">${esc(m)}</i><span>${esc(moodName(m) || m)}</span></button>`;
+  return `<section class="mood-picker" id="mood-picker" aria-label="${t("tool.mood")}"><div class="mood-head"><b>${t("tool.mood")}</b><small>${t("mood.hint")}</small></div><div class="mood-stamps">${features.moods.map(stamp).join("")}<button class="mood-stamp mood-clear" data-action="moment-mood-clear" ${now ? "" : "disabled"}><i aria-hidden="true">—</i><span>${t("mood.clear")}</span></button></div></section>`;
+}
 function detailsSheetHTML() {
-  return `<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
+  return `${moodPickerHTML()}<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
 }
 // With something selected, the bottom row is that item's tools: × (back to
 // the four tools) and only what applies to a photo / text / sticker / clip.
@@ -4028,7 +4043,7 @@ function toolMenuHTML() {
   if (selectedLayerOf()?.kind === "text") sheets.push({ id: "textstyle", icon: "", label: "ctx." + textTab, value: "", body: textStyleSheetHTML });
   if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
   const open = sheets.find((tool) => tool.id === studioTool);
-  const back = open && !["more", "stickers", "layer", "textstyle"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
+  const back = open && !["more", "stickers", "layer", "textstyle", "shape"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
     ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
@@ -6922,6 +6937,8 @@ async function action(target) {
   if (actionName === "template")
     changeEditor((e) => {
       e.template = target.dataset.template;
+      // V10.24: a paper replaces a library background (your own photo stays: it is the page's picture).
+      if (/^(scene|photo):/.test(e.backdrop || "")) delete e.backdrop;
     });
   if (actionName === "material-style") {
     materialStyle = target.dataset.style;
@@ -6993,10 +7010,14 @@ async function action(target) {
     render();
   }
   if (actionName === "backdrop") {
+    // V10.24: one background per page — a picture / gradient / pattern
+    // replaces the paper (it goes back to plain, not kept underneath).
     const reference = target.dataset.backdrop;
     changeTarget((p) => {
-      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) p.backdrop = reference;
-      else delete p.backdrop;
+      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) {
+        p.backdrop = reference;
+        p.template = "minimal";
+      } else delete p.backdrop;
     });
   }
   if (actionName === "sheet-grow") {
@@ -8809,6 +8830,17 @@ async function v31Action(target) {
       toast(t("moment.savedToast"));
       return true;
     }
+    case "moment-mood-clear":
+      changeTarget((moment) => {
+        if (moment !== editor) moment.mood = "";
+      });
+      return true;
+    case "mood-open":
+      // More → 心情: the same picker, in 页面信息.
+      studioTool = "details";
+      render();
+      document.querySelector("#mood-picker")?.scrollIntoView({ block: "start" });
+      return true;
     case "moment-mood":
       changeTarget((moment) => {
         if (moment !== editor)
@@ -8818,7 +8850,10 @@ async function v31Action(target) {
       return true;
     case "moment-template":
       changeTarget((moment) => {
-        if (moment !== editor) moment.template = target.dataset.template;
+        if (moment !== editor) {
+          moment.template = target.dataset.template;
+          if (/^(scene|photo):/.test(moment.backdrop || "")) delete moment.backdrop;
+        }
       });
       return true;
     case "template-count":
@@ -9564,7 +9599,9 @@ async function handleImageUpload(event, target) {
       });
       flushDraft();
     }
-    if (target?.kind !== "quick" || failed) toast(
+    // V10.24: photos added to the page in Studio need no "added" message — they are
+    // right there on the paper (the message also covered its top); failures still say so.
+    if (failed || !(target?.kind === "quick" || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1

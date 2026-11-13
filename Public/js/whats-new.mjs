@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.24",
+    date: "2026-11-13",
+    zh: {
+      title: "心情记在每一页上；背景和纸张互相替换",
+      items: [
+        "心情现在是每一页的可选信息：在「页面信息」里选，「更多 → 心情」也能直接打开。五个心情是 开心 · 温暖 · 平静 · 低落 · 雀跃，可以随时更改或清除，不会画到纸上。",
+        "新的一天不再自动带上 ☀️；以前的日子保留原来的心情，不做改动。",
+        "选背景（风景照片、渐变、图案）会替换纸张，选纸张也会替换背景，不用先撤销；需要的话撤销可以换回来。",
+        "打字时，字体和 B I U S 工具条会贴在键盘正上方。",
+        "小修正：贴纸面板的标题改为「贴纸」；「更多」里的「版式」统一叫「排版」；形状面板不再出现跳回「更多」的返回箭头；在页面上加照片后，不再弹出提示挡住纸张。",
+      ],
+    },
+    en: {
+      title: "Mood belongs to each page; background and paper replace each other",
+      items: [
+        "Mood is now optional page information: choose it in Page details, or go straight there from More → Mood. Happy · Warm · Calm · Low · Excited — change or clear it any time; it is never drawn on the paper.",
+        "A new day no longer starts with ☀️; earlier days keep the mood they had.",
+        "Choosing a background (scenery, gradient, pattern) replaces the paper, and choosing a paper replaces the background — no undo needed first (undo still brings it back).",
+        "While typing, the font and B I U S bar sits right above the keyboard.",
+        "Small fixes: the sticker sheet is titled Stickers; More says Layout everywhere; the Shape sheet no longer has a back arrow into More; adding photos no longer shows a message over the paper.",
+      ],
+    },
+  },
+  {
     version: "10.23",
     date: "2026-11-12",
     zh: {
