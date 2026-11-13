@@ -57,9 +57,9 @@
   - 第一次失败是脚本的问题：用错了输入框 `#photos-input`，iOS 弹出了原生菜单。首页实际用的是 `#attachment-image-input`，与 `ios-layout-check.js` 一样把它的 `click()` 换成空函数后通过。英文结果里的 `zh-CN` 是脚本读 `<html lang>` 太早，已改成等首页出现后再读。
   - 每个脚本先在容器的 Chromium 里干跑过一次（中英文都通过），再上模拟器。
   - **没有测**：真实的 iOS 相册选择界面、Studio 换照片、删除共用照片的一页、PDF、375 宽（这台 Mac 没装 iPhone SE 模拟器）。**真机：没有做任何测试。**
-- **全量浏览器回归**（81 个套件，用快照代码，在测试迁移之前跑的）：71 个通过，12 个失败。12 个在当前代码上重跑：v116、v129、v3、v33 等都通过；v31 的日历角标从 3 变成 4，是 V10.42 的计数规则（这一天自己的页有 5 张照片，算 1 页，加 3 个 Moment），所以只改测试的期望值，App 没有改。剩余结果见下一条日志。
+- **全量浏览器回归**（81 个套件，用快照代码，在测试迁移之前跑的）：71 个通过，12 个失败。12 个在当前代码上重跑：11 个直接通过（v116、v129、v3、v33、v41、v45、v53、v54、v56、v58、v64）；v31 的日历角标从 3 变成 4，是 V10.42 的计数规则（这一天自己的页有 5 张照片，算 1 页，加 3 个 Moment），只改测试的期望值后通过，App 没有改。81 个套件现在全部通过。
 - **其他测试**：`npm test` 281/281；`tests/test_native_shell.py` OK；`sync_native_web.py` 无变化。
-- **发布**：`build_link.py` 后和 V10.40 发布时的构建逐个文件比较，变的只有 10 个文件（app.js、js/pages.mjs、book-share、day、day-view、keeper、search、whats-new、styles.css、shared/i18n.json），只上传这 10 个到同一个固定链接。
+- **发布**：`build_link.py` 后和 V10.40 发布时的构建逐个文件比较，变的只有 10 个文件（app.js、js/pages.mjs、book-share、day、day-view、keeper、search、whats-new、styles.css、shared/i18n.json），只上传这 10 个到同一个固定链接（第 101 版，V10.44）。发布前确认链接上那 5 个之前的文件与 V10.40 构建的哈希完全相同（没有别人改过）。
 - **文件**：`tools/mac/ios-sprint-check.js`、`tools/mac/ios-sprint-restart.js`（新）、`tests/v31-browser.cjs`、`docs/DEVICE_TEST_PLAN.md`、`docs/MAC_LOCAL_DEV.md`、本文件、README。
 - **下一步**：S1–S4 真机步骤（DEVICE_TEST_PLAN 2.4）；S2 仍在待办。
 
