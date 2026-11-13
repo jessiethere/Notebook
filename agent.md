@@ -48,6 +48,21 @@
 
 ## 更新日志
 
+### 2026-11-13 — 合并进 main：v33-write-first-community（a0be0fd，V10.26）经云端分支合并到 main
+
+- 需求：用户确认「开 PR 并合并」进 `main`（`Start-Windows.cmd` 每次 `git pull` 的分支）。
+- 做法：
+  - 云端分支 `claude/focused-johnson-6in87n` 依次合并 `origin/v33-write-first-community` 的 40c0efb（V10.23–V10.25 + Meme 设计）和 a0be0fd（V10.26 + 文档）。
+  - 唯一的冲突在 agent.md 的日志开头：两边都在最前面加了条目。处理方式是全部保留，Mac 那边较新的条目放前面；README 里 11-12 的合并条目挪到 V10.22 / V10.23 之间，更接近它实际发生的时间。
+  - `sync_native_web.py` 运行后没有差异。
+  - 没有改 App 代码；在线链接已由 Mac 会话发布到第 90 版（V10.26），本会话没有重复发布。
+- 测试（Ubuntu 容器，Chromium 1243，模拟 iPhone 13，预览服务用合并后的代码重启）：
+  - 在 ad2ee09（含 V10.25）上：`npm test` 211/211，`python3 -m unittest` 18/18；浏览器测试 65 个中 64 个通过。v3-browser 在全量运行里（排第 2 个）等 `.tool-dock` 时超时，单独连跑两次都通过。之前全量运行里也出现过同样的超时，判断是时机不稳定的测试，不是 App 回归。
+  - 在 05ae6a5（再加 V10.26）上：`npm test` 211/211，`python3 -m unittest` 18/18；受影响的 v122、v123 浏览器测试通过。
+- 已知问题：v3-browser 在全量运行中偶尔超时（等底部工具栏），以后可以给它加一个更稳的等待条件。
+- 未验证：iOS 构建、模拟器和真机（本会话连不到 Mac；Mac 会话有自己的模拟器结果，见上面的条目）；Windows 实机。
+- 下一步：Mac 会话以后继续在 `v33-write-first-community` 上工作时，先合并 `main`（只差这次的日志和合并提交），以免日志再冲突。
+
 ### 2026-11-13 — 优先级调整：P0 原生模拟器真实路径验证 + V10.26 检查更准确（固定链接第 90 版）；核心流程 Audit；Meme Phase A 只做拆分
 
 - 需求（用户）：
