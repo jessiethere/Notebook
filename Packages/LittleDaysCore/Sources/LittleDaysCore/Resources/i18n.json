@@ -5292,8 +5292,8 @@
     "en": "Arrange"
   },
   "pages.title": {
-    "zh": "整理这一天",
-    "en": "Arrange this day"
+    "zh": "页面目录",
+    "en": "Pages"
   },
   "pages.help": {
     "zh": "封面是这一天的一句话总结（可以不写）；下面每一页记录一件事，可以调整顺序或删除。",
@@ -7512,16 +7512,16 @@
     "en": "Got it"
   },
   "guide.move.title": {
-    "zh": "移动元素",
-    "en": "Move things around"
+    "zh": "摆位置",
+    "en": "Place them"
   },
   "guide.move.body": {
-    "zh": "按住并拖动，给照片和文字换个位置。",
-    "en": "Press and drag to give a photo or your words a new spot."
+    "zh": "点一下选中，按住拖动换位置；双击文字可以直接改。",
+    "en": "Tap to select, press and drag to move; double-tap words to change them."
   },
   "guide.move.bodyEmpty": {
-    "zh": "放上照片或文字后，按住并拖动，就能给它们换个位置。",
-    "en": "Once a photo or some words are on the page, press and drag to move them."
+    "zh": "放上照片或文字后：点一下选中，拖动换位置；双击文字可以直接改。",
+    "en": "Once something is on the page: tap to select, drag to move; double-tap words to change them."
   },
   "guide.type.title": {
     "zh": "编辑文字",
@@ -7536,16 +7536,16 @@
     "en": "Tap Text below to add a text box, then double-tap it to start writing."
   },
   "guide.adjust.title": {
-    "zh": "调整布局",
-    "en": "Adjust the layout"
+    "zh": "改它",
+    "en": "Change it"
   },
   "guide.adjust.body": {
-    "zh": "轻点选中元素，用控制点调整：拖动上方的 ↻ 转角度，拖动角上的圆点改大小。",
-    "en": "Tap to select, then use the handles: drag ↻ above to turn it, the corner dot to resize."
+    "zh": "选中以后，下面就是它的工具；角上的圆点改大小，上方的 ↻ 转角度。点「← 返回」回到创作工具。",
+    "en": "Once selected, its tools are below; the corner dot resizes, ↻ above turns it. ← Back returns to the creation tools."
   },
   "guide.adjust.bodyEmpty": {
-    "zh": "放上内容后，轻点选中它，再用控制点调整大小和角度。",
-    "en": "Once something is on the page, tap to select it and use the handles to resize and turn it."
+    "zh": "放上内容后选中它，下面就会换成它的工具；点「← 返回」回到创作工具。",
+    "en": "Once something is on the page, select it and its tools appear below; ← Back returns."
   },
   "guide.tip.dblTap": {
     "zh": "双击即可编辑文字",
@@ -8478,5 +8478,53 @@
   "layer.precise": {
     "zh": "精确调整",
     "en": "Exact position & size"
+  },
+  "more.pageFont": {
+    "zh": "页面字体",
+    "en": "Page font"
+  },
+  "more.toc": {
+    "zh": "页面目录",
+    "en": "Pages"
+  },
+  "more.groupLook": {
+    "zh": "页面外观",
+    "en": "Page look"
+  },
+  "more.groupMake": {
+    "zh": "媒体与创作",
+    "en": "Media & making"
+  },
+  "more.groupPages": {
+    "zh": "页面管理",
+    "en": "Pages & info"
+  },
+  "pages.copyLabel": {
+    "zh": "复制这一页",
+    "en": "Copy this page"
+  },
+  "pages.copied": {
+    "zh": "已复制这一页",
+    "en": "Page copied"
+  },
+  "guide.add.title": {
+    "zh": "加东西",
+    "en": "Add things"
+  },
+  "guide.add.body": {
+    "zh": "从这里放照片、写字、贴贴纸。",
+    "en": "Put in photos, words and stickers from here."
+  },
+  "guide.more.title": {
+    "zh": "改整页",
+    "en": "The whole page"
+  },
+  "guide.more.body": {
+    "zh": "背景与纸张、排版、手绘、页面目录、页面信息都在「更多」里。",
+    "en": "Background & paper, layout, drawing, pages and page details are all in More."
+  },
+  "pages.more": {
+    "zh": "更多页面操作（只保存这一页、折叠）",
+    "en": "More page actions (save one page, fold)"
   }
 }

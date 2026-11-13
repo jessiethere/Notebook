@@ -98,7 +98,7 @@ const shift = (key, days) => {
     await studioClose(page);
     assert.equal(await page.locator('#journal-canvas [data-inline="title"]').count(), 1, "the title is typed on the paper (always open)");
     // V10.24: 心情 is a shortcut into 页面信息 on a page (not a tool of the cover).
-    for (const id of ["photos", "layout", "font", "paper", "stickers", "chapters"])
+    for (const id of ["layout", "font", "paper", "stickers"]) // V10.25: 本页照片 → 照片; 目录 → 页面目录
       assert.ok(rows.includes(id), `menu has ${id}`);
     // No second place to choose the journal or add media: those are the line
     // above the paper and 视频 / 声音 under it.

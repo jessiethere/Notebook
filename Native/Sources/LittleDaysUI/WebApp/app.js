@@ -3099,9 +3099,9 @@ function renderPagesManage() {
   $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
     .map(
       (m, i) =>
-        `<li class="pages-row">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">${t("delete")}</button></li>`,
+        `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
     )
-    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
+    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="text-button pages-more" data-action="pages-more">${t("pages.more")} ›</button><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
 async function removePage(momentId) {
   const moment = findMoment(editor, momentId);
@@ -3933,28 +3933,30 @@ function studioTools() {
 // sheet (‹ comes back here).
 const MORE_LABELS = { photos: "more.photos", media: "more.media" };
 function moreSheetHTML(tools) {
+  // V10.25 · three groups instead of a flat grid: 页面外观 · 媒体与创作 ·
+  // 页面管理. Each tile is the one way into its tool (目录 and 页面管理 are
+  // one 页面目录 now; photos are added with 照片 below, so 本页照片 is gone).
   const tile = (attrs, name, label, cls = "") => `<button class="more-tile ${cls}" ${attrs}><span class="more-icon">${svIcon(name)}</span><small>${label}</small></button>`;
-  const toolTile = (toolId) => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, t(MORE_LABELS[toolId] || "dock." + toolId), "dock-btn") : "");
-  const tiles =
-    toolTile("paper") +
-    toolTile("layout") +
-    toolTile("font") +
-    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw") +
-    tile('data-action="add-video"', "video", t("add.video")) +
-    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
-    (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
-    toolTile("photos") +
-    toolTile("media") +
-    toolTile("growth") +
-    toolTile("book") +
-    toolTile("layer") +
-    toolTile("chapters") +
-    tile('data-action="open-pages"', "pages", t("more.pages")) +
-    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
-    tile('data-action="guide-open"', "guide", t("more.guide"));
+  const toolTile = (toolId, label, cls = "dock-btn") => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, label, cls) : "");
+  const group = (title, tiles, extra = "") => (tiles ? `<section class="more-group"><h4>${title}</h4><div class="more-grid">${tiles}</div>${extra}</section>` : "");
   const sound = soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : "";
   const mode = isDayPage() ? "" : `<div class="more-mode"><b>${t("more.mode")}</b>${pageModeHTML()}</div>`;
-  return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
+  const look = toolTile("paper", t("tool.paper")) + toolTile("layout", t("dock.layout")) + toolTile("font", t("more.pageFont"));
+  const make =
+    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw accent") +
+    tile('data-action="add-video"', "video", t("add.video")) +
+    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
+    tile('data-action="music-sheet"', "sound", t("music.short")) +
+    toolTile("media", t("more.media"));
+  const pages =
+    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
+    (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
+    tile('data-action="open-pages"', "pages", t("more.toc")) +
+    tile('data-action="guide-open"', "guide", t("more.guide")) +
+    toolTile("growth", t("dock.growth")) +
+    toolTile("book", t("dock.book"));
+  // (换一种写法 is rarely changed: it goes last, so 媒体与创作 shows without scrolling)
+  return `${group(t("more.groupLook"), look)}${group(t("more.groupMake"), make, sound + studioMusicHTML())}${group(t("more.groupPages"), pages)}${mode}`;
 }
 // Page details: date, journal, time, name, caption, tags, delete.
 // V10.24 · Mood is optional memory metadata for one page (a Moment): it is
@@ -5761,12 +5763,16 @@ function guideTarget() {
 function guideTargetEl(target) {
   if (target.kind === "layer") return layerElement(target.id);
   if (target.kind === "addText") return document.querySelector('.tool-dock [data-action="add-text-layer"]') || $("#journal-canvas");
+  if (target.kind === "dock") return document.querySelector(".tool-dock.sv-tools:not(.ctx)") || document.querySelector(".tool-dock") || $("#journal-canvas");
+  if (target.kind === "more") return document.querySelector('.tool-dock [data-tool="more"]') || $("#journal-canvas");
   return $("#journal-canvas");
 }
 function guideDemoHTML(id) {
   // Little drawings of the real gestures (the handles look like the real ones).
   if (id === "move") return `<span class="sg-demo-box"></span><i class="sg-demo-finger"></i>`;
   if (id === "type") return `<span class="sg-demo-words">Aa<i class="sg-demo-caret"></i></span><i class="sg-demo-finger tap2"></i>`;
+  if (id === "add") return `<span class="sg-demo-words">＋</span>`;
+  if (id === "more") return `<span class="sg-demo-words">•••</span>`;
   return `<span class="sg-demo-box framed"><i class="sg-demo-stem"></i><i class="sg-demo-rotate"></i><i class="sg-demo-size"></i></span>`;
 }
 function openGuide() {
@@ -8755,6 +8761,19 @@ async function v31Action(target) {
       $("#choose-dialog").close();
       selectMoment(momentId);
       return true;
+    case "pages-more":
+      // V10.25: the older 目录 sheet (save one page, fold, …) — from 页面目录.
+      $("#choose-dialog").close();
+      studioTool = "chapters";
+      render();
+      return true;
+    case "page-copy": {
+      // V10.25: 页面目录 also copies a page (it used to be only in 目录).
+      changeEditor((entry) => duplicateMoment(entry, target.dataset.moment), false);
+      renderPagesManage();
+      toast(t("pages.copied"));
+      return true;
+    }
     case "page-move":
       changeEditor((entry) => moveMoment(entry, target.dataset.moment, Number(target.dataset.dir) || 0));
       renderPagesManage();

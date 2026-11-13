@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.25",
+    date: "2026-11-13",
+    zh: {
+      title: "编辑器整理：选中什么就改什么，「更多」分成三组",
+      items: [
+        "选中照片、文字、视频或贴纸后，工具栏上方会写着「照片 · 已选中」，最左边是「← 返回」（回到照片 · 文字 · 贴纸 · 更多），不再是 ×；× 只用来关面板。",
+        "形状、字体、颜色、对齐、图层改成工具栏上方的细选项条，打开时纸张只缩小一点，改动看得清楚。",
+        "图层只放最常用的：上移、下移、置顶、置底、复制；位置和大小的精确数值收在「精确调整」里。",
+        "选中贴纸后可以「换一个」：位置、大小和角度都不变。",
+        "「更多」分成三组：页面外观（背景与纸张、排版、页面字体）、媒体与创作（手绘排第一，还有视频、音频、配乐、本页媒体）、页面管理（页面信息、心情、页面目录、操作指南）；「换一种写法」放在最下面。",
+        "「目录」和「页面管理」合并成「页面目录」：点一页就跳过去，可以上下移动、复制、删除；「只保存这一页」等操作在「更多页面操作」里。「本页照片」和下面的「照片」重复，已经去掉。",
+        "操作指南改为四步：加东西、摆位置、改它、改整页。看过旧指南的人不会再自动弹出，可以在「更多 → 操作指南」重看。",
+      ],
+    },
+    en: {
+      title: "A tidier editor: change what you selected, and More in three groups",
+      items: [
+        "A selected photo, text, video or sticker is named above its tools (“Photo · selected”), and the first button is ← Back to Photo · Text · Stickers · More — not ×; × only closes sheets.",
+        "Shape, Font, Colour, Align and Layer open as a compact strip above the tools, so the paper stays big and you can see the change.",
+        "Layer keeps what you need most: up, down, to front, to back, duplicate; exact numbers are under Exact position & size.",
+        "A selected sticker can be swapped — same place, size and angle.",
+        "More has three groups: Page look (background & paper, layout, page font), Media & making (Draw first, then video, audio, music, page media) and Pages & info (page details, mood, pages, guide); Style is at the bottom.",
+        "Contents and Pages are one Pages list: tap a page to go there, move it, duplicate or delete it; save-one-page and similar actions are under More page actions. “This page's photos” repeated Photo below and is gone.",
+        "The guide is now four steps: add things, place them, change one, the whole page. If you saw the old guide it won't pop up again — replay it from More → Guide.",
+      ],
+    },
+  },
+  {
     version: "10.24",
     date: "2026-11-13",
     zh: {

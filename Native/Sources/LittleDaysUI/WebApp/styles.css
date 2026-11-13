@@ -15631,7 +15631,8 @@ dialog h2,
 /* A sheet never squeezes the paper under 170px tall: it scrolls inside. */
 .phone.sv {
   --sheet-max: min(40dvh, 340px, calc(var(--studio-h, 100dvh - 40px) - 374px));
-  --sheet-max-more: min(46dvh, 420px, calc(var(--studio-h, 100dvh - 40px) - 374px));
+  /* V10.25: 更多 is a little taller so 页面外观 + 媒体与创作 show without scrolling (the paper stays visible above) */
+  --sheet-max-more: min(52dvh, 440px, calc(var(--studio-h, 100dvh - 40px) - 320px));
 }
 .phone.sv .studio-stage:not(.large) .canvas-wrap {
   width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max)) * 0.8));
@@ -21188,4 +21189,57 @@ dialog.crop-editor::backdrop {
 /* while typing the item's tools step aside, and so does the line naming it */
 body.typing .ctx-caption {
   display: none;
+}
+
+/* ---------- V10.25 · 更多 in three groups ---------- */
+.more-group + .more-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.more-group h4 {
+  margin: 0 0 6px 2px;
+  font: 600 12px var(--ui-sans);
+  letter-spacing: 0.04em;
+  color: var(--t-8a8178, #8a8178);
+}
+.more-group .more-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.more-group .more-grid .more-tile {
+  min-height: 70px;
+}
+.more-group .more-icon {
+  width: 46px;
+  height: 46px;
+}
+.more-grid .more-tile.accent .more-icon {
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.more-grid .more-tile.accent small {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.more-group .more-mode {
+  margin-top: 8px;
+}
+/* 页面目录: the page being edited, and 复制 next to ↑ ↓ / 删除 */
+.pages-row.current {
+  background: var(--c-f1eadf, #f1eadf);
+  border-radius: 12px;
+}
+.pages-row .pages-copy {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--c-fffdf8, #fffdf8);
+  font-size: 13px;
+  color: var(--ink);
+}
+.tool-sheet[data-tool-row="more"] .more-mode {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
 }

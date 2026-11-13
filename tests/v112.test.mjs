@@ -42,24 +42,23 @@ test("its memory is one device key; broken values are ignored, never thrown", ()
   assert.doesNotThrow(() => G.finishTour("done", { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("blocked"); } }));
 });
 
-test("three steps, each pointing at a real thing on the page (or saying how to get one)", () => {
-  assert.deepEqual(G.STEPS.map((s) => s.id), ["move", "type", "adjust"]);
-  const [move, type, adjust] = G.STEPS;
+test("four steps (V10.25): add · place · change it · the whole page — each pointing at a real thing", () => {
+  assert.deepEqual(G.STEPS.map((s) => s.id), ["add", "move", "adjust", "more"]);
+  const [add, move, adjust, more] = G.STEPS;
   const layers = [
     { id: "t1", kind: "text", text: "今天" },
     { id: "p1", kind: "photo", mediaRef: "media:x" },
     { id: "s1", kind: "sticker", assetId: "leaf" },
   ];
+  assert.deepEqual(G.stepTarget(add, layers), { kind: "dock" }, "add: the 照片 · 文字 · 贴纸 row");
   assert.deepEqual(G.stepTarget(move, layers), { kind: "layer", id: "p1", layerKind: "photo" }, "move: a photo first");
-  assert.deepEqual(G.stepTarget(type, layers), { kind: "layer", id: "t1", layerKind: "text" });
   assert.deepEqual(G.stepTarget(adjust, layers, "s1"), { kind: "layer", id: "s1", layerKind: "sticker" }, "adjust: what is selected");
   assert.deepEqual(G.stepTarget(adjust, layers), { kind: "layer", id: "p1", layerKind: "photo" });
+  assert.deepEqual(G.stepTarget(more, layers), { kind: "more" }, "more: the 更多 button");
   // An empty page: no pretending.
   assert.deepEqual(G.stepTarget(move, []), { kind: "paper" });
-  assert.deepEqual(G.stepTarget(type, [{ id: "p1", kind: "photo" }]), { kind: "addText" });
-  assert.equal(G.stepCopy(type, { kind: "addText" }).body, "guide.type.bodyAdd");
   assert.equal(G.stepCopy(move, { kind: "paper" }).body, "guide.move.bodyEmpty");
-  assert.equal(G.stepCopy(type, { kind: "layer" }).body, "guide.type.body");
+  assert.equal(G.stepCopy(adjust, { kind: "paper" }).body, "guide.adjust.bodyEmpty");
   // A drawing is a photo layer but not "a photo" to move first.
   assert.deepEqual(G.stepTarget(move, [{ id: "d", kind: "photo", drawing: true }, { id: "t", kind: "text" }]), { kind: "layer", id: "t", layerKind: "text" });
 });
@@ -75,6 +74,7 @@ test("every guide string exists in Chinese and English", () => {
   for (const key of keys) {
     assert.ok(i18n[key]?.zh && i18n[key]?.en, key);
   }
-  assert.equal(i18n["guide.move.body"].zh, "按住并拖动，给照片和文字换个位置。");
-  assert.equal(i18n["guide.type.body"].zh, "双击文字，直接开始写。");
+  assert.equal(i18n["guide.move.body"].zh, "点一下选中，按住拖动换位置；双击文字可以直接改。");
+  assert.match(i18n["guide.adjust.body"].zh, /← 返回/);
+  assert.match(i18n["guide.more.body"].zh, /更多/);
 });

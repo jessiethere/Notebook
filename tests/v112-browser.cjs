@@ -105,37 +105,43 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       await page.waitForSelector("#studio-guide .sg-card");
       const step = () => page.evaluate(() => ({ id: document.querySelector("#studio-guide")?.dataset.step, title: document.querySelector("#sg-title")?.textContent, body: document.querySelector("#sg-body")?.textContent, count: document.querySelector(".sg-count")?.textContent }));
       let s = await step();
-      assert.deepEqual([s.id, s.title, s.count], ["move", "移动元素", "1 / 3"]);
+      // V10.25: four steps — 加东西 · 摆位置 · 改它 · 改整页.
+      assert.deepEqual([s.id, s.title, s.count], ["add", "加东西", "1 / 4"]);
       // The paper is still usable: only the card takes touches.
       assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector("#studio-guide")).pointerEvents), "none");
-      const ringOff = await page.evaluate(() => {
-        const ring = document.querySelector(".sg-ring").getBoundingClientRect(), card = document.querySelector(".sg-card").getBoundingClientRect();
-        const paper = document.querySelector("#journal-canvas").getBoundingClientRect();
-        return { overlap: Math.max(0, paper.bottom - card.top), ringAroundPaper: ring.left <= paper.left && ring.right >= paper.right, cardInside: card.left >= 0 && card.right <= innerWidth && card.bottom <= innerHeight };
-      });
-      assert.ok(ringOff.ringAroundPaper && ringOff.cardInside, JSON.stringify(ringOff));
-      assert.ok(ringOff.overlap <= 48, `pointing at the whole (empty) paper, the card sits over the tool row and covers at most its bottom edge (${ringOff.overlap}px)`);
+      const ringed = (sel) =>
+        page.evaluate((sel) => {
+          const b = document.querySelector(sel).getBoundingClientRect();
+          const ring = document.querySelector(".sg-ring").getBoundingClientRect(), card = document.querySelector(".sg-card").getBoundingClientRect();
+          return { ringed: ring.left <= b.left + 1 && ring.right >= b.right - 1 && ring.top <= b.top + 1 && ring.bottom >= b.bottom - 1, covered: !(card.bottom <= b.top || card.top >= b.bottom), cardInside: card.left >= 0 && card.right <= innerWidth && card.bottom <= innerHeight };
+        }, sel);
+      await page.waitForTimeout(600); // (the ring follows its target every 250 ms)
+      let r = await ringed(".tool-dock.sv-tools");
+      assert.ok(r.ringed && !r.covered && r.cardInside, `step 1 rings 照片 · 文字 · 贴纸 · 更多 and does not cover it: ${JSON.stringify(r)}`);
       if (shots) await page.screenshot({ path: `${shots}/01-guide-step1.png` });
       await page.locator('[data-action="guide-next"]').tap();
       s = await step();
-      assert.deepEqual([s.id, s.title], ["type", "编辑文字"]);
-      assert.match(s.body, /先点下方的「文字」/, "no text box yet: it says how to get one (no pretending)");
-      // It points at the real 文字 button and does not cover it.
-      const textBtn = await page.evaluate(() => {
-        const b = document.querySelector('.tool-dock [data-action="add-text-layer"]').getBoundingClientRect();
-        const ring = document.querySelector(".sg-ring").getBoundingClientRect(), card = document.querySelector(".sg-card").getBoundingClientRect();
-        return { ringed: ring.left <= b.left && ring.right >= b.right && ring.top <= b.top && ring.bottom >= b.bottom, covered: !(card.bottom <= b.top || card.top >= b.bottom) };
-      });
-      assert.ok(textBtn.ringed && !textBtn.covered, JSON.stringify(textBtn));
+      assert.deepEqual([s.id, s.title, s.count], ["move", "摆位置", "2 / 4"]);
+      assert.match(s.body, /双击文字/, "the empty page: how to place things and edit words");
+      r = await ringed("#journal-canvas");
+      assert.ok(r.ringed && r.cardInside, JSON.stringify(r));
       if (shots) await page.screenshot({ path: `${shots}/02-guide-step2.png` });
       await page.locator('[data-action="guide-prev"]').tap();
-      assert.equal((await step()).id, "move", "back one step");
+      assert.equal((await step()).id, "add", "back one step");
       await page.locator('[data-action="guide-next"]').tap();
       await page.locator('[data-action="guide-next"]').tap();
       s = await step();
-      assert.deepEqual([s.id, s.title, s.count], ["adjust", "调整布局", "3 / 3"]);
+      assert.deepEqual([s.id, s.title, s.count], ["adjust", "改它", "3 / 4"]);
+      assert.match(s.body, /← 返回/);
       assert.equal(await page.locator(".sg-demo.adjust .sg-demo-rotate").count(), 1, "a drawing of the real handles");
       if (shots) await page.screenshot({ path: `${shots}/03-guide-step3.png` });
+      await page.locator('[data-action="guide-next"]').tap();
+      s = await step();
+      assert.deepEqual([s.id, s.title, s.count], ["more", "改整页", "4 / 4"]);
+      assert.match(s.body, /更多/);
+      r = await ringed('.tool-dock [data-tool="more"]');
+      assert.ok(r.ringed && !r.covered, `step 4 rings 更多: ${JSON.stringify(r)}`);
+      if (shots) await page.screenshot({ path: `${shots}/04-guide-step4.png` });
       await page.locator('[data-action="guide-next"]').tap(); // 知道了
       await page.waitForSelector("#studio-guide", { state: "detached" });
       assert.equal((await guideMemory(page)).tour, "done");
@@ -159,13 +165,13 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       await SS.studioMore(page);
       await page.locator('.more-grid [data-action="guide-open"]').tap();
       await page.waitForSelector("#studio-guide .sg-card");
-      assert.equal((await step()).id, "move");
+      assert.equal((await step()).id, "add");
       await page.locator('[data-action="guide-skip"]').tap();
       await page.waitForSelector("#studio-guide", { state: "detached" });
       assert.equal((await guideMemory(page)).tour, "skipped");
       assert.deepEqual(errors, []);
       await context.close();
-      passed.push("guide: opens by itself once for someone new, 3 steps on the real paper / 文字 button (card never covers them, paper stays usable), back / next / 知道了, not again after leaving or reloading, 更多 → 操作指南 reopens, 跳过 works, journal untouched");
+      passed.push("guide: opens by itself once for someone new, 4 steps (加东西 · 摆位置 · 改它 · 改整页) on the real tool row, paper and 更多 (card never covers them, paper stays usable), back / next / 知道了, not again after leaving or reloading, 更多 → 操作指南 reopens, 跳过 works, journal untouched");
     }
     // ---------------------------------------------------------------- 2
     // Skipping on first sight; someone who already keeps pages is not taught again.
@@ -424,7 +430,7 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       const fit = await page.evaluate(() => { const r = document.querySelector(".sg-card").getBoundingClientRect(); const scroll = document.querySelector("#app-scroll"); return { inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, noSideScroll: scroll.scrollWidth <= scroll.clientWidth + 1 }; });
       assert.ok(fit.inside && fit.noSideScroll, JSON.stringify(fit));
       if (language === "en") {
-        assert.equal(await page.locator("#sg-title").innerText(), "Move things around");
+        assert.equal(await page.locator("#sg-title").innerText(), "Add things"); // V10.25: step 1 is 加东西
         assert.equal(await page.locator('[data-action="guide-skip"]').innerText(), "Skip");
       }
       if (shots) await page.screenshot({ path: `${shots}/09-guide-${label}.png` });
@@ -486,6 +492,9 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       await page.waitForSelector(".hero");
       await page.locator('[data-action="today-write"]').first().tap();
       await page.waitForSelector("#studio-guide .sg-card");
+      // V10.25: step 1 rings the tool row; step 2 (摆位置) is the one on the paper.
+      await page.locator('[data-action="guide-next"]').tap();
+      await page.waitForFunction(() => document.querySelector("#studio-guide")?.dataset.step === "move");
       const measure = () => page.evaluate(() => {
         const ring = document.querySelector(".sg-ring").getBoundingClientRect();
         const paper = document.querySelector("#journal-canvas").getBoundingClientRect();

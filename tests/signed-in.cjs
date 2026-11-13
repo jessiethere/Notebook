@@ -158,6 +158,16 @@ const dockReady = async (target) => {
   });
 };
 module.exports.studioTool = async (target, id) => {
+  // V10.25: 目录 is reached from 页面目录 (More → 页面目录 → 更多页面操作).
+  if (id === "chapters") {
+    const sheet = target.locator('.tool-sheet[data-tool-row="chapters"]');
+    if (await sheet.count()) return sheet;
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="open-pages"]').click();
+    await target.locator('#choose-dialog[open] [data-action="pages-more"]').click();
+    await sheet.waitFor();
+    return sheet;
+  }
   // V10.24: mood is chosen in 页面信息 (More → 心情 opens it at the picker).
   if (id === "mood") {
     await module.exports.studioMore(target);

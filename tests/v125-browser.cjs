@@ -101,6 +101,27 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
       assert.deepEqual([swapped.x, swapped.y, swapped.scale, swapped.rotation], [st.x, st.y, st.scale, st.rotation], "same place, size and turn");
       assert.equal((await layers()).length, before + 2, "swapped, not added");
       passed.push(`${label}: 贴纸 · 已选中; 换一个 swaps the sticker (${st.assetId} → ${other}) in place — same position, size and angle, no extra sticker`);
+      // ------------------------------------------------ 更多: three groups; 页面目录 copies; 目录 still reachable
+      if (label === "375×667") {
+        await page.locator('.tool-dock [data-action="layer-deselect"]').tap().catch(() => {});
+        await page.locator('.tool-dock [data-tool="more"]').tap();
+        await page.waitForSelector(".more-group");
+        assert.deepEqual(await page.$$eval(".more-group h4", (els) => els.map((e) => e.innerText.trim())), ["页面外观", "媒体与创作", "页面管理"]);
+        const firstMake = page.locator(".more-group").nth(1).locator(".more-tile").first();
+        assert.equal(await firstMake.getAttribute("data-action"), "draw-new");
+        assert.match(await firstMake.getAttribute("class"), /accent/);
+        assert.equal(await page.locator('.more-grid [data-tool="photos"], .more-grid [data-tool="chapters"]').count(), 0, "本页照片 / 目录 tiles gone");
+        await page.screenshot({ path: process.env.SHOTS ? `${process.env.SHOTS}/v125-more-375.png` : "/dev/null" }).catch(() => {});
+        const pagesBefore = await page.evaluate(() => { const t = new Date(); const k = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`; return JSON.parse(localStorage.getItem("little-days.v1")).drafts[k].moments.length; });
+        await page.locator('.more-grid [data-action="open-pages"]').tap();
+        await page.waitForSelector("#choose-dialog[open] .pages-sheet");
+        assert.equal((await page.locator("#choose-dialog .pages-sheet h2").innerText()).trim(), "页面目录");
+        await page.locator('#choose-dialog [data-action="page-copy"]').first().tap();
+        await page.waitForFunction((n) => { const t = new Date(); const k = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`; return JSON.parse(localStorage.getItem("little-days.v1")).drafts[k].moments.length === n + 1; }, pagesBefore);
+        await page.locator('#choose-dialog [data-action="pages-more"]').tap();
+        await page.waitForSelector('.tool-sheet[data-tool-row="chapters"]');
+        passed.push(`${label}: 更多 = 页面外观 · 媒体与创作 (手绘 first, highlighted) · 页面管理; no 本页照片 / 目录 tiles; 页面目录 copies a page; 更多页面操作 still opens the older 目录 (save one page, fold)`);
+      }
       assert.deepEqual(errors, []);
       await context.close();
     }
