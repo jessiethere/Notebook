@@ -18,7 +18,8 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
   try {
     const context = await browser.newContext({ ...devices["iPhone 13"] });
     // A person without Labs.
-    await context.addInitScript(() => localStorage.setItem("little-days.labs", "0"));
+    // (V10.39 B5: habits are behind Labs now, so step 1 switches Labs on for itself.)
+    await context.addInitScript(() => { if (!sessionStorage.getItem("labs-set")) { localStorage.setItem("little-days.labs", "0"); sessionStorage.setItem("labs-set", "1"); } });
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -30,6 +31,10 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     const photo = (id, day, time) => ({ name: `${id}.jpg`, mimeType: "image/jpeg", buffer: withExifTime(fs.readFileSync(path.join(lib, `LD-photo-${id}.jpg`)), `${day.replace(/-/g, ":")} ${time}:00`) });
 
     // 1. Edit a habit, then delete it (asked first; its check-ins go too).
+    // V10.39 (B5): habits are frozen behind Labs; this step turns Labs on.
+    await page.evaluate(() => localStorage.setItem("little-days.labs", "1"));
+    await page.reload();
+    await page.waitForSelector(".hero");
     await require("./signed-in.cjs").openPlans(page);
     await page.locator('.today-list [data-action="nav"][data-page="growth"]').tap();
     await page.locator('[data-action="check"][data-habit="move"]').first().tap();
@@ -78,6 +83,9 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     passed.push("a habit: ✎ Edit → menu: change it (check-ins kept) or delete it (asked first; its check-ins go)");
 
     // 2. Colour themes without Labs.
+    await page.evaluate(() => localStorage.setItem("little-days.labs", "0"));
+    await page.reload();
+    await page.waitForSelector(".hero");
     await menu(page, "home");
     await page.locator('[data-action="nav"][data-page="settings"]').tap();
     assert.ok((await page.locator('[data-action="theme"]').count()) > 1, "themes in Settings without Labs");
