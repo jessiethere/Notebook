@@ -9728,8 +9728,10 @@ async function mediaMetadata(file, kind) {
         kind === "video" ? "video" : "audio",
       ),
       url = URL.createObjectURL(file);
+    // V10.26 (P0): say which way it failed — no metadata within 10 s, or the
+    // media element's own error code (MediaError 1–4) — in the local log.
     const timer = setTimeout(
-      () => finish(new Error("Unsupported media")),
+      () => finish(Object.assign(new Error("Unsupported media"), { code: "media-timeout" })),
       10000,
     );
     const finish = (error) => {
@@ -9751,7 +9753,7 @@ async function mediaMetadata(file, kind) {
     };
     element.onerror = () => {
       element.onerror = null;
-      finish(new Error("Unsupported media"));
+      finish(Object.assign(new Error("Unsupported media"), { code: `media-err-${element.error?.code || 0}` }));
     };
     element.src = url;
   });
