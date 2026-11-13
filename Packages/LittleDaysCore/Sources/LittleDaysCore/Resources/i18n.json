@@ -9002,5 +9002,21 @@
   "book.default.mine": {
     "zh": "我的手帐",
     "en": "My Journal"
+  },
+  "count.pages": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "count.page": {
+    "zh": "{count} 页",
+    "en": "{count} page"
+  },
+  "count.day": {
+    "zh": "{count} 天",
+    "en": "{count} day"
+  },
+  "count.days": {
+    "zh": "{count} 天",
+    "en": "{count} days"
   }
 }

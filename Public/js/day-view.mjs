@@ -1,3 +1,4 @@
+import { dayCounts } from "./pages.mjs";
 // Calendar "Day Detail": a read-only, magazine-like view of a finished day.
 import { richHTML } from "./rich-text.mjs";
 import { pageLine, pageCoverRef } from "./page-label.mjs";
@@ -97,8 +98,10 @@ export function dayDetailHTML(date, ctx, helpers) {
   const draft = state.drafts[date];
   const entry = saved || draft;
   const summary = daySummary(state, date, { samples: true });
+  const pagesHere = dayCounts(state, date, { samples: entry && entry.isDemo === true ? "only" : "exclude" }).pages;
   const stats = [
-    summary.moments ? t("day.statMoments", { count: summary.moments }) : "",
+    // V10.41 (counts): pages (the day's own page if shown + its Moment pages), as labelled.
+    pagesHere ? t("day.statMoments", { count: pagesHere }) : "",
     summary.photos ? t("day.statPhotos", { count: summary.photos }) : "",
     summary.videos ? t("day.statVideos", { count: summary.videos }) : "",
     summary.audios ? t("day.statAudios", { count: summary.audios }) : "",

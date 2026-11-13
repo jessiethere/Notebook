@@ -160,7 +160,7 @@ export function daySummary(state, date, { samples = false } = {}) {
   const checks = state.checks.filter((check) => check.date === date);
   return {
     entry,
-    photos: photoRefs(entry).length,
+    photos: new Set(photoRefs(entry)).size, // V10.41: different photos (a day cover repeats them)
     videos: clips.filter((clip) => clip.kind === "video").length,
     audios: clips.filter((clip) => clip.kind === "audio").length,
     moments: entry?.moments?.length || 0,

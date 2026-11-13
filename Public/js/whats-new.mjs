@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.42",
+    date: "2026-11-13",
+    zh: {
+      title: "页数在每个地方都一样了",
+      items: [
+        "书架和首页的书写「几天 · 几页」，不再用「篇」表示天数。",
+        "日历上的数字、日详情里的「几页」、阅读器的「第几 / 共几页」，现在都按同一条规则计算：当天自己的页面（显示时）加上每一页 Moment。书本封面不算在页数里。",
+        "日详情的照片数只算不同的照片，每日封面里重复出现的照片不再多算。",
+      ],
+    },
+    en: {
+      title: "Page counts now match everywhere",
+      items: [
+        "Books on the shelf and on Home say \"days · pages\", instead of using one word for days.",
+        "The number on the Calendar, the pages in Day Detail and \"Page n of N\" in the Reader all follow one rule: the day's own page (when shown) plus each Moment page. The book cover is not a page.",
+        "Day Detail counts different photos: photos repeated on a day cover are no longer counted twice.",
+      ],
+    },
+  },
+  {
     version: "10.41",
     date: "2026-11-13",
     zh: {

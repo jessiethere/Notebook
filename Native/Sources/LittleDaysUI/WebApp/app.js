@@ -30,7 +30,7 @@ import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
-import { isSampleDay, dayOf } from "./js/pages.mjs";
+import { isSampleDay, dayOf, dayCounts, bookCounts } from "./js/pages.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
@@ -310,6 +310,9 @@ let dialogKind = null,
   dialogPayload = null,
   toastTimer;
 const state = () => store.state;
+// V10.41 (counts): "12 天 · 28 页" / "12 days · 28 pages" (1 day, 1 page in English).
+const pagesLabel = (n) => t(n === 1 ? "count.page" : "count.pages", { count: n });
+const daysPagesLabel = (days, pages) => `${t(days === 1 ? "count.day" : "count.days", { count: days })} · ${pagesLabel(pages)}`;
 const todayEntry = () =>
   state().entries.find((entry) => entry.date === dateKey() && !isSampleDay(entry));
 
@@ -619,7 +622,8 @@ function dayCoverHTML(day) {
     .filter(Boolean)
     .slice(0, 3);
   const extras = [
-    moments.length ? t("day.statMoments", { count: moments.length }) : "",
+    // V10.41 (counts): this day's pages in this book — its own page (if shown) and its Moment pages.
+    (moments.length + (day.dayPage ? 1 : 0)) > 1 ? pagesLabel(moments.length + (day.dayPage ? 1 : 0)) : "",
     clips.some((c) => c.kind === "video") ? "◈" : "",
     clips.some((c) => c.kind === "audio") ? "♫" : "",
   ].filter(Boolean);
@@ -644,8 +648,8 @@ function dayCoverHTML(day) {
   return `<div class="day-group">${card}<div class="day-pages" role="group" aria-label="${esc(t("day.pagesOf", { date: date.toLocaleDateString(locale(), { month: "long", day: "numeric" }) }))}">${thumbs}</div></div>`;
 }
 function bookCard(book) {
-  const count = bookEntryCount(state(), book.id);
-  return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(presetLabel("category", book.category))} · ${t("entry.count", { count })}</small></button>`;
+  const count = bookCounts(state(), book.id).pages, countDays = bookCounts(state(), book.id).days;
+  return `<button class="book-item" data-action="book" data-book="${esc(book.id)}">${coverHTML(book, ctx())}<strong>${esc(book.title)}</strong><small>${esc(presetLabel("category", book.category))} · ${pagesLabel(count)}</small></button>`;
 }
 
 // ---------- Home · Today's Story (V10.2) ----------
@@ -735,7 +739,7 @@ function sectionTitleHTML(key, sub, aside = "") {
 function todayStoryHTML() {
   const entry = todayEntry();
   const card = entry ? storyCardHTML(entry) : "";
-  const count = entry ? storyPagesOf(entry).length : 0;
+  const count = entry ? dayCounts(state(), entry.date).pages : 0;
   const head = sectionTitleHTML("ts.title", card ? t("ts.sub", { count }) : t("ts.subEmpty"), streakChipHTML());
   if (card) return `<div class="v9-today hs-remember">${head}${card}</div>`;
   // Nothing yet today: a quiet invitation, then the latest real story (if any).
@@ -766,12 +770,12 @@ function homeLibraryHTML() {
   const first = [...stamped].sort((x, y) => (x.last === y.last ? x.i - y.i : x.last < y.last ? 1 : -1))[0];
   const rest = stamped.filter((x) => x !== first);
   const f = first.bk;
-  const count = bookEntryCount(state(), f.id);
+  const count = bookCounts(state(), f.id).pages, countDays = bookCounts(state(), f.id).days;
   const day = first.last.slice(0, 10);
   const updated = !day ? "" : day === dateKey() ? t("lib.today") : day === addDays(dateKey(), -1) ? t("lib.yesterday") : t("lib.on", { date: new Date(`${day}T12:00:00`).toLocaleDateString(locale(), { month: "short", day: "numeric" }) });
   const small = rest.slice(0, 2);
   const book = (bk, cls = "") => `<button class="lib-book home-book-cover ${cls}" data-action="book" data-book="${esc(bk.id)}" aria-label="${esc(bk.title)}"><span class="lib-cover">${coverHTML(bk, ctx())}</span></button>`;
-  return `<section class="home-section home-books hs-collect">${head(mine.length)}<div class="lib"><div class="lib-shelf home-book"><div class="lib-slot">${book(f, "lib-feature")}</div><div class="lib-side"><div class="lib-now"><small>${t(first.last ? "lib.now" : "lib.start")}</small><b>${esc(f.title)}</b><span>${[t("entry.count", { count }), updated].filter(Boolean).join(" · ")}</span><button class="lib-write home-book-write" data-action="book-write" data-book="${esc(f.id)}">${t(count ? "lib.write" : "lib.writeFirst")} →</button></div><div class="lib-others">${small.map((x) => book(x.bk)).join("")}${rest.length > 2 ? `<button class="lib-count" data-action="nav" data-page="books" aria-label="${t("lib.all")}">+${rest.length - 2}</button>` : mine.length < 3 ? `<button class="lib-new home-book-new" data-action="new-book" aria-label="${t("home.newBook")}">${icon("plus")}</button>` : ""}</div></div></div>${small.length ? `<div class="lib-names" aria-hidden="true"><span></span><div>${small.map((x) => `<span>${esc(x.bk.title)}</span>`).join("")}</div></div>` : ""}</div></section>`;
+  return `<section class="home-section home-books hs-collect">${head(mine.length)}<div class="lib"><div class="lib-shelf home-book"><div class="lib-slot">${book(f, "lib-feature")}</div><div class="lib-side"><div class="lib-now"><small>${t(first.last ? "lib.now" : "lib.start")}</small><b>${esc(f.title)}</b><span>${[daysPagesLabel(countDays, count), updated].filter(Boolean).join(" · ")}</span><button class="lib-write home-book-write" data-action="book-write" data-book="${esc(f.id)}">${t(count ? "lib.write" : "lib.writeFirst")} →</button></div><div class="lib-others">${small.map((x) => book(x.bk)).join("")}${rest.length > 2 ? `<button class="lib-count" data-action="nav" data-page="books" aria-label="${t("lib.all")}">+${rest.length - 2}</button>` : mine.length < 3 ? `<button class="lib-new home-book-new" data-action="new-book" aria-label="${t("home.newBook")}">${icon("plus")}</button>` : ""}</div></div></div>${small.length ? `<div class="lib-names" aria-hidden="true"><span></span><div>${small.map((x) => `<span>${esc(x.bk.title)}</span>`).join("")}</div></div>` : ""}</div></section>`;
 }
 
 function home() {
@@ -889,7 +893,7 @@ function memoryCard(entry, moment = null) {
     moment ? coverPhoto({ layers: moment.layers }) : coverPhoto(entry),
   );
   const clips = moment ? moment.media || [] : clipsOf(entry);
-  const momentCount = moment ? 0 : entry.moments?.length || 0;
+  const momentCount = moment ? 0 : dayCounts(state(), entry.date).pages;
   const title = moment
     ? PL.pageLine(moment, { t, index: (entry.moments || []).indexOf(moment) })
     : PL.dayLabel(entry, { t });
@@ -904,6 +908,8 @@ function memoryCard(entry, moment = null) {
 }
 function dayMarks(key) {
   const summary = daySummary(state(), key);
+  // V10.41 (counts): the number on a day is its pages (pages.mjs), as its label says.
+  summary.moments = dayCounts(state(), key).pages;
   const marks = [
     ["photo", summary.photos, "calendar.markPhoto"],
     ["video", summary.videos, "calendar.markVideo"],
@@ -2825,7 +2831,7 @@ function booksPage() {
       days = bookDays(state(), selectedBook, bookFilter),
       months = bookMonths(state(), selectedBook);
     const filtered = bookFilter.month || bookFilter.date;
-    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><button class="book-detail-showcase" data-action="reader-open" data-book="${esc(book.id)}" data-at="cover" aria-label="${t("reader.start")} · ${esc(book.title)}">${coverHTML(book, ctx())}</button><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p>${book.tags?.length ? `<div class="book-tags">${book.tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}">#${esc(tag)}</button>`).join("")}</div>` : ""}<span class="badge">${t("private")} · ${t("entry.count", { count: entries.length })}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}${readerEntryHTML(book)}<div class="book-actions"><button class="secondary" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button></div><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
+    return `<div class="section-heading"><button class="back-button" data-action="all-books">${icon("back")} ${t("books.all")}</button><button class="secondary" data-action="edit-book" data-book="${esc(book.id)}">${t("edit")}</button></div><button class="book-detail-showcase" data-action="reader-open" data-book="${esc(book.id)}" data-at="cover" aria-label="${t("reader.start")} · ${esc(book.title)}">${coverHTML(book, ctx())}</button><div class="book-detail-copy"><h2>${esc(book.title)}</h2><p>${esc(book.description || "")}</p>${book.tags?.length ? `<div class="book-tags">${book.tags.map((tag) => `<button data-action="shelf-tag" data-tag="${esc(tag)}">#${esc(tag)}</button>`).join("")}</div>` : ""}<span class="badge">${t("private")} · ${daysPagesLabel(bookCounts(state(), book.id).days, bookCounts(state(), book.id).pages)}</span></div>${labsOn() ? collabSectionHTML(social(), book, ctx(), collabOpen) : ""}${readerEntryHTML(book)}<div class="book-actions"><button class="secondary" data-action="book-new-entry">${icon("plus")} ${t("books.addPage")}</button><button class="secondary book-share" data-action="book-share" data-book="${esc(book.id)}">${t("bookShare.button")}</button></div><p class="save-help book-share-help">${t("bookShare.help")}</p>${bookMusicHTML(book)}<div class="book-filter"><p class="journal-list-caption">${t("books.memories")}</p><div class="book-filter-row"><select data-book-filter="month" aria-label="${t("books.month")}"><option value="">${t("books.allMonths")}</option>${months.map((m) => `<option value="${m}" ${bookFilter.month === m ? "selected" : ""}>${esc(new Date(`${m}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }))}</option>`).join("")}</select><input type="date" data-book-filter="date" aria-label="${t("books.pickDate")}" value="${esc(bookFilter.date)}">${filtered ? `<button class="text-button" data-action="book-filter-clear">${t("books.clearFilter")}</button>` : ""}</div></div>${
       days.length
         ? `<div class="day-covers">${filtered ? "" : coverEntryHTML(book)}${days.map(dayCoverHTML).join("")}</div>`
         : `<div class="empty">${t(filtered ? "books.noMatch" : "books.empty")}</div>`
@@ -2864,24 +2870,24 @@ function isOurBook(book) {
 function shelfHTML(books = state().books, canAdd = true) {
   const pulled = books.find((book) => book.id === pulledBook);
   const spine = (book, index) => {
-    const count = bookEntryCount(state(), book.id);
+    const count = bookCounts(state(), book.id).pages, countDays = bookCounts(state(), book.id).days;
     // Magazine covers stand on the shelf as magazine spines: the cover photo
     // under a dark veil, the title in bold white, the issue number below.
     if (MAGAZINE_COVERS.includes(book.coverTemplate)) {
       const photo = safePhoto(coverPhotoRef(book, catalog));
-      return `<button class="spine mag-spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)}">${photo ? `<img class="spine-photo" src="${esc(photo)}" alt="" loading="lazy">` : ""}<span class="spine-brand">LD</span><span class="spine-title ${/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(book.title || "") ? "" : "latin"}" style="--n:${Math.max(5, [...String(book.title || "")].length)}">${esc(book.title)}</span><small>NO.${String(count).padStart(2, "0")}</small></button>`;
+      return `<button class="spine mag-spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${pagesLabel(count)}" style="--spine:${coverColor(book, tokens)}">${photo ? `<img class="spine-photo" src="${esc(photo)}" alt="" loading="lazy">` : ""}<span class="spine-brand">LD</span><span class="spine-title ${/[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(book.title || "") ? "" : "latin"}" style="--n:${Math.max(5, [...String(book.title || "")].length)}">${esc(book.title)}</span><small>NO.${String(count).padStart(2, "0")}</small></button>`;
     }
     const sticker = book.coverDecoration && book.coverDecoration !== "none" ? stickerURL(book.coverDecoration, catalog) : "";
-    return `<button class="spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${t("entry.count", { count })}" style="--spine:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${sticker ? `<img src="${esc(sticker)}" alt="">` : "<i></i>"}<span class="spine-title">${esc(book.title)}</span><small>${count}</small></button>`;
+    return `<button class="spine h${index % 4} ${pulled?.id === book.id ? "pulled" : ""}" data-action="pull-book" data-book="${esc(book.id)}" aria-pressed="${pulled?.id === book.id}" aria-label="${esc(book.title)} · ${pagesLabel(count)}" style="--spine:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${sticker ? `<img src="${esc(sticker)}" alt="">` : "<i></i>"}<span class="spine-title">${esc(book.title)}</span><small>${count}</small></button>`;
   };
   const items = [...books.map(spine), ...(canAdd ? [`<button class="spine add" data-action="new-book" aria-label="${t("books.create")}"><span>＋</span></button>`] : [])];
   const rows = [];
   for (let i = 0; i < items.length; i += 5) rows.push(items.slice(i, i + 5));
   const stage = pulled
     ? (() => {
-        const count = bookEntryCount(state(), pulled.id);
+        const count = bookCounts(state(), pulled.id).pages, countDays = bookCounts(state(), pulled.id).days;
         const shown = Community.isShowcased(social(), pulled.id);
-        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${t("entry.count", { count })}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><div class="shelf-move" role="group" aria-label="${t("shelf.moveLabel")}"><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="-1" ${state().books[0]?.id === pulled.id ? "disabled" : ""}>‹ ${t("shelf.moveEarlier")}</button><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="1" ${state().books.at(-1)?.id === pulled.id ? "disabled" : ""}>${t("shelf.moveLater")} ›</button></div></div></section>`;
+        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${daysPagesLabel(countDays, count)}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><div class="shelf-move" role="group" aria-label="${t("shelf.moveLabel")}"><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="-1" ${state().books[0]?.id === pulled.id ? "disabled" : ""}>‹ ${t("shelf.moveEarlier")}</button><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="1" ${state().books.at(-1)?.id === pulled.id ? "disabled" : ""}>${t("shelf.moveLater")} ›</button></div></div></section>`;
       })()
     : `<p class="shelf-hint">${t("shelf.hint")}</p>`;
   return `${stage}<div class="bookshelf">${rows.map((row) => `<div class="shelf-row"><div class="shelf-books">${row.join("")}</div><div class="shelf-plank"></div></div>`).join("")}</div>`;
@@ -4074,7 +4080,7 @@ function studioTools() {
     id: "chapters",
     icon: "☰",
     label: "tool.chapters",
-    value: t("day.statMoments", { count: editor.moments.length }),
+    value: pagesLabel(editor.moments.length + (hasDayPageContent(editor) ? 1 : 0)),
     body: () => chaptersOutlineHTML(),
   });
   return tools;
