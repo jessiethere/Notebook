@@ -181,6 +181,10 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-13 — 方案：照片复用、每日封面可选、示例数据隔离（App 界面没有变化）
+
+- 方案板：https://claude.ai/artifact/AKgX2gu88hRidRkKB9fQGo ，包括真实根因、数据结构、三组界面预览、分批计划。等待确认后实施。
+
 ### 2026-11-13 — 方案：分卷备份与恢复快照、真机测试步骤、Editorial 排版系统（App 界面没有变化）
 
 - 三份方案在 `docs/BACKUP_FORMAT_PLAN.md`、`docs/DEVICE_TEST_PLAN.md`、`docs/EDITORIAL_SYSTEM_PLAN.md`，都在等确认，还没有实施。
