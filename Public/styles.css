@@ -21756,3 +21756,22 @@ body.typing .ctx-caption {
 .samples-day { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 8px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--c-dfdfd0, #dfdfd0); background: var(--paper, #fffdf8); color: inherit; font-size: 14px; }
 .samples-day small { opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .samples-day .badge { margin: 0; }
+/* S3 (V10.43): use a photo already in Little Days. */
+.ps-sheet { gap: 10px; }
+.ps-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ps-head h2 { margin: 0; font-size: 18px; }
+.ps-done { background: none; border: 0; color: inherit; font-size: 15px; padding: 6px 4px; }
+.ps-tabs { display: flex; gap: 4px; background: var(--c-efece4, #efece4); border-radius: 999px; padding: 3px; }
+.ps-tabs button { flex: 1; border: 0; background: transparent; border-radius: 999px; padding: 8px 0; font-size: 14px; color: inherit; opacity: 0.7; min-height: 36px; }
+.ps-tabs button[aria-selected="true"] { background: var(--paper, #fffdf8); opacity: 1; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.ps-body { max-height: 42vh; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+.ps-group { margin: 6px 0 0; font-size: 12.5px; opacity: 0.7; }
+.ps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ps-thumb { position: relative; aspect-ratio: 1; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #ddd; }
+.ps-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ps-thumb em { position: absolute; left: 4px; bottom: 4px; font-style: normal; font-size: 11px; background: rgba(255,255,255,.92); color: #2f2a26; border-radius: 6px; padding: 0 5px; }
+.ps-thumb.self { opacity: 0.45; }
+.ps-thumb:focus-visible { outline: 2px solid var(--accent, #5f6f52); outline-offset: 2px; }
+.ps-hint, .ps-empty { font-size: 13px; opacity: 0.75; margin: 0; }
+.ps-album { min-height: 46px; }
+.ps-album { font-size: 15px; }

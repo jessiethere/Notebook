@@ -30,7 +30,7 @@ import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
-import { isSampleDay, dayOf, dayCounts, bookCounts } from "./js/pages.mjs";
+import { isSampleDay, dayOf, dayCounts, bookCounts, visiblePages } from "./js/pages.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
@@ -4933,6 +4933,11 @@ function storyReplacePhoto(target, item) {
     layer.crop = { x: 50, y: 50, zoom: 1 };
     delete layer.sourceRef;
     delete layer.edit;
+    // S3: a photo reused from elsewhere keeps its original for re-editing.
+    if (item.sourceRef) {
+      layer.sourceRef = item.sourceRef;
+      if (item.edit) layer.edit = structuredClone(item.edit);
+    }
     if (item.aspect) layer.aspect = Math.round(item.aspect * 1000) / 1000;
     if (hand) fitInto(layer, item.aspect);
     // The day spread's copy of it shows the new photo too.
@@ -5329,7 +5334,7 @@ async function storyAction(actionName, target) {
   }
   if (actionName === "story-replace") {
     const pick = storyPicked(storyPages()[story.index]);
-    if (pick) chooseAttachment({ kind: "story-replace", momentId: pick.m.id, layerId: pick.p.id });
+    if (pick) openPhotoSource({ mode: "story", target: { kind: "story-replace", momentId: pick.m.id, layerId: pick.p.id }, n: pick.n, ref: pick.p.mediaRef });
     return;
   }
   if (actionName === "story-undo") {
@@ -6946,6 +6951,7 @@ async function action(target) {
     render();
   }
   if (accountAction(target)) return;
+  if (photoSourceAction(actionName, target)) return;
   if (
     (busyMedia || recorder) &&
     [
@@ -8656,6 +8662,131 @@ function refreshBookPreview() {
   bookDraft = readBookForm();
   $("#book-cover-preview").innerHTML = coverHTML(bookDraft, ctx());
 }
+// ---------- S3 (V10.43) · Use a photo already in Little Days ----------
+// Replacing a photo first offers the photos already imported: this page,
+// this day, this book (read only when that tab is opened), then the photo
+// library. Choosing one copies its reference into the chosen place: the
+// photo it came from stays where it is, nothing is imported or saved again,
+// and the words under the replaced place stay (they belong to that place).
+let photoSource = null; // { mode: "story" | "studio", target, n, ref, scope }
+const sourcePhotosOf = (page) => (page?.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing && !l.deco);
+const sourceItem = (l) => ({ reference: l.mediaRef, name: l.text || "", aspect: Number(l.aspect) || 0, ...(l.sourceRef ? { sourceRef: l.sourceRef, edit: l.edit } : {}) });
+function photoSourceGroups(scope) {
+  const groups = [];
+  const seen = new Set();
+  const add = (label, layers) => {
+    const items = [];
+    for (const l of layers) {
+      if (seen.has(l.mediaRef)) continue;
+      seen.add(l.mediaRef);
+      items.push(l);
+    }
+    if (items.length) groups.push({ label, items });
+  };
+  if (scope === "page") {
+    const photos = photoSource.mode === "story" ? storyPhotoChoices(storyPages()[story.index]).map((c) => c.p) : sourcePhotosOf(activePage());
+    // Numbered as on the page: no de-duplication across the page itself.
+    return [{ label: "", items: photos, numbered: true }];
+  }
+  if (scope === "day") {
+    const pages = [editor, ...(editor?.moments || [])];
+    pages.forEach((pg, i) => add(pg === editor ? t("ps.dayPage") : pg.time || t("ps.pageN", { n: i }), sourcePhotosOf(pg)));
+    return groups;
+  }
+  // This book: the book being written in, newest days first (60 photos at most).
+  const bookId = photoSource.mode === "story" ? story?.book : activePage()?.bookId || editor?.bookId;
+  add(friendlyDate(editor.date), [editor, ...(editor.moments || [])].flatMap(sourcePhotosOf));
+  const byDate = new Map();
+  for (const p of visiblePages(state(), { bookId })) if (p.date !== editor.date) byDate.set(p.date, [...(byDate.get(p.date) || []), ...sourcePhotosOf(p.moment || p.entry)]);
+  for (const date of [...byDate.keys()].sort().reverse()) {
+    if (seen.size >= 60) break;
+    add(friendlyDate(date), byDate.get(date));
+  }
+  return groups;
+}
+function photoSourceHTML() {
+  const scope = photoSource.scope;
+  const tab = (id) => `<button role="tab" data-action="ps-scope" data-scope="${id}" aria-selected="${scope === id}">${t("ps.scope." + id)}</button>`;
+  const groups = photoSourceGroups(scope);
+  const thumb = (l, i, numbered) => {
+    const self = l.mediaRef === photoSource.ref && (scope !== "page" || i + 1 === photoSource.n);
+    return `<button class="ps-thumb ${self ? "self" : ""}" data-action="ps-pick" data-ref="${esc(l.mediaRef)}" data-layer="${esc(l.id)}" ${self ? 'disabled aria-disabled="true"' : ""} aria-label="${esc(self ? t("ps.current") : numbered ? t("qe.nth", { n: i + 1 }) : t("ps.usePhoto"))}"><img src="${esc(safePhoto(l.mediaRef))}" alt="">${numbered ? `<em>${i + 1}${self ? ` · ${t("ps.now")}` : ""}</em>` : self ? `<em>${t("ps.now")}</em>` : ""}</button>`;
+  };
+  const body = groups.some((g) => g.items.length)
+    ? groups.map((g) => `${g.label ? `<p class="ps-group">${esc(g.label)}</p>` : ""}<div class="ps-grid">${g.items.map((l, i) => thumb(l, i, g.numbered)).join("")}</div>`).join("")
+    : `<p class="ps-empty">${t("ps.empty")}</p>`;
+  return `<div class="choose-sheet ps-sheet" role="dialog" aria-labelledby="ps-title"><div class="choose-grabber" aria-hidden="true"></div><div class="ps-head"><h2 id="ps-title">${t("ps.title", { n: photoSource.n })}</h2><button class="ps-done" data-action="ps-close">${t("cancel")}</button></div><div class="ps-tabs" role="tablist">${tab("page")}${tab("day")}${tab("book")}</div><div class="ps-body">${body}</div><p class="ps-hint">${t("ps.hint")}</p><button class="secondary full-width ps-album" data-action="ps-album">＋ ${t("ps.album")}</button></div>`;
+}
+function openPhotoSource(options) {
+  photoSource = { scope: "page", ...options };
+  const dialog = $("#choose-dialog");
+  // See-through, like 写文字: the outlined place stays visible above the sheet.
+  dialog.classList.add("see-through");
+  dialog.innerHTML = photoSourceHTML();
+  if (!dialog.open) dialog.showModal();
+  dialog.addEventListener("close", () => { photoSource = null; dialog.classList.remove("see-through"); }, { once: true });
+  if (options.mode === "story") revealStoryPick();
+}
+function photoSourceAction(name, target) {
+  if (!photoSource) return false;
+  if (name === "ps-close") {
+    $("#choose-dialog").close();
+    return true;
+  }
+  if (name === "ps-scope") {
+    photoSource.scope = target.dataset.scope;
+    $("#choose-dialog").innerHTML = photoSourceHTML();
+    return true;
+  }
+  if (name === "ps-album") {
+    const { target: into } = photoSource;
+    $("#choose-dialog").close();
+    chooseAttachment(into);
+    return true;
+  }
+  if (name === "ps-pick") {
+    const all = [editor, ...(editor?.moments || []), ...visiblePages(state()).map((p) => p.moment || p.entry)];
+    const layer = all.flatMap(sourcePhotosOf).find((l) => l.id === target.dataset.layer && l.mediaRef === target.dataset.ref) || all.flatMap(sourcePhotosOf).find((l) => l.mediaRef === target.dataset.ref);
+    if (!layer) return true;
+    const { mode, target: into } = photoSource;
+    $("#choose-dialog").close();
+    if (mode === "story") {
+      storyReplacePhoto(into, sourceItem(layer));
+      render();
+      revealStoryPick();
+    } else {
+      studioReplacePhoto(into.layer, sourceItem(layer));
+      toast(t("ps.replacedStudio"));
+    }
+    logEvent("photo_reuse", { mode, scope: photoSource?.scope || "" });
+    return true;
+  }
+  return false;
+}
+// Studio: the chosen photo takes the old one's place, in the old one's box
+// and shape; the place's words (caption) stay with it. One undo step.
+function studioReplacePhoto(layerId, item) {
+  changeTarget((entry) => {
+    const layer = entry.layers.find((l) => l.id === layerId);
+    if (!layer) return;
+    layer.mediaRef = item.reference;
+    layer.text = item.name || layer.text;
+    layer.crop = { x: 50, y: 50, zoom: 1 };
+    if (item.aspect && !layer.shape && !layer.drawing) {
+      const box = fitPhoto(item.aspect, Number(layer.w) || 42, Number(layer.h) || 34, layer.frame || "border");
+      layer.aspect = Math.round(item.aspect * 1000) / 1000;
+      layer.w = Math.round(box.w * 100) / 100;
+      layer.h = Math.round(box.h * 100) / 100;
+    }
+    delete layer.sourceRef;
+    delete layer.edit;
+    if (item.sourceRef) {
+      layer.sourceRef = item.sourceRef;
+      if (item.edit) layer.edit = structuredClone(item.edit);
+    }
+  });
+  flushDraft();
+}
 function chooseAttachment(target) {
   attachmentTarget = target;
   $("#attachment-image-input").multiple = ["collage", "quick"].includes(target.kind);
@@ -9609,8 +9740,10 @@ async function v31Action(target) {
       editTextLayer(selectedLayer);
       return true;
     case "replace-photo":
-      if (selectedLayerOf()?.kind === "photo")
-        chooseAttachment({ kind: "replace", layer: selectedLayer });
+      if (selectedLayerOf()?.kind === "photo") {
+        const photos = sourcePhotosOf(activePage());
+        openPhotoSource({ mode: "studio", target: { kind: "replace", layer: selectedLayer }, n: photos.findIndex((l) => l.id === selectedLayer) + 1 || 1, ref: selectedLayerOf().mediaRef });
+      }
       return true;
     case "insert-growth": {
       const check = state().checks.find(
@@ -10275,28 +10408,7 @@ async function handleImageUpload(event, target) {
       render();
       revealStoryPick();
     } else if (target?.kind === "replace") {
-      changeTarget((entry) => {
-        const layer = entry.layers.find((item) => item.id === target.layer);
-        if (layer) {
-          layer.mediaRef = reference;
-          layer.text = saved[0].name;
-          layer.crop = { x: 50, y: 50, zoom: 1 };
-          // The new photo takes the old one's place, in its own shape.
-          if (saved[0].aspect && !layer.shape && !layer.drawing) {
-            const box = fitPhoto(saved[0].aspect, Number(layer.w) || 42, Number(layer.h) || 34, layer.frame || "border");
-            layer.aspect = Math.round(saved[0].aspect * 1000) / 1000;
-            layer.w = Math.round(box.w * 100) / 100;
-            layer.h = Math.round(box.h * 100) / 100;
-          }
-          delete layer.sourceRef;
-          delete layer.edit;
-          if (saved[0].sourceRef) {
-            layer.sourceRef = saved[0].sourceRef;
-            layer.edit = saved[0].edit;
-          }
-        }
-      });
-      flushDraft();
+      studioReplacePhoto(target.layer, { reference, name: saved[0].name, aspect: saved[0].aspect, sourceRef: saved[0].sourceRef, edit: saved[0].edit });
     } else if (multiple) {
       addPhotoLayers(saved);
       flushDraft();

@@ -50,7 +50,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     };
 
     const chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
     assert.equal(await page.locator(".story-tabs button").count(), 3, "a spread + 2 Moments (three photos at one minute stay one Moment)");

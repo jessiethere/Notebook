@@ -42,7 +42,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // 1. Pick photos → a designed draft right away (no steps in between).
     assert.match(await page.locator(".story-start-card .today-prompt").innerText(), /今天有什么值得记录/);
     const chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
     assert.equal(await page.locator(".story-tabs button").count(), 4, "a day spread + one page per Moment");
@@ -151,7 +151,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // 7. One photo: one page, no spread. Leaving the preview keeps nothing.
     await menu(page, "home");
     const c2 = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await c2).setFiles(pics.slice(4));
     await page.waitForSelector(".story-canvas .scrapbook-page");
     assert.equal(await page.locator(".story-tabs").count(), 0, "one page, no tabs");

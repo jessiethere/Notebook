@@ -115,7 +115,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // 4. Photos taken yesterday → yesterday's story; the date can be changed.
     await menu(page, "home");
     const c1 = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await c1).setFiles([photo("latte-art", yesterday, "14:30"), photo("coffee-cheers", yesterday, "14:40")]);
     await page.waitForSelector(".story-canvas .scrapbook-page");
     assert.match(await page.locator("#toast").innerText(), /已经记到那一天/);

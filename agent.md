@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.43 S3：换照片时复用已导入的照片
+
+- **根因**：快速编辑 `story-replace` 和 Studio `replace-photo` 都直接 `chooseAttachment()` 打开系统相册；页面上的缩略图只用来选目标。
+- **修复**：新的共享面板 `openPhotoSource()`（快速编辑与 Studio 共用）：标题「正在替换照片 N」；来源「这一页 / 这一天 / 这本书」（这本书只在点开时读取，按日期倒序，最多 60 张，跳过示例日）+「从相册添加」（原来的流程）。选中 → 只把来源照片的 `mediaRef`（和它的 `sourceRef`/`edit`，便于再编辑）复制到目标图层：图层 id 不变，所以目标位置的 caption 保留，来源的 caption 不复制；不调用 `media.put`，不重新压缩、不重复保存。快速编辑沿用 `storyReplacePhoto`（一步撤销、照片分组跟随、手动排版的页放进原框）；Studio 的替换逻辑抽成 `studioReplacePhoto`（相册路径也改用它），一步撤销。面板为 see-through，页面上被替换的位置保持可见。
+- **共享引用**：媒体库没有删除方法和垃圾回收；删除图层 / 页面只改手帐数据。备份按引用去重，恢复统一换新 id。测试中删除共享同一照片的一页后，另一页仍能读到，媒体记录数不变。
+- **测试**：新 `tests/v143-browser.cjs` 6 项（zh 375 / en 430：标题与三个来源；照片 2 复制到位置 3，照片 2 不动，两处说明各自正确，媒体记录数不变；撤销；「这一天」用另一页的照片；接着写字并保存；重启后所有引用都在；Studio 用「这本书」替换；删除共享一页后文件保留）。
+- **未做**：交换位置（按要求留到以后）；「编辑已保存页面」仍进入 Studio（另一个产品决定）。
+- **回退**：`git revert`；没有新数据字段。
+
 ### 2026-11-13 — V10.42 统一计数：天 / Moment / 页（Step 2）
 
 - **定义（写在 `Public/js/pages.mjs` 顶部）**：Day = 有记录的日期；Moment = `entry.moments`；Page = 能阅读的一页（显示中的当天主页 + 每个 Moment 页）；Book Cover 不计页；Day Cover = `layoutTemplate:"scrapbook"` 且有 Moment 的当天主页，显示时算一页，`dayCoverHidden:true` 时不算（数据保留）。

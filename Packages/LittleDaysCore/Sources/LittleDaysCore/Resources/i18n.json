@@ -9018,5 +9018,57 @@
   "count.days": {
     "zh": "{count} 天",
     "en": "{count} days"
+  },
+  "ps.title": {
+    "zh": "正在替换照片 {n}",
+    "en": "Replacing photo {n}"
+  },
+  "ps.scope.page": {
+    "zh": "这一页",
+    "en": "This page"
+  },
+  "ps.scope.day": {
+    "zh": "这一天",
+    "en": "This day"
+  },
+  "ps.scope.book": {
+    "zh": "这本书",
+    "en": "This book"
+  },
+  "ps.dayPage": {
+    "zh": "当天主页",
+    "en": "The day's page"
+  },
+  "ps.pageN": {
+    "zh": "第 {n} 页",
+    "en": "Page {n}"
+  },
+  "ps.current": {
+    "zh": "现在这张（正在替换）",
+    "en": "This one (being replaced)"
+  },
+  "ps.now": {
+    "zh": "现在",
+    "en": "now"
+  },
+  "ps.usePhoto": {
+    "zh": "用这张照片",
+    "en": "Use this photo"
+  },
+  "ps.empty": {
+    "zh": "这里还没有可以用的照片。",
+    "en": "No photos here yet."
+  },
+  "ps.hint": {
+    "zh": "选中的照片会复制到这个位置，原来的照片留在原处；这里的那句话会保留。",
+    "en": "The photo you pick is copied into this place; the original stays where it is, and this place keeps its words."
+  },
+  "ps.album": {
+    "zh": "从相册添加",
+    "en": "Add from Photos"
+  },
+  "ps.replacedStudio": {
+    "zh": "已换成这张照片 · 可以撤销",
+    "en": "Photo replaced · you can undo"
   }
 }

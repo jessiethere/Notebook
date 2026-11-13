@@ -44,6 +44,13 @@ const LONG = Array.from({ length: 14 }, (_, i) => `第 ${i + 1} 行：今天的�
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(base);
     await page.waitForSelector(".hero");
+    // V10.41 (S1): sample days are no longer read in a book. This suite turns
+    // pages across several days, so the sample days become days the person
+    // saved (as if each had been opened and saved — scenario D).
+    await require("./signed-in.cjs").touchStore(page);
+    await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); for (const e of s.entries) e.isDemo = false; localStorage.setItem("little-days.v1", JSON.stringify(s)); });
+    await page.reload();
+    await page.waitForSelector(".hero");
     const shot = async (name, p = page) => { if (shots) await p.screenshot({ path: `${shots}/${name}.png` }); };
     const label = () => page.locator(".reader-count").innerText();
     const plays = (kind) => page.evaluate((k) => window.__plays.filter((x) => x === k).length, kind);
@@ -296,6 +303,11 @@ const LONG = Array.from({ length: 14 }, (_, i) => `第 ${i + 1} 行：今天的�
     cp.on("pageerror", (error) => errors.push(error.message));
     await cp.goto(base);
     await cp.waitForSelector(".hero");
+    // (V10.41: the sample days as saved days, so the book has pages — see the top.)
+    await require("./signed-in.cjs").touchStore(cp);
+    await cp.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); for (const e of s.entries) e.isDemo = false; localStorage.setItem("little-days.v1", JSON.stringify(s)); });
+    await cp.reload();
+    await cp.waitForSelector(".hero");
     await cp.locator('#navigation [data-page="books"]').tap();
     await cp.locator('[data-action="pull-book"][data-book="daily"]').tap();
     await cp.locator('[data-action="book"][data-book="daily"]').tap();
@@ -312,6 +324,11 @@ const LONG = Array.from({ length: 14 }, (_, i) => `第 ${i + 1} 行：今天的�
       p.on("pageerror", (error) => errors.push(error.message));
       if (lang) await p.addInitScript((l) => localStorage.setItem("little-days.language", l), lang);
       await p.goto(base);
+      await p.waitForSelector(".hero");
+      // (V10.41: the sample days as saved days, so the book has pages — see the top.)
+      await require("./signed-in.cjs").touchStore(p);
+      await p.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); for (const e of s.entries) e.isDemo = false; localStorage.setItem("little-days.v1", JSON.stringify(s)); });
+      await p.reload();
       await p.waitForSelector(".hero");
       await p.locator('#navigation [data-page="books"]').tap();
       await p.locator('[data-action="pull-book"][data-book="daily"]').tap();

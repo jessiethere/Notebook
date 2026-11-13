@@ -25,7 +25,7 @@ const shots = process.env.SHOTS_DIR || "";
 
     // 1. Home → 选今天的照片 → Cancel: still on Home, no empty page.
     let chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await chooser;
     await cancelPicker();
     await page.waitForTimeout(300);

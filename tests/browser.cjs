@@ -38,10 +38,10 @@ const path = require("node:path");
           ?.textContent.includes("草稿已保存在本机"),
       );
     assert.equal(await page.title(), "Little Days · 手帐文具店");
+    // V10.41 (S1): the sample "today" page is no longer on Home, so the hero
+    // shows its own photo-journal card; its picture must load.
     assert.equal(
-      await page
-        .locator(".hero img:not(.keeper-img)")
-        .evaluate((img) => img.complete && img.naturalWidth > 0),
+      await page.locator(".hero .v9-pol-front").evaluate((el) => /url\(/.test(getComputedStyle(el).backgroundImage)),
       true,
     );
 

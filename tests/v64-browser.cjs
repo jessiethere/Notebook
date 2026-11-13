@@ -30,7 +30,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // 1. Editorial (default) pages: a kicker, a headline, a folio; the spread has a masthead.
     const chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles([photo("beach-sunset", "08:10"), photo("latte-art", "08:20"), photo("home-dinner", "19:05")]);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
     assert.match(await page.locator(".story-canvas").innerText(), /LITTLE DAYS[\s\S]*NO\. \d\d/, "the spread's masthead");

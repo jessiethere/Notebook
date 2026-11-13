@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.43",
+    date: "2026-11-13",
+    zh: {
+      title: "换照片可以直接用已经导入的照片",
+      items: [
+        "快速编辑和 Journal Studio 里点「换照片」，上方写着「正在替换照片 N」，下面先列出已经在 Little Days 里的照片：这一页、这一天、这本书；也可以照常「从相册添加」。",
+        "选中的照片会复制到这个位置，原来的那张留在原处，不会交换位置，也不会再存一份文件。",
+        "这个位置原来的那句话会保留，不会带上来源照片的说明。可以撤销，换完可以接着写字、改字体、换排版。",
+      ],
+    },
+    en: {
+      title: "Replace a photo with one you already imported",
+      items: [
+        "In Quick Edit and Journal Studio, Replace photo now says \"Replacing photo N\" and first shows the photos already in Little Days — this page, this day, this book — with Add from Photos still there.",
+        "The photo you pick is copied into that place; the original stays where it was (no swapping), and no extra copy of the file is saved.",
+        "That place keeps its own words (the other photo's caption isn't copied). You can undo, then carry on writing, changing the type or the layout.",
+      ],
+    },
+  },
+  {
     version: "10.42",
     date: "2026-11-13",
     zh: {

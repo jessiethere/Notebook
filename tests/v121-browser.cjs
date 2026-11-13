@@ -289,7 +289,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
     await page.goto(base);
     await page.waitForSelector(".hero");
     const chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(PHOTOS.slice(0, 3));
     await page.waitForSelector(".story-canvas .scrapbook-page");
     if (await page.locator(".story-tabs button").count() > 1) await page.locator(".story-tabs button").nth(1).tap();

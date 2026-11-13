@@ -30,7 +30,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     const words = ["Morning run 晨跑 5km，然后去健身房练腿，深蹲终于突破 60kg", "Brunch with friends 和朋友吃早午餐，聊了很多毕业以后的事情", "Golden hour walk 和妈妈在田边散步，看了一场很美的日落", "晚饭自己做了牛排和沙拉，配了一杯红酒 so good"];
 
     const chooser = page.waitForEvent("filechooser");
-    await page.locator('[data-action="today-photos"]').tap();
+    await page.locator('[data-action="today-photos"]').first().tap();
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page");
     assert.equal(await page.locator(".story-tabs button").count(), 5, "a spread + 4 Moment pages");
