@@ -2,7 +2,11 @@
 
 > **2026-11-13 用户调整优先级**：核心承诺是「Turn everyday photos into beautiful journal pages in under a minute.」先证明这一条成立，再做创作增强。
 > 1. **P0 媒体持久化**：按 [P0_MEDIA_TEST.md](P0_MEDIA_TEST.md) 在 Claude App 内嵌链接和原生 iOS（模拟器 / 真机）分别验证；根因未定。
-> 2. **核心流程**：选 1–5 张照片 → 自动排版 → 可选写一句 → 一键保存 → 重新打开。审查见 [CORE_FLOW_AUDIT.md](CORE_FLOW_AUDIT.md)，最小修复 F1–F7 等用户确认。
+> 2. **核心流程**：选 1–5 张照片 → 自动排版 → 可选写一句 → 一键保存 → 重新打开。审查见 [CORE_FLOW_AUDIT.md](CORE_FLOW_AUDIT.md)。
+>    - 2026-11-13 Quick Create UX Sprint 已完成：V10.27 标题可选、V10.28 双照片排版、V10.29 快速编辑、V10.30 长文字排版修复、V10.31 底部按钮。见 [QUICK_EDIT_PLAN.md](QUICK_EDIT_PLAN.md)。
+>    - Chromium 全量回归通过；iOS 模拟器里用脚本点击走通了换照片、撤销、换排版、保存和阅读器。
+>    - 还没验证：真机和模拟器里的手动触控与键盘，清单见 [QUICK_EDIT_IPHONE_CHECK.md](QUICK_EDIT_IPHONE_CHECK.md)。
+>    - 审查里 F1–F7 的其余几项（书和日期两个下拉框、写好的一句话太小等）没有在这一轮处理。
 > 3. Meme & Sticker Studio：设计 v2 已通过（[MEME_STICKER_PLAN.md](MEME_STICKER_PLAN.md)），Phase A 只做低风险准备，暂不展开实施；GIF 在 Phase B。
 > 4. Captain 原色 6 个小反应素材：与开发分开准备。
 > Captain、Meme、GIF 是增强体验，不是核心流程的前提。

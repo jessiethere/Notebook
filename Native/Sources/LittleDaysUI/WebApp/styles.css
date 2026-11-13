@@ -21568,3 +21568,19 @@ body.typing .ctx-caption {
 .sw-more[open] > summary::after {
   transform: rotate(90deg);
 }
+/* V10.31 · On a tall phone the story is shorter than the screen: the Quick
+   Edit bar still sits at the bottom of the screen, not right under the page
+   (seen in the iOS Simulator, iPhone 17 size). */
+.phone.in-studio #app:has(> .qe-bar) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding-bottom: 0;
+}
+#app > .qe-bar {
+  margin-top: auto;
+}
+#app > .story-canvas {
+  flex: none;
+}

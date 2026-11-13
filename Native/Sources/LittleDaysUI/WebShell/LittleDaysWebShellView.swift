@@ -226,12 +226,19 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
         // A step "upload:<input selector>|<file path on the Mac>|<mime>" (P0
         // media test, Debug only) gives that test file to the page's own file
         // input, as the photo picker would; everything after that is the app's
-        // real import and save path. "wait:<ms>" pauses. Others are taps.
+        // real import and save path. Several files: paths joined by ","
+        // (V10.29 Quick Edit check: two photos at once, like the picker).
+        // "wait:<ms>" pauses. Others are taps.
         let selectors: [Any] = steps.components(separatedBy: "||").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.map { step -> Any in
             guard step.hasPrefix("upload:") else { return step }
             let parts = String(step.dropFirst(7)).components(separatedBy: "|")
-            guard parts.count == 3, let bytes = FileManager.default.contents(atPath: parts[1]) else { return "wait:10" }
-            return ["selector": parts[0], "name": (parts[1] as NSString).lastPathComponent, "mime": parts[2], "b64": bytes.base64EncodedString()]
+            guard parts.count == 3 else { return "wait:10" }
+            let files: [[String: String]] = parts[1].components(separatedBy: ",").compactMap { path in
+                guard let bytes = FileManager.default.contents(atPath: path) else { return nil }
+                return ["name": (path as NSString).lastPathComponent, "b64": bytes.base64EncodedString()]
+            }
+            guard !files.isEmpty else { return "wait:10" }
+            return ["selector": parts[0], "mime": parts[2], "files": files]
         }
         guard let data = try? JSONSerialization.data(withJSONObject: selectors), let list = String(data: data, encoding: .utf8) else { return }
         let script = """
@@ -244,10 +251,12 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
             let el = null;
             for (let i = 0; i < 50 && !(el = document.querySelector(selector)); i++) await wait(100);
             if (el && typeof step !== 'string') {
-              const bin = atob(step.b64), bytes = new Uint8Array(bin.length);
-              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
               const files = new DataTransfer();
-              files.items.add(new File([bytes], step.name, { type: step.mime }));
+              for (const one of step.files) {
+                const bin = atob(one.b64), bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                files.items.add(new File([bytes], one.name, { type: step.mime }));
+              }
               el.files = files.files;
               el.dispatchEvent(new Event('change', { bubbles: true }));
             } else if (el) el.click();

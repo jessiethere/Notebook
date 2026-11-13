@@ -191,7 +191,10 @@ bash tools/mac/dev.sh stop         # 结束：停止预览、把模型从内存�
 `-LittleDaysTap` 除了点击，还支持：
 - `upload:<input 选择器>|<Mac 上的文件路径>|<mime>`：把测试文件交给页面自己的文件输入框（之后走 App 真实的导入 / 保存代码，只跳过系统选择器）；
 - `wait:<毫秒>`：等待。
+- 2026-11-13 起，`upload:` 可以一次给多个文件，路径之间用逗号隔开，就像在相册里选了好几张。
 
 例：`xcrun simctl launch <设备> com.jessiethere.littledays -LittleDaysTap 'body||body||body||[data-action="today-write"]||upload:#photos-input|/tmp/test.jpg|image/jpeg||wait:3000'`。只在 Debug 构建生效。
+
+快速编辑（今天的故事）的例子：`[data-action="today-photos"]||upload:#attachment-image-input|/路径/a.jpg,/路径/b.jpg|image/jpeg||.qe-tools [data-panel="photo"]||.qe-thumbs button:nth-child(2)||[data-action="story-replace"]||upload:#attachment-image-input|/路径/c.jpg|image/jpeg`。用脚本点击不是真的触摸，所以 iOS 不会弹出键盘；键盘要用手点着测。
 
 注意：iOS WebKit 只在用户点击后加载视频数据，用脚本交给 `#video-input` 的视频会在读取信息时超时（`media-timeout`），所以不能用来判断真实选择器的结果。完整步骤见 `docs/P0_MEDIA_TEST.md`。

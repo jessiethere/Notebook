@@ -72,6 +72,8 @@ const photoFile = (n) => path.join(lib, `LD-photo-${n}.jpg`);
       assert.equal(await page.locator('.story-bar [data-action="story-adjust"]').innerText(), zh ? "自定义" : "Customize");
       const bar = await page.locator(".qe-bar").boundingBox();
       assert.ok(bar.y + bar.height <= run.h + 1, "the Quick Edit bar is on screen");
+      // V10.31: at the bottom of the screen even when the page is shorter than it (tall phones)
+      assert.ok(bar.y + bar.height >= run.h - 60, `the bar sits at the bottom (${Math.round(bar.y + bar.height)} of ${run.h})`);
       if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/v129-${run.lang}-1-default.png` });
 
       let m = await draft();

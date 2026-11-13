@@ -4,6 +4,22 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.31",
+    date: "2026-11-13",
+    zh: {
+      title: "快速编辑的按钮固定在屏幕底部",
+      items: [
+        "在屏幕比较高的 iPhone 上，「今天的故事」的 换照片 · 写文字 · 换个排版 · 保存 现在固定在屏幕底部，不再停在页面下方、留出一大片空白。",
+      ],
+    },
+    en: {
+      title: "Quick Edit buttons stay at the bottom of the screen",
+      items: [
+        "On taller iPhones the Photo · Words · Layout · Save buttons in Today's story now sit at the bottom of the screen instead of just under the page with empty space below.",
+      ],
+    },
+  },
+  {
     version: "10.30",
     date: "2026-11-13",
     zh: {
