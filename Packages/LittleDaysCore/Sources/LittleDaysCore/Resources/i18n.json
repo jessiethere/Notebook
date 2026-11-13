@@ -8830,5 +8830,65 @@
   "kp.localDown": {
     "zh": "本机模型没有回应，这句是简单回复。",
     "en": "The model on this Mac didn't answer — this is a simple reply."
+  },
+  "rescue.title": {
+    "zh": "手帐暂时没有打开",
+    "en": "Your journal didn't open"
+  },
+  "rescue.unavailable": {
+    "zh": "这次没能打开这台设备上的手帐数据库。你的记录没有被删除，App 也没有写入任何内容。请完全退出 App 后再打开，或稍后重试。",
+    "en": "The journal database on this device couldn't be opened this time. Nothing was deleted and the app wrote nothing. Quit the app fully and open it again, or try again later."
+  },
+  "rescue.missing": {
+    "zh": "这台设备之前把手帐保存在数据库里，但这次没有找到它。App 不会把你当作新用户自动新建空白手帐。请先重试；如果仍然找不到，可以开始新的手帐，之后在 设置 → 备份 里用备份文件恢复。",
+    "en": "This device kept your journal in its database, but it wasn't found this time. The app won't treat you as a new user and start a blank journal on its own. Try again first; if it's still missing you can start a new journal and restore a backup file later in Settings → Backup."
+  },
+  "rescue.incompatible": {
+    "zh": "这本手帐是用不同版本的 Little Days 保存的，当前版本无法安全读取。为了不改写它，App 停在这里。请更新到最新版本后再打开。",
+    "en": "This journal was saved by a different version of Little Days and this version can't read it safely. To avoid rewriting it, the app stops here. Update to the latest version and open it again."
+  },
+  "rescue.damaged": {
+    "zh": "手帐的最新副本无法完整读取（可能是保存时被中断）。App 没有覆盖它。",
+    "en": "The newest copy of your journal can't be read completely (a save may have been interrupted). The app didn't overwrite it."
+  },
+  "rescue.safe": {
+    "zh": "在你做出选择之前，App 不会写入、清空或覆盖任何数据。",
+    "en": "Until you choose, the app won't write, clear or overwrite anything."
+  },
+  "rescue.earlierFound": {
+    "zh": "还找到一份较早的完整副本（{pages} 页），它可能缺少最后一次修改。",
+    "en": "An earlier complete copy was also found ({pages} pages). It may be missing your last change."
+  },
+  "rescue.retry": {
+    "zh": "重试",
+    "en": "Try again"
+  },
+  "rescue.saveCopy": {
+    "zh": "保存原始数据副本",
+    "en": "Save a copy of the raw data"
+  },
+  "rescue.saved": {
+    "zh": "已生成副本文件，请把它存到「文件」或其他安全的地方。",
+    "en": "A copy file was made. Keep it in Files or another safe place."
+  },
+  "rescue.useEarlier": {
+    "zh": "用较早的副本继续",
+    "en": "Continue with the earlier copy"
+  },
+  "rescue.earlierConfirm": {
+    "zh": "用较早的副本继续？无法读取的最新副本会先完整保留在 App 里，不会删除。",
+    "en": "Continue with the earlier copy? The unreadable newest copy is kept in the app first; nothing is deleted."
+  },
+  "rescue.keepFailed": {
+    "zh": "没能先保留无法读取的副本，所以没有继续。请先保存原始数据副本，再重试。",
+    "en": "The unreadable copy couldn't be kept first, so nothing changed. Save a copy of the raw data, then try again."
+  },
+  "rescue.startNew": {
+    "zh": "开始新的手帐",
+    "en": "Start a new journal"
+  },
+  "rescue.startNewConfirm": {
+    "zh": "开始一本新的空白手帐？这台设备上没有找到旧手帐；之后仍可以在 设置 → 备份 里用备份文件恢复。",
+    "en": "Start a new blank journal? No earlier journal was found on this device; you can still restore a backup file later in Settings → Backup."
   }
 }

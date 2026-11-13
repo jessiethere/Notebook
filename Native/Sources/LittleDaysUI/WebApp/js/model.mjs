@@ -445,7 +445,9 @@ export class Store {
     const local = this.mirror ? storage.getItem("little-days.v1") : null;
     // LocalStorage is written first on every save, so while it has a copy it
     // is the newest; without one, the IndexedDB copy is the journal.
-    const raw = local || options.durableRaw || null;
+    // A1: options.useDurable — the person chose the earlier IndexedDB copy
+    // because the LocalStorage copy is damaged (it was kept aside first).
+    const raw = options.useDurable ? options.durableRaw || null : local || options.durableRaw || null;
     this.baselineRaw = local;
     if (raw) {
       const parsed = JSON.parse(raw);

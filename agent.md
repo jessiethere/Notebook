@@ -48,6 +48,16 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.36 A1：手帐读取失败保护（P0 数据安全，第一批）
+
+- **需求**：用户确认开始 A1。区分真正的新用户 / 数据库暂时读不出 / 格式不兼容 / 数据损坏，后三种不能当新用户，不能用空白状态覆盖。
+- **根因**：`start()` 里 `meta.read()` 失败只 `console.warn`，`durableRaw` 为 null；LocalStorage 镜像关闭（手帐超过 ~5 MB）时 `Store` 走 `createInitialState`，下一次 `update` 把空白手帐写进 IndexedDB，覆盖原手帐。格式不兼容时 `Store` 抛中文硬编码错误，没有安全出路。
+- **文件**：新 `Public/js/journal-open.mjs`（`checkJournal` / `decideJournalOpen` / `hasTraces`，纯函数）；`Public/app.js`（启动先判断，blocked 时显示 `showJournalRescue` 面板并 return，不创建 Store、不渲染、不写入）；`Public/js/model.mjs`（`Store` 新选项 `useDurable`）；`styles.css` `.rescue-panel`；i18n `rescue.*` 15 个键；whats-new 10.36。
+- **规则**：有 LocalStorage 副本且可读 → 照旧；不可读 → damaged（有较早完整 IndexedDB 副本时可选「用较早的副本继续」，确认后先把损坏副本写进 IndexedDB `little-days.v1.rescue`，写成功才继续）；schemaVersion≠1 → incompatible（两份都不改）；IndexedDB 打不开 + 镜像关闭或有使用痕迹（account / mirror / seen-version / events / last-backup）→ unavailable，只能重试；IndexedDB 能开但应有的手帐没有 → missing，可确认「开始新的手帐」（那里没有可被覆盖的数据）；真正首次 → 新手帐；首次且 IndexedDB 打不开 → 新手帐但不写 IndexedDB（`persist: null`），以后能打开时不会遇到空白副本。所有 blocked 面板都可「保存原始数据副本」（下载 JSON，含每份原始文本），不用 alert/confirm。
+- **测试**：`tests/v136.test.mjs` 6 项；`tests/v136-browser.cjs` 12 项（zh 375 / en 430 × 可读 / 损坏+较早副本+下载+取消+确认+保留 / 其他格式不改写 / 数据库打不开不写入且下次正常打开 / 缺失需确认 / 首次含数据库打不开）；`npm test` 272 通过；`tests/browser.cjs` 通过；全量浏览器回归见下一条日志。
+- **已知/未验证**：真机上 IndexedDB 打不开的真实概率和表现没有验证；iOS 外壳里「保存原始数据副本」走 WKDownload → 分享面板，未在模拟器点过。
+- **回退**：`git revert` 本提交即可；不改数据格式，不迁移任何数据。
+
 ### 2026-11-13 — V10.35 Captain 卡片：打开就知道现在可以做什么（固定链接第 98 版）
 
 - 需求：

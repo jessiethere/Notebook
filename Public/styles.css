@@ -21719,3 +21719,24 @@ body.typing .ctx-caption {
 .choose-sheet.kp.corner.quiet .keeper-say {
   margin-top: 4px;
 }
+/* A1: the journal recovery panel (nothing is written until a choice). */
+.rescue-panel {
+  padding: 48px 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink, #3f3a33);
+}
+.rescue-panel h1 { font-size: 22px; margin: 0 0 12px; }
+.rescue-panel p { margin: 0 0 10px; }
+.rescue-panel .rescue-safe { font-weight: 600; }
+.rescue-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.rescue-actions button {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--c-dfdfd0, #dfdfd0);
+  background: var(--paper, #fffdf8);
+  font-size: 15px;
+  color: inherit;
+}
+.rescue-actions button.primary { background: var(--ink, #3f3a33); color: #fff; border-color: transparent; }
+.rescue-note { font-size: 13px; opacity: 0.8; }

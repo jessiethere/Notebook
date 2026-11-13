@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.36",
+    date: "2026-11-13",
+    zh: {
+      title: "手帐暂时打不开时，App 会停下来保护它",
+      items: [
+        "以前如果打开 App 时这台设备上的手帐数据库刚好读不出来，App 可能会当作新用户新建一本空白手帐，下一次修改就可能盖掉原来的记录。现在不会了。",
+        "只有真正第一次使用才会新建手帐。数据库暂时打不开、手帐格式来自其他版本、或最新副本损坏时，App 会停在一个说明页面，在你选择之前不写入、不清空、不覆盖任何数据。",
+        "说明页面可以〔重试〕、〔保存原始数据副本〕；最新副本损坏但还有较早的完整副本时，可以确认后〔用较早的副本继续〕，损坏的那份会先完整保留。",
+      ],
+    },
+    en: {
+      title: "If your journal can't open, the app now stops to protect it",
+      items: [
+        "Before, if the journal database on this device couldn't be read when the app opened, the app could start a blank journal as if you were new, and your next change could overwrite the real one. That no longer happens.",
+        "A new journal is only made on a real first start. If the database can't open, the journal was saved by another version, or the newest copy is damaged, the app stops on an explanation and writes, clears or overwrites nothing until you choose.",
+        "There you can Try again or Save a copy of the raw data; when the newest copy is damaged but an earlier complete copy exists, you can confirm Continue with the earlier copy, and the damaged one is kept first.",
+      ],
+    },
+  },
+  {
     version: "10.35",
     date: "2026-11-13",
     zh: {

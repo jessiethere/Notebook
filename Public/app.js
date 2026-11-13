@@ -29,6 +29,7 @@ import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share
 import { photoTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
+import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
 import { searchJournal, onThisDay, terms as searchTerms } from "./js/search.mjs";
 import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
@@ -108,6 +109,7 @@ import {
 import {
   sceneOfDay,
   Store,
+  MIRROR_OFF_KEY,
   dateKey,
   addDays,
   weekStart,
@@ -10636,15 +10638,37 @@ async function start() {
   // V7.5: the journal itself lives in IndexedDB (room for years of pages);
   // LocalStorage keeps a mirror while it fits.
   const meta = new MetaStore();
-  let durableRaw = null;
+  let durableRaw = null,
+    durableError = false;
   try {
     durableRaw = await meta.read();
   } catch (error) {
+    durableError = true;
     console.warn("Journal database unavailable", error?.name);
   }
+  // A1: a blank journal only for a real first start. A journal that exists
+  // but cannot be read now stops here, before anything is drawn or written.
+  const mirrorOff = localStorage.getItem(MIRROR_OFF_KEY) === "off";
+  const decision = decideJournalOpen({
+    local: mirrorOff ? null : localStorage.getItem("little-days.v1"),
+    durable: durableRaw,
+    durableError,
+    mirrorOff,
+    traces: hasTraces(localStorage),
+  });
+  let useDurable = false;
+  if (decision.kind === "blocked") {
+    const choice = await showJournalRescue(decision, meta);
+    if (choice !== "earlier" && choice !== "new") return;
+    useDurable = choice === "earlier";
+  }
+  const volatile = decision.kind === "new" && decision.volatile;
   store = new Store(localStorage, responses[2], undefined, {
     durableRaw,
-    persist: (raw) => meta.write(raw),
+    useDurable,
+    // IndexedDB could not open on a first start: keep LocalStorage only, so a
+    // later start that can read IndexedDB never meets a blank copy there.
+    persist: volatile ? null : (raw) => meta.write(raw),
     onPersistError: () => {
       toast(t("storage.saveFailed"));
       // The editor says so too, and offers to try again.
@@ -10682,6 +10706,71 @@ async function start() {
   try {
     reminderBridge()?.postMessage({ type: "ready" });
   } catch {}
+}
+// A1 recovery panel: says what happened, keeps every copy, and offers only
+// ways on that cannot lose anything. Resolves "earlier" when the person
+// goes on with the earlier complete copy (after the damaged one was kept).
+function showJournalRescue(decision, meta) {
+  const reason = decision.reason;
+  const app = $("#app");
+  logEvent("journal-blocked", { reason });
+  return new Promise((resolve) => {
+    const draw = (note = "") => {
+      app.innerHTML = `<section class="error-panel rescue-panel" role="alert" data-rescue="${esc(reason)}">
+        <h1>${esc(t("rescue.title"))}</h1>
+        <p>${esc(t(`rescue.${reason}`))}</p>
+        <p class="rescue-safe">${esc(t("rescue.safe"))}</p>
+        ${decision.earlier ? `<p>${esc(t("rescue.earlierFound", { pages: decision.earlierPages ?? 0 }))}</p>` : ""}
+        <div class="rescue-actions">
+          <button class="primary" data-rescue-act="retry">${esc(t("rescue.retry"))}</button>
+          ${decision.copies.length ? `<button data-rescue-act="save">${esc(t("rescue.saveCopy"))}</button>` : ""}
+          ${decision.earlier ? `<button data-rescue-act="earlier">${esc(t("rescue.useEarlier"))}</button>` : ""}
+          ${reason === "missing" ? `<button data-rescue-act="new">${esc(t("rescue.startNew"))}</button>` : ""}
+        </div>
+        ${note ? `<p class="rescue-note">${esc(note)}</p>` : ""}
+      </section>`;
+    };
+    draw();
+    app.addEventListener("click", async function onClick(event) {
+      const act = event.target.closest("[data-rescue-act]")?.dataset.rescueAct;
+      if (!act) return;
+      if (act === "retry") location.reload();
+      if (act === "save") {
+        const blob = new Blob(
+          [JSON.stringify({ kind: "little-days-journal-copies", reason, savedAt: new Date().toISOString(), copies: decision.copies })],
+          { type: "application/json" },
+        );
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Little-Days-Journal-Copy-${dateKey()}.json`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        draw(t("rescue.saved"));
+      }
+      if (act === "new") {
+        // Only offered when the database opened and holds no journal at all:
+        // there is nothing a new journal could overwrite.
+        if (!(await askConfirm(t("rescue.startNewConfirm")))) return;
+        app.removeEventListener("click", onClick);
+        resolve("new");
+      }
+      if (act === "earlier") {
+        if (!(await askConfirm(t("rescue.earlierConfirm")))) return;
+        // Keep the damaged newest copy in the journal database first; only
+        // when that worked does the app go on with the earlier copy.
+        const damaged = decision.copies.find((copy) => copy.source === "local")?.text;
+        try {
+          await meta.write(JSON.stringify({ keptAt: new Date().toISOString(), reason, text: damaged }), RESCUE_KEY);
+        } catch {
+          draw(t("rescue.keepFailed"));
+          return;
+        }
+        app.removeEventListener("click", onClick);
+        resolve("earlier");
+      }
+    });
+  });
 }
 start().catch((error) => {
   $("#app").innerHTML =
