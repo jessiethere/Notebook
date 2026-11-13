@@ -265,7 +265,8 @@ test("backup restore keeps moments, layouts, notes and reflections and remaps th
   assert.equal(restored.reflections[0].learned, "patience");
   // Restore does not create object URLs; views acquire what they show.
   assert.equal(media.urls.size, 0);
-  assert.equal(await (await media.get(moment.media[0].source.slice(6))).blob.size, 3);
+  // V10.21: stored as bytes.
+  assert.equal((await media.get(moment.media[0].source.slice(6))).bytes.byteLength, 3);
   media.close();
 });
 

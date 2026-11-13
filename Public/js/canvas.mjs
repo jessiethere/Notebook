@@ -3,6 +3,7 @@
 import { fontFamily, stickerURL } from "./library.mjs";
 import { escapeHTML as esc } from "./personal-ui.mjs";
 import { isShape } from "./shapes.mjs";
+import { cropView } from "./crop.mjs";
 import { captionFit } from "./story-style.mjs";
 import { boundText, boundMarks } from "./scrapbook-layout.mjs";
 import { richHTML } from "./rich-text.mjs";
@@ -47,13 +48,10 @@ export function styleExtra(style = {}) {
   if (/^#[0-9a-f]{6}$/i.test(style?.color || "")) css += `;color:${style.color}`;
   return css + alignCSS(style);
 }
+// V10.20: what shows inside the frame — from the chosen part of the picture
+// (crop.rect, js/crop.mjs) when there is one, else the older x / y / zoom.
 export function cropOf(layer) {
-  const crop = layer.crop || {};
-  return {
-    x: clamp(num(crop.x, 50), 0, 100),
-    y: clamp(num(crop.y, 50), 0, 100),
-    zoom: clamp(num(crop.zoom, 1), 1, 4),
-  };
+  return cropView(layer);
 }
 export function cropStyle(layer) {
   const crop = cropOf(layer);
@@ -109,7 +107,7 @@ export function layerHTML(layer, ctx, options = {}) {
     if (!layer.mediaRef && readOnly) return "";
     const empty = !layer.mediaRef;
     classes += ` art-layer photo-layer frame-${layer.drawing ? "bare drawing-layer" : frame}${isShape(layer.shape) && !layer.drawing ? ` shape-${layer.shape}` : ""}${empty ? " empty-slot" : ""}${options.cropMode && selected ? " cropping" : ""}`;
-    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing">📷</span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
+    inner = `<span class="photo-crop">${src ? `<img src="${esc(src)}" alt="" style="${cropStyle(layer)}" draggable="false">` : empty ? `<span class="photo-slot">＋<small>${t("photo.slot")}</small></span>` : `<span class="photo-missing" role="img" aria-label="${esc(t("media.photoMissing"))}">📷<small>${t("media.photoMissing")}</small></span>`}</span>${layer.tape ? '<i class="photo-tape" aria-hidden="true"></i>' : ""}`;
     if (readOnly && src)
       attrs = ` data-action="zoom-photo" data-src="${esc(src)}" role="button" tabindex="0" aria-label="${t("day.zoomPhoto")}"`;
   } else if (layer.kind === "video" || layer.kind === "audio") {
@@ -272,5 +270,12 @@ export function mediaCardHTML(clip, ctx, options = {}) {
           clip.size / 1024 / 1024,
         ) + " MB"
       : "";
-  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em>${editable ? `<button data-action="remove-media" data-clip="${esc(clip.id)}" aria-label="${t("media.remove")}">×</button>` : ""}</div>${body}<div class="media-card-foot"><small>${editable ? t("media.saved") + " · " : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}</small>${editable && clip.kind === "video" ? `<button data-action="video-poster" data-clip="${esc(clip.id)}">${t("media.poster")}</button>` : ""}${editable ? `<button data-action="clip-on-page" data-clip="${esc(clip.id)}" aria-pressed="${Boolean(options.onPage)}">${t(options.onPage ? "media.offPage" : "media.onPage")}</button>` : ""}</div></article>`;
+  // V10.23: the main things to do sit right under the preview (换封面 ·
+  // 从页面移除); length, size and "saved on this device" are the small print;
+  // putting it on / off the paper is a quiet text button.
+  const actions = editable
+    ? `<div class="media-card-actions">${clip.kind === "video" ? `<button class="primary-outline" data-action="video-poster" data-clip="${esc(clip.id)}">${t("poster.change")}</button>` : ""}<button class="danger-outline" data-action="remove-media-ask" data-clip="${esc(clip.id)}">${t("media.removeFromPage")}</button></div>`
+    : "";
+  const paperToggle = editable ? `<button class="text-button media-paper" data-action="clip-on-page" data-clip="${esc(clip.id)}" aria-pressed="${Boolean(options.onPage)}">${t(options.onPage ? "media.offPage" : "media.onPage")}</button>` : "";
+  return `<article class="media-card ${clip.kind}-card ${editable ? "" : "read-card"}" data-clip="${esc(clip.id)}"><div class="media-card-title"><span>${clip.kind === "video" ? "◈" : recorded ? "🎙" : "♫"}</span><strong>${esc(clip.name)}</strong><em class="media-kind">${label}</em></div>${body}${actions}<div class="media-card-foot"><small>${editable && clip.kind === "video" ? `<span class="clip-name">${esc(clip.name)}</span> · ` : ""}<span class="media-duration">${formatDuration(clip.duration)}</span>${size ? " · " + size : ""}${editable ? " · " + t("media.savedLocal") : ""}</small>${paperToggle}</div></article>`;
 }

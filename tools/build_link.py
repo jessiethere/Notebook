@@ -61,6 +61,9 @@ def main():
     for keeper in catalog.get('keepers', []):
         for name in {keeper['file'], keeper['license']}:
             files.append((SHARED / 'Keepers' / name, Path('library/keepers') / name))
+    for play in catalog.get('keeperPlay', []):  # Captain's Playroom (V10.17)
+        for name in {play['idle'], play['license'], (play.get('happy') or {}).get('file'), (play.get('ball') or {}).get('file')} - {None}:
+            files.append((SHARED / 'Keepers' / name, Path('library/keepers') / name))
     for name in ['coffee.jpg', 'lake.jpg']:
         files.append((SHARED / 'Media' / name, Path('assets') / name))
     published = {}

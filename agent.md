@@ -48,6 +48,887 @@
 
 ## 更新日志
 
+### 2026-11-13 — 合并进 main：v33-write-first-community（a0be0fd，V10.26）经云端分支合并到 main
+
+- 需求：用户确认「开 PR 并合并」进 `main`（`Start-Windows.cmd` 每次 `git pull` 的分支）。
+- 做法：
+  - 云端分支 `claude/focused-johnson-6in87n` 依次合并 `origin/v33-write-first-community` 的 40c0efb（V10.23–V10.25 + Meme 设计）和 a0be0fd（V10.26 + 文档）。
+  - 唯一的冲突在 agent.md 的日志开头：两边都在最前面加了条目。处理方式是全部保留，Mac 那边较新的条目放前面；README 里 11-12 的合并条目挪到 V10.22 / V10.23 之间，更接近它实际发生的时间。
+  - `sync_native_web.py` 运行后没有差异。
+  - 没有改 App 代码；在线链接已由 Mac 会话发布到第 90 版（V10.26），本会话没有重复发布。
+- 测试（Ubuntu 容器，Chromium 1243，模拟 iPhone 13，预览服务用合并后的代码重启）：
+  - 在 ad2ee09（含 V10.25）上：`npm test` 211/211，`python3 -m unittest` 18/18；浏览器测试 65 个中 64 个通过。v3-browser 在全量运行里（排第 2 个）等 `.tool-dock` 时超时，单独连跑两次都通过。之前全量运行里也出现过同样的超时，判断是时机不稳定的测试，不是 App 回归。
+  - 在 05ae6a5（再加 V10.26）上：`npm test` 211/211，`python3 -m unittest` 18/18；受影响的 v122、v123 浏览器测试通过。
+- 已知问题：v3-browser 在全量运行中偶尔超时（等底部工具栏），以后可以给它加一个更稳的等待条件。
+- 未验证：iOS 构建、模拟器和真机（本会话连不到 Mac；Mac 会话有自己的模拟器结果，见上面的条目）；Windows 实机。
+- 下一步：Mac 会话以后继续在 `v33-write-first-community` 上工作时，先合并 `main`（只差这次的日志和合并提交），以免日志再冲突。
+
+### 2026-11-13 — 优先级调整：P0 原生模拟器真实路径验证 + V10.26 检查更准确（固定链接第 90 版）；核心流程 Audit；Meme Phase A 只做拆分
+
+- 需求（用户）：
+  - Meme v2 设计通过，D1–D8 不变，但先证明核心承诺「一分钟把照片变成漂亮的一页」；
+  - P0 继续查，用实际 App 的保存 / 读取路径验证，Claude 内嵌链接和原生模拟器分开测；不要只凭 persisted 推断，不要未经验证断言原生不受影响，不清理用户数据；
+  - GIF 相册 → File 这一步继续标为未验证；Meme Phase A 只做低风险准备和拆分；Captain 原色 6 个静态反应与开发分开；
+  - 做核心流程 Audit 和最小修复清单，不重写首页和编辑器。
+- **P0（原生 iOS 模拟器，真实保存路径）**：
+  - 新增只在 Debug 构建生效的 `-LittleDaysTap "upload:<input>|<文件>|<mime>"` 和 `wait:<ms>`（`LittleDaysWebShellView.swift`，提交 c539dfc）。它把 Mac 上的测试文件交给页面自己的文件输入框，之后走 App 真实的导入 / 保存代码，只跳过系统选择器；Release 不读这个参数。
+  - 构建方式：在 Mac 上 `git fetch` 后用 `git archive` 导出到 `/tmp/ld-build/src` 构建（Debug，模拟器「LD P0 Verify」iOS 27.2），**没有动 Mac 工作区和其它会话没提交的修改**（project.pbxproj、Package.resolved、Qwen 结果文件仍原样）。
+  - 结果：
+    - 测试照片（图库 latte-art）→ 杀掉 App 重开 → 正常（用到 1 · 存着 1 · 正常 1）；
+    - 测试视频（第一次是分片 mp4，第二次是模拟器录屏 H.264 0.1 MB / 5.8 秒）→ 导入在 import 阶段失败：第一次只记了 `error`，加诊断后是 `media-timeout`。同一个文件在 Mac 桌面 WebKit 里 0.1 秒就能读到。推断：iOS WebKit 只在用户点击后加载媒体，脚本交文件没有点击，所以不代表真实选择器也会失败（未证实）；
+    - 用 App 的「备份」在 Mac WebKit 里做一个含测试照片和测试视频的备份 → 在模拟器里「恢复备份」→ 杀掉 App 重开 → 用到 3 · 不在 0 · 读不出 0，照片显示，视频显示封面和「0:05 · 0.1 MB · 已保存到本机」；
+    - 旧检查把这个可读的视频报成「解码失败 · timeout」。
+  - 修改（V10.26）：
+    - `media-check.mjs` 新增状态 `unchecked`：视频 / 声音在时限内没加载时，写成「视频没有打开检查（iOS 要先点一下才读取视频，不代表坏了）」，不标红；
+    - `app.js` 的 `mediaMetadata` 失败时记录 `media-timeout` 或 `media-err-<MediaError 编号>`；
+    - i18n、whats-new 10.26、`v122.test.mjs` 同步更新。
+  - 模拟器里重装后确认新文案显示正常（截图 11-check-v1026）。
+  - 读日志的办法：从模拟器的 WebKit LocalStorage sqlite 读 `little-days.events`（只有事件名、阶段、错误名）。模拟器剪贴板读不到，因为脚本点击不算用户手势。
+  - 新文档 `docs/P0_MEDIA_TEST.md`：Claude App 内嵌链接的 5 分钟手动步骤（用 `P0-TEST-时间` 文字区分「整页没了」和「只是媒体读不出」）、模拟器手动步骤、已证实 / 未确定 / 可能的修复。
+  - **根因仍未确定**：你最早看到的 Error 当时的数据已经不在；原生真机没测；真实选择器导入视频没测。
+- **发布**：
+  - V10.26 → 固定链接第 90 版（app.js、js/media-check.mjs、js/whats-new.mjs、shared/i18n.json）；
+  - 线上旧的 media-check.mjs 先读回，sha256 1b64459f… 和 HEAD~1 一致才覆盖。
+- **核心流程 Audit**（`docs/CORE_FLOW_AUDIT.md`，页面 https://claude.ai/artifact/XQudn5EW31Nc7jb6kWFgEw ）：
+  - Chromium 模拟 390 / 375，1 / 3 / 5 张都实测：App 内 5 次点击（选照片、写一句、点输入框、完成、保存），不写字 2 次；
+  - 自动排版 0.13–0.26 秒（电脑，非真机）；保存后进阅读器约 1.5 秒；刷新后从首页卡片 1 次点击重开，照片和文字都在；
+  - 问题：「写一句」被底部按钮条挡住、输入框不自动聚焦、那句话变成照片下的灰色小字、写一句面板选项太多、书和日期是原生下拉框、没有拍摄时间时显示导入时刻；
+  - 最小修复 F1–F7 等用户确认，**没有改代码**。
+  - 另外在原生模拟器里看到：同一天已有内容时，首页「只写字」会再加一页（不在核心照片流程上，记下待查）。
+- 文档：
+  - ROADMAP 顶部写入新优先级；
+  - MEME_STICKER_PLAN 状态改为「v2 通过、Phase A 暂不实施」，新增第 10 节 Phase A 拆分（A0 纯函数可以先做，A4 媒体写入等 P0）和第 11 节 Captain 素材说明（Claude 不能生成正式 3D 图）。
+- 运行：
+  - `npm test` 211 通过；`python3 -m unittest` 18 通过；
+  - 浏览器 v121、v122、v123 通过（Chromium）；
+  - 模拟器构建成功（只有警告）。
+- 未完成：
+  - 用户按 P0_MEDIA_TEST.md 在 Claude App 里测；
+  - 原生真机测；
+  - 真实选择器导入视频；
+  - F1–F7 等确认；
+  - Captain 素材等出图。
+- Mac 上留下的测试文件：`/tmp/ld-gif`、`/tmp/ld-build`、`/tmp/ld-p0`；模拟器「LD P0 Verify」里有测试数据。
+
+### 2026-11-13 — Meme & Sticker Studio 最终设计 v2（D1–D8 已确认）；GIF 选择器验证；P0 截图记录（仍未改 App 代码）
+
+- 需求：用户确认 D1–D8 并补充要求，要求先写进设计方案（设计板、图层结构、收藏机制、Captain 动画素材规格、静态 MVP 流程、Phase B GIF 方案、持久化与测试计划），确认后再开发；单独验证「从相册选 GIF 会不会被转成 JPG」；Captain 本轮只做原色 6 个；P0 没确认前不正式实施新的 Meme 媒体存储。
+- 文件：`docs/MEME_STICKER_PLAN.md` 改写为 v2（含版本记录）；设计板 https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK 第 2 版（9 个画面 × 375/430 × 中/英 = 36 张；v1 折叠对照；Captain 6 张占位封面；两个 iPhone 自测工具）。`Public/`、Swift、测试都没改，固定链接仍是第 89 版。
+- v2 的关键决定：
+  - ★ 统一成一个 `collection` 数组（官方素材只存 ID；我的 Meme 存 `media:` 引用和元数据，不存文件名）；「最近使用」每次从页面图层算出来，不自动加收藏；
+  - `kind:"meme"` 同时承载我的 Meme、以后的 GIF 和 Captain，必填 `text` 作为兼容兜底；
+  - 原创贴纸保持 `kind:"sticker"`；
+  - Phase A 文件选择器只接受 PNG / JPG / WebP，看文件头发现 GIF、动态 WebP、APNG 时说明「下一版支持」，不保存也不转换；
+  - 解码内存估算超过 300 MB 也拒绝；
+  - 统一的动态贴纸接口：精灵图驱动 + 图片驱动 + 同时最多 2 个。
+- 代码核对：
+  - `model.mjs` 校验要求每个图层有字符串 `id` 和 `text`，不校验 `kind`；
+  - `canvas.mjs` 遇到不认识的 kind 会把 `text` 当文字显示（不丢数据）；
+  - 没有透明度字段；`layerGeometry` 只给 photo / video 加宽高，Meme 需要加进去。
+- **GIF 验证（真实运行）**：
+  - iOS 模拟器（LD P0 Verify）用 `simctl addmedia` 加入测试 GIF（仓库里的 LD-captain-lemon-hug.gif，396,833 B，sha256 bfbb9b38…）→ 图库里是 IMG_0011.GIF，sha256 完全相同，**系统图库不转换**；
+  - 当前照片导入：Chromium（容器）里 `image/gif` 396,833 B → 存成 `image/jpeg` 32,381 B（FF D8）；WebKit（Mac Playwright，Safari 26.5 内核，Mac 上的 49479dd 代码，`imageBlob()` 没变）里 → `image/jpeg` 60,756 B。**是我们自己的 `imageBlob()` 把 GIF 转成了单帧 JPG。**
+  - 相册 / 文件选择器 → WKWebView 这一步**没验证**：需要界面点选，用 AppleScript 控制模拟器时卡在 macOS 权限请求（2 分钟超时），已放弃这条路。改为在设计板里放「GIF 选择测试」，在 iPhone 的 Claude App 里测；模拟器相册里已经有 IMG_0011.GIF，可以在外壳里手动点选。
+- **P0 截图（用户，8:54）**：
+  - Claude iOS App 内嵌网页，persisted=否；0.0 MB / 983.0 MB；IndexedDB、localStorage 都正常；没有媒体错误；「还没有用到照片或视频」。
+  - 还不能判断：如果截图前加过照片再强制退出，说明那一页连同照片引用一起没了，很可能是宿主（Claude App）重启时清掉了内嵌网页的存储；如果没加过，说明这次只是没东西可查。
+  - 设计板里放了「存储保持测试」来分清这两种情况（写标记 → 划掉 Claude → 重开看标记）。
+- Captain 素材：我不能画正式的 3D 形象。交付的是规格、动作说明、命名和 ID、JSON 元数据、验收清单、6 张写明 PLACEHOLDER 的灰色剪影封面（只在设计板里，没提交进仓库）。Phase A 能用的正式 Captain 图只有原色抱毛线球（320×325）。
+- Mac：只在 /tmp/ld-gif 放了测试文件，用 8092 端口跑过一次预览服务（测完就停）；Mac 上其它会话没提交的修改没有动；模拟器相册里多了 IMG_0011.GIF。
+- 运行：设计板截图脚本；自测工具在 Chromium 里试过（GIF 帧数 6，和 PIL 一致；JPG 识别正确；存储标记读写正常；没有控制台错误；手机宽度没有横向滚动）。没有 App 测试，因为没改 App 代码。
+- 下一步：
+  1. 用户在 iPhone 的 Claude App 里做两个自测；
+  2. 用户确认 v2 后开始 Phase A：先做界面、图层、收藏，媒体写入等存储保持测试有结论再接上；
+  3. Captain 原色 6 个正式图按第 5 节出图。
+
+### 2026-11-13 — Meme & Sticker Studio 设计轮（只出设计，未改 App 代码，等用户确认）
+
+- 需求：在 Journal Studio 的贴纸系统里加入「Captain 的小反应」、我自己的 Meme 收藏、GIF；交付 7 项设计（架构、流程 A–E、设计板、Captain 反应素材规格、媒体保存方案、Phase A–E 路线、风险与取舍），设计确认前不实现。
+- 文件：新增 `docs/MEME_STICKER_PLAN.md`；设计板 Artifact https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （版本 1，28 张：7 个画面 × 375/430 × 中/英）。没有改 `Public/`、Swift、测试，所以固定链接没有重新发布（仍是第 89 版）。
+- 关键结论 / 决定（待确认 D1–D8）：
+  - 贴纸面板改名「贴纸与 Meme」，四个标签 贴纸 / Captain / Meme & GIF / 我的收藏；底部四个按钮不变。
+  - **现在的照片导入 `imageBlob()` 会缩到 1200px 并转 JPEG**（透明、动画都会丢；照片编辑 / 裁剪旋转也是 JPEG）。所以 Meme 走单独的导入路径保留原始字节，新图层 `kind:"meme"`（建议，D3）。
+  - 导入后预览，按钮写明去向：「放到这一页」（下面「同时存进我的收藏」默认不勾）/「只存进收藏，先不放到页面」/ 取消。
+  - GIF 默认静止（代表帧 PNG + 角标）；编辑器播一遍停；阅读器点播、同时 2 个、离屏停、减少动态不自动播；导出用代表帧；不把 GIF 存成 PNG。
+  - `visitMediaReferences` 现在不包含收藏，实现时要加上，备份 / 媒体检查才覆盖收藏。没有自动清理媒体的逻辑，删除收藏不会伤页面。
+  - Captain 6 个反应：稳定 ID `captain.react.<key>`，原色先做、柠檬帽（不带绿领巾）随后；建议用带 alpha 的精灵图 + CSS 逐帧（D7）。**正式素材 0 个**，设计板里全部是标明 NAT-01…06「素材制作中」的占位块；包头和空状态用的是现有正式的原色 Captain 抠图。
+- 设计板做法：Playwright 打开真实 App（容器里的 Chromium，375×667 / 430×932，deviceScaleFactor 2），加一张图库照片、一行字、一张贴纸，再把提议的面板注入进去截图。示例 Meme 是为这次用 PIL 画的合成图（圆脸小人、星星 GIF），不是真实用户数据、不是网上的 Meme。脚本和图在 scratchpad，没有提交。
+- 运行：只跑了设计板截图脚本和页面的手机 / 桌面宽度检查（无横向滚动）。没有新的 App 测试，因为没有改 App 代码。
+- 风险（详见文档第 7 节）：P0 根因未定（Meme 共用同一个 IndexedDB）；iOS 相册可能把 GIF 转成 JPG（待模拟器 / 真机验证，必要时用 PHPicker 原始数据桥）；动图内存；`ImageDecoder` 在 WKWebView 是否可用不确定；备份 100 MB 上限。
+- 下一步：等用户确认 D1–D8；Phase A 以 P0 受控复现为前置；Phase C 等 Captain 反应素材。
+
+### 2026-11-13 — V10.25 发布到固定链接（第 89 版）；全量回归
+
+- 需求：收尾 V10.25，跑全量浏览器回归，再发布。
+- 第一次全量（Chromium 模拟手机）：63 通过 / 3 失败。
+  - v41、v43：它们打开「更多 → 本页照片」，这个图块在 V10.25 已按计划去掉。迁移：v41 的照片素材库改从「＋照片 → 照片素材」进入（同一个 13 个合集 → 滑动选图），v43 的面板把手改用「背景与纸张」面板测；
+  - v100：「更多」打开时纸只剩 116px 高（要求 > 120）。原因是 `--sheet-max-more` 的「屏高 − 320px」在 390×664 / 375×667 上太高。改为 **屏高 − 340px**：375×667 上更多面板 292px、纸 136px；430×932 不变（面板 440px、纸 253px）。代价：短屏上「媒体与创作」最后一行需要在面板里稍微滚动。
+- 修改文件：`Public/styles.css`（及同步的 `Native/Sources/LittleDaysUI/WebApp/styles.css`）、`tests/v41-browser.cjs`、`tests/v43-browser.cjs`、`tests/v100-browser.cjs`（断言信息里带上实际高度）。
+- 运行：重跑 v41、v43、v100、v124、v125 全部通过；`npm test` 211 通过；`python3 -m unittest discover -s tests` 18 通过（含外壳一致性）。容器没有 pytest。
+- 发布：`tools/build_link.py` 后发布 app.js、styles.css、js/studio-guide.mjs、js/whats-new.mjs、shared/i18n.json 到固定链接，**第 89 版**。线上旧的 studio-guide.mjs 先读回来核对，sha256 与 6d29c10（V10.24）一致，才覆盖。
+- 未验证：iPhone 实机 / Xcode 模拟器都没看 V10.25；键盘上方的打字条仍只在 Chromium 里模拟过。
+- 下一步：Meme & Sticker Studio 设计轮（只出设计，等用户确认）；P0 仍等用户在 Claude iOS App 里按步骤复现；P3 等素材。
+
+### 2026-11-12 — 合并：云端分支快进到 v33-write-first-community（139b306，V10.22），全量回归，在线链接第 86 版
+
+- 需求：用户说「合并代码」。
+- 做法：
+  - `origin/main`（896304b）是 `v33-write-first-community` 的祖先，所以没有冲突。云端分支 `claude/focused-johnson-6in87n` 依次快进到 49479dd、7bac0b9（V10.22 代码）、139b306（V10.22 日志），本地没有自己的代码改动。
+  - `python3 tools/sync_native_web.py` 运行后没有差异，iOS 外壳副本和 `Public/` 一致。
+  - 没有碰用户 Mac 上的工作区：Mac 会话正在查冷启动，请其他会话不要改 `LittleDaysWebShellView.swift`、`LittleDaysWebResources.swift`，也不要在 Mac 上执行 checkout / stash / reset。云端会话也没法给 Mac 会话回消息：发消息需要用户额外授权，所以没有申请。
+- 运行与测试（Ubuntu 容器，Node 22.23.4，Playwright 1.62.1，预装 Chromium 1243，模拟 iPhone 13）：
+  - 在 49479dd 上：`npm test` 206/206，`python3 -m unittest` 18/18，浏览器测试 61/61。
+  - 在 7bac0b9（V10.22）上：`npm test` 211/211，`python3 -m unittest` 18/18，浏览器测试 62/62（包括新的 v122）。139b306 只改了日志、文档和更新记录（whats-new）。
+  - 第一次全量跑时，从 v3 开始有多个测试在「等图片加载」时超时。原因是预览服务在快进之前就启动了，跑的是旧的 `tools/preview.py`，`library/photos/` 路径返回 404，不是 App 的问题。用新代码重启预览后，全部通过。**以后快进或切换分支后，要先重启预览服务再跑测试。**
+  - 容器里第一次 `npm test` 有 3 个文件失败，是因为还没 `npm install`（缺 `fake-indexeddb`）；装好后全部通过。
+- 发布：
+  - 发布前在线链接还是第 85 版（V10.21），V10.22 没有发布。
+  - 用 `tools/build_link.py` 构建后，在 Chromium 里打开构建结果，首页正常渲染，没有脚本错误。
+  - 发布为同一链接的第 86 版：上传 app.js、js/events.mjs、js/media.mjs、js/media-check.mjs、styles.css、themes.css、shared/i18n.json、js/whats-new.mjs。
+  - 读回检查：whats-new.mjs、media-check.mjs 的 sha256 和本地构建一致。
+- 未验证：iOS 构建、模拟器和真机（本会话连不到 Mac）；Windows 实机。
+- 下一步：
+  - 合并进 `main` 需要用户确认（11-13 已确认，见「合并进 main」条目）；
+  - Mac 会话的冷启动排查还在进行，它的 Debug 改动没有提交，不在这次合并里。
+
+
+### 2026-11-12 — Mac 上实测第 5 节：Captain × 本机 Qwen 在浏览器里可用；`dev.sh web` 发现 8080 被别的程序占用时会停下
+
+- 需求：用户确认「Yes, test web-ai」，按 docs/MAC_LOCAL_DEV.md 第 5 节在 Mac 上实际打开 App 里的本地 AI 聊天（Mac 本地时间 11-11 晚）。
+- 先重跑 `doctor.sh`：都齐了，没有安装任何东西。brew / node / npm 显示 ❌ 只是因为 Claude 的命令行 PATH 里没有 `/opt/homebrew/bin`；补上后全部 ✅。
+- 发现：8080 被 Xcode 里运行过的根目录服务端 `NotebookServer`（Debug-iphonesimulator，模拟器和 Mac 共用网络）占着，返回 500。原来的 `dev.sh web` 只看端口有没有人在听，会直接打开这个错误页面。没有停掉那个进程（是用户在 Xcode 里开的），改用 `python3 tools/preview.py --host 127.0.0.1 --port 8081`。
+- 实测（Claude 桌面 App 里的浏览器，新的浏览器数据，只用合成输入；qwen3.5:4b，提示词 v3）：
+  - 打开 `?dev-local-ai=qwen3.5:4b` 后 `little-days.dev.local-ai` 写入 `{on, endpoint: 127.0.0.1:11434, model}`；领养 Captain（温柔）后在聊天里发送。
+  - 「你的柠檬帽真好看」→「谢谢！帽子是我的小太阳呀。」；「今天有点累，但是写完了一页」→「累了就休息会儿吧，我在这儿陪着你呢。」两条都标着「本机模型 · 开发」，几秒内出现。
+  - 截获发给 Ollama 的请求：只有系统提示词 v3、用户的话和 Captain 的回复（开场白不在内），`think: false`、`keep_alive: "10m"`、temperature 0.7 / top_p 0.9 / top_k 40 / repeat_penalty 1.1 / num_predict 96；没有手帐内容。Ollama 对 `http://127.0.0.1:8081` 的 CORS 预检返回 204 并允许该来源。
+  - 「What can you do?」→ 规则回复真实功能列表，0 次模型调用；「帮我整理今天的故事」→ 直接打开「今天的故事」面板，0 次模型调用。
+  - 把模型地址改到没开的 `127.0.0.1:11999`：请求失败（Failed to fetch），立刻改用规则回复，页面没有异常（控制台只有浏览器自己的 ERR_CONNECTION_REFUSED）。
+  - `?dev-local-ai=off`：开关被删除，之后聊天不发出任何请求，规则回复正常。
+- 修改：`tools/mac/dev.sh` 的 `web()`：8080 有人在听但不是 `tools/preview.py` 时，打印占用的进程和停止方法，退出码 1，不再打开错误页面。验证：`bash -n` 通过；在 8080 被 `NotebookServer` 占用时运行 `dev.sh web-ai`（用假的 `open` 命令）打印提示并退出 1；确认 8081 上的 preview.py 进程能被识别为正常的预览。
+- 文档：MAC_LOCAL_DEV.md 顶部状态、第 1 节「日常命令」、第 5 节（实测结果、8080 被占用的处理）、第 6 节表格。
+- 没有修改 `Public/`，所以没有同步 iOS 外壳、没有重新发布固定链接。
+- 测试时 Mac 上的代码是 34be8ed（V10.17）；提交前 rebase 到 GitHub 上新的 14 个提交（V10.18 起 Captain 规则能听懂更多日常的话，可能让一部分闲聊改走规则），rebase 后在新代码上重跑了一遍：「你的柠檬帽真好看」「今天有点累，但是写完了一页」「我想摸摸你的头」仍然走本机模型（「哇！你发现了我的帽子！」「嗯……累了就歇会儿。」「好呀，给你挠下巴！」），「What can you do?」仍走规则、不调用模型。摸头那句又把角色说反了（提示词要求 Captain 是被摸的一方），评测时留意。
+- 未验证：`dev.sh web-ai` 在 8080 空闲时的完整流程（这次 8080 被占，用 8081 手动做的同样测试）；Safari / Chrome 等用户自己的浏览器；英文界面下的聊天。
+- 下一步：需要时试 9B（`LD_MODEL=qwen3.5:9b`）；模拟器里接本地 AI 需要只在 DEBUG 生效的外壳开关（第 6 节）。
+
+### 2026-11-13 — V10.25（P2）Journal Studio 信息架构整理：Phase 1–4；P3 Playroom 等素材
+
+- 需求：按用户确认的 IA 第二版（`docs/STUDIO_IA_PLAN.md`）分阶段实现；P3 按 Playroom 计划继续。
+- **Phase 1（选中对象）**：
+  - 工具栏上方加 `.ctx-caption`，写「照片 · 已选中」；
+  - 第一个按钮改为「← 返回」（`layer-deselect` 不变，`aria-label`「返回创作工具」），× 只用来关面板；打字时说明行隐藏；
+  - 贴纸新增「换一个」（`sticker-swap`）：打开贴纸面板，选中的贴纸换成新的，位置、大小、角度不变，不会多出一个。
+- **Phase 2（细选项条）**：
+  - 形状 / 图层 / 字体·颜色·对齐（`STRIP_TOOLS`）改为 `.tool-sheet.strip`，舞台保持 `large strip-open`；
+  - `syncStripHeight()` 把选项条的实际高度写进 `--strip-h`，纸张按这个高度缩小，不再按最高的面板算；
+  - 形状变成一行横向滑动的小按钮；
+  - 图层：上移 / 下移 / 置顶 / 置底 / 复制在前，其余（包括文字内容、字体）收进 `details.layer-precise`「精确调整」；`layer-edit-text` 会自动展开它。
+  - 375×667 上，选项条打开时纸宽 172–190px（以前打开任何面板都只剩 136px）；390×844 上 316–353px。
+- **Phase 3（更多、页面目录）**：
+  - 「更多」分三组：页面外观（背景与纸张、排版、页面字体）· 媒体与创作（手绘排第一，深色底；视频、音频、配乐、本页媒体）· 页面管理（页面信息、心情、页面目录、操作指南，以及有打卡或记录项目时才出现的两项）；
+  - 「换一种写法」放到最下面；`--sheet-max-more` 调成 min(52dvh, 440px, 屏高 − 320px)，375×667 上前两组不用滚动就能看到；
+  - 去掉「本页照片」和「目录」两个图块。「页面目录」就是原来的「整理这一天」，改了标题，每页加「复制」（`page-copy`）、当前页高亮、删除按钮带 🗑；原来的「目录」（只保存这一页、折叠）从「更多页面操作」（`pages-more`）进入，功能都还在。
+- **Phase 4（教程）**：`studio-guide.mjs` 改为四步：add（圈出工具栏）→ move → adjust → more（圈出「更多」）；文案按新结构重写。已经看过旧教程的人不会再自动弹出。
+- 测试：
+  - 新增 v125（两种屏幕尺寸，7 组）；
+  - 迁移了 v3、v38、v100、v101、v31、v32、v112（`signed-in.cjs` 的 `studioTool("layer")` 会自动展开「精确调整」，`studioTool("chapters")` 走「页面目录 → 更多页面操作」）；
+  - v112 改为四步，每一步检查圈的是不是真实元素、卡片有没有挡住它；
+  - `npm test` 211。全量结果见下一条。
+- **P3 Playroom**：
+  - 计划里剩下的都要新素材：无帽版的开心动画、坐姿、玩毛线球；不带领巾的柠檬帽玩毛线球；摸摸头、挠肚皮；Idle 眨眼和呼吸；1024px 以上的原图。
+  - 查了 Mac 的「下载」文件夹：`Lemon Kitten’s Yarn Ball Adventure-1.gif` 的 sha256 和仓库里已有的 `LD-captain-lemon-play.gif` 一样，就是用户已经决定不用的绿领巾版。
+  - **没有新素材，所以 P3 没有改代码**；不用 CSS 假装动画。等用户提供素材。
+
+### 2026-11-13 — V10.24（P1）心情放到每一页、背景和纸张互相替换、打字条贴在键盘上方、几处小修正（固定链接第 88 版）
+
+- 需求：用户说「开始 P1 P2 P3」，按优先级先做 P1。心情的处理方式按用户 11-12 确认的执行。
+- 改动（不新增数据字段）：
+  - **心情**：
+    - `moodPickerHTML` 放在「页面信息」最上面，「更多 → 心情」（`mood-open`）打开同一个地方；
+    - 五个心情显示为有名字的印章（开心 / 温暖 / 平静 / 低落 / 雀跃），另有「清除」（`moment-mood-clear`）；存的值仍是原来的 emoji；
+    - 封面（整天）不再有心情选择；新建的一天不再自动填 ☀️（`app.js` 新建草稿处和 `day.mjs`）；
+    - 旧的日子原样保留，封面上已有的 `.canvas-mood` 照常显示，不改写。
+  - **背景和纸张**：
+    - 选风景照片、渐变或图案时，把纸张设为「极简」；
+    - 选纸张时，删掉风景照片、渐变或图案（`scene:` / `photo:`）；用户自己的照片背景不删（它是这一页的照片）；
+    - 有背景时，纸张不显示为已选；撤销可以换回来。
+  - **打字条**：在触屏上、键盘弹起时（App 已经设置了 `--vv-h`），`#type-bar` 用和 V3.8 面板同样的办法，固定在键盘正上方。
+  - **小修正**：
+    - 形状面板不再显示 ‹；
+    - `tool.stickers` 改为「贴纸」，`dock.layout` 改为「排版」；
+    - 在 Studio 里加照片或替换照片成功后，不再弹提示；失败仍然提示。
+  - **推迟到 P2 Phase 2**：文字图层面板里重复的字体选择（v3 还在用它，和图层面板重做一起改）。
+- 测试：
+  - 新增 `tests/v124-browser.cjs`，6 组通过；
+  - 迁移了旧测试：`signed-in.cjs` 的 `studioTool("mood")` 改走新入口；browser.cjs、v32 改为检查封面没有心情入口，以及旧日子的 🌷 照常显示；
+  - browser.cjs、v31、v32、v3、v37 通过；`npm test` 211；Python 18。
+- 发布：第 88 版。`day.mjs` 先读取了已发布的版本，确认和提交里的一样之后才覆盖。
+- 未做：
+  - 「打字条贴在键盘上方」只在 Chromium 里用 App 自己的键盘变量模拟过，还没有在真机或模拟器里看过键盘；
+  - P2、P3 接着做。
+
+### 2026-11-12 — 用户在 iPhone 的 Claude App 里运行「检查照片和视频」的结果（第 87 版，17:59）
+
+- 运行环境（实测）：
+  - 浏览器：App 内网页视图 · WebKit · iOS（iPhone 上的 Claude App）；
+  - 运行地址：`https://e724c27c-7907-42c7-bb82-36a5b8bbe361.frame.claudeusercontent.com`（这个 Artifact 自己的来源）；
+  - 嵌在其他页面里：是，上层是 `https://claude.ai`；
+  - **长期保存：否**；
+  - 已用 / 可用空间：0.0 MB / 983.0 MB；IndexedDB 和 localStorage 都正常。
+- 照片和视频：当前这台设备上的手帐**没有任何页面引用照片或视频**（引用数为 0）。媒体记录里只有这次检查本身，因为 V10.22 之前没有这类记录。
+- 背景里「上次备份：11 月 10 日」还在，说明这份 localStorage 至少从 11 月 10 日起一直保留着。
+- 结论：
+  - 环境已经确认；
+  - 当时出 Error 的页面已经不在这份数据里了（可能被删掉、换掉，或者当时测试的是别的页面或草稿），**没法从现有数据判断当时的原因**；
+  - 「长期保存：否」说明 iOS 可以清理这份存储，这仍是风险。
+- 下一步：请用户在同一个环境里用第 87 版做一次受控复现（加 1 张照片 → 离开再进 → 完全退出 Claude App 后重开 → 检查）。V10.22 / V10.23 的记录会写下每一步发生了什么。
+
+### 2026-11-12 — P0 出问题的环境已确认：Claude 固定链接
+
+- 用户确认：之前出现 Error，是在 **Claude 固定链接**里上传照片测试时发生的，不是 localhost，也不是 Xcode 模拟器。
+- 这意味着：
+  - 页面运行在 claude.ai 的 Artifact 预览里。它是嵌在 Claude 页面里的独立来源，有自己的一份 localStorage 和 IndexedDB，和 localhost、模拟器、iOS 外壳的数据互不相通。
+  - 在 iPhone 的 Claude App 里，它跑在 App 内网页视图（WKWebView）里，属于第三方嵌入，存储会被分区，系统也可能清理。
+  - 本会话的自动测试（Chromium 和 Mac WebKit 直接打开）都没有覆盖这种「嵌在 claude.ai 里」的环境。私有链接需要登录，这里打不开。
+- 下一步：请用户在**同一台设备、同一个 Claude 链接**里打开 设置 → 检查照片和视频，复制结果。V10.22 以后的检查会显示：是否嵌入、上层来源（ancestorOrigins / referrer）、持久存储状态，以及旧文件分别属于「文件不在」「读不出来（错误名）」「打不开」中的哪一类。根因按结果来定。
+
+### 2026-11-12 — V10.22 + V10.23 发布到固定链接（第 87 版）；全量回归
+
+- 全量浏览器测试（Chromium，测试视频用 VIDEO_DIR 提供）：
+  - 64 个测试中 63 个通过；
+  - v39 没通过，因为它还在检查旧的视频工具顺序（形状 · 封面）。这是预期内的改动，已把 v39 改成新顺序（播放 · 换封面 · 形状 · 图层 · 移除），单独重跑通过；
+  - 所以全部 64 个通过。
+- 发布：固定链接第 86 版是另一个会话发布的 V10.22。我逐个核对了文件的 sha256：app.js、media.mjs、whats-new.mjs、styles.css、themes.css、i18n.json、personal-ui.mjs、poster-picker.mjs 都和提交 139b306 完全一样。V10.23 是在它之上做的修改，发布时先读取了这些文件，再发布为**第 87 版**。没有覆盖掉任何别人的内容。
+
+### 2026-11-12 — V10.23（P0 / P1 / P2）视频导入每一步都看得见、保存失败可重试、换封面就在视频下面
+
+- 需求（用户实测）：
+  - 加视频后画布有时一片空白；切换页面时才弹出「媒体正在保存或录音」；
+  - 「设置视频封面」藏在一长串小字里；「从纸上拿下」的意思不清楚；
+  - 希望：分阶段显示保存状态（导入 / 写入本机 / 已保存 / 保存失败 + 重试），能拿到真实进度就显示进度条；在页面被暂停之前就提示；换封面要醒目，有时间轴和预览；视频工具要有清楚的层级；
+  - 按要求的场景做回归，记录文件大小、保存结果、媒体 ID 和错误类型（不记录内容）。
+- 和 P0「重新进入显示 Error」有没有关系（读代码得出的判断）：
+  - 空白画布和「切换时才提示」是**反馈问题**。以前视频要先完整写入本机、再生成封面，之后才放到纸上；大文件在手机上要好几秒，这期间页面上什么都没有。
+  - 保存期间，所有编辑操作（包括切换页面、离开 Studio）都会被拦下并弹出提示，所以不会因为切换页面而丢掉视频。页面数据只在文件写入成功之后才引用它，所以中途关掉页面也只会丢掉还没保存的视频，不会留下指向空文件的引用（这种引用才会显示 Error）。
+  - 和 Error 唯一可能的联系仍是 V10.21 之前把相册选择器给的 File 原样存进去（在 iOS 上可能由会被系统删除的临时文件支撑）。根因仍待用户 iPhone 上的「检查照片和视频」结果确认。
+- 修改：
+  - `app.js`：
+    - `handleMediaUpload` 改成导入流程（`mediaImport` / `runImport`）：读取信息并截一帧当缩略图（不保存）→ FileReader 读取文件（**真实进度**）→ 保存到本机（`attachClip` 的 `onStage` 报告 write / cover，这一段没有百分比，用不确定进度条）→ 已保存，2.6 秒后卡片自动消失；
+    - 失败时卡片显示「保存失败 + 原因 + 重试 / 不要这个视频」，文件留在内存里可以重试，页面数据不变；
+    - 超过 50 MB 时在保存前就拒绝（`too-big`）；
+    - 导入期间顶部状态是「保存中」；页面条变淡（`.page-strip.locked`，`aria-disabled`，只在视频或声音导入时出现），卡片写明「保存完成前暂时不能切换页面」，提示文字改为 `import.busy`；
+    - 事件 `media_import{kind,stage,size,ms}`、`media_import_failed{kind,stage,err,size}`；
+    - 选中视频后的工具：播放（`ctx-play`）· 换封面 · 形状 · 图层 · 移除；
+    - `remove-media-ask`：先用页面内确认框确认，再从页面移除，可以撤销，文件仍留在本机。
+  - `js/canvas.mjs`：视频卡片的「换封面」和「从页面移除」两个按钮放在视频正下方，下面是小字（文件名 · 时长 · 大小 · 已保存到本机）和安静的文字按钮「不放在纸上」（原来的「从纸上拿下」，视频仍保留在本页媒体里）。
+  - `js/personal-ui.mjs`：本页已有媒体时，先显示媒体卡片，添加按钮放到下面。
+  - `js/poster-picker.mjs`：标题改为「更换封面」，显示「现在的封面」缩略图；主按钮改为「完成」；仍然复用原来的时间轴和实时画面、上传图片。
+  - `js/media.mjs`：`errName` 不再用 DOMException 的数字 code（以前 QuotaExceededError 会记成「22」）。
+  - `styles.css` 的 V10.23 区块：
+    - 导入卡片、进度条（减少动态效果时不播放动画）；
+    - 媒体卡片的按钮至少 44px 高，底部小字从 8px 改为 12px；
+    - 面板里的视频预览高度最多 min(14dvh, 150px)，去掉原来 120px 的最小高度；
+    - 隐藏面板里重复的「声音与影像」标题。
+  - i18n：新增 `import.*`、`poster.change / done / current`、`media.removeFromPage / removeShort / removeConfirm / removed / savedLocal`；修改 `poster.title`、`poster.help`、`media.offPage`（「不放在纸上」）。
+  - 测试：`tests/v123-browser.cjs`（测试视频从 `VIDEO_DIR` 读取，不进仓库）。
+- 事故：
+  - 第一版的「页面条变淡」在加照片时也会出现，而加照片的流程结束后不会重画页面条，结果一直是暂停状态（v121 发现：Playwright 认为它不可用）。已改为只在视频或声音导入时出现。
+  - 第一次 375 宽的截图显示，「换封面」和「从页面移除」被挤到了菜单下面。原因有两个：面板上方先显示添加按钮；旧样式给视频设了 120px 的最小高度。测试原来用的是「滚动到可见后再检查」，所以没发现。已修正，测试现在用屏幕上的命中检测（`elementFromPoint`），不再先滚动。
+- 测试结果（测试视频都是合成的：ffmpeg 测试图案，或者 WebKit 自己录的画面，内容不是私人视频）：
+
+  | 场景 | Chromium（容器） | WebKit（Mac） |
+  | --- | --- | --- |
+  | 约 7 秒的视频 | 705,325 字节，存进去 705,325 字节，id 9928b4bd…，经历「读取信息 → 导入 → 保存 → 封面 → 完成」，约 210 ms | 607,292 字节，存进去 607,292 字节，id 7f78ee97…，约 226 ms |
+  | 接近上限的视频 | 48,330,391 字节（46.1 MB）全部存进去，约 2.1 秒，有真实进度 | 51,938,850 字节（49.5 MB）全部存进去，约 0.34 秒 |
+  | 导入时切换页面 | 页面条变淡，卡片有说明；点别的页时提示「视频正在保存到本机…」，页面不变 | 同左 |
+  | 导入完成后切换页面 | 可以 | 可以 |
+  | 超过上限（53,477,376 字节） | 保存前就拒绝，错误类型 `too-big`，页面不变 | 同左 |
+  | 写入被拒绝一次（模拟 QuotaExceededError） | 显示「保存失败」和 `quotaexceedederr`，页面不变；点「重试」后保存成功；事件记为 `media_save_failed(write)` | 同左 |
+  | 换封面（选第 5 秒的画面） | 新封面 20,299 字节；保存草稿再回来、刷新、完成后的阅读器里都是新封面 | 新封面 12,566 字节，结果同左 |
+  | 关闭浏览器后重开（430 宽） | 新封面还在，视频能播放 | 同左 |
+  | 从页面移除 → 撤销 | 会先确认；撤销后恢复 | 同左 |
+  | 375 / 430 下按钮是否直接可见 | 是（命中检测） | 是 |
+
+  - v122 在两种引擎上各 23 个检查点全部通过；v121 11/11；`npm test` 211/211。
+  - iOS 模拟器：b3fa2df 构建成功，装在「LD P0 Verify」上能启动（首页 1.4 秒），没有 JS 报错；模拟器里没有做导入视频的点选测试（要在 iOS 相册选择器里选）。
+- 已知 / 未做：
+  - iPhone 上的「检查照片和视频」结果还没拿到，P0 根因仍未确认。
+  - 写入本机这一段没有真实百分比（IndexedDB 不报告进度），所以只在导入阶段显示百分比。
+  - 封面编辑沿用原来的界面，只加了「现在的封面」和「完成」，没有重做。
+  - IA 的其他部分（「← 返回」、「更多」分组等）按优先级放在 P3。
+
+### 2026-11-12 — V10.22（P0）只读的「检查照片和视频」+ 多引擎回归；Mac 合并状态核对；心情决定记录
+
+- 需求：
+  - 用户确认了心情的处理方式；
+  - 说明媒体 Error 出现在 iPhone 上的 Web Preview（可能是 Claude App 里打开的预览），并要求根据实际地址、日志和环境确认浏览器类型，不要猜；
+  - 按一张照片 / 多张 / 视频 / 草稿后重进 / 完成后重进 / 刷新 / 关闭重开 / 开发服务器重启分别测试，分清五类失败（保存失败、文件丢失、URL 失效、引用错误、解码失败），记录真实错误日志；
+  - 原则上同意 Mac 合并，但先做 7 项检查；
+  - 优先级：P0 → P1 基础编辑 → P2 IA → P3 Playroom。
+- Mac 合并核对（已完成，没有需要我合并的东西）：
+  - Mac 和远端都在 49479dd。reflog 显示用户 Mac 上在 14:32 把 e529a0e rebase 到了 9b70507 上，并推送了。
+  - 逐行比较 e529a0e 和 49479dd 的增删：49479dd 包含 e529a0e 的全部内容，另外多了一行 rebase 说明。没有丢失。
+  - Mac 上未提交的东西：`project.pbxproj`（Xcode 把工程文件格式从 objectVersion 56 升级到了 60）、`Package.resolved`、4 个 Qwen 评测结果文件。都不是本会话的工作，没有动。
+  - ListAgents 没有看到其他会话。
+  - 容器快进合并到 49479dd。
+- V10.22 的改动：
+  - `js/media-check.mjs`（新增，只读）：
+    - `mediaUses` 记录每个引用的位置（日期、第几页、是否草稿），并找出格式不对的引用；
+    - `inspectMedia` 把每个文件分成 ok / missing / unreadable / empty / decode / badref，旧的 Blob 记录只读不转换，图片用 `createImageBitmap` 实际解码，视频和音频读元数据；
+    - `environment()` 实测内核、浏览器、平台、运行地址、是否被嵌入（`ancestorOrigins` / `referrer`）、持久存储、空间、IndexedDB 和 localStorage 是否可用；
+    - `reportText` 生成可复制的文字报告，不含标题和正文。
+  - `js/media.mjs`：
+    - `put` 分阶段（open / read / write / verify），失败时记录 `media_save_failed`；
+    - `readable` 记录 `media_missing`、`media_read_failed`（带错误名）、`media_converted`、`media_convert_failed`，每个 id 只记一次；
+    - 新增 `errName`、`kindOf`；`onEvent` 钩子。
+  - `js/events.mjs`：允许记录 `count`、`stage`、`err` 三个字段（错误名只保留小写字母、数字和连字符，最多 16 个字符）。
+  - `app.js`：
+    - 加载出错时分三种记录：`media_url_failed`（数据在，换新地址后恢复）、`media_decode_failed`（数据在但打不开）、`media_unreadable`；
+    - 设置 → 数据与隐私新增一行「检查照片和视频」，打开一个只读面板，有复制按钮（剪贴板被拒绝时显示文字让用户自己选）。
+  - i18n 新增 `check.*` 共 45 个键；`styles.css` 新增 V10.22 区块；更新记录 10.22。
+  - 测试：`tests/v122.test.mjs`（5 项）、`tests/v122-browser.cjs`（自己启动预览服务，跑在 Chromium 或 WebKit 上）。
+- 事故：第一版把 `media.onEvent = …` 写在了 `let media` 声明之前，App 启动时报「Cannot access 'media' before initialization」，一直停在「正在打开你的文具店…」。单元测试没发现，v122 浏览器测试发现了，已把这行移到声明之后。
+- 测试结果（每一步都运行 App 自己的检查，要求每个文件都是 ok、每张图真的加载出来、视频没有错误、没有记录到任何媒体失败）：
+  - **Chromium（Linux 容器）**：v122 共 23 个检查点全部通过。依次是：从选择器加 1 张、第二页加 3 张、第三页加视频；然后草稿后重进、完成进阅读器、完成后重进、刷新、关闭页面重开、关闭浏览器重开、重启开发服务器，每一步都检查 1 张照片页、3 张照片页和视频页；最后从设置打开检查面板。
+  - **WebKit（Mac 上的 Playwright WebKit，代码是 7bac0b9 导出到 `/tmp/ld-p0/v122`）**：同样 23 个检查点全部通过。
+  - `npm test` 211/211；`python3 -m unittest` 18/18；受影响的旧浏览器测试 v110、v103、v3、v36 通过；全量浏览器测试见下一条记录。
+  - **iOS 模拟器**（Mac，Xcode 27.2，iOS 27.2，新建的设备「LD P0 Verify」）：
+    - 7bac0b9 构建成功（Debug），Swift Core `swift test` 6/6；
+    - 安装后用 Debug 的 `LittleDaysTap` 打开「设置 → 检查照片和视频」，截图显示：浏览器 in-app web view · WebKit · iOS，运行地址 `littledays://app`，**长期保存：否**，IndexedDB 和 localStorage 正常；
+    - 这台设备上没有加过照片，所以没有文件可查。
+  - **iOS 模拟器里的 Safari**：试过用 safaridriver 自动化（`safari:useSimulator`），会话建立失败（找不到可用的会话主机）。可能需要用户在模拟器的 Safari 里打开「远程自动化」，并在 Mac 上执行 `safaridriver --enable`（需要管理员密码），所以没有继续。在模拟器里写入了 `RemoteAutomationEnabled` 等设置，只影响「LD P0 Verify」这一台。
+- 结论（如实写）：
+  - Chromium 和 macOS WebKit 上，8 种情况都**没有复现**；
+  - 根因仍未确认；
+  - 用户的环境（iPhone 上的 Web Preview，可能在 Claude App 里）还没有测过；
+  - 下一步要用户在出问题的 iPhone 上打开 V10.22 的「检查照片和视频」并复制结果，这是第一次能拿到用户设备上的真实日志。
+- 风险：
+  - iOS WKWebView 里持久存储没有被批准（模拟器显示「否」），系统可能清理存储；
+  - 从 iOS 相册选的文件（由系统临时文件支撑）这条路径还没有测，自动测试用的是 Playwright 的文件选择器。
+- 心情决定（已确认，本轮没有改代码，按优先级放在 P1 / P2 里做）：
+  - 以后只在每一页上记录心情，默认不选；
+  - 旧的整天心情不迁移，不把以前自动填的 ☀️ 当成「开心」；
+  - 新建的一天不再自动填 ☀️；
+  - 页面心情可以修改、清除；旧数据照常读取。
+
+### 2026-11-12 — IA 方案第二版（六项决定）+ P0 在 Mac WebKit 和 iOS 模拟器上的验证（App 代码未改）
+
+- 需求：用户确认了六项决定（← 返回 + 选中提示、保留视频形状、375 的「更多」用两档高度、不加页面主题和新数据、手绘放第一位、心情改名为 开心 / 温暖 / 平静 / 低落 / 雀跃），要求第二版的真实设计预览。同时要求先确认 P0 媒体问题的状态，没修好就先修 P0。
+- P0 验证：
+  - 连接了用户 Mac 上的 Notebook 文件夹。用户的 Mac 在 e529a0e，这是另一个会话没推送的本地提交；另外有一份未提交的 `project.pbxproj` 改动。远端领先 13 个提交，不能快进合并，所以没有合并、没有改用户的工作目录。
+  - 把旧代码 b1aa514 和新代码 b7986b3 导出到 Mac 的 `/tmp/ld-p0`，装了 Playwright WebKit，在 WebKit 里各跑一遍：加 3 张照片和 1 段 mp4 → 离开再进来 → 刷新 → 关闭再开 → 阅读器。**新旧两版都正常**，IndexedDB 里的文件都可读。根因推测（Blob 失效）在桌面 WebKit 上没有复现。
+  - iOS 模拟器：
+    - 在 `/tmp/ld-p0/new` 用 `xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays` 构建，BUILD SUCCEEDED；
+    - 新建了模拟器设备「LD P0 Verify」（iPhone 17，iOS 27.2，没有碰用户原来的设备），用 `simctl addmedia` 放入 3 张照片和 1 段 10 秒 mp4；
+    - 安装并启动，首页 1.8 秒出现，没有 JS 报错。
+    - 加照片的测试没做：要在 iOS 相册选择器里点选；这一版 Xcode 没有 Simulator.app，`LittleDaysTap` 只能点网页元素。
+  - 结论：防护性修复（V10.21）已经上线，但根因仍未确认。需要用户告诉我是在哪里看到 Error 的。
+- 设计第二版（同一个预览页，第 2 版）：
+  - 39 张新截图（Chromium，375 / 430 × 中英）：默认、选中照片 / 文字 / 视频、照片形状、视频形状、字体、「更多」半高和展开、背景与纸张、页面目录、页面信息（新心情名）、键盘的现在和建议。
+  - 页面里加了：返回 / 关闭 / 删除 / 取消的行为表，以及 P0 状态表。
+- 新发现：
+  - 心情兼容性：每一页的心情默认是空，可以放心显示新名字。整天的心情以前会自动填 ☀️（`app.js` 新建草稿、`day.mjs` 保存、Swift 的 init 默认值），旧的 ☀️ 不一定是用户选的。建议心情只做在每一页上，整天的旧值不改写，新建的一天不再自动填。等用户决定。
+  - 键盘：App 用「窗口高度 − 可见区域高度」判断键盘；Chromium 缩窗口时两者一起变，所以测不出键盘。改用 App 自己的 `--vv-h` / `--kb` 变量加上画出的键盘区域来模拟。按现在的 CSS，打字条在纸下方，375 屏上会落进键盘区域；iPhone 会滚动让光标可见，可能部分缓解，要在模拟器确认。建议把打字条固定在键盘正上方。
+- 文档：`docs/STUDIO_IA_PLAN.md` 第 11 节。
+- 运行 / 测试：没有改 App 代码，这一轮没有跑仓库测试。新跑的验证是：Mac WebKit 的 P0 对比（新旧两版各 5 步，全部正常），以及模拟器的构建和启动。
+- 留在 Mac 上的东西：
+  - `/tmp/ld-p0`：测试代码、构建产物、脚本；
+  - 模拟器「LD P0 Verify」：保留着，用户可以在 Xcode 里选它按 ⌘R 手动测；
+  - Playwright 的 WebKit 和 ffmpeg 缓存：`~/Library/Caches/ms-playwright`。
+- 待用户回答：
+  1. 心情的旧数据怎么处理；
+  2. 在哪里看到媒体 Error；
+  3. 是否「确认合并」（需要先推送 e529a0e，再做一次真正的 merge）。
+
+### 2026-11-12 — Journal Studio 信息架构审查与方案（只出设计，等用户确认；App 代码未改）
+
+- 需求：用户的「Journal Studio Information Architecture Cleanup — Creative Freedom Without Complexity」。先审查全部工具和入口，提出三层结构、六个任务的前后流程、iPhone 预览（375 / 430，中英文）、实施计划和回归清单；确认后才改界面。
+- 开始前检查：工作区干净；远端分支最新提交是 bf8c83f；ListAgents 显示这台机器上没有其他会话；Mac 未连接。
+- 做法：
+  - 用脚本在真实 App 里走了 33 个状态（Chromium，iPhone 13 尺寸 390×844），逐个记录底部工具、面板标题、‹ / ×、面板内容高度和纸张尺寸。
+  - 根据记录写出完整工具清单（已实现 / 部分实现 / 未实现），并找出重复入口。
+  - 再在真实 App 上替换底部区域，生成原型截图：375×667 和 430×932，中文和英文，共 26 张；另有 10 张现状截图。
+- 产出：
+  - 预览页 https://claude.ai/artifact/5yrXLwKVD9cFvkjf6TPxKr （私有）。
+  - `docs/STUDIO_IA_PLAN.md`（文字版）。
+  - 脚本 `ia/tour.cjs`、`ia/proto.cjs` 在会话 scratchpad 里，没有提交。
+- 主要发现：
+  - 页面管理有 4 个入口、2 套界面。
+  - 打开任何面板，纸缩到原来的 40%（340×425 → 136×170）。
+  - 「背景与纸张」的内容有 942px，纸张在第三屏。
+  - 「更多」平铺 12 个图标。
+  - 形状面板的 ‹ 会跳到「更多」。
+  - 取消选择用的是 ×。
+  - 文字的「图层」面板重复了文字内容和字体。
+  - 有两个「字体」；「版式」和「排版」两个名字混用。
+  - 贴纸面板的标题写成了「贴纸与文字框」。
+- 方案要点：
+  - 第 1 层固定四个工具。
+  - 第 2 层最左边是「‹ 返回」；形状、字体、颜色、对齐、图层改为细选项条；视频加「播放」，贴纸加「换一个」。
+  - 第 3 层「更多」分三组：页面外观、媒体与创作、页面管理。
+  - 页面目录合并成一个；去掉「本页照片」；背景四选一、互相替换；心情进页面信息。
+  - 教程改为四步。
+  - 实施分 5 个阶段，每个阶段可以单独回退。
+- 运行 / 测试：没有改功能代码，这一轮没有跑测试。之前 bf8c83f 的结果：Node 206、Python 18、浏览器 62 套通过。
+- 待用户确认：`docs/STUDIO_IA_PLAN.md` 第 10 节的 6 个问题。确认后按 Phase 1 → 5 推进；补充需求（返回图标、背景互斥、心情）并入 Phase 1 和 Phase 3。
+- 环境记录：
+  - 本地预览服务（8080）跑满后台时限后停止，已重启并重新报告端口。
+  - 清理旧截图的 `rm` 被安全检查拦下，没有执行。旧截图在 scratchpad 里，会被新截图覆盖，不影响结果。
+
+### 2026-11-12 — V10.20 / V10.21 回归完成并发布（在线链接第 85 版）
+
+- 旧浏览器测试迁移到 V10.20 的新路径（只改测试，不改 App）：
+  - v31、v101：改用全屏裁剪编辑器（缩放滑块 → 完成），检查 `crop.zoom` 在 ±0.01 内、`crop.rect` 存在，以及只裁剪、不移动照片；
+  - v32：通过「试试排版」提示打开排版；v33：从「更多」重新打开排版；
+  - v38：形状改从「形状」面板进入；v39、v101：底部工具栏改为新的顺序；
+  - v108：等装扮图片加载完再检查（原来约一半概率失败，是测试的时机问题，与 V10.20 无关）；
+  - v36：读取媒体记录的 `bytes`（旧记录读 `blob`）。
+- 运行结果（Chromium 模拟 iPhone 13）：
+  - `npm test` 206/206；`python3 -m unittest` 18/18；
+  - 全部 62 个浏览器测试通过：一次全量运行 60 个通过，v36 修好后单独运行通过，v121（11 组）单独运行通过。全量运行在最后一个测试时到了 10 分钟后台时限，所以 v121 是单独补跑的。
+- 发布：在线链接第 85 版（V10.21 · 媒体持久化 + 裁剪），更新记录包含 10.20 和 10.21 两条。
+- 仍未完成：
+  - iOS 模拟器 / 真机验证（Mac 未连接）；Swift `LayerCrop.rect` 尚未在 Xcode 编译；
+  - 补充需求（返回 / 关闭图标语义统一、背景与纸张互相替换、Mood 作为页面信息）还没开始。
+
+### 2026-11-12 — V10.21 P0 媒体持久化：离开 Studio 再进来照片 / 视频显示 Error
+
+- 需求（用户标为 URGENT，排在 UX 清理之前）：先复现并用真实日志定位根因；用稳定的 Media ID 修好持久化与恢复；兼容旧数据；Web 与 iOS 模拟器都要验证；补自动化回归；「已保存」必须可信。安全约束：不清空数据库、不删除现有媒体、不重置本机存储、不生成假的替代内容、不把私人媒体上传到云端。
+- 复现（Chromium + 持久化浏览器资料，`scratchpad/crop/media-repro.cjs`）：
+  - 加 3 张照片 + 1 段视频后，离开 Studio 再回来、刷新、关掉浏览器再打开、点「完成」进阅读器，全部能显示；存储里引用 5 个、实际存在 5 个、缺失 0 个，控制台没有错误。
+  - 结论：**在 Chromium 里复现不出来。** 这个容器里只有 Chromium，没有 WebKit / iPhone Safari / iOS 模拟器，所以没法拿到用户设备上的真实错误日志。下面的根因是**代码审查得出的推断，没有在 WebKit 上证实**。
+- 代码审查：
+  - 页面数据里只存 `media:<uuid>` 引用，文件本身存在 IndexedDB（`little-days-media` / `media`），每次显示时用 `URL.createObjectURL` 生成临时地址。没有把 `blob:` 临时地址写进页面数据，这部分设计是对的。
+  - 风险点：V10.20 及以前把 **Blob / File 对象**直接放进 IndexedDB（视频就是相册选择器给的 File 原样存）。iOS Safari / WKWebView 对存进 IndexedDB 的 Blob 有已知问题：Blob 背后的文件可能失效，之后读出来的 Blob 无法读取（常见报错 `WebKitBlobResource error 1`），表现正是「刚加时正常，离开再进来就 Error」。
+  - 另外：保存状态只看页面数据有没有写进去，不检查媒体文件，所以文件没存好时也会显示「已保存」。
+- 修复（`Public/js/media.mjs`、`Public/app.js`）：
+  - 新文件存为 **ArrayBuffer 字节**（`bytes` + `mime`），不再存 Blob / File；写入后立即读回来核对字节数，不一致就报错（`media-verify`），不会假装存好了。
+  - 旧的 Blob 记录：第一次打开时读出来，**原地**改写成字节（同一个 id，保留其他字段）；改写失败也不影响这次显示。读不出来的记录只标记为损坏，**不删除**。
+  - `missing(ids)` 报告缺失或损坏的文件；`flushDraft` 之后 `confirmMediaSaved()` 检查这一页用到的所有媒体，全部存在才显示「已保存」，否则显示「保存失败」并提示「有 N 个照片或视频没能存进这台设备，请重新添加它们。文字已保存。」（事件 `media_not_saved`）。
+  - 图片 / 视频 / 音频加载出错时，按临时地址找回 Media ID，重新从 IndexedDB 读一次（每个 id 一次，事件 `media_reloaded`）；还是不行就加 `.media-broken` 并记录 `media_unreadable`。
+  - 真读不到的照片在页面上显示「📷 照片读取不到」，不生成替代图片；页面其他内容不受影响。
+  - 启动时尽力调用 `navigator.storage.persist()`，降低浏览器自动清理存储的概率（不保证一定被同意）。
+  - 备份：先按记录里的大小检查 100MB 上限，再读字节导出成 data URL；超过上限时备份**失败并提示**（`error.backupSize`），不会悄悄漏掉视频。恢复时用新的 `put`，所以恢复的文件也是字节存储。
+- 附带修复：多张照片时「试试排版」提示把下面的页面条（撤销 · 页面 · ＋）挡住了；纸张现在会给提示让出位置（`styles.css` V10.21）。
+- 测试：
+  - `tests/media.test.mjs` 新增 4 项（旧记录原地转换、缺失只报告不删除、写入核对、重新读取只做一次），第 1 项改为检查字节；`tests/v31.test.mjs` 同步。`npm test` 206/206 通过。
+  - 新增 `tests/v121-browser.cjs`（Chromium 持久化资料，11 组全部通过）：1 张 / 5 张 / 2 张 + 视频（含封面）/ 裁剪过的照片；离开 Studio 再进来；刷新；关闭浏览器再打开；完成后阅读器 5 页；旧 Blob 记录原地转换；真缺失的文件显示「照片读取不到」并显示「保存失败」；备份含照片和视频本身；恢复到空的浏览器资料后全部能显示；杂志模式 →「自定义」后刷新仍能显示。
+  - `tests/signed-in.cjs` 导出 `seed`，供持久化浏览器资料使用。
+- 旧数据能否恢复：如果 iPhone 上旧的 Blob 背后的文件已经失效，这些字节在本机已经不存在，**没有办法从 App 内找回**；App 会如实显示「照片读取不到」，不删除记录，用户可以从相册重新添加，或从之前导出的备份恢复。还能读出来的旧记录会被自动转成新存法。
+- 未验证 / 风险：
+  - 没有在 iPhone Safari、WKWebView 或 iOS 模拟器上验证（本轮 Mac 未连接，容器内没有 WebKit）。等 Mac 连上后，按 fetch → 展示 diff → 用户确认 → ff 合并的流程在模拟器里跑：加照片和视频 → 离开再进来 → 杀掉 App 重开。
+  - 字节存储需要把整个文件读进内存，非常大的视频在旧设备上可能较慢；单个文件上限仍是 50MB（恢复时）。
+  - 浏览器 / 系统在存储空间不足时仍可能清理网站数据；`persist()` 只是请求。
+
+### 2026-11-12 — V10.20（进行中）Journal Studio 照片工具：形状 / 裁剪画面 / 排版分开，全屏非破坏性裁剪
+
+- 需求（用户的整合需求 Part 1–11）：
+  - Part 1–2（每张照片写一句、在杂志模式里直接改字体）已在 V10.19 完成，本轮只做回归；
+  - 本轮做 Part 3–7：加照片后不强推排版；照片工具改为 形状、裁剪画面、调整、替换、图层、删除；面板标题和滚动位置；全屏可视化自由裁剪（角、边、比例、移动取景、双指缩放、旋转、取消 / 完成 / Undo / Redo，不改动原图）；统一手势。
+- 审查结论：
+  - 「裁剪」打开的是标题为「选中的图层」的通用面板：形状在顶部，缩放和 X/Y 滑块在底部，还会被自动滚到底，所以看不到形状。
+  - 旧的裁剪只有 `crop {x, y, zoom}`。「调整」里的图片编辑器另有一套比例裁剪（重新生成图片，原图留在 `sourceRef`），形成两套裁剪概念。
+  - 加照片后代码会强制 `studioTool = "layout"`。
+- 修改：
+  - 新增 `js/crop.mjs`、`js/crop-editor.mjs`；
+  - `canvas.mjs` / `export.mjs` 统一使用 `cropView`；
+  - `app.js`：照片工具行、形状面板、图层面板瘦身、`openCropFor`（旋转复用原有流程）、`layoutHint`、面板滚动位置、「调整」去掉裁剪页；
+  - `photo-editor-ui.mjs` 支持 `tabs` 参数；
+  - `styles.css` 的 V10.20 区块；`sync_tokens` 的 PAPER 列表加入 `.crop-editor`；
+  - i18n：`crop.*`、`shape.hint`、`layout.hint*`，`tool.layer` 改为「图层」；
+  - Swift：`LayerCrop.rect` / `aspect`、`CropRect`，CoreTests 补充对应检查；
+  - 测试：v120 单元测试（5 项）、v120 浏览器测试（9 组）；
+  - 文档：PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE。
+- 事故记录：一次 Python 修改脚本的最后一行 `open(P,'w').write(open(P).read())` 把未提交的 `app.js` 清空了。已用 `git checkout HEAD -- Public/app.js` 恢复（这时还没有提交任何本轮改动），再重新应用本轮修改，没有丢失已提交的内容。
+- 已验证（Chromium 模拟 iPhone 13 触控，不是真机，也不是 iOS 模拟器）：v120 浏览器测试 9 组全部通过，包括取消不改变任何东西、完成后照片文件不变 / 位置角度不变 / 层级不变、Undo / Redo、换成圆形和拱门后仍是同一块画面、旋转后原图保留、保存刷新后仍保持、阅读器显示同一块画面、两张照片时只裁剪其中一张、375 / 430。
+- 待办：旧的浏览器测试回归（全量运行中）、更新记录、发布、在 Mac 上编译 Swift 和模拟器验证（Mac 本轮未连接）。
+
+### 2026-11-12 — V10.19 杂志模式：每张照片写一句，直接换字体
+
+- 需求：
+  - 「给这几个 Moment 写一句」只显示时间，多张照片时分不清是哪张；
+  - 要以照片为中心：显示真实缩略图和编号，每张照片可以单独写，也保留 Moment 的公共文字；
+  - 用照片的稳定 ID 关联，排版时说明靠近对应的照片；
+  - 在杂志模式里直接改字体、字号、加粗、颜色、对齐，并实时预览，进入「自定义」后保留；
+  - 切换布局、重新打开都不丢；适配 375 / 430。
+- 审查结论：
+  - 照片是带稳定 `id` 和 `mediaRef` 的图层，重新排版只改位置；
+  - Moment 的一句话就是 `title`，排版生成的文字图层用 `bind` 绑定；
+  - Studio 的文字样式字段是 `fontId / fontSize / color / weight / align`，字体列表 `TYPE_FONTS`，颜色列表 `TYPE_COLORS`；
+  - 调整分组会重建 Moment，照片图层的 id 会变。
+- 修改：
+  - `scrapbook-layout.mjs`：照片说明排版、`settleCaptions`、`applyType`、`boundText` 支持 caption；
+  - `app.js`：新面板、实时预览、调整分组时按 mediaRef 带回、点照片直接打开、Studio 里写回照片；
+  - `styles.css` 的 V10.19 区块；`sync_tokens` 无需修改；
+  - i18n `sw.*`；
+  - Swift：`Models.swift`、`CoreTests`；
+  - 测试：v119（单元，144 种情况）、v119-browser（新）；v52、v53、v60、v61 改用新的 `storyLines` 辅助函数（`signed-in.cjs`）；
+  - `whats-new` 10.19；
+  - 文档：PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE。
+- 决策：
+  - 照片说明存在照片图层上，而不是 Moment 上的「顺序数组」，这样排版、重新排版、换风格都不会对错照片；
+  - 调整分组时按 mediaRef（照片本身的媒体 id）带回，不用时间或顺序；
+  - 文字样式存在页面的 `typeStyle`，并直接写进 Studio 的字段，而不是另起一套数据结构；
+  - 打字时收起字体区，给键盘留位置；
+  - 没有在杂志模式里做自由画布。
+- 结果（Chromium）：
+  - 3 张拍摄时间都是 14:18 的照片仍然是一个 Moment，缩略图标着「照片 1 / 3」等；
+  - 切换照片后文字还在；第 3 张可以不写；
+  - 宋体、A+、加粗、颜色、左对齐在面板打开时就显示在页面上；
+  - 杂志 / 手账 / 拼贴、重新排版、调整分组后，说明仍在各自照片旁边；
+  - 进入「自定义」后字体保留，在纸上编辑说明会写回那张照片；
+  - 保存并刷新后，说明仍按 mediaRef 对应；
+  - 375 / 430 宽度下页面可见，输入框和「完成」都放得下。
+- 未验证 / 未实现：
+  - Swift 改动没有编译（用户 Mac 本轮未连接）；
+  - 没有在真机上测试键盘；
+  - 早期的 SwiftUI 原型界面不显示照片说明；
+  - 封面上的小标题原本就会截短加「…」（只影响显示）；
+  - 视频图层暂时不能写说明；
+  - 照片说明不支持部分加粗等格式（B / I / U / S 只用于 Moment 的一句话）。
+
+### 2026-11-12 — V10.18 网页版 Captain 不再「笨笨的」：规则对话扩充
+
+- 需求：用户在手机网页上试用，觉得 Captain 说话笨笨的。
+- 原因：在线链接里没有 AI（本地 Qwen 只在 Mac 开发时用；正式 App 不加 AI 是用户的决定），全靠 `keeper-chat.mjs` 的规则。用 48 句日常的话测试，42 句被判为 unknown，只能回答「这句我没太懂」。
+- 修改：
+  - `keeper-chat.mjs` 新增 28 种意图和 `topic` 回显（详见 ARCHITECTURE V10.18）；
+  - i18n 新增 70 多条中英文回复；
+  - `keeper.mjs` 的 `LINE_COUNTS` 和 `thing` 值；
+  - `app.js` 加入 `keeperTopic` 和 `cjkGap`；
+  - `whats-new` 10.18；
+  - 测试：v118（新）、v109、v103、v109 / v103 / v71 浏览器测试。
+- 决策：
+  - 不加 AI，只扩充规则：遵守「正式 App 不加 AI 调用」的约定。
+  - 回显只用用户这句话里的几个字，不读取任何页面。
+  - 问句不当作分享。
+  - 难过和糟糕的事优先于分享（「去医院」不会接「哇」）。
+- 结果：48 句全部有对应的回复（unknown 0/48）。在 Chromium 里实际对话检查：问名字 →「叫我 Captain 就好…」，吃了火锅 →「火锅呀，跟我多说一点？」，老板骂我 →「抱抱你。今天辛苦了。」，去医院检查 →「抱抱你。今天辛苦了。」。
+- 测试：`npm test` 194/194；全量浏览器测试（59 个 `test:browser:*`）59/59 通过（Linux 容器，Chromium）。
+- 已知问题：规则仍然听不懂复杂句子、反问和上下文（不会记得上一句说了什么），只是常见的话接得更自然了。真正「聪明」需要模型，要等以后用户决定是否允许。
+- 环境：用户 Mac 本轮断开，没有在 Mac 上验证；预览服务到 2 小时上限被停止后已重新启动。
+
+### 2026-11-12 — Captain 提示词 v3 正式评测（用户 Mac）；真机安装步骤
+
+- 需求：用户问怎样装到真机，并同意做正式评测。
+- 正式评测：在用户 Mac 上运行 `node tools/captain-eval.mjs --runs 3`（代码在 34be8ed，qwen3.5:4b，Ollama 0.40.16，Apple M5 24GB）。
+  - 结果文件 `docs/captain-ai/results/2026-11-12-qwen3.5_4b-prompt-v3.{md,json}` 在 Mac 工作区，未提交。把它们原样复制到本会话的操作被 Mac 的自动模式拒绝了，所以没有再试。
+  - 本仓库新增 `docs/captain-ai/results/2026-11-12-prompt-v3-formal.md`：逐字摘录 36 条回复，加上计数和 7 项评分。
+  - 结论：总分 144/168（试跑 148），走模型的 10 句 122/140（试跑 124），正式结果与试跑一致。没有「喵」和表情，不声称看过手帐；3 条换语言的回复全部被 `sameLanguage` 拦截。剩下的问题：不肯定「写完了」、仍说「别难过」、偶尔主动提柠檬帽。评分由本会话完成，需要用户复核。
+- 真机：`xcrun devicectl list devices` 只有 3 台模拟器，没有连接过真机。查询签名证书的命令被 Mac 拒绝（不允许云端会话读凭据），所以没有查。`docs/MAC_LOCAL_DEV.md` 改写成 8 步安装说明，并加上真机重点检查清单。工程的 `DEVELOPMENT_TEAM` 保持为空，由用户在 Xcode 里选自己的团队。
+- 已知问题：真机上的 Captain 只用规则回复（访问不到 Mac 上的 Ollama），这是预期行为。
+- 下一步：用户连上 iPhone 后，确认设备 → 构建安装 → 按清单检查；可以试 `qwen3.5:9b` 或写 v4 提示词。
+
+### 2026-11-12 — Mac 同步收尾：34be8ed 已带入，Swift Core 测试 6/6 全部通过
+
+- 用户第三次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 34be8ed864692214d365b6b3b58a51a31f1052f0`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。检查点（分支 `checkpoint/pre-sync-2026-11-12` 和 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`）保留，由用户决定什么时候删除。
+- 在用户 Mac 上实际运行（Xcode 27.2）：
+  - `swift test`（Packages/LittleDaysCore）：**6/6 通过**；
+  - `npm test`：191/191；
+  - iPhone App Debug 构建（iPhone 18 Pro 模拟器）：**BUILD SUCCEEDED**。
+- 本条日志提交之后，用户 Mac 会落后一个只改文档（agent.md、README）的提交，下次同步时一起带过去。
+- 仍未验证：真机，轻震的手感。
+
+### 2026-11-12 — Mac 上带入 2cb0fc1，Core 测试第一次能编译；修正共享导航里的社区标记
+
+- 用户第二次回复「确认合并」后，在 Mac 上运行 `git merge --ff-only 2cb0fc1fbba2246fbeab01e6c34394eb49e581a4`。合并后 `cmp` 确认 `Package.resolved` 和两份评测结果逐字节没变。
+- 在 Mac 上运行 `swift test`（Packages/LittleDaysCore，Xcode 27.2）：这是 11-09 以来 Core 测试第一次编译通过。共 6 个测试，4 个通过，2 个断言失败，都在 `testSharedResourcesAndDates`。
+  - 原因：共享的 `features.json` 从 2026-11-07 起多了 `community` 标签，但没有任何标记说明它只属于 Labs；网页靠 `app.js` 里的 `LAB_PAGES` 过滤，测试却还在比对旧的 5 个标签。
+- 修复：
+  - `features.json` 的 community 加上 `"labs": true`；
+  - Swift `FeatureTab` 新增可选字段 `labs`；
+  - `CoreTests`：全部标签包括 community，正式版导航（排除 `inNav == false` 和 `labs == true`）是 首页 / 日历 / 写手帐 / 书架；
+  - 网页导航的过滤也读取 `tab.labs`（`LAB_PAGES` 保留，用于页面跳转拦截）；
+  - `tests/v116.test.mjs` 新增同样的检查。
+- 测试（Linux 容器）：`npm test` 191/191；Python 测试通过；浏览器 v52、v116 通过。Swift 测试要在 Mac 上带入本次提交后重跑。
+
+### 2026-11-12 — Mac 同步完成（用户确认合并）；iPhone App 构建并在模拟器里玩了 Playroom；修复多年未编译的 Core 测试
+
+- 用户回复「确认合并」后，先确认 Mac 状态与审查时一致（HEAD 5115c61，只有 `Package.resolved` 和两份评测结果），再执行 `git merge --ff-only 9ea3ccaefb93a10746d2ced7c413ea8ee7bbcde4`。合并后用 `cmp` 对比检查点副本，三个文件逐字节没有变化。没有冲突，也没有覆盖任何文件。
+- 在用户 Mac 上实际运行（Xcode 27.2）：
+  - `npm test`：190/190 通过；`python3 -m unittest discover -s tests`：通过。
+  - `xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays -configuration Debug -destination "platform=iOS Simulator,name=iPhone 18 Pro"`：**BUILD SUCCEEDED**，新的 `LittleDaysHaptics`、`KeeperPlay` 编译通过。
+  - 装进 iPhone 18 Pro 模拟器，用 Debug 专用的 `-LittleDaysTap` 依次打开 Captain →「玩耍」→ 点毛线球，连续截图（`build/sim-shots/10-playroom.png`、`build/sim-shots/burst/`）：
+    - 舞台、气泡、呼吸圈、底部提示都和网页一样；
+    - 点球后 Captain 抱住毛线球、开心动画在播（气泡「我的毛线球！」）；
+    - 播完回到原样，球回到原位，气泡变成「再来一次？」，呼吸圈消失。
+    - 这是模拟器，不是真机；轻震在模拟器里感觉不到，没有验证。
+  - `swift test`（Packages/LittleDaysCore）：**编译失败**。原因是 2026-11-09 V6.5 加的一行测试：原始字符串 `#"…"#` 里出现 `"chip":"#B4547A"`，其中的 `"#` 会提前结束字符串。从那以后 Core 测试一直没能编译，之前的日志里也没有跑过 Swift Core 测试。本次改成 `##"…"##` 修复，这个修复需要再按流程带到 Mac 上验证。
+- 未完成：用户确认后把修复提交带到 Mac，再跑 `swift test`。
+
+### 2026-11-12 — V10.17 Captain's Playroom MVP（用户确认五项决定后实现）；Mac 同步的安全检查点
+
+- 需求：用户确认 Playroom 五项决定：
+  1. 不用带绿领巾的版本；
+  2. 抱毛线球大笑作为开心反应，不冒充摸头或挠肚皮；
+  3. 摸头、挠肚皮在素材到位前隐藏；
+  4. 无帽是正式造型，与柠檬帽走同一套互动逻辑、各用各的素材，不突然换装扮；
+  5. ChatGPT 里的动画要用户手动导入。
+  MVP 要求：大舞台、点身体触发开心反应、粉色毛线球真实可互动（点或拖）、播完回到 Idle、两种造型都能用、不以自动循环 GIF 冒充互动。另外要把 iOS 17 修复和 V10.16 的提交安全同步到 Mac。
+- 素材审查（只算仓库里实际有的文件）：
+  - `docs/brand/captain-anim/` 只有三份：
+    - 柠檬帽坐姿 webp：静态，412px；
+    - 柠檬帽抱毛线球大笑 GIF：6 帧 × 180ms，循环，506px；
+    - 柠檬帽加绿领巾玩毛线球 GIF：9 帧 × 150ms，按决定不用。
+  - 无帽只有原有的静态抱毛线球 PNG（320px，透明）。
+  - 用户 Mac 上的同一目录也只有这三份。
+  - 对话里提到的 ChatGPT 无帽动画不在仓库里。需要的文件清单和导入要求写在 docs/ASSETS.md「2026-11-12」。
+- 修改：
+  - `tools/make_captain_anim.py`：重写，需要 numpy。
+    - 从坐姿图里把粉色毛线球和线抠出来，原位置用调和填充补上；球后面那只后爪本来就是虚焦，补完后是一片柔和的模糊。
+    - 底色按开心动画的纸色（#FEF5EA）统一。
+    - 生成 `LD-keeper-cat-lemon-play-idle.jpg`（23KB）和 `LD-keeper-yarn-ball.png`（19KB）；开心动画雪碧图没有变。
+    - 删除 `LD-keeper-cat-lemon-sit.jpg`、`LD-keeper-cat-lemon-play-anim.jpg`（带领巾的那张）。
+  - `library.json` 新增 `keeperPlay`：柠檬帽有 idle、happy、ball，无帽只有 idle。
+  - Swift：`Resources.swift` 新增 `KeeperPlay` / `KeeperPlayClip` / `KeeperPlayBall`，keepers 白名单加入这些文件；`CoreTests` 新增 Playroom 检查，并修正旧测试少算的无帽图。`LittleDaysWebShellView.swift` 新增 `LittleDaysHaptics`（轻触觉反馈）。
+  - `tools/preview.py`、`tools/build_link.py`：同步白名单。
+  - `tools/sync_tokens.py`：`.pr-stage` 加入 PAPER 列表，舞台在所有主题下保持纸色。
+  - `Public/app.js`：Playroom 舞台和交互（详见 ARCHITECTURE V10.17）；「玩耍」标签固定展开到最高。
+  - `Public/styles.css`：替换原来的 `.kp-play` / `.kp-soon`。
+  - i18n：删除 `corner.play*` / `corner.soon`，新增 `play.*`。
+  - `whats-new` 10.17。
+  - 测试：`tests/v117-browser.cjs`（新）；`tests/v109-browser.cjs` 的「玩耍」部分改为检查舞台；`package.json` 新增 `test:browser:v117`。
+  - 文档：CAPTAIN_PLAYROOM_PLAN §6、ASSETS、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE、Keeper LICENSE。
+- 决策与原因：
+  - 毛线球单独抠出来，才能真正跟手拖动，而不只是「按一下就播放」。
+  - 接住后用的是开心反应那段动画：Captain 抱着球的姿势正好能接上。没有单独的「扑球」动画，就不假装有。
+  - 无帽版没有动画，就让它自己的画跳一下，不借柠檬帽的帧；也没有第二个毛线球，因为它手里已经抱着一个。
+  - 舞台下不放按钮，直接操作球和 Captain 本身。
+- Mac 同步（Part C）：
+  - 检查结果：分支 v33-write-first-community，HEAD 5115c61。未提交的是 `Package.resolved`（swift-async-algorithms 1.1.7→1.1.5，新增 swift-configuration，看起来是 Xcode 解析依赖时自动改的），未跟踪的是两份 prompt-v2 评测结果。
+  - 用 `ps` 查到 Claude 桌面 App 在运行。逐个检查进程打开的文件被自动模式拒绝了，所以无法确认另一个会话此刻有没有在编辑；但 git 状态里只有上面那三项。
+  - 要合并的提交（b979623、3a3f382 和本次提交）不碰这三个路径，fast-forward 不会覆盖它们。
+  - 已经建好检查点：分支 `checkpoint/pre-sync-2026-11-12`（指向 5115c61），并把 `uncommitted.patch`、`Package.resolved` 和两份评测结果复制到 `~/Documents/Developer/Notebook-checkpoints/2026-11-12/`。没有 stash、reset，也没有 commit 别人的修改。
+  - fetch 之后要先把提交 id 和两份 diff 给用户看，用户确认后才合并，然后跑测试和模拟器构建。
+- 运行 / 测试（Linux 容器，Chromium）：见本条末尾「结果」。没有在 iPhone 真机或 iOS 模拟器里试过 Playroom；Swift 改动在这里不能编译，要在 Mac 上合并后构建验证。
+- 已知问题：
+  - 舞台图只有 400px，iPhone 3 倍屏上偏软。
+  - 拖动毛线球时能看到它原来位置的模糊补丁。
+  - Captain 的视线不会跟着球走。
+  - 无帽版只有静态画。
+- 结果：`npm test` 190 项通过；`python3 -m unittest discover -s tests` 通过（包括外壳同步检查）；浏览器 v117（新）、v109、v108、v103 通过。全量浏览器测试（package.json 里 59 个 `test:browser:*`）在提交 729d629 的代码上 59/59 通过。
+- 未完成 / 下一步：等用户导入无帽动画和更高清的素材；摸头、挠肚皮等正式素材；Mac 合并、Core 测试和模拟器构建；Captain 本地模型 v3 正式评测。
+
+### 2026-11-12 — V10.16.1 最后一次 UI 打磨：欢迎页品牌统一、五种字母印记细节统一、社区确认只在 Labs
+
+- 需求：用户认可 V10.16 方向，要求（1）欢迎页去掉像素风 ✿ 和散落表情，用已确认的品牌标识、小芽和文具元素，未上线的 Apple / 邮箱登录只在 Labs 环境展示；（2）五种 Monogram 统一字母大小、阴影、边框、纸片尺寸、选中状态，选中要清楚但克制；（3）确认社区是 Labs 界面，正式版不出现；（4）375 / 430、中英文、键盘、实时更新、保存后持久、旧头像无损、多页直达继续验证；已实现的只修问题，不重复开发。
+- 检查结论：
+  - 社区：`LAB_PAGES = ["community","inbox"]`，没有 Labs 时 `start()` 自动以本机账号进入，底部只有 4 个标签；`tests/v52-browser.cjs` 已覆盖「新安装没有欢迎页、没有社区」，本轮通过。没有改社区代码。
+  - 欢迎页也只在 Labs 里出现（同上）。
+  - 实时更新、旧 Emoji 无损、多页直达、375×667 在 V10.16 已实现并有测试，本轮只补测试，没有重写。
+- 修改：
+  - `Public/app.js`：抽出 `BRAND_SPROUT`；欢迎页 `.login-art`（✿ + 📔🌷📷）换成 `.login-brand`（App 图标 icon-192 + Little Days 字标 + 小芽）；「其他登录方式」分隔线和两个 disabled 登录按钮放进 `.login-labs` 虚线框，标签「实验室 · 还没有开放」。
+  - `Public/styles.css`：删 `.login-art*`、`.login-divider*`，加 `.login-brand`、`.login-icon`、`.login-labs`、`.login-labs-tag`；`.pmark` 改为 `--pm-cap` / `--pm-cjk` / `--pm-ring` 变量（牛皮纸字母 0.38→0.44、朱印 0.36→0.40、手写 0.6→0.56、朱印双圈变轻、手写中文上移不压线、所有线条同一粗细）；选中描边 2px → 1.5px，胶囊同样。
+  - i18n `login.labsOnly`；`whats-new.mjs` 10.16.1；`tests/v116-browser.cjs` 新增检查；`tests/v52-browser.cjs` 允许三段版本号。
+  - 文档：DESIGN_SYSTEM、PRODUCT_SPEC、PROFILE_EDITOR_PLAN §9、ARCHITECTURE。
+- 决策：版本号用 10.16.1（属于 V10.16 的打磨，但要让设置齿轮出现小红点、更新记录里看得到）。字母大小是在 Chromium 里把五种印记并排截图对比后调的，不是逐字体测量。
+- 运行 / 测试（Linux 容器，Chromium）：`npm test` 190 通过；`python3 -m unittest discover -s tests` 通过；浏览器 v116、v36、v52、v38、v104、v110 全部通过。没有在 iPhone 真机或 iOS 模拟器里看这次的改动。
+- 已知问题：键盘状态是在 Chromium 里用触屏模拟 + 聚焦输入框验证的，不是真机软键盘；用户 Mac 上的副本还停在 5115c61，本轮提交需要按 fetch → 看 diff → 确认 → 合并的流程带过去。
+- 未完成 / 下一步：Captain's Playroom 等用户回答 `docs/CAPTAIN_PLAYROOM_PLAN.md` §5 的五个问题；Captain 本地 Qwen v3 正式评测；原生触觉反馈桥接。
+
+### 2026-11-11 — P0 在用户 Mac 上验证通过：iOS 17 修复后各项构建成功，V10.16 在模拟器里运行
+
+- 你 Mac 上另一个会话先把它的修改（Debug 构建才有的 JS 日志和启动计时）提交并推送了（5115c61），是接在 81279ab、e523643、454207f 之后提交的，所以用户 Mac 上的副本已经是最新的，不需要再合并。只剩 `Package.resolved` 和 v2 评测结果还没提交，没有动。
+- 实际运行（Xcode 27.2，iOS 27.2 模拟器）：
+  - 在根目录用 `xcodebuild -workspace .swiftpm/xcode/package.xcworkspace -scheme Notebook -destination "generic/platform=iOS Simulator"` 构建：**BUILD SUCCEEDED**。之前「LittleDaysCore-product requires minimum platform version 17.0 … supports 15.0」的报错消失了。
+  - `xcodebuild -workspace LittleDays.xcworkspace -scheme LittleDays`：Debug 构建（iPhone 18 Pro）成功，17 条警告、没有错误；Release 构建（generic iOS Simulator）成功。
+  - 有了根目录的 `LittleDays.xcworkspace` 之后，在根目录直接运行 `xcodebuild` 默认就是 iPhone App。要构建服务端的包，需要显式指定 `.swiftpm/xcode/package.xcworkspace`。
+  - 装进 iPhone 18 Pro Max 并启动：V10.16 的编辑资料（小芽默认、五种字母印记）在原生 App 里正常显示。
+- 用户问「为什么只有 iPhone 17 能打开」：每台模拟器是一部独立的虚拟手机，App 要分别安装。iPhone 17 是另一个会话装的，18 Pro 是本会话装的，18 Pro Max 之前没有装过。现在三台都装了。以后在 Xcode 里先选目标机型再按 ⌘R，或者运行 `bash tools/mac/sim-shots.sh "iPhone 18 Pro Max"`。
+
+### 2026-11-11 — Captain's Playroom 设计轮（只出设计，等确认）；用户提供的 Captain 动画素材入库
+
+- 需求：用户觉得「玩耍」页像功能路线图，要重新设计成 Captain's Playroom：大舞台、能直接摸 Captain、和它玩；三个轻量快捷玩法（摸摸头、挠肚皮、玩毛线球）；首次提示；装扮联动；删掉开发说明；先给设计，确认后再开发。
+- 素材审查（只算实际拿到的文件）：
+  - 用户发的图里，只有一批带了文件路径，已原样存入 `docs/brand/captain-anim/`：柠檬帽坐姿静态图、柠檬帽「抱毛线球大笑」（6 帧 × 180ms，506px）、柠檬帽加绿领巾「玩毛线球」（9 帧 × 150ms，414px）。
+  - 无帽版几张和另外几张柠檬帽图是对话里的图片，没有文件，仓库和用户 Mac 上都找不到，不计入可用素材。
+  - 结论：Idle 只有静态图；玩毛线球（柠檬帽）可用，但有绿领巾不一致、不适合无限循环；开心反应可用，但不能冒充摸摸头；摸摸头、挠肚皮、所有无帽动画都缺；分辨率只有 400–500px，GIF 只有 256 色，偏软。
+- 做了什么：
+  - 新增 `tools/make_captain_anim.py`：不抠图、不重画，把帧原样排成 JPEG 雪碧图（`Resources/Keepers/LD-keeper-cat-lemon-{sit,hug-anim,play-anim}.jpg`）。曾经试过逐帧抠成透明图：浅色爪子上有缺口，深色背景上留着地面边，达不到要求，已放弃并删掉那个脚本。
+  - LICENSE 和 ASSETS 记录了来源。
+  - 设计方案 `docs/CAPTAIN_PLAYROOM_PLAN.md`：素材审查、布局、各种状态、三个玩法的流程（MVP 和最终版分开写）、网页端和原生端的实现方式、5 个待确认的问题。
+  - 设计预览：在真实 App 的 Captain's Corner 里注入原型后截图（393、375、430 英文，包括播放中、播完、减少动态效果、无帽装扮），已发给用户。
+- **没有改 App 功能代码**：写到一半的「玩耍」页改动已撤回；`keeper-art.mjs` 和 `library.json` 都没有改；三张雪碧图暂时没被引用（共 361KB，会打包进 App）。
+- 测试：Node 190、Python 18 通过（这一轮没有功能代码变化）。
+- 下一步：用户回答设计方案第 5 节的问题后，再实现 MVP（Playroom 布局、玩毛线球的按钮和拖动触发、播完回到 Idle、防止重复触发、减少动态效果、装扮联动、首次提示）。原生触觉反馈要等用户 Mac 上另一个会话提交 WebShell 的修改之后再加。
+
+### 2026-11-11 — V10.16 iOS 17 部署目标统一；个人标记（5 种字母印记 + 小芽）；日详情音乐默认静音；同一天多页可直达；Captain 缺失美术清单
+
+- 需求：用户确认 Settings / Reader / Captain 的待定决策，并要求先修好原生 iOS 构建问题（P0），然后是个人资料头像（P1）、Reader 剩余问题（P2）、Captain 本地 Qwen 继续测试（P3）。
+- **P0：iOS 部署目标**
+  - 报错原文：`The package product 'LittleDaysCore-product' requires minimum platform version 17.0 for the iOS platform, but this target supports 15.0`。
+  - 在用户 Mac 上复现（Xcode 27.2 / Build 27B52，模拟器运行时 iOS 27.2）：在项目根目录对 scheme「Notebook」用 iPhone 18 Pro 模拟器构建，报错出现在 `NotebookApp` 和 `NotebookServer-product`。
+  - 真实来源：根目录的 `Package.swift`。它是本机 Vapor 服务端，只声明了 `.macOS(.v13)`。在 Xcode 里打开项目根文件夹会加载这个包；选 iPhone 目标时，SwiftPM 给它用默认的 iOS 15，而它依赖的 LittleDaysCore 要求 iOS 17。
+  - 其余各处原本都是 17：iPhone App 工程 `Native/LittleDays.xcodeproj` 的 `IPHONEOS_DEPLOYMENT_TARGET = 17.0`、`Native/Package.swift`、`Packages/LittleDaysCore`（含 LittleDaysCoreTests）。
+  - 修复（提交 81279ab）：
+    - 根目录 `Package.swift` 加 `.iOS(.v17)`；没有降低 LittleDaysCore 的版本。
+    - 新增根目录 `LittleDays.xcworkspace`，双击直接打开 iPhone App 工程；`.gitignore` 为它加了例外。
+    - `tools/mac/dev.sh open`。
+    - `tests/test_native_shell.py` 新增两项：所有 `IPHONEOS_DEPLOYMENT_TARGET` 与 `.iOS(...)` 都必须是 17；workspace 指向 iPhone App。
+  - **未在 Mac 上验证**：本会话不能改用户 Mac 上的文件（自动权限检查拒绝了在 /tmp 副本里验证），要等用户同意合并后再构建。
+- **P1：个人标记**
+  - 新增 `Public/js/profile-mark.mjs`：
+    - 可选的标记：`mono:paper` / `mono:seal` / `mono:kraft` / `mono:sage` / `mono:script` 加上 `mark:sprout`。
+    - 存储字段不变，仍是 `little-days.account.avatar`。
+    - `"🌷"`（没选）显示小芽，有没有名字都一样。这是 2026-11-11 用户的决定，取代 V10.10 的「有名字显示首字」。
+    - 以前选的 Emoji 原样显示。
+    - 首字取法：有大小写的字母转成大写，汉字取第一个字。
+    - `markHTML()` 在设置页顶部、编辑面板和欢迎页共用。
+  - `account.mjs`：`acceptsAvatar()` 接受旧 Emoji 和新标记；其他值保留原来的头像。
+  - 编辑资料（标题「属于你的小世界」）：
+    - 带纸胶带的名字卡，名字和首字随输入实时变化。
+    - 「小芽 · 默认」和「现在的头像」两个胶囊，加 5 种字母印记；不再提供系统 Emoji。
+    - 手机上输入名字时，标记区暂时收起。
+    - 保存按钮固定在面板底部。
+    - 保存失败时提示「没能保存资料……」，面板不关，已输入的名字保留。
+  - 欢迎页（实验室）：只保留名字输入框和当前标记的预览，没有选择器；社区演示只在账号头像是 Emoji 时才同步头像。
+  - 视觉：同一种圆形纸片（高光、细边、小投影），只换纸色、墨色和字体：
+    - 纸片：象牙白，Cormorant；
+    - 朱印：浅粉纸，朱红双圈，Baskerville；
+    - 牛皮纸：牛皮纸色，虚线缝边，DM Sans；
+    - 鼠尾草：深绿底，象牙白字；
+    - 手写：雾蓝纸，Caveat，赤陶色短线。
+    - 中文首字用系统宋体或楷体，不为一个字额外加载几 MB 的中文字体。
+- **P2：Reader 剩余问题**
+  - 日详情页的背景音乐与书本、阅读器一致：进入时静音，点音乐按钮才播放，可以暂停和继续；换到另一天或另一本书又是静音（`syncMusic` 的 `day:` 情境）。
+  - 书本详情里，同一天有多页时，卡片下方显示这一天的每一页缩略图，缩略图下有「第 N 页」和时间，点哪一张就在全屏阅读器打开那一页（`reader-open` 新增 `data-key`）。点那天的卡片仍然打开第一页；只有一页的日子不变。页面来自阅读器自己的页面列表，不复制，也不改数据结构。
+- **P3**：在 `docs/ASSETS.md` 记录 Captain 已有的 5 张素材，以及缺少的正式美术资源（摸摸头、挠肚皮、玩毛线球、换帽子、换衣服），附交付规格；拿到素材前不实现这些动画。本轮没有跑 v3 正式评测：上次在用户 Mac 上启动的评测被用户打断，没有产出结果。
+- 测试：
+  - Node 190 通过（新增 tests/v116.test.mjs 4 项）；Python 18 通过（新增部署目标 2 项）。
+  - 新增 tests/v116-browser.cjs，连跑 2 次通过，覆盖：
+    - 默认小芽，只提供 5 种字母印记和小芽；名字卡和首字随输入变化；375×667 下「保存」可见；
+    - 旧的 🐱 保留并显示为「现在的头像」；
+    - 保存失败时面板保留，再保存能成功；
+    - 欢迎页没有选择器，使用同一条资料；
+    - 日详情静音、播放、暂停、回来后仍是静音；
+    - 同一天两页的缩略图分别打开对应页；
+    - 手帐数据不变，没有外部请求。
+  - 迁移的旧测试：v104、v110（头像）；v36（欢迎页）；v38（暗色主题读 `.pmark`）；v57、v59（日详情点了才播放）。全量浏览器回归 58 套全部通过。
+- 未完成：P0 要在用户 Mac 上构建验证（合并后跑 `xcodebuild` 两个 scheme，并在模拟器里截图）；6 个小图案仍在等设计师；v3 正式评测。
+
+### 2026-11-11 — 模拟器「空白页 / 启动慢」查清：是模拟器刚开机，不是 App；Debug 构建加 JS 报错与启动计时日志
+
+- 需求：用户在 Xcode 里遇到 `LittleDaysCore-product requires minimum platform version 17.0 … but this target supports 15.0`，之后要求调试 iPhone 17 模拟器里的空白页，并查清启动为什么慢。
+- 报错原因（另一个会话在 81279ab 里已经修好：根目录 Package.swift 也声明了 iOS 17，并新增 `LittleDays.xcworkspace`；这里记录的是修复前我独立复现的结果）：
+  - 在 Xcode 里打开的是仓库根目录的 `Package.swift`（Vapor 预览服务器，scheme「Notebook」，当时只声明 macOS）。选 iPhone 时 Xcode 27 默认 iOS 15.0，而它依赖的 `LittleDaysCore` 要求 iOS 17。
+  - 用 `xcodebuild -scheme Notebook -destination 'generic/platform=iOS Simulator'` 复现了一样的报错。
+  - `Native/LittleDays.xcodeproj` 不需要任何修改，Debug 和 Release 都能构建成功。
+  - rebase 到 81279ab 之后，本条的文档措辞已改成「打开 `LittleDays.xcworkspace`」，并说明根目录的报错已修复。
+  - 打开根目录让 Xcode 改写了根目录的 `Package.resolved`（swift-async-algorithms 1.1.7→1.1.5，新增 swift-configuration）。这个修改没提交，也没有还原，等用户决定。
+- 空白页：不是错误。App 能到首页，整个过程没有任何 JS 报错。它只是在模拟器刚开机后启动得特别慢。
+- 启动计时（iPhone 17，iOS 27.2，Debug；时间从 `simctl launch` 算起，括号里从进程启动算起）：
+  - 热启动、重新安装后启动：首页 1.1–1.9 秒。
+  - 模拟器刚开机：
+    - `simctl launch` 被拒（`Busy … failed preflight checks`），或者要等 15–18 秒才被接受。
+    - document start 在 +5.8 到 +9.5 秒（WebKit 进程启动）。
+    - 有两次在 +26 到 +30 秒才出现 home rendered，有一次在 +9.9 秒。
+- 定位方法：
+  - 在 `Native/Sources/LittleDaysUI/WebApp/app.js`（Public 的副本）的 `start()` 里临时加计时点，测完已按原样还原，`Public/` 没有改过。
+  - 结果：开机后读手帐、两次 IndexedDB open（7–18 ms）、hydrate、迁移、首次 `render()` 在 +6.0 秒就全部完成。但我每 50 ms 跑一次的检查计时器到 +26.2 秒才执行。说明这段时间 WebKit 把页面暂停了（系统还没把 App 放到前台）。
+  - 所以慢的原因是模拟器开机时的系统状态，不是 App 代码。V10.14 记录的「冷启动约 15–20 秒，原因未查」也是这个原因。
+- 改动（只在 Debug 构建生效）：
+  - `LittleDaysWebShellView.swift` 新增 `LittleDaysDebugConsole`：把页面报错（error / unhandledrejection / console.error / console.warn / 资源加载失败）和启动节点（web view created、document start、DOMContentLoaded、home rendered）以 `[LittleDays JS] +<进程启动后毫秒>` 写进 NSLog。
+  - `LittleDaysWebResources.swift` 新增 `launchedAt`（用 sysctl 读进程启动时间）。
+  - 已确认 Release 二进制里没有 `littleDaysDebug`。
+  - 排查时用过的「逐个文件计时」和「IndexedDB 计时」已删掉，没有保留。
+- 文档：`docs/MAC_LOCAL_DEV.md` 第 7 节补充了三点：打开哪个工程、刚开机启动慢的原因、怎么看 Debug JS 日志。
+- 测试：
+  - `xcodebuild` LittleDays Debug 和 Release 都成功；根目录 Notebook 对 iOS 构建复现了报错。
+  - 模拟器热启动计时 1.8–1.9 秒到首页。
+  - `npm test` 186/186；Python unittest 全部通过。
+  - 没有在真机上测过。
+- 协作说明：另一个会话（Mac 本地开发与 Qwen 集成，云端）同时在这个文件夹里提交了 V10.14 和 V10.15。开始改 Swift 前已经发消息告诉它，请它不要改这两个 Swift 文件，但它没有确认收到。它的 `prompt-v2` 结果文件（未跟踪）没有动。
+- 未完成 / 下一步：
+  - `Package.resolved` 由用户决定还原还是保留。
+  - 真机上的冷启动时间还没测。
+  - 如果真机冷启动也慢，再看 WebKit 进程启动和首屏资源（styles.css 419 KB、app.js 490 KB、i18n.json 208 KB）。
+
+### 2026-11-11 — V10.15（仅开发）Captain 提示词第 3 版和语言拦截；模拟器里确认引导圆环已对准
+
+- 在用户 Mac 上实际运行（Remote Control，提交 d9fd94c 已在用户确认后 fast-forward 合并到 Mac 副本）：
+  - 第 2 版正式评测（`captain-eval.mjs --runs 3`）：「喵」19→0、表情 8→0、劝写 4→1。但出现新口癖：柠檬帽 4→15、尾巴 0→8、窗台/阳光 2→12。还把夸奖说反（「你的柠檬帽真好看！」），并且按注入指令改用英文（3/3）。
+  - 第 3 版用临时脚本 `/tmp/ld-captain-v3.mjs` 试跑（不在仓库）：口癖降到 帽子 6（其中 3 条是帽子那句本身）、尾巴 1、阳光 3（都在天气那句）；「喵」和表情仍是 0。注入那句仍然 3/3 用英文，英文输入有 1 次用中文回答。
+  - 第 2 版原始结果生成在 Mac 上、未提交，回复原文抄进了对比文档。
+  - 模拟器（iPhone 18 Pro）里通过「更多 → 操作指南」打开引导：绿色圆环正好圈住纸张，V10.14 的修复在 App 里确认有效（截图在用户 Mac 的 `build/sim-shots/05-guide-ring.png`）。
+- 改动：
+  - `Public/js/captain-ai.mjs`：`PROMPT_VERSION = 3`。
+    - 不给可以反复用的具体意象；帽子只在对方提到时才说（装扮放在「只在被问到外表时」的括号里）；明确夸奖是在夸 Captain；对方要求换语言时不照做；难过时不要说成累了。
+    - 新增 `sameLanguage(said, reply)`：回复和用户那句的语言不一致就抛错，App 改用规则回复。
+  - `tools/captain-eval.mjs`：语言不一致的条目标为「语言不符 → App 改用规则」。
+  - 新增 `docs/captain-ai/results/2026-11-11-prompt-v1-v2-v3.md`：三版计数、逐句回复、人工评分（v1 145、v2 145、v3 148 / 168；评分人不同，请用户复核）。
+- 测试：v113 单元测试 8 项（新增语言拦截一项，含模拟 Ollama 返回英文的情况），浏览器测试 v113 通过；Node 186。
+- 未完成：合并到 Mac 后用 `captain-eval.mjs` 正式跑一次 v3；评估 9B；在 Mac 上实际打开 App 里的本地 AI 聊天。
+
+### 2026-11-11 — V10.14 iPhone App 第一次在 Xcode 模拟器里运行；引导圆环在 App 里的位置修复；Captain 提示词第 2 版
+
+- 背景：用户在 Mac 上用 Claude Code 完成了环境检查、Homebrew / Node 安装和 qwen3.5:4b 评测（提交 d945cf2，评分 145/168），随后把 Mac 上的 Notebook 文件夹连到本会话（Remote Control，用户本人确认信任）。
+- 在用户 Mac 上实际运行（Xcode 27.2，iPhone 18 Pro 模拟器 iOS 27.2）：
+  - `xcodebuild -list`：scheme LittleDays / LittleDaysCore / LittleDaysUI 由 Xcode 自动生成，两个本地包都能解析。
+  - 第一次 `xcodebuild … build`：**BUILD SUCCEEDED**，工程没改，只有警告。
+  - 安装运行：首页、日历、书架、Journal Studio 都能打开。冷启动约 15–20 秒才到首页，原因未查。
+  - 这一版 Xcode 没有单独的 Simulator.app（`open -a Simulator` 找不到），命令行构建、安装、截图不受影响。
+  - Xcode 解析包时在用户 Mac 上改了 `Package.resolved`（未提交，留在用户本机，没有动）。
+- 为了不点屏幕也能截到各页面：
+  - `LittleDaysWebShellView` 增加只在 Debug 构建生效的启动参数 `-LittleDaysTap "<selector>||…"`：页面加载完后按顺序点击，Release 不读这个参数，也不读取或发送任何数据。
+  - 新增 `tools/mac/sim-shots.sh`：构建、安装、截四个页面，不清空数据。第一次截图时首页重新渲染吃掉了点击，现在先等约 2.4 秒（`body||body||body||…`）再点。
+  - 提交 91a82a5，用户确认后以 fast-forward 合并到 Mac 上的副本。
+- 在模拟器里发现的问题（V10.12 引导）：绿色圆环比纸张低约 34px。
+  - 浏览器在 `?shell=ios` 下可以复现：旧代码测得 top -34 / bottom +42。
+  - 原因：引导放好后，纸张在 App 外壳的布局里又往下挪了。
+  - 修复：`positionGuide()` 以引导层自身为基准计算位置，引导打开期间每 250ms 跟随目标一次（关闭时停止）。「双击」提示也改为以自身的定位容器为基准。
+  - v112 增加一组 iPhone 外壳布局测试：圆环与纸张的四边距离在 2–6px 之内。
+- Captain 提示词第 2 版（`PROMPT_VERSION = 2`），按第一次 Mac 评测的问题修改：
+  - 禁止 喵 / 喵呜 / meow，改用观察和动作表现猫的特点；不用表情符号；
+  - 看不到手帐，所以不谈页面、写了多少、今天是不是空的；
+  - 不把聊天引向写或记录；
+  - 累的时候既体谅累也肯定做完的事；难过时不说「别难过」；
+  - 被摸的是 Captain；问到功能时只说「聊天上面的按钮」，不编按钮名；
+  - 跟随最新一句的语言；
+  - 加 3 个不同话题的语气示例。
+  - `cleanReply` 加一层保险：去掉句首或句尾的「喵 / Meow」，英文首字母大写。
+  - `captain-eval.mjs` 修正：除帽子用例外，原来都没传当前装扮，导致模型说「没带小帽子」；现在和 App 一样默认柠檬帽。结果文件名带上提示词版本。
+- 测试：v113 单元测试加 1 项，共 7 项；v113 浏览器测试改为兼容规则回复的随机句子，并适配新提示词；v112 加 iPhone 外壳布局一组。结果：Node 185、Python 16 通过；浏览器测试 v36、v101、v107、v109、v112、v113 通过，其中 v113 连跑 3 次都通过（之前有一次因为规则回复随机挑到另一句而失败，已改断言）。这一轮没有跑全量浏览器回归。
+- 未完成：提示词第 2 版要在 Mac 上重跑评测，和第 1 版对比；冷启动 15–20 秒的原因未查；App 里的本地 AI 聊天（第 5 节）和模拟器调用 Mac 服务都还没接通。
+
+### 2026-11-11 — Mac 上实际运行：环境检查、安装 Homebrew / Node、qwen3.5:4b 实测与 Captain 评测
+
+- 需求：用户在 Mac 上的 Claude Code 会话里要求按 docs/MAC_LOCAL_DEV.md 执行：第一步运行 doctor.sh，缺什么只装什么，装之前先问。
+- 环境（`bash tools/mac/doctor.sh`）：Apple M5 / 24 GB / macOS 26.6；Xcode 27.2；iOS 27.2 模拟器（iPhone 18 Pro 等）；Ollama 0.40.16 在 127.0.0.1:11434，只监听本机，`qwen3.5:4b` 已下载（4.0 GB）。缺 brew、node、npm。
+- 安装（用户逐项同意）：
+  - Homebrew 7.0.13：官方脚本，用户自己在终端里输入密码。
+  - Node 26.13.0 / npm 11.20.0：`brew install node`。
+  - Homebrew 安装时把 `xcode-select` 切到了 Command Line Tools，已用 `sudo xcode-select -s /Applications/Xcode.app` 切回（用户输入密码）。
+  - 想在 `~/.zprofile` 加 `brew shellenv`，被会话权限拦下，没有加；`/etc/paths.d/homebrew` 已能让新终端找到 brew。
+  - 第二次运行 doctor：全部 ✅。
+- 整理：仓库里多出一个完整的嵌套副本 `Notebook/Notebook/`（只比本仓库多一个 PR #4 的合并提交，已在 GitHub 上，没有未提交修改和 stash）。按用户选择，通过 Finder 移到了废纸篓（可以恢复）。
+- Qwen 实测（第 3 节）：
+  - 中英文自我介绍都正常。`ollama run` 默认开启思考，中文那句 36 秒、英文那句 3 分 35 秒；API 加 `think:false` 时「你好」0.5 秒。
+  - 内存：`ollama ps` 第一次加载后 4.8 GB；评测后 Ollama 报告 6.0–9.1 GB；MLX runner，100% GPU。
+- Captain 评测（第 4 节）：
+  - 跑了 `bash tools/mac/dev.sh eval`（每句 1 次）和 `node tools/captain-eval.mjs --runs 3`。
+  - 结果文件 `docs/captain-ai/results/2026-11-11-qwen3.5_4b.md` / `.json` 保存的是 3 次跑的结果，并附上人工 7 项评分（评分人 Claude，待用户复核）。
+  - 得分：145/168（86%），App 里真正走模型的 10 句 125/140。
+  - 速度：每句 0.4–1.9 秒，约 32 tok/s，中位数 570 ms。
+  - 主要问题：
+    1. 「喵」成了口头禅：3 次跑的 27 条中文回复里有 16 条带「喵」。
+    2. 偶尔编造手帐状态（「今天的小日子还空着」）。
+    3. 夸奖和难过时轻微推销「记录」。
+    4. 被问功能时编按钮名（App 里这两句走规则）。
+    5. 第一次跑的注入指令那句用英文回答并跳出角色；3 次跑里都是简短中文。
+- 文件：`docs/captain-ai/results/2026-11-11-qwen3.5_4b.{md,json}`（新增）；`docs/MAC_LOCAL_DEV.md`（状态表改成实际结果，加上 Homebrew / xcode-select 的坑和 think 的耗时对比）；agent.md；README.md。没有改代码，没有改 `Public/`，所以没有发布在线链接。
+- 测试：
+  - 第一次运行 `npm test`：157/160 通过。失败的 3 个（media、v31、v75）都是因为 Mac 上还没装 npm 开发依赖（没有 `node_modules`，缺 `fake-indexeddb`），不是代码问题。
+  - 用户同意后运行了 `npm ci`：装了 4 个包，0 个漏洞。npm 没有运行 `fsevents` 的安装脚本（可选的文件监听依赖，测试不需要）。
+  - 再次运行 `npm test`：**184/184 通过**。
+  - Python `unittest`：16/16 通过。
+  - 浏览器测试需要 playwright 的浏览器（`npx playwright install`，要另外下载），本轮没有运行。
+- 未完成：
+  - 第 5 节：在浏览器里用 `dev.sh web-ai` 实际打开本地 AI 聊天。
+  - 第 7 节：Xcode 第一次构建和模拟器运行。
+  - 根据共性问题调 Captain 提示词，然后重跑评测。
+  - 评估 9B。
+- 下一步：先用 `bash tools/mac/dev.sh sim` 第一次构建（可能要修工程），或者先调提示词，减少「喵」和编造，再跑 `--runs 3` 对比。
+
 ### 2026-11-11 — 约定：预览服务在会话里一直开着
 
 - 用户希望在 App 的 environment 下面直接看到预览服务。本会话已用 `python3 tools/preview.py --host 0.0.0.0 --port 8080` 在后台启动，并以「Little Days」为名报告 8080 端口。

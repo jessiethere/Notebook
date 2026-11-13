@@ -54,10 +54,15 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(withMusic.music, "rainy-window", "saved on the page");
     passed.push("writing: ♫ background music → listen → choose; saved with the page; nothing plays while writing");
 
-    // 2. Reading the day plays it; the chip pauses / plays; leaving stops it.
+    // 2. V10.16: reading the day is silent until its chip is tapped (like the
+    // reader); the chip plays / pauses; leaving stops it.
     await page.locator('#navigation [data-page="calendar"]').tap();
     await page.locator(`[data-action="select-date"][data-date="${today}"]`).first().tap();
     await page.waitForSelector(".day-detail .day-music .music-chip");
+    await page.waitForTimeout(600);
+    assert.equal((await bgm()).playing, false, "no music by itself");
+    assert.equal(await page.locator(".day-music .music-chip.playing").count(), 0);
+    await page.locator(".day-music .music-chip").tap();
     await page.waitForFunction(() => { const a = document.querySelector("#background-music"); return a && !a.paused && a.dataset.music === "rainy-window"; });
     await page.waitForSelector('.day-music .music-chip.playing[aria-pressed="true"]');
     if (shots) await page.screenshot({ path: `${shots}/v57-day.png` });
@@ -72,7 +77,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('[data-action="day-back"]').tap();
     await page.waitForFunction(() => document.querySelector("#background-music").paused);
     assert.equal((await bgm()).music, "", "leaving the day stops the music");
-    passed.push("reading the day plays its music; the chip pauses and plays; leaving stops it");
+    passed.push("reading the day: silent until the chip is tapped; the chip plays and pauses; leaving stops it");
 
     // 3. Flipping the book: the page with music plays it.
     await page.locator('#navigation [data-page="home"]').tap();
@@ -102,6 +107,8 @@ const shots = process.env.SHOTS_DIR || "";
     // 4. A voice note or video pauses the music (one sound at a time).
     await page.locator('#navigation [data-page="calendar"]').tap();
     await page.locator(`[data-action="select-date"][data-date="${today}"]`).first().tap();
+    await page.waitForSelector(".day-detail .day-music .music-chip");
+    await page.locator(".day-music .music-chip").tap(); // V10.16: silent until asked
     await page.waitForFunction(() => !document.querySelector("#background-music").paused);
     await page.evaluate(() => {
       const ctx = new AudioContext();

@@ -92,7 +92,7 @@ for (const c of cases) {
       error = null;
     try {
       // The same call the app makes (cleaned); also keep the raw text to see what cleaning did.
-      const data = await json("/api/chat", { model, messages: AI.buildMessages({ text: c.text, language, wearing: c.wearing || "" }), stream: false, think: false, keep_alive: "10m", options: params });
+      const data = await json("/api/chat", { model, messages: AI.buildMessages({ text: c.text, language, wearing: c.wearing ?? (language === "en" ? "the lemon hat" : "柠檬帽") }), stream: false, think: false, keep_alive: "10m", options: params });
       raw = data.message?.content ?? "";
       reply = { text: AI.cleanReply(raw, language), ms: Date.now() - started, tokens: data.eval_count ?? null, tps: data.eval_duration ? +(data.eval_count / (data.eval_duration / 1e9)).toFixed(1) : null };
     } catch (e) {
@@ -108,19 +108,21 @@ const gb = (n) => (n ? (n / 1024 ** 3).toFixed(2) + " GB" : "—");
 const memory = { modelSize: gb(loaded?.size), inGPU: gb(loaded?.size_vram), pressure: sh("memory_pressure -Q 2>/dev/null | tail -1") };
 
 const date = new Date().toISOString().slice(0, 10);
-const slug = `${date}-${model.replace(/[^\w.-]+/g, "_")}`;
+const slug = `${date}-${model.replace(/[^\w.-]+/g, "_")}-prompt-v${AI.PROMPT_VERSION}`;
 const outDir = join(root, "docs/captain-ai/results");
 mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, `${slug}.json`), JSON.stringify({ model, machine, params, runs, loadMs, memory, results }, null, 2) + "\n");
+writeFileSync(join(outDir, `${slug}.json`), JSON.stringify({ model, promptVersion: AI.PROMPT_VERSION, machine, params, runs, loadMs, memory, results }, null, 2) + "\n");
 const ms = results.filter((r) => r.reply).map((r) => r.reply.ms).sort((a, b) => a - b);
 const median = ms.length ? ms[Math.floor(ms.length / 2)] : null;
-const rows = results.map((r) => `| ${r.id}${runs > 1 ? `#${r.run}` : ""} | ${r.text} | ${(r.reply?.text ?? `（出错）${r.error}`).replace(/\|/g, "\\|")} | ${r.reply?.ms ?? "—"} | ${r.appRoute === "rules" ? "App 里走规则" : "模型"} |`).join("\n");
+// The app drops a reply that is not in the person's language (AI.sameLanguage) and answers with the rules.
+const route = (r) => (r.appRoute === "rules" ? "App 里走规则" : r.reply?.text && !AI.sameLanguage(r.text, r.reply.text) ? "语言不符 → App 改用规则" : "模型");
+const rows = results.map((r) => `| ${r.id}${runs > 1 ? `#${r.run}` : ""} | ${r.text} | ${(r.reply?.text ?? `（出错）${r.error}`).replace(/\|/g, "\\|")} | ${r.reply?.ms ?? "—"} | ${route(r)} |`).join("\n");
 writeFileSync(
   join(outDir, `${slug}.md`),
   `# Captain × ${model}（本机 Ollama）· ${date}
 
 - 机器：${machine.chip} · ${machine.memoryGB} GB · macOS ${machine.macOS} · Ollama ${version}
-- 参数（推理参数，不是微调）：\`${JSON.stringify(params)}\`，每句 ${runs} 次，\`think: false\`
+- 提示词版本：v${AI.PROMPT_VERSION}；参数（推理参数，不是微调）：\`${JSON.stringify(params)}\`，每句 ${runs} 次，\`think: false\`；装扮按 App 默认（柠檬帽）
 - 首次加载：${loadMs} ms；回复耗时中位数：${median ?? "—"} ms
 - 内存（Ollama /api/ps）：模型占用 ${memory.modelSize}，其中在 GPU ${memory.inGPU}${memory.pressure ? `；系统：${memory.pressure}` : ""}
 - 输入全部来自 docs/captain-ai/chat-cases.json（合成），没有发送任何真实手帐。

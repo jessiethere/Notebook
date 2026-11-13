@@ -43,7 +43,8 @@ test("what happened is respected: done, planned, not yet, feelings", () => {
 test("requests still work; only “what can you do” lists the abilities", () => {
   for (const [text, want] of [["回顾以前的回忆", "memory"], ["这周写了什么", "week"], ["看看书架", "shelf"], ["帮我写一句话", "write"], ["你能帮我做什么", "abilities"], ["what can you do", "abilities"]])
     assert.equal(intent(text), want, text);
-  for (const text of ["今天天气不错", "我饿了", "今天想吃蛋糕", "", "   "]) assert.equal(intent(text), "unknown", JSON.stringify(text));
+  // V10.18: everyday lines have their own replies now (tests/v118.test.mjs); empty stays unknown.
+  for (const [text, want] of [["今天天气不错", "sunny"], ["我饿了", "hungry"], ["今天想吃蛋糕", "hungry"], ["", "unknown"], ["   ", "unknown"]]) assert.equal(intent(text), want, JSON.stringify(text));
   // The feature list lives only in the abilities line.
   const lists = Object.entries(i18n).filter(([key, v]) => key.startsWith("kc.chat.") && /翻一页以前的回忆|look back at an old page/.test(v.zh + v.en)).map(([key]) => key);
   assert.deepEqual(lists, ["kc.chat.abilities.0"]);
@@ -51,7 +52,7 @@ test("requests still work; only “what can you do” lists the abilities", () =
 });
 
 test("every reply intent has lines in both languages, short and without emoji", () => {
-  const replies = ["greet", "morning", "night", "compliment", "hat", "hatOff", "pet", "play", "care", "thanks", "happy", "sad", "tired", "done", "doneTired", "doneHappy", "notYet", "notYetTired", "planned", "abilities", "unknown"];
+  const replies = ["greet", "morning", "night", "compliment", "hat", "hatOff", "pet", "play", "care", "thanks", "happy", "sad", "tired", "done", "doneTired", "doneHappy", "notYet", "notYetTired", "planned", "abilities", "unknown", "name", "age", "whatAreYou", "food", "likeMe", "tease", "laugh", "ack", "bored", "joke", "hungry", "nervous", "sleepless", "miss", "busy", "rough", "goodNews", "birthday", "rain", "cold", "hot", "sunny", "share", "shareHappy", "meh", "inspire", "question", "listen"];
   for (const name of replies) {
     const count = K.LINE_COUNTS[`chat.${name}`];
     assert.ok(count >= 1, name);

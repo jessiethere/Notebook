@@ -2,6 +2,7 @@
 # Little Days · everyday Mac commands. Nothing starts at login; the model loads only when asked.
 #   bash tools/mac/dev.sh web        # Web preview at http://127.0.0.1:8080 (this Mac only)
 #   bash tools/mac/dev.sh web-ai     # same, with Captain's local-model chat switched on (dev only)
+#   bash tools/mac/dev.sh open       # open the iPhone app in Xcode (LittleDays.xcworkspace), then ⌘R
 #   bash tools/mac/dev.sh sim [name] # build the iPhone app and run it in the Simulator (default: first iPhone)
 #   bash tools/mac/dev.sh ai         # is Ollama up? which models? (does not load a model)
 #   bash tools/mac/dev.sh eval [...] # Captain × local Qwen test set (tools/captain-eval.mjs)
@@ -13,15 +14,24 @@ MODEL="${LD_MODEL:-qwen3.5:4b}"
 cmd="${1:-help}"; shift || true
 
 web() {
-  if ! lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
+  local pid
+  pid=$(lsof -nP -t -iTCP:8080 -sTCP:LISTEN 2>/dev/null | head -1)
+  if [ -z "$pid" ]; then
     nohup python3 tools/preview.py --host 127.0.0.1 --port 8080 > /tmp/little-days-preview.log 2>&1 &
     sleep 1
+  elif ! ps -o command= -p "$pid" | grep -q "tools/preview.py"; then
+    # e.g. the Vapor server (NotebookServer) left running from Xcode: it answers 8080 with errors.
+    echo "Port 8080 is used by another program, not the Little Days preview:"
+    ps -o pid=,command= -p "$pid"
+    echo "Stop it (in Xcode: ■ Stop, or: kill $pid), then run this again."
+    exit 1
   fi
   open "http://127.0.0.1:8080/$1"
 }
 case "$cmd" in
   web) web "" ;;
   web-ai) web "?dev-local-ai=$MODEL" ;;
+  open) open LittleDays.xcworkspace ;;
   ai)
     curl -s --max-time 2 http://127.0.0.1:11434/api/version || { echo "Ollama is not running: open the Ollama app (or run: ollama serve)"; exit 1; }
     echo; ollama list; echo "-- loaded now:"; ollama ps ;;

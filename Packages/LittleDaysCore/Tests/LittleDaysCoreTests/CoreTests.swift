@@ -43,11 +43,20 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try SharedResources.libraryData(category: "music", filename: "LD-photo-latte-art.jpg"))
         // Little Keeper V8.0: Captain only (Normal, Happy, Sleepy, Peek), cut out of the approved reference.
         let keepers = try XCTUnwrap(catalog.keepers)
-        XCTAssertEqual(keepers.map(\.mood), ["normal", "happy", "sleepy", "peek"])
+        // V10.8 added the no-hat look (holding the yarn ball): one "happy" picture.
+        XCTAssertEqual(keepers.map(\.mood), ["normal", "happy", "sleepy", "peek", "happy"])
         XCTAssertEqual(Set(keepers.map(\.animal)), ["cat"])
         let keeperPNG = try SharedResources.libraryData(category: "keepers", filename: keepers[0].file)
         XCTAssertEqual(Array(keeperPNG.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
         XCTAssertThrowsError(try SharedResources.libraryData(category: "keepers", filename: "LD-photo-latte-art.jpg"))
+        // V10.17 Playroom: both looks have a stage; only the lemon hat has the
+        // hug animation and a ball of its own. Every file is served.
+        let play = try XCTUnwrap(catalog.keeperPlay)
+        XCTAssertEqual(play.map(\.outfit), ["lemon", "yarn"])
+        XCTAssertEqual(play[0].happy?.frames, 6)
+        XCTAssertNotNil(play[0].ball)
+        XCTAssertNil(play[1].happy)
+        for file in play.flatMap(\.files) { XCTAssertFalse(try SharedResources.libraryData(category: "keepers", filename: file).isEmpty, file) }
     }
 
     func testLegacyJournalWithoutV3FieldsStillDecodes() throws {
@@ -151,10 +160,22 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(moment.kit, "blush")
         XCTAssertEqual(moment.layoutStyle, "cozy")
         // V6.5: a text layer bound to a Moment's words decodes too.
-        let bound = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"t","kind":"text","text":"","x":50,"y":90,"scale":1,"rotation":0,"bind":"title","of":"m1","excerpt":20,"gen":true,"chip":"#B4547A"}"#.utf8))
+        let bound = try JSONDecoder().decode(StickerLayer.self, from: Data(##"{"id":"t","kind":"text","text":"","x":50,"y":90,"scale":1,"rotation":0,"bind":"title","of":"m1","excerpt":20,"gen":true,"chip":"#B4547A"}"##.utf8))
         XCTAssertEqual(bound.bind, "title")
         XCTAssertEqual(bound.of, "m1")
         XCTAssertEqual(bound.gen, true)
+        // V10.19: a photo's own words and the line bound to them, and a page's quick type.
+        let captioned = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"p1","kind":"photo","text":"a.jpg","x":50,"y":40,"scale":1,"rotation":0,"mediaRef":"media:p1","caption":"第一杯：拉花是一只小熊"}"#.utf8))
+        XCTAssertEqual(captioned.caption, "第一杯：拉花是一只小熊")
+        let captionLine = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"c1","kind":"text","text":"","x":50,"y":60,"scale":1,"rotation":0,"bind":"caption","captionOf":"p1","gen":true}"#.utf8))
+        XCTAssertEqual(captionLine.captionOf, "p1")
+        let typed = try JSONDecoder().decode(PageTypeStyle.self, from: Data(##"{"fontId":"song","color":"#6D8299","bold":true,"align":"left","scale":1.15}"##.utf8))
+        XCTAssertEqual(typed.fontId, "song")
+        XCTAssertEqual(try JSONDecoder().decode(StickerLayer.self, from: JSONEncoder().encode(captioned)).caption, captioned.caption, "survives a Swift round trip")
+        // V10.20: a crop chosen in the crop editor (non-destructive) survives a Swift round trip.
+        let cropped = try JSONDecoder().decode(StickerLayer.self, from: Data(#"{"id":"p2","kind":"photo","text":"b.jpg","x":50,"y":40,"scale":1,"rotation":0,"mediaRef":"media:p2","crop":{"x":56.04,"y":87.3,"zoom":1.243,"rect":{"x":0.3365,"y":0.1705,"w":0.3995,"h":0.8047},"aspect":1.5106}}"#.utf8))
+        XCTAssertEqual(cropped.crop?.rect?.w, 0.3995)
+        XCTAssertEqual(try JSONDecoder().decode(StickerLayer.self, from: JSONEncoder().encode(cropped)).crop, cropped.crop)
         XCTAssertEqual(moment.media?.first?.origin, "recording")
         // Page backgrounds and library photos keep their references.
         XCTAssertEqual(moment.backdrop, "scene:color-peach")
@@ -172,9 +193,10 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(tokens.colors["cream"], "#F8F5EF")
         XCTAssertGreaterThan(try SharedResources.mediaData(named: "coffee").count, 1000)
         let features = try SharedResources.decode(FeatureDefinition.self, named: "features")
-        XCTAssertEqual(features.tabs.map(\.id), ["home", "calendar", "studio", "growth", "books"])
-        // V6.6: Growth has no tab of its own (Home's "today" card + "My habits").
-        XCTAssertEqual(features.tabs.filter { $0.inNav != false }.map(\.id), ["home", "calendar", "studio", "books"])
+        XCTAssertEqual(features.tabs.map(\.id), ["home", "calendar", "studio", "growth", "books", "community"])
+        // V6.6: Growth has no tab of its own (Home's "today" card + "My habits");
+        // V10.17: community is a Labs page — the release app has four tabs.
+        XCTAssertEqual(features.tabs.filter { $0.inNav != false && $0.labs != true }.map(\.id), ["home", "calendar", "studio", "books"])
         XCTAssertEqual(DayKey.weekStart("2026-11-08"), "2026-11-02")
         XCTAssertEqual(DayKey.adding(1, to: "2026-12-31"), "2027-01-01")
     }

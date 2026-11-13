@@ -51,6 +51,7 @@ async function leaveStudio(page) {
   await page.waitForSelector("#phone:not(.in-studio)");
 }
 module.exports.leaveStudio = leaveStudio;
+module.exports.seed = seedAccount; // for persistent profiles (launchPersistentContext)
 // V10.11: saving opens the full-screen reader (no bottom menu there): ‹ goes back to the book.
 async function leaveReader(page) {
   if (!(await page.locator("#phone.in-reader").count())) return;
@@ -157,8 +158,32 @@ const dockReady = async (target) => {
   });
 };
 module.exports.studioTool = async (target, id) => {
+  // V10.25: 目录 is reached from 页面目录 (More → 页面目录 → 更多页面操作).
+  if (id === "chapters") {
+    const sheet = target.locator('.tool-sheet[data-tool-row="chapters"]');
+    if (await sheet.count()) return sheet;
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="open-pages"]').click();
+    await target.locator('#choose-dialog[open] [data-action="pages-more"]').click();
+    await sheet.waitFor();
+    return sheet;
+  }
+  // V10.24: mood is chosen in 页面信息 (More → 心情 opens it at the picker).
+  if (id === "mood") {
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="mood-open"]').click();
+    const details = target.locator('.tool-sheet[data-tool-row="details"]');
+    await details.locator("#mood-picker").waitFor();
+    return details;
+  }
   const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
-  if (await sheet.count()) return sheet;
+  // V10.25: 图层 shows order / copy first; older suites use the exact numbers
+  // and a text's words, which are folded under 精确调整 — open it for them.
+  const precise = async () => {
+    if (id === "layer" && (await sheet.locator("details.layer-precise:not([open]) > summary").count())) await sheet.locator("details.layer-precise > summary").click();
+    return sheet;
+  };
+  if (await sheet.count()) return precise();
   await dockReady(target);
   // With something selected the bottom row is that item's tools (V10.1):
   // 图层 is there; for any other tool, × returns to the four tools first.
@@ -166,7 +191,7 @@ module.exports.studioTool = async (target, id) => {
     if (await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).count()) {
       await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).click();
       await sheet.waitFor();
-      return sheet;
+      return precise();
     }
     await target.locator('.tool-dock.ctx [data-action="layer-deselect"]').click();
     await target.locator(".tool-dock:not(.ctx)").waitFor();
@@ -177,7 +202,7 @@ module.exports.studioTool = async (target, id) => {
     await target.locator(`.more-grid [data-tool="${id}"]`).click();
   }
   await sheet.waitFor();
-  return sheet;
+  return precise();
 };
 module.exports.studioMore = (target) => module.exports.studioTool(target, "more");
 // Date · journal · time · name · caption · tags · delete.
@@ -238,5 +263,26 @@ module.exports.settingsSheet = async (page, kind) => {
 };
 module.exports.closeSheet = async (page) => {
   if (await page.locator("#choose-dialog[open]").count()) await page.locator('#choose-dialog [data-action="choose-close"]').first().click();
+  await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
+};
+
+// V10.19: the magazine view's words sheet edits one Moment (or one photo) at
+// a time. Writes each Moment's own line (null = leave it), in order.
+module.exports.storyLines = async (page, lines) => {
+  await page.locator('.story-tools [data-action="story-text"]').tap();
+  await page.waitForSelector("#choose-dialog[open] [data-sw-text]");
+  const tabs = page.locator('#choose-dialog [data-action="sw-moment"]');
+  const n = await tabs.count();
+  for (const [i, line] of lines.entries()) {
+    if (line == null) continue;
+    if (n) {
+      await tabs.nth(i).tap();
+      await page.waitForFunction((at) => document.querySelectorAll('#choose-dialog [data-action="sw-moment"]')[at]?.getAttribute("aria-selected") === "true", i);
+    }
+    await page.locator('#choose-dialog [data-action="sw-target"][data-target="moment"]').tap();
+    await page.waitForSelector('#choose-dialog [data-target="moment"][aria-selected="true"]');
+    await page.locator("#choose-dialog [data-sw-text]").fill(line);
+  }
+  await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
   await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
 };

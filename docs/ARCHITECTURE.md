@@ -344,3 +344,136 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 启用条件：本机偏好 `little-days.dev.local-ai = { on, endpoint, model }`，并且页面地址和模型地址都是 localhost 或 127.0.0.1。在线链接和 iPhone 外壳的地址都不是本机，所以永远不会启用。
 - 发送内容：系统提示词（包含 Captain 的名字和当前装扮名）、最近最多 6 行聊天（只含用户打的字和之前的模型回复）、新的一句。不发送手帐数据。
 - 开发工具：`tools/mac/doctor.sh`（只读检查）、`tools/mac/dev.sh`（预览、模拟器、评测、测试、停止）、`tools/captain-eval.mjs`（与 App 共用提示词和参数）。
+
+
+## 2026-11-11 V10.16
+
+- `Public/js/profile-mark.mjs`：标记的取值、首字、渲染。账号记录不变（`little-days.account.avatar` 字符串），不迁移数据。
+- `syncMusic()`：`day:` 和 `book:` 情境都需要点按（`musicAsked`）才会出声。
+- 书本详情的 `dayCoverHTML()`：多页的日子渲染 `.day-group` 和 `.day-page-thumb`（`data-key = Reader.keyOf(item)`），`reader-open` 收到 `data-key` 时直接用这个位置打开。
+- 构建：根目录 `Package.swift` 声明 `.iOS(.v17)`；`LittleDays.xcworkspace` 指向 `Native/LittleDays.xcodeproj`。
+
+## 2026-11-12 V10.16.1
+
+- `app.js`：新增常量 `BRAND_SPROUT`（首页字标和欢迎页共用的小芽 SVG）；`loginHTML()` 用 `.login-brand`（App 图标 + `h1.brand-title.login-title`）和 `.login-labs`（`role="group"`，未上线的登录按钮）。
+- `styles.css`：`.pmark` 增加 `--pm-cap`、`--pm-cjk`、`--pm-ring` 三个变量，各样式只覆盖变量；删除 `.login-art`、`.login-divider` 样式。
+- i18n：新增 `login.labsOnly`。`whats-new.mjs` 新增 10.16.1（版本号允许三段，`tests/v52-browser.cjs` 已放宽格式检查）。
+
+## 2026-11-12 V10.17 Captain's Playroom
+
+- 数据：`library.json` 新增 `keeperPlay`，每套造型一条：`idle`、`stage`，可选的 `happy`（`file`/`frames`/`frameMs`/`loops`/`still`）和 `ball`（`file`/`x`/`y`/`d`），还有 `license`。
+  - Swift：`KeeperPlay`、`KeeperPlayClip`、`KeeperPlayBall`（`AssetCatalog.keeperPlay` 是可选字段）。`SharedResources.libraryData(category: "keepers", …)` 的白名单也包含这些文件，`CoreTests` 新增了检查（还修正了旧测试里少写的无帽图）。
+  - `tools/preview.py` 和 `tools/build_link.py` 用同样的白名单。
+- 页面：`app.js` 新增 `wornLook`、`playSetOf`、`keeperPlayHTML`、`prHappy`、`prToss`、`prCatch`，以及毛线球的 pointer 拖动（document 级的 `pointerdown`/`pointermove`/`pointerup`，使用 `setPointerCapture`，毛线球设 `touch-action:none`）。
+  - 状态都在 DOM 上：`.pr[data-busy]`、`.pr.happy` / `.still` / `.hop`、`.pr-ball.caught`。
+  - 「玩耍」标签固定展开到最高。
+- 原生：`LittleDaysHaptics`（`WKScriptMessageHandler`，名字是 `littleDaysHaptics`）收到页面的 `postMessage` 后调用 `UIImpactFeedbackGenerator(.light)`。网页端检测不到这个 handler，就什么都不做。
+- 素材：`tools/make_captain_anim.py` 需要 Pillow 和 numpy：把毛线球从坐姿图里抠出来，用调和填充补上原位置，生成开心动画的雪碧图，并删除不再使用的带领巾雪碧图。
+
+## 2026-11-12 共享导航的 Labs 标记
+
+- `features.json` 的 `tabs` 新增可选字段 `labs`（目前只有 `community: true`），Swift `FeatureTab.labs` 读取同一个字段。
+- 正式版导航 = `inNav != false && labs != true`。网页在 `labsOn()` 时才显示带 `labs` 的标签；`LAB_PAGES` 仍负责拦截直接跳转到这些页面。
+
+## 2026-11-12 V10.18 Captain 规则对话扩充
+
+- `js/keeper-chat.mjs`：
+  - `understand(text)` 新增 28 种意图，返回值多了 `topic`；新增导出函数 `topicOf(text)`，从「去了 / 吃了 / 看了…」或「I went to / had / watched…」后面取 1–10 个字。问句（含 哪 / 什么 / 怎么 / 吗 / ？）不取 topic。
+  - 判断顺序：灵感 → 请求 → 关于 Captain → 发生的事 / 情绪 → 天气 → 分享 → 寒暄 → 问句 / 倾听 / 未知。
+- `js/keeper.mjs`：`LINE_COUNTS` 加入新的 `chat.*` 条目；`contextLine` 的 values 多了 `thing`。
+- `app.js`：
+  - `keeperAnswer` 记下 `keeperTopic`；`share` / `shareHappy` 用它填 `{thing}`，没有 topic 时改用 `listen`。
+  - `cjkGap()`：只在中文字和英文 / 数字之间加空格，「戳戳 Captain。」不再变成「Captain 。」。
+- 文案：i18n 新增 `kc.chat.<意图>.<n>`，中文都不超过 40 字，没有表情。
+- 测试：新增 `tests/v118.test.mjs`；v109、v103 单元测试和 v109、v103、v71 浏览器测试里原来当作「未知」的例句改用「嗷呜」。
+
+## 2026-11-12 V10.19 照片说明与快速字体
+
+- **数据**（都是可选字段，向下兼容）：
+  - 照片图层 `caption`；
+  - 文字图层 `bind: "caption"` 加 `captionOf`（照片图层 id）；
+  - Moment 和当天封面的 `typeStyle`：`{ fontId, color, bold, align, scale }`。
+  - Swift 对应：`StickerLayer.caption` / `captionOf`、`PageTypeStyle`、`JournalMoment.typeStyle`、`JournalEntry.typeStyle`。CoreTests 覆盖了解码和来回编码。
+- **`scrapbook-layout.mjs`**：
+  - `layoutMoment` 对有说明的照片先排一遍，按每张照片的尺寸算出说明的高度，再把「照片 + 说明」当作一个单元重排；
+  - `settleCaptions` 依次尝试：收窄到照片宽、放到照片上方、缩小照片；
+  - `applyType` / `typeScale` / `TYPE_SCALES`；
+  - `boundText` 支持 `bind: "caption"`，按 `captionOf` 读取照片的 caption。
+- **`app.js`**：
+  - `layoutStoryPage` 把 caption 和 typeStyle 传给排版，封面用 `applyType` 处理；
+  - `makeStory` 从分组数据带上 caption 和 typeStyle；`story-regroup` 按 mediaRef 带回 caption、按第一张照片带回 typeStyle；
+  - 新面板：`storyWordsHTML` / `storyTypeHTML` / `openStoryText` / `storyWordsInput`（立即写入，260ms 后重排并刷新预览）/ `relayoutStoryWords` / `storyType` / `addMissingCaptions`（手动调整过的页面只补一行说明）；
+  - `sw-*` 按钮事件；
+  - 点页面上的照片直接打开那张照片的说明（`pointerdown` 记录点击位置）；
+  - Studio 里直接在纸上编辑 caption 图层时，写回对应照片的 caption。
+- **原生**：iPhone App 用 WKWebView 加载同一套网页，行为一致。早期的 SwiftUI 原型界面（`LittleDaysRootView` 等）没有杂志模式，也不显示照片说明，只是数据能完整解码、保存。
+
+## 2026-11-12 V10.20 照片工具与非破坏性裁剪
+
+- **新文件 `js/crop.mjs`**（纯函数）：
+  - `boxAspect`：照片窗口的比例，扣除相框留边；遮罩形状不留边。
+  - `coverRect` / `containIn` / `clampRect`。
+  - `rectToView` / `viewToRect`：保留的区域和旧的 `x / y / zoom` 互相转换，比例和外框一致时结果精确。
+  - `cropView`：有 `rect` 时由 `rect` 加当前外框比例计算，否则直接用旧字段。
+  - 还有 `withRatio` / `rotateRect90` / `frameFor` / `fixedShape`。
+  - `canvas.mjs` 的 `cropOf` 和 `export.mjs` 都改为调用 `cropView`，编辑器、阅读器和导出图片的显示一致。
+- **新文件 `js/crop-editor.mjs`**：全屏裁剪编辑器，用 Pointer Events 处理拖动、双指和角 / 边，返回 `{ rect, aspect, frameAspect, rotated }`；旋转交给 App 的回调完成。
+- **数据**（向下兼容）：
+  - `layer.crop` 新增可选的 `rect { x, y, w, h }`（照片的比例坐标）和 `aspect`；旧的 `x / y / zoom` 照常写入，旧的读取方式和校验都不受影响。
+  - Swift：`LayerCrop.rect` / `aspect`、`CropRect`；CoreTests 覆盖解码和来回编码。
+  - 在画布上用旧方式调整裁剪（拖动或滚轮）时，写入的新对象没有 `rect`，以旧字段为准。
+  - 替换照片时裁剪重置。
+- **`app.js`**：
+  - 照片工具行 `ctxDockHTML` 改为 `shape` / `crop-open` / `photo-edit` / `replace-photo`；
+  - 新增 `shapeSheetHTML`；`layerControls` 去掉形状和裁剪；
+  - `openCropFor`：90° 旋转复用 `normalizeEdit` + `renderEdited`，原图留在 `sourceRef`；所有修改在一次 `changeTarget` 里完成，因此是一次 Undo；
+  - `addPhotoLayers` 不再打开排版，改为设置 `layoutHint`；
+  - `render` 里同一个工具保留滚动位置，换工具从顶部开始；
+  - 「调整」打开图片编辑器时传 `tabs` 参数，去掉裁剪页。
+
+## 2026-11-12 V10.21 媒体持久化（P0）
+
+- **存储格式**：`little-days-media` / `media` 的新记录为 `{ id, bytes: ArrayBuffer, mime, size, kind, name, duration?, createdAt }`，不再存 `Blob` / `File`（iOS WebKit 中 IndexedDB 里的 Blob 可能失效，推断，未在 WebKit 验证）。`blobOf(record)` 统一把字节或旧 `blob` 变成 Blob。
+- **写入**：`put()` 先 `arrayBuffer()`，`add` 写入，再 `get` 读回核对 `byteLength`；不一致抛 `code: "media-verify"`。
+- **旧记录**：`readable(id)` 遇到旧 `blob` 字段时读出字节并原地改写（同 id、保留字段、删除 `blob`），改写失败不影响本次显示；读不出时记入 `broken`，不删除。
+- **可信的「已保存」**：`flushDraft()` → `confirmMediaSaved()`：用 `mediaReferences()` 取当前草稿的所有 `media:` 引用，`media.missing(ids)`（`getKey` + `broken`）为空才设为 `saved`，否则 `failed` + `media.notSaved` 提示。
+- **加载失败恢复**：全局捕获 `img / video / audio` 的 `error`，`media.idOfUrl(src)` 找回 id，`media.refresh(id)` 重新读取并换新的 object URL（每个 id 一次），否则 `.media-broken`。
+- **缺失显示**：画布 `.photo-missing`（📷 + `media.photoMissing`），不生成替代内容。
+- **备份**：大小按记录（`bytes.byteLength ?? blob.size ?? size`）累计，超过 `MAX_BACKUP_MEDIA_BYTES`（100MB）抛 `error.backupSize`；导出 `data:` URL；恢复经 `put()`，同样以字节存储。
+- **持久化请求**：启动时 `navigator.storage.persist()`（尽力而为）。
+- **测试**：`tests/media.test.mjs`（单元）、`tests/v121-browser.cjs`（Chromium 持久化资料：离开 / 刷新 / 关闭重开 / 阅读器 / 旧记录 / 缺失 / 备份恢复 / 杂志模式）。
+
+## 2026-11-12 V10.22 只读的媒体检查（P0 排查）
+
+- `js/media-check.mjs`：
+  - `mediaUses(state)` → 每个 `media:` 引用的位置（日期、页码、是否草稿）和格式不对的引用；
+  - `inspectMedia(media, state)` 把每个文件分为 `ok / missing / unreadable / empty / decode / badref`：
+    - 旧的 Blob 记录只读不改写；
+    - 图片用 `createImageBitmap` 解码，视频和音频读元数据，各有 8 秒超时；
+  - `environment()` 返回 engine / browser / platform / shell / address / embedded / parent（`location.ancestorOrigins` 或 `referrer`）/ persisted / usage / quota / idb / localStorage / ua；
+  - `reportText()` 生成不含标题和正文的报告。
+- 事件（本机 `little-days.events`，不上传）：
+  - `media_save_failed{kind,stage,err}`
+  - `media_missing`
+  - `media_read_failed{kind,stage,err}`
+  - `media_converted` / `media_convert_failed`
+  - `media_url_failed{kind,stage}`（地址失效，重新读取后恢复）
+  - `media_decode_failed{kind,err}`
+  - `media_unreadable{kind}`
+  - `media_not_saved{count}`
+  - `media_check{count}`
+  - `cleanData` 允许 `count`、`stage`、`err` 三个字段。
+- 入口：设置 → 数据与隐私 →「检查照片和视频」（`data-action="media-check"`，复制按钮是 `media-check-copy`）。
+- 测试：`tests/v122.test.mjs`、`tests/v122-browser.cjs`（`BROWSER=webkit` 时用 WebKit；它自己启动预览服务，端口用 `PORT` 指定，默认 8093）。
+
+## 2026-11-12 V10.23 导入视频 / 声音（保存到本机）
+
+- 状态 `mediaImport = { file, kind, size, duration, stage, progress, thumb, err, targetId }`。阶段依次是：`import`（`mediaMetadata` + `frameAt` 缩略图，只在内存里）→ `read`（`FileReader.readAsArrayBuffer`，`onprogress` 给出真实百分比）→ `write`（`media.put`，读回核对）→ `cover`（`autoCover`）→ `done` 或 `failed`。
+- 页面数据只在 `attachClip` 写入成功之后才引用这个文件。失败时文件留在 `mediaImport.file` 里，点「重试」再跑一次 `runImport()`；「不要这个视频」清掉它。
+- 导入期间 `busyMedia` 为真，所有编辑操作会被拦下，提示 `import.busy`。页面条 `.page-strip.locked`（`aria-disabled`）只在视频或声音导入时出现，因为这个流程开始和结束时都会重画。顶部状态为 `saving`；结束后由 `confirmMediaSaved()` 重新判断。
+- 卡片 `.import-card`（`importCardHTML` / `refreshImportCard`）放在 `.studio-stage` 里，压在纸的上方；进度条在 `read` 阶段有百分比，其余阶段是不确定进度条。
+- 事件：`media_import{kind,stage:"done",size(MB),ms}`、`media_import_failed{kind,stage,err,size}`。
+- 视频卡片（`mediaCardHTML`，可编辑时）：「换封面」（`video-poster`）和「从页面移除」（`remove-media-ask`：先确认，用 `changeTarget` 记入撤销历史）放在视频正下方，下面是小字和「不放在纸上」（`clip-on-page`）。
+- 选中视频后的工具：`ctx-play` · `video-cover` · `shape` · `layer` · `layer-delete`（显示为「移除」）。
+- 测试：`tests/v123-browser.cjs`（需要 `VIDEO_DIR`；WebKit 用 mp4，Chromium 用 webm）。
+

@@ -80,7 +80,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     passed.push("＋照片 → album (multi) / today's picks / library collections");
 
     // 4. Panels have a grabber: tap or pull up for more room, pull down to close.
-    await studioTool(page, "photos");
+    // (V10.25: 本页照片 left 更多 — the grabber is the same on every panel)
+    await studioTool(page, "paper");
     await page.waitForSelector(".tool-sheet .sheet-grabber");
     const small = (await page.locator(".tool-sheet").boundingBox()).height;
     await page.locator(".sheet-grabber").tap();

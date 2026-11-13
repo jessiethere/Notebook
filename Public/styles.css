@@ -5914,43 +5914,29 @@ details.check-history[open] > summary > span:first-child::after {
   padding: 18px 2px 30px;
   text-align: center;
 }
-.login-art {
-  position: relative;
-  width: 132px;
-  height: 132px;
-  margin: 6px auto 2px;
-  border-radius: 40px;
-  background: radial-gradient(circle at 30% 30%, var(--c-f6e3df, #f6e3df), var(--c-e7ebdf, #e7ebdf));
+/* V10.16 polish: the official app icon and the Home wordmark with its sprout
+   (no pixel ✿, no loose emoji). */
+.login-brand {
   display: grid;
-  place-items: center;
-  box-shadow: 0 10px 30px var(--c-5d493c1a, #5d493c1a);
+  justify-items: center;
+  gap: 12px;
+  margin: 8px 0 0;
 }
-.login-art span {
-  font-size: 56px;
-  color: var(--t-b07c7c, #b07c7c);
+.login-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
+  border: 4px solid var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 1px 0 var(--line), 0 10px 24px var(--c-5d493c1a, #5d493c1a);
+  transform: rotate(-2deg);
 }
-.login-art i {
-  position: absolute;
-  font-style: normal;
-  font-size: 22px;
-}
-.login-art i:nth-of-type(1) {
-  top: -8px;
-  right: -10px;
-  transform: rotate(10deg);
-}
-.login-art i:nth-of-type(2) {
-  bottom: -6px;
-  left: -12px;
-}
-.login-art i:nth-of-type(3) {
-  bottom: 10px;
-  right: -18px;
-  transform: rotate(-12deg);
-}
-.login-title {
-  font: 600 34px "LD-elegant", Georgia, serif;
-  margin: 6px 0 0;
+.login .login-title {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+  font: 400 34px/1.1 "LD-elegant", Georgia, serif;
+  letter-spacing: -0.4px;
+  margin: 0;
 }
 .login-tag {
   font: 13px/1.7 "LD-handwritten", "LD-chinese", serif;
@@ -5979,19 +5965,29 @@ details.check-history[open] > summary > span:first-child::after {
   flex-wrap: wrap;
   gap: 6px;
 }
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 10px;
-  color: var(--t-a3957f, #a3957f);
-  margin-top: 4px;
+/* Apple / email sign-in are not live: shown only inside Labs, in a dashed
+   "not available yet" tray so they never read as working entrances. */
+.login-labs {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 22px 12px 12px;
+  position: relative;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
 }
-.login-divider::before,
-.login-divider::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid var(--line);
+.login-labs-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--t-8d857b, #8d857b);
 }
 .login-provider {
   display: flex;
@@ -15635,7 +15631,8 @@ dialog h2,
 /* A sheet never squeezes the paper under 170px tall: it scrolls inside. */
 .phone.sv {
   --sheet-max: min(40dvh, 340px, calc(var(--studio-h, 100dvh - 40px) - 374px));
-  --sheet-max-more: min(46dvh, 420px, calc(var(--studio-h, 100dvh - 40px) - 374px));
+  /* V10.25: 更多 is a little taller so 页面外观 + 媒体与创作 show without much scrolling; on a short phone (375×667) it stops where the paper still has ≥ 120px */
+  --sheet-max-more: min(52dvh, 440px, calc(var(--studio-h, 100dvh - 40px) - 340px));
 }
 .phone.sv .studio-stage:not(.large) .canvas-wrap {
   width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max)) * 0.8));
@@ -18522,47 +18519,210 @@ html[data-shell="ios"] .phone.sv ~ .toast {
 .kp.corner.composing .kp-tabs {
   display: none;
 }
-/* Play: on its way — no stand-in interaction. */
-.kp-play {
+/* V10.17 · Captain's Playroom: a big paper stage with Captain on it. The
+   stage's cream is the art's own paper (#FEF5EA), so the picture has no
+   seam — it stays cream in every theme, like a photograph would. */
+.pr {
   display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 8px 4px 4px;
-  text-align: center;
+  gap: 10px;
+  padding: 2px 0 4px;
 }
-.kp-play .keeper-img {
-  width: 96px;
-  height: 96px;
+.pr-stage {
+  position: relative;
+  width: min(100%, calc(var(--kp-h) - 210px));
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--c-fef5ea, #fef5ea);
+  box-shadow: 0 0 0 1px var(--c-5a463214, #5a463214), 0 14px 26px -18px var(--c-3c2d1e66, #3c2d1e66);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.pr-idle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+/* The look without a stage photo of its own (no hat): its cut-out on the paper. */
+.pr[data-stage="cutout"] .pr-idle {
+  inset: auto 0 5% 0;
+  margin: 0 auto;
+  width: 78%;
+  height: auto;
   object-fit: contain;
 }
-.kp-play h3 {
-  margin: 4px 0 0;
-  font: 600 17px var(--ui-sans);
+.pr[data-stage="cutout"] .pr-stage::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 5%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--c-5a46322e, #5a46322e), transparent);
 }
-.kp-play p {
+/* The happy reaction: frames side by side, stepped through (twice). */
+.pr-anim {
+  position: absolute;
+  inset: 0;
+  background-size: calc(var(--pr-n) * 100%) 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.pr.happy .pr-anim {
+  opacity: 1;
+  animation: pr-frames var(--pr-time) steps(var(--pr-n), jump-none) var(--pr-loops);
+}
+.pr.happy.still .pr-anim {
+  animation: none;
+  background-position: var(--pr-key) 0;
+}
+@keyframes pr-frames {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+/* No happy animation for this look yet: its own picture hops, twice. */
+.pr.hop .pr-idle {
+  animation: pr-hop 0.42s ease-in-out 2;
+}
+@keyframes pr-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-5%);
+  }
+}
+.pr-body {
+  position: absolute;
+  left: 8%;
+  top: 6%;
+  width: 56%;
+  height: 86%;
+  padding: 0;
+  border: 0;
+  border-radius: 40%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pr[data-stage="cutout"] .pr-body {
+  left: 18%;
+  width: 64%;
+  top: 10%;
+  height: 84%;
+}
+.pr-ball {
+  position: absolute;
+  left: calc(var(--bx) - var(--bd) / 2);
+  top: calc(var(--by) - var(--bd) / 2);
+  width: var(--bd);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  touch-action: none;
+  cursor: grab;
+  z-index: 2;
+  transition: opacity 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pr-ball img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.pr-ball.held {
+  cursor: grabbing;
+}
+.pr-ball.held img {
+  filter: drop-shadow(0 6px 6px var(--c-5a463233, #5a463233));
+}
+.pr-ball.caught,
+.pr.happy .pr-ball {
+  opacity: 0;
+  pointer-events: none;
+}
+.pr-ball:focus-visible {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 2px;
+}
+/* First visit only: a soft ring breathes around the ball. */
+.pr-ring {
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  border: 2px solid var(--c-ffffffd9, #ffffffd9);
+  box-shadow: 0 0 0 1px var(--c-7d9a6a59, #7d9a6a59);
+  animation: pr-ring 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.pr[data-hinted] .pr-ring {
+  display: none;
+}
+@keyframes pr-ring {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.35;
+  }
+}
+.pr-bubble {
+  position: absolute;
+  top: 6%;
+  right: 5%;
+  max-width: 42%;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
+  padding: 8px 12px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--c-fffdf8f2, #fffdf8f2);
+  box-shadow: 0 0 0 1px var(--c-5a46321a, #5a46321a), 0 6px 14px -8px var(--c-3c2d1e59, #3c2d1e59);
+  font: 500 14px/1.4 var(--ui-sans);
+  color: var(--t-3f362e, #3f362e);
+  pointer-events: none;
+}
+.pr-bubble.pop {
+  animation: pr-pop 0.28s ease-out;
+}
+@keyframes pr-pop {
+  from {
+    transform: scale(0.9) translateY(4px);
+    opacity: 0.4;
+  }
+}
+.pr-line {
+  margin: 0 8px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--t-675d54, #675d54);
 }
-.kp-soon {
-  width: 100%;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--line);
-}
-.kp-soon li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 48px;
-  border-bottom: 1px solid var(--line);
-  font: 500 15px var(--ui-sans);
-}
-.kp-play .kp-hint {
-  margin-top: 6px;
-  font-size: 13px;
+@media (prefers-reduced-motion: reduce) {
+  .pr-ring,
+  .pr-bubble.pop {
+    animation: none;
+  }
 }
 
 /* =====================================================================
@@ -19597,8 +19757,1489 @@ button.book-detail-showcase {
   margin-top: 3px;
   font-size: 11px;
   letter-spacing: 0.02em;
-  color: var(--c-8a8178, #8a8178);
+  color: var(--t-8a8178, #8a8178);
 }
 .sg-card.at-bottom.over-dock {
   bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+/* =====================================================================
+   V10.16 · The personal mark: five monograms on five papers and the sprout
+   (Tactile Stationery × Cozy Editorial). One language for all of them: a
+   round piece of paper with a soft sheen, a hairline edge and a small
+   shadow; the letter set large and optically centred. Only the paper, the
+   ink and the type change.
+   ===================================================================== */
+.pmark {
+  --pm: 48px;
+  --pm-paper: var(--c-fbf6ec, #fbf6ec);
+  --pm-ink: var(--sageDeep);
+  /* V10.16 polish: one optical letter size and one ring weight for all five;
+     each face only corrects for its own cap height. */
+  --pm-cap: 0.52;
+  --pm-cjk: 0.4;
+  --pm-ring: max(1px, calc(var(--pm) * 0.02));
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--pm);
+  height: var(--pm);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 24%, var(--c-ffffff8c, #ffffff8c), transparent 58%),
+    radial-gradient(circle at 70% 82%, var(--c-5a46320f, #5a46320f), transparent 60%),
+    var(--pm-paper);
+  box-shadow:
+    inset 0 0 0 1px var(--c-5a463217, #5a463217),
+    0 1px 1.5px var(--c-3c2d1e1f, #3c2d1e1f),
+    0 calc(var(--pm) * 0.12) calc(var(--pm) * 0.22) calc(var(--pm) * -0.12) var(--c-3c2d1e40, #3c2d1e40);
+  color: var(--pm-ink);
+  overflow: hidden;
+  user-select: none;
+}
+.pm-letter {
+  display: block;
+  /* Cap height sits a touch high in most faces: nudge down to look centred. */
+  transform: translateY(calc(var(--pm) * 0.03));
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-elegant", Georgia, serif;
+  letter-spacing: 0;
+}
+.pmark.pm-wide .pm-letter {
+  transform: none;
+  font: 500 calc(var(--pm) * var(--pm-cjk)) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+}
+/* 1 · Paper: ivory, sage ink, Cormorant. */
+.pm-paper {
+  --pm-cap: 0.54;
+}
+/* 2 · Seal: blush paper, a vermilion double ring, Baskerville. */
+.pm-seal {
+  --pm-paper: var(--c-f6e7df, #f6e7df);
+  --pm-ink: var(--c-a9483a, #a9483a);
+  --pm-cap: 0.4;
+  --pm-cjk: 0.36;
+}
+.pm-seal::before,
+.pm-seal::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: var(--pm-ring) solid var(--pm-ink);
+  opacity: 0.7;
+}
+.pm-seal::before {
+  inset: calc(var(--pm) * 0.1);
+}
+.pm-seal::after {
+  inset: calc(var(--pm) * 0.155);
+  border-width: max(0.5px, calc(var(--pm) * 0.01));
+  opacity: 0.45;
+}
+.pm-seal .pm-letter {
+  font: 700 calc(var(--pm) * var(--pm-cap)) / 1 "LD-vintage-serif", Georgia, serif;
+  transform: translateY(calc(var(--pm) * 0.02));
+}
+.pm-seal.pm-wide .pm-letter {
+  font: 700 calc(var(--pm) * var(--pm-cjk)) / 1 "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+}
+/* 3 · Kraft: a kraft tag with a stitched edge, DM Sans capitals. */
+.pm-kraft {
+  --pm-paper: var(--c-e8d8bd, #e8d8bd);
+  --pm-ink: var(--c-4a3b2e, #4a3b2e);
+  --pm-cap: 0.44;
+  --pm-cjk: 0.38;
+}
+.pm-kraft::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--pm) * 0.085);
+  border-radius: 50%;
+  border: var(--pm-ring) dashed var(--c-4a3b2e59, #4a3b2e59);
+}
+.pm-kraft .pm-letter {
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-minimal-sans", var(--ui-sans);
+  transform: none;
+}
+.pm-kraft.pm-wide .pm-letter {
+  font: 600 calc(var(--pm) * var(--pm-cjk)) / 1 var(--ui-sans);
+}
+/* 4 · Sage: sage paper, ivory letter. */
+.pm-sage {
+  --pm-paper: var(--sageDeep);
+  --pm-ink: var(--c-fbf6ec, #fbf6ec);
+  background:
+    radial-gradient(circle at 32% 24%, var(--c-ffffff2e, #ffffff2e), transparent 58%),
+    var(--pm-paper);
+}
+.pm-sage {
+  --pm-cap: 0.54;
+}
+/* 5 · Script: mist paper, navy ink, Caveat and a terracotta stroke. */
+.pm-script {
+  --pm-paper: var(--c-e6ecee, #e6ecee);
+  --pm-ink: var(--c-3c4a5b, #3c4a5b);
+  --pm-cap: 0.56;
+  --pm-cjk: 0.36;
+}
+.pm-script .pm-letter {
+  font: 600 calc(var(--pm) * var(--pm-cap)) / 1 "LD-handwritten", cursive;
+  transform: translateY(calc(var(--pm) * -0.02)) rotate(-4deg);
+}
+.pm-script.pm-wide .pm-letter {
+  transform: translateY(calc(var(--pm) * -0.04));
+  font: 400 calc(var(--pm) * var(--pm-cjk)) / 1 "Kaiti SC", "STKaiti", "KaiTi", serif;
+}
+.pm-script::after {
+  content: "";
+  position: absolute;
+  left: 32%;
+  right: 30%;
+  bottom: 20%;
+  height: var(--pm-ring);
+  border-radius: 99px;
+  background: var(--c-b8734f, #b8734f);
+  transform: rotate(-4deg);
+  opacity: 0.85;
+}
+/* No name yet: the letter is a faint sample. */
+.pmark.pm-sample .pm-letter {
+  opacity: 0.38;
+}
+/* The sprout (the mark beside the Little Days wordmark), on ivory paper. */
+.pm-sprout-chip .pm-sprout {
+  width: 56%;
+  height: 56%;
+  fill: none;
+  stroke: var(--sageDeep);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pm-sprout-chip .pm-sprout .pm-ground {
+  stroke: var(--t-b8734f, #b8734f);
+}
+/* An emoji chosen before V10.16: kept, on the same paper. */
+.pm-emoji .pm-glyph {
+  font: 400 calc(var(--pm) * 0.46) / 1 var(--ui-sans);
+}
+
+/* Settings header: the mark is the avatar itself. */
+.s2-avatar.pm-host {
+  background: none;
+  box-shadow: none;
+}
+
+/* ---------- The editor (Settings → 编辑资料) ---------- */
+.s2-sheet[data-sheet="profile"] {
+  padding-bottom: 0;
+}
+.pf-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(272px, 100%);
+  margin: 6px auto 10px;
+  padding: 16px 18px 15px;
+  border-radius: 6px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--c-5a463214, #5a463214), 0 12px 22px -16px var(--c-3c2d1e66, #3c2d1e66);
+  transform: rotate(-1.2deg);
+}
+.pf-tape {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 64px;
+  height: 16px;
+  margin-left: -32px;
+  background: var(--c-e7c3bfb3, #e7c3bfb3);
+  transform: rotate(2deg);
+}
+.pf-card-copy {
+  min-width: 0;
+  flex: 1;
+}
+.pf-card-copy small {
+  display: block;
+  font: 600 10px/1 var(--ui-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t-8a8178, #8a8178);
+}
+.pf-card-name {
+  display: block;
+  margin: 6px 0 7px;
+  font: 500 26px/1.05 "LD-elegant", Georgia, serif;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-card-name.zh {
+  font: 600 21px/1.2 var(--ui-sans);
+}
+.pf-card-name.empty {
+  color: var(--t-a39a90, #a39a90);
+}
+.pf-rule {
+  display: block;
+  height: 1px;
+  background: var(--line);
+}
+.pf-sub {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--t-675d54, #675d54);
+}
+.pf-name input {
+  min-height: 48px;
+  font-size: 16px;
+}
+.pf-group-label {
+  margin: 12px 0 8px;
+  font: 500 12px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.pf-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pf-choice {
+  display: inline-grid;
+  place-items: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transition: transform 0.15s ease;
+}
+/* Selected: one quiet sage ring, clear of the paper (no double border). */
+.pf-choice[aria-pressed="true"] .pmark {
+  outline: 1.5px solid var(--sageDeep);
+  outline-offset: 3px;
+}
+.pf-choice:active {
+  transform: scale(0.96);
+}
+.pf-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.pf-pill {
+  display: inline-flex;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line);
+  font: 500 14px var(--ui-sans);
+  color: var(--ink);
+}
+.pf-pill[aria-pressed="true"] {
+  box-shadow: 0 0 0 1.5px var(--sageDeep);
+}
+.pf-pill[aria-pressed="true"] .pmark {
+  outline: none;
+}
+.pf-foot {
+  position: sticky;
+  bottom: 0;
+  margin: 16px -20px 0;
+  padding: 10px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--paper) 14px);
+}
+.pf-foot .s2-hint {
+  margin: 0 0 8px;
+  text-align: center;
+}
+@media (max-height: 700px) {
+  .pf-card {
+    padding: 12px 14px;
+  }
+  .pf-card-mark .pmark {
+    --pm: 48px !important;
+  }
+  .pf-foot .s2-hint {
+    display: none;
+  }
+}
+/* Typing the name on a phone: only the card, the field and Save stay. */
+@media (pointer: coarse) {
+  body.typing .s2-sheet[data-sheet="profile"] .pf-marks,
+  body.typing .s2-sheet[data-sheet="profile"] .pf-sub {
+    display: none;
+  }
+}
+
+/* ---------- The welcome page: the mark there is now, no picker ---------- */
+.login-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.login-me small {
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+
+/* ---------- V10.16 · A day with several pages in the book detail ---------- */
+.day-group {
+  display: grid;
+  gap: 0;
+  border-radius: 18px;
+  background: var(--c-fffdf8, #fffdf8);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px var(--c-5d493c0f, #5d493c0f);
+}
+.day-group > .day-cover {
+  border: 0;
+  box-shadow: none;
+  background: none;
+}
+.day-pages {
+  display: flex;
+  gap: 10px;
+  margin: 0 10px;
+  padding: 2px 0 12px;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.day-pages::-webkit-scrollbar {
+  display: none;
+}
+.day-page-thumb {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  width: 84px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  color: var(--ink);
+}
+.day-page-thumb small {
+  display: grid;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--t-675d54, #675d54);
+}
+.day-page-thumb small b {
+  font-weight: 600;
+  color: var(--ink);
+}
+.day-page-thumb small i {
+  font-style: normal;
+}
+.day-page-thumb:focus-visible {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.day-page-thumb:active .reader-thumb-paper {
+  transform: scale(0.97);
+}
+
+/* =====================================================================
+   V10.19 · Magazine view: words photo by photo, and quick type.
+   One sheet (no nesting), low enough that the page above stays in view
+   and updates as you type; the photo being written for is shown and
+   numbered.
+   ===================================================================== */
+#choose-dialog.see-through::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.choose-sheet.sw {
+  max-height: min(62dvh, 560px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 30px -18px var(--c-3c2d1e66, #3c2d1e66);
+}
+.sw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sw-head h2 {
+  margin: 0;
+  font: 600 17px var(--ui-sans);
+}
+.sw-done {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-fffdf8, #fffdf8);
+  font: 600 14px var(--ui-sans);
+}
+.sw-body {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sw-moments {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sw-moments button {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  font: 600 13px var(--ui-sans);
+  color: var(--ink);
+}
+.sw-moments button small {
+  font-weight: 400;
+  color: var(--t-8a8178, #8a8178);
+}
+.sw-moments [aria-selected="true"] {
+  border-color: var(--sageDeep);
+  box-shadow: inset 0 0 0 1px var(--sageDeep);
+}
+/* The strip: the whole Moment, then each photo with its number. */
+.sw-strip {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  padding: 4px 2px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--paper);
+}
+.sw-item {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--c-f1eadf, #f1eadf);
+  box-shadow: 0 0 0 1px var(--line);
+  overflow: visible;
+}
+.sw-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+.sw-item[aria-selected="true"] {
+  box-shadow: 0 0 0 2px var(--sageDeep);
+}
+.sw-num {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-fffdf8e6, #fffdf8e6);
+  font: 700 11px/18px var(--ui-sans);
+  color: var(--ink);
+}
+.sw-dot {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sageDeep);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.sw-all {
+  display: grid;
+  place-content: center;
+  gap: 2px;
+}
+.sw-all small {
+  font: 600 9.5px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.sw-glyph {
+  font: 500 19px/1 "LD-elegant", Georgia, serif;
+  color: var(--sageDeep);
+}
+/* The one being written for. */
+.sw-edit {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.sw-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sw-now img,
+.sw-now .sw-glyph {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.sw-now .sw-glyph {
+  display: grid;
+  place-items: center;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.sw-now b {
+  display: block;
+  font: 600 14px var(--ui-sans);
+}
+.sw-now small {
+  font-size: 12px;
+  color: var(--t-675d54, #675d54);
+}
+.sw-edit textarea {
+  min-height: 48px;
+  resize: none;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.sw-count {
+  justify-self: end;
+  font-size: 11px;
+  color: var(--t-8a8178, #8a8178);
+}
+/* Quick type: fonts in one scrolling row, then size / bold / align, colours. */
+.sw-type {
+  display: grid;
+  gap: 8px;
+}
+.sw-fonts {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sw-fonts button,
+.sw-row button {
+  flex: none;
+  min-height: 38px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--c-fffdf8, #fffdf8);
+  font-size: 15px;
+  color: var(--ink);
+}
+.sw-fonts [aria-pressed="true"],
+.sw-row [aria-pressed="true"] {
+  border-color: var(--sageDeep);
+  background: var(--c-eef1e8, #eef1e8);
+  box-shadow: inset 0 0 0 1px var(--sageDeep);
+}
+.sw-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.sw-row button:disabled {
+  opacity: 0.4;
+}
+.sw-align {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.sw-align button {
+  min-width: 40px;
+  padding: 0;
+}
+.sw-colors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sw-colors button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px var(--c-00000014, #00000014);
+}
+.sw-colors [aria-pressed="true"] {
+  outline: 2px solid var(--sageDeep);
+  outline-offset: 2px;
+}
+/* Typing on a phone: the keyboard needs the room, so the type tools step aside. */
+@media (pointer: coarse) {
+  body.typing .choose-sheet.sw .sw-type {
+    display: none;
+  }
+}
+/* Scroll rows (strip, Moments, fonts) may shrink to nothing inside a short
+   sheet: keep their own height, the sheet body scrolls instead. */
+.sw-strip {
+  min-height: 66px;
+}
+.sw-moments {
+  min-height: 38px;
+}
+.sw-fonts {
+  min-height: 40px;
+}
+.sw-strip {
+  background: var(--c-f7f4ee, #f7f4ee);
+}
+.sw-fonts button,
+.sw-row button {
+  min-height: 34px;
+}
+.sw-type {
+  gap: 6px;
+}
+
+/* =====================================================================
+   V10.20 · Photo tools: 形状 / 裁剪画面 / 调整 / 替换 / 图层 / 删除.
+   ===================================================================== */
+.shape-sheet {
+  display: grid;
+  gap: 10px;
+}
+.shape-sheet .shape-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shape-frame-row {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.shape-frame-row .field {
+  flex: 1 1 140px;
+}
+/* After adding several photos: a light, ignorable layout suggestion. */
+.layout-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px 8px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line), 0 6px 14px -10px var(--c-3c2d1e66, #3c2d1e66);
+}
+.layout-hint button {
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.layout-hint > button:first-child {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0;
+  font: 600 14px var(--ui-sans);
+  text-align: left;
+}
+.layout-hint .sv-icon {
+  width: 20px;
+  height: 20px;
+}
+.layout-hint i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--t-8a8178, #8a8178);
+}
+.layout-hint-x {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  color: var(--t-8a8178, #8a8178);
+}
+
+/* V10.21: the hint sits above the tools — the paper makes room for it, so
+   the page strip (undo · pages · ＋) is never covered. */
+.phone.sv #app:has(.layout-hint) .studio-stage.large .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 260px) * 0.8));
+}
+
+/* ---------- The crop editor (full screen, dark like a photo app) ---------- */
+dialog.crop-editor {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--c-161412, #161412);
+  color: var(--t-f4efe6, #f4efe6);
+}
+dialog.crop-editor::backdrop {
+  background: var(--c-161412, #161412);
+}
+.ce {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  height: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.ce-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+}
+.ce-top b {
+  font: 600 16px var(--ui-sans);
+}
+.ce-top .text-button {
+  min-height: 44px;
+  color: var(--t-f4efe6, #f4efe6);
+}
+.ce-top .primary {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+}
+.ce-stage {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ce-img {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+.ce-box {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax var(--c-000000a6, #000000a6);
+  outline: 1.5px solid var(--c-fffdf8, #fffdf8);
+  pointer-events: none;
+}
+.ce-anim .ce-img,
+.ce-anim .ce-box {
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.ce-grid {
+  position: absolute;
+  background: var(--c-fffdf866, #fffdf866);
+}
+.ce-grid.v1,
+.ce-grid.v2 {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.ce-grid.v1 {
+  left: 33.33%;
+}
+.ce-grid.v2 {
+  left: 66.66%;
+}
+.ce-grid.h1,
+.ce-grid.h2 {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.ce-grid.h1 {
+  top: 33.33%;
+}
+.ce-grid.h2 {
+  top: 66.66%;
+}
+/* Big, easy handles: corners always; edges in Free only. */
+.ce-h {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+}
+.ce-corner {
+  width: 44px;
+  height: 44px;
+}
+.ce-corner::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 0 solid var(--c-fffdf8, #fffdf8);
+}
+.ce-corner.nw {
+  left: -22px;
+  top: -22px;
+}
+.ce-corner.nw::before {
+  left: 19px;
+  top: 19px;
+  border-width: 4px 0 0 4px;
+}
+.ce-corner.ne {
+  right: -22px;
+  top: -22px;
+}
+.ce-corner.ne::before {
+  right: 19px;
+  top: 19px;
+  border-width: 4px 4px 0 0;
+}
+.ce-corner.sw {
+  left: -22px;
+  bottom: -22px;
+}
+.ce-corner.sw::before {
+  left: 19px;
+  bottom: 19px;
+  border-width: 0 0 4px 4px;
+}
+.ce-corner.se {
+  right: -22px;
+  bottom: -22px;
+}
+.ce-corner.se::before {
+  right: 19px;
+  bottom: 19px;
+  border-width: 0 4px 4px 0;
+}
+.ce-edge {
+  display: none;
+}
+.ce[data-ratio="free"] .ce-edge {
+  display: block;
+}
+.ce-edge.n,
+.ce-edge.s {
+  left: 30%;
+  right: 30%;
+  height: 32px;
+}
+.ce-edge.n {
+  top: -16px;
+}
+.ce-edge.s {
+  bottom: -16px;
+}
+.ce-edge.e,
+.ce-edge.w {
+  top: 30%;
+  bottom: 30%;
+  width: 32px;
+}
+.ce-edge.e {
+  right: -16px;
+}
+.ce-edge.w {
+  left: -16px;
+}
+.ce-edge::before {
+  content: "";
+  position: absolute;
+  background: var(--c-fffdf8, #fffdf8);
+  border-radius: 2px;
+}
+.ce-edge.n::before,
+.ce-edge.s::before {
+  left: 50%;
+  top: 14px;
+  width: 26px;
+  height: 4px;
+  margin-left: -13px;
+}
+.ce-edge.e::before,
+.ce-edge.w::before {
+  top: 50%;
+  left: 14px;
+  width: 4px;
+  height: 26px;
+  margin-top: -13px;
+}
+.ce-note {
+  min-height: 18px;
+  margin: 6px 16px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--t-d8cfc2, #d8cfc2);
+}
+.ce-tools {
+  display: grid;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.ce-ratios {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-height: 38px;
+}
+.ce-ratios button {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--c-ffffff2e, #ffffff2e);
+  border-radius: 999px;
+  background: none;
+  color: var(--t-f4efe6, #f4efe6);
+  font: 600 13px var(--ui-sans);
+}
+.ce-ratios [aria-checked="true"] {
+  background: var(--c-f4efe6, #f4efe6);
+  color: var(--t-161412, #161412);
+}
+.ce-ratios button:disabled {
+  opacity: 0.35;
+}
+.ce-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ce-row button {
+  flex: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--c-ffffff2e, #ffffff2e);
+  border-radius: 12px;
+  background: none;
+  color: var(--t-f4efe6, #f4efe6);
+}
+.ce-zoom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--t-d8cfc2, #d8cfc2);
+}
+.ce-zoom input {
+  flex: 1;
+}
+.ce-top .text-button {
+  font: 500 16px var(--ui-sans);
+  text-decoration: none;
+}
+
+/* V10.21 · A photo whose bytes can't be read says so (never a fake picture). */
+.photo-missing {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6cqw;
+  text-align: center;
+}
+.photo-missing small {
+  font: 500 2.4cqw/1.3 var(--ui-sans);
+  color: var(--t-6f675d, #6F675D);
+}
+.media-broken img,
+.media-broken video {
+  opacity: 0.25;
+}
+
+/* ---------- V10.22 · 检查照片和视频 (read-only media check) ---------- */
+.media-check .check-note {
+  margin: 0 4px 10px;
+  font: 13px/1.55 var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.media-check .check-body {
+  max-height: min(64dvh, 560px);
+  overflow-y: auto;
+  padding: 0 4px 8px;
+}
+.media-check h3 {
+  margin: 14px 0 4px;
+  font: 600 13px var(--ui-sans);
+  letter-spacing: 0.04em;
+  color: var(--t-8a8178, #8a8178);
+}
+.media-check .check-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font: 14px var(--ui-sans);
+  color: var(--ink);
+}
+.media-check .check-row b {
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.media-check .check-row.bad b,
+.media-check .check-bad {
+  color: var(--t-a5524a, #a5524a);
+}
+.media-check .check-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font: 13px/1.6 var(--ui-sans);
+  color: var(--ink);
+}
+.media-check code {
+  font-size: 12px;
+  color: var(--t-8a8178, #8a8178);
+}
+.media-check .check-running {
+  padding: 18px 0;
+  text-align: center;
+  color: var(--t-8a8178, #8a8178);
+}
+.media-check .full-width {
+  margin-top: 14px;
+}
+.media-check .check-text {
+  width: 100%;
+  min-height: 160px;
+  margin-top: 10px;
+  font: 11px/1.4 ui-monospace, Menlo, monospace;
+}
+
+/* ---------- V10.23 · importing a video / sound (saved on this device) ---------- */
+.studio-stage {
+  position: relative;
+}
+.import-card {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 40px));
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line), 0 18px 40px -22px var(--c-3c2d1e66, #3c2d1e66);
+}
+.import-card .ic-thumb {
+  flex: 0 0 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--sageDeep);
+  font-size: 22px;
+}
+.import-card .ic-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.import-card .ic-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.import-card b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.import-card small,
+.import-card .ic-note {
+  font: 12px/1.45 var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.import-card .ic-stage {
+  font: 600 13px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.import-card[data-stage="failed"] .ic-stage {
+  color: var(--t-a5524a, #a5524a);
+}
+.import-card .ic-bar {
+  position: relative;
+  height: 6px;
+  margin: 4px 0 2px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.import-card .ic-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 3px;
+  background: var(--sageDeep);
+  transition: width 0.2s ease;
+}
+.import-card .ic-bar.indeterminate i {
+  width: 36%;
+  animation: ic-slide 1.2s ease-in-out infinite;
+}
+@keyframes ic-slide {
+  from { left: -36%; }
+  to { left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .import-card .ic-bar.indeterminate i {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.45;
+  }
+}
+.import-card .ic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.import-card .ic-actions button {
+  min-height: 40px;
+}
+.import-card code {
+  font-size: 11px;
+}
+.page-strip.locked {
+  opacity: 0.45;
+}
+/* V10.23 · a clip's main actions right under its preview */
+.media-card-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px 2px;
+}
+.media-card-actions button {
+  min-height: 44px;
+  border-radius: 12px;
+  font: 600 15px var(--ui-sans);
+}
+.media-card-actions .primary-outline {
+  border: 1.5px solid var(--sageDeep);
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.media-card-actions .danger-outline {
+  border: 1.5px solid var(--c-e7c9c4, #e7c9c4);
+  background: var(--c-fffdf8, #fffdf8);
+  color: var(--t-a5524a, #a5524a);
+}
+.media-card .media-card-foot small {
+  font-size: 12px;
+}
+.media-card .media-card-foot .media-paper {
+  font-size: 13px;
+  min-height: 40px;
+}
+/* V10.23 · the cover picker shows the cover in use */
+.poster-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font: 13px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.poster-now img {
+  width: 56px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* V10.23 · in 本页媒体 the video preview leaves room for 换封面 / 从页面移除
+   (on a 375×667 phone they are seen without scrolling). */
+.tool-sheet .media-section > .section-heading {
+  display: none; /* the sheet's own title says it; each card says 已保存到本机 */
+}
+.tool-sheet .media-card video {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  max-height: min(14dvh, 150px);
+  object-fit: contain;
+  background: var(--c-2e2a25, #2e2a25);
+}
+.tool-sheet .media-card .media-card-title {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+/* (its name moves to the small print, so 换封面 / 从页面移除 fit on a 375×667 phone) */
+.tool-sheet .video-card .media-card-title {
+  display: none;
+}
+.media-card .media-card-foot .clip-name {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* ---------- V10.24 · mood stamps (page details) ---------- */
+.mood-picker {
+  margin: 0 0 14px;
+}
+.mood-picker .mood-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mood-picker .mood-head b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-picker .mood-head small {
+  font: 12px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+  text-align: right;
+}
+.mood-stamps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+.mood-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: 12px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-stamp i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px dashed var(--line);
+  font-style: normal;
+  font-size: 20px;
+  background: var(--c-fffdf8, #fffdf8);
+}
+.mood-stamp[aria-pressed="true"] i {
+  border: 2px solid var(--sageDeep);
+  background: var(--c-e3ebdc, #e3ebdc);
+  box-shadow: 0 0 0 3px var(--c-e3ebdc, #e3ebdc);
+}
+.mood-stamp[aria-pressed="true"] span {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.mood-stamp.mood-clear i {
+  color: var(--t-8a8178, #8a8178);
+}
+.mood-stamp:disabled {
+  opacity: 0.4;
+}
+
+/* V10.24 · while typing with the keyboard up, the type bar sits right above
+   the keyboard (it used to float under the paper, which a 375-wide phone's
+   keyboard can cover). Same measure the open sheets use (V3.8). */
+@media (pointer: coarse) {
+  html[style*="--vv-h"] body.typing #type-bar:not([hidden]) {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: calc(var(--vv-top, 0px) + var(--vv-h, 52dvh) - 6px);
+    transform: translateY(-100%);
+    z-index: 41;
+  }
+}
+
+/* ---------- V10.25 · selected item: ← 返回 and what is selected ---------- */
+.ctx-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 18px 2px;
+  font: 600 12px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.ctx-caption i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sageDeep);
+}
+.ctx-caption span {
+  font-weight: 500;
+  color: var(--t-8a8178, #8a8178);
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow .sv-icon {
+  width: 22px;
+  height: 22px;
+}
+/* the selected item's options: a compact strip, the paper stays big */
+.phone.sv .tool-sheet.strip {
+  max-height: min(210px, 32dvh);
+}
+.phone.sv .tool-sheet.strip .sheet-grabber {
+  display: none;
+}
+.phone.sv .studio-stage.large.strip-open .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--strip-h, min(210px, 32dvh))) * 0.8));
+}
+/* 形状 in a strip: one scrolling row of compact chips, then the frame row */
+.tool-sheet.strip .shape-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.tool-sheet.strip .shape-chips button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0 12px;
+}
+.tool-sheet.strip .shape-sheet .save-help {
+  margin: 4px 0;
+  font-size: 12px;
+}
+/* 图层: order and copy first, the rest folded */
+.layer-controls .layer-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.layer-controls .layer-buttons button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.layer-precise {
+  margin-top: 10px;
+}
+.layer-precise > summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  font: 600 14px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  cursor: pointer;
+}
+.tool-sheet.strip .shape-frames > .small-label {
+  display: none;
+}
+.tool-sheet.strip .shape-frame-row {
+  align-items: center;
+}
+.tool-sheet.strip .shape-frame-row .field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+/* while typing the item's tools step aside, and so does the line naming it */
+body.typing .ctx-caption {
+  display: none;
+}
+
+/* ---------- V10.25 · 更多 in three groups ---------- */
+.more-group + .more-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.more-group h4 {
+  margin: 0 0 6px 2px;
+  font: 600 12px var(--ui-sans);
+  letter-spacing: 0.04em;
+  color: var(--t-8a8178, #8a8178);
+}
+.more-group .more-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.more-group .more-grid .more-tile {
+  min-height: 70px;
+}
+.more-group .more-icon {
+  width: 46px;
+  height: 46px;
+}
+.more-grid .more-tile.accent .more-icon {
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.more-grid .more-tile.accent small {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.more-group .more-mode {
+  margin-top: 8px;
+}
+/* 页面目录: the page being edited, and 复制 next to ↑ ↓ / 删除 */
+.pages-row.current {
+  background: var(--c-f1eadf, #f1eadf);
+  border-radius: 12px;
+}
+.pages-row .pages-copy {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--c-fffdf8, #fffdf8);
+  font-size: 13px;
+  color: var(--ink);
+}
+.tool-sheet[data-tool-row="more"] .more-mode {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
 }

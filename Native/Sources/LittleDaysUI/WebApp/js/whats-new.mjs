@@ -4,6 +4,336 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.26",
+    date: "2026-11-13",
+    zh: {
+      title: "「检查照片和视频」说得更准确",
+      items: [
+        "在 iPhone 上，视频要先点一下才会被读取，所以检查时打不开视频不再算作「解码失败」，而是单独写成「视频没有打开检查」，不代表文件坏了。",
+        "导入视频或音频失败时，本机记录里会写明是「等了 10 秒还没读到」还是播放器给出的具体错误编号，方便找原因。记录里没有文件名和内容。",
+      ],
+    },
+    en: {
+      title: "Check photos & videos is more precise",
+      items: [
+        "On iPhone a video is only read after a tap, so a video the check could not open is no longer counted as “decode failed”; it is listed as “video not opened”, which does not mean the file is broken.",
+        "When importing a video or sound fails, the local log now says whether nothing loaded within 10 seconds or which player error code came back. The log has no file names or content.",
+      ],
+    },
+  },
+  {
+    version: "10.25",
+    date: "2026-11-13",
+    zh: {
+      title: "编辑器整理：选中什么就改什么，「更多」分成三组",
+      items: [
+        "选中照片、文字、视频或贴纸后，工具栏上方会写着「照片 · 已选中」，最左边是「← 返回」（回到照片 · 文字 · 贴纸 · 更多），不再是 ×；× 只用来关面板。",
+        "形状、字体、颜色、对齐、图层改成工具栏上方的细选项条，打开时纸张只缩小一点，改动看得清楚。",
+        "图层只放最常用的：上移、下移、置顶、置底、复制；位置和大小的精确数值收在「精确调整」里。",
+        "选中贴纸后可以「换一个」：位置、大小和角度都不变。",
+        "「更多」分成三组：页面外观（背景与纸张、排版、页面字体）、媒体与创作（手绘排第一，还有视频、音频、配乐、本页媒体）、页面管理（页面信息、心情、页面目录、操作指南）；「换一种写法」放在最下面。",
+        "「目录」和「页面管理」合并成「页面目录」：点一页就跳过去，可以上下移动、复制、删除；「只保存这一页」等操作在「更多页面操作」里。「本页照片」和下面的「照片」重复，已经去掉。",
+        "操作指南改为四步：加东西、摆位置、改它、改整页。看过旧指南的人不会再自动弹出，可以在「更多 → 操作指南」重看。",
+      ],
+    },
+    en: {
+      title: "A tidier editor: change what you selected, and More in three groups",
+      items: [
+        "A selected photo, text, video or sticker is named above its tools (“Photo · selected”), and the first button is ← Back to Photo · Text · Stickers · More — not ×; × only closes sheets.",
+        "Shape, Font, Colour, Align and Layer open as a compact strip above the tools, so the paper stays big and you can see the change.",
+        "Layer keeps what you need most: up, down, to front, to back, duplicate; exact numbers are under Exact position & size.",
+        "A selected sticker can be swapped — same place, size and angle.",
+        "More has three groups: Page look (background & paper, layout, page font), Media & making (Draw first, then video, audio, music, page media) and Pages & info (page details, mood, pages, guide); Style is at the bottom.",
+        "Contents and Pages are one Pages list: tap a page to go there, move it, duplicate or delete it; save-one-page and similar actions are under More page actions. “This page's photos” repeated Photo below and is gone.",
+        "The guide is now four steps: add things, place them, change one, the whole page. If you saw the old guide it won't pop up again — replay it from More → Guide.",
+      ],
+    },
+  },
+  {
+    version: "10.24",
+    date: "2026-11-13",
+    zh: {
+      title: "心情记在每一页上；背景和纸张互相替换",
+      items: [
+        "心情现在是每一页的可选信息：在「页面信息」里选，「更多 → 心情」也能直接打开。五个心情是 开心 · 温暖 · 平静 · 低落 · 雀跃，可以随时更改或清除，不会画到纸上。",
+        "新的一天不再自动带上 ☀️；以前的日子保留原来的心情，不做改动。",
+        "选背景（风景照片、渐变、图案）会替换纸张，选纸张也会替换背景，不用先撤销；需要的话撤销可以换回来。",
+        "打字时，字体和 B I U S 工具条会贴在键盘正上方。",
+        "小修正：贴纸面板的标题改为「贴纸」；「更多」里的「版式」统一叫「排版」；形状面板不再出现跳回「更多」的返回箭头；在页面上加照片后，不再弹出提示挡住纸张。",
+      ],
+    },
+    en: {
+      title: "Mood belongs to each page; background and paper replace each other",
+      items: [
+        "Mood is now optional page information: choose it in Page details, or go straight there from More → Mood. Happy · Warm · Calm · Low · Excited — change or clear it any time; it is never drawn on the paper.",
+        "A new day no longer starts with ☀️; earlier days keep the mood they had.",
+        "Choosing a background (scenery, gradient, pattern) replaces the paper, and choosing a paper replaces the background — no undo needed first (undo still brings it back).",
+        "While typing, the font and B I U S bar sits right above the keyboard.",
+        "Small fixes: the sticker sheet is titled Stickers; More says Layout everywhere; the Shape sheet no longer has a back arrow into More; adding photos no longer shows a message over the paper.",
+      ],
+    },
+  },
+  {
+    version: "10.23",
+    date: "2026-11-12",
+    zh: {
+      title: "导入视频时看得到每一步，换封面更好找",
+      items: [
+        "导入视频时，页面上会出现一张卡片：先读取视频信息，再显示导入进度，然后是「正在保存到本机」「正在生成封面」，最后显示「已保存到本机」。",
+        "保存过程中，页面条会变淡，卡片上写明「保存完成前，暂时不能切换页面」，不用等点了才知道；顶部只会显示「保存中」，不会提前显示「已保存」。",
+        "没存进这台设备时，卡片会写明「保存失败」和原因，并提供「重试」；视频超过 50 MB 时会直接说明，页面不会被改动。",
+        "选中视频后，下面依次是：播放、换封面、形状、图层、移除。",
+        "「本页媒体」里，换封面和从页面移除两个大按钮就在视频正下方，375 和 430 宽的手机上都不用滚动；时长、大小和「已保存到本机」放在下面的小字里。",
+        "换封面会显示现在的封面，拖动时间轴选一帧，点完成保存；原视频不会被改动，阅读模式里也用新封面。",
+        "「从纸上拿下」改为两个更清楚的操作：「从页面移除」（会先确认，可以撤销），以及「不放在纸上」（仍保留在本页媒体里）。",
+      ],
+    },
+    en: {
+      title: "See every step of importing a video, and find the cover easily",
+      items: [
+        "Importing a video shows a card on the page: reading the file, importing with progress, saving to this device, making a cover, then “Saved on this device”.",
+        "While it saves, the page strip dims and the card says pages can't be switched until it's saved — before you tap; the top only says “Saving”, never “Saved” too early.",
+        "If it can't be stored on this device, the card says “Not saved” and why, with Retry; a video over 50 MB is refused right away and the page is unchanged.",
+        "A selected video's tools are: Play, Cover, Shape, Layer, Remove.",
+        "In the page's media list, Cover and Remove from page are big buttons right under the video — no scrolling on 375 or 430-wide phones; length, size and “Saved on this device” are the small print.",
+        "Cover shows the cover in use; drag the timeline to pick a frame and tap Done. The video itself is never changed, and the reader uses the new cover.",
+        "“Take off the page” is now two clear actions: “Remove from page” (asks first, undo works) and “Off the paper” (stays in the page's media list).",
+      ],
+    },
+  },
+  {
+    version: "10.22",
+    date: "2026-11-12",
+    zh: {
+      title: "新增「检查照片和视频」，帮我们找到照片打不开的原因",
+      items: [
+        "设置 → 数据与隐私里新增「检查照片和视频」：逐个检查这台设备上手帐用到的照片、视频和声音，分清是「文件不在」「文件在但读不出来」「读得出但打不开」还是「页面引用不对」。",
+        "同时显示运行环境：浏览器内核、运行地址、是不是嵌在其他页面里、存储会不会被系统自动清理、还剩多少空间。",
+        "检查只读取，不会修改、转换、删除或上传任何东西；结果里没有名字和文字，可以一键复制发给开发者。",
+        "照片或视频出问题时，本机记录会写下是哪一步出的问题（保存、读取、临时地址失效、解码）和错误类型，方便查原因。",
+      ],
+    },
+    en: {
+      title: "New “Check photos & videos” to find out why a photo won't open",
+      items: [
+        "Settings → Data & privacy has a new “Check photos & videos”: every photo, video and sound your pages use is checked and sorted into missing, stored but unreadable, read but won't open, or an invalid reference.",
+        "It also shows where the app runs: browser engine, address, whether it is embedded in another page, whether storage may be cleared by the system, and space left.",
+        "The check only reads — nothing is changed, converted, deleted or uploaded — and the result has no names or words, so it can be copied to the developer.",
+        "When a photo or video fails, the local log now notes which step failed (save, read, temporary address, decode) and the error type.",
+      ],
+    },
+  },
+  {
+    version: "10.21",
+    date: "2026-11-12",
+    zh: {
+      title: "照片和视频存得更牢，出问题会如实告诉你",
+      items: [
+        "新加的照片和视频现在按原始文件内容存进这台设备，存完会马上读回来核对一遍，确认无误才算存好。",
+        "以前存下的照片和视频照常打开，第一次打开时会悄悄换成更稳的存法：同一个文件、同一个编号，不删除任何东西。",
+        "右上角的「已保存」只有在这一页用到的照片和视频都确实存在时才会出现；有文件没存进去时会显示「保存失败」，告诉你是几个照片或视频，请你重新添加；文字照常保存。",
+        "如果某张照片真的读取不到，页面上会写着「照片读取不到」，不会换成别的图片；页面里的文字和其他内容都不受影响。",
+        "照片或视频偶尔加载失败时会自动重新读取一次。",
+        "备份会把照片和视频本身一起导出；恢复到另一台设备后都能打开。",
+      ],
+    },
+    en: {
+      title: "Photos and videos are kept more safely — and you're told if one is missing",
+      items: [
+        "New photos and videos are stored on this device as their original file contents, read back and checked right after saving.",
+        "Photos and videos saved before open as usual, and move to the safer storage the first time they open — same file, same id, nothing deleted.",
+        "“Saved” at the top only appears when every photo and video on the page is really there; if one isn't, it says “Not saved”, how many photos or videos to add again, and that your words are kept.",
+        "A photo that really can't be read says “Photo can't be read” on the page instead of showing another picture; the words and everything else stay.",
+        "A photo or video that fails to load is read again once, automatically.",
+        "Backups include the photos and videos themselves, and open after restoring on another device.",
+      ],
+    },
+  },
+  {
+    version: "10.20",
+    date: "2026-11-12",
+    zh: {
+      title: "照片的形状、裁剪和排版分开了",
+      items: [
+        "加照片后不会再自动弹出排版：一张照片会直接选中；多张时下面会出现一条「试试排版」的小提示，不想用点 × 就好。",
+        "选中照片后，下面依次是：形状、裁剪画面、调整、替换、图层、删除。",
+        "「形状」只改照片框的样子（圆形、拱形、心形、相框、胶带……），不会改动照片里显示的部分。",
+        "「裁剪画面」是全屏的：拖四个角和四条边选范围，单指拖动画面、双指缩放，可选原比例、1:1、3:4、16:9 等，也能旋转 90°。",
+        "裁剪不会改动原图，随时可以重新裁或恢复；可以撤销 / 重做，阅读模式和导出也会按裁好的样子显示。",
+        "多张照片时，「试试排版」的提示不会再挡住下面的页面条。",
+      ],
+    },
+    en: {
+      title: "Shape, crop and layout are now separate",
+      items: [
+        "Adding photos no longer opens Layout: one photo is selected right away; with several, a small “Try a layout” hint appears — tap × to ignore it.",
+        "A selected photo's tools are: Shape, Crop, Adjust, Replace, Layer, Delete.",
+        "Shape only changes the frame (circle, arch, heart, frames, tape…), never which part of the photo shows.",
+        "Crop is full screen: drag the corners and edges, move the picture with one finger, pinch to zoom, pick Original, 1:1, 3:4, 16:9… and rotate 90°.",
+        "Cropping never changes the original photo — re-crop or reset any time; undo / redo work, and the reader and exports show the crop.",
+        "With several photos, the layout hint no longer covers the page strip.",
+      ],
+    },
+  },
+  {
+    version: "10.19",
+    date: "2026-11-12",
+    zh: {
+      title: "杂志模式：每张照片写一句，直接换字体",
+      items: [
+        "「Aa 改文字」现在以照片为主：上面一排是这个 Moment 的真实照片缩略图，标着 1、2、3，点哪张就给哪张写一句；也可以写一句给整个 Moment。",
+        "拍摄时间相同的照片也分得清：每句话都跟着那张照片走，排版时就放在那张照片的下面（放不下时放在上面），不会跑到别的照片旁边。",
+        "切换照片、换杂志 / 手账 / 拼贴、重新排版、调整分组，写好的字都还在，并且仍然对着原来的照片。",
+        "在同一个面板里直接换字体（宋体、黑体、楷体、文楷……）、大小、加粗、颜色和对齐，上面的页面马上就变；进入「自定义」后这些样式也都保留。",
+        "直接点页面上的某张照片，就会打开那张照片的文字。",
+      ],
+    },
+    en: {
+      title: "Magazine view: a line for each photo, and fonts right there",
+      items: [
+        "“Aa Edit words” is now photo by photo: a row of the Moment's real thumbnails, numbered 1, 2, 3 — tap one to write its line, or write one line for the whole Moment.",
+        "Photos taken at the same minute are told apart: each line belongs to its photo and is laid out right under it (or above when there's no room), never beside another one.",
+        "Switching photos, styles (Editorial / Cozy / Collage), re-layout or regrouping keeps every line with its own photo.",
+        "Change the font (Song, Hei, Kai, WenKai…), size, bold, colour and alignment in the same sheet and see the page change at once; Customize keeps it all.",
+        "Tap a photo on the page to open its line directly.",
+      ],
+    },
+  },
+  {
+    version: "10.18",
+    date: "2026-11-12",
+    zh: {
+      title: "Captain 听得懂更多日常的话了",
+      items: [
+        "问 Captain 叫什么、几岁、喜欢吃什么，说你饿了、好忙、无聊、紧张、睡不着、想家，或者考砸了、升职了、过生日，Captain 都会接上对应的话。",
+        "告诉它你做了什么（比如「今天吃了火锅」），它会用你的话接着问：「火锅！听起来不错。最喜欢哪一刻？」",
+        "不知道写什么时跟它说一声，它会给你一个小题目；无聊时它会邀请你去「玩耍」丢毛线球。",
+        "答不上来的问题，它会老实说「这个问题难倒我了」；难过的日子不说「别难过」，只是陪着你。",
+        "这些都在你的设备上完成，不是 AI，也不会把你的话发到任何地方。",
+      ],
+    },
+    en: {
+      title: "Captain understands more everyday lines",
+      items: [
+        "Ask Captain's name, age or favourite food; say you're hungry, busy, bored, nervous, can't sleep, miss home, had a rough day, got good news or it's your birthday — Captain answers to fit.",
+        "Tell it what you did (“I had coffee with a friend”) and it picks up your words: “Oh, coffee! Sounds nice. What was the best moment?”",
+        "Not sure what to write? Say so and get a small prompt. Bored? Captain invites you to Play with the yarn ball.",
+        "Questions it can't answer get an honest “that one's beyond me”; on hard days it never says “don't be sad” — it just stays with you.",
+        "All on your device — not AI, and nothing you say is sent anywhere.",
+      ],
+    },
+  },
+  {
+    version: "10.17",
+    date: "2026-11-12",
+    zh: {
+      title: "和 Captain 玩毛线球：拖一拖、点一点，Captain 会接住",
+      items: [
+        "Captain's Corner 的「玩耍」变成一个大舞台：按住粉色毛线球拖到 Captain 爪子边松手，Captain 会抱住它开心大笑；丢到别处，球会自己滚回来。",
+        "点一下毛线球，它会自己滚过去；戳戳 Captain 的身体，也会看到它开心的样子。",
+        "柠檬帽和无帽都能玩，各用各的画：无帽版现在只有静态画，戳它会开心地跳一下。不会突然换装扮。",
+        "还没画好的摸摸头、挠肚皮先收起来，不再显示「准备中」。",
+        "系统开了「减少动态效果」时，只显示一张开心的画，不播放动画。iPhone App 里接住毛线球时会有一下轻轻的震动。",
+      ],
+    },
+    en: {
+      title: "Play yarn with Captain: drag it, tap it — Captain catches it",
+      items: [
+        "Play in Captain's Corner is now a big stage: drag the pink yarn ball to Captain's paws and let go — Captain hugs it and giggles; drop it elsewhere and it rolls back.",
+        "Tap the ball and it rolls over by itself; poke Captain for a happy moment too.",
+        "Both the lemon hat and no hat can play, each with its own pictures — the no-hat look only has a still for now and gives a happy hop. The look never switches by itself.",
+        "Pat and tummy rub are tucked away until their art is ready — no more “coming soon”.",
+        "With Reduce Motion on, one happy picture is shown instead of the animation. The iPhone app gives a light tap when Captain catches the ball.",
+      ],
+    },
+  },
+  {
+    version: "10.16.1",
+    date: "2026-11-12",
+    zh: {
+      title: "细节打磨：欢迎页换上 App 图标和小芽字标，五种字母印记更统一",
+      items: [
+        "欢迎页（实验室里才会出现）用 App 图标和带小芽的 Little Days 字标，去掉了像素小花和散落的表情。",
+        "Apple 登录、邮箱登录还没有开放，只放在欢迎页底部标着「实验室 · 还没有开放」的虚线框里，不能点。",
+        "五种字母印记的字母大小、边框粗细统一了：牛皮纸的字母变大，朱印的双圈变轻，手写体的中文不再压到下划线。",
+        "选中的印记只有一圈细细的绿色描边，不再显得太重。",
+      ],
+    },
+    en: {
+      title: "Polish: the welcome page wears the app icon and sprout wordmark; the five monograms match",
+      items: [
+        "The welcome page (only in Labs) now shows the app icon and the Little Days wordmark with its sprout, instead of a pixel flower and scattered emoji.",
+        "Apple and email sign-in are not available yet: they sit, disabled, in a dashed tray labelled “Labs · not available yet”.",
+        "The five monograms now share one letter size and ring weight: Kraft's letter is larger, Seal's double ring lighter, and Script's Chinese no longer touches its stroke.",
+        "The chosen monogram has one thin sage ring instead of a heavy outline.",
+      ],
+    },
+  },
+  {
+    version: "10.16",
+    date: "2026-11-11",
+    zh: {
+      title: "你的个人标记；日记音乐点了才响；同一天的每一页都能直接打开",
+      items: [
+        "编辑资料换成「属于你的小世界」：五种字母印记（纸片、朱印、牛皮纸、鼠尾草、手写）用你名字的第一个字，另外还有小芽。没选的时候显示小芽。",
+        "以前选的表情头像会一直保留，在编辑资料里显示为「现在的头像」，只是不再提供新的表情选项。",
+        "欢迎页只留名字和你现在的头像，挑头像在「设置 → 编辑资料」。",
+        "看某一天的手帐时，背景音乐默认不响，点音乐按钮才播放，可以暂停；换到另一天也不会突然响。",
+        "书本页里，同一天有好几页时，会显示这一天的每一页，点哪页就在阅读器打开哪页。",
+      ],
+    },
+    en: {
+      title: "Your own mark; a day's music plays only when tapped; every page of a day one tap away",
+      items: [
+        "Edit profile is now “A little world of your own”: five monograms of your name's first letter (Paper, Seal, Kraft, Sage, Script) and the sprout, which also shows when nothing is chosen.",
+        "An emoji avatar you chose before stays, shown as “Current avatar”; new emoji are no longer offered.",
+        "The welcome page keeps just your name and current mark — choose a mark in Settings → Edit profile.",
+        "Reading a day, its music is silent until you tap it, and can be paused; moving to another day never starts it by surprise.",
+        "In a book, a day with several pages shows each of them — tap one to open the reader right there.",
+      ],
+    },
+  },
+  {
+    version: "10.15",
+    date: "2026-11-11",
+    zh: {
+      title: "开发用的 Captain 本地对话：第 3 版（这个链接里看不到变化）",
+      items: [
+        "在 Mac 上用本机 Qwen 实测了三版说法：现在不再一直「喵」，也不会反复提帽子、尾巴和阳光，夸它时它知道是在夸自己。",
+        "如果模型的回复和你说的语言不一样（比如你说中文它回英文），App 不会显示这句，改用 Captain 原来的回答。",
+        "这些只在 Mac 上开发时使用，默认关闭；这个链接和 iPhone App 里的 Captain 不变。",
+      ],
+    },
+    en: {
+      title: "Captain's development-only local chat: version 3 (nothing changes in this link)",
+      items: [
+        "Three versions were tested with Qwen on the Mac: no more “meow” in every line, no more hat / tail / sunshine over and over, and a compliment is understood as being about Captain.",
+        "If the model answers in a different language from yours (you write Chinese, it answers in English), the app drops that line and Captain answers the usual way.",
+        "Only used while developing on a Mac and off by default; Captain in this link and the iPhone app is unchanged.",
+      ],
+    },
+  },
+  {
+    version: "10.14",
+    date: "2026-11-11",
+    zh: {
+      title: "iPhone App 第一次在模拟器里跑起来了",
+      items: [
+        "Little Days 的 iPhone App 第一次在 Mac 的 Xcode 模拟器里构建并运行成功：首页、日历、书架和写手帐的页面都能正常打开。",
+        "修好了操作指南在 iPhone App 里的位置：绿色圆环原来会比纸张低一截，现在会跟着纸张走，准确圈住要讲的地方。",
+        "开发用的 Captain 本地模型对话换了一版说法：不再一直「喵」，不猜你的手帐里写了什么，也不老是劝你去写。这个只在 Mac 上开发时使用，这个链接里看不到。",
+      ],
+    },
+    en: {
+      title: "The iPhone app runs in the Simulator for the first time",
+      items: [
+        "The Little Days iPhone app was built and run in Xcode's Simulator on a Mac for the first time: Home, Calendar, the shelf and the page editor all open.",
+        "Fixed the guide's position in the iPhone app: the green ring used to sit a little below the page; it now follows the page and circles the right spot.",
+        "Captain's development-only local-model chat got a new voice: no more \u201cmeow\u201d in every line, no guessing what's in your journal, no nudging you to write. It is only used while developing on a Mac — not in this link.",
+      ],
+    },
+  },
+  {
     version: "10.13",
     date: "2026-11-11",
     zh: {

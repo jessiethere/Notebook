@@ -58,12 +58,12 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     passed.push("pick 5 photos → straight to a designed draft: a day spread + 3 Moment pages (Editorial), no words needed");
 
     // 2. Words, written in the preview (tap the page); the page shows them.
-    await page.locator(".story-canvas").tap();
-    await page.waitForSelector("#choose-dialog[open] [data-story-word]");
-    assert.equal(await page.locator("[data-story-word]").count(), 3, "the spread: all three Moments");
-    await page.locator("[data-story-word]").nth(0).fill("练腿日，深蹲终于到 60kg");
-    await page.locator("[data-story-word]").nth(1).fill("和小雨在新开的店喝拿铁 latte");
-    await page.locator('[data-action="story-text-done"]').tap();
+    // V10.19: one Moment at a time (tabs on the spread), see tests/v119-browser.cjs.
+    await page.locator('.story-tools [data-action="story-text"]').tap();
+    await page.waitForSelector("#choose-dialog[open] [data-sw-text]");
+    assert.equal(await page.locator('#choose-dialog [data-action="sw-moment"]').count(), 3, "the spread: all three Moments");
+    await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
+    await require("./signed-in.cjs").storyLines(page, ["练腿日，深蹲终于到 60kg", "和小雨在新开的店喝拿铁 latte"]);
     await page.waitForFunction(() => /练腿日/.test(document.querySelector(".story-canvas").innerText));
     d = await draft();
     assert.deepEqual(mine().map((m) => m.title), ["练腿日，深蹲终于到 60kg", "和小雨在新开的店喝拿铁 latte", ""]);

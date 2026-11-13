@@ -2,8 +2,13 @@
 // small record in this browser (name, avatar, whether the welcome tour was
 // seen). Journals are never deleted on sign-out. Real accounts (Apple / phone
 // / email) need the Phase 3 server and are shown as "coming soon".
+import { isPickable } from "./profile-mark.mjs";
+
 export const ACCOUNT_KEY = "little-days.account";
+// The emoji avatars of earlier versions: still accepted and shown as they
+// are, but no longer offered (V10.16 offers the marks in js/profile-mark.mjs).
 export const AVATARS = ["🌷", "🌼", "🍓", "🐰", "🐱", "🌿", "☁️", "📖", "☕", "🌙"];
+export const acceptsAvatar = (value) => AVATARS.includes(value) || isPickable(value);
 
 export function loadAccount(storage) {
   try {
@@ -23,7 +28,8 @@ export function isSignedIn(account) {
 export function signIn(storage, values = {}) {
   const previous = loadAccount(storage);
   const name = String(values.name ?? previous?.name ?? "").trim().slice(0, 30);
-  const avatar = AVATARS.includes(values.avatar) ? values.avatar : previous?.avatar || "🌷";
+  // Anything else keeps the avatar there was (an old emoji is never lost).
+  const avatar = acceptsAvatar(values.avatar) ? values.avatar : previous?.avatar || "🌷";
   return save(storage, {
     version: 1,
     method: "local",

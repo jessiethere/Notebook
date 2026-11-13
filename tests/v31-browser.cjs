@@ -227,17 +227,25 @@ async function noOverflow(page, label) {
       const l = e.layers.find((x) => x.id === a.id);
       return l.w > a.w && l.h > a.h && l.rotation !== a.rotation;
     }, { id: ids[0], w: g0.w, h: g0.h, rotation: g0.rotation });
-    await page.locator('[data-action="crop-mode"]').click();
-    await page.locator('[data-crop-field="zoom"]').evaluate((el) => {
+    // V10.20: the in-canvas crop mode is gone. 裁剪画面 opens the full-screen
+    // crop editor (zoom slider, 完成 writes crop.rect plus the older x/y/zoom),
+    // and the frame select moved to the 形状 sheet.
+    await page.locator('.tool-dock.ctx [data-action="crop-open"]').click();
+    await page.waitForSelector("#crop-editor[open] .ce-box");
+    await page.waitForFunction(() => document.querySelector("#crop-editor .ce-box").getBoundingClientRect().width > 50);
+    await page.locator("#crop-editor [data-ce-zoom]").evaluate((el) => {
       el.value = "1.8";
       el.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await page.locator('[data-layer-text="frame"]').selectOption("polaroid");
+    await page.locator('#crop-editor [data-ce="done"]').click();
+    await page.waitForSelector("#crop-editor:not([open])", { state: "attached" });
+    await studioTool(page, "shape");
+    await page.locator('.tool-sheet[data-tool-row="shape"] [data-layer-text="frame"]').selectOption("polaroid");
     await waitDay(D1, (e, id) => {
       const l = e.layers.find((x) => x.id === id);
-      return l.crop.zoom === 1.8 && l.frame === "polaroid";
+      return Math.abs(l.crop.zoom - 1.8) < 0.01 && l.crop.rect && l.frame === "polaroid";
     }, ids[0]);
-    await page.locator('[data-action="crop-mode"]').click();
+    await studioClose(page);
     // Two-finger pinch + rotate on a real touch screen (CDP touch points).
     await selectLayer(page, ids[2]);
     const g2 = (await day(D1)).layers.find((l) => l.id === ids[2]);

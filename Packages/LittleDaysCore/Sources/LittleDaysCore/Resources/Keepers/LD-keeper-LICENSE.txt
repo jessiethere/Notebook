@@ -34,3 +34,19 @@ also Happy, Sleepy and Peek, in the same style and scale as the reference.
 Still needed from the artist: higher-resolution renders of each state
 (the reference figures are only ~190 px wide, the Peek ~340 px), and
 consistent animation frames if blinking or other motion is wanted.
+
+Play stage (2026-11-11): Captain's own animations, provided by the product
+owner (docs/brand/captain-anim/: LD-captain-lemon-yarn-sit.webp,
+LD-captain-lemon-hug.gif, LD-captain-lemon-play.gif). Not cut out and not
+redrawn: tools/make_captain_anim.py only resizes the frames to 400 px and lays
+them side by side (JPEG, each frame keeps its own cream backdrop).
+- LD-keeper-cat-lemon-hug-anim.jpg  6 frames × 180 ms: hugging the yarn, giggling
+  (the Playroom's happy reaction)
+- LD-keeper-cat-lemon-play-idle.jpg (2026-11-12) the sitting still with its yarn
+  ball and string lifted off; the paper under them filled smoothly from the
+  surrounding pixels; colour-matched to the hug frames
+- LD-keeper-yarn-ball.png           (2026-11-12) that ball, cut out on its own
+  (transparent), so it can be dragged
+LD-captain-lemon-play.gif (with a green bandana) is kept in docs/brand only:
+the owner decided on 2026-11-12 that Captain keeps the usual look (grey fur,
+golden eyes, lemon hat with a green leaf, no bandana) in the app.

@@ -45,7 +45,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await first.locator('.s2-about [data-action="whats-new"]').tap();
     await first.waitForSelector("#choose-dialog[open] .news-sheet");
     const latest = await first.locator(".news-entry .news-version").first().innerText();
-    assert.match(latest, /^V\d+\.\d+$/);
+    assert.match(latest, /^V\d+\.\d+(\.\d+)?$/);
     await first.locator('#choose-dialog [data-action="choose-close"]').tap();
     assert.equal(await first.evaluate(() => localStorage.getItem("little-days.seen-version")), latest.slice(1), "seen on this device");
     await first.locator('#navigation [data-page="home"]').tap();
@@ -117,9 +117,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     await page.waitForTimeout(1300);
     assert.equal((await story()).layoutVariant, 1);
     assert.notEqual(await look(), before);
-    await page.locator('.story-tools [data-action="story-text"]').tap();
-    await page.locator("[data-story-word]").fill("和朋友喝咖啡的下午");
-    await page.locator('[data-action="story-text-done"]').tap();
+    await require("./signed-in.cjs").storyLines(page, ["和朋友喝咖啡的下午"]);
     await page.waitForFunction(() => /和朋友喝咖啡的下午/.test(document.querySelector(".story-canvas").innerText));
     await page.locator('[data-action="story-save"]').tap();
     await page.waitForSelector(".flip-page:not(.is-cover)");

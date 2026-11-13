@@ -70,11 +70,12 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     await page.waitForSelector('.tool-dock.ctx[data-ctx="video"]');
     assert.equal(await page.locator(".layer-bar").count(), 0, "nothing floats on the paper");
     const actions = await page.$$eval(".tool-dock.ctx button", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
-    assert.deepEqual(actions, ["layer-deselect", "video-cover", "layer", "layer-delete"]);
+    // V10.20: videos also get 形状 (shapes moved out of 图层 into their own sheet).
+    assert.deepEqual(actions, ["layer-deselect", "ctx-play", "video-cover", "shape", "layer", "layer-delete"] /* V10.23: 播放 · 换封面 · 形状 · 图层 · 移除 */);
     const bar = await page.locator(".tool-dock.ctx").boundingBox();
     const paper = await page.locator("#journal-canvas").boundingBox();
     assert.ok(bar.y >= paper.y + paper.height, "the tools sit under the paper, never on the item");
-    passed.push("selected video: × · cover · layer · delete in the bottom row");
+    passed.push("selected video: × · shape · cover · layer · delete in the bottom row");
 
     // 3. Cover: pick a frame with the slider.
     await page.locator('.tool-dock.ctx [data-action="video-cover"]').tap();

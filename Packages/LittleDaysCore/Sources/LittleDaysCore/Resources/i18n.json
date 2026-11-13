@@ -2340,8 +2340,8 @@
     "en": "Watercolor"
   },
   "tool.layer": {
-    "zh": "选中的图层",
-    "en": "Selected layer"
+    "zh": "图层",
+    "en": "Layer"
   },
   "tool.photos": {
     "zh": "照片",
@@ -2368,8 +2368,8 @@
     "en": "Mood"
   },
   "tool.stickers": {
-    "zh": "贴纸与文字框",
-    "en": "Stickers & text boxes"
+    "zh": "贴纸",
+    "en": "Stickers"
   },
   "tool.media": {
     "zh": "声音与影像",
@@ -3312,8 +3312,8 @@
     "en": "Put on the page"
   },
   "media.offPage": {
-    "zh": "从纸上拿下",
-    "en": "Take off the page"
+    "zh": "不放在纸上",
+    "en": "Off the paper"
   },
   "layout.textConfirm": {
     "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
@@ -3328,7 +3328,7 @@
     "en": "Photos"
   },
   "dock.layout": {
-    "zh": "版式",
+    "zh": "排版",
     "en": "Layout"
   },
   "dock.font": {
@@ -4356,12 +4356,12 @@
     "en": "Remove photo"
   },
   "poster.title": {
-    "zh": "选择视频封面",
-    "en": "Choose a video cover"
+    "zh": "更换封面",
+    "en": "Change the cover"
   },
   "poster.help": {
-    "zh": "拖动滑块选一帧当封面，或者上传一张自己的图片。",
-    "en": "Slide to pick a frame, or upload a picture of your own."
+    "zh": "拖动时间轴选一帧，上面会马上显示；也可以上传一张自己的图片。原视频不会被改动。",
+    "en": "Drag along the timeline to pick a frame — it shows above right away — or upload a picture. The video itself is not changed."
   },
   "poster.frame": {
     "zh": "画面",
@@ -5292,8 +5292,8 @@
     "en": "Arrange"
   },
   "pages.title": {
-    "zh": "整理这一天",
-    "en": "Arrange this day"
+    "zh": "页面目录",
+    "en": "Pages"
   },
   "pages.help": {
     "zh": "封面是这一天的一句话总结（可以不写）；下面每一页记录一件事，可以调整顺序或删除。",
@@ -7343,34 +7343,6 @@
     "zh": "Captain 的小角落",
     "en": "Captain's Corner"
   },
-  "corner.playTitle": {
-    "zh": "一起玩，还在准备",
-    "en": "Playing together is on its way"
-  },
-  "corner.playNote": {
-    "zh": "摸摸头、挠肚皮、玩毛线球都需要 Captain 的正式动画。画好之前，不做粗糙的版本。",
-    "en": "Head pats, belly rubs and the yarn ball all need Captain's real animation. Until it's drawn, there won't be a rough version."
-  },
-  "corner.playPat": {
-    "zh": "摸摸头",
-    "en": "Head pats"
-  },
-  "corner.playBelly": {
-    "zh": "挠肚皮",
-    "en": "Belly rubs"
-  },
-  "corner.playYarn": {
-    "zh": "玩毛线球",
-    "en": "Yarn ball"
-  },
-  "corner.soon": {
-    "zh": "准备中",
-    "en": "On its way"
-  },
-  "corner.playMeanwhile": {
-    "zh": "现在可以在「聊天」里说「摸摸你」。",
-    "en": "For now, you can say “pat you” in Chat."
-  },
   "corner.expand": {
     "zh": "展开",
     "en": "Expand"
@@ -7540,16 +7512,16 @@
     "en": "Got it"
   },
   "guide.move.title": {
-    "zh": "移动元素",
-    "en": "Move things around"
+    "zh": "摆位置",
+    "en": "Place them"
   },
   "guide.move.body": {
-    "zh": "按住并拖动，给照片和文字换个位置。",
-    "en": "Press and drag to give a photo or your words a new spot."
+    "zh": "点一下选中，按住拖动换位置；双击文字可以直接改。",
+    "en": "Tap to select, press and drag to move; double-tap words to change them."
   },
   "guide.move.bodyEmpty": {
-    "zh": "放上照片或文字后，按住并拖动，就能给它们换个位置。",
-    "en": "Once a photo or some words are on the page, press and drag to move them."
+    "zh": "放上照片或文字后：点一下选中，拖动换位置；双击文字可以直接改。",
+    "en": "Once something is on the page: tap to select, drag to move; double-tap words to change them."
   },
   "guide.type.title": {
     "zh": "编辑文字",
@@ -7564,16 +7536,16 @@
     "en": "Tap Text below to add a text box, then double-tap it to start writing."
   },
   "guide.adjust.title": {
-    "zh": "调整布局",
-    "en": "Adjust the layout"
+    "zh": "改它",
+    "en": "Change it"
   },
   "guide.adjust.body": {
-    "zh": "轻点选中元素，用控制点调整：拖动上方的 ↻ 转角度，拖动角上的圆点改大小。",
-    "en": "Tap to select, then use the handles: drag ↻ above to turn it, the corner dot to resize."
+    "zh": "选中以后，下面就是它的工具；角上的圆点改大小，上方的 ↻ 转角度。点「← 返回」回到创作工具。",
+    "en": "Once selected, its tools are below; the corner dot resizes, ↻ above turns it. ← Back returns to the creation tools."
   },
   "guide.adjust.bodyEmpty": {
-    "zh": "放上内容后，轻点选中它，再用控制点调整大小和角度。",
-    "en": "Once something is on the page, tap to select it and use the handles to resize and turn it."
+    "zh": "放上内容后选中它，下面就会换成它的工具；点「← 返回」回到创作工具。",
+    "en": "Once something is on the page, select it and its tools appear below; ← Back returns."
   },
   "guide.tip.dblTap": {
     "zh": "双击即可编辑文字",
@@ -7618,5 +7590,945 @@
   "kp.localAI": {
     "zh": "本机模型 · 开发",
     "en": "Local model · dev"
+  },
+  "pf.title": {
+    "zh": "属于你的小世界",
+    "en": "A little world of your own"
+  },
+  "pf.sub": {
+    "zh": "一个名字，一枚专属的标记。",
+    "en": "A name, and a mark that is yours."
+  },
+  "pf.nameLabel": {
+    "zh": "名字",
+    "en": "Name"
+  },
+  "pf.namePlaceholder": {
+    "zh": "给自己起个喜欢的名字",
+    "en": "A name you like"
+  },
+  "pf.marks": {
+    "zh": "标记",
+    "en": "Your mark"
+  },
+  "pf.current": {
+    "zh": "现在的头像",
+    "en": "Current avatar"
+  },
+  "pf.monograms": {
+    "zh": "字母印记 · 用名字的第一个字",
+    "en": "Monogram · the first letter of your name"
+  },
+  "pf.local": {
+    "zh": "只保存在这台设备。",
+    "en": "Kept on this device only."
+  },
+  "pf.saveFailed": {
+    "zh": "没能保存资料。名字和标记还在这里，请再试一次。",
+    "en": "Your profile couldn't be saved. Your name and mark are still here — please try again."
+  },
+  "pf.style.paper": {
+    "zh": "字母印记 · 纸片",
+    "en": "Monogram · Paper"
+  },
+  "pf.style.seal": {
+    "zh": "字母印记 · 朱印",
+    "en": "Monogram · Seal"
+  },
+  "pf.style.kraft": {
+    "zh": "字母印记 · 牛皮纸",
+    "en": "Monogram · Kraft"
+  },
+  "pf.style.sage": {
+    "zh": "字母印记 · 鼠尾草",
+    "en": "Monogram · Sage"
+  },
+  "pf.style.script": {
+    "zh": "字母印记 · 手写",
+    "en": "Monogram · Script"
+  },
+  "login.markLater": {
+    "zh": "头像之后可以在「设置 → 编辑资料」里挑选。",
+    "en": "Choose your mark later in Settings → Edit profile."
+  },
+  "pf.sproutDefault": {
+    "zh": "小芽 · 默认",
+    "en": "Sprout · default"
+  },
+  "day.pagesOf": {
+    "zh": "{date} 的每一页",
+    "en": "The pages of {date}"
+  },
+  "reader.pageShort": {
+    "zh": "第 {n} 页",
+    "en": "p. {n}"
+  },
+  "login.labsOnly": {
+    "zh": "实验室 · 还没有开放",
+    "en": "Labs · not available yet"
+  },
+  "play.none": {
+    "zh": "这身装扮还没有可以玩的画。",
+    "en": "There are no play pictures for this look yet."
+  },
+  "play.invite": {
+    "zh": "陪我玩毛线球嘛！",
+    "en": "Play yarn with me!"
+  },
+  "play.inviteSolo": {
+    "zh": "戳戳我呀～",
+    "en": "Give me a poke!"
+  },
+  "play.hint": {
+    "zh": "把毛线球拖给{name}或者点一下毛线球，也可以戳戳{name}。",
+    "en": "Drag the yarn ball to {name}, or tap it — or give {name} a poke."
+  },
+  "play.hintSolo": {
+    "zh": "戳戳{name}，它会开心地跳一下。",
+    "en": "Poke {name} for a happy little hop."
+  },
+  "play.ballLabel": {
+    "zh": "毛线球：拖给{name}，或者点一下",
+    "en": "Yarn ball: drag it to {name}, or tap it"
+  },
+  "play.pokeLabel": {
+    "zh": "戳戳{name}",
+    "en": "Poke {name}"
+  },
+  "play.poke1": {
+    "zh": "嘿嘿～",
+    "en": "Hehe~"
+  },
+  "play.poke2": {
+    "zh": "好痒呀！",
+    "en": "That tickles!"
+  },
+  "play.poke3": {
+    "zh": "再戳一下嘛！",
+    "en": "Again!"
+  },
+  "play.caught1": {
+    "zh": "抓到啦！",
+    "en": "Got it!"
+  },
+  "play.caught2": {
+    "zh": "我的毛线球！",
+    "en": "My yarn ball!"
+  },
+  "play.caught3": {
+    "zh": "接住了，厉害吧？",
+    "en": "Caught it — not bad, right?"
+  },
+  "play.missed1": {
+    "zh": "差一点点～再丢过来嘛",
+    "en": "So close~ toss it here!"
+  },
+  "play.missed2": {
+    "zh": "这边、这边！",
+    "en": "Over here!"
+  },
+  "play.again1": {
+    "zh": "再来一次？",
+    "en": "Again?"
+  },
+  "play.again2": {
+    "zh": "还想玩！",
+    "en": "More, please!"
+  },
+  "kc.chat.name.0": {
+    "zh": "我是{name}，你的手帐小伙伴。",
+    "en": "I'm {name}, your journal buddy."
+  },
+  "kc.chat.name.1": {
+    "zh": "叫我{name}就好。小名嘛……还在想。",
+    "en": "Just call me {name}. Still thinking about a nickname."
+  },
+  "kc.chat.age.0": {
+    "zh": "猫不说年龄。不过我的胡子很有经验。",
+    "en": "Cats don't tell their age. My whiskers are very experienced, though."
+  },
+  "kc.chat.age.1": {
+    "zh": "按猫的算法，刚好是最可爱的年纪。",
+    "en": "In cat years? Just the right age for cute."
+  },
+  "kc.chat.whatAreYou.0": {
+    "zh": "我是一只灰色的小猫，住在你的手帐里。",
+    "en": "I'm a little grey cat who lives in your journal."
+  },
+  "kc.chat.whatAreYou.1": {
+    "zh": "是猫，而且是会陪你写手帐的那种。",
+    "en": "A cat — the kind that keeps you company while you journal."
+  },
+  "kc.chat.food.0": {
+    "zh": "小鱼干！闻一闻蛋糕的香味也算。",
+    "en": "Little fish treats! Sniffing cake counts too."
+  },
+  "kc.chat.food.1": {
+    "zh": "我对牛奶很认真，对猫粮很挑剔。",
+    "en": "I'm serious about milk and fussy about kibble."
+  },
+  "kc.chat.likeMe.0": {
+    "zh": "喜欢呀。你来的时候我尾巴都会翘起来。",
+    "en": "Of course. My tail goes up whenever you're here."
+  },
+  "kc.chat.likeMe.1": {
+    "zh": "我一直在这儿，你打开本子我就在。",
+    "en": "I'm always here. Open the journal and there I am."
+  },
+  "kc.chat.likeMe.2": {
+    "zh": "当然。你是我最喜欢的人类。",
+    "en": "Of course. You're my favourite human."
+  },
+  "kc.chat.tease.0": {
+    "zh": "哼，我只是一只小猫嘛。会的话不多，但很认真。",
+    "en": "Hmph, I'm only a little cat. Not many words, but I mean them."
+  },
+  "kc.chat.tease.1": {
+    "zh": "笨笨的猫也是会陪着你的猫。",
+    "en": "A silly cat is still a cat who keeps you company."
+  },
+  "kc.chat.tease.2": {
+    "zh": "被你说中了。我就当你在撒娇啦。",
+    "en": "Fair. I'll take that as a cuddle."
+  },
+  "kc.chat.laugh.0": {
+    "zh": "嘿嘿，你一笑我也想笑。",
+    "en": "Hehe, when you laugh I want to laugh too."
+  },
+  "kc.chat.laugh.1": {
+    "zh": "什么这么好笑？我也要知道！",
+    "en": "What's so funny? I want to know too!"
+  },
+  "kc.chat.ack.0": {
+    "zh": "嗯，我在这儿。想说什么都可以。",
+    "en": "Mm, I'm here. Say anything you like."
+  },
+  "kc.chat.ack.1": {
+    "zh": "好。今天还有什么想告诉我的吗？",
+    "en": "Okay. Anything else from today?"
+  },
+  "kc.chat.ack.2": {
+    "zh": "收到！我在旁边舔舔爪子。",
+    "en": "Got it! I'll be here, licking my paw."
+  },
+  "kc.chat.bored.0": {
+    "zh": "无聊的话，来「玩耍」里丢毛线球给我吧！",
+    "en": "Bored? Come to Play and toss me the yarn ball!"
+  },
+  "kc.chat.bored.1": {
+    "zh": "要不翻翻以前的手帐？常常会遇到好笑的自己。",
+    "en": "Flip through an old page? You often meet a funny past you."
+  },
+  "kc.chat.bored.2": {
+    "zh": "我也有点无聊。我们一起发会儿呆吧。",
+    "en": "I'm a bit bored too. Let's stare into space together."
+  },
+  "kc.chat.joke.0": {
+    "zh": "我今天追了自己的尾巴三圈，差一点就赢了。",
+    "en": "I chased my tail three times today. Nearly won."
+  },
+  "kc.chat.joke.1": {
+    "zh": "我想在键盘上写手帐，结果写出了「；；；；」。",
+    "en": "I tried to journal on the keyboard. It came out as ';;;;'."
+  },
+  "kc.chat.joke.2": {
+    "zh": "我把毛线球藏起来了，然后忘了藏在哪儿。",
+    "en": "I hid my yarn ball. Then forgot where."
+  },
+  "kc.chat.hungry.0": {
+    "zh": "饿了就先吃点东西吧，手帐不会跑掉。",
+    "en": "Eat something first — the journal won't run away."
+  },
+  "kc.chat.hungry.1": {
+    "zh": "我也饿了！你吃什么？分我闻一口。",
+    "en": "Me too! What are you having? Let me sniff."
+  },
+  "kc.chat.hungry.2": {
+    "zh": "吃饱了心情会好一点。吃完回来告诉我好不好吃。",
+    "en": "Food helps. Come back and tell me if it was good."
+  },
+  "kc.chat.nervous.0": {
+    "zh": "紧张很正常，说明你很在乎。我陪着你。",
+    "en": "Nerves mean you care. I'm right here."
+  },
+  "kc.chat.nervous.1": {
+    "zh": "深呼吸一下？跟我一起：吸——呼——",
+    "en": "Deep breath? With me: in… and out…"
+  },
+  "kc.chat.nervous.2": {
+    "zh": "不管结果怎样，你都已经很努力了。",
+    "en": "However it goes, you've already worked hard."
+  },
+  "kc.chat.sleepless.0": {
+    "zh": "睡不着的话，我陪你躺一会儿。",
+    "en": "Can't sleep? I'll lie here with you for a bit."
+  },
+  "kc.chat.sleepless.1": {
+    "zh": "把脑子里转的事写一句下来，有时就安静了。",
+    "en": "Write down one line of what's spinning — sometimes it quiets down."
+  },
+  "kc.chat.sleepless.2": {
+    "zh": "我数毛线球给你听：一个、两个、三个……",
+    "en": "I'll count yarn balls for you: one, two, three…"
+  },
+  "kc.chat.miss.0": {
+    "zh": "想念的人，一定很重要吧。",
+    "en": "Someone you miss must matter a lot."
+  },
+  "kc.chat.miss.1": {
+    "zh": "想家的时候，我在这儿陪你。要不要跟我说说？",
+    "en": "When you miss home, I'm here. Want to tell me about it?"
+  },
+  "kc.chat.busy.0": {
+    "zh": "忙了一天，辛苦啦。先坐下歇一口气。",
+    "en": "A busy day — well done. Sit and breathe a moment."
+  },
+  "kc.chat.busy.1": {
+    "zh": "这么忙还记得来找我，我很开心。",
+    "en": "That busy, and you still came by. That makes me happy."
+  },
+  "kc.chat.busy.2": {
+    "zh": "忙完了吗？没忙完我就在旁边安静等你。",
+    "en": "All done? If not, I'll wait quietly."
+  },
+  "kc.chat.rough.0": {
+    "zh": "听起来好难受。我在这儿，不用急着好起来。",
+    "en": "That sounds hard. I'm here — no rush to feel better."
+  },
+  "kc.chat.rough.1": {
+    "zh": "抱抱你。今天辛苦了。",
+    "en": "A hug for you. Today was a lot."
+  },
+  "kc.chat.rough.2": {
+    "zh": "想说就说，不想说我就陪你坐着。",
+    "en": "Talk if you want; if not, I'll just sit with you."
+  },
+  "kc.chat.goodNews.0": {
+    "zh": "哇！太棒了！我在原地转了一圈。",
+    "en": "Wow! That's wonderful! I just spun in a circle."
+  },
+  "kc.chat.goodNews.1": {
+    "zh": "恭喜你！这个值得记在今天的页上。",
+    "en": "Congratulations! That deserves a spot on today's page."
+  },
+  "kc.chat.goodNews.2": {
+    "zh": "我就知道你可以！尾巴已经翘到天上了。",
+    "en": "I knew you could! My tail's up to the sky."
+  },
+  "kc.chat.birthday.0": {
+    "zh": "生日快乐！今天你是最重要的人。",
+    "en": "Happy birthday! Today you're the most important one."
+  },
+  "kc.chat.birthday.1": {
+    "zh": "生日快乐！送你一个毛线球（借你玩，要还我）。",
+    "en": "Happy birthday! Here's a yarn ball (on loan — I want it back)."
+  },
+  "kc.chat.rain.0": {
+    "zh": "下雨天适合窝着。你有带伞吗？",
+    "en": "Rainy days are for curling up. Did you bring an umbrella?"
+  },
+  "kc.chat.rain.1": {
+    "zh": "我喜欢听雨声，但不喜欢被淋湿。",
+    "en": "I like the sound of rain, not getting wet."
+  },
+  "kc.chat.cold.0": {
+    "zh": "好冷！多穿一点，我的尾巴借你当围巾。",
+    "en": "Brr! Wrap up — you can borrow my tail as a scarf."
+  },
+  "kc.chat.cold.1": {
+    "zh": "冷的时候抱一杯热的，会好很多。",
+    "en": "When it's cold, hold something warm. It helps."
+  },
+  "kc.chat.hot.0": {
+    "zh": "好热……我已经摊成一张猫饼了。",
+    "en": "So hot… I've melted into a cat pancake."
+  },
+  "kc.chat.hot.1": {
+    "zh": "记得多喝水，你也要，我也要。",
+    "en": "Drink water — you and me both."
+  },
+  "kc.chat.sunny.0": {
+    "zh": "好天气！要不要出去走走？",
+    "en": "Lovely weather! Fancy a little walk?"
+  },
+  "kc.chat.sunny.1": {
+    "zh": "这种天气，我只想找个暖和的地方打盹。",
+    "en": "Weather like this, I just want a warm spot to nap."
+  },
+  "kc.chat.share.0": {
+    "zh": "{thing}！听起来不错。最喜欢哪一刻？",
+    "en": "Oh, {thing}! Sounds nice. What was the best moment?"
+  },
+  "kc.chat.share.1": {
+    "zh": "哇，{thing}。是什么感觉呀？",
+    "en": "Ooh, {thing}. How did it feel?"
+  },
+  "kc.chat.share.2": {
+    "zh": "{thing}呀，跟我多说一点？",
+    "en": "{thing}? Tell me a bit more?"
+  },
+  "kc.chat.shareHappy.0": {
+    "zh": "{thing}，还这么开心，真好！",
+    "en": "Oh, {thing} — and so happy about it! Love that."
+  },
+  "kc.chat.shareHappy.1": {
+    "zh": "开心的{thing}，值得记一笔。",
+    "en": "A happy {thing} — worth a line in the journal."
+  },
+  "kc.chat.meh.0": {
+    "zh": "普普通通的一天也很好。有什么小事吗？",
+    "en": "An ordinary day is fine too. Any little thing?"
+  },
+  "kc.chat.meh.1": {
+    "zh": "嗯，平平淡淡的。那就安安静静地过吧。",
+    "en": "Mm, a quiet one. Let it be quiet then."
+  },
+  "kc.chat.inspire.0": {
+    "zh": "写写今天吃到的最好吃的一口？",
+    "en": "Write about the best bite you had today?"
+  },
+  "kc.chat.inspire.1": {
+    "zh": "今天有没有让你笑出来的瞬间？就写它。",
+    "en": "Was there a moment that made you smile today? Write that."
+  },
+  "kc.chat.inspire.2": {
+    "zh": "拍一张桌上的东西，配一句话就好。",
+    "en": "Snap whatever's on your desk and add one line."
+  },
+  "kc.chat.inspire.3": {
+    "zh": "写一句话给一年后的自己吧。",
+    "en": "Write one line to yourself a year from now."
+  },
+  "kc.chat.question.0": {
+    "zh": "这个问题难倒我了。我只是一只小猫嘛。",
+    "en": "That one's beyond me — I'm only a little cat."
+  },
+  "kc.chat.question.1": {
+    "zh": "唔，我不知道诶。你觉得呢？",
+    "en": "Hmm, I don't know. What do you think?"
+  },
+  "kc.chat.question.2": {
+    "zh": "我答不上来，但我想知道你怎么想。",
+    "en": "I can't answer that, but I'd like your take."
+  },
+  "kc.chat.listen.0": {
+    "zh": "嗯嗯，我在听。然后呢？",
+    "en": "Mm-hm, I'm listening. And then?"
+  },
+  "kc.chat.listen.1": {
+    "zh": "原来是这样。你现在感觉怎么样？",
+    "en": "I see. How do you feel about it now?"
+  },
+  "kc.chat.listen.2": {
+    "zh": "谢谢你告诉我。还有想说的吗？",
+    "en": "Thanks for telling me. Anything else?"
+  },
+  "sw.title": {
+    "zh": "写字 · 改字体",
+    "en": "Words & type"
+  },
+  "sw.moments": {
+    "zh": "这一天的 Moment",
+    "en": "Moments of this day"
+  },
+  "sw.strip": {
+    "zh": "写给谁",
+    "en": "Write for"
+  },
+  "sw.whole": {
+    "zh": "整个 Moment 的一句话",
+    "en": "A line for the whole Moment"
+  },
+  "sw.wholeShort": {
+    "zh": "整体",
+    "en": "Whole"
+  },
+  "sw.wholeHint": {
+    "zh": "排在这一页的标题位置",
+    "en": "Goes where the page's headline is"
+  },
+  "sw.photoOf": {
+    "zh": "照片 {n} / {count}",
+    "en": "Photo {n} / {count}"
+  },
+  "sw.photoHint": {
+    "zh": "这句会排在这张照片旁边",
+    "en": "This line sits right by this photo"
+  },
+  "sw.photoPlaceholder": {
+    "zh": "给这张照片写一句…（可以不写）",
+    "en": "A line for this photo… (optional)"
+  },
+  "sw.written": {
+    "zh": "已写",
+    "en": "written"
+  },
+  "sw.type": {
+    "zh": "这一页的文字样式",
+    "en": "Type for this page"
+  },
+  "sw.fontAuto": {
+    "zh": "自动",
+    "en": "Auto"
+  },
+  "crop.tool": {
+    "zh": "裁剪画面",
+    "en": "Crop"
+  },
+  "shape.hint": {
+    "zh": "形状只改变外框；想换保留的画面，用「裁剪画面」。",
+    "en": "Shape changes the frame only; to choose what shows, use Crop."
+  },
+  "layout.hint": {
+    "zh": "{count} 张照片 · 试试排版",
+    "en": "{count} photos · try a layout"
+  },
+  "layout.hintClose": {
+    "zh": "不用了",
+    "en": "No thanks"
+  },
+  "crop.title": {
+    "zh": "裁剪画面",
+    "en": "Crop"
+  },
+  "crop.ratio": {
+    "zh": "比例",
+    "en": "Ratio"
+  },
+  "crop.ratio.frame": {
+    "zh": "外框",
+    "en": "Frame"
+  },
+  "crop.ratio.free": {
+    "zh": "自由",
+    "en": "Free"
+  },
+  "crop.ratio.original": {
+    "zh": "原比例",
+    "en": "Original"
+  },
+  "crop.rotate": {
+    "zh": "旋转 90°",
+    "en": "Rotate 90°"
+  },
+  "crop.reset": {
+    "zh": "还原",
+    "en": "Reset"
+  },
+  "crop.fixedShape": {
+    "zh": "这个形状的比例是固定的；想换比例，先在「形状」里选「原图」。",
+    "en": "This shape keeps its own proportions; to change them, choose Original in Shape first."
+  },
+  "crop.frameWillChange": {
+    "zh": "完成后，照片外框会变成这个比例，位置和角度不变。",
+    "en": "When you tap Done, the photo's frame takes this ratio; its place and angle stay."
+  },
+  "crop.saved": {
+    "zh": "已裁剪，原图仍保留",
+    "en": "Cropped — the original is kept"
+  },
+  "media.notSaved": {
+    "zh": "有 {count} 个照片或视频没能存进这台设备，请重新添加它们。文字已保存。",
+    "en": "{count} photo(s) or video(s) could not be stored on this device — please add them again. Your words are saved."
+  },
+  "media.photoMissing": {
+    "zh": "照片读取不到",
+    "en": "Photo can't be read"
+  },
+  "check.title": {
+    "zh": "检查照片和视频",
+    "en": "Check photos & videos"
+  },
+  "check.short": {
+    "zh": "只读，不改动任何东西",
+    "en": "Read-only"
+  },
+  "check.hint": {
+    "zh": "只读取和检查，不会修改、转换、删除或上传任何东西。结果里没有名字和文字，可以复制发给开发者。",
+    "en": "Only reads and checks — nothing is changed, converted, deleted or uploaded. The result has no names or words, so it can be copied to the developer."
+  },
+  "check.running": {
+    "zh": "正在检查……",
+    "en": "Checking…"
+  },
+  "check.failed": {
+    "zh": "检查没能完成",
+    "en": "The check could not finish"
+  },
+  "check.env": {
+    "zh": "运行环境",
+    "en": "Where it runs"
+  },
+  "check.browser": {
+    "zh": "浏览器",
+    "en": "Browser"
+  },
+  "check.address": {
+    "zh": "运行地址",
+    "en": "Address"
+  },
+  "check.embedded": {
+    "zh": "嵌在其他页面里",
+    "en": "Embedded in another page"
+  },
+  "check.persisted": {
+    "zh": "长期保存（不被自动清理）",
+    "en": "Kept long-term (not auto-cleared)"
+  },
+  "check.space": {
+    "zh": "已用 / 可用空间",
+    "en": "Used / available"
+  },
+  "check.yes": {
+    "zh": "是",
+    "en": "Yes"
+  },
+  "check.no": {
+    "zh": "否",
+    "en": "No"
+  },
+  "check.media": {
+    "zh": "照片和视频",
+    "en": "Photos & videos"
+  },
+  "check.used": {
+    "zh": "页面用到的文件",
+    "en": "Files used by pages"
+  },
+  "check.stored": {
+    "zh": "这台设备上存着的文件",
+    "en": "Files stored on this device"
+  },
+  "check.s.ok": {
+    "zh": "正常",
+    "en": "OK"
+  },
+  "check.s.missing": {
+    "zh": "文件不在（没存进来，或已丢失）",
+    "en": "Missing (never saved, or lost)"
+  },
+  "check.s.unreadable": {
+    "zh": "文件在，但读不出来",
+    "en": "Stored but can't be read"
+  },
+  "check.s.empty": {
+    "zh": "文件在，但是空的",
+    "en": "Stored but empty"
+  },
+  "check.s.decode": {
+    "zh": "读得出，但打不开（解码失败）",
+    "en": "Read but won't open (decode failed)"
+  },
+  "check.s.unchecked": {
+    "zh": "视频没有打开检查（iOS 要先点一下才读取视频，不代表坏了）",
+    "en": "Video not opened (iOS loads video only after a tap; not a fault)"
+  },
+  "check.s.badref": {
+    "zh": "页面里的引用格式不对",
+    "en": "Page points to an invalid reference"
+  },
+  "check.legacy": {
+    "zh": "旧的存储格式（还能读）",
+    "en": "Older storage format (still readable)"
+  },
+  "check.unused": {
+    "zh": "没有被页面用到的文件",
+    "en": "Stored files no page uses"
+  },
+  "check.none": {
+    "zh": "这台设备上的手帐还没有用到照片或视频。",
+    "en": "No page on this device uses a photo or video yet."
+  },
+  "check.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "check.clip": {
+    "zh": "声音 / 视频",
+    "en": "Sound / video"
+  },
+  "check.page": {
+    "zh": "第 {n} 页",
+    "en": "page {n}"
+  },
+  "check.draft": {
+    "zh": "草稿",
+    "en": "draft"
+  },
+  "check.events": {
+    "zh": "最近的媒体记录",
+    "en": "Recent media events"
+  },
+  "check.noEvents": {
+    "zh": "还没有记录到媒体问题。",
+    "en": "No media problems recorded yet."
+  },
+  "check.copy": {
+    "zh": "复制检查结果",
+    "en": "Copy the result"
+  },
+  "check.copied": {
+    "zh": "已复制，可以粘贴发给开发者",
+    "en": "Copied — paste it to the developer"
+  },
+  "check.selectToCopy": {
+    "zh": "这里不能直接复制：已显示文字，请长按全选后复制",
+    "en": "Can't copy here: the text is shown — select it and copy"
+  },
+  "check.e.media_save_failed": {
+    "zh": "保存失败",
+    "en": "Save failed"
+  },
+  "check.e.media_missing": {
+    "zh": "文件不在",
+    "en": "File missing"
+  },
+  "check.e.media_read_failed": {
+    "zh": "读不出来",
+    "en": "Could not read"
+  },
+  "check.e.media_converted": {
+    "zh": "旧格式已转换",
+    "en": "Older format converted"
+  },
+  "check.e.media_convert_failed": {
+    "zh": "旧格式转换失败（仍可显示）",
+    "en": "Conversion failed (still shown)"
+  },
+  "check.e.media_url_failed": {
+    "zh": "临时地址失效，已重新读取",
+    "en": "Temporary address failed, read again"
+  },
+  "check.e.media_decode_failed": {
+    "zh": "打不开（解码失败）",
+    "en": "Won't open (decode failed)"
+  },
+  "check.e.media_unreadable": {
+    "zh": "读取失败",
+    "en": "Unreadable"
+  },
+  "check.e.media_not_saved": {
+    "zh": "保存时有文件没存上",
+    "en": "Some files were not saved"
+  },
+  "check.e.media_reloaded": {
+    "zh": "已重新读取",
+    "en": "Read again"
+  },
+  "check.e.media_check": {
+    "zh": "运行了检查",
+    "en": "Check run"
+  },
+  "import.titleVideo": {
+    "zh": "导入视频",
+    "en": "Importing a video"
+  },
+  "import.titleAudio": {
+    "zh": "导入声音",
+    "en": "Importing a sound"
+  },
+  "import.import": {
+    "zh": "正在读取视频信息…",
+    "en": "Reading the file…"
+  },
+  "import.read": {
+    "zh": "正在导入 {pct}%",
+    "en": "Importing {pct}%"
+  },
+  "import.write": {
+    "zh": "正在保存到本机…",
+    "en": "Saving to this device…"
+  },
+  "import.cover": {
+    "zh": "正在生成封面…",
+    "en": "Making a cover…"
+  },
+  "import.done": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
+  },
+  "import.failed": {
+    "zh": "保存失败",
+    "en": "Not saved"
+  },
+  "import.lockNote": {
+    "zh": "保存完成前，暂时不能切换页面或离开编辑。",
+    "en": "Pages can't be switched until it is saved."
+  },
+  "import.doneNote": {
+    "zh": "可以继续编辑、切换页面了。",
+    "en": "You can switch pages now."
+  },
+  "import.failedNote": {
+    "zh": "没有存进这台设备，页面没有变化。可以重试，文件还在。",
+    "en": "It was not stored on this device and the page is unchanged. You can retry — the file is still here."
+  },
+  "import.retry": {
+    "zh": "重试",
+    "en": "Retry"
+  },
+  "import.dismissVideo": {
+    "zh": "不要这个视频",
+    "en": "Discard this video"
+  },
+  "import.dismissAudio": {
+    "zh": "不要这个声音",
+    "en": "Discard this sound"
+  },
+  "import.busy": {
+    "zh": "视频正在保存到本机，完成后就可以切换页面。",
+    "en": "The video is being saved on this device — you can switch pages once it's done."
+  },
+  "import.tooBigVideo": {
+    "zh": "视频超过 50 MB，请先在相册里剪短再导入。",
+    "en": "The video is over 50 MB — trim it in Photos first."
+  },
+  "import.tooBigAudio": {
+    "zh": "声音文件超过 20 MB。",
+    "en": "The sound file is over 20 MB."
+  },
+  "import.failedToast": {
+    "zh": "没能保存到本机，可以点「重试」。",
+    "en": "Couldn't save it on this device — tap Retry."
+  },
+  "poster.change": {
+    "zh": "换封面",
+    "en": "Cover"
+  },
+  "poster.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "poster.current": {
+    "zh": "现在的封面",
+    "en": "Current cover"
+  },
+  "media.removeFromPage": {
+    "zh": "从页面移除",
+    "en": "Remove from page"
+  },
+  "media.removeShort": {
+    "zh": "移除",
+    "en": "Remove"
+  },
+  "media.removeConfirm": {
+    "zh": "把它从这一页移除？可以撤销；文件仍保存在这台设备上。",
+    "en": "Remove it from this page? You can undo; the file stays on this device."
+  },
+  "media.removed": {
+    "zh": "已从这一页移除，可以撤销。",
+    "en": "Removed from this page — undo brings it back."
+  },
+  "media.savedLocal": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
+  },
+  "mood.happy": {
+    "zh": "开心",
+    "en": "Happy"
+  },
+  "mood.warm": {
+    "zh": "温暖",
+    "en": "Warm"
+  },
+  "mood.calm": {
+    "zh": "平静",
+    "en": "Calm"
+  },
+  "mood.low": {
+    "zh": "低落",
+    "en": "Low"
+  },
+  "mood.excited": {
+    "zh": "雀跃",
+    "en": "Excited"
+  },
+  "mood.hint": {
+    "zh": "可选 · 只记在这一页，不会画到纸上",
+    "en": "Optional · kept with this page, never drawn on it"
+  },
+  "mood.clear": {
+    "zh": "清除",
+    "en": "Clear"
+  },
+  "mood.coverNote": {
+    "zh": "心情记在每一页上：打开某一页，在「页面信息」里选。",
+    "en": "Mood belongs to each page: open a page and choose it in Page details."
+  },
+  "ctx.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "ctx.backLabel": {
+    "zh": "返回创作工具",
+    "en": "Back to the creation tools"
+  },
+  "ctx.selected": {
+    "zh": "已选中",
+    "en": "selected"
+  },
+  "ctx.selectedLabel": {
+    "zh": "{kind} · 已选中",
+    "en": "{kind} · selected"
+  },
+  "sticker.swap": {
+    "zh": "换一个",
+    "en": "Swap"
+  },
+  "sticker.swapped": {
+    "zh": "已换成新的贴纸",
+    "en": "Sticker swapped"
+  },
+  "layer.precise": {
+    "zh": "精确调整",
+    "en": "Exact position & size"
+  },
+  "more.pageFont": {
+    "zh": "页面字体",
+    "en": "Page font"
+  },
+  "more.toc": {
+    "zh": "页面目录",
+    "en": "Pages"
+  },
+  "more.groupLook": {
+    "zh": "页面外观",
+    "en": "Page look"
+  },
+  "more.groupMake": {
+    "zh": "媒体与创作",
+    "en": "Media & making"
+  },
+  "more.groupPages": {
+    "zh": "页面管理",
+    "en": "Pages & info"
+  },
+  "pages.copyLabel": {
+    "zh": "复制这一页",
+    "en": "Copy this page"
+  },
+  "pages.copied": {
+    "zh": "已复制这一页",
+    "en": "Page copied"
+  },
+  "guide.add.title": {
+    "zh": "加东西",
+    "en": "Add things"
+  },
+  "guide.add.body": {
+    "zh": "从这里放照片、写字、贴贴纸。",
+    "en": "Put in photos, words and stickers from here."
+  },
+  "guide.more.title": {
+    "zh": "改整页",
+    "en": "The whole page"
+  },
+  "guide.more.body": {
+    "zh": "背景与纸张、排版、手绘、页面目录、页面信息都在「更多」里。",
+    "en": "Background & paper, layout, drawing, pages and page details are all in More."
+  },
+  "pages.more": {
+    "zh": "更多页面操作（只保存这一页、折叠）",
+    "en": "More page actions (save one page, fold)"
   }
 }

@@ -14,6 +14,9 @@ public struct NavigationTab: Decodable, Identifiable {
     /// V6.6: false = a page without its own tab (Growth lives on Home's
     /// "today" card and in the "My habits" book).
     public let inNav: Bool?
+    /// true = only shown with Labs switched on (community: a local demo,
+    /// not a launched feature). The release app's tabs leave it out.
+    public let labs: Bool?
 }
 
 public struct MaterialTemplate: Decodable, Identifiable {
@@ -167,6 +170,38 @@ public struct KeeperLook: Decodable, Identifiable {
     public let noteEn: String?
 }
 
+/// V10.17: Captain's Playroom (library.json "keeperPlay"): per outfit, the
+/// stage's resting picture, its happy reaction (frames side by side) and,
+/// where the art allows, a yarn ball that can be dragged on its own. An
+/// outfit only gets the actions it has matching art for — never another
+/// outfit's pictures.
+public struct KeeperPlayClip: Decodable {
+    public let file: String
+    public let frames: Int
+    public let frameMs: Int
+    public let loops: Int?
+    public let still: Int?
+}
+
+public struct KeeperPlayBall: Decodable {
+    public let file: String
+    public let x: Double
+    public let y: Double
+    public let d: Double
+}
+
+public struct KeeperPlay: Decodable {
+    public let animal: String
+    public let outfit: String
+    public let stage: String
+    public let idle: String
+    public let happy: KeeperPlayClip?
+    public let ball: KeeperPlayBall?
+    public let license: String
+
+    public var files: [String] { [idle, license] + [happy?.file, ball?.file].compactMap { $0 } }
+}
+
 public struct AssetCatalog: Decodable {
     public let schemaVersion: Int
     public let fonts: [FontAsset]
@@ -178,6 +213,7 @@ public struct AssetCatalog: Decodable {
     public let music: [MusicAsset]?
     public let keepers: [KeeperAsset]?
     public let keeperLooks: [KeeperLook]?
+    public let keeperPlay: [KeeperPlay]?
     public let kits: [StoryKit]?
     public let coverTemplates: [MaterialTemplate]
     public let fieldTypes: [String]
@@ -193,7 +229,7 @@ public enum SharedResources {
         case "scenes": allowed = Set((catalog.scenes ?? []).flatMap { [$0.file, $0.license] })
         case "photos": allowed = Set((catalog.photos ?? []).flatMap { [$0.file, $0.license] })
         case "music": allowed = Set((catalog.music ?? []).flatMap { [$0.file, $0.license] })
-        case "keepers": allowed = Set((catalog.keepers ?? []).flatMap { [$0.file, $0.license] })
+        case "keepers": allowed = Set((catalog.keepers ?? []).flatMap { [$0.file, $0.license] } + (catalog.keeperPlay ?? []).flatMap(\.files))
         default: throw CocoaError(.fileNoSuchFile)
         }
         guard allowed.contains(filename) else { throw CocoaError(.fileNoSuchFile) }

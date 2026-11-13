@@ -5,7 +5,7 @@ export const EVENTS_KEY = "little-days.events";
 export const MAX_EVENTS = 600;
 // Only these fields may be stored with an event, and only as numbers,
 // booleans or short ids.
-const ALLOWED = ["way", "photo", "photos", "ms", "taps", "shuffles", "variant", "line", "size", "kind", "pages"];
+const ALLOWED = ["way", "photo", "photos", "ms", "taps", "shuffles", "variant", "line", "size", "kind", "pages", "count", "stage", "err"];
 
 export function cleanData(data = {}) {
   const out = {};

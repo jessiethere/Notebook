@@ -1,4 +1,5 @@
-import { MediaStore, migrateLegacyPhotos } from "./js/media.mjs";
+import { MediaStore, migrateLegacyPhotos, mediaReferences, errName } from "./js/media.mjs";
+import * as MediaCheck from "./js/media-check.mjs";
 import {
   configureI18n,
   t,
@@ -34,11 +35,12 @@ import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.
 import * as Rich from "./js/rich-text.mjs";
 import * as Reader from "./js/reader.mjs";
 import * as Guide from "./js/studio-guide.mjs";
+import * as PM from "./js/profile-mark.mjs";
 import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
-import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto } from "./js/scrapbook-layout.mjs";
+import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -61,7 +63,9 @@ import * as Community from "./js/community.mjs";
 import * as Collab from "./js/collab.mjs";
 import * as Account from "./js/account.mjs";
 import { openPhotoEditor } from "./js/photo-editor-ui.mjs";
-import { renderEdited, isIdentity } from "./js/photo-edit.mjs";
+import { renderEdited, isIdentity, normalizeEdit } from "./js/photo-edit.mjs";
+import { openCropEditor } from "./js/crop-editor.mjs";
+import * as Crop from "./js/crop.mjs";
 import { SHAPES, shapeSize, shapeForSize } from "./js/shapes.mjs";
 import { frameAt, openPosterPicker } from "./js/poster-picker.mjs";
 import { collabSectionHTML } from "./js/collab-view.mjs";
@@ -177,6 +181,41 @@ const shortDate = (key) =>
 const themeIcon = (theme) =>
   icon({ Learning: "book", Fitness: "pulse", Wellness: "cloud", "Creative Life": "palette" }[theme] || "leaf");
 let calendarBook = "";
+// V10.21: a picture / clip that fails to load gets one fresh URL from its
+// stored bytes; if the bytes are gone it is shown as missing (never faked).
+// V10.22: the local log tells the kinds of failure apart —
+//   media_url_failed     the page's temporary address stopped working, the
+//                        stored data was fine and a new address fixed it
+//   media_decode_failed  the stored data is there but will not open
+//   media_unreadable     the stored data cannot be read (or is gone)
+const mediaTag = (el) => (el instanceof HTMLImageElement ? "photo" : el instanceof HTMLVideoElement ? "video" : "audio");
+document.addEventListener(
+  "error",
+  async (event) => {
+    const el = event.target;
+    if (!(el instanceof HTMLImageElement || el instanceof HTMLVideoElement || el instanceof HTMLAudioElement)) return;
+    const src = el.getAttribute("src") || "";
+    if (!src.startsWith("blob:")) return;
+    const id = media.idOfUrl(src);
+    if (!id) return;
+    const kind = mediaTag(el);
+    if (await media.refresh(id)) {
+      el.setAttribute("src", media.resolve(`media:${id}`));
+      logEvent("media_url_failed", { kind, stage: el.closest("#journal-canvas") ? "studio" : "view" });
+    } else {
+      el.closest(".photo-layer, .media-layer")?.classList.add("media-broken");
+      const record = await media.get(id).catch(() => null);
+      const hasData = record?.bytes?.byteLength > 0;
+      logEvent(hasData ? "media_decode_failed" : "media_unreadable", { kind, err: el.error ? "mediaerror" + el.error.code : "" });
+    }
+  },
+  true,
+);
+// Ask the browser to keep this device's journal and media (best effort; on
+// iPhone, Safari may still clear sites unused for a long time).
+try {
+  navigator.storage?.persist?.().catch(() => {});
+} catch {}
 let media = new MediaStore(),
   catalog,
   bookDraft = null,
@@ -189,6 +228,12 @@ let media = new MediaStore(),
   recordingStarted = 0,
   attachmentTarget = null,
   recordingTargetId = null;
+// V10.22: what went wrong with a file goes to the local log (see media-check.mjs).
+media.onEvent = (name, data) => logEvent(name, data);
+// V10.25: 精确调整 in 图层 stays open / closed as the person left it.
+document.addEventListener("toggle", (event) => {
+  if (event.target.matches?.("details.layer-precise")) layerPreciseOpen = event.target.open;
+}, true);
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
@@ -219,7 +264,6 @@ let activeMomentId = null,
   studioReturn = "home",
   soundMenu = false,
   account = null,
-  loginAvatar = null,
   tourStep = 0,
   settingsReturn = "home",
   booksView = "shelf", // "shelf" (my books) | "our" (books written with friends) | "profile"
@@ -277,7 +321,28 @@ function flushDraft() {
     s.drafts[editor.date] = structuredClone(editor);
   });
   draftDirty = false;
-  setDraftState("saved");
+  // V10.21: "已保存" only once every photo / video / sound this day uses is
+  // really in this device's media store (not only the page's words).
+  confirmMediaSaved();
+}
+let mediaCheck = 0;
+async function confirmMediaSaved() {
+  const run = ++mediaCheck;
+  const ids = [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })];
+  if (!ids.length) return setDraftState("saved");
+  setDraftState("saving");
+  let missing = [];
+  try {
+    missing = await media.missing(ids);
+  } catch {
+    missing = ids;
+  }
+  if (run !== mediaCheck) return;
+  if (missing.length) {
+    setDraftState("failed");
+    toast(t("media.notSaved", { count: missing.length }));
+    logEvent("media_not_saved", { count: missing.length });
+  } else setDraftState("saved");
 }
 function scheduleDraft() {
   draftDirty = true;
@@ -453,7 +518,7 @@ function openStudio(date = dateKey()) {
         date,
         title: "",
         body: "",
-        mood: "☀️",
+        mood: "",
         bookId: "daily",
         photo: "",
         template: "cute",
@@ -491,7 +556,7 @@ function navigation() {
   // "today" card and kept in the "My habits" book on the shelf.
   $("#navigation").innerHTML = features.tabs
     .filter((tab) => tab.inNav !== false)
-    .filter((tab) => labsOn() || !LAB_PAGES.includes(tab.id))
+    .filter((tab) => labsOn() || !(tab.labs || LAB_PAGES.includes(tab.id)))
     .map(
       (tab) =>
         `<button class="nav-item ${tab.id === current ? "active" : ""} ${tab.id}" data-action="nav" data-page="${tab.id}" aria-label="${t("nav." + tab.id)}" ${tab.id === current ? 'aria-current="page"' : ""}>${icon(tab.symbol)}<span>${t("nav." + tab.id)}</span></button>`,
@@ -545,10 +610,25 @@ function dayCoverHTML(day) {
     clips.some((c) => c.kind === "video") ? "◈" : "",
     clips.some((c) => c.kind === "audio") ? "♫" : "",
   ].filter(Boolean);
-  return `<button class="day-cover" data-action="reader-open" data-book="${esc(selectedBook || "")}" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
+  // V10.16: a day with several pages in this book shows how many, and a row
+  // of its pages: each opens the reader at that page. One page: the card
+  // itself opens it. (The pages are the reader's own list — nothing copied.)
+  const all = selectedBook ? flipPages(selectedBook) : [];
+  const ofDay = all.map((item, i) => ({ item, at: i + 1 })).filter(({ item }) => item.date === day.date);
+  const card = `<button class="day-cover" data-action="reader-open" data-book="${esc(selectedBook || "")}" data-date="${day.date}"><span class="day-cover-photos n${shots.length}">${shots.length ? shots.map((src) => `<img src="${esc(src)}" alt="">`).join("") : `<span class="day-cover-mood">${esc(entry.mood || "✿")}</span>`}</span><span class="day-cover-copy"><span class="day-cover-date"><b>${date.getDate()}</b><span>${esc(date.toLocaleDateString(locale(), { month: "short", weekday: "short" }))}</span>${entry.isDemo ? "" : draftTagHTML(day.date)}${entry.mood ? `<i>${esc(entry.mood)}</i>` : ""}</span><strong>${esc(titles[0] || t("entry.untitled"))}</strong>${titles.length > 1 ? `<ul>${titles
     .slice(1, 4)
     .map((title) => `<li>${esc(title)}</li>`)
     .join("")}</ul>` : ""}${extras.length ? `<small>${esc(extras.join(" · "))}</small>` : ""}</span></button>`;
+  if (ofDay.length < 2) return card;
+  // Not <button>s: a small page can hold its own play button (buttons cannot nest).
+  const thumbs = ofDay
+    .map(({ item, at }) => {
+      const page = item.moment || item.entry;
+      const label = [t("reader.pageShort", { n: at }), item.moment?.time || "", String(page.title || "").trim()].filter(Boolean).join(" · ");
+      return `<div class="day-page-thumb" role="button" tabindex="0" data-action="reader-open" data-book="${esc(selectedBook)}" data-key="${esc(Reader.keyOf(item))}" aria-label="${esc(label)}"><span class="reader-thumb-paper" inert>${sharedCanvasHTML(page, ctx(), { readOnly: true, dayPage: !item.moment })}</span><small><b>${esc(t("reader.pageShort", { n: at }))}</b>${item.moment?.time ? `<i>${esc(item.moment.time)}</i>` : ""}</small></div>`;
+    })
+    .join("");
+  return `<div class="day-group">${card}<div class="day-pages" role="group" aria-label="${esc(t("day.pagesOf", { date: date.toLocaleDateString(locale(), { month: "long", day: "numeric" }) }))}">${thumbs}</div></div>`;
 }
 function bookCard(book) {
   const count = bookEntryCount(state(), book.id);
@@ -690,7 +770,7 @@ function home() {
   const weekday = now.toLocaleDateString(locale(), { weekday: "long" });
   const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
   const books = homeLibraryHTML();
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg></div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days${BRAND_SPROUT}</div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
  ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div>${keeperInviteHTML()}<div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
  ${books}<p class="home-quote hs-colophon">Collect moments, grow gently.</p></div>`;
 }
@@ -1048,7 +1128,9 @@ function syncMusic() {
     musicPaused = false;
     musicAsked = "";
   }
-  const silent = context.startsWith("book:") && musicAsked !== context;
+  // V10.11 books, V10.16 a day: silent until its ♪ / music chip is tapped.
+  // Moving to another day or book starts silent again (no sound by surprise).
+  const silent = (context.startsWith("book:") || context.startsWith("day:")) && musicAsked !== context;
   const track = findTrack(catalog, wanted);
   if (silent) {
     if (music.current() && !musicSheetOpen()) music.stop();
@@ -1301,7 +1383,7 @@ function keeperSay(event, facts) {
   const line = Keeper.contextLine(event, facts, { recent: recent.map((x) => x.id), seed: Math.floor(Math.random() * 1000) });
   if (!line) return "";
   rememberKeeperLine(line.id);
-  return t(line.key, { ...line.values, name: Keeper.keeperName(k, languageCode()) });
+  return cjkGap(t(line.key, { ...line.values, name: Keeper.keeperName(k, languageCode()) }));
 }
 function rememberKeeperLine(id) {
   try {
@@ -1316,11 +1398,11 @@ const keeperFacts = () => {
   return Keeper.modeAllows(keeperNow(), "memories") ? facts : { ...facts, title: "" };
 };
 // "找 Captain" reads better than "找Captain"; a Chinese name needs no gaps.
-const keeperNameIn = (k) => {
-  const name = Keeper.keeperName(k, languageCode());
-  return languageCode() !== "en" && /^[\x20-\x7e]+$/.test(name) ? ` ${name} ` : name;
-};
-const tk = (key, k, values = {}) => t(key, { ...values, name: keeperNameIn(k) }).trim();
+// V10.18: the gap goes only between a Chinese character and a Latin word —
+// never before Chinese punctuation ("戳戳 Captain。", not "Captain 。").
+const keeperNameIn = (k) => Keeper.keeperName(k, languageCode());
+const cjkGap = (text) => (languageCode() === "en" ? text : String(text).replace(/([\u4e00-\u9fff])([A-Za-z0-9])/g, "$1 $2").replace(/([A-Za-z0-9])([\u4e00-\u9fff])/g, "$1 $2"));
+const tk = (key, k, values = {}) => cjkGap(t(key, { ...values, name: keeperNameIn(k) })).trim();
 function keeperShelfFacts() {
   const mine = state().books.filter((bk) => !isOurBook(bk));
   const latest = [...mine].map((bk) => ({ bk, last: bookLastWritten(bk.id) })).sort((x, y) => (x.last < y.last ? 1 : -1))[0];
@@ -1415,10 +1497,173 @@ function keeperActsHTML(k) {
   const row = (kind, extra = "") => `<li><button class="kp-do ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span><b>${esc(tk("kp.do." + kind, k))}</b><small>${t("kp.do." + kind + "Hint")}</small></span><i aria-hidden="true">›</i></button></li>`;
   return `<ul class="kp-acts">${row("organize")}${row("memory")}${row("write", "later")}${row("chat")}</ul>`;
 }
-function keeperPlayHTML() {
-  const item = (key) => `<li><span>${t(key)}</span><small class="s2-tag">${t("corner.soon")}</small></li>`;
-  return `<div class="kp-scroll"><div class="kp-play">${keeperArt("happy")}<h3>${t("corner.playTitle")}</h3><p>${t("corner.playNote")}</p><ul class="kp-soon">${item("corner.playPat")}${item("corner.playBelly")}${item("corner.playYarn")}</ul><p class="kp-hint">${t("corner.playMeanwhile")}</p></div></div>`;
+// V10.17 · Captain's Playroom (MVP): a big stage with Captain on it. Tap
+// Captain for a happy reaction; drag (or tap) the pink yarn ball to Captain
+// to have it caught. Each look plays only its own pictures (library.json
+// "keeperPlay"): an action without matching art is simply not offered —
+// never borrowed from the other look, never shown as "coming soon".
+const PLAY_HINT_KEY = "little-days.play-hint";
+function wornLook(k = keeperNow()) {
+  const looks = keeperLooks(catalog, k.animal, languageCode());
+  return looks.some((look) => look.id === k.outfit) ? k.outfit : DEFAULT_OUTFIT[k.animal] || looks[0]?.id || "";
 }
+function playSetOf(k = keeperNow()) {
+  const wear = wornLook(k);
+  return (catalog?.keeperPlay || []).find((p) => p.animal === k.animal && p.outfit === wear) || null;
+}
+function keeperPlayHTML() {
+  const k = keeperNow();
+  const set = playSetOf(k);
+  if (!set) return `<div class="kp-scroll"><div class="kp-note">${keeperArt("happy")}<p>${esc(tk("play.none", k))}</p></div></div>`;
+  const src = (file) => `library/keepers/${esc(file)}`;
+  let hinted = true;
+  try {
+    hinted = localStorage.getItem(PLAY_HINT_KEY) === "1";
+  } catch {}
+  const h = set.happy;
+  const happy = h ? `<div class="pr-anim" aria-hidden="true" style="background-image:url('${src(h.file)}');--pr-n:${h.frames};--pr-time:${h.frames * h.frameMs}ms;--pr-loops:${h.loops || 1};--pr-key:${((h.still || 0) / Math.max(1, h.frames - 1)) * 100}%"></div>` : "";
+  const b = set.ball;
+  const ball = b ? `<button class="pr-ball" style="--bx:${b.x}%;--by:${b.y}%;--bd:${b.d}%" aria-label="${esc(tk("play.ballLabel", k))}"><i class="pr-ring" aria-hidden="true"></i><img src="${src(b.file)}" alt="" draggable="false"></button>` : "";
+  return `<div class="kp-scroll pr-scroll"><div class="pr" data-outfit="${esc(set.outfit)}" data-stage="${esc(set.stage)}"${hinted ? " data-hinted" : ""}><div class="pr-stage"><img class="pr-idle" src="${src(set.idle)}" alt="" draggable="false">${happy}<button class="pr-body" data-action="pr-poke" aria-label="${esc(tk("play.pokeLabel", k))}"></button>${ball}<p class="pr-bubble" aria-live="polite">${esc(tk(b ? "play.invite" : "play.inviteSolo", k))}</p></div><p class="pr-line">${esc(tk(b ? "play.hint" : "play.hintSolo", k))}</p></div></div>`;
+}
+const prReduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+function prSay(keys) {
+  const bubble = $(".pr .pr-bubble");
+  if (!bubble) return;
+  bubble.textContent = tk(keys[Math.floor(Math.random() * keys.length)], keeperNow());
+  bubble.classList.remove("pop");
+  void bubble.offsetWidth;
+  bubble.classList.add("pop");
+}
+// The iPhone app gives a light tap (Swift: LittleDaysHaptics); the web page has none.
+function prHaptic() {
+  try {
+    window.webkit?.messageHandlers?.littleDaysHaptics?.postMessage("light");
+  } catch {}
+}
+function prPlayed(pr) {
+  if (pr.hasAttribute("data-hinted")) return;
+  pr.setAttribute("data-hinted", "");
+  try {
+    localStorage.setItem(PLAY_HINT_KEY, "1");
+  } catch {}
+}
+// The happy reaction: the look's own animation (twice), then back to rest.
+// A look with no happy animation yet gives a small hop of its own picture.
+function prHappy(keys) {
+  const pr = $(".pr");
+  if (!pr || pr.dataset.busy) return;
+  pr.dataset.busy = "1";
+  prPlayed(pr);
+  prHaptic();
+  prSay(keys);
+  const anim = pr.querySelector(".pr-anim");
+  let over = false;
+  const done = () => {
+    if (over) return;
+    over = true;
+    pr.classList.remove("happy", "still", "hop");
+    const ball = pr.querySelector(".pr-ball");
+    setTimeout(() => {
+      if (ball) {
+        ball.style.transition = "none";
+        ball.style.transform = "";
+        void ball.offsetWidth;
+        ball.style.transition = "";
+        ball.classList.remove("caught");
+      }
+      delete pr.dataset.busy;
+      if (anim) prSay(["play.again1", "play.again2"]);
+    }, 240);
+  };
+  if (!anim) {
+    if (!prReduced()) pr.classList.add("hop");
+    return setTimeout(done, 900);
+  }
+  const ms = parseFloat(getComputedStyle(anim).getPropertyValue("--pr-time")) * (Number(getComputedStyle(anim).getPropertyValue("--pr-loops")) || 1);
+  if (prReduced()) {
+    pr.classList.add("happy", "still");
+    return setTimeout(done, 1600);
+  }
+  pr.classList.add("happy");
+  anim.addEventListener("animationend", done, { once: true });
+  setTimeout(done, (ms || 2200) + 600); // in case animationend never comes
+}
+// The ball, dragged: it follows the finger and rolls; let go near Captain's
+// paws and Captain catches it; anywhere else it rolls back.
+let prDrag = null;
+function prBallMove(ball, dx, dy, r, ms = 0) {
+  ball.style.transition = ms && !prReduced() ? `transform ${ms}ms cubic-bezier(.3,.7,.35,1)` : "none";
+  ball.style.transform = dx || dy ? `translate(${dx}px, ${dy}px) rotate(${dx / r}rad)` : "";
+}
+function prCatch(ball) {
+  ball.classList.add("caught");
+  prHappy(["play.caught1", "play.caught2", "play.caught3"]);
+}
+// A tap (or Enter / Space) on the ball: it rolls over to Captain by itself.
+function prToss(ball) {
+  const pr = ball.closest(".pr");
+  if (!pr || pr.dataset.busy) return;
+  const stage = pr.querySelector(".pr-stage").getBoundingClientRect();
+  const b = ball.getBoundingClientRect();
+  const dx = stage.left + stage.width * 0.47 - (b.left + b.width / 2);
+  const dy = stage.top + stage.height * 0.8 - (b.top + b.height / 2);
+  pr.dataset.busy = "1";
+  prBallMove(ball, dx, dy, b.width / 2, 520);
+  setTimeout(() => {
+    delete pr.dataset.busy;
+    prCatch(ball);
+  }, prReduced() ? 0 : 520);
+}
+document.addEventListener("pointerdown", (event) => {
+  const ball = event.target.closest?.(".pr-ball");
+  if (!ball || (event.pointerType === "mouse" && event.button !== 0)) return;
+  const pr = ball.closest(".pr");
+  if (pr.dataset.busy) return;
+  event.preventDefault();
+  try {
+    ball.setPointerCapture(event.pointerId);
+  } catch {}
+  const b = ball.getBoundingClientRect();
+  prDrag = { ball, pr, id: event.pointerId, x0: event.clientX, y0: event.clientY, dx: 0, dy: 0, moved: false, stage: pr.querySelector(".pr-stage").getBoundingClientRect(), home: { x: b.left + b.width / 2, y: b.top + b.height / 2 }, r: b.width / 2 };
+  ball.classList.add("held");
+});
+document.addEventListener("pointermove", (event) => {
+  const d = prDrag;
+  if (!d || event.pointerId !== d.id) return;
+  // Keep the whole ball on the stage.
+  const x = Math.min(d.stage.right - d.r, Math.max(d.stage.left + d.r, d.home.x + event.clientX - d.x0));
+  const y = Math.min(d.stage.bottom - d.r, Math.max(d.stage.top + d.r, d.home.y + event.clientY - d.y0));
+  d.dx = x - d.home.x;
+  d.dy = y - d.home.y;
+  if (Math.hypot(d.dx, d.dy) > 6) d.moved = true;
+  if (d.moved) prBallMove(d.ball, d.dx, d.dy, d.r);
+});
+const prDrop = (event) => {
+  const d = prDrag;
+  if (!d || event.pointerId !== d.id) return;
+  prDrag = null;
+  d.ball.classList.remove("held");
+  d.ball.dataset.handled = String(performance.now());
+  if (event.type === "pointercancel") return prBallMove(d.ball, 0, 0, d.r, 420);
+  if (!d.moved) return prToss(d.ball);
+  prPlayed(d.pr);
+  const x = (d.home.x + d.dx - d.stage.left) / d.stage.width;
+  const y = (d.home.y + d.dy - d.stage.top) / d.stage.height;
+  // Captain's paws and lap: the left two thirds, lower half of the stage.
+  if (x < 0.64 && y > 0.42) return prCatch(d.ball);
+  prBallMove(d.ball, 0, 0, d.r, 480);
+  prSay(["play.missed1", "play.missed2"]);
+};
+document.addEventListener("pointerup", prDrop);
+document.addEventListener("pointercancel", prDrop);
+// Keyboard (and VoiceOver) activation of the ball: no pointer came first.
+document.addEventListener("click", (event) => {
+  const ball = event.target.closest?.(".pr-ball");
+  if (!ball) return;
+  if (performance.now() - Number(ball.dataset.handled || 0) < 600) return;
+  prToss(ball);
+});
 function openKeeperPanel(view = keeperView) {
   const k = keeperNow();
   if (!Keeper.modeAllows(k, "invite")) return;
@@ -1439,7 +1684,8 @@ function openKeeperPanel(view = keeperView) {
   const dialog = $("#choose-dialog");
   // Still typing (re-drawn while the field has the caret): keep the typing layout.
   const composing = dialog.open && view === "home" && document.activeElement?.matches?.("[data-keeper-say]") && dialog.querySelector(".kp.composing");
-  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
+  // Play takes the full height: the stage is the point of it.
+  dialog.innerHTML = `<div class="choose-sheet keeper-sheet keeper-chat kp corner ${kpTall || view === "play" ? "tall" : ""} ${composing ? "composing" : ""}" data-view="${view}"><button class="choose-grabber kp-grab" data-action="kp-size" aria-label="${t(kpTall ? "corner.shrink" : "corner.expand")}"></button>${body}</div>`;
   if (!dialog.open) dialog.showModal();
   scrollKeeperChat();
   syncKeeperComposer();
@@ -1485,11 +1731,15 @@ function keeperMemoryHTML() {
 }
 // The small chat: a few things it really can do; anything else is answered
 // honestly instead of with the same sentence every time.
+// The few words of the person's own line Captain echoes back ("火锅！…").
+let keeperTopic = "";
 function keeperAnswer(intent, said = "") {
   if (keeperBusy) return;
   if (said) {
     keeperChat.push({ who: "me", text: said });
-    intent = understandChat(said).intent;
+    const heard = understandChat(said);
+    intent = heard.intent;
+    keeperTopic = heard.topic || "";
   } else keeperChat.push({ who: "me", text: t("keeper.chip." + intent) });
   // The line is in the chat: only now is the field emptied (and its draft forgotten).
   keeperBusy = true;
@@ -1557,7 +1807,9 @@ function keeperReply(intent, typed) {
     // a tired day…). The hat lines need Captain to be wearing one.
     const wearingHat = keeperLooks(catalog, k.animal, languageCode()).find((look) => look.id === (k.outfit || DEFAULT_OUTFIT[k.animal]))?.kind === "hat";
     const event = intent === "hat" && !wearingHat ? "hatOff" : Keeper.LINE_COUNTS[`chat.${intent}`] ? intent : "unknown";
-    reply = { who: "keeper", text: keeperSay(`chat.${event}`, {}) };
+    // A line that echoes what they did needs the words; without them, listen.
+    const echo = ["share", "shareHappy"].includes(event);
+    reply = { who: "keeper", text: keeperSay(`chat.${echo && !keeperTopic ? "listen" : event}`, echo ? { thing: keeperTopic } : {}) };
   }
   keeperChat.push(reply);
   keeperChat = keeperChat.slice(-12);
@@ -2301,7 +2553,7 @@ function openReaderThumbs() {
   dialog.querySelector(".reader-thumb.current")?.scrollIntoView({ block: "center" });
 }
 document.addEventListener("keydown", (event) => {
-  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".reader-thumb")) {
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches?.(".reader-thumb, .day-page-thumb")) {
     event.preventDefault();
     event.target.click();
   }
@@ -2715,6 +2967,7 @@ function photoRegion() {
   return isDayPage() ? { top: 4, bottom: 60 } : { top: 4, bottom: 96 };
 }
 
+let layerPreciseOpen = false;
 function layerControls() {
   const layer = selectedLayerOf();
   if (!layer) return "";
@@ -2771,7 +3024,25 @@ function layerControls() {
     layer.kind === "text"
       ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
-  return `<div class="layer-controls">${textTools}${shapes}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}${photoTools}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+  // V10.20: a photo's shape (and frame) has its own sheet; what shows inside
+  // it is the crop editor. This sheet keeps place, size, turn and order.
+  void shapes;
+  void photoTools;
+  // V10.25: what 图层 is for comes first (order, copy); exact numbers and a
+  // text's words / font (also under 编辑 and 字体) fold away in 精确调整.
+  return `<div class="layer-controls"><div class="layer-buttons"><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-copy">${t("copy")}</button></div><details class="layer-precise" ${layerPreciseOpen ? "open" : ""}><summary>${t("layer.precise")}</summary>${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}</details></div>`;
+}
+
+// V10.20 · 形状: the frame's shape first (no scrolling), then its paper edge.
+function shapeSheetHTML(layer) {
+  const shapes = [...(layer.kind === "photo" ? ["free"] : []), ...SHAPES.filter((s) => layer.kind === "video" || s !== "film")];
+  const now = layer.shape || (layer.kind === "video" ? "landscape" : "free");
+  const chips = shapes.map((shape) => `<button data-action="layer-shape" data-shape="${shape}" class="${now === shape ? "selected" : ""}" aria-pressed="${now === shape}"><i class="shape-icon shape-icon-${shape}" aria-hidden="true"></i>${t("shape." + shape)}</button>`).join("");
+  const frames =
+    layer.kind === "photo"
+      ? `<div class="shape-frames" role="group" aria-label="${t("photo.frame")}"><span class="small-label">${t("photo.frame")}</span><div class="shape-frame-row"><label class="field">${t("photo.frame")}<select data-layer-text="frame">${PHOTO_FRAMES.map((frame) => `<option value="${frame}" ${(layer.frame || "border") === frame ? "selected" : ""}>${t("frame." + frame)}</option>`).join("")}</select></label><label class="check-label"><input type="checkbox" data-layer-flag="tape" ${layer.tape ? "checked" : ""}> ${t("photo.tape")}</label></div></div>`
+      : "";
+  return `<div class="shape-sheet"><div class="shape-picker" role="group" aria-label="${t("shape.title")}"><div class="shape-chips">${chips}</div></div><p class="save-help">${t("shape.hint")}</p>${frames}</div>`;
 }
 
 // ---------- Studio: chapter chips, sticky preview and a summary tool menu ----------
@@ -2796,7 +3067,10 @@ function chapterChipsHTML() {
   // thing that happened. They sit side by side, cover first.
   const hasCover = hasDayPageContent(editor);
   const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><i class="chip-num" aria-hidden="true">${t("strip.coverShort")}</i>${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
-  return `<nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
+  // V10.23: while a file is being saved the strip is shown paused (not only a toast after a tap).
+  // (only while a video / sound is imported: that flow redraws when it starts and ends)
+  const locked = busyMedia && mediaImport && !["done", "failed"].includes(mediaImport.stage);
+  return `<nav class="chapter-chips page-strip${locked ? " locked" : ""}" aria-label="${t("moment.title")}"${locked ? ` aria-disabled="true" title="${esc(t("import.busy"))}"` : ""}>${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
         `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
@@ -2825,9 +3099,9 @@ function renderPagesManage() {
   $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
     .map(
       (m, i) =>
-        `<li class="pages-row">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">${t("delete")}</button></li>`,
+        `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
     )
-    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
+    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="text-button pages-more" data-action="pages-more">${t("pages.more")} ›</button><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
 async function removePage(momentId) {
   const moment = findMoment(editor, momentId);
@@ -3396,7 +3670,15 @@ function inlineInput(target, event) {
       const layer = page.layers.find((l) => l.id === layerId);
       if (!layer) return;
       const field = richField({ kind: "layer", id: layerId }, page);
-      if (layer.bind) {
+      if (layer.bind === "caption") {
+        // V10.19: a photo's own words live on that photo (found by its id).
+        const photo = page.layers.find((l) => l.id === layer.captionOf);
+        shown = text.slice(0, 120);
+        if (photo) {
+          if (shown.trim()) photo.caption = shown;
+          else delete photo.caption;
+        }
+      } else if (layer.bind) {
         // Words bound to a Moment: edit the Moment itself (one source of truth).
         const source = layer.of ? findMoment(editor, layer.of) : page;
         shown = text.slice(0, layer.bind === "time" ? 12 : 70);
@@ -3537,6 +3819,9 @@ function studioTools() {
     paperAction = dayPage ? "template" : "moment-template",
     photoTotal = counts.photos + (dayPage && editor.photo ? 1 : 0);
   const tools = [];
+  const chosen = selectedLayerOf();
+  if (chosen && (chosen.kind === "photo" || chosen.kind === "video") && !chosen.drawing)
+    tools.push({ id: "shape", icon: "◐", label: "shape.title", value: t("shape." + (chosen.shape || (chosen.kind === "video" ? "landscape" : "free"))), body: () => shapeSheetHTML(chosen) });
   if (selectedLayerOf())
     tools.push({
       id: "layer",
@@ -3586,15 +3871,14 @@ function studioTools() {
       label: "tool.paper",
       value: page.backdrop ? t("backdrop.on") : t("template." + (page.template || "minimal")),
       body: () =>
-        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id ? "selected" : ""}" aria-pressed="${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
     },
     {
       id: "mood",
       icon: "☺",
       label: "tool.mood",
-      value: page.mood || t("tool.none"),
-      body: () =>
-        `<div class="mood-list">${features.moods.map((m) => `<button data-action="${moodAction}" data-mood="${m}" class="${page.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${page.mood === m}">${m}</button>`).join("")}</div>`,
+      value: page.mood ? `${page.mood} ${moodName(page.mood)}` : t("tool.none"),
+      body: () => moodPickerHTML(page) || `<p class="save-help">${t("mood.coverNote")}</p>`,
     },
     {
       id: "stickers",
@@ -3649,32 +3933,50 @@ function studioTools() {
 // sheet (‹ comes back here).
 const MORE_LABELS = { photos: "more.photos", media: "more.media" };
 function moreSheetHTML(tools) {
+  // V10.25 · three groups instead of a flat grid: 页面外观 · 媒体与创作 ·
+  // 页面管理. Each tile is the one way into its tool (目录 and 页面管理 are
+  // one 页面目录 now; photos are added with 照片 below, so 本页照片 is gone).
   const tile = (attrs, name, label, cls = "") => `<button class="more-tile ${cls}" ${attrs}><span class="more-icon">${svIcon(name)}</span><small>${label}</small></button>`;
-  const toolTile = (toolId) => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, t(MORE_LABELS[toolId] || "dock." + toolId), "dock-btn") : "");
-  const tiles =
-    toolTile("paper") +
-    toolTile("layout") +
-    toolTile("font") +
-    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw") +
-    tile('data-action="add-video"', "video", t("add.video")) +
-    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
-    toolTile("mood") +
-    toolTile("photos") +
-    toolTile("media") +
-    toolTile("growth") +
-    toolTile("book") +
-    toolTile("layer") +
-    toolTile("chapters") +
-    tile('data-action="open-pages"', "pages", t("more.pages")) +
-    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
-    tile('data-action="guide-open"', "guide", t("more.guide"));
+  const toolTile = (toolId, label, cls = "dock-btn") => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, label, cls) : "");
+  const group = (title, tiles, extra = "") => (tiles ? `<section class="more-group"><h4>${title}</h4><div class="more-grid">${tiles}</div>${extra}</section>` : "");
   const sound = soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : "";
   const mode = isDayPage() ? "" : `<div class="more-mode"><b>${t("more.mode")}</b>${pageModeHTML()}</div>`;
-  return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
+  const look = toolTile("paper", t("tool.paper")) + toolTile("layout", t("dock.layout")) + toolTile("font", t("more.pageFont"));
+  const make =
+    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw accent") +
+    tile('data-action="add-video"', "video", t("add.video")) +
+    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
+    tile('data-action="music-sheet"', "sound", t("music.short")) +
+    toolTile("media", t("more.media"));
+  const pages =
+    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
+    (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
+    tile('data-action="open-pages"', "pages", t("more.toc")) +
+    tile('data-action="guide-open"', "guide", t("more.guide")) +
+    toolTile("growth", t("dock.growth")) +
+    toolTile("book", t("dock.book"));
+  // (换一种写法 is rarely changed: it goes last, so 媒体与创作 shows without scrolling)
+  return `${group(t("more.groupLook"), look)}${group(t("more.groupMake"), make, sound + studioMusicHTML())}${group(t("more.groupPages"), pages)}${mode}`;
 }
 // Page details: date, journal, time, name, caption, tags, delete.
+// V10.24 · Mood is optional memory metadata for one page (a Moment): it is
+// chosen in 页面信息 (More → 心情 opens the same place), can be changed or
+// cleared, and is never drawn on the paper. The stored values stay the five
+// emoji (☀️ 🌷 ☁️ 🌧️ ✨); only their names are shown. The cover (the whole day)
+// has no mood picker any more: older days keep what they have.
+const MOOD_NAMES = { "☀️": "happy", "🌷": "warm", "☁️": "calm", "🌧️": "low", "✨": "excited" };
+function moodName(mood) {
+  const key = MOOD_NAMES[mood];
+  return key ? t("mood." + key) : "";
+}
+function moodPickerHTML(page = activePage()) {
+  if (isDayPage()) return "";
+  const now = page.mood || "";
+  const stamp = (m) => `<button class="mood-stamp mood-${MOOD_NAMES[m] || "other"}" data-action="moment-mood" data-mood="${esc(m)}" aria-pressed="${now === m}"><i aria-hidden="true">${esc(m)}</i><span>${esc(moodName(m) || m)}</span></button>`;
+  return `<section class="mood-picker" id="mood-picker" aria-label="${t("tool.mood")}"><div class="mood-head"><b>${t("tool.mood")}</b><small>${t("mood.hint")}</small></div><div class="mood-stamps">${features.moods.map(stamp).join("")}<button class="mood-stamp mood-clear" data-action="moment-mood-clear" ${now ? "" : "disabled"}><i aria-hidden="true">—</i><span>${t("mood.clear")}</span></button></div></section>`;
+}
 function detailsSheetHTML() {
-  return `<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
+  return `${moodPickerHTML()}<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
 }
 // With something selected, the bottom row is that item's tools: × (back to
 // the four tools) and only what applies to a photo / text / sticker / clip.
@@ -3697,15 +3999,21 @@ function ctxDockHTML(tool) {
   const style = (tab, name, label) => tool(`data-action="text-style" data-tab="${tab}" aria-expanded="${on("textstyle", tab)}"`, name, t(label), on("textstyle", tab) ? "open" : "");
   const own =
     kind === "photo" && layer.mediaRef
-      ? tool('data-action="replace-photo"', "replace", t("photo.replaceShort")) + tool(`data-action="ctx-crop" aria-pressed="${cropMode}"`, "crop", t("photo.crop"), cropMode ? "open" : "") + tool('data-action="photo-edit"', "adjust", t("ctx.adjust"))
+      ? // V10.20: shape (the frame) · crop (what shows inside) · adjust · replace.
+        tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`) + tool('data-action="crop-open"', "crop", t("crop.tool")) + tool('data-action="photo-edit"', "adjust", t("ctx.adjust")) + tool('data-action="replace-photo"', "replace", t("photo.replaceShort"))
       : kind === "text"
         ? tool('data-action="ctx-edit-text"', "pen", t("edit")) + style("font", "font", "ctx.font") + style("color", "color", "ctx.color") + style("align", "align", "ctx.align")
         : kind === "video"
-          ? tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
+          ? // V10.23: 播放 · 换封面 · 形状 (frame) — the cover and the frame are separate things.
+            tool('data-action="ctx-play"', "play", t("media.play")) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.change")) + tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`)
           : kind === "drawing"
             ? tool('data-action="draw-edit"', "draw", t("draw.again"))
-            : "";
-  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t("delete"), "danger")}</nav>`;
+            : kind === "sticker" && layer.assetId
+              ? tool(`data-action="sticker-swap" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("sticker.swap"), studioTool === "stickers" ? "open" : "")
+              : "";
+  // V10.25: ← 返回 leaves this item's tools (the item stays where it is); the
+  // line above names what is selected. × only ever closes a sheet.
+  return `<p class="ctx-caption" aria-hidden="true"><i></i>${t("ctx." + kind)}<span>· ${t("ctx.selected")}</span></p><nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("ctx.selectedLabel", { kind: t("ctx." + kind) })}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.backLabel")}"><span class="ctx-arrow" aria-hidden="true">${svIcon("backArrow")}</span><small>${t("ctx.back")}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t(kind === "video" || kind === "audio" ? "media.removeShort" : "delete"), "danger")}</nav>`;
 }
 // Font · size · colour · alignment for the selected text box (the same
 // controls as the bar that shows while typing).
@@ -3737,6 +4045,9 @@ function typeControlsHTML(only) {
 function textStyleSheetHTML() {
   return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
 }
+// V10.25: the selected item's options open as a compact strip above its tools
+// (the paper stays big); page-level tools keep the taller sheet.
+const STRIP_TOOLS = ["shape", "layer", "textstyle"];
 // The bottom of the editor: an open sheet (if any) above one row of tools.
 function toolMenuHTML() {
   const tools = studioTools();
@@ -3748,15 +4059,18 @@ function toolMenuHTML() {
   if (selectedLayerOf()?.kind === "text") sheets.push({ id: "textstyle", icon: "", label: "ctx." + textTab, value: "", body: textStyleSheetHTML });
   if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
   const open = sheets.find((tool) => tool.id === studioTool);
-  const back = open && !["more", "stickers", "layer", "textstyle"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
+  const back = open && !["more", "stickers", "layer", "textstyle", "shape"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
-    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""} ${STRIP_TOOLS.includes(open.id) ? "strip" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
-  if (selectedLayerOf()) return sheet + ctxDockHTML(tool);
+  const photosHere = activePage().layers.filter(framedPhoto).length;
+  if (layoutHint && (studioTool || photosHere < 2)) layoutHint = false;
+  const hint = layoutHint ? `<div class="layout-hint" role="group"><button data-action="layout-hint-open">${svIcon("layout")}<span>${t("layout.hint", { count: photosHere })}</span><i aria-hidden="true">›</i></button><button class="layout-hint-x" data-action="layout-hint-close" aria-label="${t("layout.hintClose")}">×</button></div>` : "";
+  if (selectedLayerOf()) return sheet + hint + ctxDockHTML(tool);
   const moreOpen = Boolean(studioTool) && studioTool !== "stickers";
   const dock = `<nav class="tool-dock sv-tools" aria-label="${t("write.decorate")}">${tool('data-action="add-photos"', "photo", t("add.photo"))}${tool('data-action="add-text-layer"', "text", t("sv.text"))}${tool(`data-action="tool" data-tool="stickers" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("dock.stickers"), `dock-btn ${studioTool === "stickers" ? "open" : ""}`)}${tool(`data-action="tool" data-tool="more" aria-expanded="${moreOpen}"`, "more", t("dock.more"), `dock-btn ${moreOpen ? "open" : ""}`)}</nav>`;
-  return sheet + dock;
+  return sheet + hint + dock;
 }
 // Updates the one-line summaries without re-rendering open inputs.
 function refreshToolSummaries() {
@@ -3767,6 +4081,15 @@ function refreshToolSummaries() {
 }
 function refreshToolMenu() {
   if ($("#tool-menu")) $("#tool-menu").innerHTML = toolMenuHTML();
+  syncStripHeight();
+}
+// V10.25: the paper makes room for the strip that is really open (its own
+// height), not for the tallest one.
+function syncStripHeight() {
+  const strip = document.querySelector(".tool-sheet.strip");
+  const root = document.documentElement;
+  if (strip) root.style.setProperty("--strip-h", `${Math.ceil(strip.getBoundingClientRect().height)}px`);
+  else root.style.removeProperty("--strip-h");
 }
 function growthPanelHTML() {
   const checks = state().checks.filter((check) => check.date === editor.date);
@@ -4086,13 +4409,16 @@ function layoutStoryPage(target, isCover) {
       more: (n) => t("story.more", { count: n }),
       makeId: id,
     });
+    applyType(result.layers, target.typeStyle);
     target.layers = target.layers.filter((l) => !l.gen && !l.deco).concat(result.layers);
   } else {
     const visuals = visualLayers(target);
     const audio = target.layers.filter((l) => l.kind === "audio");
     const day = new Date(`${story.date}T12:00:00`);
     const folio = `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`;
-    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l) })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio }, style, variant);
+    // V10.19: each photo's own words (on the photo layer, by its id) are laid
+    // out right by that photo; the page's quick type comes along.
+    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio, type: target.typeStyle }, style, variant);
     target.layers = target.layers.filter((l) => !l.gen && !l.deco);
     for (const layer of target.layers) if (result.place[layer.id]) Object.assign(layer, result.place[layer.id]);
     target.layers.push(...result.layers.map((l) => ({ id: id(), ...l })));
@@ -4142,7 +4468,8 @@ function makeStory() {
       created.layoutStyle = story.style;
       created.layoutVariant = 0;
       if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
-      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}));
+      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, { ...(item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}), ...(item.caption ? { caption: item.caption } : {}) }));
+      if (group.typeStyle) created.typeStyle = { ...group.typeStyle };
       entry.moments.push(created);
     }, false);
     ids.push(created.id);
@@ -4198,41 +4525,203 @@ function storyPage() {
   const title = story.date === dateKey() ? t("story.previewTitle") : t("story.previewTitleDay", { date: friendlyDate(story.date) });
   return `<header class="story-bar">${back}<h1>${esc(title)}</h1><span></span></header><div class="story-where"><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><label class="story-day"><span>${t("story.day")}</span><input type="date" data-story-date value="${esc(story.date)}" max="${dateKey()}" aria-label="${t("story.day")}"></label></div>${tabs}<button class="story-canvas" data-action="story-text" aria-label="${t("story.addWords")}">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</button><div class="story-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("story.relayout")}</button><button data-action="story-text">Aa ${t(words ? "story.editWords" : "story.addWords")}</button>${total > 1 ? `<button data-action="story-group">${t("story.regroup")}</button>` : ""}</div><div class="story-actions"><button class="secondary" data-action="story-adjust">✎ ${t("story.customize")}</button><button class="primary" data-action="story-save">${t("save")}</button></div>`;
 }
-// Words for the Moments on this page, in a small sheet (all optional).
-function openStoryText() {
+document.addEventListener("input", (event) => {
+  if (event.target.matches?.("[data-sw-text]") && story) storyWordsInput(event.target);
+});
+// Where the magazine page was tapped (in % of the paper), to open that photo's words.
+document.addEventListener(
+  "pointerdown",
+  (event) => {
+    const box = event.target.closest?.(".story-canvas");
+    const paper = box?.firstElementChild;
+    if (!paper) return;
+    const r = paper.getBoundingClientRect();
+    window.__storyTapAt = { x: ((event.clientX - r.left) / r.width) * 100, y: ((event.clientY - r.top) / r.height) * 100 };
+  },
+  true,
+);
+// ---------- V10.19 · Words, photo by photo, and quick type ----------
+// One sheet, no nesting: the Moment's own line or one photo's line at a
+// time (its real thumbnail, "照片 2 / 3"), and a compact row of type for
+// this page. Every keystroke is kept on the spot (the photo's words live on
+// that photo layer, found by its id), so switching photos loses nothing; the
+// magazine page behind updates as you type.
+let storyWords = null; // { momentId, target: "moment" | <photo layer id> }
+let storyWordsTimer = 0;
+const storyPhotosOf = (m) => (m?.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing && !l.deco);
+function storyTypePage() {
+  const current = storyPages()[story.index];
+  return current ? (current.cover ? editor : findMoment(editor, current.page.id)) : null;
+}
+function storyWordsHTML() {
+  const current = storyPages()[story.index];
+  const moments = storyMomentsOf(current);
+  if (!storyWords || !moments.some((m) => m.id === storyWords.momentId)) storyWords = { momentId: moments[0]?.id, target: "moment" };
+  const m = moments.find((x) => x.id === storyWords.momentId);
+  const photos = storyPhotosOf(m);
+  if (storyWords.target !== "moment" && !photos.some((p) => p.id === storyWords.target)) storyWords.target = "moment";
+  const target = storyWords.target;
+  const said = (text) => Boolean(String(text || "").trim());
+  const momentTabs =
+    moments.length > 1
+      ? `<div class="sw-moments" role="tablist" aria-label="${t("sw.moments")}">${moments.map((x) => `<button role="tab" data-action="sw-moment" data-moment="${esc(x.id)}" aria-selected="${x.id === m.id}">${esc(x.time || t("story.page"))}<small>${t("story.photos", { count: storyPhotosOf(x).length })}</small></button>`).join("")}</div>`
+      : "";
+  const items = [
+    `<button class="sw-item sw-all" role="tab" data-action="sw-target" data-target="moment" aria-selected="${target === "moment"}" aria-label="${esc(t("sw.whole") + (said(m.title) ? ` · ${t("sw.written")}` : ""))}"><span class="sw-glyph" aria-hidden="true">Aa</span><small>${t("sw.wholeShort")}</small>${said(m.title) ? '<i class="sw-dot" aria-hidden="true"></i>' : ""}</button>`,
+    ...photos.map((p, i) => `<button class="sw-item" role="tab" data-action="sw-target" data-target="${esc(p.id)}" aria-selected="${target === p.id}" aria-label="${esc(t("sw.photoOf", { n: i + 1, count: photos.length }) + (said(p.caption) ? ` · ${t("sw.written")}` : ""))}"><img src="${esc(safePhoto(p.mediaRef))}" alt=""><b class="sw-num" aria-hidden="true">${i + 1}</b>${said(p.caption) ? '<i class="sw-dot" aria-hidden="true"></i>' : ""}</button>`),
+  ].join("");
+  const photo = photos.find((p) => p.id === target);
+  const index = photo ? photos.indexOf(photo) : -1;
+  const value = photo ? photo.caption || "" : m.title || "";
+  const max = photo ? 120 : 70;
+  const now = photo
+    ? `<img src="${esc(safePhoto(photo.mediaRef))}" alt=""><span><b>${t("sw.photoOf", { n: index + 1, count: photos.length })}</b><small>${t("sw.photoHint")}</small></span>`
+    : `<span class="sw-glyph" aria-hidden="true">Aa</span><span><b>${t("sw.whole")}</b><small>${t("sw.wholeHint")}</small></span>`;
+  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea><small class="sw-count" aria-live="polite">${[...value].length} / ${max}</small></div>${storyTypeHTML()}`;
+}
+// The type for this page: the same fonts and colours as Journal Studio.
+function storyTypeHTML() {
+  const type = storyTypePage()?.typeStyle || {};
+  const en = languageCode() === "en";
+  const fonts = TYPE_FONTS.map(([fid, zh, enName]) => `<button type="button" data-action="sw-font" data-font="${fid}" aria-pressed="${type.fontId === fid}" style="font-family:${esc(fontFamily(fid, catalog))}">${en ? enName : zh}</button>`).join("");
+  const scale = typeScale(type);
+  const colors = TYPE_COLORS.filter((c) => c !== "#FFFDF8").map((c) => `<button type="button" data-action="sw-color" data-color="${c}" style="--swatch:${c}" aria-pressed="${(type.color || "").toUpperCase() === c}" aria-label="${t("type.colour." + c.slice(1).toLowerCase())}"></button>`).join("");
+  const align = ["left", "center", "right"].map((a) => `<button type="button" data-action="sw-align" data-align="${a}" aria-pressed="${type.align === a}" aria-label="${t("type.align." + a)}"><i class="align-glyph ${a}" aria-hidden="true"></i></button>`).join("");
+  return `<div class="sw-type" role="group" aria-label="${t("sw.type")}"><div class="sw-fonts"><button type="button" data-action="sw-font" data-font="" aria-pressed="${!type.fontId}">${t("sw.fontAuto")}</button>${fonts}</div><div class="sw-row"><button type="button" data-action="sw-size" data-dir="-1" aria-label="${t("type.smaller")}" ${scale <= TYPE_SCALES[0] ? "disabled" : ""}>A−</button><button type="button" data-action="sw-size" data-dir="1" aria-label="${t("type.bigger")}" ${scale >= TYPE_SCALES.at(-1) ? "disabled" : ""}>A+</button><button type="button" class="sw-bold" data-action="sw-bold" aria-pressed="${Boolean(type.bold)}" aria-label="${t("type.mark.bold")}"><b>B</b></button><span class="sw-align">${align}</span></div><div class="sw-colors" role="group" aria-label="${t("ctx.color")}">${colors}</div></div>`;
+}
+function openStoryText(target = null) {
   const current = storyPages()[story.index];
   const moments = storyMomentsOf(current);
   if (!moments.length) return;
+  if (target) storyWords = target;
+  else if (!storyWords || !moments.some((m) => m.id === storyWords.momentId)) storyWords = { momentId: moments[0].id, target: "moment" };
   const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet story-text-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("story.wordsTitle")}</h2><p class="save-help">${t("story.wordsHint")}</p>${moments
-    .map((m) => `<label class="story-word"><span>${esc(m.time || t("story.page"))}</span><input type="text" maxlength="70" data-story-word="${esc(m.id)}" value="${esc(m.title || "")}" placeholder="${t("story.linePlaceholder")}"></label>`)
-    .join("")}<button class="primary full-width" data-action="story-text-done">${t("pages.done")}</button></div>`;
-  dialog.showModal();
-  dialog.querySelector("input")?.focus();
+  dialog.classList.add("see-through");
+  dialog.innerHTML = `<div class="choose-sheet story-text-sheet sw"><div class="choose-grabber" aria-hidden="true"></div><div class="sw-head"><h2>${t("sw.title")}</h2><button class="sw-done" data-action="story-text-done">${t("pages.done")}</button></div><div class="sw-body">${storyWordsHTML()}</div></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.addEventListener("close", () => dialog.classList.remove("see-through"), { once: true });
+  revealStoryTarget();
 }
-async function saveStoryText() {
-  const inputs = [...document.querySelectorAll("[data-story-word]")];
-  const changed = [];
+function refreshStoryWords(focus = false) {
+  const body = $("#choose-dialog .sw-body");
+  if (!body) return;
+  body.innerHTML = storyWordsHTML();
+  if (focus) body.querySelector("[data-sw-text]")?.focus();
+  revealStoryTarget();
+}
+// Keep the photo being written for (or the page's line) in view above the sheet.
+function revealStoryTarget() {
+  const scroll = $("#app-scroll"),
+    canvas = $(".story-canvas");
+  if (!scroll || !canvas || !storyWords) return;
+  const current = storyPages()[story.index];
+  const page = current?.cover ? editor : current?.page;
+  const layer = (page?.layers || []).find((l) => (storyWords.target === "moment" ? l.bind === "title" && (!l.of || l.of === storyWords.momentId) : l.id === storyWords.target || (l.gen && l.mediaRef && l.mediaRef === findMoment(editor, storyWords.momentId)?.layers.find((p) => p.id === storyWords.target)?.mediaRef)));
+  const rect = canvas.getBoundingClientRect();
+  const y = layer ? rect.top + (rect.height * (Number(layer.y) || 50)) / 100 : rect.top;
+  const sheetTop = $("#choose-dialog .sw")?.getBoundingClientRect().top || innerHeight * 0.55;
+  const room = sheetTop - 12;
+  if (y < 70 || y > room) scroll.scrollBy({ top: y - Math.max(90, room * 0.45), behavior: "smooth" });
+}
+// Typed words: kept at once on the Moment / photo; the page follows shortly.
+function storyWordsInput(field) {
+  const value = field.value.slice(0, Number(field.maxLength) || 120);
+  const count = $("#choose-dialog .sw-count");
+  if (count) count.textContent = `${[...value].length} / ${field.maxLength}`;
+  const { momentId, target } = storyWords;
+  const m = findMoment(editor, momentId);
+  if (!m) return;
+  if (target === "moment") {
+    m.title = value;
+    const group = story.groups[story.made.ids.indexOf(momentId)];
+    if (group) group.line = value.trim();
+  } else {
+    const photo = m.layers.find((l) => l.id === target);
+    if (!photo) return;
+    if (value.trim()) photo.caption = value;
+    else delete photo.caption;
+  }
+  m.updatedAt = new Date().toISOString();
+  scheduleDraft();
+  // The little dot on the thumbnail follows what is written.
+  const item = $(`#choose-dialog .sw-item[data-target="${CSS.escape(target)}"]`);
+  if (item) {
+    const dot = item.querySelector(".sw-dot");
+    if (value.trim() && !dot) item.insertAdjacentHTML("beforeend", '<i class="sw-dot" aria-hidden="true"></i>');
+    if (!value.trim() && dot) dot.remove();
+  }
+  clearTimeout(storyWordsTimer);
+  storyWordsTimer = setTimeout(() => relayoutStoryWords([momentId]), 260);
+}
+// Lay the touched pages out again (words take room) and redraw the preview.
+// Pages arranged by hand keep their places; a photo's new words are put
+// under it there.
+function relayoutStoryWords(momentIds = []) {
+  if (!story?.made) return;
   changeEditor((entry) => {
-    for (const input of inputs) {
-      const m = findMoment(entry, input.dataset.storyWord);
-      const value = input.value.trim().slice(0, 70);
-      if (m && (m.title || "") !== value) {
-        m.title = value;
-        m.updatedAt = new Date().toISOString();
-        changed.push(m.id);
-        const group = story.groups[story.made.ids.indexOf(m.id)];
-        if (group) group.line = value;
-      }
+    for (const momentId of momentIds) {
+      const m = findMoment(entry, momentId);
+      if (m) m.title = (m.title || "").slice(0, 70);
+      if (m?.layoutEdited) addMissingCaptions(m);
     }
   }, false);
-  $("#choose-dialog").close();
-  if (!changed.length) return render();
-  // Words take room: lay out those pages again (and the day spread), except
-  // pages edited by hand, which keep their places (the words still show).
-  layoutStory({ which: [...changed, "cover"] });
+  layoutStory({ which: [...momentIds, "cover"] });
   flushDraft();
-  logEvent("story_words", { count: changed.length });
+  refreshStoryCanvas();
+}
+function refreshStoryCanvas() {
+  const current = storyPages()[story.index];
+  const canvas = $(".story-canvas");
+  if (canvas && current) canvas.innerHTML = sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover });
+}
+// A page arranged by hand: a photo that got words but has no line on the
+// page yet gets one right under it (nothing else moves).
+function addMissingCaptions(page) {
+  const look = STYLE_LOOK[styleOf(page.layoutStyle)];
+  for (const photo of storyPhotosOf(page)) {
+    if (!(photo.caption || "").trim() || page.layers.some((l) => l.bind === "caption" && l.captionOf === photo.id)) continue;
+    const w = Math.min(86, Math.max(26, Number(photo.w) || 40));
+    const size = 10.5 * typeScale(page.typeStyle);
+    const h = textBlock(photo.caption, size, w).height;
+    const y = Math.min(99 - h / 2, (Number(photo.y) || 50) + (Number(photo.h) || 30) / 2 + 1.2 + h / 2);
+    const layer = { id: id(), kind: "text", bind: "caption", captionOf: photo.id, text: photo.caption, x: Number(photo.x) || 50, y, w, scale: 1, rotation: 0, fontId: pickFont(photo.caption, look), fontSize: size, color: look.muted, weight: 400, spacing: 0, align: "center" };
+    applyType([layer], page.typeStyle);
+    page.layers.push(layer);
+  }
+}
+// Quick type: changes this page's typeStyle and the words already on it.
+function storyType(change) {
+  const current = storyPages()[story.index];
+  if (!current) return;
+  const key = current.cover ? "cover" : current.page.id;
+  let before = null;
+  changeEditor((entry) => {
+    const target = current.cover ? entry : findMoment(entry, current.page.id);
+    if (!target) return;
+    before = { ...(target.typeStyle || {}) };
+    const next = change({ ...before });
+    for (const k of Object.keys(next)) if (next[k] == null || next[k] === "") delete next[k];
+    target.typeStyle = next;
+    // Pages arranged by hand keep their places: only the words' look changes.
+    if (target.layoutEdited) {
+      applyType(target.layers, next);
+      if (typeScale(next) !== typeScale(before)) for (const l of target.layers) if (l.kind === "text" && ["title", "caption"].includes(l.bind)) l.fontSize = Math.round(((Number(l.fontSize) || 14) * typeScale(next)) / typeScale(before) * 10) / 10;
+      if (next.bold == null && before.bold != null) for (const l of target.layers) if (l.kind === "text" && ["title", "caption"].includes(l.bind)) l.weight = l.bind === "title" ? 500 : 400;
+    }
+  }, false);
+  layoutStory({ which: [key] });
+  flushDraft();
+  refreshStoryCanvas();
+  const tools = $("#choose-dialog .sw-type");
+  if (tools) tools.outerHTML = storyTypeHTML();
+  logEvent("story_type", {});
+}
+async function saveStoryText() {
+  clearTimeout(storyWordsTimer);
+  const ids = storyWords?.momentId ? [storyWords.momentId] : [];
+  $("#choose-dialog").close();
+  relayoutStoryWords(ids);
+  logEvent("story_words", { photos: storyMomentsOf(storyPages()[story.index]).reduce((n, m) => n + storyPhotosOf(m).filter((p) => (p.caption || "").trim()).length, 0) });
   render();
 }
 function finishStory() {
@@ -4307,7 +4796,18 @@ async function storyAction(actionName, target) {
       const first = story.groups[i]?.items[0]?.reference;
       if (m?.title && first) lines.set(first, m.title);
     }
-    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "" }));
+    // V10.19: each photo's own words go with that photo (its media id — the
+    // photo itself, not its time or its place in the row); the page's type
+    // stays with the Moment of its first photo.
+    const captions = new Map();
+    const types = new Map();
+    for (const momentId of story.made?.ids || []) {
+      const m = findMoment(editor, momentId);
+      for (const l of m?.layers || []) if (l.kind === "photo" && l.mediaRef && (l.caption || "").trim()) captions.set(l.mediaRef, l.caption);
+      const first = (m?.layers || []).find((l) => l.kind === "photo" && l.mediaRef && !l.gen);
+      if (m?.typeStyle && first) types.set(first.mediaRef, m.typeStyle);
+    }
+    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "", typeStyle: types.get(g.items[0]?.reference) || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
     story.selected = null;
     return makeStory();
   }
@@ -4331,7 +4831,22 @@ async function storyAction(actionName, target) {
     story.selected = null;
   }
   if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
-  if (actionName === "story-text") return openStoryText();
+  if (actionName === "story-text") {
+    // Tapped on a photo of the page: open the words for that very photo.
+    const current = storyPages()[story.index];
+    const at = target.classList.contains("story-canvas") ? window.__storyTapAt : null;
+    window.__storyTapAt = null;
+    if (at && current) {
+      const page = current.cover ? editor : current.page;
+      const hit = [...(page.layers || [])].reverse().find((l) => l.kind === "photo" && l.mediaRef && Math.abs(at.x - Number(l.x)) <= Number(l.w) / 2 && Math.abs(at.y - Number(l.y)) <= (Number(l.h) || 30) / 2);
+      if (hit) {
+        const owner = current.cover ? storyMomentsOf(current).find((m) => storyPhotosOf(m).some((p) => p.mediaRef === hit.mediaRef)) : current.page;
+        const photo = storyPhotosOf(owner).find((p) => p.id === hit.id || p.mediaRef === hit.mediaRef);
+        if (owner && photo) return openStoryText({ momentId: owner.id, target: photo.id });
+      }
+    }
+    return openStoryText();
+  }
   if (actionName === "story-text-done") return saveStoryText();
   if (actionName === "story-style") {
     const next = styleOf(target.dataset.style);
@@ -4609,6 +5124,9 @@ function addChoicesHTML(className = "") {
 // more). Everything else opens in the bottom sheet.
 let studioPreview = false;
 const SV_ICONS = {
+  backArrow: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  play: '<circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/>',
+  shape: '<rect x="3.5" y="9" width="10" height="10" rx="2"/><circle cx="15" cy="9" r="5.5"/>',
   photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
   text: '<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
   stickers: '<path d="M5 4.5h14a.5.5 0 0 1 .5.5v9l-5.5 5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5Z"/><path d="M14 19.5V15a1 1 0 0 1 1-1h4.5"/><path d="M9 10.5c.8 1.2 1.8 1.8 3 1.8s2.2-.6 3-1.8"/>',
@@ -4659,7 +5177,7 @@ function studioPage() {
   if (studioPreview)
     return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-preview" aria-label="${t("studio.previewBack")}">${icon("back")}</button><div class="sv-title static"><b>${t("studio.preview")}</b><small>${t("studio.previewHint")}</small></div><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage large previewing">${paper}</div><div class="tool-dock-wrap"><nav class="sv-export" aria-label="${t("studio.preview")}"><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="export">${icon("download")}<b>${t("export.photo")}</b></button><button data-action="export-video"><span aria-hidden="true">▶</span><b>${t("export.video")}</b></button></nav></div>`;
   const status = draftDirty && draftState !== "failed" ? "saving" : draftState;
-  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${!studioTool ? "large" : STRIP_TOOLS.includes(studioTool) ? "large strip-open" : ""}">${paper}${importCardHTML()}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -4762,6 +5280,10 @@ function render() {
   }
   $("#phone").style.setProperty("--studio-h", $("#app-scroll").clientHeight + "px");
   const dockScroll = $(".tool-dock")?.scrollLeft || 0;
+  // V10.20: a sheet re-drawn for the same tool keeps its place; a different
+  // tool always opens at its top (its main controls first, no scrolling).
+  const sheetBefore = $(".tool-sheet");
+  const sheetKeep = sheetBefore ? { id: sheetBefore.dataset.toolRow, top: sheetBefore.scrollTop } : null;
   if (!signedIn) {
     $("#app").innerHTML = loginHTML();
     $("#navigation").innerHTML = "";
@@ -4789,6 +5311,9 @@ function render() {
   applyShellLanguage();
   watchSaveButton();
   $("#app-scroll").scrollTop = scrollTop;
+  const sheetNow = $(".tool-sheet");
+  if (sheetNow) sheetNow.scrollTop = sheetKeep && sheetKeep.id === sheetNow.dataset.toolRow ? sheetKeep.top : 0;
+  syncStripHeight();
   if (focused) {
     const again = $(`#app ${focused}`);
     if (again?.dataset.inlineLayer) editTextLayer(again.dataset.inlineLayer);
@@ -5076,7 +5601,6 @@ function openWhatsNew() {
 let settingsSheet = ""; // which detail sheet is open (re-drawn after a change)
 // The default personal mark before a name is chosen: a small sprout in sage
 // line art (the same sprout as on the Little Days wordmark). Not an emoji.
-const SPROUT_MARK = '<svg class="sprout-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27V15"/><path d="M16 17c0-4.5-3.2-7.5-8-7.5 0 4.6 3.4 7.5 8 7.5Z"/><path d="M16 14.5c0-4.3 3-7.2 7.6-7.2 0 4.4-3.1 7.2-7.6 7.2Z"/><path d="M11 27h10"/></svg>';
 function settingsPageHTML() {
   const en = languageCode() === "en";
   const title = (key, aside = "") => `<div class="s2-h"><h2 class="${en ? "en" : "zh"}">${t(key)}</h2>${aside}</div>`;
@@ -5084,12 +5608,9 @@ function settingsPageHTML() {
   const more = (attrs, name, value = "", dot = false) => `<button class="s2-more-row" ${attrs}><span><b>${name}</b>${dot ? '<i class="s2-dot" aria-hidden="true"></i>' : ""}</span><span class="v">${value}<i class="s2-chev" aria-hidden="true">›</i></span></button>`;
   // -- My Little Days: this device's own space (there is no cloud account).
   const name = String(account?.name || "").trim();
-  const custom = Boolean(account?.avatar && account.avatar !== "🌷");
-  // V10.10: no name yet → "my little world" and a quiet sprout mark (the one
-  // beside the Little Days wordmark); a name → its first letter; a chosen
-  // avatar is always kept as it is.
-  const mark = custom ? esc(account.avatar) : name ? esc(name.slice(0, 1).toUpperCase()) : SPROUT_MARK;
-  const me = `<section class="s2-me account-card"><span class="s2-avatar ${custom ? "emoji" : name ? "" : "sprout"}" aria-hidden="true">${mark}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.myWorld"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t(name ? "s2.editProfile" : "s2.nameWorld")} ›</button></div></section>`;
+  // V10.16: the personal mark (js/profile-mark.mjs) — the sprout when nothing
+  // was chosen, a monogram of the name, or an emoji chosen before (kept).
+  const me = `<section class="s2-me account-card"><span class="s2-avatar pm-host">${profileMarkHTML(account?.avatar, name, 68)}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.myWorld"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t(name ? "s2.editProfile" : "s2.nameWorld")} ›</button></div></section>`;
   // -- Little Keeper: a preview and the companion mode; the rest is in its sheet.
   const k = keeperNow();
   let keeper;
@@ -5109,20 +5630,37 @@ function settingsPageHTML() {
   const privacyRow = (id) => toggle(`data-action="privacy-toggle" data-privacy="${id}"`, privacyOn(id), t("privacy." + id), t("s2." + id + "Short"));
   // V10.10: backup first and easy to find; one short line each; the full
   // notes (what a backup holds, size limits) stay in 隐私说明.
-  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack s2-backup"><span><b>${t("s2.backup")}</b><small>${t("s2.backupShort")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button class="primary-outline" data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div><p id="media-usage" class="s2-usage" role="status"></p></div>${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiShort"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
+  const data = `<section class="s2-sec privacy-card">${title("s2.data")}<div class="s2-row stack s2-backup"><span><b>${t("s2.backup")}</b><small>${t("s2.backupShort")}</small></span>${backupWhenHTML()}<div class="s2-btns"><button class="primary-outline" data-action="backup">${t("settings.backup")}</button><button data-action="restore-backup">${t("settings.restore")}</button></div><p id="media-usage" class="s2-usage" role="status"></p></div>${more('data-action="media-check"', t("check.title"), t("check.short"))}${lockRowsHTML()}${privacyRow("hideToday")}${privacyRow("shareList")}${toggle('data-action="keeper-toggle" data-key="aiConsent"', false, `${t("s2.ai")}<i class="s2-tag">${t("s2.aiNot")}</i>`, t("s2.aiShort"), true)}${more('data-action="settings-sheet" data-sheet="privacy"', t("s2.privacyNotes"))}</section>`;
   // -- About & more.
   const samples = state().entries.filter((e) => e.isDemo).length;
   const about = `<section class="s2-sec s2-about">${title("s2.about")}${more('data-action="whats-new"', t("news.title"), `V${esc(LATEST)}`, hasUnseen())}${more('data-action="tour-replay"', t("s2.tour"), t("s2.tourAgain"))}${more('data-action="settings-sheet" data-sheet="licenses"', t("settings.licenses"))}${samples ? more('data-action="settings-sheet" data-sheet="samples"', t("samples.title"), t("s2.sampleDays", { count: samples })) : ""}${more('data-action="settings-sheet" data-sheet="testlog"', t("testlog.title"))}${more('data-action="settings-sheet" data-sheet="labs"', t("labs.title"), t(labsOn() ? "s2.on" : "s2.off"))}${labsOn() && account ? more('data-action="sign-out"', t("s2.welcome"), t("s2.dataKept")) : ""}</section>`;
   return `<div class="s2"><div class="settings-nav s2-nav"><button class="back-button" data-action="settings-back">‹ ${t("settings.back")}</button><span>${t("s2.kicker")}</span><i aria-hidden="true"></i></div><h1 class="page-title visually-hidden">${t("settings.title")}</h1>${me}${keeper}${look}${data}${about}<p class="s2-foot">Little Days<small>V${esc(LATEST)} · ${t("settings.subtitle")}</small></p></div>`;
 }
+// One personal mark (Settings header, the editor, the welcome page).
+function profileMarkHTML(avatar, name, size, label = "") {
+  return PM.markHTML(PM.markOf(avatar, name, { language: languageCode() }), { size, label });
+}
+// The editor: a small name card that shows the result as it is typed, the
+// name, and the marks — five monograms of the name's first letter and the
+// sprout. An emoji chosen before V10.16 stays, offered as "现在的头像".
+function profileSheetHTML(head) {
+  const saved = account?.avatar || PM.UNSET;
+  const legacy = !PM.isPickable(saved) && saved !== PM.UNSET && PM.markOf(saved, "").kind === "emoji" ? saved : "";
+  const picked = profileDraft?.avatar ?? (saved === PM.UNSET ? PM.SPROUT : saved);
+  const name = profileDraft?.name ?? account?.name ?? "";
+  const choice = (value, label) =>
+    `<button class="pf-choice" data-action="profile-avatar" data-avatar="${esc(value)}" aria-pressed="${picked === value}" aria-label="${esc(label)}">${profileMarkHTML(value, name, 48)}</button>`;
+  const monos = PM.MONOGRAMS.map((value) => choice(value, t("pf.style." + value.slice(5)))).join("");
+  // The sprout (the default) and an emoji chosen before: two small pills at the top.
+  const pill = (value, label, cls) => `<button class="pf-choice pf-pill ${cls}" data-action="profile-avatar" data-avatar="${esc(value)}" aria-pressed="${picked === value}">${profileMarkHTML(value, name, 36)}<span>${label}</span></button>`;
+  const pills = `<div class="pf-pills">${pill(PM.SPROUT, t("pf.sproutDefault"), "pf-sprout")}${legacy ? pill(legacy, t("pf.current"), "pf-legacy") : ""}</div>`;
+  const card = `<div class="pf-card" aria-hidden="true"><i class="pf-tape"></i><span class="pf-card-mark">${profileMarkHTML(picked, name, 64)}</span><span class="pf-card-copy"><small>My Little Days</small><b class="pf-card-name ${name.trim() ? "" : "empty"} ${/[\u3400-\u9fff]/.test(name || (languageCode() === "en" ? "" : "名")) ? "zh" : ""}">${esc(name.trim() || t("s2.myWorld"))}</b><i class="pf-rule"></i></span></div>`;
+  return `${head("pf.title")}${card}<p class="pf-sub">${t("pf.sub")}</p><label class="s2-field pf-name">${t("pf.nameLabel")}<input data-profile-name maxlength="30" value="${esc(name)}" placeholder="${esc(t("pf.namePlaceholder"))}" autocomplete="nickname"></label><div class="pf-marks"><p class="s2-field-label">${t("pf.marks")}</p>${pills}<p class="pf-group-label">${t("pf.monograms")}</p><div class="pf-row" role="group" aria-label="${t("pf.monograms")}">${monos}</div></div><div class="pf-foot"><p class="s2-hint">${t("pf.local")}</p><button class="kp-main" data-action="profile-save">${t("s2.save")}</button></div>`;
+}
 // The detail sheets: profile, Keeper details, privacy notes, licences, samples, test log, labs.
 function settingsSheetHTML(kind) {
   const head = (key) => `<div class="kp-title"><span></span><b>${t(key)}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
-  if (kind === "profile") {
-    const picked = profileDraft?.avatar ?? (account?.avatar && account.avatar !== "🌷" ? account.avatar : "");
-    const name = profileDraft?.name ?? account?.name ?? "";
-    return `${head("s2.editProfile")}<label class="s2-field">${t("s2.nameLabel")}<input data-profile-name maxlength="30" value="${esc(name)}" placeholder="${esc(t("s2.namePlaceholder"))}"></label><p class="s2-field-label">${t("s2.avatarLabel")}</p><div class="s2-avatars" role="group" aria-label="${t("s2.avatarLabel")}"><button data-action="profile-avatar" data-avatar="" class="letter" aria-pressed="${!picked}">${esc((name || "L").trim().slice(0, 1).toUpperCase() || "L")}</button>${Account.AVATARS.filter((a) => a !== "🌷").map((a) => `<button data-action="profile-avatar" data-avatar="${esc(a)}" aria-pressed="${picked === a}">${esc(a)}</button>`).join("")}</div><p class="s2-hint">${t("s2.profileNote")}</p><button class="kp-main" data-action="profile-save">${t("s2.save")}</button>`;
-  }
+  if (kind === "profile") return profileSheetHTML(head);
   if (kind === "keeper") {
     const k = keeperNow();
     if (!k.enabled) return `${head("s2.keeperManage")}<p class="s2-hint">${t("keeper.settings.offNote")}</p>`;
@@ -5147,6 +5685,23 @@ function settingsSheetHTML(kind) {
   return "";
 }
 let profileDraft = null; // name / avatar being edited in the profile sheet
+document.addEventListener("input", (event) => {
+  if (!event.target.matches?.("[data-profile-name]")) return;
+  const name = event.target.value;
+  const card = $("#choose-dialog .pf-card-name");
+  if (card) {
+    card.textContent = name.trim() || t("s2.myWorld");
+    card.classList.toggle("empty", !name.trim());
+    card.classList.toggle("zh", /[\u3400-\u9fff]/.test(name || (languageCode() === "en" ? "" : "名")));
+  }
+  const letter = PM.initialOf(name);
+  document.querySelectorAll("#choose-dialog .pmark .pm-letter").forEach((el) => {
+    el.textContent = letter || (languageCode() === "en" ? "A" : "名");
+    const mark = el.parentElement;
+    mark.classList.toggle("pm-sample", !letter);
+    mark.classList.toggle("pm-wide", /[\u2e80-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]/.test(el.textContent));
+  });
+});
 function openSettingsSheet(kind) {
   const body = settingsSheetHTML(kind);
   if (!body) return;
@@ -5169,10 +5724,13 @@ document.addEventListener(
 
 /* ---------- Sign in (this device) and the welcome tour ---------- */
 
+// The sprout beside the Little Days wordmark (Home, the welcome page).
+const BRAND_SPROUT = '<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg>';
 function loginHTML() {
-  const avatar = loginAvatar || account?.avatar || "🌷";
+  // V10.16: the same profile record as Settings; no picker here (the mark is
+  // chosen in Settings → 编辑资料). Shows the mark there is now.
   const back = account && !account.signedIn;
-  return `<section class="login"><div class="login-art" aria-hidden="true"><span>✿</span><i>📔</i><i>🌷</i><i>📷</i></div><h1 class="login-title">Little Days</h1><p class="login-tag">${t("login.tagline")}</p>${back ? `<p class="login-back">${t("login.welcomeBack", { name: account.name || t("community.me") })}</p>` : ""}<div class="login-form"><span class="small-label">${t("login.avatar")}</span><div class="p-avatars login-avatars">${Account.AVATARS.map((a) => `<button type="button" data-action="login-avatar" data-avatar="${a}" class="${avatar === a ? "selected" : ""}" aria-pressed="${avatar === a}">${a}</button>`).join("")}</div><label class="field">${t("login.name")}<input id="login-name" maxlength="30" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"></label><button class="primary full-width" data-action="login-local">${t(back ? "login.continue" : "login.start")}</button></div><div class="login-divider"><span>${t("login.or")}</span></div><button class="login-provider" disabled> ${t("login.apple")}<small>${t("login.soon")}</small></button><button class="login-provider" disabled>✉︎ ${t("login.email")}<small>${t("login.soon")}</small></button><p class="login-note">🔒 ${t("login.note")}</p><div class="login-language"><button data-action="login-language" data-language="zh-CN" class="${languageCode() === "en" ? "" : "selected"}">中文</button><button data-action="login-language" data-language="en" class="${languageCode() === "en" ? "selected" : ""}">English</button></div></section>`;
+  return `<section class="login"><div class="login-brand"><img class="login-icon" src="icons/icon-192.png" alt="" width="88" height="88"><h1 class="brand-title login-title">Little Days${BRAND_SPROUT}</h1></div><p class="login-tag">${t("login.tagline")}</p>${back ? `<p class="login-back">${t("login.welcomeBack", { name: account.name || t("community.me") })}</p>` : ""}<div class="login-form"><div class="login-me">${profileMarkHTML(account?.avatar, account?.name || "", 56)}<small>${t("login.markLater")}</small></div><label class="field">${t("login.name")}<input id="login-name" maxlength="30" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"></label><button class="primary full-width" data-action="login-local">${t(back ? "login.continue" : "login.start")}</button></div><div class="login-labs" role="group" aria-label="${t("login.labsOnly")}"><span class="login-labs-tag">${t("login.labsOnly")}</span><button class="login-provider" disabled> ${t("login.apple")}<small>${t("login.soon")}</small></button><button class="login-provider" disabled>✉︎ ${t("login.email")}<small>${t("login.soon")}</small></button></div><p class="login-note">🔒 ${t("login.note")}</p><div class="login-language"><button data-action="login-language" data-language="zh-CN" class="${languageCode() === "en" ? "" : "selected"}">中文</button><button data-action="login-language" data-language="en" class="${languageCode() === "en" ? "selected" : ""}">English</button></div></section>`;
 }
 function renderTour() {
   const box = $("#tour");
@@ -5205,12 +5763,16 @@ function guideTarget() {
 function guideTargetEl(target) {
   if (target.kind === "layer") return layerElement(target.id);
   if (target.kind === "addText") return document.querySelector('.tool-dock [data-action="add-text-layer"]') || $("#journal-canvas");
+  if (target.kind === "dock") return document.querySelector(".tool-dock.sv-tools:not(.ctx)") || document.querySelector(".tool-dock") || $("#journal-canvas");
+  if (target.kind === "more") return document.querySelector('.tool-dock [data-tool="more"]') || $("#journal-canvas");
   return $("#journal-canvas");
 }
 function guideDemoHTML(id) {
   // Little drawings of the real gestures (the handles look like the real ones).
   if (id === "move") return `<span class="sg-demo-box"></span><i class="sg-demo-finger"></i>`;
   if (id === "type") return `<span class="sg-demo-words">Aa<i class="sg-demo-caret"></i></span><i class="sg-demo-finger tap2"></i>`;
+  if (id === "add") return `<span class="sg-demo-words">＋</span>`;
+  if (id === "more") return `<span class="sg-demo-words">•••</span>`;
   return `<span class="sg-demo-box framed"><i class="sg-demo-stem"></i><i class="sg-demo-rotate"></i><i class="sg-demo-size"></i></span>`;
 }
 function openGuide() {
@@ -5226,6 +5788,7 @@ function closeGuide(outcome) {
   Guide.finishTour(outcome);
   logEvent("studio_guide_" + (outcome === "done" ? "done" : "skip"), { step: guideStep + 1 });
   guideStep = null;
+  clearInterval(guideFollow);
   $("#studio-guide")?.remove();
 }
 function placeGuide() {
@@ -5249,9 +5812,24 @@ function placeGuide() {
   }
   box.dataset.step = step.id;
   box.innerHTML = `<div class="sg-ring" aria-hidden="true"></div><section class="sg-card" role="dialog" aria-modal="false" aria-labelledby="sg-title" aria-describedby="sg-body"><div class="sg-head"><span class="sg-count">${t("guide.count", { n: guideStep + 1, count: Guide.STEPS.length })}</span><button type="button" class="sg-skip" data-action="guide-skip">${t("guide.skip")}</button></div><div class="sg-row"><div class="sg-demo ${step.id}" aria-hidden="true">${guideDemoHTML(step.id)}</div><div class="sg-copy"><b id="sg-title">${t(copy.title)}</b><p id="sg-body">${t(copy.body)}</p></div></div><div class="sg-actions"><span class="sg-dots" aria-hidden="true">${Guide.STEPS.map((_, i) => `<i class="${i === guideStep ? "on" : ""}"></i>`).join("")}</span>${guideStep ? `<button type="button" class="secondary" data-action="guide-prev">${t("guide.prev")}</button>` : ""}<button type="button" class="primary" data-action="guide-next">${t(last ? "guide.done" : "guide.next")}</button></div></section>`;
-  // The ring goes around the real item; the card sits on the other half of
-  // the screen so it never covers what it points at.
-  const phone = $("#phone").getBoundingClientRect();
+  positionGuide();
+  const card = box.querySelector(".sg-card");
+  if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
+  // The page can still settle after the guide opens (in the iPhone shell the
+  // paper moved ~35 px once the safe area and the sticky stage applied), so
+  // the ring follows its target while the guide is open.
+  clearInterval(guideFollow);
+  guideFollow = setInterval(() => (guideStep == null ? clearInterval(guideFollow) : positionGuide()), 250);
+}
+let guideFollow = null;
+// The ring goes around the real item; the card sits on the other half of the
+// screen so it never covers what it points at. Measured from the guide layer
+// itself (its containing block).
+function positionGuide() {
+  const box = $("#studio-guide");
+  if (!box || guideStep == null) return;
+  const target = guideTarget();
+  const phone = box.getBoundingClientRect();
   const el = guideTargetEl(target);
   const ring = box.querySelector(".sg-ring");
   const card = box.querySelector(".sg-card");
@@ -5268,7 +5846,6 @@ function placeGuide() {
     // Pointing at the whole paper: the card sits over the tool row, not on the paper.
     card.classList.toggle("over-dock", target.kind === "paper");
   } else ring.hidden = true;
-  if (!box.contains(document.activeElement)) card.querySelector('[data-action="guide-next"]')?.focus({ preventScroll: true });
 }
 function guideAction(name) {
   if (name === "guide-open") {
@@ -5319,7 +5896,6 @@ function showDoubleTapTip(layer) {
     const el = layerElement(layer.id);
     if (!el) return;
     Guide.markTip("dblTap");
-    const phone = $("#phone").getBoundingClientRect();
     const r = el.getBoundingClientRect();
     const tip = document.createElement("div");
     tip.id = "dbl-tip";
@@ -5327,6 +5903,8 @@ function showDoubleTapTip(layer) {
     tip.setAttribute("role", "status");
     tip.textContent = t("guide.tip.dblTap");
     $("#phone").append(tip);
+    // Measured from the tip's own containing block (see placeGuide).
+    const phone = (tip.offsetParent || $("#phone")).getBoundingClientRect();
     // Under the box (the ↻ handle is above it), or above when there is no room.
     const room = phone.bottom - r.bottom;
     const below = room > 120;
@@ -5347,13 +5925,6 @@ window.addEventListener("resize", () => {
 function accountAction(target) {
   const name = target.dataset.action;
   switch (name) {
-    case "login-avatar":
-      loginAvatar = target.dataset.avatar;
-      document.querySelectorAll(".login-avatars button").forEach((b) => {
-        b.classList.toggle("selected", b === target);
-        b.setAttribute("aria-pressed", String(b === target));
-      });
-      return true;
     case "login-language":
       setLanguage(target.dataset.language);
       document.documentElement.lang = languageCode();
@@ -5361,11 +5932,12 @@ function accountAction(target) {
       return true;
     case "login-local": {
       const firstTime = !account;
-      account = Account.signIn(localStorage, { name: $("#login-name")?.value || "", avatar: loginAvatar || account?.avatar });
-      // The demo profile starts with the same name and avatar.
+      account = Account.signIn(localStorage, { name: $("#login-name")?.value || "", avatar: account?.avatar });
+      // The demo profile starts with the same name (and an emoji avatar, if the
+      // account has one — the demo keeps its own emoji set).
       const demo = social();
       if (!demo.profile.name) {
-        Community.updateProfile(demo, { name: account.name, avatar: account.avatar });
+        Community.updateProfile(demo, { name: account.name, ...(Community.AVATARS.includes(account.avatar) ? { avatar: account.avatar } : {}) });
         persistSocial();
       }
       tourStep = 0;
@@ -5398,19 +5970,35 @@ function accountAction(target) {
     case "guide-prev":
     case "guide-next":
       return guideAction(name);
+    case "media-check":
+      openMediaCheck();
+      return true;
+    case "media-check-copy":
+      copyMediaCheck();
+      return true;
     case "settings-sheet":
       profileDraft = null;
       openSettingsSheet(target.dataset.sheet);
       return true;
-    case "profile-avatar":
-      profileDraft = { name: $("[data-profile-name]")?.value ?? account?.name ?? "", avatar: target.dataset.avatar || "" };
+    case "profile-avatar": {
+      profileDraft = { name: $("[data-profile-name]")?.value ?? account?.name ?? "", avatar: target.dataset.avatar || PM.SPROUT };
+      const scroll = $("#choose-dialog .s2-sheet")?.scrollTop || 0;
       openSettingsSheet("profile");
+      const sheet = $("#choose-dialog .s2-sheet");
+      if (sheet) sheet.scrollTop = scroll;
       return true;
+    }
     case "profile-save": {
       // Only this device's record changes (name, avatar); journals are untouched.
       const name = ($("[data-profile-name]")?.value ?? "").trim().slice(0, 30);
-      const avatar = profileDraft ? profileDraft.avatar || "🌷" : account?.avatar || "🌷";
-      account = Account.signIn(localStorage, { name, avatar });
+      const avatar = profileDraft ? profileDraft.avatar : account?.avatar || PM.UNSET;
+      try {
+        account = Account.signIn(localStorage, { name, avatar });
+      } catch {
+        // Storage full or blocked: the sheet stays as it is; nothing is lost.
+        toast(t("pf.saveFailed"));
+        return true;
+      }
       profileDraft = null;
       $("#choose-dialog").close();
       render();
@@ -5552,7 +6140,6 @@ function accountAction(target) {
         if (!ok) return;
         flushDraft();
         account = Account.signOut(localStorage);
-        loginAvatar = null;
         page = "home";
         render();
       });
@@ -5574,6 +6161,52 @@ function openExitSheet() {
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet kp exit-sheet" data-status="${status}"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("exit.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("exit.keepEditing")}">×</button></div><p class="exit-note">${t(status === "completed" ? "exit.noteCompleted" : "exit.note", { count: pages })}</p><button class="exit-choice primary" data-action="save-entry"><b>${t("exit.complete")}</b><small>${t("exit.completeHint")}</small></button><button class="exit-choice" data-action="studio-draft-exit"><b>${t("exit.draft")}</b><small>${t("exit.draftHint")}</small></button><button class="exit-stay" data-action="choose-close">${t("exit.keepEditing")}</button></div>`;
   if (!dialog.open) dialog.showModal();
+}
+// V10.22 · 检查照片和视频: a read-only check (nothing is written, converted,
+// deleted or sent). The report has no names or words, so it can be copied.
+let mediaCheckReport = "";
+async function openMediaCheck() {
+  const dialog = $("#choose-dialog");
+  dialog.innerHTML = `<div class="choose-sheet kp media-check" role="document"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("check.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div><p class="check-note">${t("check.hint")}</p><div class="check-body" aria-live="polite"><p class="check-running">${t("check.running")}</p></div></div>`;
+  if (!dialog.open) dialog.showModal();
+  const body = dialog.querySelector(".check-body");
+  let env, result;
+  try {
+    env = await MediaCheck.environment();
+    result = await MediaCheck.inspectMedia(media, state());
+  } catch (error) {
+    body.innerHTML = `<p class="check-bad">${t("check.failed")} · ${esc(String(error?.name || error))}</p>`;
+    return;
+  }
+  const events = readEvents().filter((e) => MediaCheck.MEDIA_EVENTS.test(e.e)).slice(-40);
+  mediaCheckReport = MediaCheck.reportText({ env, result, events, version: UPDATES[0].version });
+  if (!body.isConnected) return;
+  const row = (label, value, bad = false) => `<div class="check-row${bad ? " bad" : ""}"><span>${label}</span><b>${esc(String(value))}</b></div>`;
+  const yesNo = (v) => (v == null ? "?" : t(v ? "check.yes" : "check.no"));
+  const mb = (n) => (n == null ? "?" : `${(n / 1024 / 1024).toFixed(1)} MB`);
+  const envHTML = `<h3>${t("check.env")}</h3>${row(t("check.browser"), `${env.browser} · ${env.engine} · ${env.platform}`)}${row(t("check.address"), env.address)}${row(t("check.embedded"), env.embedded ? `${t("check.yes")}${env.parent ? " · " + env.parent : ""}` : t("check.no"))}${row(t("check.persisted"), yesNo(env.persisted), env.persisted === false)}${row(t("check.space"), `${mb(env.usage)} / ${mb(env.quota)}`)}${row("IndexedDB · localStorage", `${env.idb} · ${env.localStorage}`, env.idb !== "ok" || env.localStorage !== "ok")}`;
+  const counts = result.counts;
+  const problems = result.items.filter((i) => i.status !== "ok");
+  const mediaHTML = `<h3>${t("check.media")}</h3>${result.referenced || problems.length ? `${row(t("check.used"), result.referenced)}${row(t("check.stored"), result.stored)}${MediaCheck.STATUSES.map((s) => row(t("check.s." + s), counts[s], s !== "ok" && s !== "unchecked" && counts[s] > 0)).join("")}${result.legacy ? row(t("check.legacy"), result.legacy) : ""}${result.unused ? row(t("check.unused"), result.unused) : ""}` : `<p class="check-note">${t("check.none")}</p>`}${problems.length ? `<ul class="check-list">${problems.slice(0, 60).map((i) => `<li><b>${t("check.s." + i.status)}</b> · ${t(i.kind === "video" ? "media.kindVideo" : i.kind === "audio" || i.kind === "clip" ? "check.clip" : "check.photo")} · ${esc(i.date || "")}${i.page ? " · " + t("check.page", { n: i.page }) : ""}${i.draft ? " · " + t("check.draft") : ""}${i.err ? ` · <code>${esc(i.err)}</code>` : ""}</li>`).join("")}</ul>` : ""}`;
+  const eventsHTML = `<h3>${t("check.events")}</h3>${events.length ? `<ul class="check-list">${events.slice(-12).reverse().map((e) => `<li>${esc(new Date(e.t).toLocaleString(locale(), { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))} · ${t("check.e." + e.e) || esc(e.e)}${e.kind ? " · " + esc(e.kind) : ""}${e.stage ? " · " + esc(e.stage) : ""}${e.err ? ` · <code>${esc(e.err)}</code>` : ""}</li>`).join("")}</ul>` : `<p class="check-note">${t("check.noEvents")}</p>`}`;
+  body.innerHTML = `${mediaHTML}${envHTML}${eventsHTML}<button class="primary full-width" data-action="media-check-copy">${t("check.copy")}</button><textarea class="check-text" readonly aria-label="${t("check.copy")}" hidden></textarea>`;
+  logEvent("media_check", { count: problems.length });
+}
+async function copyMediaCheck() {
+  const area = $("#choose-dialog .check-text");
+  try {
+    await navigator.clipboard.writeText(mediaCheckReport);
+    toast(t("check.copied"));
+  } catch {
+    // Some web views refuse the clipboard: show the text to select instead.
+    if (area) {
+      area.hidden = false;
+      area.value = mediaCheckReport;
+      area.focus();
+      area.select();
+    }
+    toast(t("check.selectToCopy"));
+  }
 }
 // Which page of a draft was open when it was put away (this device only).
 const DRAFT_PAGE_KEY = "little-days.draft-page";
@@ -5749,7 +6382,7 @@ async function action(target) {
       "moment-delete",
     ].includes(actionName)
   ) {
-    toast(t("media.busy"));
+    toast(t(mediaImport && busyMedia ? "import.busy" : "media.busy"));
     return;
   }
   if (await v3Action(target)) return;
@@ -5972,6 +6605,8 @@ async function action(target) {
   if (actionName === "reader-open") {
     const bookId = target.dataset.book || selectedBook;
     const pages = flipPages(bookId);
+    // A page of a day (the row under a day with several pages): that page.
+    if (target.dataset.key) return openReader(bookId, target.dataset.key);
     if (target.dataset.date) {
       const first = pages.find((p) => p.date === target.dataset.date);
       return openReader(bookId, first ? Reader.keyOf(first) : Reader.COVER);
@@ -6094,6 +6729,7 @@ async function action(target) {
     return openKeeperPanel("home");
   }
   if (actionName === "keeper-view") return openKeeperPanel(target.dataset.view || "home");
+  if (actionName === "pr-poke") return prHappy(["play.poke1", "play.poke2", "play.poke3"]);
   if (actionName === "kp-size") {
     kpTall = !kpTall;
     const sheet = $("#choose-dialog .kp");
@@ -6332,6 +6968,8 @@ async function action(target) {
   if (actionName === "template")
     changeEditor((e) => {
       e.template = target.dataset.template;
+      // V10.24: a paper replaces a library background (your own photo stays: it is the page's picture).
+      if (/^(scene|photo):/.test(e.backdrop || "")) delete e.backdrop;
     });
   if (actionName === "material-style") {
     materialStyle = target.dataset.style;
@@ -6403,10 +7041,14 @@ async function action(target) {
     render();
   }
   if (actionName === "backdrop") {
+    // V10.24: one background per page — a picture / gradient / pattern
+    // replaces the paper (it goes back to plain, not kept underneath).
     const reference = target.dataset.backdrop;
     changeTarget((p) => {
-      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) p.backdrop = reference;
-      else delete p.backdrop;
+      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) {
+        p.backdrop = reference;
+        p.template = "minimal";
+      } else delete p.backdrop;
     });
   }
   if (actionName === "sheet-grow") {
@@ -6443,6 +7085,28 @@ async function action(target) {
   }
   if (actionName.startsWith("story-")) {
     await storyAction(actionName, target);
+    return;
+  }
+  // V10.19 · the words sheet of the magazine view.
+  if (actionName.startsWith("sw-") && story) {
+    if (actionName === "sw-moment" || actionName === "sw-target") {
+      clearTimeout(storyWordsTimer);
+      const leaving = storyWords?.momentId;
+      if (actionName === "sw-moment") storyWords = { momentId: target.dataset.moment, target: "moment" };
+      else storyWords = { ...storyWords, target: target.dataset.target };
+      if (leaving) relayoutStoryWords([leaving]);
+      return refreshStoryWords(true);
+    }
+    if (actionName === "sw-font") return storyType((x) => ({ ...x, fontId: target.dataset.font || null }));
+    if (actionName === "sw-color") return storyType((x) => ({ ...x, color: x.color === target.dataset.color ? null : target.dataset.color }));
+    if (actionName === "sw-align") return storyType((x) => ({ ...x, align: x.align === target.dataset.align ? null : target.dataset.align }));
+    if (actionName === "sw-bold") return storyType((x) => ({ ...x, bold: x.bold ? null : true }));
+    if (actionName === "sw-size")
+      return storyType((x) => {
+        const at = TYPE_SCALES.indexOf(typeScale(x));
+        const next = TYPE_SCALES[Math.max(0, Math.min(TYPE_SCALES.length - 1, at + Number(target.dataset.dir)))];
+        return { ...x, scale: next === 1 ? null : next };
+      });
     return;
   }
   if (actionName === "music-sheet") {
@@ -8042,8 +8706,19 @@ async function v31Action(target) {
     case "tool-close":
       openTool(null);
       return true;
+    case "import-retry":
+      runImport();
+      return true;
+    case "import-dismiss":
+      if (mediaImport?.thumb) URL.revokeObjectURL(mediaImport.thumb);
+      mediaImport = null;
+      refreshImportCard();
+      render();
+      return true;
+    case "ctx-play":
     case "layer-play": {
-      const element = target.closest(".media-layer")?.querySelector("video,audio");
+      // From the selected video's tools (V10.23) or the play button on the paper.
+      const element = name === "ctx-play" ? document.querySelector(`#journal-canvas [data-layer="${CSS.escape(selectedLayer || "")}"] :is(video,audio)`) : target.closest(".media-layer")?.querySelector("video,audio");
       if (!element) return true;
       if (element.paused)
         element.play().catch((error) => {
@@ -8086,6 +8761,19 @@ async function v31Action(target) {
       $("#choose-dialog").close();
       selectMoment(momentId);
       return true;
+    case "pages-more":
+      // V10.25: the older 目录 sheet (save one page, fold, …) — from 页面目录.
+      $("#choose-dialog").close();
+      studioTool = "chapters";
+      render();
+      return true;
+    case "page-copy": {
+      // V10.25: 页面目录 also copies a page (it used to be only in 目录).
+      changeEditor((entry) => duplicateMoment(entry, target.dataset.moment), false);
+      renderPagesManage();
+      toast(t("pages.copied"));
+      return true;
+    }
     case "page-move":
       changeEditor((entry) => moveMoment(entry, target.dataset.moment, Number(target.dataset.dir) || 0));
       renderPagesManage();
@@ -8186,6 +8874,17 @@ async function v31Action(target) {
       toast(t("moment.savedToast"));
       return true;
     }
+    case "moment-mood-clear":
+      changeTarget((moment) => {
+        if (moment !== editor) moment.mood = "";
+      });
+      return true;
+    case "mood-open":
+      // More → 心情: the same picker, in 页面信息.
+      studioTool = "details";
+      render();
+      document.querySelector("#mood-picker")?.scrollIntoView({ block: "start" });
+      return true;
     case "moment-mood":
       changeTarget((moment) => {
         if (moment !== editor)
@@ -8195,7 +8894,10 @@ async function v31Action(target) {
       return true;
     case "moment-template":
       changeTarget((moment) => {
-        if (moment !== editor) moment.template = target.dataset.template;
+        if (moment !== editor) {
+          moment.template = target.dataset.template;
+          if (/^(scene|photo):/.test(moment.backdrop || "")) delete moment.backdrop;
+        }
       });
       return true;
     case "template-count":
@@ -8241,6 +8943,18 @@ async function v31Action(target) {
       return true;
     case "crop-mode":
       cropMode = !cropMode;
+      render();
+      return true;
+    case "crop-open":
+      studioTool = null;
+      openCropFor();
+      return true;
+    case "layout-hint-open":
+      layoutHint = false;
+      openTool("layout");
+      return true;
+    case "layout-hint-close":
+      layoutHint = false;
       render();
       return true;
     case "ctx-crop":
@@ -8338,7 +9052,7 @@ async function v31Action(target) {
 async function v3Action(target) {
   const name = target.dataset.action;
   if (busyMedia) {
-    toast(t("media.busy"));
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return true;
   }
   if (await v31Action(target)) return true;
@@ -8416,8 +9130,25 @@ async function v3Action(target) {
     render();
     return true;
   }
+  if (name === "sticker-swap") {
+    // V10.25 · 换一个: pick another sticker for the selected one (same place, size and turn).
+    studioTool = studioTool === "stickers" ? null : "stickers";
+    render();
+    return true;
+  }
   if (name === "asset-sticker") {
     const asset = catalog.stickers.find((s) => s.id === target.dataset.sticker);
+    const swap = selectedLayerOf();
+    if (swap?.assetId && swap.kind !== "photo" && !swap.drawing) {
+      changeTarget((entry) => {
+        const layer = entry.layers.find((l) => l.id === swap.id);
+        if (!layer) return;
+        layer.assetId = asset.id;
+        layer.text = languageCode() === "en" ? asset.nameEn : asset.nameZh;
+      });
+      toast(t("sticker.swapped"));
+      return true;
+    }
     changeTarget((entry) => {
       const layer = {
         id: id(),
@@ -8495,10 +9226,24 @@ async function v3Action(target) {
   }
   if (name === "layer-edit-text") {
     studioTool = "layer";
+    layerPreciseOpen = true;
     render();
     const box = $('[data-layer-text="text"]');
     box?.focus({ preventScroll: true });
     box?.select();
+    return true;
+  }
+  if (name === "remove-media-ask") {
+    // V10.23 · 从页面移除: off this page (paper and list). Undo brings it back;
+    // the file itself stays on this device.
+    if (!(await askConfirm(t("media.removeConfirm")))) return true;
+    const clipId = target.dataset.clip;
+    changeTarget((entry) => {
+      entry.media = entry.media.filter((clip) => clip.id !== clipId);
+      entry.layers = entry.layers.filter((layer) => layer.clipId !== clipId);
+    });
+    flushDraft();
+    toast(t("media.removed"));
     return true;
   }
   if (name === "remove-media") {
@@ -8703,12 +9448,12 @@ async function imageBlob(file) {
 const MAX_PHOTOS_PER_PICK = 20;
 // Opens the photo editor for saved originals; returns the pictures to use
 // (edited ones are new Blobs, originals kept as sourceRef) or null if cancelled.
-async function editPhotos(saved, mode) {
+async function editPhotos(saved, mode, tabs = null) {
   const items = saved
     .map((item) => ({ ref: item.sourceRef || item.reference, src: safePhoto(item.sourceRef || item.reference), name: item.name, edit: item.edit }))
     .filter((item) => item.src);
   if (!items.length) return null;
-  const result = await openPhotoEditor(items, { t, loadImage, mode });
+  const result = await openPhotoEditor(items, { t, loadImage, mode, ...(tabs ? { tabs } : {}) });
   if (!result) return null;
   const out = [];
   for (const item of result) {
@@ -8725,13 +9470,70 @@ async function editPhotos(saved, mode) {
   }
   return out;
 }
+// V10.20 · 裁剪画面: the full-screen crop editor for the selected photo.
+// Applied as one undo step; the layer's place, turn and order stay; its frame
+// changes only when a different ratio was chosen (the editor says so first).
+async function openCropFor() {
+  const layer = selectedLayerOf();
+  if (layer?.kind !== "photo" || !layer.mediaRef || busyMedia) return;
+  let image;
+  try {
+    image = await loadImage(safePhoto(layer.mediaRef));
+  } catch {
+    return toast(t("media.missing"));
+  }
+  // Turning 90° re-draws the picture from its untouched original (as 调整
+  // does); nothing is kept unless 完成 is pressed.
+  let pending = null;
+  const rotate = async () => {
+    const source = pending?.sourceRef || layer.sourceRef || layer.mediaRef;
+    const edit = normalizeEdit(pending?.edit || layer.edit || {});
+    edit.rotate = (edit.rotate + 90) % 360;
+    const original = await loadImage(safePhoto(source));
+    let reference = source,
+      aspect = original.width / original.height;
+    if (!isIdentity(edit)) {
+      const canvas = renderEdited(original, edit);
+      const blob = await new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Image encoding failed"))), "image/jpeg", 0.88));
+      reference = `media:${await media.put(blob, { kind: "photo", name: layer.text, edited: true })}`;
+      aspect = canvas.width / canvas.height;
+    }
+    pending = { reference, sourceRef: isIdentity(edit) ? null : source, edit: isIdentity(edit) ? null : edit, aspect };
+    return { src: safePhoto(reference), aspect };
+  };
+  const result = await openCropEditor({ src: safePhoto(layer.mediaRef), imgAspect: image.width / image.height, layer: structuredClone(layer), t, rotate });
+  if (!result) return;
+  changeTarget((page) => {
+    const target = page.layers.find((item) => item.id === layer.id);
+    if (!target) return;
+    if (pending) {
+      target.mediaRef = pending.reference;
+      if (pending.sourceRef) {
+        target.sourceRef = pending.sourceRef;
+        target.edit = pending.edit;
+      } else {
+        delete target.sourceRef;
+        delete target.edit;
+      }
+      target.aspect = Math.round(pending.aspect * 1000) / 1000;
+    }
+    if (result.frameAspect) {
+      Object.assign(target, Crop.frameFor(target, result.frameAspect));
+      page.layoutEdited = true;
+    }
+    target.crop = { ...Crop.rectToView(result.rect, result.aspect, Crop.boxAspect(target)), rect: result.rect, aspect: result.aspect };
+  });
+  flushDraft();
+  logEvent("photo_crop", { frame: Boolean(result.frameAspect), rotated: result.rotated || 0 });
+  toast(t("crop.saved"));
+}
 async function reEditPhotoLayer() {
   const layer = selectedLayerOf();
   if (layer?.kind !== "photo" || !layer.mediaRef) return;
   busyMedia = true;
   try {
     const [result] =
-      (await editPhotos([{ reference: layer.mediaRef, sourceRef: layer.sourceRef, edit: layer.edit, name: layer.text }], "edit")) || [];
+      (await editPhotos([{ reference: layer.mediaRef, sourceRef: layer.sourceRef, edit: layer.edit, name: layer.text }], "edit", ["filter", "adjust", "text"])) || [];
     if (!result) return;
     changeTarget((page) => {
       const target = page.layers.find((item) => item.id === layer.id);
@@ -8859,7 +9661,9 @@ async function handleImageUpload(event, target) {
       });
       flushDraft();
     }
-    if (target?.kind !== "quick" || failed) toast(
+    // V10.24: photos added to the page in Studio need no "added" message — they are
+    // right there on the paper (the message also covered its top); failures still say so.
+    if (failed || !(target?.kind === "quick" || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1
@@ -8880,9 +9684,12 @@ async function handleImageUpload(event, target) {
 // New photos never overwrite existing ones. While the page still follows an
 // auto layout, all photos are re-flowed; after manual edits, new photos are
 // cascaded on top so the user's arrangement is preserved.
+let layoutHint = false; // V10.20: "try a layout" after adding several photos (ignorable)
 function addPhotoLayers(saved) {
-  // Open Layout with the new photos so arranging them is one tap away.
-  studioTool = "layout";
+  // V10.20: adding photos never opens Layout by itself. One photo is simply
+  // selected (its own tools: shape, crop, adjust…); with several, a small
+  // "try a layout" chip offers the arrangements and can be ignored.
+  studioTool = null;
   if (editorMode !== "creative") editorMode = "creative";
   changeTarget((page) => {
     if (page === editor) freeMainPhoto(page);
@@ -8906,12 +9713,13 @@ function addPhotoLayers(saved) {
       }),
     );
     page.layers.push(...added);
+    const total = existing + added.length;
     if (!page.layoutEdited) {
-      const total = existing + added.length;
       if (page.layoutTemplate === "smart") applyLayout(page, "smart");
       else applyLayout(page, suggestLayout(total), photoRegion());
     }
-    selectedLayer = added.at(-1).id;
+    selectedLayer = added.length === 1 ? added[0].id : null;
+    layoutHint = total >= 2;
   });
 }
 async function mediaMetadata(file, kind) {
@@ -8920,8 +9728,10 @@ async function mediaMetadata(file, kind) {
         kind === "video" ? "video" : "audio",
       ),
       url = URL.createObjectURL(file);
+    // V10.26 (P0): say which way it failed — no metadata within 10 s, or the
+    // media element's own error code (MediaError 1–4) — in the local log.
     const timer = setTimeout(
-      () => finish(new Error("Unsupported media")),
+      () => finish(Object.assign(new Error("Unsupported media"), { code: "media-timeout" })),
       10000,
     );
     const finish = (error) => {
@@ -8943,7 +9753,7 @@ async function mediaMetadata(file, kind) {
     };
     element.onerror = () => {
       element.onerror = null;
-      finish(new Error("Unsupported media"));
+      finish(Object.assign(new Error("Unsupported media"), { code: `media-err-${element.error?.code || 0}` }));
     };
     element.src = url;
   });
@@ -8981,8 +9791,10 @@ async function autoCover(mediaId, duration) {
   }
 }
 async function attachClip(blob, kind, name, duration = 0, options = {}) {
+  options.onStage?.("write");
   const mediaId = await media.put(blob, { kind, name, duration }, "studio");
   // Videos get a first cover right away (changeable later).
+  options.onStage?.("cover");
   const poster = kind === "video" ? await autoCover(mediaId, duration) : "";
   const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
@@ -9011,29 +9823,117 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
   });
   flushDraft();
 }
+// V10.23 · Importing a video / sound file from this device: every step is
+// shown on the page (import → read, with real progress → save to this device
+// → cover → saved / failed), the file stays in memory until it is really
+// saved (so a failure can be retried), and switching pages is shown as
+// paused before anyone taps it. Nothing is uploaded anywhere.
+let mediaImport = null;
+const IMPORT_LIMIT = { video: 50, audio: 20 };
+function importCardHTML() {
+  const job = mediaImport;
+  if (!job || page !== "studio") return "";
+  const mb = (n) => new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(n / 1024 / 1024) + " MB";
+  const meta = [job.duration ? formatClock(job.duration) : "", job.size ? mb(job.size) : ""].filter(Boolean).join(" · ");
+  const pct = job.stage === "read" && job.progress != null ? Math.round(job.progress * 100) : null;
+  const label = job.stage === "read" ? t("import.read", { pct: pct ?? 0 }) : t("import." + job.stage);
+  const bar = ["done", "failed"].includes(job.stage) ? "" : `<div class="ic-bar ${pct == null ? "indeterminate" : ""}" role="progressbar" aria-label="${esc(label)}" ${pct == null ? "" : `aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"`}><i style="${pct == null ? "" : `width:${pct}%`}"></i></div>`;
+  const note = job.stage === "failed" ? `${t("import.failedNote")}${job.err ? ` <code>${esc(job.err)}</code>` : ""}` : job.stage === "done" ? t("import.doneNote") : t("import.lockNote");
+  const actions = job.stage === "failed" ? `<div class="ic-actions"><button class="primary" data-action="import-retry">${t("import.retry")}</button><button class="text-button" data-action="import-dismiss">${t(job.kind === "video" ? "import.dismissVideo" : "import.dismissAudio")}</button></div>` : "";
+  return `<div class="import-card" data-stage="${job.stage}" role="status" aria-live="polite"><span class="ic-thumb">${job.thumb ? `<img src="${esc(job.thumb)}" alt="">` : `<i aria-hidden="true">${job.kind === "video" ? "▶" : "♫"}</i>`}</span><span class="ic-main"><b>${t(job.kind === "video" ? "import.titleVideo" : "import.titleAudio")}</b><small>${esc(meta)}</small><span class="ic-stage">${label}</span>${bar}<span class="ic-note">${note}</span>${actions}</span></div>`;
+}
+function formatClock(seconds) {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function refreshImportCard() {
+  const html = importCardHTML();
+  const old = document.querySelector(".import-card");
+  if (old && html) old.outerHTML = html;
+  else if (old) old.remove();
+  else if (html) document.querySelector(".studio-stage")?.insertAdjacentHTML("beforeend", html);
+}
+function setImport(changes) {
+  if (!mediaImport) return;
+  Object.assign(mediaImport, changes);
+  refreshImportCard();
+}
+// The file's bytes with real progress (FileReader reports it as it reads).
+function readWithProgress(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error("read"));
+    reader.readAsArrayBuffer(file);
+  });
+}
 async function handleMediaUpload(event, kind) {
   const file = event.target.files[0];
+  event.target.value = "";
   if (!file) return;
   if (busyMedia || recorder) {
-    toast(t("media.busy"));
-    event.target.value = "";
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return;
   }
+  if (mediaImport?.stage === "failed" && mediaImport.thumb) URL.revokeObjectURL(mediaImport.thumb);
+  mediaImport = { file, kind, size: file.size, duration: 0, stage: "import", progress: null, thumb: "", err: "", targetId: activeMomentId, started: Date.now() };
+  await runImport();
+}
+async function runImport() {
+  const job = mediaImport;
+  if (!job) return;
+  const { file, kind } = job;
   busyMedia = true;
+  setDraftState("saving");
+  Object.assign(job, { stage: "import", progress: null, err: "" });
+  render();
+  let stage = "import";
   try {
-    if (
-      !file.type.startsWith(kind + "/") ||
-      file.size > (kind === "video" ? 50 : 20) * 1024 * 1024
-    )
-      throw new Error("Invalid media");
+    if (!file.type.startsWith(kind + "/")) throw Object.assign(new Error("type"), { code: "unsupported" });
+    if (file.size > IMPORT_LIMIT[kind] * 1024 * 1024) throw Object.assign(new Error("size"), { code: "too-big" });
     const metadata = await mediaMetadata(file, kind);
-    await attachClip(file, kind, file.name, metadata.duration, { width: metadata.width, height: metadata.height });
-    toast(t("media.saved"));
-  } catch {
-    toast(t("media.failed"));
-  } finally {
+    job.duration = metadata.duration;
+    if (kind === "video" && !job.thumb) {
+      // A first look at the video while it is being saved (not stored).
+      const url = URL.createObjectURL(file);
+      try {
+        job.thumb = URL.createObjectURL(await frameAt(url, Math.min(1, (metadata.duration || 2) * 0.25), 360));
+      } catch {}
+      URL.revokeObjectURL(url);
+    }
+    stage = "read";
+    setImport({ stage, progress: 0 });
+    const bytes = await readWithProgress(file, (progress) => setImport({ progress }));
+    await attachClip(new Blob([bytes], { type: file.type }), kind, file.name, metadata.duration, {
+      width: metadata.width,
+      height: metadata.height,
+      targetId: job.targetId,
+      onStage: (next) => {
+        stage = next;
+        setImport({ stage: next, progress: null });
+      },
+    });
+    logEvent("media_import", { kind, stage: "done", size: Math.round(file.size / 1024 / 1024), ms: Date.now() - job.started });
     busyMedia = false;
-    event.target.value = "";
+    setImport({ stage: "done" });
+    render();
+    setTimeout(() => {
+      if (mediaImport === job && job.stage === "done") {
+        if (job.thumb) URL.revokeObjectURL(job.thumb);
+        mediaImport = null;
+        refreshImportCard();
+      }
+    }, 2600);
+  } catch (error) {
+    busyMedia = false;
+    const err = error?.code === "too-big" || error?.code === "unsupported" ? error.code : errName(error);
+    logEvent("media_import_failed", { kind, stage, err, size: Math.round(file.size / 1024 / 1024) });
+    setImport({ stage: "failed", err });
+    render();
+    // Nothing of it was added to the page: the page's own state stays as it was.
+    confirmMediaSaved();
+    toast(t(err === "too-big" ? (kind === "video" ? "import.tooBigVideo" : "import.tooBigAudio") : err === "unsupported" ? "media.unsupported" : "import.failedToast"));
   }
 }
 async function startRecording() {

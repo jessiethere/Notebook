@@ -60,7 +60,16 @@
     "test:browser:v111": "node tests/v111-browser.cjs",
     "test:browser:v112": "node tests/v112-browser.cjs",
     "test:browser:v113": "node tests/v113-browser.cjs",
-    "captain:eval": "node tools/captain-eval.mjs"
+    "captain:eval": "node tools/captain-eval.mjs",
+    "test:browser:v116": "node tests/v116-browser.cjs",
+    "test:browser:v117": "node tests/v117-browser.cjs",
+    "test:browser:v119": "node tests/v119-browser.cjs",
+    "test:browser:v120": "node tests/v120-browser.cjs",
+    "test:browser:v121": "node tests/v121-browser.cjs",
+    "test:browser:v122": "node tests/v122-browser.cjs",
+    "test:browser:v123": "node tests/v123-browser.cjs",
+    "test:browser:v124": "node tests/v124-browser.cjs",
+    "test:browser:v125": "node tests/v125-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

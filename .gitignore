@@ -10,6 +10,8 @@
 node_modules/
 test-results/
 *.xcworkspace/
+# …except the one at the root that opens the iPhone app (Native/LittleDays.xcodeproj)
+!/LittleDays.xcworkspace/
 dist/
 
 # Mac local development (tools/mac/dev.sh): Xcode build output; never commit model files

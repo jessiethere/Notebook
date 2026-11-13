@@ -2592,5 +2592,34 @@
       "noteZh": "不戴帽子",
       "noteEn": "no hat"
     }
+  ],
+  "keeperPlay": [
+    {
+      "animal": "cat",
+      "outfit": "lemon",
+      "stage": "photo",
+      "idle": "LD-keeper-cat-lemon-play-idle.jpg",
+      "happy": {
+        "file": "LD-keeper-cat-lemon-hug-anim.jpg",
+        "frames": 6,
+        "frameMs": 180,
+        "loops": 2,
+        "still": 2
+      },
+      "ball": {
+        "file": "LD-keeper-yarn-ball.png",
+        "x": 72.2,
+        "y": 84.1,
+        "d": 24.0
+      },
+      "license": "LD-keeper-LICENSE.txt"
+    },
+    {
+      "animal": "cat",
+      "outfit": "yarn",
+      "stage": "cutout",
+      "idle": "LD-keeper-cat-yarn-happy.png",
+      "license": "LD-keeper-LICENSE.txt"
+    }
   ]
 }

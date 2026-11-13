@@ -39,7 +39,9 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     await page.locator('[data-action="login-language"][data-language="en"]').click();
     assert.match(await page.locator(".login").innerText(), /Start on this device/);
     await page.locator('[data-action="login-language"][data-language="zh-CN"]').click();
-    await page.locator('[data-action="login-avatar"][data-avatar="🐰"]').click();
+    // V10.16: no picker on the welcome page — the mark there is now, chosen later in Settings.
+    assert.equal(await page.locator('[data-action="login-avatar"]').count(), 0);
+    assert.equal(await page.locator(".login-me .pm-sprout-chip").count(), 1);
     await page.locator("#login-name").fill("小满");
     await page.locator('[data-action="login-local"]').click();
     passed.push("sign-in page: local account, providers marked coming soon, language switch");
@@ -57,9 +59,9 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
     await page.reload();
     await page.waitForSelector(".hero");
     assert.equal(await page.locator("#tour").isHidden(), true, "tour only once");
-    // The demo profile starts with the same name and avatar.
+    // The demo profile starts with the same name (it keeps its own emoji avatar set).
     const demo = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.demo-social")));
-    assert.deepEqual([demo.profile.name, demo.profile.avatar], ["小满", "🐰"]);
+    assert.equal(demo.profile.name, "小满");
     passed.push(`welcome tour (${steps} cards) once; profile seeded from sign-in`);
 
     // 3. Settings: back and close return to where you were; replay; sign out keeps data.
@@ -177,7 +179,8 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
         });
       const stats = async (ref) => {
         const record = await get(ref);
-        const bitmap = await createImageBitmap(record.blob);
+        // V10.21: files are stored as bytes (older records as a Blob).
+        const bitmap = await createImageBitmap(record.bytes ? new Blob([record.bytes], { type: record.mime }) : record.blob);
         const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
         const ctx = canvas.getContext("2d");
         ctx.drawImage(bitmap, 0, 0);

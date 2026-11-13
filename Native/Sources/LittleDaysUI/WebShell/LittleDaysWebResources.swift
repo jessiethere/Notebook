@@ -13,6 +13,16 @@ import LittleDaysCore
 enum LittleDaysWebResources {
     static let scheme = "littledays"
     static let host = "app"
+    #if DEBUG
+    /// Debug timing: when the process started, so page milestones can be logged as "+ms since launch".
+    static let launchedAt: TimeInterval = {
+        var info = kinfo_proc(), size = MemoryLayout<kinfo_proc>.stride
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+        guard sysctl(&mib, 4, &info, &size, nil, 0) == 0 else { return Date().timeIntervalSince1970 }
+        let start = info.kp_proc.p_un.__p_starttime
+        return TimeInterval(start.tv_sec) + TimeInterval(start.tv_usec) / 1_000_000
+    }()
+    #endif
     static var startURL: URL { URL(string: "\(scheme)://\(host)/index.html?shell=ios")! }
 
     /// Release builds always open the bundled app. Debug builds can follow the

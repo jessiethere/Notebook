@@ -105,6 +105,17 @@ public struct JournalTextStyle: Codable, Equatable {
 /// `NSRange(location: start, length: end - start)` names the same characters
 /// on both sides. Stored lists are sorted and do not overlap; a page without
 /// formatting has no list at all. Absent flags mean "off".
+/// V10.19: the page's quick type, chosen in the magazine view. It uses Journal
+/// Studio's own values (font ids, colours, alignment) and applies to the
+/// page's own words only (its line and its photos' lines).
+public struct PageTypeStyle: Codable, Equatable {
+    public var fontId: String?
+    public var color: String?
+    public var bold: Bool?
+    public var align: String?
+    public var scale: Double?
+}
+
 public struct TextMark: Codable, Equatable {
     public var start: Int
     public var end: Int
@@ -207,6 +218,10 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     public var excerpt: Int?
     public var prefix: String?
     public var chip: String?
+    // V10.19: a photo's own words (kind == "photo"), and a text bound to them
+    // (bind == "caption", captionOf = that photo layer's id).
+    public var caption: String?
+    public var captionOf: String?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString
@@ -247,6 +262,18 @@ public struct LayerCrop: Codable, Equatable {
     public var x: Double
     public var y: Double
     public var zoom: Double
+    /// V10.20: the part of the picture chosen in the crop editor (fractions of
+    /// the picture) and the picture's width / height then; x / y / zoom above
+    /// are what the current frame shows of it. The picture is never re-cut.
+    public var rect: CropRect?
+    public var aspect: Double?
+}
+
+public struct CropRect: Codable, Equatable {
+    public var x: Double
+    public var y: Double
+    public var w: Double
+    public var h: Double
 }
 
 /// V3.1: an ordered chapter inside one day (JournalEntry stays the date container).
@@ -278,6 +305,8 @@ public struct JournalMoment: Codable, Identifiable, Equatable {
     public var layoutVariant: Int?
     /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
     public var layoutStyle: String?
+    /// V10.19: quick type for this page (magazine view).
+    public var typeStyle: PageTypeStyle?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
     /// V6.0: background music for this page, a library.json "music" id.
@@ -329,6 +358,8 @@ public struct JournalEntry: Codable, Identifiable, Equatable {
     public var layoutVariant: Int?
     /// V6.5: layoutTemplate "scrapbook" (Quick Create V2): editorial / cozy / playful.
     public var layoutStyle: String?
+    /// V10.19: quick type for this page (magazine view).
+    public var typeStyle: PageTypeStyle?
     /// Page background, e.g. "scene:color-peach" (library.json "scenes").
     public var backdrop: String?
 
