@@ -14,10 +14,13 @@ const sample = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const passed = [];
   try {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York" });
+    // V10.39 (B2): a first start follows the device language; this suite checks the Chinese texts.
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York", locale: "zh-CN" });
     // The sign-in page and tour are Labs modules (hidden on a new install).
     await context.addInitScript(() => {
       if (localStorage.getItem("little-days.labs") === null) localStorage.setItem("little-days.labs", "1");
+      // V10.39 (B1): this suite was written with the sample journal.
+      if (localStorage.getItem("little-days.with-samples") === null) localStorage.setItem("little-days.with-samples", "1");
     });
     const page = await context.newPage();
     const errors = [];
