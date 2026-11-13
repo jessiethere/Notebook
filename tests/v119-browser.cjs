@@ -61,7 +61,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // ---------------------------------------------------------- the sheet
     await page.locator(".story-tabs button").nth(1).tap(); // Moment 14:18
-    await page.locator('.story-tools [data-action="story-text"]').tap();
+    await page.locator('.qe-tools [data-action="story-text"]').tap();
     await page.waitForSelector("#choose-dialog[open] .sw [data-sw-text]");
     const strip = await page.$$eval("#choose-dialog .sw-item", (els) => els.map((el) => [el.dataset.target, el.getAttribute("aria-label"), Boolean(el.querySelector("img"))]));
     assert.deepEqual(strip.map((x) => x[0]), ["moment", ...ids], "the whole Moment, then each photo by its own id");
@@ -98,7 +98,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.locator("#choose-dialog [data-sw-text]").focus();
     assert.equal(await page.locator("#choose-dialog .sw-type").isVisible(), false, "type tools step aside while typing");
     await page.evaluate(() => document.activeElement.blur());
-    await page.waitForSelector("#choose-dialog .sw-type", { state: "visible" });
+    await require("./signed-in.cjs").openTypeTools(page);
     await page.locator('#choose-dialog [data-action="sw-font"][data-font="song"]').tap();
     await page.locator('#choose-dialog [data-action="sw-size"][data-dir="1"]').tap();
     await page.locator('#choose-dialog [data-action="sw-bold"]').tap();
@@ -123,29 +123,33 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // ---------------------------------------------------------- styles, re-layout
     for (const style of ["cozy", "playful", "editorial"]) {
-      await page.locator(`[data-action="story-style"][data-style="${style}"]`).tap();
+      await require("./signed-in.cjs").storyStyle(page, style);
       await page.waitForSelector(`.story-canvas .scrapbook-page.style-${style}`);
       a = await momentA();
       assert.deepEqual(photosOf(a).map((p) => p.caption || ""), ["第一杯：拉花是一只小熊", "cheers 和朋友碰杯 🙂 two lattes", ""], style);
       assert.equal(nextToOwnPhoto(a), 2, style);
       assert.ok(a.layers.filter((l) => l.bind === "caption").every((l) => l.fontId === "song"), "the type stays: " + style);
     }
-    await page.locator('[data-action="story-shuffle"]').tap();
+    await require("./signed-in.cjs").storyNextLayout(page);
     await page.waitForTimeout(300);
     assert.equal(nextToOwnPhoto(await momentA()), 2, "re-layout keeps each line by its photo");
     passed.push("杂志 / 手账 / 拼贴 and re-layout: every line still by its own photo, the type kept");
 
     // ---------------------------------------------------------- tapping a photo opens its words
+    await require("./signed-in.cjs").closeStoryPanel(page);
     const target = (await momentA()).layers.find((l) => l.id === ids[1]);
     const paper = await page.locator(".story-canvas").evaluate((el) => { const r = el.firstElementChild.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
     await page.mouse.click(paper.x + (paper.w * target.x) / 100, paper.y + (paper.h * target.y) / 100);
+    // V10.29: the tap chooses that photo (换照片); 给这张写字 opens its words.
+    await page.waitForSelector(`.qe-thumbs [data-layer="${ids[1]}"][aria-pressed="true"]`);
+    await page.locator('[data-action="story-words-photo"]').tap();
     await page.waitForSelector(`#choose-dialog [data-target="${ids[1]}"][aria-selected="true"]`);
     assert.equal(await page.locator("#choose-dialog [data-sw-text]").inputValue(), "cheers 和朋友碰杯 🙂 two lattes");
     await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
-    passed.push("tapping a photo on the page opens the words for that very photo");
+    passed.push("tapping a photo on the page chooses that very photo; 给这张写字 opens its words");
 
     // ---------------------------------------------------------- regroup keeps lines with their photos
-    await page.locator('[data-action="story-group"]').tap();
+    await require("./signed-in.cjs").storyRegroup(page);
     await page.waitForSelector(".story-group");
     await page.locator('[data-action="story-regroup"]').tap();
     await page.waitForSelector(".story-canvas .scrapbook-page");
@@ -159,7 +163,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     for (const [w, h] of [[375, 667], [430, 932]]) {
       await page.setViewportSize({ width: w, height: h });
       await page.locator(".story-tabs button").nth(1).tap();
-      await page.locator('.story-tools [data-action="story-text"]').tap();
+      await page.locator('.qe-tools [data-action="story-text"]').tap();
       await page.waitForSelector("#choose-dialog[open] .sw");
       const fit = await page.evaluate(() => {
         const sheet = document.querySelector("#choose-dialog .sw").getBoundingClientRect();

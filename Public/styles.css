@@ -21289,3 +21289,282 @@ body.typing .ctx-caption {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* =====================================================================
+   V10.29 · Quick Edit (今天的故事): 换照片 · 写文字 · 换个排版 + 保存 at
+   the bottom; 自定义 at the top right; panels sit just above the buttons.
+   ===================================================================== */
+.story-bar .story-custom {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.story-canvas {
+  position: relative;
+}
+.qe-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid var(--sageDeep);
+  border-radius: 4px;
+  box-shadow: 0 0 0 3px var(--c-fffdf8e6, #fffdf8e6);
+  pointer-events: none;
+}
+.qe-ring b {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #FFFFFF);
+  font: 700 11px/16px var(--ui-sans);
+  white-space: nowrap;
+}
+.story-actions.qe-bar {
+  display: block;
+  padding: 8px 12px 14px;
+  margin: 12px -16px 0;
+  z-index: 3;
+  box-shadow: 0 -10px 24px rgba(47, 42, 38, 0.06);
+}
+.qe-tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.25fr);
+  gap: 6px;
+}
+.qe-tools button {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 52px;
+  padding: 4px 2px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.2;
+}
+.qe-tools button b {
+  font-weight: 600;
+}
+.qe-tools .qe-glyph {
+  font-size: 16px;
+  line-height: 1;
+}
+.qe-tools button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--t-ffffff, #FFFFFF);
+}
+.qe-tools .qe-save {
+  border: 0;
+  background: var(--c-5f6f52, #5F6F52);
+  color: var(--t-ffffff, #FFFFFF);
+  font-size: 15px;
+  font-weight: 700;
+}
+.qe-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.qe-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.qe-panel header span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.qe-panel header b {
+  font-size: 14px;
+}
+.qe-panel header small,
+.qe-hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--t-6f675d, #6F675D);
+}
+.qe-hint {
+  margin: 0;
+}
+.qe-done {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-f7f4ee, #f7f4ee);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.qe-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  min-height: 64px;
+}
+.qe-thumbs button {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--c-f7f4ee, #f7f4ee);
+}
+.qe-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.qe-thumbs button > b {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-fffdf8e6, #fffdf8e6);
+  font: 700 11px/18px var(--ui-sans);
+  color: var(--ink);
+}
+.qe-thumbs button[aria-pressed="true"] {
+  border-color: var(--sageDeep);
+  box-shadow: 0 0 0 2px var(--c-fffdf8e6, #fffdf8e6) inset;
+}
+.qe-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 8px;
+}
+.qe-row button {
+  min-height: 44px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.qe-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: var(--c-f7f4ee, #f7f4ee);
+  font-size: 13px;
+  color: var(--ink);
+}
+.qe-notice button {
+  flex: none;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.qe-variants {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.qe-variants button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 5px 5px 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12px;
+}
+.qe-variants button b {
+  font-weight: 600;
+}
+.qe-variants button small {
+  font-size: 10.5px;
+  color: var(--t-6f675d, #6F675D);
+}
+.qe-variants button[aria-pressed="true"] {
+  border: 2px solid var(--ink);
+  padding: 4px 4px 3px;
+}
+.qe-mini {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(47, 42, 38, 0.12);
+}
+.qe-styles {
+  margin: 0;
+}
+.qe-styles button {
+  min-height: 40px;
+  font-size: 12px;
+}
+.qe-styles svg {
+  width: 16px;
+  height: 20px;
+}
+.qe-regroup {
+  justify-self: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--t-6f675d, #6F675D);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Words: ready to type; fonts and colours folded until asked for. */
+.sw-optional {
+  margin: -2px 0 0;
+  font-size: 12px;
+  color: var(--t-6f675d, #6F675D);
+}
+.sw-more > summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.sw-more > summary::-webkit-details-marker {
+  display: none;
+}
+.sw-more > summary::after {
+  content: "›";
+  margin-left: 6px;
+  transition: transform 0.15s;
+}
+.sw-more[open] > summary::after {
+  transform: rotate(90deg);
+}

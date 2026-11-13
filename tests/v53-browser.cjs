@@ -59,7 +59,7 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
       await page.locator('[data-action="quick-start"]').tap();
       await (await chooser).setFiles(files);
       // Quick Create V2: a line in the preview, saved into the book.
-      await page.waitForSelector(".story-styles");
+      await page.waitForSelector(".qe-tools");
       await require("./signed-in.cjs").storyLines(page, [line]);
       await page.locator('[data-action="story-save"]').tap();
       await page.waitForSelector(".flip-page");

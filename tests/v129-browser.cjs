@@ -80,7 +80,7 @@ const photoFile = (n) => path.join(lib, `LD-photo-${n}.jpg`);
       // Tap photo 2 on the page: chosen and outlined, no editor.
       await tapOnPaper(p2);
       await page.waitForSelector(".qe-panel.qe-photo");
-      assert.equal(await page.locator("#phone.in-studio").count(), 0, "still in Quick Edit");
+      assert.equal(await page.locator(".tool-dock-wrap, #canvas-wrap").count(), 0, "still in Quick Edit, not the editor");
       assert.equal(await page.locator(`.qe-thumbs [data-layer="${p2.id}"]`).getAttribute("aria-pressed"), "true");
       assert.equal((await page.locator(".story-canvas .qe-ring b").innerText()).trim(), zh ? "第 2 张" : "Photo 2");
       if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/v129-${run.lang}-2-pick.png` });
@@ -172,7 +172,7 @@ const photoFile = (n) => path.join(lib, `LD-photo-${n}.jpg`);
       // 自定义 and back: nothing changes on the way.
       const beforeCustom = JSON.stringify(await draft());
       await page.locator('.story-bar [data-action="story-adjust"]').tap();
-      await page.waitForSelector("#phone.in-studio");
+      await page.waitForSelector("#canvas-wrap");
       await page.locator('[data-action="studio-back"]').first().tap();
       await page.waitForSelector('[data-action="story-save"]');
       const afterCustom = await draft();
@@ -218,7 +218,7 @@ const photoFile = (n) => path.join(lib, `LD-photo-${n}.jpg`);
       await chooser2.setFiles([photoFile("beach-day"), photoFile("balloons")]);
       await page.waitForSelector('[data-action="story-save"]');
       await page.locator('.story-bar [data-action="story-adjust"]').tap();
-      await page.waitForSelector("#phone.in-studio");
+      await page.waitForSelector("#canvas-wrap");
       const id = await page.evaluate(() => document.querySelector("#canvas-wrap .layer[data-layer]")?.getAttribute("data-layer"));
       const box = await page.locator(`#canvas-wrap .layer[data-layer="${id}"]`).boundingBox();
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

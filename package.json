@@ -71,7 +71,8 @@
     "test:browser:v124": "node tests/v124-browser.cjs",
     "test:browser:v125": "node tests/v125-browser.cjs",
     "test:browser:v126": "node tests/v126-browser.cjs",
-    "test:browser:v128": "node tests/v128-browser.cjs"
+    "test:browser:v128": "node tests/v128-browser.cjs",
+    "test:browser:v129": "node tests/v129-browser.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.4",

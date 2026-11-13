@@ -4435,6 +4435,7 @@ function layoutStoryPage(target, isCover) {
   else if (/^scene:color-/.test(target.backdrop || "")) delete target.backdrop;
   decorate(target, { stickers: look.stickers }, { seed: variant + (isCover ? 1 : 0), max: look.deco, makeId: id });
   target.layoutEdited = false;
+  return result;
 }
 // Lay out every page of the story (or only `which`); pages edited by hand
 // stay unless `force`.
@@ -4491,6 +4492,9 @@ function makeStory() {
   layoutStory({ force: true });
   story.step = "preview";
   story.index = 0;
+  story.panel = null;
+  story.pick = null;
+  story.notice = null;
   flushDraft();
   logEvent("story_made", { moments: ids.length, cover: story.made.cover, style: story.style });
   render();
@@ -4524,11 +4528,170 @@ function storyPage() {
   story.index = Math.max(0, Math.min(pages.length - 1, story.index));
   const current = pages[story.index];
   const tabs = pages.length > 1 ? `<div class="story-tabs" role="tablist" aria-label="${t("story.pages")}">${pages.map((p, i) => `<button role="tab" data-action="story-page" data-index="${i}" aria-selected="${i === story.index}">${esc(p.label)}</button>`).join("")}</div>` : "";
-  const styles = STYLES.map((s) => `<button data-action="story-style" data-style="${s}" aria-pressed="${s === story.style}">${STYLE_ICONS[s]}<b>${t("story.style." + s)}</b></button>`).join("");
-  const words = storyMomentsOf(current).some((m) => (m.title || "").trim());
   const books = state().books.map((b) => `<option value="${esc(b.id)}" ${b.id === story.book ? "selected" : ""}>${esc(b.title)}</option>`).join("");
   const title = story.date === dateKey() ? t("story.previewTitle") : t("story.previewTitleDay", { date: friendlyDate(story.date) });
-  return `<header class="story-bar">${back}<h1>${esc(title)}</h1><span></span></header><div class="story-where"><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><label class="story-day"><span>${t("story.day")}</span><input type="date" data-story-date value="${esc(story.date)}" max="${dateKey()}" aria-label="${t("story.day")}"></label></div>${tabs}<button class="story-canvas" data-action="story-text" aria-label="${t("story.addWords")}">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}</button><div class="story-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div><div class="story-tools"><button data-action="story-shuffle">↻ ${t("story.relayout")}</button><button data-action="story-text">Aa ${t(words ? "story.editWords" : "story.addWords")}</button>${total > 1 ? `<button data-action="story-group">${t("story.regroup")}</button>` : ""}</div><div class="story-actions"><button class="secondary" data-action="story-adjust">✎ ${t("story.customize")}</button><button class="primary" data-action="story-save">${t("save")}</button></div>`;
+  // V10.29 · Quick Edit: every quick change happens right here — change a
+  // photo, write, change the layout or style — and Save. 自定义 (free moving,
+  // layers…) is at the top right for when it is wanted.
+  const tool = (panel, glyph, label) => `<button data-action="story-panel" data-panel="${panel}" aria-pressed="${story.panel === panel}"><span class="qe-glyph" aria-hidden="true">${glyph}</span><b>${t(label)}</b></button>`;
+  const bar = `<div class="story-actions qe-bar">${storyPanelHTML(current, total)}<div class="qe-tools" role="group" aria-label="${t("story.styleLabel")}">${tool("photo", "⇄", "qe.photo")}<button data-action="story-text"><span class="qe-glyph" aria-hidden="true">Aa</span><b>${t("qe.words")}</b></button>${tool("layout", "▦", "qe.layout")}<button class="primary qe-save" data-action="story-save">${t("save")}</button></div></div>`;
+  return `<header class="story-bar">${back}<h1>${esc(title)}</h1><button class="story-custom" data-action="story-adjust">${t("story.customize")}</button></header><div class="story-where"><label class="story-book"><span>${t("story.into")}</span><select data-story-book aria-label="${t("story.into")}">${books}</select></label><label class="story-day"><span>${t("story.day")}</span><input type="date" data-story-date value="${esc(story.date)}" max="${dateKey()}" aria-label="${t("story.day")}"></label></div>${tabs}<button class="story-canvas" data-action="story-tap" aria-label="${t("story.addWords")}">${current ? sharedCanvasHTML(current.page, ctx(), { readOnly: true, dayPage: current.cover }) : ""}${storyRingHTML(current)}</button>${bar}`;
+}
+// ---------- V10.29 · Quick Edit: change a photo, change the layout ----------
+// 写文字 (and a tap beside the photos) opens the page's own line (整体); on
+// the day spread, the Moment last written for.
+function storyLineTarget() {
+  const moments = storyMomentsOf(storyPages()[story.index]);
+  if (!moments.length) return null;
+  const momentId = moments.some((m) => m.id === storyWords?.momentId) ? storyWords.momentId : moments[0].id;
+  return { momentId, target: "moment" };
+}
+// The photos of the page in view (on the day spread: every Moment's), in
+// order, numbered as the person sees them ("第 2 张").
+function storyPhotoChoices(current) {
+  return storyMomentsOf(current).flatMap((m) => storyPhotosOf(m).map((p) => ({ m, p }))).map((c, i) => ({ ...c, n: i + 1 }));
+}
+function storyPicked(current) {
+  const choices = storyPhotoChoices(current);
+  const pick = story.pick && choices.find((c) => c.m.id === story.pick.momentId && c.p.id === story.pick.layerId);
+  return pick || choices[0] || null;
+}
+// The chosen photo, outlined on the page (on the spread: its copy there).
+function storyRingHTML(current) {
+  if (!current || story.panel !== "photo") return "";
+  const pick = storyPicked(current);
+  if (!pick) return "";
+  const page = current.cover ? editor : current.page;
+  const layer = current.cover ? page.layers.find((l) => l.gen && l.mediaRef === pick.p.mediaRef) : page.layers.find((l) => l.id === pick.p.id);
+  if (!layer) return "";
+  const n = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
+  const w = n(layer.w, 40) * n(layer.scale, 1),
+    h = n(layer.h, 30) * n(layer.scale, 1);
+  return `<i class="qe-ring" aria-hidden="true" style="left:${n(layer.x, 50) - w / 2}%;top:${n(layer.y, 50) - h / 2}%;width:${w}%;height:${h}%;transform:rotate(${n(layer.rotation, 0)}deg)"><b>${t("qe.nth", { n: pick.n })}</b></i>`;
+}
+// What the page looks like with layout `variant` (worked out on a copy).
+function storyVariantPreview(current, variant) {
+  const copy = structuredClone(current.cover ? editor : findMoment(editor, current.page.id));
+  copy.layoutVariant = variant;
+  copy.layoutEdited = false;
+  const result = layoutStoryPage(copy, current.cover);
+  const html = sharedCanvasHTML(copy, ctx(), { readOnly: true, dayPage: current.cover }).replace(/ data-action="[^"]*"/g, "").replace(/ tabindex="0"/g, ' tabindex="-1"');
+  return { html, kind: result?.arrangement || "" };
+}
+// The arrangement a Moment page gets with `variant` ("" when not a pair).
+function storyArrangement(moment, variant = moment.layoutVariant) {
+  const copy = structuredClone(moment);
+  copy.layoutVariant = Number(variant) || 0;
+  return layoutStoryPage(copy, false)?.arrangement || "";
+}
+function storyPanelHTML(current, total) {
+  const notice = story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "";
+  if (!current || !story.panel) return notice;
+  const done = `<button class="qe-done" data-action="story-panel" data-panel="">${t("qe.done")}</button>`;
+  if (story.panel === "photo") {
+    const choices = storyPhotoChoices(current);
+    const pick = storyPicked(current);
+    if (!pick) return notice;
+    const hand = Boolean(pick.m.layoutEdited);
+    const thumbs = choices
+      .map((c) => `<button data-action="story-pick" data-moment="${esc(c.m.id)}" data-layer="${esc(c.p.id)}" aria-pressed="${c === pick || (c.m.id === pick.m.id && c.p.id === pick.p.id)}" aria-label="${esc(t("qe.nth", { n: c.n }))}"><img src="${esc(safePhoto(c.p.mediaRef))}" alt=""><b aria-hidden="true">${c.n}</b>${(c.p.caption || "").trim() ? '<i class="sw-dot" aria-hidden="true"></i>' : ""}</button>`)
+      .join("");
+    return `${notice}<section class="qe-panel qe-photo" aria-label="${t("qe.photoTitle")}"><header><span><b>${t("qe.photoTitle")}</b><small>${t("qe.photoHint")}</small></span>${done}</header><div class="qe-thumbs">${thumbs}</div><p class="qe-hint">${t(hand ? "qe.photoKeepHand" : "qe.photoKeep")}</p><div class="qe-row"><button class="secondary" data-action="story-words-photo">Aa ${t("qe.wordsFor")}</button><button class="primary" data-action="story-replace">${t("qe.replace")}</button></div></section>`;
+  }
+  const target = current.cover ? editor : findMoment(editor, current.page.id);
+  const hand = Boolean(target?.layoutEdited);
+  const now = (Number(target?.layoutVariant) || 0) % 3;
+  const variants = [0, 1, 2]
+    .map((v) => {
+      const { html, kind } = storyVariantPreview(current, v);
+      const name = kind ? t(`qe.kind.${kind}`) : t("qe.layoutN", { n: v + 1 });
+      const on = !hand && v === now;
+      return `<button data-action="story-layout" data-variant="${v}" data-kind="${kind}" aria-pressed="${on}"><span class="qe-mini" aria-hidden="true">${html}</span><b>${esc(name)}</b><small>${on ? t("qe.current") : v === 0 ? t("qe.recommended") : "&nbsp;"}</small></button>`;
+    })
+    .join("");
+  const styles = STYLES.map((s) => `<button data-action="story-style" data-style="${s}" aria-pressed="${s === styleOf(target?.layoutStyle || story.style)}">${STYLE_ICONS[s]}<b>${t("story.style." + s)}</b></button>`).join("");
+  return `${notice}<section class="qe-panel qe-layout" aria-label="${t("qe.layoutTitle")}"><header><span><b>${t("qe.layoutTitle")}</b><small>${t(hand ? "qe.layoutHand" : "qe.layoutHint")}</small></span>${done}</header><div class="qe-variants">${variants}</div><div class="story-styles qe-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div>${total > 1 ? `<button class="qe-regroup" data-action="story-group">${t("qe.regroup")}</button>` : ""}</section>`;
+}
+// Keep the chosen photo in view above the Quick Edit panel.
+function revealStoryPick() {
+  requestAnimationFrame(() => {
+    const ring = $(".story-canvas .qe-ring"),
+      bar = $(".qe-bar"),
+      scroll = $("#app-scroll");
+    if (!ring || !bar || !scroll) return;
+    const r = ring.getBoundingClientRect(),
+      limit = bar.getBoundingClientRect().top - 8;
+    if (r.bottom > limit || r.top < 60) scroll.scrollBy({ top: r.top - Math.max(64, (limit - r.height) / 2), behavior: "smooth" });
+  });
+}
+const COVER_FIELDS = ["layers", "template", "backdrop", "layoutStyle", "layoutVariant", "layoutEdited", "layoutTemplate", "typeStyle"];
+// Replace one photo, from Quick Edit. Only that photo layer changes: its
+// id stays, so its words (caption, by the layer id) stay with it; the page's
+// line, type and style stay. A page arranged by hand keeps every place (the
+// new photo fits the old one's box); otherwise the page is laid out again
+// in the same style and, for a pair, the same arrangement. One step back.
+function storyReplacePhoto(target, item) {
+  if (!story?.made) return;
+  const before = findMoment(editor, target.momentId);
+  const old = before?.layers.find((l) => l.id === target.layerId);
+  if (!old) return;
+  const oldRef = old.mediaRef;
+  const kept = Boolean((old.caption || "").trim());
+  const n = storyPhotoChoices(storyPages()[story.index]).find((c) => c.p.id === old.id)?.n || 1;
+  const undo = { momentId: before.id, moment: structuredClone(before), cover: story.made.cover ? Object.fromEntries(COVER_FIELDS.map((k) => [k, structuredClone(editor[k])])) : null };
+  const hand = Boolean(before.layoutEdited);
+  const keepKind = hand ? "" : storyArrangement(before);
+  const fitInto = (layer, aspect) => {
+    if (!aspect || layer.shape || layer.drawing) return;
+    const box = fitPhoto(aspect, Number(layer.w) || 42, Number(layer.h) || 34, layer.frame || "bare");
+    layer.w = Math.round(box.w * 100) / 100;
+    layer.h = Math.round(box.h * 100) / 100;
+  };
+  changeEditor((entry) => {
+    const m = findMoment(entry, target.momentId);
+    const layer = m?.layers.find((l) => l.id === target.layerId);
+    if (!layer) return;
+    layer.mediaRef = item.reference;
+    layer.text = item.name || layer.text;
+    layer.crop = { x: 50, y: 50, zoom: 1 };
+    delete layer.sourceRef;
+    delete layer.edit;
+    if (item.aspect) layer.aspect = Math.round(item.aspect * 1000) / 1000;
+    if (hand) fitInto(layer, item.aspect);
+    // The day spread's copy of it shows the new photo too.
+    for (const copy of entry.layers || [])
+      if (copy.gen && copy.mediaRef === oldRef) {
+        copy.mediaRef = item.reference;
+        if (item.aspect) copy.aspect = layer.aspect;
+        if (entry.layoutEdited) fitInto(copy, item.aspect);
+      }
+    m.updatedAt = new Date().toISOString();
+    if (keepKind) {
+      const v = [0, 1, 2].find((x) => storyArrangement(m, x) === keepKind);
+      if (v != null) m.layoutVariant = v;
+    }
+  }, false);
+  layoutStory({ which: [target.momentId, "cover"] });
+  flushDraft();
+  story.notice = { text: kept ? t("qe.replacedKept", { n }) : t("qe.replaced"), undo };
+  logEvent("qe_replace", { kept, hand });
+}
+function storyUndoReplace() {
+  const undo = story?.notice?.undo;
+  if (!undo) return;
+  changeEditor((entry) => {
+    const i = entry.moments.findIndex((m) => m.id === undo.momentId);
+    if (i >= 0) entry.moments[i] = structuredClone(undo.moment);
+    if (undo.cover)
+      for (const [k, v] of Object.entries(undo.cover)) {
+        if (v === undefined) delete entry[k];
+        else entry[k] = structuredClone(v);
+      }
+  }, false);
+  flushDraft();
+  story.notice = null;
+  logEvent("qe_undo", {});
+  toast(t("qe.undone"));
 }
 document.addEventListener("input", (event) => {
   if (event.target.matches?.("[data-sw-text]") && story) storyWordsInput(event.target);
@@ -4552,6 +4715,10 @@ document.addEventListener(
 // that photo layer, found by its id), so switching photos loses nothing; the
 // magazine page behind updates as you type.
 let storyWords = null; // { momentId, target: "moment" | <photo layer id> }
+let swTypeOpen = false; // V10.29: fonts and colours stay folded until asked for
+document.addEventListener("toggle", (event) => {
+  if (event.target.matches?.(".sw-more")) swTypeOpen = event.target.open;
+}, true);
 let storyWordsTimer = 0;
 const storyPhotosOf = (m) => (m?.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing && !l.deco);
 function storyTypePage() {
@@ -4582,7 +4749,7 @@ function storyWordsHTML() {
   const now = photo
     ? `<img src="${esc(safePhoto(photo.mediaRef))}" alt=""><span><b>${t("sw.photoOf", { n: index + 1, count: photos.length })}</b><small>${t("sw.photoHint")}</small></span>`
     : `<span class="sw-glyph" aria-hidden="true">Aa</span><span><b>${t("sw.whole")}</b><small>${t("sw.wholeHint")}</small></span>`;
-  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea><small class="sw-count" aria-live="polite">${[...value].length} / ${max}</small></div>${storyTypeHTML()}`;
+  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea><small class="sw-count" aria-live="polite">${[...value].length} / ${max}</small></div><p class="sw-optional">${t("qe.optional")}</p><details class="sw-more" ${swTypeOpen ? "open" : ""}><summary>${t("qe.typeMore")}</summary>${storyTypeHTML()}</details>`;
 }
 // The type for this page: the same fonts and colours as Journal Studio.
 function storyTypeHTML() {
@@ -4605,6 +4772,12 @@ function openStoryText(target = null) {
   dialog.innerHTML = `<div class="choose-sheet story-text-sheet sw"><div class="choose-grabber" aria-hidden="true"></div><div class="sw-head"><h2>${t("sw.title")}</h2><button class="sw-done" data-action="story-text-done">${t("pages.done")}</button></div><div class="sw-body">${storyWordsHTML()}</div></div>`;
   if (!dialog.open) dialog.showModal();
   dialog.addEventListener("close", () => dialog.classList.remove("see-through"), { once: true });
+  // V10.29: ready to type at once (in the same tap, so iOS shows the keyboard).
+  const field = dialog.querySelector("[data-sw-text]");
+  if (field) {
+    field.focus({ preventScroll: true });
+    field.setSelectionRange(field.value.length, field.value.length);
+  }
   revealStoryTarget();
 }
 function refreshStoryWords(focus = false) {
@@ -4780,6 +4953,68 @@ function showSavedPage() {
 async function storyAction(actionName, target) {
   if (!story) return;
   const sel = story.selected;
+  // The "replaced · undo" note stays only until the next change.
+  if (!["story-undo", "story-panel", "story-pick", "story-tap"].includes(actionName)) story.notice = null;
+  if (actionName === "story-tap") {
+    // Tap a photo on the page: choose it (to change it, or write for it);
+    // tap anywhere else: write.
+    const current = storyPages()[story.index];
+    const at = window.__storyTapAt;
+    window.__storyTapAt = null;
+    const page = current?.cover ? editor : current?.page;
+    const hit = at && page ? [...(page.layers || [])].reverse().find((l) => l.kind === "photo" && l.mediaRef && !l.drawing && Math.abs(at.x - Number(l.x)) <= (Number(l.w) * (Number(l.scale) || 1)) / 2 && Math.abs(at.y - Number(l.y)) <= ((Number(l.h) || 30) * (Number(l.scale) || 1)) / 2) : null;
+    const choice = hit && storyPhotoChoices(current).find((c) => c.p.id === hit.id || c.p.mediaRef === hit.mediaRef);
+    if (!choice) return openStoryText(storyLineTarget());
+    story.panel = "photo";
+    story.pick = { momentId: choice.m.id, layerId: choice.p.id };
+    render();
+    revealStoryPick();
+    return;
+  }
+  if (actionName === "story-panel") {
+    const next = target.dataset.panel || null;
+    story.panel = story.panel === next ? null : next;
+    render();
+    if (story.panel === "photo") revealStoryPick();
+    return;
+  }
+  if (actionName === "story-pick") {
+    story.pick = { momentId: target.dataset.moment, layerId: target.dataset.layer };
+    render();
+    revealStoryPick();
+    return;
+  }
+  if (actionName === "story-words-photo") {
+    const pick = storyPicked(storyPages()[story.index]);
+    return pick ? openStoryText({ momentId: pick.m.id, target: pick.p.id }) : openStoryText();
+  }
+  if (actionName === "story-replace") {
+    const pick = storyPicked(storyPages()[story.index]);
+    if (pick) chooseAttachment({ kind: "story-replace", momentId: pick.m.id, layerId: pick.p.id });
+    return;
+  }
+  if (actionName === "story-undo") {
+    storyUndoReplace();
+    render();
+    return;
+  }
+  if (actionName === "story-layout") {
+    const current = storyPages()[story.index];
+    if (!current) return;
+    const v = Number(target.dataset.variant) || 0;
+    const page2 = current.cover ? editor : findMoment(editor, current.page.id);
+    if (!page2) return;
+    if (!page2.layoutEdited && (Number(page2.layoutVariant) || 0) % 3 === v) return;
+    if (page2.layoutEdited && !(await askConfirm(t("story.relayoutConfirm")))) return;
+    changeEditor((entry) => {
+      const target2 = current.cover ? entry : findMoment(entry, current.page.id);
+      if (target2) target2.layoutVariant = v;
+    }, false);
+    layoutStory({ which: [current.cover ? "cover" : current.page.id], force: true });
+    flushDraft();
+    if (quickSession) quickSession.shuffles++;
+    logEvent("story_relayout", { style: story.style, variant: v, kind: target.dataset.kind || "" });
+  }
   if (actionName === "story-back") {
     if (story.step === "group") return storyAction("story-regroup", target);
     if (!(await askConfirm(t("story.discard")))) return;
@@ -4835,23 +5070,11 @@ async function storyAction(actionName, target) {
     story.groups = left;
     story.selected = null;
   }
-  if (actionName === "story-page") story.index = Number(target.dataset.index) || 0;
-  if (actionName === "story-text") {
-    // Tapped on a photo of the page: open the words for that very photo.
-    const current = storyPages()[story.index];
-    const at = target.classList.contains("story-canvas") ? window.__storyTapAt : null;
-    window.__storyTapAt = null;
-    if (at && current) {
-      const page = current.cover ? editor : current.page;
-      const hit = [...(page.layers || [])].reverse().find((l) => l.kind === "photo" && l.mediaRef && Math.abs(at.x - Number(l.x)) <= Number(l.w) / 2 && Math.abs(at.y - Number(l.y)) <= (Number(l.h) || 30) / 2);
-      if (hit) {
-        const owner = current.cover ? storyMomentsOf(current).find((m) => storyPhotosOf(m).some((p) => p.mediaRef === hit.mediaRef)) : current.page;
-        const photo = storyPhotosOf(owner).find((p) => p.id === hit.id || p.mediaRef === hit.mediaRef);
-        if (owner && photo) return openStoryText({ momentId: owner.id, target: photo.id });
-      }
-    }
-    return openStoryText();
+  if (actionName === "story-page") {
+    story.index = Number(target.dataset.index) || 0;
+    story.pick = null;
   }
+  if (actionName === "story-text") return openStoryText(storyLineTarget());
   if (actionName === "story-text-done") return saveStoryText();
   if (actionName === "story-style") {
     const next = styleOf(target.dataset.style);
@@ -9648,6 +9871,10 @@ async function handleImageUpload(event, target) {
         if (clip) clip.poster = reference;
       });
       flushDraft();
+    } else if (target?.kind === "story-replace") {
+      storyReplacePhoto(target, saved[0]);
+      render();
+      revealStoryPick();
     } else if (target?.kind === "replace") {
       changeTarget((entry) => {
         const layer = entry.layers.find((item) => item.id === target.layer);
@@ -9682,7 +9909,7 @@ async function handleImageUpload(event, target) {
     }
     // V10.24: photos added to the page in Studio need no "added" message — they are
     // right there on the paper (the message also covered its top); failures still say so.
-    if (failed || !(target?.kind === "quick" || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
+    if (failed || !(["quick", "story-replace"].includes(target?.kind) || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1

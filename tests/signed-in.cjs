@@ -269,7 +269,7 @@ module.exports.closeSheet = async (page) => {
 // V10.19: the magazine view's words sheet edits one Moment (or one photo) at
 // a time. Writes each Moment's own line (null = leave it), in order.
 module.exports.storyLines = async (page, lines) => {
-  await page.locator('.story-tools [data-action="story-text"]').tap();
+  await page.locator('.qe-tools [data-action="story-text"]').tap();
   await page.waitForSelector("#choose-dialog[open] [data-sw-text]");
   const tabs = page.locator('#choose-dialog [data-action="sw-moment"]');
   const n = await tabs.count();
@@ -285,4 +285,34 @@ module.exports.storyLines = async (page, lines) => {
   }
   await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
   await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
+};
+
+// V10.29 · Quick Edit: the styles, the layouts and 调整分组 live in the
+// 换个排版 panel (opened from the bottom bar, left open while you use it).
+module.exports.storyLayoutPanel = async (page) => {
+  if ((await page.locator('.qe-tools [data-panel="layout"]').getAttribute("aria-pressed")) !== "true") await page.locator('.qe-tools [data-panel="layout"]').tap();
+  await page.waitForSelector(".qe-panel.qe-layout");
+};
+module.exports.storyStyle = async (page, style) => {
+  await module.exports.storyLayoutPanel(page);
+  await page.locator(`.qe-styles [data-action="story-style"][data-style="${style}"]`).tap();
+};
+// The next layout (what ↻ 重新排版 did before).
+module.exports.storyNextLayout = async (page) => {
+  await module.exports.storyLayoutPanel(page);
+  const now = Number(await page.locator('.qe-variants [aria-pressed="true"]').getAttribute("data-variant").catch(() => "0")) || 0;
+  await page.locator(`.qe-variants [data-variant="${(now + 1) % 3}"]`).tap();
+};
+module.exports.storyRegroup = async (page) => {
+  await module.exports.storyLayoutPanel(page);
+  await page.locator('.qe-panel [data-action="story-group"]').tap();
+};
+// Fonts and colours are folded in the words sheet until asked for.
+module.exports.openTypeTools = async (page) => {
+  if (!(await page.locator("#choose-dialog .sw-more[open]").count())) await page.locator("#choose-dialog .sw-more > summary").tap();
+  await page.waitForSelector("#choose-dialog .sw-type", { state: "visible" });
+};
+module.exports.closeStoryPanel = async (page) => {
+  if (await page.locator(".qe-panel").count()) await page.locator('.qe-panel .qe-done').tap();
+  await page.waitForFunction(() => !document.querySelector(".qe-panel"));
 };

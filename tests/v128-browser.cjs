@@ -1,5 +1,5 @@
 // V10.28 · Step 3: two photos and no words come out as a balanced pair —
-// centred, no empty column kept for words — and "重新排版" goes through the
+// centred, no empty column kept for words — and "换个排版" goes through the
 // three arrangements (side by side / one above the other / staggered) with
 // every photo kept. A page saved before (an older two-photo layout) is never
 // laid out again by itself: opening it in the calendar, the reader, the
@@ -57,16 +57,16 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
         assert.equal(m.layers.filter((l) => l.bind === "title" || l.bind === "caption").length, 0, "no empty words box");
         seen.push(JSON.stringify(photos.map((p) => [p.mediaRef, p.x, p.y, p.w, p.h])));
         if (process.env.SHOTS) await page.locator(".story-canvas").screenshot({ path: `${process.env.SHOTS}/v128-pair-${run.lang}-${k}.png` });
-        await page.locator('[data-action="story-shuffle"]').tap();
+        await SS.storyNextLayout(page);
         await page.waitForTimeout(150);
       }
       assert.equal(new Set(seen).size, 3, "three different arrangements");
       assert.equal(JSON.stringify((await draftPhotos()).photos.map((p) => [p.mediaRef, p.x, p.y, p.w, p.h])), seen[0], "a fourth tap comes back to the first");
-      passed.push(`${run.lang} ${run.w}: two photos, no words → a centred, even pair; 重新排版 gives three different arrangements and comes back round, both photos kept`);
+      passed.push(`${run.lang} ${run.w}: two photos, no words → a centred, even pair; 换个排版 gives three different arrangements and comes back round, both photos kept`);
 
       // ------------------------------------------------ arranged by hand: not re-laid without asking
       await page.locator('[data-action="story-adjust"]').tap();
-      await page.waitForSelector("#phone.in-studio");
+      await page.waitForSelector("#canvas-wrap");
       // A hand move (the same flag the editor sets when a photo is dragged).
       const moved = await page.evaluate(() => {
         const photo = document.querySelector('#canvas-wrap .layer[data-layer]');
@@ -84,12 +84,12 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
       await page.waitForSelector('[data-action="story-save"]');
       const { m: handMade, photos: handPhotos } = await draftPhotos();
       assert.equal(handMade.layoutEdited, true, "the editor marked the page as arranged by hand");
-      await page.locator('[data-action="story-shuffle"]').tap();
+      await SS.storyNextLayout(page);
       await page.waitForSelector("#confirm-dialog[open]");
       await page.locator("#confirm-cancel").tap();
       await page.waitForTimeout(200);
       assert.deepEqual((await draftPhotos()).photos.map((p) => [p.x, p.y]), handPhotos.map((p) => [p.x, p.y]), "cancel keeps the hand arrangement");
-      passed.push(`${run.lang} ${run.w}: a page moved by hand asks before 重新排版; cancelling keeps every place`);
+      passed.push(`${run.lang} ${run.w}: a page moved by hand asks before a new layout; cancelling keeps every place`);
 
       await page.locator('[data-action="story-save"]').tap();
       await page.waitForSelector("#phone.in-reader");
@@ -134,7 +134,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
       await page.locator(`[data-action="select-date"][data-date="${today}"]`).first().tap();
       await page.waitForSelector(".day-detail .day-contents");
       await page.locator('.day-detail .chapter-edit[data-moment="old-pair-page"]').tap();
-      await page.waitForSelector("#phone.in-studio");
+      await page.waitForSelector("#canvas-wrap");
       await page.waitForTimeout(300);
       await SS.leaveStudio(page);
       await page.reload();

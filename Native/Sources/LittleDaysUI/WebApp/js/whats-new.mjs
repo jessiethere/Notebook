@@ -4,6 +4,32 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.29",
+    date: "2026-11-13",
+    zh: {
+      title: "快速编辑：换照片、写文字、换排版，都在「今天的故事」里",
+      items: [
+        "底部变成四个按钮：换照片、写文字、换个排版、保存。「自定义」移到右上角，自由移动、图层这些都还在里面。",
+        "点页面上的照片就能选中它（会描边并标出「第 2 张」），再点「替换这张照片」，不用进「自定义」。",
+        "换照片时，这张照片的文字、整页的字体和风格都保留；新照片形状不同时，这一页会重新排，两张照片的排法（并排 / 上下 / 错落）不变。换完可以点「撤销」。",
+        "你在「自定义」里调整过的页面，换照片时新照片放在原来的位置，其他都不动。",
+        "「写文字」一打开就能直接输入；字体、字号、颜色收在「字体与样式」里，需要时再展开。不写也可以直接保存。",
+        "「换个排版」里能看到三种排版的小图，下面一行是杂志 / 手账 / 拼贴风格；换排版或换风格都不会丢照片和文字。",
+      ],
+    },
+    en: {
+      title: "Quick Edit: change a photo, write, change the layout — all in Today's story",
+      items: [
+        "The bottom now has four buttons: Photo, Words, Layout and Save. Customize moved to the top right; free moving, layers and the rest are still there.",
+        "Tap a photo on the page to choose it (it gets an outline and a “Photo 2” label), then “Replace this photo” — no need to open Customize.",
+        "Replacing a photo keeps that photo's words and the page's type and style. If the new photo has another shape the page is laid out again, keeping the same arrangement for a pair (side by side / stacked / staggered). Undo is right there.",
+        "On a page you arranged yourself in Customize, the new photo takes the old one's place and nothing else moves.",
+        "Words opens ready to type; fonts, size and colours are folded into “Type & style” until you want them. Words are optional — you can just save.",
+        "Layout shows the three layouts as small previews, with the Magazine / Journal / Collage styles below. Changing either never loses a photo or a word.",
+      ],
+    },
+  },
+  {
     version: "10.28",
     date: "2026-11-13",
     zh: {

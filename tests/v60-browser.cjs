@@ -46,7 +46,9 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await (await chooser).setFiles(pics);
     await page.waitForSelector(".story-canvas .scrapbook-page.style-editorial");
     assert.equal(await page.locator(".story-tabs button").count(), 4, "a day spread + one page per Moment");
-    assert.equal(await page.locator('.story-styles [aria-pressed="true"]').getAttribute("data-style"), "editorial", "Editorial by default");
+    await require("./signed-in.cjs").storyLayoutPanel(page);
+    assert.equal(await page.locator('.qe-styles [aria-pressed="true"]').getAttribute("data-style"), "editorial", "Editorial by default");
+    await require("./signed-in.cjs").closeStoryPanel(page);
     assert.equal(await page.locator("#phone.in-studio").count(), 1, "full screen, no menu");
     let d = await draft();
     assert.equal(d.layoutTemplate, "scrapbook");
@@ -59,7 +61,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
 
     // 2. Words, written in the preview (tap the page); the page shows them.
     // V10.19: one Moment at a time (tabs on the spread), see tests/v119-browser.cjs.
-    await page.locator('.story-tools [data-action="story-text"]').tap();
+    await page.locator('.qe-tools [data-action="story-text"]').tap();
     await page.waitForSelector("#choose-dialog[open] [data-sw-text]");
     assert.equal(await page.locator('#choose-dialog [data-action="sw-moment"]').count(), 3, "the spread: all three Moments");
     await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
@@ -76,7 +78,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     const keep = snapshot(d);
     const looks = {};
     for (const style of ["cozy", "playful", "editorial"]) {
-      await page.locator(`[data-action="story-style"][data-style="${style}"]`).tap();
+      await require("./signed-in.cjs").storyStyle(page, style);
       await page.waitForSelector(`.story-canvas .scrapbook-page.style-${style}`);
       d = await draft();
       assert.equal(snapshot(d), keep, `${style}: same photos, words and order`);
@@ -90,7 +92,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     passed.push("Editorial / Cozy / Collage: different frames, papers and backdrops; photos, words and order kept");
 
     // 4. Adjust the groups: move a photo to the next Moment, make it again.
-    await page.locator('[data-action="story-group"]').tap();
+    await require("./signed-in.cjs").storyRegroup(page);
     await page.waitForSelector(".story-group");
     await page.locator('[data-action="story-photo"][data-g="1"][data-i="1"]').tap();
     await page.locator('[data-action="story-move"][data-dir="1"]').tap();
@@ -115,12 +117,12 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     await page.mouse.up();
     await page.waitForTimeout(300);
     await page.locator('[data-action="studio-back"]').tap();
-    await page.waitForSelector(".story-styles");
+    await page.waitForSelector(".qe-tools");
     d = await draft();
     const edited = mine()[0];
     assert.equal(edited.layoutEdited, true, "the drag marks the page as adjusted by hand");
     const placed = JSON.stringify(edited.layers.filter((l) => l.kind === "photo").map((l) => [l.x, l.y]));
-    await page.locator('[data-action="story-style"][data-style="cozy"]').tap();
+    await require("./signed-in.cjs").storyStyle(page, "cozy");
     await page.waitForSelector("#confirm-dialog[open]");
     assert.match(await page.locator("#confirm-message").innerText(), /1 页是你自己调整过的/);
     await page.locator("#confirm-cancel").tap();

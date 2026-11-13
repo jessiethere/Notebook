@@ -45,7 +45,7 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // Every style: measure every photo and word on every page.
     const problems = [];
     for (const style of ["editorial", "cozy", "playful"]) {
-      await page.locator(`[data-action="story-style"][data-style="${style}"]`).tap();
+      await require("./signed-in.cjs").storyStyle(page, style);
       await page.waitForSelector(`.story-canvas .scrapbook-page.style-${style}`);
       for (let i = 0; i < 5; i++) {
         await page.locator(".story-tabs button").nth(i).tap();

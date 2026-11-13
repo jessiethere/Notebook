@@ -92,11 +92,16 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     assert.equal(picker.isMultiple(), true, "several photos at once");
     await picker.setFiles(pics);
     // Quick Create V2 (V6.5): straight to a designed draft, words optional.
-    await page.waitForSelector(".story-styles");
+    await page.waitForSelector(".qe-tools");
     assert.equal(await page.locator("#photo-editor[open]").count(), 0, "no photo editor in the quick path");
-    assert.deepEqual(await page.$$eval(".story-styles [data-action]", (els) => els.map((el) => el.dataset.style)), ["editorial", "cozy", "playful"]);
-    assert.deepEqual(await page.$$eval(".story-tools [data-action]", (els) => els.map((el) => el.dataset.action)), ["story-shuffle", "story-text", "story-group"]);
-    assert.deepEqual(await page.$$eval(".story-actions [data-action]", (els) => els.map((el) => el.dataset.action)), ["story-adjust", "story-save"]);
+    // V10.29 Quick Edit: 换照片 · 写文字 · 换个排版 + 保存; 自定义 at the top right;
+    // the styles and 调整分组 are in 换个排版.
+    assert.deepEqual(await page.$$eval(".qe-tools [data-action]", (els) => els.map((el) => el.dataset.panel || el.dataset.action)), ["photo", "story-text", "layout", "story-save"]);
+    assert.equal(await page.locator('.story-bar [data-action="story-adjust"]').count(), 1);
+    await require("./signed-in.cjs").storyLayoutPanel(page);
+    assert.deepEqual(await page.$$eval(".qe-styles [data-action]", (els) => els.map((el) => el.dataset.style)), ["editorial", "cozy", "playful"]);
+    assert.equal(await page.locator('.qe-panel [data-action="story-group"]').count(), 1);
+    await require("./signed-in.cjs").closeStoryPanel(page);
     assert.equal(await page.locator(".tool-dock-wrap, .chapter-chips, .page-mode").count(), 0, "no editing tools in the way");
     await page.waitForTimeout(1300);
     let s = await story();
@@ -113,7 +118,7 @@ const pics = ["coffee-cheers", "latte-art", "corner-cafe", "latte-beans"].map((i
     // 3. Re-layout, a line written in the preview, save into the book.
     const look = async () => JSON.stringify((await story()).layers.filter((l) => l.kind === "photo").map((l) => [l.x, l.y, l.w]));
     const before = await look();
-    await page.locator('[data-action="story-shuffle"]').tap();
+    await require("./signed-in.cjs").storyNextLayout(page);
     await page.waitForTimeout(1300);
     assert.equal((await story()).layoutVariant, 1);
     assert.notEqual(await look(), before);

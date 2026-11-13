@@ -503,3 +503,26 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - 页面数据不新增字段：选哪种排法由 `layoutVariant`（0–2，按得分排名）决定，图层位置照常保存。
 - 已保存的页面不会重算位置：只有「今天的故事」里新建或重排时才调用排版引擎。
 - 测试：`tests/v128.test.mjs`、`tests/v128-browser.cjs`。
+
+## 2026-11-13 V10.29 Quick Edit（`app.js` 故事视图）
+
+- 状态都在 `story` 上：
+  - `story.panel`：null / "photo" / "layout"；
+  - `story.pick`：`{ momentId, layerId }`，选中的照片；
+  - `story.notice`：`{ text, undo }`，「已换成新照片 · 撤销」。
+- 点画布（`story-tap`）：用点到的位置判断点到哪张照片。点到照片就打开换照片面板，没点到就打开写字面板（整体那一句）。
+- 换照片：
+  - 先 `chooseAttachment({ kind: "story-replace" })`，再走 `handleImageUpload`：照片字节先写进 IndexedDB（`media.put`），然后才改元数据；
+  - 不经过照片编辑器；
+  - 最后由 `storyReplacePhoto` 只改那张照片图层的 `mediaRef`、`aspect`、`text`、`crop`，图层 id 不变。
+- 换照片后怎么排：
+  - 跨页封面上这张照片的副本（`gen`）也换成新照片；
+  - 页面没有手动调整过（非 `layoutEdited`）：重排这一页和封面；如果是双照片排版，按 `arrangement` 找回同一种排法对应的 `layoutVariant`；
+  - 手动调整过：只把新照片放进旧照片的框里。
+- 撤销：恢复替换前那个 Moment 和封面字段的快照。新照片的字节留在 IndexedDB 里，不删除，和原来不自动删除旧 Blob 的规则一致。
+- 换个排版：
+  - `storyVariantPreview` 在副本上调用 `layoutStoryPage`（现在会返回排版结果），画出三个只读小图；小图去掉了 `data-action` 和 `tabindex`；
+  - 选一个会设置 `layoutVariant` 并强制重排（调整过的页面先确认）；
+  - 风格按钮还是原来的 `story-style`。
+- 写文字：`openStoryText` 打开时就聚焦输入框。字体与样式放进 `<details class="sw-more">`，打开或收起的状态记在 `swTypeOpen`。
+- 旧的 `story-shuffle`、`story-text` 动作还保留，不过界面上已经没有对应的按钮了。

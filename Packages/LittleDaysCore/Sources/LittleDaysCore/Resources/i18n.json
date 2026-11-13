@@ -8566,5 +8566,117 @@
   "label.titleOptional": {
     "zh": "给这一页起个名字（选填）",
     "en": "Name this page (optional)"
+  },
+  "qe.photo": {
+    "zh": "换照片",
+    "en": "Photo"
+  },
+  "qe.words": {
+    "zh": "写文字",
+    "en": "Words"
+  },
+  "qe.layout": {
+    "zh": "换个排版",
+    "en": "Layout"
+  },
+  "qe.photoTitle": {
+    "zh": "换照片",
+    "en": "Change a photo"
+  },
+  "qe.photoHint": {
+    "zh": "点页面上的照片，或在下面选一张",
+    "en": "Tap a photo on the page, or pick one below"
+  },
+  "qe.photoKeep": {
+    "zh": "文字、字体和风格都会保留；新照片形状不同时，这一页会重新排，可以撤销。",
+    "en": "Words, type and style stay; if the new photo has another shape the page is laid out again. You can undo."
+  },
+  "qe.photoKeepHand": {
+    "zh": "这一页你自己调整过：新照片放在原来的位置，其他不动。可以撤销。",
+    "en": "You arranged this page yourself: the new photo takes the old one's place, nothing else moves. You can undo."
+  },
+  "qe.replace": {
+    "zh": "替换这张照片",
+    "en": "Replace this photo"
+  },
+  "qe.wordsFor": {
+    "zh": "给这张写字",
+    "en": "Words for it"
+  },
+  "qe.nth": {
+    "zh": "第 {n} 张",
+    "en": "Photo {n}"
+  },
+  "qe.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "qe.replaced": {
+    "zh": "已换成新照片",
+    "en": "Photo replaced"
+  },
+  "qe.replacedKept": {
+    "zh": "已换成新照片 · 第 {n} 张的文字保留了",
+    "en": "Photo replaced · the words for photo {n} stay"
+  },
+  "qe.undo": {
+    "zh": "撤销",
+    "en": "Undo"
+  },
+  "qe.undone": {
+    "zh": "已撤销，换回原来的照片",
+    "en": "Undone — the earlier photo is back"
+  },
+  "qe.layoutTitle": {
+    "zh": "换个排版",
+    "en": "Layout"
+  },
+  "qe.layoutHint": {
+    "zh": "照片和文字都会保留",
+    "en": "Photos and words all stay"
+  },
+  "qe.layoutHand": {
+    "zh": "你自己调整过这一页；选一个排版会重新排它",
+    "en": "You arranged this page yourself; picking one lays it out again"
+  },
+  "qe.kind.row": {
+    "zh": "并排",
+    "en": "Side by side"
+  },
+  "qe.kind.column": {
+    "zh": "上下",
+    "en": "Stacked"
+  },
+  "qe.kind.stagger": {
+    "zh": "错落",
+    "en": "Staggered"
+  },
+  "qe.layoutN": {
+    "zh": "排版 {n}",
+    "en": "Layout {n}"
+  },
+  "qe.recommended": {
+    "zh": "推荐",
+    "en": "Best fit"
+  },
+  "qe.current": {
+    "zh": "当前",
+    "en": "Current"
+  },
+  "qe.style": {
+    "zh": "风格",
+    "en": "Style"
+  },
+  "qe.regroup": {
+    "zh": "调整照片分组",
+    "en": "Regroup photos"
+  },
+  "qe.typeMore": {
+    "zh": "字体与样式",
+    "en": "Type & style"
+  },
+  "qe.optional": {
+    "zh": "可以不写，直接保存",
+    "en": "Words are optional — you can just save"
   }
 }
