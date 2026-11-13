@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.38",
+    date: "2026-11-13",
+    zh: {
+      title: "长文字不会再被截断",
+      items: [
+        "快速编辑「写文字」以前一页最多 70 字、照片说明最多 120 字，多打的字进不去。现在没有这个限制，写多少都会完整保存。",
+        "短的一句排成标题，长的一段自动排成好读的正文字号，不会为了塞进去把字缩小。",
+        "文字多到一页放不下时，会给出分页建议：照片留在第一页，文字在下一页接着排，按句子分开，一个字都不少。点〔分成 N 页〕之前不会自动加页。",
+        "Journal Studio 里纸上的标题和照片说明也不再在 70 / 120 字处截断。",
+      ],
+    },
+    en: {
+      title: "Long words are no longer cut off",
+      items: [
+        "Quick Edit's Words used to stop at 70 characters for a page and 120 for a photo's caption. That limit is gone; everything you type is saved.",
+        "A short line is set as a headline; a longer one becomes easy-to-read body text instead of shrinking to fit.",
+        "When the words need more than one page, you get a suggestion: the photos stay on the first page and the words continue on the next, split between sentences, nothing left out. No page is added until you tap Make N pages.",
+        "In Journal Studio, the line and photo captions on the paper are no longer cut at 70 / 120 characters either.",
+      ],
+    },
+  },
+  {
     version: "10.37",
     date: "2026-11-13",
     zh: {

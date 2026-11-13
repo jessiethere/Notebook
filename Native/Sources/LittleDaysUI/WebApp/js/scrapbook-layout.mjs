@@ -405,6 +405,22 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
   const audioBand = (input.audio || []).length ? 9 : 0;
   let arrangement = "";
 
+  // A3 · A page of words only (the rest of a long text, on the page after
+  // its photos): the words from the top at a comfortable reading size, as a
+  // headline when they are short. Never shrunk to squeeze, never cut.
+  if (n === 0) {
+    const textW = 80;
+    const fit = lineFor(title, textUnits(title) <= 14 ? 24 : 21, textW, typeSize, titleFont, titleWeight);
+    if (input.time) meta({ x: 50, y: 6, w: textW, align: "left" });
+    const top = input.time ? 12 : 9;
+    if (title) caption({ x: 50, y: top + fit.height / 2, w: textW, fontSize: fit.size, align: "left", ...(style === "playful" ? { weight: 600 } : {}) });
+    if (input.folio && style === "editorial") layers.push(textLayer(look, { text: input.folio, x: 70, y: 97.6, w: 50, fontId: look.meta, fontSize: 6.5, spacing: 2, color: look.muted, align: "right" }));
+    (input.audio || []).forEach((clip, i) => {
+      place[clip.id] = { x: 50, y: 95 - audioBand / 2 - i * 0.5, w: 70, rotation: 0 };
+    });
+    return { place, layers, paper: look.paper, backdrop: style === "playful" ? PLAYFUL_BACKDROPS[v] : null, arrangement: "text" };
+  }
+
   if (style === "editorial") {
     const textW = n === 1 && v !== 0 ? 50 : 86;
     // A headline while it fits in two lines; a longer line is body text.
@@ -1049,4 +1065,119 @@ export function suggestSplit(input, styleId = "editorial") {
     if (ok) return parts.map((part) => part.map((v) => v.id));
   }
   return null;
+}
+
+// ---------- A3 · Long words: continue on the next page ----------
+// The text in pieces that end a sentence (。！？!?；;… a line break, or a
+// full stop before a space). Every character is kept: the pieces joined
+// give the text back exactly.
+export function sentencePieces(text) {
+  const chars = [...String(text || "")];
+  const out = [];
+  let cur = "";
+  for (let i = 0; i < chars.length; i++) {
+    cur += chars[i];
+    const c = chars[i],
+      next = chars[i + 1];
+    const end = /[。！？!?；;…\n]/.test(c) || (c === "." && (next === undefined || /\s/.test(next)));
+    if (!end || (next && /[”’」』）)"'。！？!?…]/.test(next))) continue;
+    while (chars[i + 1] && /[ \t\u3000]/.test(chars[i + 1])) cur += chars[++i];
+    out.push(cur);
+    cur = "";
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+// When the page's words do not fit on one page (also after sharing the
+// photos out): the photos as before, the words continued on the pages after
+// them, cut between sentences (inside one only when a single sentence is
+// longer than a page). Each page must pass the quality rules on its own.
+// Returns { parts: [[ids]…], texts: [text…] } (texts.join("") === title),
+// or null. Nothing is done here — the person sees the pages and decides.
+export function suggestTextSplit(input, styleId = "editorial", maxPages = 8) {
+  const text = String(input.title || "");
+  if (!text.trim()) return null;
+  const visuals = input.visuals || [];
+  const run = (vis, words, first) => layoutMoment({ ...input, visuals: vis, title: words, audio: first ? input.audio : [] }, styleId, 0);
+  const area = (r, vis) => vis.reduce((sum, v) => sum + (r.place[v.id] ? r.place[v.id].w * r.place[v.id].h : 0), 0);
+  // A page with photos keeps them as the subject: its words may take room
+  // from them only while they keep at least ~60% of the size they have alone.
+  const alone = new Map();
+  const fits = (vis, words, first) => {
+    const r = run(vis, words, first);
+    if (!r.quality.ok) return false;
+    // The words end clear of the folio at the foot of the page.
+    const line = r.layers.find((l) => l.bind === "title" && String(l.text || "").trim());
+    if (line && line.y + measuredBlock(line.text, line.fontSize, line.w, line.fontId, line.weight).height / 2 > 93) return false;
+    if (!vis.length || !String(words).trim()) return true;
+    const key = vis.map((v) => v.id).join("|");
+    if (!alone.has(key)) alone.set(key, area(run(vis, "", first), vis));
+    return area(r, vis) >= 0.6 * alone.get(key);
+  };
+  let photoParts = [visuals];
+  if (visuals.length && !fits(visuals, "", true)) {
+    const shared = suggestSplit({ ...input, title: "" }, styleId);
+    if (!shared) return null;
+    photoParts = shared.map((ids) => visuals.filter((v) => ids.includes(v.id)));
+  }
+  const pieces = sentencePieces(text);
+  const parts = [],
+    texts = [];
+  let k = 0;
+  for (let page = 0; page < maxPages; page++) {
+    const vis = photoParts[page] || [];
+    let cur = "";
+    while (k < pieces.length) {
+      if (fits(vis, cur + pieces[k], page === 0)) {
+        cur += pieces[k];
+        k++;
+        continue;
+      }
+      if (!cur) {
+        // One sentence longer than the room left: cut it where the page is
+        // full, after a comma or a space when there is one near. Beside
+        // photos only when a fair part of it fits; a page of words always.
+        const chars = [...pieces[k]];
+        let lo = 0,
+          hi = chars.length;
+        while (lo < hi) {
+          const mid = Math.ceil((lo + hi) / 2);
+          if (fits(vis, chars.slice(0, mid).join(""), page === 0)) lo = mid;
+          else hi = mid - 1;
+        }
+        for (let j = lo; j > lo * 0.7; j--)
+          if (/[，、,：:\s]/.test(chars[j - 1] || "")) {
+            lo = j;
+            break;
+          }
+        if (!vis.length && !lo) return null;
+        if (!vis.length || lo >= 20) {
+          cur = chars.slice(0, lo).join("");
+          pieces[k] = chars.slice(lo).join("");
+        }
+      }
+      break;
+    }
+    parts.push(vis.map((v) => v.id));
+    texts.push(cur);
+    if (k >= pieces.length && page >= photoParts.length - 1) break;
+  }
+  if (k < pieces.length || parts.length < 2) return null;
+  // A last page of words with only a line or two: share the last two pages
+  // of words more evenly (between sentences), when both still fit.
+  const n = texts.length;
+  if (n >= 2 && !parts[n - 1].length && !parts[n - 2].length && [...texts[n - 1]].length < 0.35 * [...texts[n - 2]].length) {
+    const both = sentencePieces(texts[n - 2] + texts[n - 1]);
+    const total = [...(texts[n - 2] + texts[n - 1])].length;
+    let best = null;
+    for (let i = 1, acc = ""; i < both.length; i++) {
+      acc += both[i - 1];
+      const rest = both.slice(i).join("");
+      const score = Math.abs([...acc].length - total / 2);
+      if ((!best || score < best.score) && fits([], acc, false) && fits([], rest, false)) best = { score, a: acc, b: rest };
+    }
+    if (best) [texts[n - 2], texts[n - 1]] = [best.a, best.b];
+  }
+  if (texts.join("") !== text) return null;
+  return { parts, texts };
 }

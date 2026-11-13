@@ -27,7 +27,8 @@ const startOf = (items) => {
   const times = items.map((item) => item.time).filter(Number.isFinite);
   return times.length ? Math.min(...times) : null;
 };
-const tidy = (groups) => groups.filter((g) => g.items.length).map((g) => ({ ...g, start: startOf(g.items) }));
+// A3: a page of only words (the rest of a long text) stays while it has words.
+const tidy = (groups) => groups.filter((g) => g.items.length || (g.wordsOnly && String(g.line || "").trim())).map((g) => ({ ...g, start: startOf(g.items) }));
 
 // Photos ([{ time: ms|null, ... }]) in shooting order, split wherever more
 // than `gap` minutes pass. A photo without a time keeps its place after the

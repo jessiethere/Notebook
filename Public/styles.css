@@ -21740,3 +21740,6 @@ body.typing .ctx-caption {
 }
 .rescue-actions button.primary { background: var(--ink, #3f3a33); color: #fff; border-color: transparent; }
 .rescue-note { font-size: 13px; opacity: 0.8; }
+/* A3: a page of only words in the photo groups; the words limit note. */
+.story-words-only { margin: 6px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.8; }
+.sw-count.full { color: var(--danger, #b4483c); white-space: normal; }

@@ -8890,5 +8890,25 @@
   "rescue.startNewConfirm": {
     "zh": "开始一本新的空白手帐？这台设备上没有找到旧手帐；之后仍可以在 设置 → 备份 里用备份文件恢复。",
     "en": "Start a new blank journal? No earlier journal was found on this device; you can still restore a backup file later in Settings → Backup."
+  },
+  "sw.full": {
+    "zh": "已经写到 {max} 字的上限。多出的字没有加进来，可以分成另一页继续写。",
+    "en": "You've reached the {max}-character limit. Extra text wasn't added — continue on another page."
+  },
+  "qe.split.wordsPage": {
+    "zh": "第 {n} 页 · 文字",
+    "en": "Page {n} · words"
+  },
+  "qe.split.wordsHint": {
+    "zh": "文字比一页能放下的多。照片留在第一页，后面的文字在下一页接着排，按句子分开，一个字都不少。",
+    "en": "There are more words than one page holds. The photos stay on the first page and the words continue on the next, split between sentences — nothing is left out."
+  },
+  "story.wordsOnly": {
+    "zh": "文字续页",
+    "en": "Words, continued"
+  },
+  "qe.split.keepWordsNote": {
+    "zh": "保持一页时，文字会完整保存，但页面上放不下的部分可能被挤出页面、看不全；随时可以再分页。",
+    "en": "If you keep one page, every word is still saved, but what doesn't fit may run off the page and not show in full; you can split it any time."
   }
 }

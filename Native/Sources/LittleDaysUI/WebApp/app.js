@@ -41,7 +41,7 @@ import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
-import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont, PAGE_RATIO, PAIR_KINDS, suggestSplit } from "./js/scrapbook-layout.mjs";
+import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont, PAGE_RATIO, PAIR_KINDS, suggestSplit, suggestTextSplit } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -3096,7 +3096,7 @@ function layerControls() {
       : "";
   const textTools =
     layer.kind === "text"
-      ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="300">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
+      ? `<label class="field">${t("layer.content")}<textarea data-layer-text="text" maxlength="${WORDS_MAX}">${esc(layer.text)}</textarea></label><label class="field">${t("studio.font")}<select data-layer-text="fontId">${fontOptions(layer.fontId || activePage().font)}</select></label><label>${t("studio.size")}<input data-layer-text="fontSize" type="range" min="10" max="50" value="${layer.fontSize || 16}"></label><label>${t("studio.weight")}<input data-layer-text="weight" type="range" min="100" max="900" step="100" value="${layer.weight || 400}"></label><label>${t("studio.spacing")}<input data-layer-text="spacing" type="range" min="0" max="5" step=".5" value="${layer.spacing || 0}"></label><label>${t("studio.textColor")}<input data-layer-text="color" type="color" value="${layer.color || "#2F2A26"}"></label><label>${t("layer.align")}<select data-layer-text="align">${["left", "center", "right"].map((a) => `<option value="${a}" ${(layer.align || "left") === a ? "selected" : ""}>${t("layer." + a)}</option>`).join("")}</select></label>`
       : "";
   // V10.20: a photo's shape (and frame) has its own sheet; what shows inside
   // it is the crop editor. This sheet keeps place, size, turn and order.
@@ -3727,6 +3727,7 @@ function typedMarks(target, field, value, composing) {
 }
 function inlineInput(target, event) {
   const text = target.innerText.replace(/\n$/, "");
+  if (text.length > WORDS_MAX) toast(t("sw.full", { max: WORDS_MAX }));
   const composing = Boolean(event?.isComposing) || composeBase?.el === target;
   const redraw = (value, result) => {
     if (result.caret != null) {
@@ -3747,7 +3748,7 @@ function inlineInput(target, event) {
       if (layer.bind === "caption") {
         // V10.19: a photo's own words live on that photo (found by its id).
         const photo = page.layers.find((l) => l.id === layer.captionOf);
-        shown = text.slice(0, 120);
+        shown = text.slice(0, WORDS_MAX);
         if (photo) {
           if (shown.trim()) photo.caption = shown;
           else delete photo.caption;
@@ -3755,7 +3756,7 @@ function inlineInput(target, event) {
       } else if (layer.bind) {
         // Words bound to a Moment: edit the Moment itself (one source of truth).
         const source = layer.of ? findMoment(editor, layer.of) : page;
-        shown = text.slice(0, layer.bind === "time" ? 12 : 70);
+        shown = text.slice(0, layer.bind === "time" ? 12 : WORDS_MAX);
         if (field) result = typedMarks(target, field, shown, composing);
         if (source) source[layer.bind === "time" ? "time" : "title"] = shown;
       } else {
@@ -3879,7 +3880,7 @@ function writeCardHTML() {
   // A note or a photo + one line page: the words are on the paper itself.
   if (["text", "line", "smart"].includes(page.layoutTemplate)) return "";
   // A free layout: the page is the picture; these words go under it.
-  return `<section class="write-card moment" aria-label="${t("write.title")}">${head}<label class="write-label">${t("write.pageName")}</label><input class="write-title" data-moment-field="title" maxlength="70" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><label class="write-label">${t("write.caption")}</label><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><p class="write-tip">${icon("text")} ${t("write.layoutTip")}</p>${tags}</section>`;
+  return `<section class="write-card moment" aria-label="${t("write.title")}">${head}<label class="write-label">${t("write.pageName")}</label><input class="write-title" data-moment-field="title" maxlength="${WORDS_MAX}" placeholder="${t("moment.titlePlaceholder")}" value="${esc(page.title)}" aria-label="${t("moment.titleLabel")}"><label class="write-label">${t("write.caption")}</label><textarea class="write-body" data-moment-field="body" maxlength="4000" placeholder="${t("moment.bodyPlaceholder")}" aria-label="${t("moment.bodyLabel")}">${esc(page.body)}</textarea><p class="write-tip">${icon("text")} ${t("write.layoutTip")}</p>${tags}</section>`;
 }
 function studioTools() {
   const page = activePage(),
@@ -4610,7 +4611,8 @@ function makeStory() {
     changeEditor((entry) => {
       created = createMoment(entry, { time: clockLabel(group.start) });
       created.bookId = story.book;
-      created.title = (group.line || "").trim().slice(0, 70);
+      // A3: the words exactly as written (a long text continued over pages joins back to the same text).
+      created.title = String(group.line || "").trim() ? group.line : "";
       created.layoutTemplate = "scrapbook";
       created.layoutStyle = story.style;
       created.layoutVariant = 0;
@@ -4652,7 +4654,7 @@ function storyPage() {
   const total = story.groups.reduce((n, g) => n + g.items.length, 0);
   if (story.step === "group") {
     const cards = story.groups
-      .map((group, g) => `${g ? `<div class="story-split" aria-hidden="true"><span></span>${t("story.splitHere")}<span></span></div>` : ""}<section class="story-group tone-${partOfDay(group.start) || "none"}"><header><b>${esc(storyTimeLabel(group))}</b><small>${t("story.photos", { count: group.items.length })}</small></header><div class="story-thumbs">${group.items
+      .map((group, g) => `${g ? `<div class="story-split" aria-hidden="true"><span></span>${t("story.splitHere")}<span></span></div>` : ""}<section class="story-group tone-${partOfDay(group.start) || "none"}"><header><b>${esc(storyTimeLabel(group))}</b><small>${group.items.length ? t("story.photos", { count: group.items.length }) : t("story.wordsOnly")}</small></header>${group.items.length ? "" : `<p class="story-words-only">${esc(String(group.line || "").slice(0, 120))}${[...String(group.line || "")].length > 120 ? "…" : ""}</p>`}<div class="story-thumbs">${group.items
         .map((item, i) => {
           const on = story.selected?.g === g && story.selected?.i === i;
           return `<button class="story-thumb ${on ? "selected" : ""}" data-action="story-photo" data-g="${g}" data-i="${i}" aria-pressed="${on}" aria-label="${esc(item.name || t("photo.alt"))}"><img src="${esc(storyPhoto(item))}" alt=""></button>`;
@@ -4741,9 +4743,15 @@ function storySplitFor(current) {
   if (story.splits[m.id]?.sig !== sig) {
     const day = new Date(`${story.date}T12:00:00`);
     const input = { visuals: photos.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: m.layers.filter((l) => l.kind === "audio").map((l) => ({ id: l.id })), title: m.title, time: m.time, folio: `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`, type: m.typeStyle, measure: measureWords };
-    story.splits[m.id] = { sig, parts: suggestSplit(input, styleOf(m.layoutStyle || story.style)) };
+    const style = styleOf(m.layoutStyle || story.style);
+    // The photos over more pages first; when the words are what does not
+    // fit (A3), the words continue on the pages after (cut between sentences).
+    const parts = suggestSplit(input, style);
+    const byText = parts ? null : suggestTextSplit(input, style);
+    story.splits[m.id] = { sig, parts: parts || byText?.parts || null, texts: byText?.texts || null };
   }
-  return story.splits[m.id].parts ? { m, parts: story.splits[m.id].parts } : null;
+  const found = story.splits[m.id];
+  return found.parts ? { m, parts: found.parts, texts: found.texts } : null;
 }
 function storySplitHTML(current, { force = false } = {}) {
   if (story.panel && !force) return "";
@@ -4753,14 +4761,15 @@ function storySplitHTML(current, { force = false } = {}) {
   const pages = s.parts.map((ids, i) => {
     const copy = structuredClone(s.m);
     copy.layers = copy.layers.filter((l) => !l.gen && !l.deco && !(visualLayers(s.m).some((v) => v.id === l.id) && !ids.includes(l.id)) && !(l.kind === "audio" && i > 0));
-    if (i > 0) copy.title = "";
+    if (s.texts) copy.title = s.texts[i];
+    else if (i > 0) copy.title = "";
     copy.layoutVariant = 0;
     copy.layoutEdited = false;
     layoutStoryPage(copy, false);
-    return `<figure>${mini(copy)}<figcaption>${t("qe.split.page", { n: i + 1, count: ids.length })}</figcaption></figure>`;
+    return `<figure>${mini(copy)}<figcaption>${ids.length ? t("qe.split.page", { n: i + 1, count: ids.length }) : t("qe.split.wordsPage", { n: i + 1 })}</figcaption></figure>`;
   });
   const n = s.parts.length;
-  return `<section class="qe-panel qe-split" aria-label="${esc(t("qe.split.title", { n }))}"><header><span><b>${t("qe.split.title", { n })}</b><small>${t("qe.split.hint")}</small></span></header><div class="qe-split-pages"><figure class="now">${mini(s.m)}<figcaption>${t("qe.split.now")}</figcaption></figure>${pages.join("")}</div><div class="qe-row"><button class="secondary" data-action="story-keep-one">${t("qe.split.keep")}</button><button class="primary" data-action="story-split-pages">${t("qe.split.do", { n })}</button></div><p class="qe-hint">${t("qe.split.keepNote")}</p></section>`;
+  return `<section class="qe-panel qe-split" aria-label="${esc(t("qe.split.title", { n }))}"><header><span><b>${t("qe.split.title", { n })}</b><small>${t(s.texts ? "qe.split.wordsHint" : "qe.split.hint")}</small></span></header><div class="qe-split-pages"><figure class="now">${mini(s.m)}<figcaption>${t("qe.split.now")}</figcaption></figure>${pages.join("")}</div><div class="qe-row"><button class="secondary" data-action="story-keep-one">${t("qe.split.keep")}</button><button class="primary" data-action="story-split-pages">${t("qe.split.do", { n })}</button></div><p class="qe-hint">${t(s.texts ? "qe.split.keepWordsNote" : "qe.split.keepNote")}</p></section>`;
 }
 function storyPanelHTML(current, total) {
   const notice = (story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "") + storySplitHTML(current);
@@ -4906,6 +4915,15 @@ document.addEventListener("toggle", (event) => {
   if (event.target.matches?.(".sw-more")) swTypeOpen = event.target.open;
 }, true);
 let storyWordsTimer = 0;
+// A3 · Words are never cut to fit. WORDS_MAX is only a safety net (the same
+// as a page's body text); near it the count shows, and at it the person is
+// told, instead of typing that silently goes nowhere.
+const WORDS_MAX = 4000;
+function wordsCountHTML(value) {
+  const n = [...String(value || "")].length;
+  if (n < WORDS_MAX - 400) return `<small class="sw-count" aria-live="polite" hidden></small>`;
+  return `<small class="sw-count ${n >= WORDS_MAX ? "full" : ""}" aria-live="polite">${n >= WORDS_MAX ? esc(t("sw.full", { max: WORDS_MAX })) : `${n} / ${WORDS_MAX}`}</small>`;
+}
 const storyPhotosOf = (m) => (m?.layers || []).filter((l) => l.kind === "photo" && l.mediaRef && !l.gen && !l.drawing && !l.deco);
 function storyTypePage() {
   const current = storyPages()[story.index];
@@ -4931,11 +4949,14 @@ function storyWordsHTML() {
   const photo = photos.find((p) => p.id === target);
   const index = photo ? photos.indexOf(photo) : -1;
   const value = photo ? photo.caption || "" : m.title || "";
-  const max = photo ? 120 : 70;
+  // A3: no small cap — long words become body text, and a page that can't
+  // hold them suggests another page. The limit is only a safety net, and
+  // the count shows when it comes near.
+  const max = WORDS_MAX;
   const now = photo
     ? `<img src="${esc(safePhoto(photo.mediaRef))}" alt=""><span><b>${t("sw.photoOf", { n: index + 1, count: photos.length })}</b><small>${t("sw.photoHint")}</small></span>`
     : `<span class="sw-glyph" aria-hidden="true">Aa</span><span><b>${t("sw.whole")}</b><small>${t("sw.wholeHint")}</small></span>`;
-  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea><small class="sw-count" aria-live="polite">${[...value].length} / ${max}</small></div><p class="sw-optional">${t("qe.optional")}</p><details class="sw-more" ${swTypeOpen ? "open" : ""}><summary>${t("qe.typeMore")}</summary>${storyTypeHTML()}</details>`;
+  return `${momentTabs}<div class="sw-strip" role="tablist" aria-label="${t("sw.strip")}">${items}</div><div class="sw-edit"><div class="sw-now">${now}</div><textarea data-sw-text rows="2" maxlength="${max}" placeholder="${esc(photo ? t("sw.photoPlaceholder") : t("story.linePlaceholder"))}" aria-label="${esc(photo ? t("sw.photoOf", { n: index + 1, count: photos.length }) : t("sw.whole"))}">${esc(value)}</textarea>${wordsCountHTML(value)}</div><p class="sw-optional">${t("qe.optional")}</p><details class="sw-more" ${swTypeOpen ? "open" : ""}><summary>${t("qe.typeMore")}</summary>${storyTypeHTML()}</details>`;
 }
 // The type for this page: the same fonts and colours as Journal Studio.
 function storyTypeHTML() {
@@ -4989,9 +5010,9 @@ function revealStoryTarget() {
 }
 // Typed words: kept at once on the Moment / photo; the page follows shortly.
 function storyWordsInput(field) {
-  const value = field.value.slice(0, Number(field.maxLength) || 120);
+  const value = field.value;
   const count = $("#choose-dialog .sw-count");
-  if (count) count.textContent = `${[...value].length} / ${field.maxLength}`;
+  if (count) count.outerHTML = wordsCountHTML(value);
   const { momentId, target } = storyWords;
   const m = findMoment(editor, momentId);
   if (!m) return;
@@ -5025,7 +5046,6 @@ function relayoutStoryWords(momentIds = []) {
   changeEditor((entry) => {
     for (const momentId of momentIds) {
       const m = findMoment(entry, momentId);
-      if (m) m.title = (m.title || "").slice(0, 70);
       if (m?.layoutEdited) addMissingCaptions(m);
     }
   }, false);
@@ -5168,12 +5188,26 @@ async function storyAction(actionName, target) {
     const g = story.made.ids.indexOf(current?.page.id);
     if (!s || g < 0) return;
     const type = s.m.typeStyle ? { ...s.m.typeStyle } : null;
+    // Every page keeps the words it has now (by its place, before the cut).
+    story.groups = story.groups.map((group, k) => ({ ...group, line: findMoment(editor, story.made.ids[k])?.title ?? group.line, keepLine: true }));
+    if (s.texts) {
+      // A3: the words continue on the pages after the photos. The photos go
+      // where the suggestion put them; a page of only words has no photos.
+      const refOf = new Map(visualLayers(s.m).map((l) => [l.id, l.mediaRef]));
+      const group = story.groups[g];
+      const pages = s.parts.map((ids, i) => ({ ...group, items: group.items.filter((item) => ids.some((lid) => refOf.get(lid) === item.reference)), line: s.texts[i], typeStyle: type, keepLine: true, ...(ids.length ? {} : { wordsOnly: true }) }));
+      story.groups.splice(g, 1, ...pages);
+      logEvent("qe_split", { pages: s.parts.length, words: true });
+      return storyAction("story-regroup", target);
+    }
     let at = g;
     for (const part of s.parts.slice(0, -1)) {
       story.groups = splitAt(story.groups, at, part.length);
       at++;
     }
     for (let k = g; k <= at; k++) if (story.groups[k]) story.groups[k].typeStyle = type;
+    // The new pages start without a line of their own (the line stays on the first).
+    story.groups = story.groups.map((group) => ({ ...group, line: group.line || "", keepLine: true }));
     logEvent("qe_split", { pages: s.parts.length });
     return storyAction("story-regroup", target);
   }
@@ -5269,7 +5303,7 @@ async function storyAction(actionName, target) {
       const first = (m?.layers || []).find((l) => l.kind === "photo" && l.mediaRef && !l.gen);
       if (m?.typeStyle && first) types.set(first.mediaRef, m.typeStyle);
     }
-    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "", typeStyle: types.get(g.items[0]?.reference) || g.typeStyle || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
+    story.groups = story.groups.map(({ keepLine, ...g }) => ({ ...g, line: keepLine || !g.items.length ? g.line || "" : lines.get(g.items[0]?.reference) || "", typeStyle: (keepLine && g.typeStyle) || types.get(g.items[0]?.reference) || g.typeStyle || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
     story.selected = null;
     return makeStory();
   }
@@ -5986,8 +6020,9 @@ function startTitleEdit(el) {
   const finish = (keep) => {
     el.removeEventListener("blur", onBlur);
     el.removeEventListener("keydown", onKey);
-    const title = el.textContent.replace(/\s+/g, " ").trim().slice(0, 70);
-    if (keep && title !== original) {
+    const title = el.textContent.replace(/\s+/g, " ").trim();
+    // A3: nothing cut; an unchanged title is never rewritten (its line breaks stay).
+    if (keep && title !== original.replace(/\s+/g, " ").trim()) {
       store.update((next) => {
         for (const day of readCopies(date)(next)) {
           const page = moment ? findMoment(day, moment) : day;
@@ -7704,7 +7739,7 @@ document.addEventListener("input", (event) => {
   const target = event.target;
   if (target.dataset?.storyLine != null && story) {
     const group = story.groups[Number(target.dataset.storyLine)];
-    if (group) group.line = target.value.slice(0, 70);
+    if (group) group.line = target.value;
     return;
   }
   if (target.dataset?.musicVolume != null) {
