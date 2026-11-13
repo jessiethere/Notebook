@@ -1,4 +1,4 @@
-// Journal Studio · a light, three-step guide (V10.12): pure helpers.
+// Journal Studio · a light guide (V10.12; four steps since V10.25): pure helpers.
 //
 // The guide points at the real things on the paper — it never shows a gesture
 // the editor does not have. Whether it has been seen is a preference of this
@@ -14,10 +14,14 @@
 export const GUIDE_KEY = "little-days.studio-guide";
 
 // Each step names what it points at, in order of preference.
+// V10.25: four steps that follow the editor's three layers — add things
+// (照片 · 文字 · 贴纸), move them (tap, drag, double-tap words), change the
+// selected one (its own tools, ← 返回), and the whole page (更多).
 export const STEPS = [
+  { id: "add", title: "guide.add.title", body: "guide.add.body", targets: ["dock"] },
   { id: "move", title: "guide.move.title", body: "guide.move.body", targets: ["photo", "sticker", "text", "any", "paper"] },
-  { id: "type", title: "guide.type.title", body: "guide.type.body", targets: ["text", "addText"] },
   { id: "adjust", title: "guide.adjust.title", body: "guide.adjust.body", targets: ["selected", "photo", "sticker", "text", "any", "paper"] },
+  { id: "more", title: "guide.more.title", body: "guide.more.body", targets: ["more"] },
 ];
 
 export function loadGuide(storage = globalThis.localStorage) {
@@ -74,6 +78,8 @@ export function stepTarget(step, layers = [], selectedId = null) {
     else if (want === "text") layer = first((l) => l.kind === "text");
     else if (want === "any") layer = shown[0] || null;
     else if (want === "addText") return { kind: "addText" };
+    else if (want === "dock") return { kind: "dock" };
+    else if (want === "more") return { kind: "more" };
     else if (want === "paper") return { kind: "paper" };
     if (layer) return { kind: "layer", id: layer.id, layerKind: layer.kind };
   }

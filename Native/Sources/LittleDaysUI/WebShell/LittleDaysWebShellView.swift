@@ -223,16 +223,34 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
         // without touching the screen (tools/mac/sim-shots.sh). It only clicks
         // what a person could tap; it reads and sends nothing.
         guard let steps = UserDefaults.standard.string(forKey: "LittleDaysTap"), !steps.isEmpty else { return }
-        let selectors = steps.components(separatedBy: "||").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        // A step "upload:<input selector>|<file path on the Mac>|<mime>" (P0
+        // media test, Debug only) gives that test file to the page's own file
+        // input, as the photo picker would; everything after that is the app's
+        // real import and save path. "wait:<ms>" pauses. Others are taps.
+        let selectors: [Any] = steps.components(separatedBy: "||").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.map { step -> Any in
+            guard step.hasPrefix("upload:") else { return step }
+            let parts = String(step.dropFirst(7)).components(separatedBy: "|")
+            guard parts.count == 3, let bytes = FileManager.default.contents(atPath: parts[1]) else { return "wait:10" }
+            return ["selector": parts[0], "name": (parts[1] as NSString).lastPathComponent, "mime": parts[2], "b64": bytes.base64EncodedString()]
+        }
         guard let data = try? JSONSerialization.data(withJSONObject: selectors), let list = String(data: data, encoding: .utf8) else { return }
         let script = """
         void (async (steps) => {
           const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
           for (let i = 0; i < 150 && !document.querySelector('#navigation [data-page]'); i++) await wait(100);
-          for (const selector of steps) {
+          for (const step of steps) {
+            if (typeof step === 'string' && step.startsWith('wait:')) { await wait(Number(step.slice(5)) || 0); continue; }
+            const selector = typeof step === 'string' ? step : step.selector;
             let el = null;
             for (let i = 0; i < 50 && !(el = document.querySelector(selector)); i++) await wait(100);
-            if (el) el.click();
+            if (el && typeof step !== 'string') {
+              const bin = atob(step.b64), bytes = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+              const files = new DataTransfer();
+              files.items.add(new File([bytes], step.name, { type: step.mime }));
+              el.files = files.files;
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+            } else if (el) el.click();
             await wait(800);
           }
         })(\(list));

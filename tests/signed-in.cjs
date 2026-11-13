@@ -158,8 +158,32 @@ const dockReady = async (target) => {
   });
 };
 module.exports.studioTool = async (target, id) => {
+  // V10.25: 目录 is reached from 页面目录 (More → 页面目录 → 更多页面操作).
+  if (id === "chapters") {
+    const sheet = target.locator('.tool-sheet[data-tool-row="chapters"]');
+    if (await sheet.count()) return sheet;
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="open-pages"]').click();
+    await target.locator('#choose-dialog[open] [data-action="pages-more"]').click();
+    await sheet.waitFor();
+    return sheet;
+  }
+  // V10.24: mood is chosen in 页面信息 (More → 心情 opens it at the picker).
+  if (id === "mood") {
+    await module.exports.studioMore(target);
+    await target.locator('.more-grid [data-action="mood-open"]').click();
+    const details = target.locator('.tool-sheet[data-tool-row="details"]');
+    await details.locator("#mood-picker").waitFor();
+    return details;
+  }
   const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
-  if (await sheet.count()) return sheet;
+  // V10.25: 图层 shows order / copy first; older suites use the exact numbers
+  // and a text's words, which are folded under 精确调整 — open it for them.
+  const precise = async () => {
+    if (id === "layer" && (await sheet.locator("details.layer-precise:not([open]) > summary").count())) await sheet.locator("details.layer-precise > summary").click();
+    return sheet;
+  };
+  if (await sheet.count()) return precise();
   await dockReady(target);
   // With something selected the bottom row is that item's tools (V10.1):
   // 图层 is there; for any other tool, × returns to the four tools first.
@@ -167,7 +191,7 @@ module.exports.studioTool = async (target, id) => {
     if (await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).count()) {
       await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).click();
       await sheet.waitFor();
-      return sheet;
+      return precise();
     }
     await target.locator('.tool-dock.ctx [data-action="layer-deselect"]').click();
     await target.locator(".tool-dock:not(.ctx)").waitFor();
@@ -178,7 +202,7 @@ module.exports.studioTool = async (target, id) => {
     await target.locator(`.more-grid [data-tool="${id}"]`).click();
   }
   await sheet.waitFor();
-  return sheet;
+  return precise();
 };
 module.exports.studioMore = (target) => module.exports.studioTool(target, "more");
 // Date · journal · time · name · caption · tags · delete.

@@ -2368,8 +2368,8 @@
     "en": "Mood"
   },
   "tool.stickers": {
-    "zh": "贴纸与文字框",
-    "en": "Stickers & text boxes"
+    "zh": "贴纸",
+    "en": "Stickers"
   },
   "tool.media": {
     "zh": "声音与影像",
@@ -3312,8 +3312,8 @@
     "en": "Put on the page"
   },
   "media.offPage": {
-    "zh": "从纸上拿下",
-    "en": "Take off the page"
+    "zh": "不放在纸上",
+    "en": "Off the paper"
   },
   "layout.textConfirm": {
     "zh": "改成“只有文字”？这一页的照片会从纸上移开（照片文件仍保存在本机，可以撤销）。",
@@ -3328,7 +3328,7 @@
     "en": "Photos"
   },
   "dock.layout": {
-    "zh": "版式",
+    "zh": "排版",
     "en": "Layout"
   },
   "dock.font": {
@@ -4356,12 +4356,12 @@
     "en": "Remove photo"
   },
   "poster.title": {
-    "zh": "选择视频封面",
-    "en": "Choose a video cover"
+    "zh": "更换封面",
+    "en": "Change the cover"
   },
   "poster.help": {
-    "zh": "拖动滑块选一帧当封面，或者上传一张自己的图片。",
-    "en": "Slide to pick a frame, or upload a picture of your own."
+    "zh": "拖动时间轴选一帧，上面会马上显示；也可以上传一张自己的图片。原视频不会被改动。",
+    "en": "Drag along the timeline to pick a frame — it shows above right away — or upload a picture. The video itself is not changed."
   },
   "poster.frame": {
     "zh": "画面",
@@ -5292,8 +5292,8 @@
     "en": "Arrange"
   },
   "pages.title": {
-    "zh": "整理这一天",
-    "en": "Arrange this day"
+    "zh": "页面目录",
+    "en": "Pages"
   },
   "pages.help": {
     "zh": "封面是这一天的一句话总结（可以不写）；下面每一页记录一件事，可以调整顺序或删除。",
@@ -7512,16 +7512,16 @@
     "en": "Got it"
   },
   "guide.move.title": {
-    "zh": "移动元素",
-    "en": "Move things around"
+    "zh": "摆位置",
+    "en": "Place them"
   },
   "guide.move.body": {
-    "zh": "按住并拖动，给照片和文字换个位置。",
-    "en": "Press and drag to give a photo or your words a new spot."
+    "zh": "点一下选中，按住拖动换位置；双击文字可以直接改。",
+    "en": "Tap to select, press and drag to move; double-tap words to change them."
   },
   "guide.move.bodyEmpty": {
-    "zh": "放上照片或文字后，按住并拖动，就能给它们换个位置。",
-    "en": "Once a photo or some words are on the page, press and drag to move them."
+    "zh": "放上照片或文字后：点一下选中，拖动换位置；双击文字可以直接改。",
+    "en": "Once something is on the page: tap to select, drag to move; double-tap words to change them."
   },
   "guide.type.title": {
     "zh": "编辑文字",
@@ -7536,16 +7536,16 @@
     "en": "Tap Text below to add a text box, then double-tap it to start writing."
   },
   "guide.adjust.title": {
-    "zh": "调整布局",
-    "en": "Adjust the layout"
+    "zh": "改它",
+    "en": "Change it"
   },
   "guide.adjust.body": {
-    "zh": "轻点选中元素，用控制点调整：拖动上方的 ↻ 转角度，拖动角上的圆点改大小。",
-    "en": "Tap to select, then use the handles: drag ↻ above to turn it, the corner dot to resize."
+    "zh": "选中以后，下面就是它的工具；角上的圆点改大小，上方的 ↻ 转角度。点「← 返回」回到创作工具。",
+    "en": "Once selected, its tools are below; the corner dot resizes, ↻ above turns it. ← Back returns to the creation tools."
   },
   "guide.adjust.bodyEmpty": {
-    "zh": "放上内容后，轻点选中它，再用控制点调整大小和角度。",
-    "en": "Once something is on the page, tap to select it and use the handles to resize and turn it."
+    "zh": "放上内容后选中它，下面就会换成它的工具；点「← 返回」回到创作工具。",
+    "en": "Once something is on the page, select it and its tools appear below; ← Back returns."
   },
   "guide.tip.dblTap": {
     "zh": "双击即可编辑文字",
@@ -8314,5 +8314,217 @@
   "check.e.media_check": {
     "zh": "运行了检查",
     "en": "Check run"
+  },
+  "import.titleVideo": {
+    "zh": "导入视频",
+    "en": "Importing a video"
+  },
+  "import.titleAudio": {
+    "zh": "导入声音",
+    "en": "Importing a sound"
+  },
+  "import.import": {
+    "zh": "正在读取视频信息…",
+    "en": "Reading the file…"
+  },
+  "import.read": {
+    "zh": "正在导入 {pct}%",
+    "en": "Importing {pct}%"
+  },
+  "import.write": {
+    "zh": "正在保存到本机…",
+    "en": "Saving to this device…"
+  },
+  "import.cover": {
+    "zh": "正在生成封面…",
+    "en": "Making a cover…"
+  },
+  "import.done": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
+  },
+  "import.failed": {
+    "zh": "保存失败",
+    "en": "Not saved"
+  },
+  "import.lockNote": {
+    "zh": "保存完成前，暂时不能切换页面或离开编辑。",
+    "en": "Pages can't be switched until it is saved."
+  },
+  "import.doneNote": {
+    "zh": "可以继续编辑、切换页面了。",
+    "en": "You can switch pages now."
+  },
+  "import.failedNote": {
+    "zh": "没有存进这台设备，页面没有变化。可以重试，文件还在。",
+    "en": "It was not stored on this device and the page is unchanged. You can retry — the file is still here."
+  },
+  "import.retry": {
+    "zh": "重试",
+    "en": "Retry"
+  },
+  "import.dismissVideo": {
+    "zh": "不要这个视频",
+    "en": "Discard this video"
+  },
+  "import.dismissAudio": {
+    "zh": "不要这个声音",
+    "en": "Discard this sound"
+  },
+  "import.busy": {
+    "zh": "视频正在保存到本机，完成后就可以切换页面。",
+    "en": "The video is being saved on this device — you can switch pages once it's done."
+  },
+  "import.tooBigVideo": {
+    "zh": "视频超过 50 MB，请先在相册里剪短再导入。",
+    "en": "The video is over 50 MB — trim it in Photos first."
+  },
+  "import.tooBigAudio": {
+    "zh": "声音文件超过 20 MB。",
+    "en": "The sound file is over 20 MB."
+  },
+  "import.failedToast": {
+    "zh": "没能保存到本机，可以点「重试」。",
+    "en": "Couldn't save it on this device — tap Retry."
+  },
+  "poster.change": {
+    "zh": "换封面",
+    "en": "Cover"
+  },
+  "poster.done": {
+    "zh": "完成",
+    "en": "Done"
+  },
+  "poster.current": {
+    "zh": "现在的封面",
+    "en": "Current cover"
+  },
+  "media.removeFromPage": {
+    "zh": "从页面移除",
+    "en": "Remove from page"
+  },
+  "media.removeShort": {
+    "zh": "移除",
+    "en": "Remove"
+  },
+  "media.removeConfirm": {
+    "zh": "把它从这一页移除？可以撤销；文件仍保存在这台设备上。",
+    "en": "Remove it from this page? You can undo; the file stays on this device."
+  },
+  "media.removed": {
+    "zh": "已从这一页移除，可以撤销。",
+    "en": "Removed from this page — undo brings it back."
+  },
+  "media.savedLocal": {
+    "zh": "已保存到本机",
+    "en": "Saved on this device"
+  },
+  "mood.happy": {
+    "zh": "开心",
+    "en": "Happy"
+  },
+  "mood.warm": {
+    "zh": "温暖",
+    "en": "Warm"
+  },
+  "mood.calm": {
+    "zh": "平静",
+    "en": "Calm"
+  },
+  "mood.low": {
+    "zh": "低落",
+    "en": "Low"
+  },
+  "mood.excited": {
+    "zh": "雀跃",
+    "en": "Excited"
+  },
+  "mood.hint": {
+    "zh": "可选 · 只记在这一页，不会画到纸上",
+    "en": "Optional · kept with this page, never drawn on it"
+  },
+  "mood.clear": {
+    "zh": "清除",
+    "en": "Clear"
+  },
+  "mood.coverNote": {
+    "zh": "心情记在每一页上：打开某一页，在「页面信息」里选。",
+    "en": "Mood belongs to each page: open a page and choose it in Page details."
+  },
+  "ctx.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "ctx.backLabel": {
+    "zh": "返回创作工具",
+    "en": "Back to the creation tools"
+  },
+  "ctx.selected": {
+    "zh": "已选中",
+    "en": "selected"
+  },
+  "ctx.selectedLabel": {
+    "zh": "{kind} · 已选中",
+    "en": "{kind} · selected"
+  },
+  "sticker.swap": {
+    "zh": "换一个",
+    "en": "Swap"
+  },
+  "sticker.swapped": {
+    "zh": "已换成新的贴纸",
+    "en": "Sticker swapped"
+  },
+  "layer.precise": {
+    "zh": "精确调整",
+    "en": "Exact position & size"
+  },
+  "more.pageFont": {
+    "zh": "页面字体",
+    "en": "Page font"
+  },
+  "more.toc": {
+    "zh": "页面目录",
+    "en": "Pages"
+  },
+  "more.groupLook": {
+    "zh": "页面外观",
+    "en": "Page look"
+  },
+  "more.groupMake": {
+    "zh": "媒体与创作",
+    "en": "Media & making"
+  },
+  "more.groupPages": {
+    "zh": "页面管理",
+    "en": "Pages & info"
+  },
+  "pages.copyLabel": {
+    "zh": "复制这一页",
+    "en": "Copy this page"
+  },
+  "pages.copied": {
+    "zh": "已复制这一页",
+    "en": "Page copied"
+  },
+  "guide.add.title": {
+    "zh": "加东西",
+    "en": "Add things"
+  },
+  "guide.add.body": {
+    "zh": "从这里放照片、写字、贴贴纸。",
+    "en": "Put in photos, words and stickers from here."
+  },
+  "guide.more.title": {
+    "zh": "改整页",
+    "en": "The whole page"
+  },
+  "guide.more.body": {
+    "zh": "背景与纸张、排版、手绘、页面目录、页面信息都在「更多」里。",
+    "en": "Background & paper, layout, drawing, pages and page details are all in More."
+  },
+  "pages.more": {
+    "zh": "更多页面操作（只保存这一页、折叠）",
+    "en": "More page actions (save one page, fold)"
   }
 }

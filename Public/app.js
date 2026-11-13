@@ -1,4 +1,4 @@
-import { MediaStore, migrateLegacyPhotos, mediaReferences } from "./js/media.mjs";
+import { MediaStore, migrateLegacyPhotos, mediaReferences, errName } from "./js/media.mjs";
 import * as MediaCheck from "./js/media-check.mjs";
 import {
   configureI18n,
@@ -230,6 +230,10 @@ let media = new MediaStore(),
   recordingTargetId = null;
 // V10.22: what went wrong with a file goes to the local log (see media-check.mjs).
 media.onEvent = (name, data) => logEvent(name, data);
+// V10.25: 精确调整 in 图层 stays open / closed as the person left it.
+document.addEventListener("toggle", (event) => {
+  if (event.target.matches?.("details.layer-precise")) layerPreciseOpen = event.target.open;
+}, true);
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
@@ -514,7 +518,7 @@ function openStudio(date = dateKey()) {
         date,
         title: "",
         body: "",
-        mood: "☀️",
+        mood: "",
         bookId: "daily",
         photo: "",
         template: "cute",
@@ -2963,6 +2967,7 @@ function photoRegion() {
   return isDayPage() ? { top: 4, bottom: 60 } : { top: 4, bottom: 96 };
 }
 
+let layerPreciseOpen = false;
 function layerControls() {
   const layer = selectedLayerOf();
   if (!layer) return "";
@@ -3023,7 +3028,9 @@ function layerControls() {
   // it is the crop editor. This sheet keeps place, size, turn and order.
   void shapes;
   void photoTools;
-  return `<div class="layer-controls">${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+  // V10.25: what 图层 is for comes first (order, copy); exact numbers and a
+  // text's words / font (also under 编辑 and 字体) fold away in 精确调整.
+  return `<div class="layer-controls"><div class="layer-buttons"><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-copy">${t("copy")}</button></div><details class="layer-precise" ${layerPreciseOpen ? "open" : ""}><summary>${t("layer.precise")}</summary>${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}</details></div>`;
 }
 
 // V10.20 · 形状: the frame's shape first (no scrolling), then its paper edge.
@@ -3060,7 +3067,10 @@ function chapterChipsHTML() {
   // thing that happened. They sit side by side, cover first.
   const hasCover = hasDayPageContent(editor);
   const cover = `<button class="chapter-chip cover-chip ${activeMomentId ? "" : "active"} ${hasCover ? "" : "empty"}" data-action="select-moment" data-moment="" aria-pressed="${!activeMomentId}"><i class="chip-num" aria-hidden="true">${t("strip.coverShort")}</i>${pageThumbHTML(editor, true)}<span class="chip-text"><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></span></button>`;
-  return `<nav class="chapter-chips page-strip" aria-label="${t("moment.title")}">${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
+  // V10.23: while a file is being saved the strip is shown paused (not only a toast after a tap).
+  // (only while a video / sound is imported: that flow redraws when it starts and ends)
+  const locked = busyMedia && mediaImport && !["done", "failed"].includes(mediaImport.stage);
+  return `<nav class="chapter-chips page-strip${locked ? " locked" : ""}" aria-label="${t("moment.title")}"${locked ? ` aria-disabled="true" title="${esc(t("import.busy"))}"` : ""}>${cover}<span class="strip-divider" aria-hidden="true"></span>${moments
     .map(
       (moment, index) =>
         `<span class="chapter-chip-wrap"><button class="chapter-chip ${moment.id === activeMomentId ? "active" : ""}" data-action="select-moment" data-moment="${esc(moment.id)}" aria-pressed="${moment.id === activeMomentId}"><i class="chip-num" aria-hidden="true">${index + 1}</i>${pageThumbHTML(moment)}<span class="chip-text"><small>${t("moment.chapter", { number: String(index + 1).padStart(2, "0") })}${moment.time ? " · " + esc(moment.time) : ""}</small><b data-chapter-label="${esc(moment.id)}">${esc(moment.title || t("moment.untitled"))}</b></span>${badges(moment)}</button>${moment.id === activeMomentId ? `<button class="chip-delete" data-action="moment-delete" aria-label="${t("write.deleteStory")}">×</button>` : ""}</span>`,
@@ -3089,9 +3099,9 @@ function renderPagesManage() {
   $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
     .map(
       (m, i) =>
-        `<li class="pages-row">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">${t("delete")}</button></li>`,
+        `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(m.title || t("moment.untitled"))}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
     )
-    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
+    .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="text-button pages-more" data-action="pages-more">${t("pages.more")} ›</button><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
 async function removePage(momentId) {
   const moment = findMoment(editor, momentId);
@@ -3861,15 +3871,14 @@ function studioTools() {
       label: "tool.paper",
       value: page.backdrop ? t("backdrop.on") : t("template." + (page.template || "minimal")),
       body: () =>
-        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${page.template === template.id ? "selected" : ""}" aria-pressed="${page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
+        `${backdropHTML(page)}<div class="scene-head paper-head"><b>${t("paper.title")}</b></div><div class="paper-grid">${features.templates.map((template) => `<button data-action="${paperAction}" data-template="${template.id}" class="paper-option ${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id ? "selected" : ""}" aria-pressed="${!/^(scene|photo):/.test(page.backdrop || "") && page.template === template.id}"><span class="paper-swatch journal-canvas ${template.id}" aria-hidden="true"></span>${t("template." + template.id)}</button>`).join("")}</div>`,
     },
     {
       id: "mood",
       icon: "☺",
       label: "tool.mood",
-      value: page.mood || t("tool.none"),
-      body: () =>
-        `<div class="mood-list">${features.moods.map((m) => `<button data-action="${moodAction}" data-mood="${m}" class="${page.mood === m ? "selected" : ""}" aria-label="${t("studio.moodLabel", { mood: m })}" aria-pressed="${page.mood === m}">${m}</button>`).join("")}</div>`,
+      value: page.mood ? `${page.mood} ${moodName(page.mood)}` : t("tool.none"),
+      body: () => moodPickerHTML(page) || `<p class="save-help">${t("mood.coverNote")}</p>`,
     },
     {
       id: "stickers",
@@ -3924,32 +3933,50 @@ function studioTools() {
 // sheet (‹ comes back here).
 const MORE_LABELS = { photos: "more.photos", media: "more.media" };
 function moreSheetHTML(tools) {
+  // V10.25 · three groups instead of a flat grid: 页面外观 · 媒体与创作 ·
+  // 页面管理. Each tile is the one way into its tool (目录 and 页面管理 are
+  // one 页面目录 now; photos are added with 照片 below, so 本页照片 is gone).
   const tile = (attrs, name, label, cls = "") => `<button class="more-tile ${cls}" ${attrs}><span class="more-icon">${svIcon(name)}</span><small>${label}</small></button>`;
-  const toolTile = (toolId) => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, t(MORE_LABELS[toolId] || "dock." + toolId), "dock-btn") : "");
-  const tiles =
-    toolTile("paper") +
-    toolTile("layout") +
-    toolTile("font") +
-    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw") +
-    tile('data-action="add-video"', "video", t("add.video")) +
-    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
-    toolTile("mood") +
-    toolTile("photos") +
-    toolTile("media") +
-    toolTile("growth") +
-    toolTile("book") +
-    toolTile("layer") +
-    toolTile("chapters") +
-    tile('data-action="open-pages"', "pages", t("more.pages")) +
-    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
-    tile('data-action="guide-open"', "guide", t("more.guide"));
+  const toolTile = (toolId, label, cls = "dock-btn") => (tools.some((tool) => tool.id === toolId) ? tile(`data-action="tool" data-tool="${toolId}"`, toolId, label, cls) : "");
+  const group = (title, tiles, extra = "") => (tiles ? `<section class="more-group"><h4>${title}</h4><div class="more-grid">${tiles}</div>${extra}</section>` : "");
   const sound = soundMenu ? `<div class="sound-menu" role="group" aria-label="${t("add.sound")}"><button data-action="music-sheet">♫ ${t("music.title")}</button><button data-action="add-record">🎙 ${t("add.record")}</button><button data-action="add-audio-file">⤒ ${t("add.audioFile")}</button></div>` : "";
   const mode = isDayPage() ? "" : `<div class="more-mode"><b>${t("more.mode")}</b>${pageModeHTML()}</div>`;
-  return `<div class="more-grid">${tiles}</div>${sound}${studioMusicHTML()}${mode}`;
+  const look = toolTile("paper", t("tool.paper")) + toolTile("layout", t("dock.layout")) + toolTile("font", t("more.pageFont"));
+  const make =
+    tile('data-action="draw-new"', "draw", t("draw.short"), "page-draw accent") +
+    tile('data-action="add-video"', "video", t("add.video")) +
+    tile(`data-action="add-sound" aria-expanded="${soundMenu}"`, "sound", t("more.audio")) +
+    tile('data-action="music-sheet"', "sound", t("music.short")) +
+    toolTile("media", t("more.media"));
+  const pages =
+    tile('data-action="tool" data-tool="details"', "details", t("more.details"), "dock-btn") +
+    (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
+    tile('data-action="open-pages"', "pages", t("more.toc")) +
+    tile('data-action="guide-open"', "guide", t("more.guide")) +
+    toolTile("growth", t("dock.growth")) +
+    toolTile("book", t("dock.book"));
+  // (换一种写法 is rarely changed: it goes last, so 媒体与创作 shows without scrolling)
+  return `${group(t("more.groupLook"), look)}${group(t("more.groupMake"), make, sound + studioMusicHTML())}${group(t("more.groupPages"), pages)}${mode}`;
 }
 // Page details: date, journal, time, name, caption, tags, delete.
+// V10.24 · Mood is optional memory metadata for one page (a Moment): it is
+// chosen in 页面信息 (More → 心情 opens the same place), can be changed or
+// cleared, and is never drawn on the paper. The stored values stay the five
+// emoji (☀️ 🌷 ☁️ 🌧️ ✨); only their names are shown. The cover (the whole day)
+// has no mood picker any more: older days keep what they have.
+const MOOD_NAMES = { "☀️": "happy", "🌷": "warm", "☁️": "calm", "🌧️": "low", "✨": "excited" };
+function moodName(mood) {
+  const key = MOOD_NAMES[mood];
+  return key ? t("mood." + key) : "";
+}
+function moodPickerHTML(page = activePage()) {
+  if (isDayPage()) return "";
+  const now = page.mood || "";
+  const stamp = (m) => `<button class="mood-stamp mood-${MOOD_NAMES[m] || "other"}" data-action="moment-mood" data-mood="${esc(m)}" aria-pressed="${now === m}"><i aria-hidden="true">${esc(m)}</i><span>${esc(moodName(m) || m)}</span></button>`;
+  return `<section class="mood-picker" id="mood-picker" aria-label="${t("tool.mood")}"><div class="mood-head"><b>${t("tool.mood")}</b><small>${t("mood.hint")}</small></div><div class="mood-stamps">${features.moods.map(stamp).join("")}<button class="mood-stamp mood-clear" data-action="moment-mood-clear" ${now ? "" : "disabled"}><i aria-hidden="true">—</i><span>${t("mood.clear")}</span></button></div></section>`;
+}
 function detailsSheetHTML() {
-  return `<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
+  return `${moodPickerHTML()}<label class="details-date">${t("field.date")}<input class="date-input" type="date" id="editor-date" aria-label="${t("field.date")}" value="${editor.date}"></label>${pageBarHTML()}${writeCardHTML()}<p class="save-help">${t("studio.help")}</p>`;
 }
 // With something selected, the bottom row is that item's tools: × (back to
 // the four tools) and only what applies to a photo / text / sticker / clip.
@@ -3977,11 +4004,16 @@ function ctxDockHTML(tool) {
       : kind === "text"
         ? tool('data-action="ctx-edit-text"', "pen", t("edit")) + style("font", "font", "ctx.font") + style("color", "color", "ctx.color") + style("align", "align", "ctx.align")
         : kind === "video"
-          ? tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.short"))
+          ? // V10.23: 播放 · 换封面 · 形状 (frame) — the cover and the frame are separate things.
+            tool('data-action="ctx-play"', "play", t("media.play")) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.change")) + tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`)
           : kind === "drawing"
             ? tool('data-action="draw-edit"', "draw", t("draw.again"))
-            : "";
-  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t("delete"), "danger")}</nav>`;
+            : kind === "sticker" && layer.assetId
+              ? tool(`data-action="sticker-swap" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("sticker.swap"), studioTool === "stickers" ? "open" : "")
+              : "";
+  // V10.25: ← 返回 leaves this item's tools (the item stays where it is); the
+  // line above names what is selected. × only ever closes a sheet.
+  return `<p class="ctx-caption" aria-hidden="true"><i></i>${t("ctx." + kind)}<span>· ${t("ctx.selected")}</span></p><nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("ctx.selectedLabel", { kind: t("ctx." + kind) })}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.backLabel")}"><span class="ctx-arrow" aria-hidden="true">${svIcon("backArrow")}</span><small>${t("ctx.back")}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t(kind === "video" || kind === "audio" ? "media.removeShort" : "delete"), "danger")}</nav>`;
 }
 // Font · size · colour · alignment for the selected text box (the same
 // controls as the bar that shows while typing).
@@ -4013,6 +4045,9 @@ function typeControlsHTML(only) {
 function textStyleSheetHTML() {
   return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
 }
+// V10.25: the selected item's options open as a compact strip above its tools
+// (the paper stays big); page-level tools keep the taller sheet.
+const STRIP_TOOLS = ["shape", "layer", "textstyle"];
 // The bottom of the editor: an open sheet (if any) above one row of tools.
 function toolMenuHTML() {
   const tools = studioTools();
@@ -4024,9 +4059,9 @@ function toolMenuHTML() {
   if (selectedLayerOf()?.kind === "text") sheets.push({ id: "textstyle", icon: "", label: "ctx." + textTab, value: "", body: textStyleSheetHTML });
   if (studioTool && !sheets.some((tool) => tool.id === studioTool)) studioTool = null;
   const open = sheets.find((tool) => tool.id === studioTool);
-  const back = open && !["more", "stickers", "layer", "textstyle"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
+  const back = open && !["more", "stickers", "layer", "textstyle", "shape"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
-    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""} ${STRIP_TOOLS.includes(open.id) ? "strip" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
   const photosHere = activePage().layers.filter(framedPhoto).length;
@@ -4046,6 +4081,15 @@ function refreshToolSummaries() {
 }
 function refreshToolMenu() {
   if ($("#tool-menu")) $("#tool-menu").innerHTML = toolMenuHTML();
+  syncStripHeight();
+}
+// V10.25: the paper makes room for the strip that is really open (its own
+// height), not for the tallest one.
+function syncStripHeight() {
+  const strip = document.querySelector(".tool-sheet.strip");
+  const root = document.documentElement;
+  if (strip) root.style.setProperty("--strip-h", `${Math.ceil(strip.getBoundingClientRect().height)}px`);
+  else root.style.removeProperty("--strip-h");
 }
 function growthPanelHTML() {
   const checks = state().checks.filter((check) => check.date === editor.date);
@@ -5080,6 +5124,8 @@ function addChoicesHTML(className = "") {
 // more). Everything else opens in the bottom sheet.
 let studioPreview = false;
 const SV_ICONS = {
+  backArrow: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  play: '<circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/>',
   shape: '<rect x="3.5" y="9" width="10" height="10" rx="2"/><circle cx="15" cy="9" r="5.5"/>',
   photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
   text: '<path d="M5 6.5V5h14v1.5M12 5v14M9 19h6"/>',
@@ -5131,7 +5177,7 @@ function studioPage() {
   if (studioPreview)
     return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-preview" aria-label="${t("studio.previewBack")}">${icon("back")}</button><div class="sv-title static"><b>${t("studio.preview")}</b><small>${t("studio.previewHint")}</small></div><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage large previewing">${paper}</div><div class="tool-dock-wrap"><nav class="sv-export" aria-label="${t("studio.preview")}"><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="export">${icon("download")}<b>${t("export.photo")}</b></button><button data-action="export-video"><span aria-hidden="true">▶</span><b>${t("export.video")}</b></button></nav></div>`;
   const status = draftDirty && draftState !== "failed" ? "saving" : draftState;
-  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${!studioTool ? "large" : STRIP_TOOLS.includes(studioTool) ? "large strip-open" : ""}">${paper}${importCardHTML()}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -5267,6 +5313,7 @@ function render() {
   $("#app-scroll").scrollTop = scrollTop;
   const sheetNow = $(".tool-sheet");
   if (sheetNow) sheetNow.scrollTop = sheetKeep && sheetKeep.id === sheetNow.dataset.toolRow ? sheetKeep.top : 0;
+  syncStripHeight();
   if (focused) {
     const again = $(`#app ${focused}`);
     if (again?.dataset.inlineLayer) editTextLayer(again.dataset.inlineLayer);
@@ -5716,12 +5763,16 @@ function guideTarget() {
 function guideTargetEl(target) {
   if (target.kind === "layer") return layerElement(target.id);
   if (target.kind === "addText") return document.querySelector('.tool-dock [data-action="add-text-layer"]') || $("#journal-canvas");
+  if (target.kind === "dock") return document.querySelector(".tool-dock.sv-tools:not(.ctx)") || document.querySelector(".tool-dock") || $("#journal-canvas");
+  if (target.kind === "more") return document.querySelector('.tool-dock [data-tool="more"]') || $("#journal-canvas");
   return $("#journal-canvas");
 }
 function guideDemoHTML(id) {
   // Little drawings of the real gestures (the handles look like the real ones).
   if (id === "move") return `<span class="sg-demo-box"></span><i class="sg-demo-finger"></i>`;
   if (id === "type") return `<span class="sg-demo-words">Aa<i class="sg-demo-caret"></i></span><i class="sg-demo-finger tap2"></i>`;
+  if (id === "add") return `<span class="sg-demo-words">＋</span>`;
+  if (id === "more") return `<span class="sg-demo-words">•••</span>`;
   return `<span class="sg-demo-box framed"><i class="sg-demo-stem"></i><i class="sg-demo-rotate"></i><i class="sg-demo-size"></i></span>`;
 }
 function openGuide() {
@@ -6331,7 +6382,7 @@ async function action(target) {
       "moment-delete",
     ].includes(actionName)
   ) {
-    toast(t("media.busy"));
+    toast(t(mediaImport && busyMedia ? "import.busy" : "media.busy"));
     return;
   }
   if (await v3Action(target)) return;
@@ -6917,6 +6968,8 @@ async function action(target) {
   if (actionName === "template")
     changeEditor((e) => {
       e.template = target.dataset.template;
+      // V10.24: a paper replaces a library background (your own photo stays: it is the page's picture).
+      if (/^(scene|photo):/.test(e.backdrop || "")) delete e.backdrop;
     });
   if (actionName === "material-style") {
     materialStyle = target.dataset.style;
@@ -6988,10 +7041,14 @@ async function action(target) {
     render();
   }
   if (actionName === "backdrop") {
+    // V10.24: one background per page — a picture / gradient / pattern
+    // replaces the paper (it goes back to plain, not kept underneath).
     const reference = target.dataset.backdrop;
     changeTarget((p) => {
-      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) p.backdrop = reference;
-      else delete p.backdrop;
+      if (/^(scene|photo):[a-z0-9-]+$/.test(reference)) {
+        p.backdrop = reference;
+        p.template = "minimal";
+      } else delete p.backdrop;
     });
   }
   if (actionName === "sheet-grow") {
@@ -8649,8 +8706,19 @@ async function v31Action(target) {
     case "tool-close":
       openTool(null);
       return true;
+    case "import-retry":
+      runImport();
+      return true;
+    case "import-dismiss":
+      if (mediaImport?.thumb) URL.revokeObjectURL(mediaImport.thumb);
+      mediaImport = null;
+      refreshImportCard();
+      render();
+      return true;
+    case "ctx-play":
     case "layer-play": {
-      const element = target.closest(".media-layer")?.querySelector("video,audio");
+      // From the selected video's tools (V10.23) or the play button on the paper.
+      const element = name === "ctx-play" ? document.querySelector(`#journal-canvas [data-layer="${CSS.escape(selectedLayer || "")}"] :is(video,audio)`) : target.closest(".media-layer")?.querySelector("video,audio");
       if (!element) return true;
       if (element.paused)
         element.play().catch((error) => {
@@ -8693,6 +8761,19 @@ async function v31Action(target) {
       $("#choose-dialog").close();
       selectMoment(momentId);
       return true;
+    case "pages-more":
+      // V10.25: the older 目录 sheet (save one page, fold, …) — from 页面目录.
+      $("#choose-dialog").close();
+      studioTool = "chapters";
+      render();
+      return true;
+    case "page-copy": {
+      // V10.25: 页面目录 also copies a page (it used to be only in 目录).
+      changeEditor((entry) => duplicateMoment(entry, target.dataset.moment), false);
+      renderPagesManage();
+      toast(t("pages.copied"));
+      return true;
+    }
     case "page-move":
       changeEditor((entry) => moveMoment(entry, target.dataset.moment, Number(target.dataset.dir) || 0));
       renderPagesManage();
@@ -8793,6 +8874,17 @@ async function v31Action(target) {
       toast(t("moment.savedToast"));
       return true;
     }
+    case "moment-mood-clear":
+      changeTarget((moment) => {
+        if (moment !== editor) moment.mood = "";
+      });
+      return true;
+    case "mood-open":
+      // More → 心情: the same picker, in 页面信息.
+      studioTool = "details";
+      render();
+      document.querySelector("#mood-picker")?.scrollIntoView({ block: "start" });
+      return true;
     case "moment-mood":
       changeTarget((moment) => {
         if (moment !== editor)
@@ -8802,7 +8894,10 @@ async function v31Action(target) {
       return true;
     case "moment-template":
       changeTarget((moment) => {
-        if (moment !== editor) moment.template = target.dataset.template;
+        if (moment !== editor) {
+          moment.template = target.dataset.template;
+          if (/^(scene|photo):/.test(moment.backdrop || "")) delete moment.backdrop;
+        }
       });
       return true;
     case "template-count":
@@ -8957,7 +9052,7 @@ async function v31Action(target) {
 async function v3Action(target) {
   const name = target.dataset.action;
   if (busyMedia) {
-    toast(t("media.busy"));
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return true;
   }
   if (await v31Action(target)) return true;
@@ -9035,8 +9130,25 @@ async function v3Action(target) {
     render();
     return true;
   }
+  if (name === "sticker-swap") {
+    // V10.25 · 换一个: pick another sticker for the selected one (same place, size and turn).
+    studioTool = studioTool === "stickers" ? null : "stickers";
+    render();
+    return true;
+  }
   if (name === "asset-sticker") {
     const asset = catalog.stickers.find((s) => s.id === target.dataset.sticker);
+    const swap = selectedLayerOf();
+    if (swap?.assetId && swap.kind !== "photo" && !swap.drawing) {
+      changeTarget((entry) => {
+        const layer = entry.layers.find((l) => l.id === swap.id);
+        if (!layer) return;
+        layer.assetId = asset.id;
+        layer.text = languageCode() === "en" ? asset.nameEn : asset.nameZh;
+      });
+      toast(t("sticker.swapped"));
+      return true;
+    }
     changeTarget((entry) => {
       const layer = {
         id: id(),
@@ -9114,10 +9226,24 @@ async function v3Action(target) {
   }
   if (name === "layer-edit-text") {
     studioTool = "layer";
+    layerPreciseOpen = true;
     render();
     const box = $('[data-layer-text="text"]');
     box?.focus({ preventScroll: true });
     box?.select();
+    return true;
+  }
+  if (name === "remove-media-ask") {
+    // V10.23 · 从页面移除: off this page (paper and list). Undo brings it back;
+    // the file itself stays on this device.
+    if (!(await askConfirm(t("media.removeConfirm")))) return true;
+    const clipId = target.dataset.clip;
+    changeTarget((entry) => {
+      entry.media = entry.media.filter((clip) => clip.id !== clipId);
+      entry.layers = entry.layers.filter((layer) => layer.clipId !== clipId);
+    });
+    flushDraft();
+    toast(t("media.removed"));
     return true;
   }
   if (name === "remove-media") {
@@ -9535,7 +9661,9 @@ async function handleImageUpload(event, target) {
       });
       flushDraft();
     }
-    if (target?.kind !== "quick" || failed) toast(
+    // V10.24: photos added to the page in Studio need no "added" message — they are
+    // right there on the paper (the message also covered its top); failures still say so.
+    if (failed || !(target?.kind === "quick" || (page === "studio" && ["photos", "replace"].includes(target?.kind)))) toast(
       failed
         ? t("photo.partial", { saved: saved.length, failed })
         : multiple && saved.length > 1
@@ -9600,8 +9728,10 @@ async function mediaMetadata(file, kind) {
         kind === "video" ? "video" : "audio",
       ),
       url = URL.createObjectURL(file);
+    // V10.26 (P0): say which way it failed — no metadata within 10 s, or the
+    // media element's own error code (MediaError 1–4) — in the local log.
     const timer = setTimeout(
-      () => finish(new Error("Unsupported media")),
+      () => finish(Object.assign(new Error("Unsupported media"), { code: "media-timeout" })),
       10000,
     );
     const finish = (error) => {
@@ -9623,7 +9753,7 @@ async function mediaMetadata(file, kind) {
     };
     element.onerror = () => {
       element.onerror = null;
-      finish(new Error("Unsupported media"));
+      finish(Object.assign(new Error("Unsupported media"), { code: `media-err-${element.error?.code || 0}` }));
     };
     element.src = url;
   });
@@ -9661,8 +9791,10 @@ async function autoCover(mediaId, duration) {
   }
 }
 async function attachClip(blob, kind, name, duration = 0, options = {}) {
+  options.onStage?.("write");
   const mediaId = await media.put(blob, { kind, name, duration }, "studio");
   // Videos get a first cover right away (changeable later).
+  options.onStage?.("cover");
   const poster = kind === "video" ? await autoCover(mediaId, duration) : "";
   const targetId = options.targetId ?? activeMomentId;
   changeEditor((entry) => {
@@ -9691,29 +9823,117 @@ async function attachClip(blob, kind, name, duration = 0, options = {}) {
   });
   flushDraft();
 }
+// V10.23 · Importing a video / sound file from this device: every step is
+// shown on the page (import → read, with real progress → save to this device
+// → cover → saved / failed), the file stays in memory until it is really
+// saved (so a failure can be retried), and switching pages is shown as
+// paused before anyone taps it. Nothing is uploaded anywhere.
+let mediaImport = null;
+const IMPORT_LIMIT = { video: 50, audio: 20 };
+function importCardHTML() {
+  const job = mediaImport;
+  if (!job || page !== "studio") return "";
+  const mb = (n) => new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(n / 1024 / 1024) + " MB";
+  const meta = [job.duration ? formatClock(job.duration) : "", job.size ? mb(job.size) : ""].filter(Boolean).join(" · ");
+  const pct = job.stage === "read" && job.progress != null ? Math.round(job.progress * 100) : null;
+  const label = job.stage === "read" ? t("import.read", { pct: pct ?? 0 }) : t("import." + job.stage);
+  const bar = ["done", "failed"].includes(job.stage) ? "" : `<div class="ic-bar ${pct == null ? "indeterminate" : ""}" role="progressbar" aria-label="${esc(label)}" ${pct == null ? "" : `aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"`}><i style="${pct == null ? "" : `width:${pct}%`}"></i></div>`;
+  const note = job.stage === "failed" ? `${t("import.failedNote")}${job.err ? ` <code>${esc(job.err)}</code>` : ""}` : job.stage === "done" ? t("import.doneNote") : t("import.lockNote");
+  const actions = job.stage === "failed" ? `<div class="ic-actions"><button class="primary" data-action="import-retry">${t("import.retry")}</button><button class="text-button" data-action="import-dismiss">${t(job.kind === "video" ? "import.dismissVideo" : "import.dismissAudio")}</button></div>` : "";
+  return `<div class="import-card" data-stage="${job.stage}" role="status" aria-live="polite"><span class="ic-thumb">${job.thumb ? `<img src="${esc(job.thumb)}" alt="">` : `<i aria-hidden="true">${job.kind === "video" ? "▶" : "♫"}</i>`}</span><span class="ic-main"><b>${t(job.kind === "video" ? "import.titleVideo" : "import.titleAudio")}</b><small>${esc(meta)}</small><span class="ic-stage">${label}</span>${bar}<span class="ic-note">${note}</span>${actions}</span></div>`;
+}
+function formatClock(seconds) {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function refreshImportCard() {
+  const html = importCardHTML();
+  const old = document.querySelector(".import-card");
+  if (old && html) old.outerHTML = html;
+  else if (old) old.remove();
+  else if (html) document.querySelector(".studio-stage")?.insertAdjacentHTML("beforeend", html);
+}
+function setImport(changes) {
+  if (!mediaImport) return;
+  Object.assign(mediaImport, changes);
+  refreshImportCard();
+}
+// The file's bytes with real progress (FileReader reports it as it reads).
+function readWithProgress(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error("read"));
+    reader.readAsArrayBuffer(file);
+  });
+}
 async function handleMediaUpload(event, kind) {
   const file = event.target.files[0];
+  event.target.value = "";
   if (!file) return;
   if (busyMedia || recorder) {
-    toast(t("media.busy"));
-    event.target.value = "";
+    toast(t(mediaImport ? "import.busy" : "media.busy"));
     return;
   }
+  if (mediaImport?.stage === "failed" && mediaImport.thumb) URL.revokeObjectURL(mediaImport.thumb);
+  mediaImport = { file, kind, size: file.size, duration: 0, stage: "import", progress: null, thumb: "", err: "", targetId: activeMomentId, started: Date.now() };
+  await runImport();
+}
+async function runImport() {
+  const job = mediaImport;
+  if (!job) return;
+  const { file, kind } = job;
   busyMedia = true;
+  setDraftState("saving");
+  Object.assign(job, { stage: "import", progress: null, err: "" });
+  render();
+  let stage = "import";
   try {
-    if (
-      !file.type.startsWith(kind + "/") ||
-      file.size > (kind === "video" ? 50 : 20) * 1024 * 1024
-    )
-      throw new Error("Invalid media");
+    if (!file.type.startsWith(kind + "/")) throw Object.assign(new Error("type"), { code: "unsupported" });
+    if (file.size > IMPORT_LIMIT[kind] * 1024 * 1024) throw Object.assign(new Error("size"), { code: "too-big" });
     const metadata = await mediaMetadata(file, kind);
-    await attachClip(file, kind, file.name, metadata.duration, { width: metadata.width, height: metadata.height });
-    toast(t("media.saved"));
-  } catch {
-    toast(t("media.failed"));
-  } finally {
+    job.duration = metadata.duration;
+    if (kind === "video" && !job.thumb) {
+      // A first look at the video while it is being saved (not stored).
+      const url = URL.createObjectURL(file);
+      try {
+        job.thumb = URL.createObjectURL(await frameAt(url, Math.min(1, (metadata.duration || 2) * 0.25), 360));
+      } catch {}
+      URL.revokeObjectURL(url);
+    }
+    stage = "read";
+    setImport({ stage, progress: 0 });
+    const bytes = await readWithProgress(file, (progress) => setImport({ progress }));
+    await attachClip(new Blob([bytes], { type: file.type }), kind, file.name, metadata.duration, {
+      width: metadata.width,
+      height: metadata.height,
+      targetId: job.targetId,
+      onStage: (next) => {
+        stage = next;
+        setImport({ stage: next, progress: null });
+      },
+    });
+    logEvent("media_import", { kind, stage: "done", size: Math.round(file.size / 1024 / 1024), ms: Date.now() - job.started });
     busyMedia = false;
-    event.target.value = "";
+    setImport({ stage: "done" });
+    render();
+    setTimeout(() => {
+      if (mediaImport === job && job.stage === "done") {
+        if (job.thumb) URL.revokeObjectURL(job.thumb);
+        mediaImport = null;
+        refreshImportCard();
+      }
+    }, 2600);
+  } catch (error) {
+    busyMedia = false;
+    const err = error?.code === "too-big" || error?.code === "unsupported" ? error.code : errName(error);
+    logEvent("media_import_failed", { kind, stage, err, size: Math.round(file.size / 1024 / 1024) });
+    setImport({ stage: "failed", err });
+    render();
+    // Nothing of it was added to the page: the page's own state stays as it was.
+    confirmMediaSaved();
+    toast(t(err === "too-big" ? (kind === "video" ? "import.tooBigVideo" : "import.tooBigAudio") : err === "unsupported" ? "media.unsupported" : "import.failedToast"));
   }
 }
 async function startRecording() {

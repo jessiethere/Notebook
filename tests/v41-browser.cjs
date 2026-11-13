@@ -54,23 +54,28 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector("#journal-canvas"); // mode layout (chosen in More)
     passed.push("Home: picture of the day → one tap makes a photo + one line page");
 
-    // 3. Photo panel: a wallpaper-style gallery (6 collections) → swipe sheet.
+    // 3. Photo library (V10.25: 「更多 → 本页照片」 is gone; the collections live in
+    // ＋照片 → 照片素材, which opens the same swipe sheet).
     await page.evaluate(() => document.activeElement?.blur());
-    await studioTool(page, "photos");
-    await page.waitForSelector(".wall-gallery");
+    const openCollections = async () => {
+      if (await page.locator(".tool-dock.ctx").count()) await page.locator('.tool-dock.ctx [data-action="layer-deselect"]').tap();
+      await page.locator('.tool-dock [data-action="add-photos"]').tap();
+      await page.waitForSelector("#choose-dialog[open] .choose-collections");
+    };
+    await openCollections();
     const photoCollections = await page.evaluate(async () => (await (await fetch("shared/library.json")).json()).photoCollections.map((c) => c.id));
-    assert.deepEqual(await page.$$eval(".wall-get", (els) => els.map((el) => el.dataset.collection)), photoCollections);
+    assert.deepEqual(await page.$$eval('#choose-dialog [data-action="scene-collection"]', (els) => els.map((el) => el.dataset.collection)), photoCollections);
     assert.equal(photoCollections.length, 13);
     const todayCollection = await page.evaluate(async (id) => (await (await fetch("shared/library.json")).json()).photos.find((p) => p.id === id).collection, sceneId);
     const otherCollection = photoCollections.find((id) => id !== todayCollection);
-    assert.equal(await page.locator('.wall-row').first().locator('.wall-card').count(), 3, "stacked previews");
-    await page.locator(`.wall-get[data-collection="${todayCollection}"]`).tap();
+    await page.locator(`#choose-dialog [data-action="scene-collection"][data-collection="${todayCollection}"]`).tap();
     await page.waitForSelector("#scene-dialog[open] .pb-tile");
     assert.equal(await page.locator("#scene-dialog .pb-tile").count(), 6);
     assert.equal(await page.locator("#scene-dialog .pb-tile").first().getAttribute("data-photo"), sceneId, "today's first");
     assert.equal(await page.locator("#scene-dialog .pb-use").getAttribute("data-scene"), sceneId, "today's is picked to start");
     await page.locator('[data-action="scene-close"]').tap();
-    await page.locator(`.wall-get[data-collection="${otherCollection}"]`).tap();
+    await openCollections();
+    await page.locator(`#choose-dialog [data-action="scene-collection"][data-collection="${otherCollection}"]`).tap();
     await page.waitForSelector("#scene-dialog[open] .pb-tile");
     assert.equal(await page.locator("#scene-dialog .pb-tile").count(), 6);
     const other = await page.locator("#scene-dialog .pb-tile").nth(1).getAttribute("data-photo");
@@ -84,7 +89,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
       const draft = JSON.parse(localStorage.getItem("little-days.v1")).drafts[k];
       return draft && [draft, ...draft.moments].some((p) => p.layers.some((l) => l.mediaRef === `photo:${id}`));
     }, other);
-    passed.push("photo library: 13 collections with stacked previews → swipe sheet; today's first; use one");
+    passed.push("photo library (＋照片 → 照片素材): 13 collections → swipe sheet; today's first; use one");
 
     // 4. A scene can be edited like a photo (the original scene stays the source).
     const layerId = await page.evaluate((id) => {

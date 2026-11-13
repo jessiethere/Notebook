@@ -15631,7 +15631,8 @@ dialog h2,
 /* A sheet never squeezes the paper under 170px tall: it scrolls inside. */
 .phone.sv {
   --sheet-max: min(40dvh, 340px, calc(var(--studio-h, 100dvh - 40px) - 374px));
-  --sheet-max-more: min(46dvh, 420px, calc(var(--studio-h, 100dvh - 40px) - 374px));
+  /* V10.25: 更多 is a little taller so 页面外观 + 媒体与创作 show without much scrolling; on a short phone (375×667) it stops where the paper still has ≥ 120px */
+  --sheet-max-more: min(52dvh, 440px, calc(var(--studio-h, 100dvh - 40px) - 340px));
 }
 .phone.sv .studio-stage:not(.large) .canvas-wrap {
   width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--sheet-max)) * 0.8));
@@ -20833,4 +20834,412 @@ dialog.crop-editor::backdrop {
   min-height: 160px;
   margin-top: 10px;
   font: 11px/1.4 ui-monospace, Menlo, monospace;
+}
+
+/* ---------- V10.23 · importing a video / sound (saved on this device) ---------- */
+.studio-stage {
+  position: relative;
+}
+.import-card {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 40px));
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--c-fffdf8, #fffdf8);
+  box-shadow: 0 0 0 1px var(--line), 0 18px 40px -22px var(--c-3c2d1e66, #3c2d1e66);
+}
+.import-card .ic-thumb {
+  flex: 0 0 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--c-f1eadf, #f1eadf);
+  color: var(--sageDeep);
+  font-size: 22px;
+}
+.import-card .ic-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.import-card .ic-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.import-card b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.import-card small,
+.import-card .ic-note {
+  font: 12px/1.45 var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.import-card .ic-stage {
+  font: 600 13px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.import-card[data-stage="failed"] .ic-stage {
+  color: var(--t-a5524a, #a5524a);
+}
+.import-card .ic-bar {
+  position: relative;
+  height: 6px;
+  margin: 4px 0 2px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--c-f1eadf, #f1eadf);
+}
+.import-card .ic-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 3px;
+  background: var(--sageDeep);
+  transition: width 0.2s ease;
+}
+.import-card .ic-bar.indeterminate i {
+  width: 36%;
+  animation: ic-slide 1.2s ease-in-out infinite;
+}
+@keyframes ic-slide {
+  from { left: -36%; }
+  to { left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .import-card .ic-bar.indeterminate i {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.45;
+  }
+}
+.import-card .ic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.import-card .ic-actions button {
+  min-height: 40px;
+}
+.import-card code {
+  font-size: 11px;
+}
+.page-strip.locked {
+  opacity: 0.45;
+}
+/* V10.23 · a clip's main actions right under its preview */
+.media-card-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px 2px;
+}
+.media-card-actions button {
+  min-height: 44px;
+  border-radius: 12px;
+  font: 600 15px var(--ui-sans);
+}
+.media-card-actions .primary-outline {
+  border: 1.5px solid var(--sageDeep);
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.media-card-actions .danger-outline {
+  border: 1.5px solid var(--c-e7c9c4, #e7c9c4);
+  background: var(--c-fffdf8, #fffdf8);
+  color: var(--t-a5524a, #a5524a);
+}
+.media-card .media-card-foot small {
+  font-size: 12px;
+}
+.media-card .media-card-foot .media-paper {
+  font-size: 13px;
+  min-height: 40px;
+}
+/* V10.23 · the cover picker shows the cover in use */
+.poster-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font: 13px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+}
+.poster-now img {
+  width: 56px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* V10.23 · in 本页媒体 the video preview leaves room for 换封面 / 从页面移除
+   (on a 375×667 phone they are seen without scrolling). */
+.tool-sheet .media-section > .section-heading {
+  display: none; /* the sheet's own title says it; each card says 已保存到本机 */
+}
+.tool-sheet .media-card video {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  max-height: min(14dvh, 150px);
+  object-fit: contain;
+  background: var(--c-2e2a25, #2e2a25);
+}
+.tool-sheet .media-card .media-card-title {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+/* (its name moves to the small print, so 换封面 / 从页面移除 fit on a 375×667 phone) */
+.tool-sheet .video-card .media-card-title {
+  display: none;
+}
+.media-card .media-card-foot .clip-name {
+  display: inline-block;
+  max-width: 11em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+/* ---------- V10.24 · mood stamps (page details) ---------- */
+.mood-picker {
+  margin: 0 0 14px;
+}
+.mood-picker .mood-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mood-picker .mood-head b {
+  font: 600 15px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-picker .mood-head small {
+  font: 12px var(--ui-sans);
+  color: var(--t-8a8178, #8a8178);
+  text-align: right;
+}
+.mood-stamps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+.mood-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: 12px var(--ui-sans);
+  color: var(--ink);
+}
+.mood-stamp i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px dashed var(--line);
+  font-style: normal;
+  font-size: 20px;
+  background: var(--c-fffdf8, #fffdf8);
+}
+.mood-stamp[aria-pressed="true"] i {
+  border: 2px solid var(--sageDeep);
+  background: var(--c-e3ebdc, #e3ebdc);
+  box-shadow: 0 0 0 3px var(--c-e3ebdc, #e3ebdc);
+}
+.mood-stamp[aria-pressed="true"] span {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.mood-stamp.mood-clear i {
+  color: var(--t-8a8178, #8a8178);
+}
+.mood-stamp:disabled {
+  opacity: 0.4;
+}
+
+/* V10.24 · while typing with the keyboard up, the type bar sits right above
+   the keyboard (it used to float under the paper, which a 375-wide phone's
+   keyboard can cover). Same measure the open sheets use (V3.8). */
+@media (pointer: coarse) {
+  html[style*="--vv-h"] body.typing #type-bar:not([hidden]) {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: calc(var(--vv-top, 0px) + var(--vv-h, 52dvh) - 6px);
+    transform: translateY(-100%);
+    z-index: 41;
+  }
+}
+
+/* ---------- V10.25 · selected item: ← 返回 and what is selected ---------- */
+.ctx-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 18px 2px;
+  font: 600 12px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.ctx-caption i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sageDeep);
+}
+.ctx-caption span {
+  font-weight: 500;
+  color: var(--t-8a8178, #8a8178);
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow .sv-icon {
+  width: 22px;
+  height: 22px;
+}
+/* the selected item's options: a compact strip, the paper stays big */
+.phone.sv .tool-sheet.strip {
+  max-height: min(210px, 32dvh);
+}
+.phone.sv .tool-sheet.strip .sheet-grabber {
+  display: none;
+}
+.phone.sv .studio-stage.large.strip-open .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--strip-h, min(210px, 32dvh))) * 0.8));
+}
+/* 形状 in a strip: one scrolling row of compact chips, then the frame row */
+.tool-sheet.strip .shape-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.tool-sheet.strip .shape-chips button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0 12px;
+}
+.tool-sheet.strip .shape-sheet .save-help {
+  margin: 4px 0;
+  font-size: 12px;
+}
+/* 图层: order and copy first, the rest folded */
+.layer-controls .layer-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.layer-controls .layer-buttons button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.layer-precise {
+  margin-top: 10px;
+}
+.layer-precise > summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  font: 600 14px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  cursor: pointer;
+}
+.tool-sheet.strip .shape-frames > .small-label {
+  display: none;
+}
+.tool-sheet.strip .shape-frame-row {
+  align-items: center;
+}
+.tool-sheet.strip .shape-frame-row .field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+/* while typing the item's tools step aside, and so does the line naming it */
+body.typing .ctx-caption {
+  display: none;
+}
+
+/* ---------- V10.25 · 更多 in three groups ---------- */
+.more-group + .more-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.more-group h4 {
+  margin: 0 0 6px 2px;
+  font: 600 12px var(--ui-sans);
+  letter-spacing: 0.04em;
+  color: var(--t-8a8178, #8a8178);
+}
+.more-group .more-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.more-group .more-grid .more-tile {
+  min-height: 70px;
+}
+.more-group .more-icon {
+  width: 46px;
+  height: 46px;
+}
+.more-grid .more-tile.accent .more-icon {
+  background: var(--sageDeep);
+  color: var(--t-ffffff, #ffffff);
+}
+.more-grid .more-tile.accent small {
+  font-weight: 700;
+  color: var(--sageDeep);
+}
+.more-group .more-mode {
+  margin-top: 8px;
+}
+/* 页面目录: the page being edited, and 复制 next to ↑ ↓ / 删除 */
+.pages-row.current {
+  background: var(--c-f1eadf, #f1eadf);
+  border-radius: 12px;
+}
+.pages-row .pages-copy {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--c-fffdf8, #fffdf8);
+  font-size: 13px;
+  color: var(--ink);
+}
+.tool-sheet[data-tool-row="more"] .more-mode {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
 }

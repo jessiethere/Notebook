@@ -4,6 +4,86 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.25",
+    date: "2026-11-13",
+    zh: {
+      title: "编辑器整理：选中什么就改什么，「更多」分成三组",
+      items: [
+        "选中照片、文字、视频或贴纸后，工具栏上方会写着「照片 · 已选中」，最左边是「← 返回」（回到照片 · 文字 · 贴纸 · 更多），不再是 ×；× 只用来关面板。",
+        "形状、字体、颜色、对齐、图层改成工具栏上方的细选项条，打开时纸张只缩小一点，改动看得清楚。",
+        "图层只放最常用的：上移、下移、置顶、置底、复制；位置和大小的精确数值收在「精确调整」里。",
+        "选中贴纸后可以「换一个」：位置、大小和角度都不变。",
+        "「更多」分成三组：页面外观（背景与纸张、排版、页面字体）、媒体与创作（手绘排第一，还有视频、音频、配乐、本页媒体）、页面管理（页面信息、心情、页面目录、操作指南）；「换一种写法」放在最下面。",
+        "「目录」和「页面管理」合并成「页面目录」：点一页就跳过去，可以上下移动、复制、删除；「只保存这一页」等操作在「更多页面操作」里。「本页照片」和下面的「照片」重复，已经去掉。",
+        "操作指南改为四步：加东西、摆位置、改它、改整页。看过旧指南的人不会再自动弹出，可以在「更多 → 操作指南」重看。",
+      ],
+    },
+    en: {
+      title: "A tidier editor: change what you selected, and More in three groups",
+      items: [
+        "A selected photo, text, video or sticker is named above its tools (“Photo · selected”), and the first button is ← Back to Photo · Text · Stickers · More — not ×; × only closes sheets.",
+        "Shape, Font, Colour, Align and Layer open as a compact strip above the tools, so the paper stays big and you can see the change.",
+        "Layer keeps what you need most: up, down, to front, to back, duplicate; exact numbers are under Exact position & size.",
+        "A selected sticker can be swapped — same place, size and angle.",
+        "More has three groups: Page look (background & paper, layout, page font), Media & making (Draw first, then video, audio, music, page media) and Pages & info (page details, mood, pages, guide); Style is at the bottom.",
+        "Contents and Pages are one Pages list: tap a page to go there, move it, duplicate or delete it; save-one-page and similar actions are under More page actions. “This page's photos” repeated Photo below and is gone.",
+        "The guide is now four steps: add things, place them, change one, the whole page. If you saw the old guide it won't pop up again — replay it from More → Guide.",
+      ],
+    },
+  },
+  {
+    version: "10.24",
+    date: "2026-11-13",
+    zh: {
+      title: "心情记在每一页上；背景和纸张互相替换",
+      items: [
+        "心情现在是每一页的可选信息：在「页面信息」里选，「更多 → 心情」也能直接打开。五个心情是 开心 · 温暖 · 平静 · 低落 · 雀跃，可以随时更改或清除，不会画到纸上。",
+        "新的一天不再自动带上 ☀️；以前的日子保留原来的心情，不做改动。",
+        "选背景（风景照片、渐变、图案）会替换纸张，选纸张也会替换背景，不用先撤销；需要的话撤销可以换回来。",
+        "打字时，字体和 B I U S 工具条会贴在键盘正上方。",
+        "小修正：贴纸面板的标题改为「贴纸」；「更多」里的「版式」统一叫「排版」；形状面板不再出现跳回「更多」的返回箭头；在页面上加照片后，不再弹出提示挡住纸张。",
+      ],
+    },
+    en: {
+      title: "Mood belongs to each page; background and paper replace each other",
+      items: [
+        "Mood is now optional page information: choose it in Page details, or go straight there from More → Mood. Happy · Warm · Calm · Low · Excited — change or clear it any time; it is never drawn on the paper.",
+        "A new day no longer starts with ☀️; earlier days keep the mood they had.",
+        "Choosing a background (scenery, gradient, pattern) replaces the paper, and choosing a paper replaces the background — no undo needed first (undo still brings it back).",
+        "While typing, the font and B I U S bar sits right above the keyboard.",
+        "Small fixes: the sticker sheet is titled Stickers; More says Layout everywhere; the Shape sheet no longer has a back arrow into More; adding photos no longer shows a message over the paper.",
+      ],
+    },
+  },
+  {
+    version: "10.23",
+    date: "2026-11-12",
+    zh: {
+      title: "导入视频时看得到每一步，换封面更好找",
+      items: [
+        "导入视频时，页面上会出现一张卡片：先读取视频信息，再显示导入进度，然后是「正在保存到本机」「正在生成封面」，最后显示「已保存到本机」。",
+        "保存过程中，页面条会变淡，卡片上写明「保存完成前，暂时不能切换页面」，不用等点了才知道；顶部只会显示「保存中」，不会提前显示「已保存」。",
+        "没存进这台设备时，卡片会写明「保存失败」和原因，并提供「重试」；视频超过 50 MB 时会直接说明，页面不会被改动。",
+        "选中视频后，下面依次是：播放、换封面、形状、图层、移除。",
+        "「本页媒体」里，换封面和从页面移除两个大按钮就在视频正下方，375 和 430 宽的手机上都不用滚动；时长、大小和「已保存到本机」放在下面的小字里。",
+        "换封面会显示现在的封面，拖动时间轴选一帧，点完成保存；原视频不会被改动，阅读模式里也用新封面。",
+        "「从纸上拿下」改为两个更清楚的操作：「从页面移除」（会先确认，可以撤销），以及「不放在纸上」（仍保留在本页媒体里）。",
+      ],
+    },
+    en: {
+      title: "See every step of importing a video, and find the cover easily",
+      items: [
+        "Importing a video shows a card on the page: reading the file, importing with progress, saving to this device, making a cover, then “Saved on this device”.",
+        "While it saves, the page strip dims and the card says pages can't be switched until it's saved — before you tap; the top only says “Saving”, never “Saved” too early.",
+        "If it can't be stored on this device, the card says “Not saved” and why, with Retry; a video over 50 MB is refused right away and the page is unchanged.",
+        "A selected video's tools are: Play, Cover, Shape, Layer, Remove.",
+        "In the page's media list, Cover and Remove from page are big buttons right under the video — no scrolling on 375 or 430-wide phones; length, size and “Saved on this device” are the small print.",
+        "Cover shows the cover in use; drag the timeline to pick a frame and tap Done. The video itself is never changed, and the reader uses the new cover.",
+        "“Take off the page” is now two clear actions: “Remove from page” (asks first, undo works) and “Off the paper” (stays in the page's media list).",
+      ],
+    },
+  },
+  {
     version: "10.22",
     date: "2026-11-12",
     zh: {

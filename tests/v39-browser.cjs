@@ -71,7 +71,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     assert.equal(await page.locator(".layer-bar").count(), 0, "nothing floats on the paper");
     const actions = await page.$$eval(".tool-dock.ctx button", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
     // V10.20: videos also get 形状 (shapes moved out of 图层 into their own sheet).
-    assert.deepEqual(actions, ["layer-deselect", "shape", "video-cover", "layer", "layer-delete"]);
+    assert.deepEqual(actions, ["layer-deselect", "ctx-play", "video-cover", "shape", "layer", "layer-delete"] /* V10.23: 播放 · 换封面 · 形状 · 图层 · 移除 */);
     const bar = await page.locator(".tool-dock.ctx").boundingBox();
     const paper = await page.locator("#journal-canvas").boundingBox();
     assert.ok(bar.y >= paper.y + paper.height, "the tools sit under the paper, never on the item");
