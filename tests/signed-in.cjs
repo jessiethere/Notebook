@@ -6,6 +6,9 @@
 function seedAccount() {
   try {
     if (localStorage.getItem("little-days.labs") === null) localStorage.setItem("little-days.labs", "1");
+    // V10.39 (B1): new journals start without samples; older suites were
+    // written with the sample journal (tests/v139 checks the new default).
+    if (localStorage.getItem("little-days.with-samples") === null) localStorage.setItem("little-days.with-samples", "1");
     // The streak stamp moment is tested in v55; older suites skip it.
     if (localStorage.getItem("little-days.celebrated") === null) {
       const d = new Date();

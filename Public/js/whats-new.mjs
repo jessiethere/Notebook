@@ -4,6 +4,30 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.39",
+    date: "2026-11-13",
+    zh: {
+      title: "第一次打开：干净的手帐，照片入口一眼就能看到",
+      items: [
+        "新装的 App 不再把示例页面、示例日子和示例习惯放进你的书、日历和页数里。已经有示例的手帐不受影响，示例都还在（设置 → 示例 可以移除没改过的），也不会再加新的。",
+        "第一次打开时跟随手机语言：英文手机直接是英文，默认的三本书也用英文名。已经在用的人保持原来的语言，更新后不会突然改变。",
+        "小屏手机（375 宽）首页第一屏就能完整看到「选今天的照片」。认识 Little Keeper 的邀请改为在你收好第一页之后出现，放在照片手帐卡下面。",
+        "不再自动弹出连续记录的印章，首页也不再提示「开始连续记录」。",
+        "习惯、成长轨迹、我的习惯暂时收起（在 设置 → 实验功能 打开后仍可使用），所有打卡和习惯数据都保留，没有删除。",
+      ],
+    },
+    en: {
+      title: "First open: a clean journal, and the photo button in plain sight",
+      items: [
+        "A new install no longer mixes sample pages, sample days and sample habits into your books, calendar and page counts. Journals that already have samples keep them (Settings → Samples removes the untouched ones) and get no new ones.",
+        "The first open follows your phone's language: an English phone opens in English, with the three starting books named in English. If you already use the app, your language stays as it was.",
+        "On small phones (375 wide) Choose today's photos is fully in the first screen. The invitation to meet Little Keeper now shows after you keep your first page, under the photo card.",
+        "The streak stamp no longer pops up on its own, and Home no longer asks you to start a streak.",
+        "Habits, the growth calendar and My Habits are put away for now (still there with Settings → Labs on). Every check-in and habit is kept.",
+      ],
+    },
+  },
+  {
     version: "10.38",
     date: "2026-11-13",
     zh: {

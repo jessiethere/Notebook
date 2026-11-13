@@ -473,6 +473,8 @@ function navigate(target) {
   readReturn = null;
   quickResult = null;
   if (LAB_PAGES.includes(target) && !labsOn()) target = "home";
+  // B5: Growth (habits, streak) is frozen for now — reachable with Labs on; nothing is deleted.
+  if (target === "growth" && !labsOn()) target = "home";
   // Back on Home after writing today's first page: the stamp moment.
   if (target === "home") setTimeout(() => maybeCelebrate(), 260);
   if (target === "studio") {
@@ -781,7 +783,7 @@ function home() {
   const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
   const books = homeLibraryHTML();
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days${BRAND_SPROUT}</div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div>${keeperInviteHTML()}<div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
+ ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div><div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${keeperInviteHTML()}${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
  ${books}<p class="home-quote hs-colophon">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -794,7 +796,8 @@ function plansOf(date) {
 }
 function todayListHTML() {
   const today = dateKey();
-  const habits = state().habits;
+  // B5 (Growth frozen): habits show only with Labs on; the data stays.
+  const habits = labsOn() ? state().habits : [];
   const done = state().checks.filter((check) => check.date === today).length;
   const items = plansOf(today);
   const yesterday = plansOf(addDays(today, -1)).filter((p) => !p.done);
@@ -812,7 +815,7 @@ function todayListHTML() {
   const open = plansOpen();
   const left = items.filter((p) => !p.done).length;
   const summary = [items.length ? (left ? t("qu.left", { count: left }) : t("qu.allDone")) : t("qu.none"), habits.length ? `${t("qu.habits")} ${done}/${habits.length}` : ""].filter(Boolean).join(" · ");
-  return `<section class="today-list today-planner qu" data-open="${open}" aria-label="${t("qu.title")}"><button class="qu-row" data-action="plans-toggle" aria-expanded="${open}" aria-controls="qu-body"><i class="qu-box" aria-hidden="true"></i><b>${t("qu.title")}</b><small data-qu-summary>${esc(summary)}</small><span class="qu-chev" aria-hidden="true">▾</span></button><div class="qu-body" id="qu-body" ${open ? "" : "hidden"}><p class="qu-hint">${t("plan.hint")}</p><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${habitsLink}</div></section>`;
+  return `<section class="today-list today-planner qu" data-open="${open}" aria-label="${t("qu.title")}"><button class="qu-row" data-action="plans-toggle" aria-expanded="${open}" aria-controls="qu-body"><i class="qu-box" aria-hidden="true"></i><b>${t("qu.title")}</b><small data-qu-summary>${esc(summary)}</small><span class="qu-chev" aria-hidden="true">▾</span></button><div class="qu-body" id="qu-body" ${open ? "" : "hidden"}><p class="qu-hint">${t("plan.hint")}</p><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${labsOn() ? habitsLink : ""}</div></section>`;
 }
 const PLANS_OPEN_KEY = "little-days.homePlans";
 function plansOpen() {
@@ -964,6 +967,8 @@ function calendarWallHTML() {
   return `<section class="cal-wall">${backdrop ? `<img class="cal-wall-backdrop" src="${esc(backdrop)}" alt="" aria-hidden="true">` : ""}<div class="cal-wall-glow" aria-hidden="true"></div><div class="cal-wall-head"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><div><h2>${esc(title)}</h2><small>${t("calendar.wrapped", { year })}</small></div><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="cal-wall-grid">${weekdays.map((d) => `<span class="wall-weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div><p class="cal-wall-stats">${t("calendar.wallStats", { days, pictures })}</p></section>`;
 }
 function calendarPage() {
+  // B5: 成长轨迹 is frozen with Growth (Labs); the calendar shows memories.
+  if (calendarMode === "growth" && !labsOn()) calendarMode = "memory";
   const year = month.getFullYear(),
     monthIndex = month.getMonth(),
     count = new Date(year, monthIndex + 1, 0).getDate(),
@@ -993,8 +998,8 @@ function calendarPage() {
   }).join("");
   const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><span class="page-top-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></span></header>`;
   if (calendarMode === "wall")
-    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
-  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button><button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button><button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span><span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span><span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
+    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
+  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span>${labsOn() ? `<span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span>` : ""}<span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -1273,6 +1278,10 @@ function keeperArt(mood = "idle", { follow = true, cls = "" } = {}) {
 function keeperInviteHTML() {
   const k = keeperNow();
   if (k.enabled || k.invite === "dismissed") return "";
+  // B3: the invitation waits until the first page of one's own is kept, and
+  // sits under the photo card (the way to start stays in the first screen).
+  // (The old sample journal — older test suites only — behaves as before.)
+  if (!state().entries.some((e) => !e.isDemo) && readKey("little-days.with-samples") !== "1") return "";
   return `<div class="keeper-invite"><span class="keeper" data-keeper-follow>${keeperImage(catalog, { animal: "cat", mood: "happy", label: "" })}</span><div><b>${t("keeper.invite.title")}</b><small>${t("keeper.invite.body")}</small><span class="keeper-invite-actions"><button class="secondary" data-action="keeper-onboard">${t("keeper.invite.yes")}</button><button class="text-button" data-action="keeper-invite-dismiss">${t("keeper.invite.later")}</button></span></div></div>`;
 }
 // Perched on the top edge of today's notebook card, paws over the edge.
@@ -2773,7 +2782,7 @@ function booksPage() {
   const more = rest.length ? `<button class="shelf-tags-more" data-action="shelf-tags-more" aria-expanded="${shelfTagsOpen}">${t(shelfTagsOpen ? "books.tagsLess" : "books.tagsMore", { count: rest.length })}</button>` : "";
   const panel = rest.length && shelfTagsOpen ? `<div class="shelf-tags-panel"><input type="search" data-tag-search maxlength="20" placeholder="${t("books.tagsSearch")}" aria-label="${t("books.tagsSearch")}"><div class="shelf-tags-all">${rest.map(chip).join("")}</div></div>` : "";
   const tagRow = tags.length ? `<div class="shelf-tags" role="group" aria-label="${t("books.tags")}"><button data-action="shelf-tag" data-tag="" aria-pressed="${!shelfTag}">${t("books.allTags")}</button>${top.map(chip).join("")}${more}</div>${panel}` : "";
-  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours ? "" : keeperShelfHTML(all)}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
+  return `<header class="page-top"><div><h1 class="page-title">${t("books.title")}</h1><p class="page-subtitle">${t("books.subtitle")}</p></div><span class="page-top-actions">${labsOn() ? `<button class="me-chip" data-action="books-view" data-view="profile" aria-label="${t("me.tab")}">${t("me.tab")} ›</button>` : ""}<button class="icon-button" data-action="new-book" aria-label="${t("books.new")}">${icon("plus")}</button></span></header>${labsOn() ? switcher : ""}${tagRow}${ours ? "" : keeperShelfHTML(all)}${ours && !list.length ? `<div class="empty our-empty">${t("books.oursEmpty")}</div>` : shelfHTML(list, !ours)}${ours || !labsOn() ? "" : habitBookHTML()}${ours ? "" : suggestedBooksHTML()}<p class="home-quote">A home for every little story.</p>`;
 }
 
 // Books written together with friends (the collaborative demo): at least one
@@ -4028,7 +4037,7 @@ function moreSheetHTML(tools) {
     (isDayPage() ? "" : tile('data-action="mood-open"', "mood", t("dock.mood"), "dock-btn")) +
     tile('data-action="open-pages"', "pages", t("more.toc")) +
     tile('data-action="guide-open"', "guide", t("more.guide")) +
-    toolTile("growth", t("dock.growth")) +
+    (labsOn() ? toolTile("growth", t("dock.growth")) : "") +
     toolTile("book", t("dock.book"));
   // (换一种写法 is rarely changed: it goes last, so 媒体与创作 shows without scrolling)
   return `${group(t("more.groupLook"), look)}${group(t("more.groupMake"), make, sound + studioMusicHTML())}${group(t("more.groupPages"), pages)}${mode}`;
@@ -5964,10 +5973,13 @@ function streakNow() {
   return streakInfo(recordedDays(state()), dateKey());
 }
 function streakChipHTML() {
+  if (!labsOn()) return "";
   const s = streakNow();
   return `<button class="streak-chip ${s.today ? "done" : ""}" data-action="streak-open"><i class="streak-dot" aria-hidden="true"></i>${s.streak ? t("streak.chip", { count: s.streak, week: s.weekCount }) : t("streak.start")}</button>`;
 }
 function maybeCelebrate(anywhere = false) {
+  // B4 (frozen for now): no streak stamp popping up on its own; with Labs on it works as before.
+  if (!labsOn()) return;
   if ((!anywhere && page !== "home") || document.querySelector("dialog[open]")) return;
   const s = streakNow();
   if (!s.today) return;
@@ -10687,6 +10699,16 @@ async function start() {
   );
   [tokens, features] = responses;
   catalog = responses[3];
+  // B2: the very first start (no language chosen, no sign of earlier use)
+  // follows the device's language; anyone already using the app keeps the
+  // language they had (Chinese was the default), so an update never switches it.
+  try {
+    if (localStorage.getItem("little-days.language") == null) {
+      const used = hasTraces(localStorage) || localStorage.getItem("little-days.v1") != null;
+      const device = String(navigator.languages?.[0] || navigator.language || "").toLowerCase();
+      localStorage.setItem("little-days.language", used || device.startsWith("zh") ? "zh-CN" : "en");
+    }
+  } catch {}
   configureI18n(responses[4], localStorage);
   document.documentElement.lang = languageCode();
   // Colors come from tokens.css / themes.css (generated from the shared
@@ -10723,7 +10745,17 @@ async function start() {
     useDurable = choice === "earlier";
   }
   const volatile = decision.kind === "new" && decision.volatile;
-  store = new Store(localStorage, responses[2], undefined, {
+  // B1: a new journal starts empty — no sample pages, days or habits mixed
+  // into one's own books, calendar and page counts. Journals that already
+  // have samples keep them (Settings → 示例 removes the untouched ones), and
+  // no new samples are added to them. ("little-days.with-samples" = "1" keeps
+  // the old sample journal, for the older test suites.)
+  const withSamples = localStorage.getItem("little-days.with-samples") === "1";
+  // The three starting books are named in the interface language when the
+  // journal is new (preset names, not the person's words; existing books keep theirs).
+  const startBooks = responses[2].books.map((b) => ({ ...b, title: t(`book.default.${b.id}`) === `book.default.${b.id}` ? b.title : t(`book.default.${b.id}`) }));
+  const journalSeed = withSamples ? responses[2] : { ...responses[2], books: startBooks, journals: [], sampleDays: [], habits: [] };
+  store = new Store(localStorage, journalSeed, undefined, {
     durableRaw,
     useDurable,
     // IndexedDB could not open on a first start: keep LocalStorage only, so a

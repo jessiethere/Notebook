@@ -48,6 +48,20 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.39 B1–B5：首次体验（P0 第四批）
+
+- **需求**：示例数据混入、默认语言、375 首页入口被遮、连续记录弹窗、Growth 残留。不能用删除数据的方式去掉示例；区分示例与用户自己保存/修改过的内容。
+- **根因与修复**：
+  - B1 新手帐由 seed 生成示例页（`journals`）、示例日子（`sampleDays`，按 `samplesVersion` 追加）和 3 个示例习惯。`start()` 现在给 `Store` 一份不含这三项的 seed：新手帐是空的；已有手帐的示例原样保留（不删除；Settings → 示例 只移除未修改的 `isDemo`，用户改过的示例早已 `isDemo:false`），以后也不再追加新示例。新安装的默认三本书按界面语言命名（`book.default.*`；已有的书不改名）。`little-days.with-samples=1` 只给旧测试套件保留旧示例手帐（`tests/signed-in.cjs` 设置）。
+  - B2 `little-days.language` 为空时：没有任何使用痕迹（`hasTraces` / 已有手帐）→ 按 `navigator.languages[0]` 选中文或英文并保存；已经在用的人写入 zh-CN，保持原来的样子。
+  - B3 Keeper 邀请卡从照片卡上方移到「今天怎么记」区域下方，并且只在第一页自己的内容保存后出现（旧示例模式除外）。375×667 首屏「选今天的照片」底部 475px < 导航栏 597px。
+  - B4 `maybeCelebrate` 与 `streakChipHTML` 在 Labs 关闭时不出现（代码保留）。
+  - B5 首页小计划里的习惯、书架「我的习惯」、日历「成长轨迹」页签与图例、Studio 的成长卡工具、`growth` 页路由都放到 `labsOn()` 后面；数据不动。
+- **文件**：`Public/app.js`、`Packages/.../i18n.json`（`book.default.*`）、`Public/js/whats-new.mjs`（10.39）、`tests/signed-in.cjs`、新 `tests/v139-browser.cjs`。
+- **测试**：`tests/v139-browser.cjs` 3 项（zh-CN 375 / en-US 430 真正首次打开：语言、首屏入口、无示例/习惯/连续记录/成长轨迹/我的习惯、英文书名、第一页保存后不弹印章、邀请出现在照片卡下方、打开 Labs 后 Growth 回来；英文设备上的老用户保持中文、示例/自己的页/习惯全部保留且不新增）。受影响的旧套件 v71 v110 已过；全量回归见 C 批日志。
+- **未验证**：iOS WKWebView 里 `navigator.languages` 是否反映系统语言（Xcode 工程 knownRegions 有 zh-Hans，但没有 .lproj 资源），需要在模拟器用 `-AppleLanguages (zh-Hans)` 和 `(en)` 各启动一次确认；列入模拟器测试。
+- **回退**：`git revert` 本提交；没有改数据格式，也没有删除任何数据。
+
 ### 2026-11-13 — V10.38 A3：长文字不再截断；放不下时文字接到下一页（P0 第三批）
 
 - **需求**：Quick Edit 支持长文字；短文字标题式、长文字正文；完整保存；放不下时给分页建议；不允许静默截断/隐藏/丢失；验证旧页面和中英文长文字。不能只把 70 改大。
