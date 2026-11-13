@@ -8706,5 +8706,37 @@
   "quick.say.layout": {
     "zh": "空白的一页，照片、文字、贴纸自己摆。",
     "en": "A blank page — place photos, words and stickers yourself."
+  },
+  "qe.split.title": {
+    "zh": "放在一页会太挤，分成 {n} 页？",
+    "en": "Too much for one page — make it {n} pages?"
+  },
+  "qe.split.hint": {
+    "zh": "照片和文字都保留，顺序不变；每句话仍在它的照片下面。",
+    "en": "Every photo and word stays, in order; each line stays under its photo."
+  },
+  "qe.split.now": {
+    "zh": "现在 · 一页",
+    "en": "Now · one page"
+  },
+  "qe.split.page": {
+    "zh": "第 {n} 页 · {count} 张",
+    "en": "Page {n} · {count} photos"
+  },
+  "qe.split.keep": {
+    "zh": "保持一页",
+    "en": "Keep one page"
+  },
+  "qe.split.do": {
+    "zh": "分成 {n} 页",
+    "en": "Make {n} pages"
+  },
+  "qe.split.keepNote": {
+    "zh": "保持一页时，有的照片会比较小，或者排得比较挤。",
+    "en": "On one page some photos will be small, or the page will be crowded."
+  },
+  "qe.split.kept": {
+    "zh": "好的，保持一页。之后想分开，可以在「换个排版」里找到。",
+    "en": "One page it is. To split it later, look in Layout."
   }
 }

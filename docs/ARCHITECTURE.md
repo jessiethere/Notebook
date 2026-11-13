@@ -532,3 +532,18 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
 - `layoutCore` 杂志风格：双照片排版的条件改为 `n === 2 && (!title || textUnits(title) > 24)`；有长文字时，文字放在这一对照片下面。
 - 两张以上照片：大照片下面的照片里，只要有一张不到页面宽的 14%（或者放不下），就去掉大照片，所有照片用 `rowsIn` 排成几行。
 - 测试：`tests/v130.test.mjs`（864 种组合）、`tests/v130-browser.cjs`。
+
+## 2026-11-13 V10.33–V10.34 排版质量 L1–L3
+
+- `scrapbook-layout.mjs`
+  - `layoutMoment(input, style, variant)`：`input.measure` 可选。用法：先在 `MEASURE` 上下文里试风格自己的三种排版（`layoutMomentBase`），用 `checkQuality` 检查；不够时再用 `arrangedPages` 生成备选排法；从合格的里选，选项不重复。`result.quality = { ok, options, from, hard, soft }`。
+  - `measuredBlock`、`wrapLines`、`lineFor`、`fitText` 都按字体和字重测量文字。
+  - 规则数值在 `QUALITY`；`minShortFor(aspect)` 给很高的图片 26%。
+  - `suggestSplit(input, style)`：按顺序分成 2–4 页，每页都合格；没有就返回 null。
+- `app.js`
+  - `measureWords`：隐藏的 `.journal-canvas.scrapbook-page.measure-host`，1000 px 宽，`.layer.text-layer` 用 `textCSS` 设置样式，结果有缓存。字体没加载好时用 `document.fonts.check` 和 `load` 等待，加载后调用 `fontsArrived` 重排故事。
+  - `story.quality[momentId]`：只为真实页面记录。
+  - `storySplitFor` / `storySplitHTML`：建议卡和预览。
+  - 动作 `story-split-pages`（用 `splitAt` 加 `story-regroup`）、`story-keep-one`、`story-split-show`。
+  - `storyReplacePhoto` 会同时更新 `story.groups`。
+- 测试：`tests/v134.test.mjs`、`tests/v133-browser.cjs`（在真实页面上检查）；v119、v128 迁移。

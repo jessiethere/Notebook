@@ -36,11 +36,71 @@ export function textBlock(text, size, width, lineHeight = 1.35) {
   const lines = text ? Math.max(1, Math.ceil(textUnits(text) / perLine)) : 0;
   return { lines, height: (lines * size * 3.375 * lineHeight) / 13.5 };
 }
-// A caption size that keeps long words readable inside `maxLines`.
-export function fitText(text, base, width, maxLines = 4, min = 11) {
+// ---------- V10.33 (L1) · Words measured as they will really render ----------
+// While a page is laid out, the app lends a measure(text, size, width,
+// fontId, weight) that renders the words off screen in their real font and
+// returns their height (% of the page height), or null while that font is
+// still loading. Without one (tests, a font not loaded yet) the words are
+// counted the way a browser wraps them — Latin words move whole, a CJK
+// closing mark never starts a line, capitals are wider — so a page is never
+// passed on a guess that is too small. Sizes under 10 render at 10.
+let MEASURE = null;
+const LINE = 0.25 * 1.35; // a line of size 1, in % of the page height
+const CJK_CLOSE = /[，。、！？；：）」』〉》,.!?;:)]/;
+const glyphW = (ch) => (CJK.test(ch) ? 1 : /[MW]/.test(ch) ? 0.92 : /[A-Z]/.test(ch) ? 0.72 : /[mw]/.test(ch) ? 0.82 : /[0-9]/.test(ch) ? 0.58 : /[il.,'!:;|]/.test(ch) ? 0.3 : ch === " " ? 0.3 : 0.56);
+const WRAPPED = new Map();
+export function wrapLines(text, size, width) {
+  const key = `${size}|${Math.round(width * 4)}|${text}`;
+  if (WRAPPED.has(key)) return WRAPPED.get(key);
+  if (WRAPPED.size > 4000) WRAPPED.clear();
+  const per = Math.max(1, (width * 3.2) / Math.max(10, size));
+  let lines = 0;
+  for (const para of String(text || "").split("\n")) {
+    lines++;
+    let x = 0;
+    for (const tok of para.match(/[A-Za-z0-9'’\-]+|\s+|./gu) || []) {
+      const w = [...tok].reduce((sum, ch) => sum + glyphW(ch), 0);
+      if (/^\s+$/.test(tok)) { x += w; continue; }
+      if (x + w <= per + 1e-6) { x += w; continue; }
+      if (CJK_CLOSE.test(tok)) { lines++; x = 1 + w; continue; }
+      if (w > per) { if (x > 0) lines++; let rest = w; while (rest > per) { lines++; rest -= per; } x = rest; continue; }
+      lines++;
+      x = w;
+    }
+  }
+  WRAPPED.set(key, lines);
+  return lines;
+}
+// { lines, height } of words at `size` in a box `width`% wide, in `font`.
+export function measuredBlock(text, size, width, font = null, weight = 400) {
+  if (!String(text || "").trim()) return { lines: 0, height: 0 };
+  const sz = Math.max(10, size);
+  // A slightly narrower box than asked: never fewer lines than the real one.
+  const w = Math.floor(width * 2) / 2;
+  const real = MEASURE ? MEASURE(String(text), sz, w, font, weight) : null;
+  if (Number.isFinite(real) && real > 0) return { lines: Math.max(1, Math.round(real / (sz * LINE))), height: real };
+  const lines = wrapLines(text, sz, w);
+  return { lines, height: lines * sz * LINE };
+}
+// A size that keeps words readable inside `maxLines` (never under 10, the
+// smallest size a page shows).
+export function fitText(text, base, width, maxLines = 4, min = 11, font = null, weight = 400) {
   let size = base;
-  while (size > min && textBlock(text, size, width).lines > maxLines) size -= 1;
-  return { size, ...textBlock(text, size, width) };
+  const floor = Math.max(10, min);
+  while (size > floor && measuredBlock(text, size, width, font, weight).lines > maxLines) size -= 1;
+  return { size: Math.max(floor, size), ...measuredBlock(text, Math.max(floor, size), width, font, weight) };
+}
+// The page's own line: a headline while it fits in two lines at headline
+// size (measured, in its real font and the page's type size); otherwise body
+// text at a comfortable reading size — never shrunk to squeeze, never cut.
+export function lineFor(title, headline, width, typeSize = 1, font = null, weight = 500) {
+  if (!title) return { size: headline, lines: 0, height: 0, body: false };
+  const head = Math.max(10, headline * typeSize);
+  const h = measuredBlock(title, head, width, font, weight);
+  if (h.lines <= 2) return { size: head, lines: h.lines, height: h.height, body: false };
+  const size = Math.max(10, 16 * typeSize);
+  const b = measuredBlock(title, size, width, font, weight);
+  return { size, lines: b.lines, height: b.height, body: true };
 }
 
 // The frame around a photo (padding in % of page width, as styles.css):
@@ -181,8 +241,9 @@ function textLayer(look, values) {
 function centreVertically(place, layers, top = 8, bottom = 95) {
   const boxes = Object.values(place).filter((b) => b.h);
   const texts = layers.filter((l) => l.bind !== "time");
-  const tops = boxes.map((b) => b.y - b.h / 2).concat(texts.map((l) => l.y - textBlock(l.text, l.fontSize, l.w).height / 2));
-  const ends = boxes.map((b) => b.y + b.h / 2).concat(texts.map((l) => l.y + textBlock(l.text, l.fontSize, l.w).height / 2));
+  const hOf = (l) => measuredBlock(l.text, l.fontSize, l.w, l.fontId, l.weight).height;
+  const tops = boxes.map((b) => b.y - b.h / 2).concat(texts.map((l) => l.y - hOf(l) / 2));
+  const ends = boxes.map((b) => b.y + b.h / 2).concat(texts.map((l) => l.y + hOf(l) / 2));
   if (!tops.length) return;
   const minY = Math.min(...tops),
     maxY = Math.max(...ends);
@@ -198,8 +259,14 @@ function centreVertically(place, layers, top = 8, bottom = 95) {
 // beside photo 2. The layer is bound to the photo by the photo layer's id
 // (`captionOf`), never by its time or its place in the row.
 const CAPTION_SIZE = { editorial: 10.5, cozy: 13, playful: 11.5 };
-const captionWidth = (w) => Math.min(86, Math.max(26, w));
-const capBox = (l) => ({ x: l.x, y: l.y, w: l.w, h: textBlock(l.text, l.fontSize, l.w).height });
+// V10.33: a photo's words are as wide as the photo (they used to be at least
+// 26% wide and could reach over the photos beside a narrow one).
+const captionWidth = (w) => Math.min(86, Math.max(18, w));
+const capBox = (l) => ({ x: l.x, y: l.y, w: l.w, h: measuredBlock(l.text, l.fontSize, l.w, l.fontId, l.weight).height });
+// The font and weight the page's words will really render in (the page's
+// quick type wins over the style's default).
+const wordsFont = (text, look, type) => type?.fontId || pickFont(text, look);
+const wordsWeight = (type, title) => (type?.bold ? 700 : title ? 500 : 400);
 // The page's quick type (the Moment's / day's `typeStyle`, chosen in the
 // magazine view): { fontId, color, bold, align, scale }. Only the page's
 // own words follow it (its line and the photos' lines) — not the small
@@ -222,7 +289,7 @@ export function applyType(layers, type) {
 // input: { visuals: [{ id, aspect, caption? }], title, time, audio: [{ id }], type? }
 // Returns { place: { [id]: { x, y, w, h, rotation, frame, tape } },
 //           layers: [generated text layers], paper, backdrop }.
-export function layoutMoment(input, styleId = "editorial", variant = 0) {
+function layoutMomentBase(input, styleId = "editorial", variant = 0) {
   const style = styleOf(styleId);
   const look = STYLE_LOOK[style];
   const scale = typeScale(input.type);
@@ -240,7 +307,7 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
     const text = said(v);
     const box = first.place[v.id];
     if (!text || !box) return v;
-    const fit = fitText(text, size, captionWidth(box.w), 5, 9);
+    const fit = fitText(text, size, captionWidth(box.w), 5, 10, wordsFont(text, look, input.type), wordsWeight(input.type, false));
     const capH = fit.height + 1.8;
     capOf.set(v.id, { text, fit, capH });
     const unitAspect = ((box.w - px) * PAGE_RATIO) / Math.max(4, box.h + capH - py);
@@ -258,9 +325,9 @@ export function layoutMoment(input, styleId = "editorial", variant = 0) {
     // Words re-measured at the photo's final width (never cut: fewer lines
     // only by a slightly smaller size, then more lines).
     const w = captionWidth(unit.w);
-    const fit = fitText(cap.text, size, w, 5, 9);
+    const fit = fitText(cap.text, size, w, 5, 10, wordsFont(cap.text, look, input.type), wordsWeight(input.type, false));
     const x = Math.min(96 - w / 2, Math.max(4 + w / 2, unit.x));
-    const layer = textLayer(look, { bind: "caption", captionOf: v.id, text: cap.text, x: round(x), y: round(top + photoH + 1.2 + fit.height / 2), w: round(w), fontId: pickFont(cap.text, look), fontSize: fit.size, align: "center", rotation: round((unit.rotation || 0) / 2), color: style === "editorial" ? look.muted : look.ink });
+    const layer = textLayer(look, { bind: "caption", captionOf: v.id, text: cap.text, x: round(x), y: round(top + photoH + 1.2 + fit.height / 2), w: round(w), fontId: wordsFont(cap.text, look, input.type), weight: wordsWeight(input.type, false), fontSize: fit.size, align: "center", rotation: round((unit.rotation || 0) / 2), color: style === "editorial" ? look.muted : look.ink });
     second.layers.push(layer);
     made.push({ layer, v, size });
   }
@@ -279,11 +346,12 @@ function settleCaptions(result, made, frame) {
   const ok = (m) => {
     const box = capBox(m.layer);
     if (box.y - box.h / 2 < 1 || box.y + box.h / 2 > 99.5 || box.x - box.w / 2 < 1 || box.x + box.w / 2 > 99) return false;
-    return others(m).every((o) => overlapArea(box, o) <= 0.06 * box.w * box.h);
+    // V10.33: not on anything — the total, not 6% on each thing.
+    return others(m).reduce((sum, o) => sum + overlapArea(box, o), 0) <= 0.003 * box.w * box.h;
   };
   const place = (m, where = "below") => {
     const p = result.place[m.v.id];
-    const fit = fitText(m.layer.text, m.size, m.layer.w, 5, 9);
+    const fit = fitText(m.layer.text, m.size, m.layer.w, 5, 10, m.layer.fontId, m.layer.weight);
     m.layer.fontSize = fit.size;
     m.layer.x = round(Math.min(99 - m.layer.w / 2, Math.max(1 + m.layer.w / 2, p.x)));
     m.layer.y = round(where === "below" ? p.y + p.h / 2 + 1.2 + fit.height / 2 : p.y - p.h / 2 - 1.2 - fit.height / 2);
@@ -329,17 +397,18 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
           textLayer(look, { bind: "time", prefix: "kicker", text: input.time || "", fontId: look.meta, fontSize: 8.5, spacing: 2.4, color: look.accent, weight: 700, ...values })
         : textLayer(look, { bind: "time", text: input.time || "", fontId: look.meta, fontSize: style === "cozy" ? 14 : 9, spacing: 0, color: look.muted, weight: 400, ...values }),
     );
+  const titleFont = wordsFont(title, look, input.type);
+  const titleWeight = wordsWeight(input.type, true);
   const caption = (values) => {
-    layers.push(textLayer(look, { bind: "title", text: title, fontId: pickFont(title, look), ...values }));
+    layers.push(textLayer(look, { bind: "title", text: title, fontId: titleFont, ...values }));
   };
   const audioBand = (input.audio || []).length ? 9 : 0;
   let arrangement = "";
 
   if (style === "editorial") {
     const textW = n === 1 && v !== 0 ? 50 : 86;
-    // A headline, not a caption: big serif for short lines, smaller for long.
-    const base = (textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 19) * typeSize;
-    const fit = title ? fitText(title, base, textW, 4) : { size: base, lines: 0, height: 0 };
+    // A headline while it fits in two lines; a longer line is body text.
+    const fit = lineFor(title, textUnits(title) <= 14 ? 24 : 21, textW, typeSize, titleFont, titleWeight);
     const textH = title ? fit.height + 4 : 0;
     const bottom = 94 - textH - audioBand;
     // The folio at the foot of the page, like a magazine.
@@ -353,7 +422,7 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
         const left = v === 1;
         put(visuals[0], { ...box, x: left ? 7 + box.w / 2 : 93 - box.w / 2, y: 8 + box.h / 2 }, 0);
         const colW = 86 - box.w - 5;
-        const f = fitText(title, 20 * typeSize, colW, 8);
+        const f = fitText(title, 20 * typeSize, colW, 8, 11, titleFont, titleWeight);
         caption({ x: left ? 93 - colW / 2 : 7 + colW / 2, y: 8 + box.h - f.height / 2 - 2, w: colW, fontSize: f.size, align: left ? "left" : "right" });
       } else {
         // A single landscape photo opens edge to edge (the magazine look).
@@ -396,7 +465,7 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
           put(rest[0], { ...second, x: 93 - second.w / 2, y: region.top + second.h / 2 }, 1);
           if (title) {
             const colW = 86 - second.w - 4;
-            const f = fitText(title, 18 * typeSize, colW, 6);
+            const f = fitText(title, 18 * typeSize, colW, 6, 11, titleFont, titleWeight);
             caption({ x: 7 + colW / 2, y: region.top + f.height / 2 + 1, w: colW, fontSize: f.size });
           }
           top = -1;
@@ -414,7 +483,7 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
       if (title && top !== -1) caption({ x: 50, y: bottom + 2 + fit.height / 2, w: 86, fontSize: fit.size, weight: 500 });
     }
   } else if (style === "cozy") {
-    const fit = title ? fitText(title, 22 * typeSize, 76, 3, 13) : { size: 22, lines: 0, height: 0 };
+    const fit = lineFor(title, 22, 76, typeSize, titleFont, titleWeight);
     const textH = title ? fit.height + 5 : 0;
     const bottom = 95 - textH - audioBand;
     if (input.time) meta({ x: v === 1 ? 20 : 80, y: 5, w: 30, align: v === 1 ? "left" : "right", rotation: v === 1 ? 3 : -3 });
@@ -437,7 +506,7 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
     if (title) caption({ x: v === 1 ? 46 : 54, y: bottom + 3 + fit.height / 2, w: 76, fontSize: fit.size, align: "center", rotation: v === 1 ? 1.5 : -1.5 });
   } else {
     // playful
-    const fit = title ? fitText(title, 22 * typeSize, 80, 3, 13) : { size: 22, lines: 0, height: 0 };
+    const fit = lineFor(title, 22, 80, typeSize, titleFont, titleWeight);
     const headH = title ? fit.height + 6 : 4;
     const top = 6 + headH;
     const bottom = 95 - audioBand;
@@ -655,4 +724,329 @@ export function boundText(layer, page) {
   if (layer.bind === "title" && !text && layer.prefix === "time") text = source.time || "";
   if (layer.excerpt && text.length > layer.excerpt) text = `${text.slice(0, layer.excerpt - 1)}…`;
   return text;
+}
+
+// ---------- V10.33 (L1) · Layout quality check ----------
+// Hard rules (a page that breaks one is not used when another passes):
+//   · a photo's short side ≥ 20% of the page width, its area ≥ 5.5% of the
+//     page (starting values, checked on real pages);
+//   · words never on a photo, never on other words, never off the page;
+//   · photos inside the page (one landscape photo may run edge to edge) and,
+//     in the magazine style, not on each other (Polaroids and the collage
+//     may overlap a little on purpose).
+// Soft (a score, not a failure): the smallest photo about a third of the
+// largest when there are up to four (a lead photo with smaller ones is a
+// fine design), and no big empty band without a reason.
+export const QUALITY = { minShort: 20, minShortTall: 26, tall: 0.62, minArea: 5.5, balanceFew: 1 / 3, balanceMany: 1 / 5, textOnPhoto: 0.3, emptyBand: 24 };
+// Calibrated on real pages: a very tall picture (9:16 and taller — phone
+// screenshots, memes) usually carries words; at 20% of the page wide those
+// words were about 8 px high on a phone. It gets 26% (about 90 px).
+export const minShortFor = (aspect) => (safeAspect(aspect) <= QUALITY.tall ? QUALITY.minShortTall : QUALITY.minShort);
+const edgesOf = (b) => ({ l: b.x - b.w / 2, r: b.x + b.w / 2, t: b.y - b.h / 2, b: b.y + b.h / 2 });
+const overlapOf = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+export function checkQuality(result, ids, { loose = false, fullBleed = false } = {}) {
+  const hard = [];
+  const soft = [];
+  const photos = ids.map((id) => ({ id, ...result.place[id] })).filter((p) => p.w && p.h);
+  for (const p of photos) {
+    const short = Math.min(p.w, p.h / PAGE_RATIO);
+    const aspect = (p.w * PAGE_RATIO) / p.h;
+    if (short < minShortFor(aspect) || (p.w * p.h) / 100 < QUALITY.minArea) hard.push({ kind: "photo-too-small", id: p.id, value: +short.toFixed(1) });
+    const e = edgesOf(p);
+    if (!fullBleed && (e.l < 0.5 || e.r > 99.5 || e.t < 0.5 || e.b > 99.5)) hard.push({ kind: "photo-off-page", id: p.id });
+  }
+  if (!loose) for (let i = 0; i < photos.length; i++) for (let j = i + 1; j < photos.length; j++) if (overlapOf(edgesOf(photos[i]), edgesOf(photos[j])) > 0.5) hard.push({ kind: "photo-on-photo" });
+  const words = (result.layers || []).filter((l) => l.kind === "text" && (l.bind === "title" || l.bind === "caption") && String(l.text || "").trim());
+  const boxes = words.map((l) => ({ l, e: edgesOf({ x: l.x, y: l.y, w: l.w, h: measuredBlock(l.text, l.fontSize, l.w, l.fontId, l.weight).height }) }));
+  for (const { l, e } of boxes) {
+    const area = Math.max(0.01, (e.r - e.l) * (e.b - e.t));
+    if ((photos.reduce((sum, p) => sum + overlapOf(e, edgesOf(p)), 0) / area) * 100 > QUALITY.textOnPhoto) hard.push({ kind: "words-on-photo", bind: l.bind });
+    if (e.l < 1 || e.r > 99 || e.t < 1 || e.b > 99) hard.push({ kind: "words-off-page", bind: l.bind });
+  }
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) if (overlapOf(boxes[i].e, boxes[j].e) > 0.3) hard.push({ kind: "words-on-words" });
+  const areas = photos.map((p) => p.w * p.h);
+  const balance = areas.length > 1 ? Math.min(...areas) / Math.max(...areas) : 1;
+  if (balance < (areas.length <= 4 ? QUALITY.balanceFew : QUALITY.balanceMany)) soft.push({ kind: "uneven", value: +balance.toFixed(2) });
+  const spans = [...photos.map(edgesOf), ...boxes.map((x) => x.e)].map((e) => [e.t, e.b]).sort((a, b) => a[0] - b[0]);
+  let reach = spans.length ? spans[0][1] : 0, gap = 0;
+  for (const [t, b] of spans.slice(1)) {
+    gap = Math.max(gap, t - reach);
+    reach = Math.max(reach, b);
+  }
+  if (gap > QUALITY.emptyBand) soft.push({ kind: "empty-band", value: +gap.toFixed(1) });
+  const minShort = photos.length ? Math.min(...photos.map((p) => Math.min(p.w, p.h / PAGE_RATIO))) : 0;
+  const cover = areas.reduce((sum, a) => sum + a, 0) / (86 * 86);
+  const score = cover * (0.6 + 0.4 * Math.min(1, balance * 3)) * Math.min(1, minShort / 28) * (soft.some((x) => x.kind === "empty-band") ? 0.8 : 1);
+  return { ok: !hard.length, hard, soft, score };
+}
+
+// ---------- One Moment's page ----------
+// input: { visuals: [{ id, aspect, caption? }], title, time, audio: [{ id }],
+//          type?, measure? }
+// The layout asked for (`variant`) is used when it passes the hard rules;
+// otherwise the next one that does. result.quality says how it went:
+//   { ok, variant, hard: [...], soft: [...] }.
+export function layoutMoment(input, styleId = "editorial", variant = 0) {
+  const before = MEASURE;
+  MEASURE = typeof input?.measure === "function" ? input.measure : null;
+  try {
+    return layoutChecked(input, styleOf(styleId), variant);
+  } finally {
+    MEASURE = before;
+  }
+}
+function checkOptions(input, style) {
+  const n = (input.visuals || []).length;
+  return { loose: style !== "editorial", fullBleed: n === 1 };
+}
+// ---------- V10.33 (L2) · Other ways to arrange the photos ----------
+// Used only when none of the style's own layouts passes the hard rules:
+//   · tidy rows (with one lead photo over a pair, and the like); every photo
+//     keeps the width it needs to be seen — a narrow one stands a little
+//     taller than its row instead of being squeezed — and a lead photo is
+//     narrowed when it would dwarf the others (about 3× the smallest);
+//   · two columns that end level;
+//   · a tall photo (9:16, 3:4…) in its own column, the others in rows beside it.
+// Each photo's words sit right under it, as wide as it, measured in their
+// real font. The style keeps its look (frames, a slight tilt, tape, its
+// paper); only the arrangement changes. Deterministic; photos never cropped.
+const GAP = 2.4, CAP_GAP = 1.2;
+const floorWidth = (a) => Math.max(minShortFor(a), QUALITY.minShort * a, Math.sqrt((QUALITY.minArea * 100 * a) / PAGE_RATIO)) + 0.3;
+function unitHeight(u, w, ctx) {
+  return frameHeight(u.a, w, ctx.frame) + (u.cap ? CAP_GAP + measuredBlock(u.cap, ctx.capSize, w, u.font, ctx.capWeight).height : 0);
+}
+function widthAtHeight(u, H, ctx) {
+  let lo = 4, hi = 100;
+  for (let k = 0; k < 18; k++) {
+    const m = (lo + hi) / 2;
+    if (unitHeight(u, m, ctx) > H) hi = m;
+    else lo = m;
+  }
+  return lo;
+}
+function rowsOf(units, parts, W, ctx, caps = []) {
+  const rows = [];
+  let i = 0;
+  const wOf = (u, m) => Math.max(widthAtHeight(u, m, ctx), floorWidth(u.a));
+  for (const [r, n] of parts.entries()) {
+    const row = units.slice(i, i + n);
+    i += n;
+    const RW = Math.min(W, caps[r] || W);
+    let lo = 2, hi = 300;
+    for (let k = 0; k < 22; k++) {
+      const m = (lo + hi) / 2;
+      if (row.reduce((sum, u) => sum + wOf(u, m), 0) + GAP * (n - 1) > RW) hi = m;
+      else lo = m;
+    }
+    const widths = row.map((u) => wOf(u, lo));
+    const heights = row.map((u, j) => unitHeight(u, widths[j], ctx));
+    rows.push({ row, widths, heights, H: Math.max(...heights) });
+  }
+  return rows;
+}
+function compositions(n, max = 3) {
+  if (n === 0) return [[]];
+  const out = [];
+  for (let k = 1; k <= Math.min(max, n); k++) for (const rest of compositions(n - k, max)) out.push([k, ...rest]);
+  return out;
+}
+function arrangements(units, region, ctx) {
+  const W = region.right - region.left, H = region.bottom - region.top, cx = region.left + W / 2;
+  const out = [];
+  const place = (rows, x0, wSpan, y0, boxes) => {
+    let y = y0;
+    for (const r of rows) {
+      const rw = r.widths.reduce((sum, x) => sum + x, 0) + GAP * (r.row.length - 1);
+      let x = x0 + (wSpan - rw) / 2;
+      r.row.forEach((u, j) => {
+        boxes[u.id] = { x: x + r.widths[j] / 2, top: y + (r.H - r.heights[j]) / 2, w: r.widths[j] };
+        x += r.widths[j] + GAP;
+      });
+      y += r.H + GAP;
+    }
+  };
+  const rowsHeight = (rows) => rows.reduce((sum, r) => sum + r.H, 0) + GAP * (rows.length - 1);
+  const rowsFit = (rows, w) => rows.every((r) => r.widths.reduce((sum, x) => sum + x, 0) + GAP * (r.row.length - 1) <= w + 0.5);
+  for (const parts of compositions(units.length)) {
+    if (parts.length > 3) continue;
+    let w = W, caps = [], rows = rowsOf(units, parts, w, ctx);
+    for (let k = 0; k < 12 && rows.length > 1; k++) {
+      const all = rows.flatMap((r, ri) => r.row.map((u, j) => ({ ri, a: r.widths[j] * frameHeight(u.a, r.widths[j], ctx.frame) })));
+      const big = all.reduce((m, x) => (x.a > m.a ? x : m));
+      if (Math.min(...all.map((x) => x.a)) / big.a >= 0.34) break;
+      caps = rows.map((r, ri) => caps[ri] || W);
+      caps[big.ri] *= 0.92;
+      rows = rowsOf(units, parts, w, ctx, caps);
+    }
+    for (let k = 0; k < 30 && rowsHeight(rows) > H; k++) {
+      w *= Math.min(0.98, H / rowsHeight(rows));
+      rows = rowsOf(units, parts, w, ctx, caps.map((c) => c * (w / W)));
+    }
+    if (rowsHeight(rows) > H + 0.5 || !rowsFit(rows, W)) continue;
+    const boxes = {};
+    place(rows, region.left, W, region.top, boxes);
+    out.push({ kind: `rows ${parts.join("+")}`, boxes, height: rowsHeight(rows) });
+  }
+  const colHeight = (list, w) => list.reduce((sum, u) => sum + unitHeight(u, w, ctx), 0) + GAP * (list.length - 1);
+  const splits = [];
+  for (let k = 1; k < units.length; k++) splits.push([units.slice(0, k), units.slice(k)]);
+  for (const [A, B] of splits) {
+    if (A.length > 3 || B.length > 3) continue;
+    let lo = 5, hi = W - GAP - 5;
+    for (let k = 0; k < 20; k++) {
+      const m = (lo + hi) / 2;
+      if (colHeight(A, m) > colHeight(B, W - GAP - m)) hi = m;
+      else lo = m;
+    }
+    let wa = lo, wb = W - GAP - lo, s = 1;
+    for (let k = 0; k < 40 && Math.max(colHeight(A, wa * s), colHeight(B, wb * s)) > H; k++) s *= 0.97;
+    wa *= s;
+    wb *= s;
+    const x0 = cx - (wa + wb + GAP) / 2;
+    const boxes = {};
+    let y = region.top;
+    for (const u of A) { boxes[u.id] = { x: x0 + wa / 2, top: y, w: wa }; y += unitHeight(u, wa, ctx) + GAP; }
+    y = region.top;
+    for (const u of B) { boxes[u.id] = { x: x0 + wa + GAP + wb / 2, top: y, w: wb }; y += unitHeight(u, wb, ctx) + GAP; }
+    out.push({ kind: `columns ${A.length}|${B.length}`, boxes, height: Math.max(colHeight(A, wa), colHeight(B, wb)) });
+  }
+  const tall = units.reduce((m, u) => (u.a < m.a ? u : m), units[0]);
+  if (units.length >= 3 && tall.a < 0.8) {
+    const others = units.filter((u) => u !== tall);
+    for (const parts of compositions(others.length)) {
+      if (parts.length > 3) continue;
+      const restOf = (w) => { const rows = rowsOf(others, parts, w, ctx); return { rows, h: rowsHeight(rows) }; };
+      let lo = 5, hi = W - GAP - 10;
+      for (let k = 0; k < 16; k++) {
+        const m = (lo + hi) / 2;
+        if (unitHeight(tall, m, ctx) > restOf(W - GAP - m).h) hi = m;
+        else lo = m;
+      }
+      let wa = lo, wb = W - GAP - lo, s = 1;
+      for (let k = 0; k < 40 && Math.max(unitHeight(tall, wa * s, ctx), restOf(wb * s).h) > H; k++) s *= 0.96;
+      wa *= s;
+      wb *= s;
+      const { rows, h: hB } = restOf(wb);
+      if (!rowsFit(rows, wb)) continue;
+      const hA = unitHeight(tall, wa, ctx);
+      for (const left of [true, false]) {
+        const x0 = cx - (wa + wb + GAP) / 2;
+        const xa = left ? x0 : x0 + wb + GAP, xb = left ? x0 + wa + GAP : x0;
+        const boxes = { [tall.id]: { x: xa + wa / 2, top: region.top, w: wa } };
+        place(rows, xb, wb, region.top + Math.max(0, (hA - hB) / 2), boxes);
+        out.push({ kind: `tall column + rows ${parts.join("+")}${left ? "" : " (right)"}`, boxes, height: Math.max(hA, hB) });
+      }
+    }
+  }
+  return out;
+}
+function arrangedPages(input, style) {
+  const look = STYLE_LOOK[style];
+  const typeSize = typeScale(input.type);
+  const title = String(input.title || "").trim();
+  const titleFont = wordsFont(title, look, input.type);
+  const ctx = { frame: look.frame, capSize: Math.max(10, CAPTION_SIZE[style] * typeSize), capWeight: wordsWeight(input.type, false) };
+  const units = (input.visuals || []).map((v) => {
+    const cap = String(v.caption || "").trim();
+    return { id: v.id, a: safeAspect(v.aspect), cap, font: cap ? wordsFont(cap, look, input.type) : null };
+  });
+  const line = lineFor(title, style === "editorial" ? (textUnits(title) <= 14 ? 24 : 21) : 22, 86, typeSize, titleFont, wordsWeight(input.type, true));
+  const audioBand = (input.audio || []).length ? 9 : 0;
+  const titleOnTop = style === "playful" && title;
+  const region = { top: titleOnTop ? 6 + line.height + 3 : style === "cozy" ? 10 : 8, bottom: (titleOnTop || !title ? 94 : 94 - line.height - 4) - audioBand, left: 7, right: 93 };
+  const out = [];
+  for (const a of arrangements(units, region, ctx)) {
+    const place = {}, layers = [];
+    const shift = Math.max(0, (region.bottom - region.top - a.height) * 0.42);
+    units.forEach((u, i) => {
+      const b = a.boxes[u.id];
+      const ph = frameHeight(u.a, b.w, ctx.frame);
+      const top = b.top + shift;
+      place[u.id] = { x: round(b.x), y: round(top + ph / 2), w: round(b.w), h: round(ph), rotation: style === "editorial" ? 0 : tilt(style, i, 0) / 2, frame: ctx.frame, tape: style !== "editorial" && i % 3 === 0 };
+      if (u.cap) {
+        const h = measuredBlock(u.cap, ctx.capSize, b.w, u.font, ctx.capWeight).height;
+        layers.push(textLayer(look, { bind: "caption", captionOf: u.id, text: u.cap, x: round(b.x), y: round(top + ph + CAP_GAP + h / 2), w: round(b.w), fontId: u.font, weight: ctx.capWeight, fontSize: ctx.capSize, align: "center", color: style === "editorial" ? look.muted : look.ink }));
+      }
+    });
+    if (input.time)
+      layers.push(
+        style === "editorial"
+          ? textLayer(look, { bind: "time", prefix: "kicker", text: input.time, fontId: look.meta, fontSize: 8.5, spacing: 2.4, color: look.accent, weight: 700, x: 42, y: 4.6, w: 70 })
+          : textLayer(look, { bind: "time", text: input.time, fontId: look.meta, fontSize: style === "cozy" ? 14 : 9, color: look.muted, x: 80, y: 5, w: 30, align: "right" }),
+      );
+    if (input.folio && style === "editorial") layers.push(textLayer(look, { text: input.folio, x: 70, y: 97.6, w: 50, fontId: look.meta, fontSize: 6.5, spacing: 2, color: look.muted, align: "right" }));
+    if (title) {
+      const ends = Math.max(...Object.values(place).map((b) => b.y + b.h / 2), ...layers.filter((l) => l.bind === "caption").map((l) => l.y + measuredBlock(l.text, l.fontSize, l.w, l.fontId, l.weight).height / 2));
+      const y = titleOnTop ? 6 + line.height / 2 : ends + 3 + line.height / 2;
+      layers.push(textLayer(look, { bind: "title", text: title, fontId: titleFont, x: 50, y: round(y), w: 86, fontSize: line.size, weight: line.body ? 400 : 500, align: line.body && style === "editorial" ? "left" : "center" }));
+    }
+    (input.audio || []).forEach((clip, i) => {
+      place[clip.id] = { x: 50, y: 95 - audioBand / 2 - i * 0.5, w: 70, rotation: 0 };
+    });
+    out.push({ place, layers, paper: look.paper, backdrop: style === "playful" ? PLAYFUL_BACKDROPS[0] : null, arrangement: a.kind });
+  }
+  return out;
+}
+const signatureOf = (r, ids) => ids.map((id) => { const b = r.place[id]; return b ? `${Math.round(b.x / 4)},${Math.round(b.y / 4)},${Math.round(b.w / 4)}` : "-"; }).join("|");
+// The page's options: the style's own layouts that pass, then (when fewer
+// than three) other arrangements that pass, best first; no two alike.
+// `variant` picks among them, so 换个排版 never shows the same page twice.
+function layoutChecked(input, style, variant) {
+  const ids = (input.visuals || []).map((v) => v.id);
+  const opts = checkOptions(input, style);
+  const options = [];
+  const seen = new Set();
+  const add = (result, q, from) => {
+    const sig = signatureOf(result, ids);
+    if (seen.has(sig)) return;
+    seen.add(sig);
+    options.push({ result, q, from });
+  };
+  const tried = [];
+  for (const v of [0, 1, 2]) {
+    const result = layoutMomentBase(input, style, v);
+    const q = checkQuality(result, ids, opts);
+    tried.push({ result, q, from: `style ${v}` });
+    if (q.ok) add(result, q, `style ${v}`);
+  }
+  if (options.length < 3 && ids.length) {
+    const others = arrangedPages(input, style).map((result) => {
+      applyType(result.layers, input.type);
+      return { result, q: checkQuality(result, ids, opts) };
+    });
+    tried.push(...others.map((o) => ({ ...o, from: o.result.arrangement })));
+    for (const o of others.filter((x) => x.q.ok).sort((a, b) => b.q.score - a.q.score)) {
+      if (options.length >= 3) break;
+      add(o.result, o.q, o.result.arrangement);
+    }
+  }
+  const v = ((Number(variant) % 3) + 3) % 3;
+  if (options.length) {
+    const pick = options[v % options.length];
+    return { ...pick.result, quality: { ok: true, options: options.length, from: pick.from, hard: [], soft: pick.q.soft.map((x) => x.kind) } };
+  }
+  // Nothing passes: the least troubled page (words clear of photos first).
+  const wordsTrouble = (q) => q.hard.filter((x) => x.kind.startsWith("words")).length;
+  const best = tried.sort((a, b) => wordsTrouble(a.q) - wordsTrouble(b.q) || a.q.hard.length - b.q.hard.length || b.q.score - a.q.score)[0];
+  return { ...best.result, quality: { ok: false, options: 0, from: best.from, hard: best.q.hard.map((x) => x.kind), soft: best.q.soft.map((x) => x.kind) } };
+}
+
+// ---------- V10.34 (L3) · When one page is too much ----------
+// Only when no arrangement of these photos and words passes on one page:
+// the photos shared over 2–4 pages, in their order, each page passing on its
+// own. The page's line stays on the first page; each photo keeps its own
+// words; sounds stay with the first page. Nothing is done here — the person
+// sees the pages and decides. null when even that does not help.
+export function suggestSplit(input, styleId = "editorial") {
+  const visuals = input.visuals || [];
+  for (const k of [2, 3, 4]) {
+    if (visuals.length < k) break;
+    const size = Math.ceil(visuals.length / k);
+    const parts = [];
+    for (let i = 0; i < visuals.length; i += size) parts.push(visuals.slice(i, i + size));
+    if (parts.length < 2) continue;
+    const ok = parts.every((part, i) => layoutMoment({ ...input, visuals: part, title: i === 0 ? input.title : "", audio: i === 0 ? input.audio : [] }, styleId, 0).quality.ok);
+    if (ok) return parts.map((part) => part.map((v) => v.id));
+  }
+  return null;
 }

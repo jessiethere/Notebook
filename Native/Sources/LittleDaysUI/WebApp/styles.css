@@ -21633,3 +21633,30 @@ body.typing .ctx-caption {
   line-height: 1.5;
   color: var(--t-6f675d, #6f675d);
 }
+
+/* V10.34 · Too much for one page: the page as it is, and the pages it would become. */
+.qe-split {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+.qe-split-pages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+}
+.qe-split-pages figure {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+.qe-split-pages figure.now {
+  opacity: 0.75;
+}
+.qe-split-pages figcaption {
+  font-size: 11px;
+  color: var(--t-6f675d, #6F675D);
+  text-align: center;
+}

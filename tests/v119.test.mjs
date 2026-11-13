@@ -24,7 +24,8 @@ test("each photo's line sits by its own photo, on the page, over no other photo 
           for (const l of caps2) {
             checked++;
             const b = r.place[l.captionOf];
-            const h = L.textBlock(l.text, l.fontSize, l.w).height;
+            // V10.33: the engine's own measure (real wrapping), the one it lays the words out with.
+            const h = L.measuredBlock(l.text, l.fontSize, l.w, l.fontId, l.weight).height;
             const top = l.y - h / 2,
               bottom = l.y + h / 2;
             const below = top >= b.y + b.h / 2 - 0.5 && top <= b.y + b.h / 2 + 3;

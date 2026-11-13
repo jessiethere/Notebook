@@ -40,7 +40,7 @@ import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
 import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
-import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont } from "./js/scrapbook-layout.mjs";
+import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont, PAGE_RATIO, PAIR_KINDS, suggestSplit } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
 import {
   backdropOf,
@@ -50,6 +50,7 @@ import {
   cropOf,
   formatDuration,
   growthCardInner,
+  textCSS,
 } from "./js/canvas.mjs";
 import { dayDetailHTML } from "./js/day-view.mjs";
 import * as PL from "./js/page-label.mjs";
@@ -4400,6 +4401,65 @@ function storyMomentsOf(current) {
 }
 const visualLayers = (page) => page.layers.filter((l) => !l.gen && !l.deco && !l.drawing && ((l.kind === "photo" && l.mediaRef) || l.kind === "video"));
 const layerAspect = (l) => l.aspect || (l.w && l.h ? (l.w / l.h) * 0.8 : 1);
+// ---------- V10.33 (L1) · Words measured in their real font ----------
+// The layout engine asks how tall some words will be; they are rendered off
+// screen exactly as the page renders them (same font, size, weight, width
+// and line height, on a 1000 px wide page) and measured. While a font the
+// words need is still loading the answer is "not known yet" (null): the
+// engine then counts lines on the safe side, and the story's pages are laid
+// out again once the font has arrived.
+const MEASURE_PAGE = 1000;
+let measureHost = null;
+let measureBox = null;
+const measuredWords = new Map();
+let fontsWaiting = 0;
+function measureWords(text, size, width, fontId, weight = 400) {
+  if (typeof document === "undefined" || !document.body) return null;
+  const family = fontFamily(fontId, catalog);
+  const px = (Math.min(60, Math.max(10, size)) / 3.2) * (MEASURE_PAGE / 100);
+  const spec = `${weight} ${px}px ${family}`;
+  try {
+    if (document.fonts && !document.fonts.check(spec, text)) {
+      fontsWaiting++;
+      document.fonts
+        .load(spec, text)
+        .catch(() => {})
+        .finally(() => {
+          if (--fontsWaiting === 0) fontsArrived();
+        });
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  const key = `${fontId}|${weight}|${size}|${width}|${text}`;
+  if (measuredWords.has(key)) return measuredWords.get(key);
+  if (!measureHost) {
+    measureHost = document.createElement("div");
+    measureHost.className = "journal-canvas scrapbook-page measure-host";
+    measureHost.setAttribute("aria-hidden", "true");
+    measureHost.style.cssText = `position:fixed;left:-${MEASURE_PAGE * 3}px;top:0;width:${MEASURE_PAGE}px;visibility:hidden;pointer-events:none;box-shadow:none`;
+    measureBox = document.createElement("div");
+    measureBox.className = "layer text-layer";
+    measureHost.appendChild(measureBox);
+    document.body.appendChild(measureHost);
+  }
+  measureBox.style.cssText = `left:0;top:0;transform:none;width:${width}%;${textCSS({ size, weight }, fontId, 16, catalog)}`;
+  measureBox.innerHTML = `<span class="layer-text">${esc(text)}</span>`;
+  const height = (measureBox.offsetHeight / (MEASURE_PAGE / PAGE_RATIO)) * 100;
+  if (measuredWords.size > 3000) measuredWords.clear();
+  measuredWords.set(key, height);
+  return height;
+}
+// A font arrived: the story being made is laid out again with the real
+// measure (pages arranged by hand keep their places).
+function fontsArrived() {
+  measuredWords.clear();
+  if (!story?.made || page !== "story" && !$(".story-canvas")) return;
+  layoutStory({});
+  flushDraft();
+  refreshStoryCanvas();
+}
 // Lay out one page in the story's style (its own variant), replacing only
 // what the engine made before; the user's own stickers / text stay.
 function layoutStoryPage(target, isCover) {
@@ -4434,7 +4494,7 @@ function layoutStoryPage(target, isCover) {
     const folio = `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`;
     // V10.19: each photo's own words (on the photo layer, by its id) are laid
     // out right by that photo; the page's quick type comes along.
-    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio, type: target.typeStyle }, style, variant);
+    result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio, type: target.typeStyle, measure: measureWords }, style, variant);
     target.layers = target.layers.filter((l) => !l.gen && !l.deco);
     for (const layer of target.layers) if (result.place[layer.id]) Object.assign(layer, result.place[layer.id]);
     target.layers.push(...result.layers.map((l) => ({ id: id(), ...l })));
@@ -4446,6 +4506,8 @@ function layoutStoryPage(target, isCover) {
   else if (/^scene:color-/.test(target.backdrop || "")) delete target.backdrop;
   decorate(target, { stickers: look.stickers }, { seed: variant + (isCover ? 1 : 0), max: look.deco, makeId: id });
   target.layoutEdited = false;
+  // V10.34: how this page did against the quality rules (kept on the story while it is made, not in the data).
+  if (!isCover && story && result.quality && editor && findMoment(editor, target.id) === target) (story.quality ||= {})[target.id] = result.quality;
   return result;
 }
 // Lay out every page of the story (or only `which`); pages edited by hand
@@ -4587,7 +4649,7 @@ function storyVariantPreview(current, variant) {
   copy.layoutEdited = false;
   const result = layoutStoryPage(copy, current.cover);
   const html = sharedCanvasHTML(copy, ctx(), { readOnly: true, dayPage: current.cover }).replace(/ data-action="[^"]*"/g, "").replace(/ tabindex="0"/g, ' tabindex="-1"');
-  return { html, kind: result?.arrangement || "" };
+  return { html, kind: result?.arrangement || "", options: result?.quality?.options ?? 3 };
 }
 // The arrangement a Moment page gets with `variant` ("" when not a pair).
 function storyArrangement(moment, variant = moment.layoutVariant) {
@@ -4595,8 +4657,45 @@ function storyArrangement(moment, variant = moment.layoutVariant) {
   copy.layoutVariant = Number(variant) || 0;
   return layoutStoryPage(copy, false)?.arrangement || "";
 }
+// ---------- V10.34 (L3) · Too much for one page: suggest a split ----------
+// Only when no arrangement of this page passes the quality rules. The
+// person sees the page as it is and the pages it would become, and decides;
+// nothing is added on its own. Every photo, word and line is kept, in order.
+function storySplitFor(current) {
+  if (!current || current.cover) return null;
+  const q = story.quality?.[current.page.id];
+  if (!q || q.ok) return null;
+  const m = findMoment(editor, current.page.id);
+  if (!m || m.layoutEdited) return null;
+  const photos = visualLayers(m);
+  const sig = JSON.stringify([photos.map((l) => [l.id, l.mediaRef, l.caption || ""]), m.title || "", m.layoutStyle, m.typeStyle || null]);
+  story.splits ||= {};
+  if (story.splits[m.id]?.sig !== sig) {
+    const day = new Date(`${story.date}T12:00:00`);
+    const input = { visuals: photos.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: m.layers.filter((l) => l.kind === "audio").map((l) => ({ id: l.id })), title: m.title, time: m.time, folio: `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`, type: m.typeStyle, measure: measureWords };
+    story.splits[m.id] = { sig, parts: suggestSplit(input, styleOf(m.layoutStyle || story.style)) };
+  }
+  return story.splits[m.id].parts ? { m, parts: story.splits[m.id].parts } : null;
+}
+function storySplitHTML(current, { force = false } = {}) {
+  if (story.panel && !force) return "";
+  const s = storySplitFor(current);
+  if (!s || (story.keepOne?.[s.m.id] && !force)) return "";
+  const mini = (page) => `<span class="qe-mini">${sharedCanvasHTML(page, ctx(), { readOnly: true }).replace(/ data-action="[^"]*"/g, "").replace(/ tabindex="0"/g, ' tabindex="-1"')}</span>`;
+  const pages = s.parts.map((ids, i) => {
+    const copy = structuredClone(s.m);
+    copy.layers = copy.layers.filter((l) => !l.gen && !l.deco && !(visualLayers(s.m).some((v) => v.id === l.id) && !ids.includes(l.id)) && !(l.kind === "audio" && i > 0));
+    if (i > 0) copy.title = "";
+    copy.layoutVariant = 0;
+    copy.layoutEdited = false;
+    layoutStoryPage(copy, false);
+    return `<figure>${mini(copy)}<figcaption>${t("qe.split.page", { n: i + 1, count: ids.length })}</figcaption></figure>`;
+  });
+  const n = s.parts.length;
+  return `<section class="qe-panel qe-split" aria-label="${esc(t("qe.split.title", { n }))}"><header><span><b>${t("qe.split.title", { n })}</b><small>${t("qe.split.hint")}</small></span></header><div class="qe-split-pages"><figure class="now">${mini(s.m)}<figcaption>${t("qe.split.now")}</figcaption></figure>${pages.join("")}</div><div class="qe-row"><button class="secondary" data-action="story-keep-one">${t("qe.split.keep")}</button><button class="primary" data-action="story-split-pages">${t("qe.split.do", { n })}</button></div><p class="qe-hint">${t("qe.split.keepNote")}</p></section>`;
+}
 function storyPanelHTML(current, total) {
-  const notice = story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "";
+  const notice = (story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "") + storySplitHTML(current);
   if (!current || !story.panel) return notice;
   const done = `<button class="qe-done" data-action="story-panel" data-panel="">${t("qe.done")}</button>`;
   if (story.panel === "photo") {
@@ -4612,16 +4711,19 @@ function storyPanelHTML(current, total) {
   const target = current.cover ? editor : findMoment(editor, current.page.id);
   const hand = Boolean(target?.layoutEdited);
   const now = (Number(target?.layoutVariant) || 0) % 3;
-  const variants = [0, 1, 2]
+  // V10.33: only layouts that pass the quality rules are offered, never the same page twice.
+  const first = storyVariantPreview(current, 0);
+  const count = current.cover ? 3 : Math.max(1, Math.min(3, first.options || 1));
+  const variants = [...Array(count).keys()]
     .map((v) => {
-      const { html, kind } = storyVariantPreview(current, v);
-      const name = kind ? t(`qe.kind.${kind}`) : t("qe.layoutN", { n: v + 1 });
-      const on = !hand && v === now;
+      const { html, kind } = v === 0 ? first : storyVariantPreview(current, v);
+      const name = PAIR_KINDS.includes(kind) ? t(`qe.kind.${kind}`) : t("qe.layoutN", { n: v + 1 });
+      const on = !hand && v === now % count;
       return `<button data-action="story-layout" data-variant="${v}" data-kind="${kind}" aria-pressed="${on}"><span class="qe-mini" aria-hidden="true">${html}</span><b>${esc(name)}</b><small>${on ? t("qe.current") : v === 0 ? t("qe.recommended") : "&nbsp;"}</small></button>`;
     })
     .join("");
   const styles = STYLES.map((s) => `<button data-action="story-style" data-style="${s}" aria-pressed="${s === styleOf(target?.layoutStyle || story.style)}">${STYLE_ICONS[s]}<b>${t("story.style." + s)}</b></button>`).join("");
-  return `${notice}<section class="qe-panel qe-layout" aria-label="${t("qe.layoutTitle")}"><header><span><b>${t("qe.layoutTitle")}</b><small>${t(hand ? "qe.layoutHand" : "qe.layoutHint")}</small></span>${done}</header><div class="qe-variants">${variants}</div><div class="story-styles qe-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div>${total > 1 ? `<button class="qe-regroup" data-action="story-group">${t("qe.regroup")}</button>` : ""}</section>`;
+  return `${notice}<section class="qe-panel qe-layout" aria-label="${t("qe.layoutTitle")}"><header><span><b>${t("qe.layoutTitle")}</b><small>${t(hand ? "qe.layoutHand" : "qe.layoutHint")}</small></span>${done}</header><div class="qe-variants">${variants}</div><div class="story-styles qe-styles" role="group" aria-label="${t("story.styleLabel")}">${styles}</div>${storySplitFor(current) ? `<button class="qe-regroup" data-action="story-split-show">${t("qe.split.do", { n: storySplitFor(current).parts.length })}</button>` : ""}${total > 1 ? `<button class="qe-regroup" data-action="story-group">${t("qe.regroup")}</button>` : ""}</section>`;
 }
 // Keep the chosen photo in view above the Quick Edit panel.
 function revealStoryPick() {
@@ -4649,7 +4751,11 @@ function storyReplacePhoto(target, item) {
   const oldRef = old.mediaRef;
   const kept = Boolean((old.caption || "").trim());
   const n = storyPhotoChoices(storyPages()[story.index]).find((c) => c.p.id === old.id)?.n || 1;
-  const undo = { momentId: before.id, moment: structuredClone(before), cover: story.made.cover ? Object.fromEntries(COVER_FIELDS.map((k) => [k, structuredClone(editor[k])])) : null };
+  const undo = { momentId: before.id, moment: structuredClone(before), cover: story.made.cover ? Object.fromEntries(COVER_FIELDS.map((k) => [k, structuredClone(editor[k])])) : null, groups: structuredClone(story.groups) };
+  // V10.34: the story's photo groups follow too, so regrouping or splitting keeps the new photo.
+  const g = story.made.ids.indexOf(before.id);
+  const slot = storyPhotosOf(before).findIndex((l) => l.id === old.id);
+  if (g >= 0 && slot >= 0 && story.groups[g]?.items[slot]?.reference === oldRef) story.groups[g].items[slot] = { ...story.groups[g].items[slot], reference: item.reference, name: item.name || story.groups[g].items[slot].name, ...(item.aspect ? { aspect: item.aspect } : {}) };
   const hand = Boolean(before.layoutEdited);
   const keepKind = hand ? "" : storyArrangement(before);
   const fitInto = (layer, aspect) => {
@@ -4699,6 +4805,7 @@ function storyUndoReplace() {
         else entry[k] = structuredClone(v);
       }
   }, false);
+  if (undo.groups) story.groups = undo.groups;
   flushDraft();
   story.notice = null;
   logEvent("qe_undo", {});
@@ -4965,7 +5072,41 @@ async function storyAction(actionName, target) {
   if (!story) return;
   const sel = story.selected;
   // The "replaced · undo" note stays only until the next change.
-  if (!["story-undo", "story-panel", "story-pick", "story-tap"].includes(actionName)) story.notice = null;
+  if (!["story-undo", "story-panel", "story-pick", "story-tap", "story-keep-one", "story-split-show"].includes(actionName)) story.notice = null;
+  if (actionName === "story-keep-one") {
+    const current = storyPages()[story.index];
+    (story.keepOne ||= {})[current.page.id] = true;
+    logEvent("qe_keep_one", {});
+    toast(t("qe.split.kept"));
+    render();
+    return;
+  }
+  if (actionName === "story-split-show") {
+    const current = storyPages()[story.index];
+    if (story.keepOne) delete story.keepOne[current.page.id];
+    story.panel = null;
+    render();
+    return;
+  }
+  if (actionName === "story-split-pages") {
+    // The same as 调整照片分组 → 从这里分开, done for the person: the page's
+    // photo group is cut where the suggestion says. Words go with their photos
+    // (by the photo), the line stays on the first page, every new page keeps
+    // the page's type.
+    const current = storyPages()[story.index];
+    const s = storySplitFor(current);
+    const g = story.made.ids.indexOf(current?.page.id);
+    if (!s || g < 0) return;
+    const type = s.m.typeStyle ? { ...s.m.typeStyle } : null;
+    let at = g;
+    for (const part of s.parts.slice(0, -1)) {
+      story.groups = splitAt(story.groups, at, part.length);
+      at++;
+    }
+    for (let k = g; k <= at; k++) if (story.groups[k]) story.groups[k].typeStyle = type;
+    logEvent("qe_split", { pages: s.parts.length });
+    return storyAction("story-regroup", target);
+  }
   if (actionName === "story-tap") {
     // Tap a photo on the page: choose it (to change it, or write for it);
     // tap anywhere else: write.
@@ -5058,7 +5199,7 @@ async function storyAction(actionName, target) {
       const first = (m?.layers || []).find((l) => l.kind === "photo" && l.mediaRef && !l.gen);
       if (m?.typeStyle && first) types.set(first.mediaRef, m.typeStyle);
     }
-    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "", typeStyle: types.get(g.items[0]?.reference) || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
+    story.groups = story.groups.map((g) => ({ ...g, line: lines.get(g.items[0]?.reference) || "", typeStyle: types.get(g.items[0]?.reference) || g.typeStyle || null, items: g.items.map((item) => ({ ...item, caption: captions.get(item.reference) || "" })) }));
     story.selected = null;
     return makeStory();
   }

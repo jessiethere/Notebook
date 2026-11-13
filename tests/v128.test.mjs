@@ -38,7 +38,11 @@ for (const [name, [a, b]] of Object.entries(COMBOS)) {
       // Words were not written, so no words are made up.
       assert.equal(out.layers.filter((l) => l.bind === "title" || l.bind === "caption").length, 0);
     }
-    assert.deepEqual([...kinds].sort(), [...PAIR_KINDS].sort(), `${name}: ${kinds}`);
+    // Three different pages. V10.33: an arrangement that would make a photo
+    // too small to see (a 9:16 beside a 16:9 at the same height) is replaced
+    // by another one that passes the quality rules.
+    assert.equal(new Set(kinds).size, 3, `${name}: ${kinds}`);
+    assert.ok(kinds.filter((k) => PAIR_KINDS.includes(k)).length >= 2, `${name}: mostly the pair arrangements (${kinds})`);
   });
 
   test(`${name}: the default is balanced and fills the page, with no empty words column`, () => {

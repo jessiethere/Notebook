@@ -4,6 +4,50 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.34",
+    date: "2026-11-13",
+    zh: {
+      title: "放不下一页时，建议分成两页，由你决定",
+      items: [
+        "照片和文字实在太多、怎么排都会太挤时，「今天的故事」底部会出现建议卡：左边是现在的一页，旁边是分开后的每一页。",
+        "〔分成 2 页〕：照片按原来的顺序分开，那句话放在第一页，每张照片的字跟着照片走。〔保持一页〕：也可以，卡片会说明哪里会比较挤；文字仍然不会压在照片上。",
+        "不会自动加页，已保存的页面也不会被重新排版。",
+        "修复：换照片后再调整照片分组，旧照片会被换回来的问题。",
+      ],
+    },
+    en: {
+      title: "Too much for one page? A suggested split — your call",
+      items: [
+        "When the photos and words can't fit one page without crowding, Today's story shows a card: the page as it is now, next to each page of a split.",
+        "\u201cMake 2 pages\u201d keeps the photos in order, your line on the first page and each photo's words with its photo. \u201cKeep one page\u201d is fine too — the card says what will be tight, and words still never sit on a photo.",
+        "Pages are never added on their own, and saved pages are never re-laid out.",
+        "Fixed: after replacing a photo, regrouping the photos brought the old photo back.",
+      ],
+    },
+  },
+  {
+    version: "10.33",
+    date: "2026-11-13",
+    zh: {
+      title: "自动排版：照片不再被挤得很小，字不再压到照片上",
+      items: [
+        "排版时按你选的字体和字号量出文字真实占几行，不再靠字数估算。",
+        "每张照片都有最小尺寸；很高的截图、Meme 会留得更宽，上面的字看得清。照片不裁切。",
+        "长的一句话改成正文大小显示，不缩小、不截断；照片下面的字和照片一样宽，不会伸到旁边的照片上。",
+        "「换个排版」只给出合格而且彼此不同的排法，不再出现几张一样的小图。",
+      ],
+    },
+    en: {
+      title: "Auto layout: no tiny photos, no words on photos",
+      items: [
+        "Words are measured in the font and size you chose, by the lines they really take — no more guessing from the character count.",
+        "Every photo has a minimum size; tall screenshots and memes get more width so their own text stays readable. Photos are never cropped.",
+        "A long line is shown at reading size, never shrunk or cut; the words under a photo are as wide as the photo and no longer reach the next one.",
+        "\u201cAnother layout\u201d only offers layouts that pass and differ from each other — no more identical thumbnails.",
+      ],
+    },
+  },
+  {
     version: "10.32",
     date: "2026-11-13",
     zh: {
