@@ -48,6 +48,15 @@
 
 ## 更新日志
 
+### 2026-11-13 — V10.37 A2：离开 App 时立即保存；「已保存」只在数据库写完后显示（P0 第二批）
+
+- **需求**：加生命周期保存，但不只依赖进入后台那一刻；异步写入未完成时不谎报成功。
+- **根因**：编辑时有 450 ms 防抖自动保存，但 `visibilitychange` 只处理 App 锁，`pagehide` 没有处理（iOS 切后台不触发 `beforeunload`），最后 450 ms 内的输入可能丢；`confirmMediaSaved` 在 IndexedDB 写入开始前就显示「已保存」（镜像关闭时 LocalStorage 也没写）。
+- **文件**：`Public/js/model.mjs`（`Store.save` 记录最新一次持久化 `lastWrite`，新 `stored()` → true / false）；`Public/app.js`（`saveBeforeLeaving`：visibilitychange hidden / pagehide / freeze 时 `flushDraft`，失败显示「还没保存」并记事件；回到前台在编辑器 / 快速编辑里重新 `confirmMediaSaved`；`confirmMediaSaved` 先查照片再等 `store.stored()`，失败为 failed）；whats-new 10.37。
+- **测试**：`tests/v137-browser.cjs` 8 项（zh 375 / en 430：编辑中已自动保存；防抖窗口内切后台 → LocalStorage 立即有、IndexedDB 随后有；pagehide 立即保存；IndexedDB 拒绝写入时一直是「还没保存」，切后台再回来仍是；恢复后点重试 → 已保存且数据库里有全文）。
+- **未验证 / 风险**：iOS 真机上 App 被系统杀掉前 WebKit 是否完成 IndexedDB 事务、LocalStorage 是否已落盘，只能真机验证（列入真机测试）。原生外壳没有调用 `beginBackgroundTask` 争取后台时间，本批不改原生代码；如真机发现丢最后几个字，再加这一步。正在导入的照片在切后台时被杀，引用只在照片写入成功后才加入页面（原有逻辑），回到前台会重新检查。
+- **回退**：`git revert` 本提交；不改数据格式。
+
 ### 2026-11-13 — V10.36 A1：手帐读取失败保护（P0 数据安全，第一批）
 
 - **需求**：用户确认开始 A1。区分真正的新用户 / 数据库暂时读不出 / 格式不兼容 / 数据损坏，后三种不能当新用户，不能用空白状态覆盖。

@@ -469,11 +469,27 @@ export class Store {
   }
   save(encoded) {
     if (!this.persist) return;
+    let write;
     try {
-      Promise.resolve(this.persist(encoded)).catch((error) => this.onPersistError(error));
+      write = Promise.resolve(this.persist(encoded));
     } catch (error) {
-      this.onPersistError(error);
+      write = Promise.reject(error);
     }
+    // A2: remember the newest durable write, so "saved" is only shown once
+    // it has really finished (stored() resolves true) — not when it started.
+    const tracked = write.then(
+      () => true,
+      (error) => {
+        this.onPersistError(error);
+        return false;
+      },
+    );
+    this.lastWrite = tracked;
+  }
+  // true once the newest change is in the durable store (or there is none to
+  // wait for); false when that write failed.
+  stored() {
+    return this.lastWrite || Promise.resolve(true);
   }
   update(change) {
     if (this.mirror && this.storage.getItem("little-days.v1") !== this.baselineRaw) {

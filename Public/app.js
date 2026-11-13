@@ -332,16 +332,22 @@ function flushDraft() {
 let mediaCheck = 0;
 async function confirmMediaSaved() {
   const run = ++mediaCheck;
-  const ids = [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })];
-  if (!ids.length) return setDraftState("saved");
+  const ids = editor ? [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })] : [];
   setDraftState("saving");
   let missing = [];
   try {
-    missing = await media.missing(ids);
+    missing = ids.length ? await media.missing(ids) : [];
   } catch {
     missing = ids;
   }
+  // A2: and the words themselves must be in the journal database, not only
+  // on their way there.
+  const stored = await store.stored();
   if (run !== mediaCheck) return;
+  if (!stored) {
+    setDraftState("failed");
+    return;
+  }
   if (missing.length) {
     setDraftState("failed");
     toast(t("media.notSaved", { count: missing.length }));
@@ -2297,6 +2303,25 @@ document.addEventListener("keydown", (event) => {
   else return;
   event.preventDefault();
 });
+// A2 · Leaving the app (home screen, app switcher, phone locked, closing the
+// tab): keep what is typed now instead of waiting for the next save tick.
+// Changes are also kept while editing (a short pause after each change);
+// this is the last chance, not the only one. On return the saved state is
+// checked again (the database write or a photo may not have finished).
+function saveBeforeLeaving(reason) {
+  try {
+    if (editor && draftDirty) flushDraft();
+  } catch (error) {
+    setDraftState("failed");
+    logEvent("leave_save_failed", { reason, code: error?.code || error?.name || "" });
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") saveBeforeLeaving("hidden");
+  else if (editor && (page === "studio" || story)) confirmMediaSaved();
+});
+window.addEventListener("pagehide", () => saveBeforeLeaving("pagehide"));
+document.addEventListener("freeze", () => saveBeforeLeaving("freeze"));
 // Away for a while (another app, the phone locked): lock again on return.
 document.addEventListener("visibilitychange", () => {
   const lock = AppLock.readLock();

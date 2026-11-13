@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.37",
+    date: "2026-11-13",
+    zh: {
+      title: "切出 App 时，刚写的字会马上保存",
+      items: [
+        "写字时本来就会边写边存；现在刚打完字就切到别的 App、锁屏或关掉页面，最后几个字也会马上保存，不用等。",
+        "「已保存」只在文字真的写进这台设备的手帐数据库之后才显示；写入失败会显示「还没保存」，可以点一下重试。",
+        "回到 App 时会再检查一次保存状态（包括照片是否已存好）。",
+      ],
+    },
+    en: {
+      title: "Switching away from the app saves what you just typed",
+      items: [
+        "Your words were already kept as you write; now the last few are kept at once when you switch apps, lock the phone or close the page right after typing.",
+        "\"Saved\" only shows once the words are really in this device's journal database; if that fails it says \"Not saved yet\" and you can tap to try again.",
+        "When you come back, the save state is checked again (photos included).",
+      ],
+    },
+  },
+  {
     version: "10.36",
     date: "2026-11-13",
     zh: {
