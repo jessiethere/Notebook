@@ -8450,5 +8450,33 @@
   "mood.coverNote": {
     "zh": "心情记在每一页上：打开某一页，在「页面信息」里选。",
     "en": "Mood belongs to each page: open a page and choose it in Page details."
+  },
+  "ctx.back": {
+    "zh": "返回",
+    "en": "Back"
+  },
+  "ctx.backLabel": {
+    "zh": "返回创作工具",
+    "en": "Back to the creation tools"
+  },
+  "ctx.selected": {
+    "zh": "已选中",
+    "en": "selected"
+  },
+  "ctx.selectedLabel": {
+    "zh": "{kind} · 已选中",
+    "en": "{kind} · selected"
+  },
+  "sticker.swap": {
+    "zh": "换一个",
+    "en": "Swap"
+  },
+  "sticker.swapped": {
+    "zh": "已换成新的贴纸",
+    "en": "Sticker swapped"
+  },
+  "layer.precise": {
+    "zh": "精确调整",
+    "en": "Exact position & size"
   }
 }

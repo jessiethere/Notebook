@@ -73,7 +73,8 @@ function wav(seconds = 1) {
     // 2. More: every other tool; ‹ comes back; page details hold date / journal / time.
     await studioMore(page);
     const tiles = await page.$$eval(".more-grid .more-tile", (els) => els.map((el) => el.dataset.tool || el.dataset.action));
-    for (const need of ["paper", "layout", "font", "draw-new", "add-video", "add-sound", "mood", "photos", "chapters", "open-pages", "details"]) assert.ok(tiles.includes(need), `More has ${need}`);
+    // V10.24: 心情 is a shortcut into 页面信息 ("mood-open"), shown on a page (not on the cover)
+    for (const need of ["paper", "layout", "font", "draw-new", "add-video", "add-sound", "photos", "chapters", "open-pages", "details"]) assert.ok(tiles.includes(need), `More has ${need}`);
     assert.equal(await page.locator(".more-mode [data-action='page-mode']").count(), 3, "换一种写法: three ways");
     g = await geometry();
     assert.ok(g.scroll <= 2, "still fits with More open");

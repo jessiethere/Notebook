@@ -230,6 +230,10 @@ let media = new MediaStore(),
   recordingTargetId = null;
 // V10.22: what went wrong with a file goes to the local log (see media-check.mjs).
 media.onEvent = (name, data) => logEvent(name, data);
+// V10.25: 精确调整 in 图层 stays open / closed as the person left it.
+document.addEventListener("toggle", (event) => {
+  if (event.target.matches?.("details.layer-precise")) layerPreciseOpen = event.target.open;
+}, true);
 // Object URL scopes that finished loading; a view shows "loading" until then.
 const readyScopes = new Set();
 let activeMomentId = null,
@@ -2963,6 +2967,7 @@ function photoRegion() {
   return isDayPage() ? { top: 4, bottom: 60 } : { top: 4, bottom: 96 };
 }
 
+let layerPreciseOpen = false;
 function layerControls() {
   const layer = selectedLayerOf();
   if (!layer) return "";
@@ -3023,7 +3028,9 @@ function layerControls() {
   // it is the crop editor. This sheet keeps place, size, turn and order.
   void shapes;
   void photoTools;
-  return `<div class="layer-controls">${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}<div class="layer-buttons"><button data-action="layer-copy">${t("copy")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-forward">${t("layer.forward")}</button></div><p class="save-help">${t("layer.barHint")}</p></div>`;
+  // V10.25: what 图层 is for comes first (order, copy); exact numbers and a
+  // text's words / font (also under 编辑 and 字体) fold away in 精确调整.
+  return `<div class="layer-controls"><div class="layer-buttons"><button data-action="layer-forward">${t("layer.forward")}</button><button data-action="layer-backward">${t("layer.backward")}</button><button data-action="layer-front">${t("layer.frontShort")}</button><button data-action="layer-back">${t("layer.back")}</button><button data-action="layer-copy">${t("copy")}</button></div><details class="layer-precise" ${layerPreciseOpen ? "open" : ""}><summary>${t("layer.precise")}</summary>${textTools}<p class="gesture-help">${t(matchMedia("(pointer: coarse)").matches ? "layer.gestureHelpTouch" : "layer.gestureHelp")}</p>${base.map(slider).join("")}</details></div>`;
 }
 
 // V10.20 · 形状: the frame's shape first (no scrolling), then its paper edge.
@@ -3999,8 +4006,12 @@ function ctxDockHTML(tool) {
             tool('data-action="ctx-play"', "play", t("media.play")) + tool(`data-action="video-cover" data-clip="${esc(layer.clipId)}"`, "photo", t("poster.change")) + tool(`data-action="tool" data-tool="shape" aria-expanded="${on("shape")}"`, "shape", t("shape.title"), `dock-btn ${on("shape") ? "open" : ""}`)
           : kind === "drawing"
             ? tool('data-action="draw-edit"', "draw", t("draw.again"))
-            : "";
-  return `<nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("layer.selected")}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.deselect")}"><span class="ctx-x" aria-hidden="true">×</span><small>${t("ctx." + kind)}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t(kind === "video" || kind === "audio" ? "media.removeShort" : "delete"), "danger")}</nav>`;
+            : kind === "sticker" && layer.assetId
+              ? tool(`data-action="sticker-swap" aria-expanded="${studioTool === "stickers"}"`, "stickers", t("sticker.swap"), studioTool === "stickers" ? "open" : "")
+              : "";
+  // V10.25: ← 返回 leaves this item's tools (the item stays where it is); the
+  // line above names what is selected. × only ever closes a sheet.
+  return `<p class="ctx-caption" aria-hidden="true"><i></i>${t("ctx." + kind)}<span>· ${t("ctx.selected")}</span></p><nav class="tool-dock sv-tools ctx" data-ctx="${kind}" aria-label="${t("ctx.selectedLabel", { kind: t("ctx." + kind) })}"><button class="sv-tool ctx-back" data-action="layer-deselect" aria-label="${t("ctx.backLabel")}"><span class="ctx-arrow" aria-hidden="true">${svIcon("backArrow")}</span><small>${t("ctx.back")}</small></button><i class="ctx-rule" aria-hidden="true"></i>${own}${tool(`data-action="tool" data-tool="layer" aria-expanded="${on("layer")}"`, "layer", t("ctx.layer"), `dock-btn ${on("layer") ? "open" : ""}`)}${tool('data-action="layer-delete"', "trash", t(kind === "video" || kind === "audio" ? "media.removeShort" : "delete"), "danger")}</nav>`;
 }
 // Font · size · colour · alignment for the selected text box (the same
 // controls as the bar that shows while typing).
@@ -4032,6 +4043,9 @@ function typeControlsHTML(only) {
 function textStyleSheetHTML() {
   return `<div class="type-controls type-sheet" data-tab="${textTab}">${typeControlsHTML(textTab)}</div>`;
 }
+// V10.25: the selected item's options open as a compact strip above its tools
+// (the paper stays big); page-level tools keep the taller sheet.
+const STRIP_TOOLS = ["shape", "layer", "textstyle"];
 // The bottom of the editor: an open sheet (if any) above one row of tools.
 function toolMenuHTML() {
   const tools = studioTools();
@@ -4045,7 +4059,7 @@ function toolMenuHTML() {
   const open = sheets.find((tool) => tool.id === studioTool);
   const back = open && !["more", "stickers", "layer", "textstyle", "shape"].includes(open.id) ? `<button class="sheet-back" data-action="tool" data-tool="more" aria-label="${t("more.back")}">${icon("back")}</button>` : "";
   const sheet = open
-    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
+    ? `<section class="tool-sheet open ${sheetTall ? "tall" : ""} ${STRIP_TOOLS.includes(open.id) ? "strip" : ""}" data-tool-row="${open.id}" aria-label="${t(open.label)}"><button class="sheet-grabber" data-action="sheet-grow" aria-label="${t(sheetTall ? "sheet.shrink" : "sheet.grow")}"><i></i></button><div class="sheet-head">${back}<b>${t(open.label)}</b><span class="tool-value" data-tool-value="${open.id}">${esc(open.value)}</span><button class="tool-head sheet-close" data-action="tool-close" aria-label="${t("close")}">×</button></div><div class="tool-body">${open.body()}</div></section>`
     : "";
   const tool = (attrs, name, label, cls = "") => `<button class="sv-tool ${cls}" ${attrs}>${svIcon(name)}<small>${label}</small></button>`;
   const photosHere = activePage().layers.filter(framedPhoto).length;
@@ -4065,6 +4079,15 @@ function refreshToolSummaries() {
 }
 function refreshToolMenu() {
   if ($("#tool-menu")) $("#tool-menu").innerHTML = toolMenuHTML();
+  syncStripHeight();
+}
+// V10.25: the paper makes room for the strip that is really open (its own
+// height), not for the tallest one.
+function syncStripHeight() {
+  const strip = document.querySelector(".tool-sheet.strip");
+  const root = document.documentElement;
+  if (strip) root.style.setProperty("--strip-h", `${Math.ceil(strip.getBoundingClientRect().height)}px`);
+  else root.style.removeProperty("--strip-h");
 }
 function growthPanelHTML() {
   const checks = state().checks.filter((check) => check.date === editor.date);
@@ -5099,6 +5122,7 @@ function addChoicesHTML(className = "") {
 // more). Everything else opens in the bottom sheet.
 let studioPreview = false;
 const SV_ICONS = {
+  backArrow: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
   play: '<circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/>',
   shape: '<rect x="3.5" y="9" width="10" height="10" rx="2"/><circle cx="15" cy="9" r="5.5"/>',
   photo: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3 3-2.5 5 4"/>',
@@ -5151,7 +5175,7 @@ function studioPage() {
   if (studioPreview)
     return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-preview" aria-label="${t("studio.previewBack")}">${icon("back")}</button><div class="sv-title static"><b>${t("studio.preview")}</b><small>${t("studio.previewHint")}</small></div><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage large previewing">${paper}</div><div class="tool-dock-wrap"><nav class="sv-export" aria-label="${t("studio.preview")}"><button data-action="share-story"><span aria-hidden="true">⇪</span><b>${t("share.story")}</b></button><button data-action="export">${icon("download")}<b>${t("export.photo")}</b></button><button data-action="export-video"><span aria-hidden="true">▶</span><b>${t("export.video")}</b></button></nav></div>`;
   const status = draftDirty && draftState !== "failed" ? "saving" : draftState;
-  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${studioTool ? "" : "large"}">${paper}${importCardHTML()}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
+  return `<header class="studio-bar sv-top"><button class="studio-back" data-action="studio-back" aria-label="${t("studio.back")}">${icon("back")}</button><h1 class="visually-hidden">${t("studio.title")}</h1>${studioTitleHTML()}<button class="draft-status" id="draft-status" data-action="draft-retry" data-state="${status}" ${status === "failed" ? "" : "disabled"}>${draftStatusInner(status)}</button><button class="sv-preview" data-action="studio-preview" aria-label="${t("studio.preview")}">${svIcon("eye")}</button><button class="primary" data-action="save-entry">${t("studio.done")}</button></header><div class="studio-stage ${!studioTool ? "large" : STRIP_TOOLS.includes(studioTool) ? "large strip-open" : ""}">${paper}${importCardHTML()}${typeBarHTML()}<div class="stage-bar"><button data-action="undo" ${history.length ? "" : "disabled"} aria-label="${t("studio.undo")}">${icon("undo")}</button><button data-action="redo" ${future.length ? "" : "disabled"} aria-label="${t("studio.redo")}">${icon("redo")}</button>${chapterChipsHTML()}</div></div><div class="tool-dock-wrap" id="tool-menu">${toolMenuHTML()}</div>`;
 }
 
 // Save stays in reach: when the top bar has scrolled away, show the small
@@ -5287,6 +5311,7 @@ function render() {
   $("#app-scroll").scrollTop = scrollTop;
   const sheetNow = $(".tool-sheet");
   if (sheetNow) sheetNow.scrollTop = sheetKeep && sheetKeep.id === sheetNow.dataset.toolRow ? sheetKeep.top : 0;
+  syncStripHeight();
   if (focused) {
     const again = $(`#app ${focused}`);
     if (again?.dataset.inlineLayer) editTextLayer(again.dataset.inlineLayer);
@@ -9086,8 +9111,25 @@ async function v3Action(target) {
     render();
     return true;
   }
+  if (name === "sticker-swap") {
+    // V10.25 · 换一个: pick another sticker for the selected one (same place, size and turn).
+    studioTool = studioTool === "stickers" ? null : "stickers";
+    render();
+    return true;
+  }
   if (name === "asset-sticker") {
     const asset = catalog.stickers.find((s) => s.id === target.dataset.sticker);
+    const swap = selectedLayerOf();
+    if (swap?.assetId && swap.kind !== "photo" && !swap.drawing) {
+      changeTarget((entry) => {
+        const layer = entry.layers.find((l) => l.id === swap.id);
+        if (!layer) return;
+        layer.assetId = asset.id;
+        layer.text = languageCode() === "en" ? asset.nameEn : asset.nameZh;
+      });
+      toast(t("sticker.swapped"));
+      return true;
+    }
     changeTarget((entry) => {
       const layer = {
         id: id(),
@@ -9165,6 +9207,7 @@ async function v3Action(target) {
   }
   if (name === "layer-edit-text") {
     studioTool = "layer";
+    layerPreciseOpen = true;
     render();
     const box = $('[data-layer-text="text"]');
     box?.focus({ preventScroll: true });

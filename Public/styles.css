@@ -21091,3 +21091,101 @@ dialog.crop-editor::backdrop {
     z-index: 41;
   }
 }
+
+/* ---------- V10.25 · selected item: ← 返回 and what is selected ---------- */
+.ctx-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 18px 2px;
+  font: 600 12px var(--ui-sans);
+  color: var(--sageDeep);
+}
+.ctx-caption i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sageDeep);
+}
+.ctx-caption span {
+  font-weight: 500;
+  color: var(--t-8a8178, #8a8178);
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+}
+.tool-dock.sv-tools.ctx .ctx-back .ctx-arrow .sv-icon {
+  width: 22px;
+  height: 22px;
+}
+/* the selected item's options: a compact strip, the paper stays big */
+.phone.sv .tool-sheet.strip {
+  max-height: min(210px, 32dvh);
+}
+.phone.sv .tool-sheet.strip .sheet-grabber {
+  display: none;
+}
+.phone.sv .studio-stage.large.strip-open .canvas-wrap {
+  width: min(100%, calc((var(--studio-h, 100dvh - 40px) - 204px - var(--strip-h, min(210px, 32dvh))) * 0.8));
+}
+/* 形状 in a strip: one scrolling row of compact chips, then the frame row */
+.tool-sheet.strip .shape-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.tool-sheet.strip .shape-chips button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  flex-direction: row;
+  gap: 6px;
+  padding: 0 12px;
+}
+.tool-sheet.strip .shape-sheet .save-help {
+  margin: 4px 0;
+  font-size: 12px;
+}
+/* 图层: order and copy first, the rest folded */
+.layer-controls .layer-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.layer-controls .layer-buttons button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.layer-precise {
+  margin-top: 10px;
+}
+.layer-precise > summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  font: 600 14px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+  cursor: pointer;
+}
+.tool-sheet.strip .shape-frames > .small-label {
+  display: none;
+}
+.tool-sheet.strip .shape-frame-row {
+  align-items: center;
+}
+.tool-sheet.strip .shape-frame-row .field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+/* while typing the item's tools step aside, and so does the line naming it */
+body.typing .ctx-caption {
+  display: none;
+}

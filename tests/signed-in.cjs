@@ -167,7 +167,13 @@ module.exports.studioTool = async (target, id) => {
     return details;
   }
   const sheet = target.locator(`.tool-sheet[data-tool-row="${id}"]`);
-  if (await sheet.count()) return sheet;
+  // V10.25: 图层 shows order / copy first; older suites use the exact numbers
+  // and a text's words, which are folded under 精确调整 — open it for them.
+  const precise = async () => {
+    if (id === "layer" && (await sheet.locator("details.layer-precise:not([open]) > summary").count())) await sheet.locator("details.layer-precise > summary").click();
+    return sheet;
+  };
+  if (await sheet.count()) return precise();
   await dockReady(target);
   // With something selected the bottom row is that item's tools (V10.1):
   // 图层 is there; for any other tool, × returns to the four tools first.
@@ -175,7 +181,7 @@ module.exports.studioTool = async (target, id) => {
     if (await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).count()) {
       await target.locator(`.tool-dock.ctx [data-tool="${id}"]`).click();
       await sheet.waitFor();
-      return sheet;
+      return precise();
     }
     await target.locator('.tool-dock.ctx [data-action="layer-deselect"]').click();
     await target.locator(".tool-dock:not(.ctx)").waitFor();
@@ -186,7 +192,7 @@ module.exports.studioTool = async (target, id) => {
     await target.locator(`.more-grid [data-tool="${id}"]`).click();
   }
   await sheet.waitFor();
-  return sheet;
+  return precise();
 };
 module.exports.studioMore = (target) => module.exports.studioTool(target, "more");
 // Date · journal · time · name · caption · tags · delete.

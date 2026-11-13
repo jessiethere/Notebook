@@ -232,7 +232,7 @@ const shots = process.env.SHOTS || "";
     await page.locator('.tool-sheet [data-action="asset-sticker"]').first().tap();
     await studioClose(page);
     await page.waitForSelector('.tool-dock.ctx[data-ctx="sticker"]');
-    assert.deepEqual(await dock(), ["layer-deselect", "layer", "layer-delete"]);
+    assert.deepEqual(await dock(), ["layer-deselect", "sticker-swap", "layer", "layer-delete"]); // V10.25: 换一个
     await shot("v101-sticker");
     await page.locator('.tool-dock.ctx [data-tool="layer"]').tap();
     await page.locator('.tool-sheet [data-action="layer-copy"]').tap();
