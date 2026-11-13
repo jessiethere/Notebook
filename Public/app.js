@@ -4706,8 +4706,9 @@ function makeStory() {
     }, false);
     ids.push(created.id);
   }
-  // A day spread, only when there are several Moments and the cover is empty.
-  story.made = { ids, cover: ids.length >= 2 && !hasDayPageContent(editor) };
+  // S4-A (V10.44): no day cover unless the person adds one (＋ 封面（可选）);
+  // a cover they added stays when the photos are regrouped.
+  story.made = { ids, cover: Boolean(story.wantCover) && ids.length >= 1 && !hasDayPageContent(editor) };
   if (story.made.cover)
     changeEditor((entry) => {
       entry.layoutTemplate = "scrapbook";
