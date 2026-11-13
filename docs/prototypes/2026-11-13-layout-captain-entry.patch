@@ -1,0 +1,572 @@
+diff --git a/Public/app.js b/Public/app.js
+index 022323a..2606f08 100644
+--- a/Public/app.js
++++ b/Public/app.js
+@@ -1490,7 +1490,46 @@ function cornerTabsHTML(view) {
+   return `<div class="kp-tabs" role="tablist" aria-label="${t("corner.tabs")}">${tab("home", "corner.chat")}${tab("play", "corner.play")}${tab("looks", "corner.look")}</div>`;
+ }
+ // The four shortcuts: full rows until the chat starts, then one compact line.
++// PROTOTYPE (Captain repositioning): one card that fits the moment, with at
++// most two things that really happen when tapped. Only facts from the
++// journal (dates, counts, the person's own words); nothing made up.
++function captainCardData() {
++  const zh = languageCode() !== "en";
++  const today = dateKey();
++  const entryOf = (d) => state().entries.find((e) => e.date === d) || state().drafts[d];
++  const fresh = (x, min) => x && Date.now() - x.at < min * 60000;
++  const btn = (label, attrs, primary = false) => `<button class="${primary ? "primary" : "secondary"}" ${attrs}>${label}</button>`;
++  if (fresh(captainRead, 30) && captainRead.date !== today) {
++    const e = entryOf(captainRead.date);
++    const m = e?.moments?.find((x) => x.id === captainRead.momentId);
++    const when = new Date(`${captainRead.date}T12:00:00`).toLocaleDateString(locale(), { month: "long", day: "numeric" });
++    const label = m ? PL.pageLabel(m, { t }).label : PL.dayLabel(e || {}, { t });
++    return { state: "D", line: zh ? `刚才在看 ${when}的「${label}」。` : `You were reading ${when} — “${label}”.`, acts: btn(zh ? "接着往下翻" : "Keep reading", `data-action="cp-read-on"`, true) + btn(zh ? "回到今天" : "Back to today", `data-action="cp-today"`) };
++  }
++  if (fresh(captainSaved, 15) && captainSaved.date === today) {
++    const m = entryOf(today)?.moments?.find((x) => x.id === captainSaved.momentId);
++    if (m) {
++      const photos = PL.pageMedia(m).photos;
++      const said = String(m.title || "").trim() || PL.pageWords(m);
++      const read = btn(zh ? "看看成品" : "See the page", `data-action="read-page" data-date="${today}" data-moment="${esc(m.id)}"`, Boolean(said));
++      return said
++        ? { state: "B", line: zh ? "这一页排好了。" : "This page is ready.", acts: read }
++        : { state: "B", line: zh ? `这一页排好了，${photos} 张照片。想写一句话吗？不写也很好。` : `This page is ready — ${photos} photo${photos === 1 ? "" : "s"}. Add a line? It's fine without one, too.`, acts: btn(zh ? "写一句话" : "Add a line", `data-action="read-edit" data-date="${today}" data-moment="${esc(m.id)}"`, true) + read };
++    }
++  }
++  if (keptToday()) {
++    const e = entryOf(today);
++    const n = (e?.moments || []).filter((x) => !x.isDemo).length || 1;
++    return { state: "C", line: zh ? `今天记了 ${n} 页。` : `${n} page${n === 1 ? "" : "s"} kept today.`, acts: btn(zh ? "打开今天" : "Open today", `data-action="cp-today"`, true) };
++  }
++  return { state: "A", line: zh ? "今天还没有记下什么。挑几张照片，我帮你排成一页。" : "Nothing kept today yet. Pick a few photos and I'll lay them out as a page.", acts: btn(zh ? "选照片" : "Pick photos", `data-action="cp-go" data-go="today-photos"`, true) + btn(zh ? "随手写一句" : "Just write", `data-action="cp-go" data-go="today-write"`) };
++}
++function captainCardHTML() {
++  const card = captainCardData();
++  return `<section class="cp-card" data-state="${card.state}"><p>${esc(card.line)}</p><div class="cp-acts">${card.acts}</div></section>`;
++}
+ function keeperActsHTML(k) {
++  return captainCardHTML();
+   if (keeperChat.some((m) => m.who === "me")) {
+     const chip = (kind, extra = "") => `<button class="kp-chip ${extra}" data-action="keeper-do" data-do="${kind}">${keeperPanelIcon(kind)}<span>${t("kp.short." + kind)}</span></button>`;
+     return `<div class="kp-acts compact" role="group" aria-label="${t("kp.quick")}">${chip("organize")}${chip("memory")}${chip("write", "later")}</div>`;
+@@ -1670,9 +1709,9 @@ function openKeeperPanel(view = keeperView) {
+   if (!Keeper.modeAllows(k, "invite")) return;
+   keeperView = view;
+   const name = Keeper.keeperName(k, languageCode());
+-  if (!keeperChat.length) keeperChat = [{ who: "keeper", text: keeperSay("tap", keeperFacts()) }];
++  // PROTOTYPE: no status line first — the card says what fits now.
+   const top = (title) => `<div class="kp-title"><button class="kp-back" data-action="keeper-view" data-view="home" aria-label="${t("kp.back")}">${icon("back")}</button><b>${title}</b><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>`;
+-  const head = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b><small>${esc(t("kp.sub", { mode: t("keeper.mode." + k.mode) }))}</small></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${cornerTabsHTML(view)}`;
++  const head = `<div class="kp-head">${keeperArt("idle")}<span><b>${esc(name)}</b></span><button class="kp-x" data-action="choose-close" aria-label="${t("close")}">×</button></div>${cornerTabsHTML(view)}`;
+   let body;
+   if (view === "looks") body = head + `<div class="kp-scroll"><div class="kp-note">${keeperArt("happy")}<p>${esc(tk("look.say", k))}</p></div>${keeperLooksHTML()}</div>`;
+   else if (view === "play") body = head + keeperPlayHTML();
+@@ -1680,7 +1719,7 @@ function openKeeperPanel(view = keeperView) {
+   else if (view === "memory") body = top(t("kp.mem.title")) + `<div class="kp-scroll">${keeperMemoryHTML()}</div>`;
+   else {
+     const composer = `<div class="keeper-say kp-input"><textarea data-keeper-say rows="1" maxlength="300" enterkeyhint="enter" placeholder="${esc(tk("kp.say", k))}" aria-label="${esc(tk("kp.say", k))}">${esc(keeperUnsent())}</textarea><button class="kp-send" data-action="keeper-say" aria-label="${t("kp.send")}" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5l6-6 6 6"/></svg><span>${t("kp.send")}</span><i class="kp-spin" aria-hidden="true"></i></button></div>`;
+-    body = `${head}<div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div>${keeperActsHTML(k)}${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
++    body = `${head}${keeperActsHTML(k)}<div class="keeper-msgs" aria-live="polite">${keeperLinesHTML()}</div>${composer}<p class="save-help keeper-local">${t("kp.local")}</p>`;
+   }
+   const dialog = $("#choose-dialog");
+   // Still typing (re-drawn while the field has the caret): keep the typing layout.
+@@ -2307,6 +2346,8 @@ function openReader(bookId, key = "resume") {
+ }
+ function closeReader() {
+   Reader.savePosition(readerBook, readerKey());
++  const at = flipPages(readerBook)[flipIndex];
++  if (at?.date) captainRead = { book: readerBook, key: readerKey(), date: at.date, momentId: at.moment?.id || "", at: Date.now() };
+   document.querySelectorAll("#app audio, #app video").forEach((m) => m.pause());
+   page = "books";
+   selectedBook = readerBook;
+@@ -4199,6 +4240,24 @@ function lastQuickBook() {
+ }
+ const QUICK_WAY_KEY = "little-days.quick-way";
+ const QUICK_WAYS = ["photo", "write", "draw"];
++// PROTOTYPE · the other ways, compact, right under the three (no scrolling to find them).
++const QUICK_ALSO = ["video", "voice", "layout"];
++function quickAlsoHTML() {
++  const zh = languageCode() !== "en";
++  const names = { video: zh ? "视频" : "Video", voice: zh ? "声音" : "Sound", layout: zh ? "自由排版" : "Free layout" };
++  const glyph = { video: "▶", voice: "♪", layout: "▦" };
++  return `<div class="quick-also" role="group" aria-label="${zh ? "也可以" : "Also"}"><span>${zh ? "也可以" : "Or"}</span>${QUICK_ALSO.map((w) => `<button data-action="quick-way" data-way="${w}" aria-pressed="${quick.way === w}"><i aria-hidden="true">${glyph[w]}</i>${names[w]}</button>`).join("")}</div>`;
++}
++function quickMediaHTML() {
++  if (!QUICK_ALSO.includes(quick.way)) return "";
++  const zh = languageCode() !== "en";
++  const say = { video: zh ? "从相册选一段视频，放进这一页。" : "Pick a video from your library for this page.", voice: zh ? "录一段声音，或选一个音频文件。" : "Record a sound, or pick an audio file.", layout: zh ? "空白的一页，照片、文字、贴纸自己摆。" : "A blank page — place photos, words and stickers yourself." }[quick.way];
++  return `<p class="quick-media-say">${say}</p>`;
++}
++function quickAlsoStart(way) {
++  const zh = languageCode() !== "en";
++  return { video: zh ? "选一段视频" : "Pick a video", voice: zh ? "开始记声音" : "Start a sound", layout: zh ? "打开空白页" : "Open a blank page" }[way];
++}
+ function lastQuickWay() {
+   try {
+     const way = localStorage.getItem(QUICK_WAY_KEY);
+@@ -4249,9 +4308,9 @@ function renderQuickRecord() {
+           .map((p) => `<button class="${quick.lib === p.id ? "selected" : ""}" data-action="quick-lib" data-photo-id="${esc(p.id)}" aria-pressed="${quick.lib === p.id}" aria-label="${esc(sceneName(p))}"><img src="${esc(safePhoto(`photo:${p.id}`))}" alt="" loading="lazy"></button>`)
+           .join("")}</div>`
+       : "";
+-  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${photos}${library}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
++  $("#choose-dialog").innerHTML = `<div class="choose-sheet quick-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${quick.date === dateKey() ? t("quick.title") : t("quick.titleDate", { date: friendlyDate(quick.date) })}</h2><div class="quick-ways" role="group" aria-label="${t("quick.title")}">${QUICK_WAYS.map(way).join("")}</div>${quickAlsoHTML()}${photos}${quickMediaHTML()}${library}<h3>${t("quick.book")}</h3><div class="quick-books">${state()
+     .books.map((book) => `<button data-action="quick-book" data-book="${esc(book.id)}" class="${quick.book === book.id ? "selected" : ""}" aria-pressed="${quick.book === book.id}">${coverHTML(book, ctx())}<span>${esc(book.title)}</span></button>`)
+-    .join("")}</div><button class="primary full-width quick-start" data-action="quick-start">${t(quick.way === "photo" && quick.photo === "mine" ? "quick.start.pick" : quick.way === "photo" && quick.photo === "pick" ? (quick.lib ? "quick.start.lib" : "quick.start.libPick") : "quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<div class="quick-more"><span>${t("quick.more")}</span><button data-action="quick-more" data-more="layout">${t("mode.layout")}</button><button data-action="quick-more" data-more="video">${t("add.video")}</button><button data-action="quick-more" data-more="voice">${t("add.sound")}</button></div><button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
++    .join("")}</div><button class="primary full-width quick-start" data-action="${QUICK_ALSO.includes(quick.way) ? "quick-more" : "quick-start"}" data-more="${quick.way}">${QUICK_ALSO.includes(quick.way) ? quickAlsoStart(quick.way) : t(quick.way === "photo" && quick.photo === "mine" ? "quick.start.pick" : quick.way === "photo" && quick.photo === "pick" ? (quick.lib ? "quick.start.lib" : "quick.start.libPick") : "quick.start." + quick.way)}</button>${pages ? `<button class="quick-continue" data-action="quick-continue">${t("quick.continue", { count: pages })} ›</button>` : ""}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+ }
+ // Every record is a new page of today, in the chosen journal.
+ function startPage(book, date = dateKey()) {
+@@ -4435,6 +4494,8 @@ function layoutStoryPage(target, isCover) {
+   else if (/^scene:color-/.test(target.backdrop || "")) delete target.backdrop;
+   decorate(target, { stickers: look.stickers }, { seed: variant + (isCover ? 1 : 0), max: look.deco, makeId: id });
+   target.layoutEdited = false;
++  // PROTOTYPE: how the page did against the quality rules (kept on the story, not in the data).
++  if (!isCover && story && result.quality && editor && findMoment(editor, target.id) === target) (story.quality ||= {})[target.id] = result.quality;
+   return result;
+ }
+ // Lay out every page of the story (or only `which`); pages edited by hand
+@@ -4584,8 +4645,27 @@ function storyArrangement(moment, variant = moment.layoutVariant) {
+   copy.layoutVariant = Number(variant) || 0;
+   return layoutStoryPage(copy, false)?.arrangement || "";
+ }
++// PROTOTYPE: too much for one page → suggest a split, with a preview; never done silently.
++function storySplitHTML(current) {
++  if (!current || current.cover || story.panel) return "";
++  const q = story.quality?.[current.page.id];
++  if (!q || q.ok || !q.split || story.keepOne?.[current.page.id]) return "";
++  const m = findMoment(editor, current.page.id);
++  const minis = q.split.map((ids, i) => {
++    const copy = structuredClone(m);
++    copy.layers = copy.layers.filter((l) => !(l.kind === "photo" && l.mediaRef && !l.gen && !ids.includes(l.id)) && !l.gen && !l.deco);
++    if (i > 0) copy.title = "";
++    copy.layoutVariant = 0;
++    copy.layoutEdited = false;
++    layoutStoryPage(copy, false);
++    return `<span class="qe-mini">${sharedCanvasHTML(copy, ctx(), { readOnly: true }).replace(/ data-action="[^"]*"/g, "").replace(/ tabindex="0"/g, ' tabindex="-1"')}</span>`;
++  });
++  const n = q.split.length;
++  const zh = languageCode() !== "en";
++  return `<section class="qe-panel qe-split" aria-label="split"><header><span><b>${zh ? `放在一页会太挤，分成 ${n} 页？` : `Too much for one page — make it ${n} pages?`}</b><small>${zh ? "照片和文字都保留，顺序不变；每句话仍在它的照片下面。" : "Every photo and word stays, in order; each line stays under its photo."}</small></span></header><div class="qe-split-pages">${minis.map((x, i) => `<figure>${x}<figcaption>${zh ? `第 ${i + 1} 页 · ${q.split[i].length} 张` : `Page ${i + 1} · ${q.split[i].length} photos`}</figcaption></figure>`).join("")}</div><div class="qe-row"><button class="secondary" data-action="story-keep-one">${zh ? "保持一页" : "Keep one page"}</button><button class="primary" data-action="story-split-pages">${zh ? `分成 ${n} 页` : `Make ${n} pages`}</button></div></section>`;
++}
+ function storyPanelHTML(current, total) {
+-  const notice = story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "";
++  const notice = (story.notice ? `<div class="qe-notice" role="status"><span>${esc(story.notice.text)}</span>${story.notice.undo ? `<button data-action="story-undo">${t("qe.undo")}</button>` : ""}</div>` : "") + storySplitHTML(current);
+   if (!current || !story.panel) return notice;
+   const done = `<button class="qe-done" data-action="story-panel" data-panel="">${t("qe.done")}</button>`;
+   if (story.panel === "photo") {
+@@ -4902,8 +4982,12 @@ async function saveStoryText() {
+   logEvent("story_words", { photos: storyMomentsOf(storyPages()[story.index]).reduce((n, m) => n + storyPhotosOf(m).filter((p) => (p.caption || "").trim()).length, 0) });
+   render();
+ }
++let captainSaved = null; // PROTOTYPE: { date, momentId, at } — the page just made
++let captainRead = null; // PROTOTYPE: { book, key, date, momentId, at } — the page last open in the reader
+ function finishStory() {
+   const { book, date } = story;
++  const lastId = story.made?.ids?.at(-1);
++  if (lastId) captainSaved = { date, momentId: lastId, book, at: Date.now() };
+   clearTimeout(draftTimer);
+   store.update((s) => saveEntry(s, editor));
+   draftDirty = false;
+@@ -4955,6 +5039,26 @@ async function storyAction(actionName, target) {
+   const sel = story.selected;
+   // The "replaced · undo" note stays only until the next change.
+   if (!["story-undo", "story-panel", "story-pick", "story-tap"].includes(actionName)) story.notice = null;
++  if (actionName === "story-keep-one") {
++    const current = storyPages()[story.index];
++    (story.keepOne ||= {})[current.page.id] = true;
++    render();
++    return;
++  }
++  if (actionName === "story-split-pages") {
++    // The same as 调整照片分组 → 从这里分开, done for the person: the group of
++    // this page is cut where the suggestion says; words go with their photos.
++    const current = storyPages()[story.index];
++    const q = story.quality?.[current.page.id];
++    const g = story.made.ids.indexOf(current.page.id);
++    if (!q?.split || g < 0) return;
++    let at = 0;
++    for (const part of q.split.slice(0, -1)) {
++      at += part.length;
++      story.groups = splitAt(story.groups, g + q.split.indexOf(part), part.length);
++    }
++    return storyAction("story-regroup", target);
++  }
+   if (actionName === "story-tap") {
+     // Tap a photo on the page: choose it (to change it, or write for it);
+     // tap anywhere else: write.
+@@ -6982,6 +7086,26 @@ async function action(target) {
+     scrollKeeperChat();
+     return;
+   }
++  if (actionName === "cp-go") {
++    $("#choose-dialog").close();
++    const go = document.createElement("button");
++    go.dataset.action = target.dataset.go;
++    return action(go);
++  }
++  if (actionName === "cp-today") {
++    $("#choose-dialog").close?.();
++    const d = dateKey();
++    const e = state().entries.find((x) => x.date === d);
++    const book = e?.moments?.find((m) => m.bookId)?.bookId || e?.bookId || state().books[0]?.id;
++    const first = flipPages(book).find((p) => p.date === d);
++    return openReader(book, first ? Reader.keyOf(first) : Reader.COVER);
++  }
++  if (actionName === "cp-read-on") {
++    $("#choose-dialog").close?.();
++    openReader(captainRead.book, captainRead.key);
++    if (flipIndex < flipPages(captainRead.book).length - 1) { flipIndex++; render(); }
++    return;
++  }
+   if (actionName === "keeper-do") {
+     const what = target.dataset.do;
+     if (what === "organize") return openKeeperPanel("organize");
+diff --git a/Public/js/scrapbook-layout.mjs b/Public/js/scrapbook-layout.mjs
+index 0b6ac28..d6301c2 100644
+--- a/Public/js/scrapbook-layout.mjs
++++ b/Public/js/scrapbook-layout.mjs
+@@ -222,7 +222,7 @@ export function applyType(layers, type) {
+ // input: { visuals: [{ id, aspect, caption? }], title, time, audio: [{ id }], type? }
+ // Returns { place: { [id]: { x, y, w, h, rotation, frame, tape } },
+ //           layers: [generated text layers], paper, backdrop }.
+-export function layoutMoment(input, styleId = "editorial", variant = 0) {
++function layoutMomentBase(input, styleId = "editorial", variant = 0) {
+   const style = styleOf(styleId);
+   const look = STYLE_LOOK[style];
+   const scale = typeScale(input.type);
+@@ -338,8 +338,8 @@ function layoutCore(input, styleId = "editorial", variant = 0, typeSize = 1) {
+   if (style === "editorial") {
+     const textW = n === 1 && v !== 0 ? 50 : 86;
+     // A headline, not a caption: big serif for short lines, smaller for long.
+-    const base = (textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 19) * typeSize;
+-    const fit = title ? fitText(title, base, textW, 4) : { size: base, lines: 0, height: 0 };
++    const base = (textUnits(title) <= 14 ? 24 : textUnits(title) <= 28 ? 21 : 16) * typeSize; // PROTOTYPE: a long line is body text
++    const fit = title ? fitText(title, base, textW, 6) : { size: base, lines: 0, height: 0 };
+     const textH = title ? fit.height + 4 : 0;
+     const bottom = 94 - textH - audioBand;
+     // The folio at the foot of the page, like a magazine.
+@@ -656,3 +656,297 @@ export function boundText(layer, page) {
+   if (layer.excerpt && text.length > layer.excerpt) text = `${text.slice(0, layer.excerpt - 1)}…`;
+   return text;
+ }
++
++// =====================================================================
++// PROTOTYPE (plan only, not shipped): quality-checked layouts.
++// 1. Lay the page out as before. If it passes the quality rules, it stays
++//    exactly as before.
++// 2. Otherwise try a few deterministic structures — justified rows (incl.
++//    one lead photo over a pair), two columns, a tall photo in its own
++//    column — with each photo's words measured at the photo's own width.
++// 3. If nothing fits one page well, say so: result.quality.split suggests
++//    how to share the photos over 2–3 pages (never done silently).
++// =====================================================================
++export const QUALITY = { minShort: 20, minArea: 5.5, minBalance: 0.2, minBalanceFew: 0.33, textOnPhoto: 0.3, gap: 2.4, capGap: 1.2 };
++const CJK_PUNCT = /[，。、！？；：）」』〉》,.!?;:)]/;
++const charW = (ch) => (CJK.test(ch) ? 1 : /[MW]/.test(ch) ? 0.92 : /[A-Z]/.test(ch) ? 0.72 : /[mw]/.test(ch) ? 0.82 : /[0-9]/.test(ch) ? 0.58 : /[il.,'!:;|]/.test(ch) ? 0.3 : ch === " " ? 0.3 : 0.56);
++// Lines as a browser wraps them: Latin words move whole, CJK breaks
++// anywhere, a CJK closing mark never starts a line (it takes the character
++// before it along).
++const LINES = new Map();
++export function safeLines(text, size, width) {
++  const key = `${size}|${Math.round(width * 4)}|${text}`;
++  if (LINES.has(key)) return LINES.get(key);
++  if (LINES.size > 5000) LINES.clear();
++  const n = linesOf(text, size, Math.round(width * 4) / 4);
++  LINES.set(key, n);
++  return n;
++}
++function linesOf(text, size, width) {
++  const per = Math.max(1, (width * 3.2) / size);
++  let lines = 0;
++  for (const para of String(text || "").split("\n")) {
++    lines++;
++    let x = 0;
++    for (const tok of para.match(/[A-Za-z0-9'’\-]+|\s+|./gu) || []) {
++      const w = [...tok].reduce((s, c) => s + charW(c), 0);
++      if (/^\s+$/.test(tok)) { x += w; continue; }
++      if (x + w <= per + 1e-6) { x += w; continue; }
++      if (CJK_PUNCT.test(tok)) { lines++; x = 1 + w; continue; }
++      if (w > per) { if (x > 0) lines++; let rest = w; while (rest > per) { lines++; rest -= per; } x = rest; continue; }
++      lines++;
++      x = w;
++    }
++  }
++  return Math.max(1, lines);
++}
++export const safeHeight = (text, size, width) => (safeLines(text, size, width) * size * 0.25 * 1.35);
++// The page's own line: a short line is a headline; a long one is body text
++// (never a 4-line headline that eats a third of the page).
++function lineFit(title, typeSize = 1) {
++  const u = textUnits(title);
++  const size = (u <= 14 ? 24 : u <= 28 ? 21 : 16) * typeSize;
++  return { size: Math.max(10, size), h: title ? safeHeight(title, Math.max(10, size), 86) : 0 };
++}
++const boxOf = (b) => ({ l: b.x - b.w / 2, r: b.x + b.w / 2, t: b.y - b.h / 2, b: b.y + b.h / 2 });
++const ovl = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
++export function checkQuality(result, ids, { loose = false, fullBleed = false } = {}) {
++  const issues = [];
++  const photos = ids.map((id) => ({ id, ...result.place[id] })).filter((p) => p.w);
++  for (const p of photos) {
++    const short = Math.min(p.w, p.h * 1.25);
++    if (short < QUALITY.minShort || (p.w * p.h) / 100 < QUALITY.minArea) issues.push({ kind: "tiny", id: p.id, value: +short.toFixed(1) });
++    const e = boxOf(p);
++    if (!fullBleed && (e.l < 0.5 || e.r > 99.5 || e.t < 0.5 || e.b > 99.5)) issues.push({ kind: "photo-off-page", id: p.id });
++  }
++  const areas = photos.map((p) => p.w * p.h);
++  if (areas.length > 1 && Math.min(...areas) / Math.max(...areas) < (areas.length <= 4 ? QUALITY.minBalanceFew : QUALITY.minBalance)) issues.push({ kind: "unbalanced" });
++  if (!loose) for (let i = 0; i < photos.length; i++) for (let j = i + 1; j < photos.length; j++) if (ovl(boxOf(photos[i]), boxOf(photos[j])) > 0.5) issues.push({ kind: "photo-overlap" });
++  const words = (result.layers || []).filter((l) => l.kind === "text" && (l.bind === "title" || l.bind === "caption") && String(l.text || "").trim());
++  const wb = words.map((l) => ({ l, e: boxOf({ x: l.x, y: l.y, w: l.w, h: safeHeight(l.text, l.fontSize, l.w) }) }));
++  for (const { l, e } of wb) {
++    const a = (e.r - e.l) * (e.b - e.t);
++    if ((photos.reduce((s, p) => s + ovl(e, boxOf(p)), 0) / a) * 100 > QUALITY.textOnPhoto) issues.push({ kind: "text-on-photo", bind: l.bind });
++    if (e.l < 1 || e.r > 99 || e.t < 1 || e.b > 99) issues.push({ kind: "text-off-page", bind: l.bind });
++  }
++  for (let i = 0; i < wb.length; i++) for (let j = i + 1; j < wb.length; j++) if (ovl(wb[i].e, wb[j].e) > 0.3) issues.push({ kind: "text-on-text" });
++  // Empty space with no purpose: no empty band taller than a third of the page
++  // between the things on it (the margins and a centred block are fine).
++  const spans = [...photos.map(boxOf), ...wb.map((x) => x.e)].map((e) => [e.t, e.b]).sort((a, b) => a[0] - b[0]);
++  let reach = spans.length ? spans[0][1] : 0, gap = 0;
++  for (const [t, b] of spans.slice(1)) { gap = Math.max(gap, t - reach); reach = Math.max(reach, b); }
++  if (gap > 24) issues.push({ kind: "empty-band", value: +gap.toFixed(1) });
++  return issues;
++}
++// One photo + its own words, as a unit of a given width.
++function unitH(u, w, frame, capSize) {
++  return frameHeight(u.a, w, frame) + (u.cap ? QUALITY.capGap + safeHeight(u.cap, capSize, w) : 0);
++}
++function widthAt(u, H, frame, capSize) {
++  let lo = 4, hi = 100;
++  for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (unitH(u, m, frame, capSize) > H) hi = m; else lo = m; }
++  return lo;
++}
++// The narrowest a photo may be and still be seen: its short side ≥ minShort
++// and its area ≥ minArea (a 3:4 photo ≈ 23% wide, a 9:16 ≈ 20%, a 16:9 ≈ 36%).
++const floorW = (a) => Math.max(QUALITY.minShort, QUALITY.minShort * a, Math.sqrt((QUALITY.minArea * 100 * a) / PAGE_RATIO)) + 0.3;
++function rowsOf(units, parts, W, frame, capSize, floors = true, caps = []) {
++  const rows = [];
++  let i = 0;
++  const wOf = (u, m) => Math.max(widthAt(u, m, frame, capSize), floors ? floorW(u.a) : 0);
++  for (const [r, n] of parts.entries()) {
++    const row = units.slice(i, i + n);
++    i += n;
++    const RW = Math.min(W, caps[r] || W);
++    let lo = 2, hi = 300;
++    for (let k = 0; k < 22; k++) { const m = (lo + hi) / 2; const tw = row.reduce((s, u) => s + wOf(u, m), 0) + QUALITY.gap * (n - 1); if (tw > RW) hi = m; else lo = m; }
++    const widths = row.map((u) => wOf(u, lo));
++    // A photo kept at its narrowest is a little taller than the others: the
++    // row is as tall as its tallest; the others sit in its middle.
++    const H = Math.max(...row.map((u, j) => unitH(u, widths[j], frame, capSize)));
++    rows.push({ row, H, widths, heights: row.map((u, j) => unitH(u, widths[j], frame, capSize)) });
++  }
++  return rows;
++}
++function compositions(n, max = 3) {
++  if (n === 0) return [[]];
++  const out = [];
++  for (let k = 1; k <= Math.min(max, n); k++) for (const rest of compositions(n - k, max)) out.push([k, ...rest]);
++  return out;
++}
++// Candidate structures for the photo region; each returns unit boxes.
++function structures(units, region, frame, capSize) {
++  const W = region.right - region.left, H = region.bottom - region.top, cx = region.left + W / 2;
++  const out = [];
++  for (const parts of compositions(units.length)) {
++    if (parts.length > 3) continue;
++    let w = W, caps = [], rows = rowsOf(units, parts, w, frame, capSize);
++    const total = () => rows.reduce((s, r) => s + r.H, 0) + QUALITY.gap * (rows.length - 1);
++    // A lead photo may be bigger, not overwhelming: the row holding the
++    // largest photo is narrowed until it is at most ~3× the smallest.
++    const areasOf = () => rows.flatMap((r) => r.row.map((u, j) => ({ r: rows.indexOf(r), a: r.widths[j] * frameHeight(u.a, r.widths[j], frame) })));
++    for (let k = 0; k < 12; k++) {
++      const as = areasOf();
++      const big = as.reduce((m, x) => (x.a > m.a ? x : m)), small = Math.min(...as.map((x) => x.a));
++      if (small / big.a >= 0.34 || rows.length < 2) break;
++      caps = rows.map((r, j) => caps[j] || W);
++      caps[big.r] *= 0.92;
++      rows = rowsOf(units, parts, w, frame, capSize, true, caps);
++    }
++    for (let k = 0; k < 30 && total() > H; k++) { w *= Math.min(0.98, H / total()); rows = rowsOf(units, parts, w, frame, capSize, true, caps.map((c) => c * (w / W))); }
++    if (total() > H + 0.5) continue;
++    if (rows.some((r) => r.widths.reduce((t, x) => t + x, 0) + QUALITY.gap * (r.row.length - 1) > W + 0.5)) continue;
++    const boxes = {};
++    let y = region.top;
++    for (const r of rows) {
++      const rw = r.widths.reduce((s, x) => s + x, 0) + QUALITY.gap * (r.row.length - 1);
++      let x = cx - rw / 2;
++      r.row.forEach((u, j) => { boxes[u.id] = { x: x + r.widths[j] / 2, top: y + (r.H - r.heights[j]) / 2, w: r.widths[j] }; x += r.widths[j] + QUALITY.gap; });
++      y += r.H + QUALITY.gap;
++    }
++    out.push({ kind: `rows ${parts.join("+")}`, boxes, height: total() });
++  }
++  // Two columns (a tall photo may stand alone in one): widths chosen so the
++  // two columns end level.
++  const colH = (list, w) => list.reduce((s, u) => s + unitH(u, w, frame, capSize), 0) + QUALITY.gap * (list.length - 1);
++  const splits = [];
++  for (let k = 1; k < units.length; k++) splits.push([units.slice(0, k), units.slice(k)]);
++  const tall = units.reduce((m, u) => (u.a < m.a ? u : m), units[0]);
++  if (units.length >= 3 && tall.a < 0.8) splits.push([[tall], units.filter((u) => u !== tall)]);
++  for (const [A, B] of splits) {
++    if (!A.length || !B.length || A.length > 3 || B.length > 3) continue;
++    let lo = 5, hi = W - QUALITY.gap - 5;
++    for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (colH(A, m) > colH(B, W - QUALITY.gap - m)) hi = m; else lo = m; }
++    let wa = lo, wb = W - QUALITY.gap - lo;
++    let s = 1;
++    for (let k = 0; k < 40 && Math.max(colH(A, wa * s), colH(B, wb * s)) > H; k++) s *= 0.98;
++    wa *= s; wb *= s;
++    const x0 = cx - (wa + wb + QUALITY.gap) / 2;
++    const boxes = {};
++    let y = region.top;
++    for (const u of A) { boxes[u.id] = { x: x0 + wa / 2, top: y, w: wa }; y += unitH(u, wa, frame, capSize) + QUALITY.gap; }
++    y = region.top;
++    for (const u of B) { boxes[u.id] = { x: x0 + wa + QUALITY.gap + wb / 2, top: y, w: wb }; y += unitH(u, wb, frame, capSize) + QUALITY.gap; }
++    out.push({ kind: `columns ${A.length}|${B.length}`, boxes, height: Math.max(colH(A, wa), colH(B, wb)) });
++  }
++  // A tall photo (9:16, 3:4…) in its own column; the others in rows beside it.
++  if (units.length >= 3 && tall.a < 0.8) {
++    const others = units.filter((u) => u !== tall);
++    for (const parts of compositions(others.length)) {
++      if (parts.length > 3) continue;
++      const restH = (w) => { const rs = rowsOf(others, parts, w, frame, capSize); return { rs, h: rs.reduce((s, r) => s + r.H, 0) + QUALITY.gap * (rs.length - 1) }; };
++      let lo = 5, hi = W - QUALITY.gap - 10;
++      for (let k = 0; k < 16; k++) { const m = (lo + hi) / 2; if (unitH(tall, m, frame, capSize) > restH(W - QUALITY.gap - m).h) hi = m; else lo = m; }
++      let wa = lo, wb = W - QUALITY.gap - lo, s = 1;
++      for (let k = 0; k < 40 && Math.max(unitH(tall, wa * s, frame, capSize), restH(wb * s).h) > H; k++) s *= 0.96;
++      wa *= s; wb *= s;
++      const { rs, h: hB } = restH(wb);
++      for (const left of [true, false]) {
++        const x0 = cx - (wa + wb + QUALITY.gap) / 2;
++        const xa = left ? x0 : x0 + wb + QUALITY.gap, xb = left ? x0 + wa + QUALITY.gap : x0;
++        const boxes = { [tall.id]: { x: xa + wa / 2, top: region.top, w: wa } };
++        let y = region.top + Math.max(0, (unitH(tall, wa, frame, capSize) - hB) / 2);
++        for (const r of rs) {
++          const rw = r.widths.reduce((t, x) => t + x, 0) + QUALITY.gap * (r.row.length - 1);
++          let x = xb + (wb - rw) / 2;
++          r.row.forEach((u, j) => { boxes[u.id] = { x: x + r.widths[j] / 2, top: y + (r.H - r.heights[j]) / 2, w: r.widths[j] }; x += r.widths[j] + QUALITY.gap; });
++          y += r.H + QUALITY.gap;
++        }
++        out.push({ kind: `tall column + rows ${parts.join("+")}${left ? "" : " (right)"}`, boxes, height: Math.max(unitH(tall, wa, frame, capSize), hB) });
++      }
++    }
++  }
++  return out;
++}
++function buildCandidate(input, style, cand, units, region, frame, capSize, line, look, v) {
++  const place = {}, layers = [];
++  const shift = Math.max(0, ((region.bottom - region.top) - cand.height) * 0.42);
++  units.forEach((u, i) => {
++    const b = cand.boxes[u.id];
++    const ph = frameHeight(u.a, b.w, frame);
++    const top = b.top + shift;
++    place[u.id] = { x: round(b.x), y: round(top + ph / 2), w: round(b.w), h: round(ph), rotation: style === "editorial" ? 0 : tilt(style, i, v) * 0.5, frame, tape: style !== "editorial" && i % 3 === 0 };
++    if (u.cap) {
++      const h = safeHeight(u.cap, capSize, b.w);
++      layers.push(textLayer(look, { bind: "caption", captionOf: u.id, text: u.cap, x: round(b.x), y: round(top + ph + QUALITY.capGap + h / 2), w: round(b.w), fontId: pickFont(u.cap, look), fontSize: capSize, align: "center", color: style === "editorial" ? look.muted : look.ink }));
++    }
++  });
++  return { place, layers, structure: cand.kind };
++}
++export function qualityCandidates(input, styleId) {
++  const style = styleOf(styleId), look = STYLE_LOOK[style], frame = look.frame;
++  const typeSize = typeScale(input.type);
++  const title = String(input.title || "").trim();
++  const capSize = Math.max(10, CAPTION_SIZE[style] * typeSize);
++  const units = (input.visuals || []).map((v) => ({ id: v.id, a: safeAspect(v.aspect), cap: String(v.caption || "").trim() }));
++  const line = lineFit(title, typeSize);
++  const audioBand = (input.audio || []).length ? 9 : 0;
++  const headTop = style === "playful" && title ? 6 + line.h + 3 : 8;
++  const region = { top: headTop, bottom: (style === "playful" ? 95 : 94 - (title ? line.h + 4 : 0)) - audioBand, left: 7, right: 93 };
++  const out = [];
++  for (const cand of structures(units, region, frame, capSize)) {
++    const built = buildCandidate(input, style, cand, units, region, frame, capSize, line, look, 0);
++    const meta = [];
++    if (input.time) meta.push(style === "editorial" ? textLayer(look, { bind: "time", prefix: "kicker", text: input.time, fontId: look.meta, fontSize: 8.5, spacing: 2.4, color: look.accent, weight: 700, x: 42, y: 4.6, w: 70 }) : textLayer(look, { bind: "time", text: input.time, fontId: look.meta, fontSize: style === "cozy" ? 14 : 9, color: look.muted, x: 80, y: 5, w: 30, align: "right" }));
++    if (input.folio && style === "editorial") meta.push(textLayer(look, { text: input.folio, x: 70, y: 97.6, w: 50, fontId: look.meta, fontSize: 6.5, spacing: 2, color: look.muted, align: "right" }));
++    if (title) {
++      const ends = Math.max(...Object.values(built.place).map((b) => b.y + b.h / 2), ...built.layers.map((l) => l.y + safeHeight(l.text, l.fontSize, l.w) / 2));
++      const y = style === "playful" ? 6 + line.h / 2 : ends + 3 + line.h / 2;
++      meta.push(textLayer(look, { bind: "title", text: title, fontId: pickFont(title, look), x: 50, y: round(y), w: 86, fontSize: line.size, weight: line.size >= 21 ? 500 : 400, align: style === "editorial" && line.size < 21 ? "left" : "center" }));
++    }
++    (input.audio || []).forEach((clip, i) => { built.place[clip.id] = { x: 50, y: 95 - audioBand / 2 - i * 0.5, w: 70, rotation: 0 }; });
++    const result = { place: built.place, layers: [...meta, ...built.layers], paper: look.paper, backdrop: style === "playful" ? PLAYFUL_BACKDROPS[0] : null, structure: built.structure };
++    const issues = checkQuality(result, units.map((u) => u.id), { loose: style !== "editorial" });
++    const ps = units.map((u) => result.place[u.id]);
++    const areas = ps.map((p) => p.w * p.h);
++    const minShort = Math.min(...ps.map((p) => Math.min(p.w, p.h * 1.25)));
++    const cover = areas.reduce((s, a) => s + a, 0) / (86 * 86);
++    result.score = cover * (0.55 + 0.45 * Math.min(...areas) / Math.max(...areas)) * Math.min(1, minShort / 28);
++    out.push({ result, issues });
++  }
++  return out;
++}
++const sig = (r, ids) => ids.map((id) => { const b = r.place[id]; return `${Math.round(b.x / 4)},${Math.round(b.y / 4)},${Math.round(b.w / 4)}`; }).join("|");
++export function layoutMoment(input, styleId = "editorial", variant = 0) {
++  const style = styleOf(styleId);
++  const ids = (input.visuals || []).map((v) => v.id);
++  const fullBleed = ids.length === 1;
++  const options = [];
++  const seen = new Set();
++  const add = (result, from) => { const s = sig(result, ids); if (seen.has(s)) return; seen.add(s); options.push({ result, from }); };
++  for (const v of [0, 1, 2]) {
++    const r = layoutMomentBase(input, style, v);
++    if (!checkQuality(r, ids, { loose: style !== "editorial", fullBleed }).length) add(r, `base ${v}`);
++  }
++  let best = null;
++  if (options.length < 3 && ids.length) {
++    const cands = qualityCandidates(input, style);
++    for (const c of cands.filter((c) => !c.issues.length).sort((a, b) => b.result.score - a.result.score)) { if (options.length >= 3) break; add(applyType(c.result.layers, input.type) && c.result, c.result.structure); }
++    best = cands.sort((a, b) => a.issues.length - b.issues.length || b.result.score - a.result.score)[0];
++  }
++  if (options.length) {
++    const pick = options[((variant % options.length) + options.length) % options.length];
++    return { ...pick.result, quality: { ok: true, options: options.length, from: pick.from } };
++  }
++  // Nothing good on one page: the least bad one, and a suggested split.
++  const fallback = best ? best.result : layoutMomentBase(input, style, variant);
++  applyType(fallback.layers, input.type);
++  return { ...fallback, quality: { ok: false, issues: (best?.issues || []).map((i) => i.kind), split: suggestSplit(input, style) } };
++}
++// Photos shared over 2–3 pages, in order; the page's line stays on the
++// first; each photo keeps its own words. Each part must pass on its own.
++export function suggestSplit(input, styleId) {
++  const visuals = input.visuals || [];
++  for (const k of [2, 3, 4]) {
++    if (visuals.length < k) break;
++    const size = Math.ceil(visuals.length / k);
++    const parts = [];
++    for (let i = 0; i < visuals.length; i += size) parts.push(visuals.slice(i, i + size));
++    const ok = parts.every((part, i) => {
++      const sub = { ...input, visuals: part, title: i === 0 ? input.title : "", audio: i === 0 ? input.audio : [] };
++      return layoutMoment(sub, styleId, 0).quality.ok;
++    });
++    if (ok) return parts.map((p) => p.map((v) => v.id));
++  }
++  return null;
++}
+diff --git a/Public/styles.css b/Public/styles.css
+index a25b1b0..af5f0b2 100644
+--- a/Public/styles.css
++++ b/Public/styles.css
+@@ -21584,3 +21584,22 @@ body.typing .ctx-caption {
+ #app > .story-canvas {
+   flex: none;
+ }
++/* PROTOTYPE · split suggestion */
++.qe-split-pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
++.qe-split-pages figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
++.qe-split-pages figcaption { font-size: 11px; color: var(--t-6f675d, #6F675D); }
++.qe-split { padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
++/* PROTOTYPE · Captain's context card */
++.cp-card { margin: 6px 0 10px; padding: 12px 14px; border-radius: 16px; background: var(--c-f7f4ee, #f7f4ee); display: grid; gap: 10px; }
++.cp-card p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink); }
++.cp-acts { display: flex; gap: 8px; flex-wrap: wrap; }
++.cp-acts button { min-height: 42px; padding: 0 16px; border-radius: 14px; font-size: 14px; font-weight: 700; }
++/* PROTOTYPE · 今天怎么记: the other ways right under the three, and a shorter first screen */
++.quick-sheet .quick-way { padding: 5px 5px 8px; gap: 2px; }
++.quick-sheet .way-art { aspect-ratio: 5 / 4; }
++.quick-sheet .quick-way small { display: none; }
++.quick-also { display: flex; align-items: center; gap: 6px; margin: 2px 0 6px; font-size: 12px; color: var(--t-9a8f80, #9a8f80); }
++.quick-also button { flex: 1; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--c-e6dfd3, #e6dfd3); border-radius: 12px; background: var(--c-ffffff, #ffffff); font-size: 13px; color: var(--t-2b2622, #2b2622); }
++.quick-also button[aria-pressed="true"] { border-color: var(--c-2b2622, #2b2622); box-shadow: 0 2px 10px var(--c-3c2d1e1f, #3c2d1e1f); }
++.quick-also i { font-style: normal; font-size: 12px; }
++.quick-media-say { margin: 6px 2px 4px; font-size: 13px; color: var(--t-6f675d, #6f675d); }

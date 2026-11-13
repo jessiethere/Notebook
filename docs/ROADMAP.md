@@ -7,6 +7,7 @@
 >    - Chromium 全量回归通过；iOS 模拟器里用脚本点击走通了换照片、撤销、换排版、保存和阅读器。
 >    - 还没验证：真机和模拟器里的手动触控与键盘，清单见 [QUICK_EDIT_IPHONE_CHECK.md](QUICK_EDIT_IPHONE_CHECK.md)。
 >    - 审查里 F1–F7 的其余几项（书和日期两个下拉框、写好的一句话太小等）没有在这一轮处理。
+> 2b. **排版质量（2026-11-13 新增，属于核心流程）**：最小尺寸、文字不压照片、视觉平衡、放不下时建议分页。方案见 [LAYOUT_QUALITY_PLAN.md](LAYOUT_QUALITY_PLAN.md)，等确认后按 L1–L4 实施。「今天怎么记」入口见 [QUICK_ENTRY_PLAN.md](QUICK_ENTRY_PLAN.md)。Captain 重新定位见 [CAPTAIN_UX_PLAN.md](CAPTAIN_UX_PLAN.md)，排在排版质量和媒体可靠性之后。
 > 3. Meme & Sticker Studio：设计 v2 已通过（[MEME_STICKER_PLAN.md](MEME_STICKER_PLAN.md)），Phase A 只做低风险准备，暂不展开实施；GIF 在 Phase B。
 > 4. Captain 原色 6 个小反应素材：与开发分开准备。
 > Captain、Meme、GIF 是增强体验，不是核心流程的前提。
