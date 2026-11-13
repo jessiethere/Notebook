@@ -393,6 +393,7 @@ async function streamBytes(download) {
     await page.locator('[data-action="backup"]').click();
     const backupBytes = await streamBytes(await backupPromise),
       backup = JSON.parse(backupBytes);
+    await page.locator('#choose-dialog [data-bk="yes"]').click(); // V10.40 (C3): say the file was kept
     assert.ok(backup.media.length >= 6);
     assert.equal(backup.state.books.at(-1).title, book.title);
     const stable = JSON.stringify(await read());

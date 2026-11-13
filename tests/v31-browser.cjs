@@ -533,6 +533,7 @@ async function noOverflow(page, label) {
     const downloadPromise = page.waitForEvent("download");
     await page.locator('[data-action="backup"]').click();
     const download = await downloadPromise;
+    await page.locator('#choose-dialog [data-bk="yes"]').click(); // V10.40 (C3): say the file was kept
     const chunks = [];
     for await (const chunk of await download.createReadStream()) chunks.push(chunk);
     const backupBuffer = Buffer.concat(chunks);

@@ -262,35 +262,64 @@ export class MediaStore {
     await this.acquire(mediaReferences(state, "image"), "app");
     return this;
   }
-  async backup(state) {
+  // C2: one file that can't be read no longer fails the whole backup, and
+  // is never left out quietly. Without allowMissing, unreadable files stop
+  // the backup with error.code "backup-missing" and error.missing (the list
+  // the person sees). With allowMissing (after they chose to go on), the
+  // backup is made without them and says so in the file: complete: false and
+  // missing: [{ id, kind, name }]. A complete backup has complete: true.
+  async backup(state, { allowMissing = false } = {}) {
     const media = [];
+    const missing = [];
     let totalSize = 0;
     for (const id of mediaReferences(state)) {
       // Size first (from the record), so an oversize backup stops before
       // any bytes are read or encoded.
-      const stored = await this.get(id);
-      if (!stored) throw new Error("A referenced media file is missing.");
+      let stored = null;
+      try {
+        stored = await this.get(id);
+      } catch {}
+      if (!stored) {
+        missing.push({ id, kind: "", name: "", reason: "missing" });
+        continue;
+      }
       totalSize += stored.bytes?.byteLength ?? stored.blob?.size ?? stored.size ?? 0;
       if (totalSize > MAX_BACKUP_MEDIA_BYTES) {
         const error = new Error("error.backupSize");
         error.code = "backup-size";
         throw error;
       }
-      const record = await this.readable(id);
-      const blob = blobOf(record);
-      if (!blob) throw new Error("A referenced media file is missing.");
-      const data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
+      let data = null,
+        record = null;
+      try {
+        record = await this.readable(id);
+        const blob = blobOf(record);
+        if (blob)
+          data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+          });
+      } catch {}
+      if (!data) {
+        missing.push({ id, kind: kindOf(stored.kind, stored.mime), name: stored.name || "", reason: "unreadable" });
+        continue;
+      }
       media.push({ ...record, blob: undefined, bytes: undefined, data });
+    }
+    if (missing.length && !allowMissing) {
+      const error = new Error("error.backupMissing");
+      error.code = "backup-missing";
+      error.missing = missing;
+      throw error;
     }
     return {
       format: "little-days-backup",
       version: 1,
       createdAt: new Date().toISOString(),
+      complete: missing.length === 0,
+      ...(missing.length ? { missing: missing.map(({ id, kind, name }) => ({ id, kind, name })) } : {}),
       state: structuredClone(state),
       media,
     };
@@ -338,12 +367,15 @@ export class MediaStore {
         ),
       );
     }
-    if ([...references].some((id) => !mapping.has(id)))
+    // A backup that says which files it could not include (C2) restores
+    // with those references kept as they were; any other gap is refused.
+    const known = new Set(Array.isArray(backup.missing) && backup.complete === false ? backup.missing.map((m) => m?.id).filter((x) => typeof x === "string") : []);
+    if ([...references].some((id) => !mapping.has(id) && !known.has(id)))
       throw new Error("Incomplete media backup");
     const restored = structuredClone(backup.state);
     visitMediaReferences(
       restored,
-      (ref) => "media:" + mapping.get(ref.slice(6)),
+      (ref) => (mapping.has(ref.slice(6)) ? "media:" + mapping.get(ref.slice(6)) : ref),
     );
     for (const book of restored.books) book.visibility = "private";
     for (const entry of [

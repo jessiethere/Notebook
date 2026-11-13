@@ -41,6 +41,7 @@ const shots = process.env.SHOTS_DIR || "";
     const download = page.waitForEvent("download");
     await page.locator('.backup-nudge [data-action="backup"]').click();
     assert.match((await download).suggestedFilename(), /Little-Days-Backup-.*\.json/);
+    await page.locator('#choose-dialog [data-bk="yes"]').click(); // V10.40 (C3): say the file was kept
     await page.waitForSelector(".backup-nudge", { state: "detached" });
     await page.locator(".settings-gear").click();
     assert.match(await page.locator(".backup-when").innerText(), /上次备份[\s\S]*0 天前/);

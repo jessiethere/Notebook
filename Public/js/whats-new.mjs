@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.40",
+    date: "2026-11-13",
+    zh: {
+      title: "备份：只有真的存好了，才算备份",
+      items: [
+        "以前只要有一张照片读不出来，整份备份就会失败。现在 App 会列出读不出来的是哪几个文件、在哪一天的页面里；你可以先取消去看看，或者导出一份不含这些文件的备份。",
+        "这份备份的文件名会带「incomplete」，文件里也写明缺了哪些，只会记为「不完整的备份」，不会当成完整备份。恢复时其他内容照常恢复，缺的照片位置保留。",
+        "以前点了备份、在分享面板里取消，也会被记成「已备份」。现在导出后会问你「备份文件存好了吗？」，选「存好了」才记下这次备份。",
+      ],
+    },
+    en: {
+      title: "Backups: it only counts once the file is kept",
+      items: [
+        "Before, one photo that couldn't be read made the whole backup fail. Now the app lists which files can't be read and which days they're on; you can cancel and look, or export a backup without them.",
+        "That backup's file name says \"incomplete\" and the file lists what's missing; it's recorded as an incomplete backup, never a complete one. Restoring it brings back everything else and keeps the missing photo's place.",
+        "Before, cancelling the share sheet still counted as \"backed up\". Now the app asks \"Did you keep the backup file?\" and records the backup only when you say yes.",
+      ],
+    },
+  },
+  {
     version: "10.39",
     date: "2026-11-13",
     zh: {

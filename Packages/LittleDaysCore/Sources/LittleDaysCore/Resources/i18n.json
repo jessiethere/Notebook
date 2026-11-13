@@ -8922,5 +8922,69 @@
   "book.default.food": {
     "zh": "好好吃饭，好好生活",
     "en": "Eat Well, Live Well"
+  },
+  "backup.kind.photo": {
+    "zh": "照片",
+    "en": "Photo"
+  },
+  "backup.kind.video": {
+    "zh": "视频",
+    "en": "Video"
+  },
+  "backup.kind.audio": {
+    "zh": "声音",
+    "en": "Sound"
+  },
+  "backup.usedOn": {
+    "zh": "在 {days} 的页面里",
+    "en": "On the page(s) of {days}"
+  },
+  "backup.missingTitle": {
+    "zh": "有 {count} 个文件读不出来",
+    "en": "{count} file(s) can't be read"
+  },
+  "backup.missingBody": {
+    "zh": "这些文件在这台设备上读不出来，所以没法放进备份。其他内容都可以正常备份。你可以先取消，去看看这些页面；或者先导出一份不含这些文件的备份——它会标明「不完整」，不会被当成完整备份。",
+    "en": "These files can't be read on this device, so they can't go into a backup. Everything else can. You can cancel and look at those pages first, or export a backup without them — it is marked incomplete and never counted as a complete backup."
+  },
+  "backup.missingMore": {
+    "zh": "还有 {count} 个没有列出。",
+    "en": "{count} more not listed."
+  },
+  "backup.missingGo": {
+    "zh": "导出不完整的备份（缺 {count} 个）",
+    "en": "Export an incomplete backup (missing {count})"
+  },
+  "backup.keptTitle": {
+    "zh": "备份文件存好了吗？",
+    "en": "Did you keep the backup file?"
+  },
+  "backup.keptBody": {
+    "zh": "确认已经把文件存到「文件」、电脑或其他地方，App 才会记下这次备份。如果刚才取消了，选「没有」。",
+    "en": "The app records this backup only once you've kept the file somewhere (Files, a computer…). If you cancelled, choose No."
+  },
+  "backup.keptBodyPartial": {
+    "zh": "这份备份缺 {count} 个文件，会记为「不完整」。确认已经把文件存好了吗？",
+    "en": "This backup is missing {count} file(s) and will be recorded as incomplete. Did you keep the file?"
+  },
+  "backup.keptYes": {
+    "zh": "存好了",
+    "en": "Yes, it's kept"
+  },
+  "backup.keptNo": {
+    "zh": "没有，稍后再备份",
+    "en": "No, back up later"
+  },
+  "backup.partialKept": {
+    "zh": "已记下：这次备份不完整，缺 {count} 个文件。",
+    "en": "Recorded: this backup is incomplete, missing {count} file(s)."
+  },
+  "backup.whenPartial": {
+    "zh": "上次备份在 {date}，但不完整（缺 {count} 个文件）。",
+    "en": "Last backup on {date} was incomplete (missing {count} file(s))."
+  },
+  "backup.lastComplete": {
+    "zh": "上次完整备份：{date}。",
+    "en": "Last complete backup: {date}."
   }
 }

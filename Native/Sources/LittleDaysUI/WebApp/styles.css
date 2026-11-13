@@ -21743,3 +21743,10 @@ body.typing .ctx-caption {
 /* A3: a page of only words in the photo groups; the words limit note. */
 .story-words-only { margin: 6px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.8; }
 .sw-count.full { color: var(--danger, #b4483c); white-space: normal; }
+/* C2: the files a backup could not read. */
+.bm-list { list-style: none; margin: 8px 0 14px; padding: 0; max-height: 40vh; overflow: auto; }
+.bm-list li { padding: 8px 0; border-bottom: 1px solid var(--c-dfdfd0, #dfdfd0); font-size: 14px; }
+.bm-list small { display: block; opacity: 0.75; font-size: 12px; }
+.backup-when.partial { color: var(--danger, #b4483c); }
+.backup-missing .save-help, .backup-kept .save-help { font-size: 14px; line-height: 1.55; text-align: left; color: inherit; opacity: 0.85; }
+.backup-missing .primary, .backup-kept .primary { font-size: 15px; }

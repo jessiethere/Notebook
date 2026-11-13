@@ -2107,6 +2107,65 @@ document.addEventListener("change", (event) => {
 // survives a lost phone or a deleted app. A quiet nudge on Home once there is
 // something worth keeping and no backup for two weeks; "later" waits a week.
 const BACKUP_AT_KEY = "little-days.last-backup";
+// C2: the last backup that was kept but could not include every file.
+const BACKUP_PARTIAL_KEY = "little-days.last-backup-partial";
+// Where a media file is used: "11月3日" for each day that has it.
+function mediaUsedOn(id) {
+  const ref = `"media:${id}"`;
+  const days = [...state().entries, ...Object.values(state().drafts || {})].filter((e) => JSON.stringify(e).includes(ref)).map((e) => e.date);
+  return [...new Set(days)].sort();
+}
+// C2: which files could not be read; go on without them, or stop.
+function backupMissingSheet(missing) {
+  const dialog = $("#choose-dialog");
+  const kindName = (k) => t(k === "video" ? "backup.kind.video" : k === "audio" ? "backup.kind.audio" : "backup.kind.photo");
+  const rows = missing
+    .slice(0, 30)
+    .map((m) => {
+      const days = mediaUsedOn(m.id).map((d) => friendlyDate(d)).join("、");
+      return `<li><b>${esc(kindName(m.kind))}</b>${m.name ? ` · ${esc(m.name)}` : ""}<small>${days ? esc(t("backup.usedOn", { days })) : ""}</small></li>`;
+    })
+    .join("");
+  dialog.innerHTML = `<div class="choose-sheet backup-missing" role="alertdialog" aria-labelledby="bm-title"><div class="choose-grabber" aria-hidden="true"></div><h2 id="bm-title">${t("backup.missingTitle", { count: missing.length })}</h2><p class="save-help">${t("backup.missingBody")}</p><ul class="bm-list">${rows}</ul>${missing.length > 30 ? `<p class="save-help">${t("backup.missingMore", { count: missing.length - 30 })}</p>` : ""}<button class="primary full-width" data-bk="go">${t("backup.missingGo", { count: missing.length })}</button><button class="choose-cancel" data-bk="stop">${t("cancel")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  return new Promise((resolve) => {
+    const done = (value) => {
+      dialog.removeEventListener("click", onClick);
+      dialog.removeEventListener("close", onClose);
+      if (dialog.open) dialog.close();
+      resolve(value);
+    };
+    const onClick = (event) => {
+      const b = event.target.closest("[data-bk]");
+      if (b) done(b.dataset.bk === "go");
+    };
+    const onClose = () => done(false);
+    dialog.addEventListener("click", onClick);
+    dialog.addEventListener("close", onClose);
+  });
+}
+// C3: after the file is handed over, ask whether it was kept.
+function backupKeptSheet(backup) {
+  const dialog = $("#choose-dialog");
+  const partial = !backup.complete;
+  dialog.innerHTML = `<div class="choose-sheet backup-kept" role="alertdialog" aria-labelledby="bk-title"><div class="choose-grabber" aria-hidden="true"></div><h2 id="bk-title">${t("backup.keptTitle")}</h2><p class="save-help">${t(partial ? "backup.keptBodyPartial" : "backup.keptBody", { count: backup.missing?.length || 0 })}</p><button class="primary full-width" data-bk="yes">${t("backup.keptYes")}</button><button class="choose-cancel" data-bk="no">${t("backup.keptNo")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+  return new Promise((resolve) => {
+    const done = (value) => {
+      dialog.removeEventListener("click", onClick);
+      dialog.removeEventListener("close", onClose);
+      if (dialog.open) dialog.close();
+      resolve(value);
+    };
+    const onClick = (event) => {
+      const b = event.target.closest("[data-bk]");
+      if (b) done(b.dataset.bk === "yes");
+    };
+    const onClose = () => done(false);
+    dialog.addEventListener("click", onClick);
+    dialog.addEventListener("close", onClose);
+  });
+}
 const BACKUP_SNOOZE_KEY = "little-days.backup-snooze";
 const readKey = (key) => {
   try {
@@ -2141,6 +2200,12 @@ function backupNudgeHTML() {
 }
 function backupWhenHTML() {
   const last = readKey(BACKUP_AT_KEY).slice(0, 10);
+  let partial = null;
+  try {
+    partial = JSON.parse(readKey(BACKUP_PARTIAL_KEY) || "null");
+  } catch {}
+  // A newer backup that could not include every file says so.
+  if (partial?.date && (!last || partial.date > last)) return `<p class="backup-when partial">${t("backup.whenPartial", { date: friendlyDate(partial.date), count: partial.missing })}${last ? ` ${t("backup.lastComplete", { date: friendlyDate(last) })}` : ""}</p>`;
   if (!last) return `<p class="backup-when">${t("backup.whenNever")}</p>`;
   const days = daysBetween(last, dateKey());
   return `<p class="backup-when">${t("backup.when", { date: friendlyDate(last), days })}</p>`;
@@ -9826,18 +9891,37 @@ async function v3Action(target) {
   }
   if (name === "backup") {
     flushDraft();
-    const backup = await media.backup(state());
+    // C2: a file that can't be read is listed, and left out only when the
+    // person chooses to — the file then says it is incomplete.
+    let backup;
+    try {
+      backup = await media.backup(state());
+    } catch (error) {
+      if (error.code !== "backup-missing") throw error;
+      if (!(await backupMissingSheet(error.missing))) return true;
+      backup = await media.backup(state(), { allowMissing: true });
+    }
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(backup)], { type: "application/json" }),
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Little-Days-Backup-${dateKey()}.json`;
+    link.download = `Little-Days-Backup-${dateKey()}${backup.complete ? "" : "-incomplete"}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    toast(t("settings.backupDone"));
-    writeKey(BACKUP_AT_KEY, dateKey());
-    logEvent("backup", {});
+    logEvent("backup", { complete: backup.complete, missing: backup.missing?.length || 0 });
+    // C3: the file was only handed over (download / share sheet, which can be
+    // cancelled): it counts as a backup once the person says it is kept.
+    if (await backupKeptSheet(backup)) {
+      if (backup.complete) {
+        writeKey(BACKUP_AT_KEY, dateKey());
+        toast(t("settings.backupDone"));
+      } else {
+        writeKey(BACKUP_PARTIAL_KEY, JSON.stringify({ date: dateKey(), missing: backup.missing.length }));
+        toast(t("backup.partialKept", { count: backup.missing.length }));
+      }
+      logEvent("backup_kept", { complete: backup.complete });
+    }
     if (["home", "settings"].includes(page)) {
       render();
       if (page === "settings") showMediaUsage();
