@@ -547,3 +547,8 @@ Vapor 继续 `bash start.sh`，Swift 6.0+；Native 用 macOS + Xcode 16+ 打开 
   - 动作 `story-split-pages`（用 `splitAt` 加 `story-regroup`）、`story-keep-one`、`story-split-show`。
   - `storyReplacePhoto` 会同时更新 `story.groups`。
 - 测试：`tests/v134.test.mjs`、`tests/v133-browser.cjs`（在真实页面上检查）；v119、v128 迁移。
+
+## 2026-11-13 V10.35 L4：iOS 模拟器里的排版核对（只在 Debug 版）
+
+- `LittleDaysWebShellView.swift`：Debug 版读启动参数 `-LittleDaysCheck <.js 路径>`，用 `callAsyncJavaScript` 在页面里运行这个文件，把返回值打印出来；返回后不再处理 `-LittleDaysTap`。Release 编译不包含这段代码。
+- `tools/mac/ios-layout-check.js`（v133 的 8 个案例，走 App 的真实流程）和 `tools/mac/ios-layout-check.sh`（安装、启动、截图、取结果）。结果见 `docs/LAYOUT_QUALITY_PLAN.md`「L4」。

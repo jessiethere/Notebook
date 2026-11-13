@@ -222,6 +222,19 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
         // screenshot of Calendar, the shelf or Journal Studio can be taken
         // without touching the screen (tools/mac/sim-shots.sh). It only clicks
         // what a person could tap; it reads and sends nothing.
+        // `-LittleDaysCheck <path of a .js file on the Mac>` (V10.35 layout check
+        // in iOS WebKit with the iPhone's own fonts): runs that file's body as
+        // an async function in the page and prints what it returns, so
+        // `xcrun simctl launch --console` shows the result. Debug only, like the taps.
+        if let path = UserDefaults.standard.string(forKey: "LittleDaysCheck"), let body = try? String(contentsOfFile: path, encoding: .utf8) {
+            webView.callAsyncJavaScript(body, arguments: [:], in: nil, in: .page) { result in
+                switch result {
+                case .success(let value): print("LittleDaysCheck:", value ?? "null")
+                case .failure(let error): print("LittleDaysCheck failed:", error)
+                }
+            }
+            return
+        }
         guard let steps = UserDefaults.standard.string(forKey: "LittleDaysTap"), !steps.isEmpty else { return }
         // A step "upload:<input selector>|<file path on the Mac>|<mime>" (P0
         // media test, Debug only) gives that test file to the page's own file

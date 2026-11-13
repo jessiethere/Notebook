@@ -48,6 +48,39 @@
 
 ## 更新日志
 
+### 2026-11-13 — L4：在 iOS 模拟器里用 iPhone 字体核对排版；入口 Safe Area（没有改 `Public/`，固定链接不变）
+
+- 需求：
+  - 用户说 Mac 打开了。继续 L4：用 iOS 真实字体核对排版和测量。
+  - 补做 V10.32 入口在模拟器里的 Safe Area 检查。
+- 文件：
+  - `Native/Sources/LittleDaysUI/WebShell/LittleDaysWebShellView.swift`：Debug 版新增 `-LittleDaysCheck`；
+  - 新增 `tools/mac/ios-layout-check.js`、`tools/mac/ios-layout-check.sh`；
+  - 文档：`docs/LAYOUT_QUALITY_PLAN.md`（L4 一节）、`docs/QUICK_ENTRY_PLAN.md`、`docs/ARCHITECTURE.md`。
+- 做法：
+  - Mac 上只用 `git archive` 导出 9366925 到 `/tmp/ld-build3/src`，在导出里加上同样的 Swift 改动（两边 sha 一致），然后 Debug 构建，`BUILD SUCCEEDED`。
+  - Mac 项目目录里另一个会话没提交的 `project.pbxproj`、`Package.resolved` 和 4 个 Qwen 结果文件没有碰。
+  - 新建两台只用来测试的模拟器：`LD L4 375`（375 × 667）、`LD L4 430`（430 × 932），都是 iOS 27.2。原来的模拟器和数据没有动。
+- 结果：
+  - 中文 375、英文 430 两种设置下，8 个案例全部通过：照片尺寸达标，文字不压照片、不出页；两个「太多」的案例建议分 2 页，分开后每页合格、每句话都在。
+  - 校准：中英混排 + 宋体 + 大一号，iOS（Songti SC）排 3 行，Linux Chromium 排 2 行；「回家路上看到 sunset」iOS 两行、Chromium 一行。App 按真实测量排，iOS 上这几页的排法不同，但都合格。其它文字高度两边一致。
+  - 规则数值不变。
+  - Chromium 英文全流程第一次跑时，6 张 + 长文字 + 说明的案例排进了一页（这一页本身合格），之后 4 次都是建议分页，原因没有找到。
+- 入口 Safe Area（模拟器截图）：
+  - 375 × 667 中文、430 × 932 英文下，视频 / 声音 / 自由排版都在第一屏；
+  - 选视频后显示说明，按钮变成「选一段视频」；
+  - 「取消」在 Home 指示条上方。
+- 截图：在 Mac 的 `/tmp/ld-build3/l4/out` 和 `/tmp/ld-build3/l4/entry`，已经在 Finder 里打开。截图太大，传不到云端会话，所以没有放进设计页，也没有提交到仓库。
+- 运行：
+  - `npm test` 266 通过，`python3 -m unittest` 通过；
+  - iOS 模拟器检查 2 轮；Chromium 对照 4 轮；
+  - Swift 改动在 Debug 构建里编译通过。
+- **Captain**：
+  - 准备开始实施时，自动权限检查拦下了代码修改。原因是「确认 mac 也打开了」不能明确算作确认了 Captain 设计。
+  - 已加的文案也撤回了，`Public/` 没有改动。等用户明确确认再做。
+- 未完成：iPhone 真机；手账和拼贴风格的 iOS 逐张检查；Captain 实施（等确认）。
+- 预览：本地预览服务到了 2 小时上限后停止了，按会话规则没有再启动（固定链接不受影响）。
+
 ### 2026-11-13 — 排版质量 L1–L3：V10.33 真实测量 + 质量规则 + 备选排法，V10.34 建议分页（固定链接第 97 版）
 
 - 需求：用户确认 L1–L4 的方向和调整：
