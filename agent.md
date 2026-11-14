@@ -48,6 +48,21 @@
 
 ## 更新日志
 
+### 2026-11-14 — V10.49 iPhone 上音乐音量滑块没有用；全量回归结果
+
+- **需求**：用户在 TestFlight 上发现「这本书的音乐」的音量滑块没有作用。
+- **根因**：iOS 忽略网页 `<audio>.volume`。模拟器读回设定值，看起来像生效，所以不能只靠读回值判断。详见 `docs/BUGFIX_LOG.md`。
+- **修改**：`Public/js/music.mjs`。在 iPhone / iPad 上，背景音乐改走 Web Audio 增益节点：点播放时建立音频环境，环境运行后才接入；`navigator.audioSession = "playback"`；接好后标 `data-gain`。桌面浏览器不变。whats-new 10.49；`sync_native_web` 已同步。
+- **测试**
+  - 新增 `tests/v147-browser.cjs`，3 组通过；v59 通过；`npm test` 281/281；`test_native_shell` OK。
+  - **iOS 模拟器真实触摸** `testMusicVolume` 通过：播放中、走增益；滑块 70% → 0% → 100%，一直在播。探针新增 `navBooks`、`shelfSpine`、`shelfBook`、`bookMusic`、`musicPreview`、`musicVolume`、`bgmPlaying`、`bgmGain`、`volOut`。
+  - 模拟器测不了真实声音大小，真机需要听。
+- **全量浏览器回归**（`run-all2`，8081）：85/85 通过。
+  - 前 31 组跑在 V10.47 代码上，之后跑在随后提交的 V10.48 / V10.49 代码上。
+  - 新增和改过的套件（v53、v111、v59、v147）在最终代码上单独重跑，全部通过。
+- **发布**：固定链接版本 105。
+- **没有验证**：真机上的声音大小；静音开关下的行为。
+
 ### 2026-11-14 — V10.48 书里的「分享」按钮；去掉分享后的问卷
 
 - **需求**：用户在 TestFlight 截图里指出：书详情的「分享给家人看（PDF）」不一定是家人，写「分享」就可以；分享后弹出的「想让 TA 也能往这本书里加照片吗？」问卷莫名其妙、没必要。
