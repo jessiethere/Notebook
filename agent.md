@@ -1,4 +1,4 @@
-# Capiday · 开发日志与会话交接
+# 开铺手帐 · Capiday · 开发日志与会话交接
 
 ## 固定约定
 
@@ -47,6 +47,13 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-14 — 中文名「开铺手帐」（同属 V10.45，发布前补上）
+
+- **需求**：用户确认中文名叫「开铺手帐」，英文名 Capiday。
+- **怎么分**：中文界面的提示和说明写开铺手帐（`i18n.json` 14 条中文、更新记录里的中文、页面标题「开铺手帐 · Capiday」、Captain 提示词注明中文名）；新增 `app.name`（zh 开铺手帐 / en Capiday），提醒通知的标题按语言显示。**字标仍用 Capiday**：首页刊头、页面刊头/页脚 `CAPIDAY · NO.`、锁屏、欢迎页、设置里的「My Capiday」，以及导出文件名 `Capiday-*`——这是我的默认做法，用户想让中文界面的首页字标也显示「开铺手帐」的话可以再改。
+- **iPhone 主屏幕名称**：新增 `Native/App/en.lproj/InfoPlist.strings`（Capiday）和 `Native/App/zh-Hans.lproj/InfoPlist.strings`（开铺手帐），连同相机 / 面容 ID / 麦克风说明各用一种语言；在 `project.pbxproj` 里登记为 Variant Group 并加进 Resources。默认（其他语言）是英文。
+- **测试**：`tests/browser.cjs` 的页面标题改为「开铺手帐 · Capiday」。结果见下一条日志。
 
 ### 2026-11-14 — V10.45 App 改名：Little Days → Capiday（App、GitHub、Xcode、固定链接）
 

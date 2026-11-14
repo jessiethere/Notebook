@@ -37,7 +37,7 @@ const path = require("node:path");
           .querySelector("#draft-status")
           ?.textContent.includes("草稿已保存在本机"),
       );
-    assert.equal(await page.title(), "Capiday · 手帐文具店");
+    assert.equal(await page.title(), "开铺手帐 · Capiday");
     // V10.41 (S1): the sample "today" page is no longer on Home, so the hero
     // shows its own photo-journal card; its picture must load.
     assert.equal(

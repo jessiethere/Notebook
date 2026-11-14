@@ -2084,7 +2084,7 @@ function syncReminder() {
   const { on, time } = readReminder();
   const [hour, minute] = time.split(":").map(Number);
   try {
-    bridge.postMessage({ type: "schedule", on, hour, minute, skipToday: keptToday(), title: "Capiday", body: t("reminder.body"), offTitle: t("reminder.offAction") });
+    bridge.postMessage({ type: "schedule", on, hour, minute, skipToday: keptToday(), title: t("app.name"), body: t("reminder.body"), offTitle: t("reminder.offAction") });
   } catch {}
 }
 // From the iPhone app: scheduling result, a tap on a reminder, or "turn off".
@@ -8673,9 +8673,8 @@ $("#backup-input").addEventListener("change", async (event) => {
 });
 function applyShellLanguage() {
   $("#navigation").setAttribute("aria-label", t("nav.label"));
-  document.title =
-    "Capiday · " +
-    (languageCode() === "en" ? "The Little Stationery Shop" : "手帐文具店");
+  // 2026-11-14: Chinese name 开铺手帐, English name Capiday.
+  document.title = languageCode() === "en" ? "Capiday · The Little Stationery Shop" : "开铺手帐 · Capiday";
   const preview = document.querySelector(".preview-label>span:last-child");
   if (preview) preview.textContent = t("preview.label");
   const foot = document.querySelector(".preview-footnote");

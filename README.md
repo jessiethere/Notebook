@@ -1,13 +1,15 @@
-# Capiday · 手帐文具店
+# 开铺手帐 · Capiday
+
+> 中文名「开铺手帐」，英文名 Capiday（2026-11-14 起；原名 Little Days）。
 
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-## 👉 [点这里直接打开 Capiday（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
+## 👉 [点这里直接打开开铺手帐（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
 
 > 不用安装、不用运行任何东西，点开就是最新版；只有你自己能打开（登录 claude.ai）。每次更新都会发布到这同一个链接。
 >
-> **随手就能打开的地方**：① 已固定（pin）在 claude.ai 左侧栏，名字是「Capiday · 手帐文具店」；② 项目文件夹里双击 **Open-Capiday.url**，直接用浏览器打开在线链接；③ 也可以把这个链接加到浏览器书签栏。
+> **随手就能打开的地方**：① 已固定（pin）在 claude.ai 左侧栏，名字是「开铺手帐 · Capiday」；② 项目文件夹里双击 **Open-Capiday.url**，直接用浏览器打开在线链接；③ 也可以把这个链接加到浏览器书签栏。
 > 查看方式统一用这个在线链接；iPhone 上最终是 Swift / SwiftUI 外壳里运行同一个界面。
 > 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
 
@@ -181,9 +183,9 @@ npm run test:browser:v65
 
 ## 更新日志
 
-### 2026-11-14 — 改名为 Capiday（V10.45）
+### 2026-11-14 — 改名为开铺手帐 / Capiday（V10.45）
 
-- App 名字从 Little Days 改为 **Capiday**（中英文都叫 Capiday，副标题仍是「手帐文具店」）。GitHub 仓库现在是 https://github.com/jessiethere/Capiday ，Xcode 显示名 Capiday、Bundle ID `com.capiday.app`。
+- App 名字从 Little Days 改为中文「**开铺手帐**」、英文「**Capiday**」。中文界面写开铺手帐，iPhone 主屏幕在中文系统下显示开铺手帐；首页字标、页面刊头和导出文件名用 Capiday。GitHub 仓库现在是 https://github.com/jessiethere/Capiday ，Xcode 显示名 Capiday、Bundle ID `com.capiday.app`。
 - 手帐、照片、设置和以前的备份都不受影响（内部存储名没改）。
 - 还没换：App 图标里的「Little Days」字样，需要新的图标稿。
 

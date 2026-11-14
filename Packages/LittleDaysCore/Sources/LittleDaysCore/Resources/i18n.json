@@ -784,7 +784,7 @@
     "en": "App lock"
   },
   "lock.offHint": {
-    "zh": "打开后，进入 Capiday 要输入 4 位密码（iPhone App 里也可以用面容 ID）。",
+    "zh": "打开后，进入开铺手帐要输入 4 位密码（iPhone App 里也可以用面容 ID）。",
     "en": "When on, a 4-digit passcode opens Capiday (or Face ID in the iPhone app)."
   },
   "lock.onHint": {
@@ -816,7 +816,7 @@
     "en": "Unlock with Touch ID"
   },
   "lock.biometricHint": {
-    "zh": "只在 iPhone App 里可用；验证由 iOS 完成，Capiday 拿不到你的面容或指纹信息。",
+    "zh": "只在 iPhone App 里可用；验证由 iOS 完成，开铺手帐拿不到你的面容或指纹信息。",
     "en": "iPhone app only; iOS checks it — Capiday never sees your face or fingerprint."
   },
   "lock.useBiometric": {
@@ -824,7 +824,7 @@
     "en": "Face ID"
   },
   "lock.biometricReason": {
-    "zh": "解锁你的 Capiday 手帐",
+    "zh": "解锁你的开铺手帐",
     "en": "Unlock your Capiday journal"
   },
   "lock.change": {
@@ -872,7 +872,7 @@
     "en": "Forgot passcode?"
   },
   "lock.forgotText": {
-    "zh": "密码只保存在这台设备上，我们也无法帮你找回。iPhone App 里打开了面容 ID 的话可以用它解锁；否则只能清除这台设备上 Capiday 的数据（记录会一起删除，所以记得定期在设置里备份）。",
+    "zh": "密码只保存在这台设备上，我们也无法帮你找回。iPhone App 里打开了面容 ID 的话可以用它解锁；否则只能清除这台设备上开铺手帐的数据（记录会一起删除，所以记得定期在设置里备份）。",
     "en": "The passcode lives only on this device, so we can't recover it. In the iPhone app, Face ID unlocks it if turned on; otherwise the only way is to clear Capiday' data on this device (which deletes the journal — so back up from Settings now and then)."
   },
   "lock.turnedOn": {
@@ -1000,7 +1000,7 @@
     "en": "Reminders work in the iPhone app only — a closed web page can't notify you."
   },
   "reminder.denied": {
-    "zh": "iPhone 没有允许 Capiday 发通知：请到「设置 → 通知 → Capiday」打开。",
+    "zh": "iPhone 没有允许开铺手帐发通知：请到「设置 → 通知 → 开铺手帐」打开。",
     "en": "Notifications are off for Capiday: turn them on in Settings → Notifications → Capiday."
   },
   "reminder.failed": {
@@ -1768,7 +1768,7 @@
     "en": "Records and media restored. All journals remain private."
   },
   "settings.restoreFailed": {
-    "zh": "备份未恢复，当前记录保留。请使用完整的 Capiday 备份文件。",
+    "zh": "备份未恢复，当前记录保留。请使用完整的开铺手帐备份文件。",
     "en": "Backup was not restored. Current records are preserved. Choose a complete Capiday backup file."
   },
   "error.invalidData": {
@@ -2760,7 +2760,7 @@
     "en": "Share"
   },
   "community.shareText": {
-    "zh": "Capiday 演示作品：{title}（本机演示，没有真实链接）",
+    "zh": "开铺手帐演示作品：{title}（本机演示，没有真实链接）",
     "en": "Capiday demo work: {title} (offline demo, no real link)"
   },
   "community.shareCopied": {
@@ -3824,7 +3824,7 @@
     "en": "Welcome back, {name} ✿"
   },
   "login.signOutConfirm": {
-    "zh": "回到欢迎页？这不是退出账号——Capiday 没有云端账号。你的手帐、照片和录音都保留在这台设备上。",
+    "zh": "回到欢迎页？这不是退出账号——开铺手帐没有云端账号。你的手帐、照片和录音都保留在这台设备上。",
     "en": "Go back to the welcome page? This is not signing out of an account — Capiday has no cloud account. Your journal, photos and recordings stay on this device."
   },
   "tour.skip": {
@@ -3852,7 +3852,7 @@
     "en": "Hello, {name} ✿"
   },
   "tour.welcome.body": {
-    "zh": "Capiday 是一本放在手机里的手帐：每天记一点点，照片、文字、声音都可以。",
+    "zh": "开铺手帐是一本放在手机里的手帐：每天记一点点，照片、文字、声音都可以。",
     "en": "Capiday is a journal in your pocket: a little each day — photos, words and sounds."
   },
   "tour.write.title": {
@@ -4592,7 +4592,7 @@
     "en": "Messages"
   },
   "inbox.system.welcome": {
-    "zh": "欢迎来到 Capiday！每天记一点点，就是很好的开始。",
+    "zh": "欢迎来到开铺手帐！每天记一点点，就是很好的开始。",
     "en": "Welcome to Capiday! A little every day is a lovely start."
   },
   "inbox.system.backup": {
@@ -5808,7 +5808,7 @@
     "en": "Give this page a soft piece of music. It loops quietly when you read the day or flip the book, and goes into the page's video."
   },
   "music.original": {
-    "zh": "全部是 Capiday 原创的轻音乐，可以放心用在你的页面、视频和书里。",
+    "zh": "全部是开铺手帐原创的轻音乐，可以放心用在你的页面、视频和书里。",
     "en": "All original Capiday music — free to use in your pages, videos and books."
   },
   "music.use": {
@@ -5876,7 +5876,7 @@
     "en": "What's worth keeping today?"
   },
   "story.promptHint": {
-    "zh": "选几张今天的照片，剩下的交给 Capiday。",
+    "zh": "选几张今天的照片，剩下的交给开铺手帐。",
     "en": "Pick a few photos from today — Capiday does the rest."
   },
   "story.pickPhotos": {
@@ -6876,7 +6876,7 @@
     "en": "Name"
   },
   "s2.namePlaceholder": {
-    "zh": "想让 Capiday 怎么称呼你",
+    "zh": "想让开铺手帐怎么称呼你",
     "en": "What should Capiday call you?"
   },
   "s2.avatarLabel": {
@@ -8844,7 +8844,7 @@
     "en": "This device kept your journal in its database, but it wasn't found this time. The app won't treat you as a new user and start a blank journal on its own. Try again first; if it's still missing you can start a new journal and restore a backup file later in Settings → Backup."
   },
   "rescue.incompatible": {
-    "zh": "这本手帐是用不同版本的 Capiday 保存的，当前版本无法安全读取。为了不改写它，App 停在这里。请更新到最新版本后再打开。",
+    "zh": "这本手帐是用不同版本的开铺手帐保存的，当前版本无法安全读取。为了不改写它，App 停在这里。请更新到最新版本后再打开。",
     "en": "This journal was saved by a different version of Capiday and this version can't read it safely. To avoid rewriting it, the app stops here. Update to the latest version and open it again."
   },
   "rescue.damaged": {
@@ -9118,5 +9118,9 @@
   "cover.hiddenNote": {
     "zh": "这一天的封面已隐藏。",
     "en": "This day's cover is hidden."
+  },
+  "app.name": {
+    "zh": "开铺手帐",
+    "en": "Capiday"
   }
 }

@@ -1,0 +1,6 @@
+/* App name and permission texts shown by iOS (English). Chinese: zh-Hans.lproj. */
+"CFBundleDisplayName" = "Capiday";
+"CFBundleName" = "Capiday";
+"NSCameraUsageDescription" = "Capiday can use the camera to take photos for your journal.";
+"NSFaceIDUsageDescription" = "Capiday uses Face ID to unlock your private journal.";
+"NSMicrophoneUsageDescription" = "Capiday uses the microphone to record voice notes.";
