@@ -48,6 +48,40 @@
 
 ## 更新日志
 
+### 2026-11-14 — V10.51：返回即保存、文字输入、今天的故事实时预览、首页字标、书架快捷管理；设计轮
+
+- **需求**：用户一次提了多组 TestFlight 反馈。
+  - **要实施的**：
+    - Studio 返回 = 自动保存并退出；
+    - 文字：新建后立即输入、双击编辑、工具条不叠加；
+    - 今天的故事：键盘避让、实时预览、保存后打开刚保存的页；
+    - 首页字标中英文；
+    - 书架 ··· 和标签胶囊。
+  - **只出设计的**：页面管理与排序、日历单日阅读、新手引导、语音播放器三种外观。
+- **根因和修改**：见 `docs/BUGFIX_LOG.md` V10.51 表格。
+  - 双击编辑和新建即输入**原来已经有**：真机上的问题是新文字框的默认文字被全选，弹出了系统菜单；加上两行工具条叠在键盘上。
+- **文件**
+  - `Public/app.js`：`saveAndLeave`、`freshText` / `dropFreshText`、`type-style` / `type-done`、`syncStoryPreview` / `watchStoryPreview`、`finishStory` 改为异步并等待保存、`openShelfMenu` / `deleteEmptyBook`、标签胶囊处理、字标。
+  - `Public/js/canvas.mjs`：空文字框显示占位。
+  - `Public/js/personal-ui.mjs`：`tagChipsHTML` / `tagsValue`；封面上的 little days 改为 capiday。
+  - `Public/styles.css`、i18n（`exit.*`、`layer.placeholder`、`type.style` / `type.done`、`tags.*`、`shelf.*`、`brand.wordmark`）、whats-new 10.51。
+  - 设计轮：`docs/DESIGN_ROUND_V10_52.md`。
+- **决定**
+  - 删除书本只允许空书，有页面的书说明原因：避免产生没有书的孤儿页面。
+  - 首页引导、页面排序、日历单日、语音外观都**等确认后再做**。
+  - **新手引导根因**：实验功能关闭时，启动代码自动登录后立刻调用 `Account.finishTour`，引导永远不会自动出现。
+- **测试**
+  - 新增 v149（4 组）、v150（2 组）。
+  - 迁移 v3 / v38 / v70 / v107 / v111 / v112 / v119。
+  - 相关套件全部通过；`npm test` 281/281；`test_native_shell` OK。
+  - **模拟器真实触摸**（每个测试都先删除 App 重装）：`testDrawSelectSave`（新建文字框后真实键盘按键直接输入）、`testClearDay`、`testVoiceRecordPlay`、`testMusicVolume` 全部通过。
+  - **注意**：几个测试不卸载连着跑时，`testClearDay` 会失败。原因是前一个测试留下的数据，不是 App 的问题；测试工具 README 里已经写明要先卸载。
+- **全量浏览器回归**：见下一行 / README。
+- **没有验证**：
+  - 真机：键盘高度、中文拼音输入、Emoji、系统剪切 / 拷贝 / 粘贴菜单、静音开关和蓝牙。
+  - 今天的故事面板贴在键盘上方：只在网页上测过。
+- **下一步**：等用户确认设计轮；新的 TestFlight 构建（外壳 V10.50 有改动）。
+
 ### 2026-11-14 — V10.50 P0：语音日记播放无声、录音状态、视频第一次导入失败
 
 - **需求**：
