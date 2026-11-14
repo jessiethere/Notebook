@@ -344,3 +344,8 @@ module.exports.suggestBook = async (page, preset) => {
   await page.locator("#test-suggest").click();
   await page.evaluate(() => document.querySelector("#test-suggest")?.remove());
 };
+
+// V10.52: the book editor folds tags / cover details / privacy and fields
+// away; tests that fill them open every section first.
+module.exports.openBookSections = (page) =>
+  page.evaluate(() => document.querySelectorAll("#dialog-form details.book-more").forEach((d) => (d.open = true)));

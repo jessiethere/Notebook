@@ -43,6 +43,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
       if (pages) assert.equal(await page.locator('.shelf-menu [data-action="shelf-delete"]').count(), 0);
       // Edit details: the same editor, filled in; old tags load as chips.
       await page.locator('.shelf-menu [data-action="edit-book"]').tap();
+      await require("./signed-in.cjs").openBookSections(page);
       await page.waitForSelector("#dialog-form .tag-chips");
       assert.deepEqual(await page.locator("#dialog-form .tag-chip span").allInnerTexts(), ["旧标签", "self awareness", "日常"], "old tags kept, no # shown");
       assert.equal(await page.locator('#dialog-form [name="title"]').inputValue(), first.title);

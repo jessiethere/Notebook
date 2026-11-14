@@ -75,6 +75,7 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('[data-action="new-book"]').first().click();
     await page.locator('#dialog-form [name="title"]').fill("感恩小书");
     // V10.51: tags are chips — type one, press return (no "#" needed for spaces).
+    await require("./signed-in.cjs").openBookSections(page);
     for (const tag of ["阅读", "感恩", "self awareness"]) {
       await page.locator("#dialog-form [data-tag-entry]").fill(tag);
       await page.locator("#dialog-form [data-tag-entry]").press("Enter");

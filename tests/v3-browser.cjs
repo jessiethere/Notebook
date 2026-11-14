@@ -88,6 +88,7 @@ async function streamBytes(download) {
     await page
       .locator('#dialog-form [name="description"]')
       .fill("保持我的文字，不要自动翻译。");
+    await require("./signed-in.cjs").openBookSections(page);
     await page
       .locator('#dialog-form [name="category"]')
       .fill("Plant care / 自定义");

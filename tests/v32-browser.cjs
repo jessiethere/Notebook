@@ -176,6 +176,7 @@ const shift = (key, days) => {
     const presets = await page.$$eval("#book-preset option", (els) => els.map((el) => el.value));
     for (const id of ["pet", "parenting", "travel", "relationship", "wedding", "movie"]) assert.ok(presets.includes(id), id);
     await page.locator('#dialog-form [name="title"]').fill("毛孩子日记");
+    await require("./signed-in.cjs").openBookSections(page);
     await page.locator("#book-preset").selectOption("pet");
     assert.ok((await page.locator("[data-field-row]").count()) >= 7);
     await page.locator('#dialog-form [type="submit"]').click();
