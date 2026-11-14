@@ -237,4 +237,18 @@ final class DrawUITests: XCTestCase {
         let el = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDREC:'")).firstMatch
         print("LDSTEP voice-played \(el.label)")
     }
+
+    // P0 video import: an off-page <video> on a blob URL, without a tap and
+    // after a real tap (tools/mac/uitest/video-check.js).
+    func testVideoMetadata() throws {
+        launch(check: "/tmp/ld-uitest/video-check.js")
+        let label = { () -> String in app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDVID:'")).firstMatch.label }
+        let end = Date().addingTimeInterval(40)
+        while Date() < end, !(label().contains("noTap")) { Thread.sleep(forTimeInterval: 0.5) }
+        let b = app.buttons["LDVID-tap"]
+        if b.waitForExistence(timeout: 5) { b.tap() }
+        let end2 = Date().addingTimeInterval(15)
+        while Date() < end2, !(label().contains("afterTap")) { Thread.sleep(forTimeInterval: 0.5) }
+        print("LDSTEP video \(label())")
+    }
 }
