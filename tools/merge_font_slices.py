@@ -38,5 +38,5 @@ base["maxp"].numGlyphs = len(order)
 if "post" in base: base["post"].formatType = 3.0
 base.save(out)
 check = TTFont(out); cm = check.getBestCmap()
-probe = "小日子慢慢记手帐今天的心情成长打卡宠物亲子Little Days 123"
+probe = "小日子慢慢记手帐今天的心情成长打卡宠物亲子Capiday 123"
 print(out, os.path.getsize(out)//1024, "KB glyphs", len(check.getGlyphOrder()), "cmap", len(cm), "missing", [c for c in probe if c != " " and ord(c) not in cm], check["name"].getDebugName(6))

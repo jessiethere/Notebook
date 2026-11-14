@@ -225,7 +225,7 @@ const MB = (n) => (n == null ? "?" : (n / 1024 / 1024).toFixed(1) + " MB");
 // A plain-text report to copy (no names or words from the journal).
 export function reportText({ env, result, events, version, now = new Date() }) {
   const lines = [];
-  lines.push(`Little Days ${version} · media check · ${now.toISOString()}`);
+  lines.push(`Capiday ${version} · media check · ${now.toISOString()}`);
   lines.push(`engine ${env.engine} · browser ${env.browser} · ${env.platform}${env.shell ? " · shell " + env.shell : ""}`);
   lines.push(`address ${env.address} · embedded ${env.embedded ? "yes" : "no"}${env.parent ? " in " + env.parent : ""}${env.standalone ? " · home screen" : ""}`);
   lines.push(`storage persisted ${env.persisted == null ? "?" : env.persisted ? "yes" : "no"} · used ${MB(env.usage)} of ${MB(env.quota)} · indexedDB ${env.idb} · localStorage ${env.localStorage}`);

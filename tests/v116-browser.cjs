@@ -185,7 +185,7 @@ const shots = process.env.SHOTS || "";
     assert.equal(await page.locator('[data-action="login-avatar"]').count(), 0, "no picker on the welcome page");
     assert.equal(await page.locator(".login-me .pm-seal").count(), 1, "the same mark as Settings");
     assert.equal(await page.locator("#login-name").inputValue(), "小满");
-    // The brand: the app icon and the Little Days wordmark with its sprout (no pixel ✿, no emoji art).
+    // The brand: the app icon and the Capiday wordmark with its sprout (no pixel ✿, no emoji art).
     assert.equal(await page.locator(".login-brand .login-icon").count(), 1);
     assert.equal(await page.locator(".login-brand .brand-sprout").count(), 1);
     assert.equal(await page.locator(".login-art").count(), 0);

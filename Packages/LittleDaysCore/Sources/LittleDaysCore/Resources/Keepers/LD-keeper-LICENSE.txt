@@ -1,8 +1,8 @@
 Little Keeper — Captain (character artwork)
 
 Source: "参考图 1 · Captain 角色视觉标准" (Captain Character Reference), provided
-by the Little Days product owner on 2026-11-10 as the only art standard for
-Captain and authorised for use in Little Days. Captain is based on the owner's
+by the Capiday product owner on 2026-11-10 as the only art standard for
+Captain and authorised for use in Capiday. Captain is based on the owner's
 own grey cat, Captain.
 
 Files (cut out with tools/extract_captain.py; nothing redrawn, every pixel is
@@ -23,7 +23,7 @@ and its thread stay.
 On a dark page a faint light edge can remain under the paws (the picture's
 own floor shadow); the app's pages are light.
 
-Usage: inside Little Days only. Not for redistribution or resale.
+Usage: inside Capiday only. Not for redistribution or resale.
 
 Wanted looks that have NO artwork yet (they are not in the app and are never
 drawn in code): flower clip, knit hat, frog hat, sleep cap; scarf, pencil,

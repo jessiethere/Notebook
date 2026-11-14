@@ -1,6 +1,6 @@
-# Little Days — Product Vision 2.0 与 Little Keeper（方案，待批准）
+# Capiday — Product Vision 2.0 与 Little Keeper（方案，待批准）
 
-> **Little Days — Your life, a little world growing with you.**
+> **Capiday — Your life, a little world growing with you.**
 > 状态：2026-11-10 记录的产品方向与方案。**只是文档，本轮没有实现任何 Little Keeper 功能，也没有改导航**（用户指示：未经批准不实现新功能、不改导航）。
 > 来源：用户 2026-11-10 的两条消息「Additional Core Product Principle — Grow Through Living」和「Product Vision 2.0 — Important Correction」。两条冲突时以后者（更正）为准。
 

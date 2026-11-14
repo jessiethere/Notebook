@@ -4,7 +4,7 @@
 
 - 咖啡：<https://images.unsplash.com/photo-1495474472287-4d71bcdd2085>，通过 `w=900&q=85&fit=crop` 获取。
 - 湖畔：<https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1>，通过 `w=600&q=85&fit=crop` 获取。
-- Unsplash License：<https://unsplash.com/license>。照片仅用作第一阶段示例内容，不表示 Little Days 已建立原创摄影/素材商店；发布前应完成全部资产授权与来源审核。
+- Unsplash License：<https://unsplash.com/license>。照片仅用作第一阶段示例内容，不表示 Capiday 已建立原创摄影/素材商店；发布前应完成全部资产授权与来源审核。
 
 位置：`Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Media/`。
 
@@ -39,17 +39,17 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 ## V4.4 照片素材（真实照片）与页面背景
 
 - **照片素材**：78 张来自 Unsplash 的照片，按心情和事件分 13 组，位于 `Resources/Photos/LD-photo-*.jpg`（JPEG，保留原始横竖比例、长边 1000px，约 9.6 MB；尺寸记录在 `photos[].w/h`）。由 `tools/fetch_photos.py` 一次性下载并随 App 打包，运行时不请求 Unsplash。每个文件的原图地址写在 `Photos/Unsplash-Photos.txt` 和 `library.json` 的 `photos[].source`。
-- 许可：Unsplash License（<https://unsplash.com/license>）允许免费商用、修改，不要求署名，但不允许把照片原样汇编成同类图库或壁纸服务。Little Days 只把它们作为写手帐时可选的配图；正式上架前仍应按上文完成全部资产的来源与授权审核。挑选时尽量避开可辨认的人脸和品牌标志。
+- 许可：Unsplash License（<https://unsplash.com/license>）允许免费商用、修改，不要求署名，但不允许把照片原样汇编成同类图库或壁纸服务。Capiday 只把它们作为写手帐时可选的配图；正式上架前仍应按上文完成全部资产的来源与授权审核。挑选时尽量避开可辨认的人脸和品牌标志。
 - **页面背景**：`Scenes/` 里的渐变、可爱图案、万花筒、光影丝带、星空（21 张）是项目原创，用作页面背景（`backdrop`）；12 张手绘“生活小景”标记为 `retired`，只为兼容已使用它们的页面而保留。
 - 2026-11-09 更新：万花筒、光影丝带、星空也标记为 `retired`（只为兼容保留）。照片素材中有 10 张标记 `backdrop: true`，可作为整页背景（“照片氛围”），`tone` 由 `tools/fetch_photos.py` 按画面下半部分亮度计算。
 
 ## V7.9 Little Keeper 角色图（2026-11-10）
 
-- 来源：Little Days 产品负责人 2026-11-10 提供并明确授权在 Little Days 内使用的 3D 角色表，以及「参考图 1 · Captain 角色视觉标准」。不是从网上抓取的素材。
+- 来源：Capiday 产品负责人 2026-11-10 提供并明确授权在 Capiday 内使用的 3D 角色表，以及「参考图 1 · Captain 角色视觉标准」。不是从网上抓取的素材。
 - Captain 猫以产品负责人自己的猫 Captain 为原型。
 - 处理：`python3 tools/extract_keepers.py <角色表.png>`（18 张）和 `python3 tools/extract_keepers.py --captain <参考图1.png>`（探头 Peek + 惊喜 Surprised）。每个角色单独裁切、去底、保留柔和阴影；原图（整张角色表、参考图）不随 App 发布，也不提交到仓库。
 - 文件：`Packages/LittleDaysCore/Sources/LittleDaysCore/Resources/Keepers/`，清单在 `library.json` 的 `keepers`，说明在 `LD-keeper-LICENSE.txt`。服务路径 `library/keepers/<文件>`（`tools/preview.py`、`tools/build_link.py`、Swift `SharedResources.libraryData(category: "keepers")`）。
-- 限制：只限 Little Days 内使用，不另行分发或出售。
+- 限制：只限 Capiday 内使用，不另行分发或出售。
 - 缺少的姿势与更高分辨率图见 DESIGN_SYSTEM.md「V7.9 Little Keeper 角色视觉规范」。
 
 ## V8.0 Captain 素材（2026-11-10，取代 V7.9 的 20 张多角色素材）
@@ -58,13 +58,13 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 - 文件：Resources/Keepers 下 4 张透明 PNG（Normal / Happy / Sleepy 197×251，Peek 339×290）+ `LD-keeper-LICENSE.txt`；清单在 `library.json` 的 `keepers`。
 - 处理：`tools/extract_captain.py`（只用参考图里的像素，不重画）。参考图本身不进仓库、不随 App 发布。
 - V7.9 的小兔、小西高地和其他帽子素材已从 App 包中移除（仍在 git 历史里）；`tools/extract_keepers.py` 一并删除。等这些角色的美术确认后再重新加入。
-- 限制：只限 Little Days 内使用。分辨率受参考图限制，正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG 和动画帧。
+- 限制：只限 Capiday 内使用。分辨率受参考图限制，正式上架前建议美术提供每个状态 ≥ 1024px 宽的透明 PNG 和动画帧。
 
 ## V8.1 正式 App Icon（2026-11-10）
 
-- 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」，保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
+- 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」（图标上的字样仍是 Little Days；改名为 Capiday 后需要新图标），保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
 - 生成：`python3 tools/make_app_icon.py` → iOS `Native/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`；Web `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`（同步进 iOS 外壳 WebApp 与在线链接）。
-- 处理说明见 DESIGN_SYSTEM.md「V8.1 正式 App Icon」。只限 Little Days 使用。
+- 处理说明见 DESIGN_SYSTEM.md「V8.1 正式 App Icon」。只限 Capiday 使用。
 
 ## 2026-11-10 Captain 自然形象原图（待集成）
 

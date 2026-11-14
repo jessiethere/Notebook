@@ -1,5 +1,5 @@
 #!/bin/bash
-# Little Days · Mac environment check (read-only: installs nothing, changes nothing).
+# Capiday · Mac environment check (read-only: installs nothing, changes nothing).
 #   bash tools/mac/doctor.sh
 cd "$(dirname "$0")/../.." || exit 1
 ok() { printf "  ✅ %s\n" "$1"; }
@@ -29,7 +29,7 @@ if has ollama; then
     no "server not answering on 127.0.0.1:11434 (open the Ollama app, or: ollama serve)"
   fi
   if lsof -nP -iTCP:11434 -sTCP:LISTEN 2>/dev/null | grep -q '\*:11434'; then
-    no "Ollama listens on ALL addresses (*:11434) — check OLLAMA_HOST; for Little Days keep it on 127.0.0.1"
+    no "Ollama listens on ALL addresses (*:11434) — check OLLAMA_HOST; for Capiday keep it on 127.0.0.1"
   fi
 else
   no "ollama not found (download from ollama.com, or: brew install --cask ollama)"
@@ -45,7 +45,7 @@ else
   no "Xcode not installed or not selected (install Xcode from the App Store, then: sudo xcode-select -s /Applications/Xcode.app)"
 fi
 
-echo "== Little Days repository"
+echo "== Capiday repository"
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   ok "$(pwd)"
   info "branch: $(git branch --show-current) · last commit: $(git log -1 --format='%h %s' | cut -c1-70)"
@@ -53,5 +53,5 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if [ "$changes" = "0" ]; then ok "no uncommitted changes"; else no "$changes uncommitted change(s) — commit or stash before pulling"; git status --short | head -10 | sed 's/^/    /'; fi
   [ -d Native/LittleDays.xcodeproj ] && ok "Xcode project: Native/LittleDays.xcodeproj" || no "Native/LittleDays.xcodeproj missing"
 else
-  no "not inside the Little Days repository"
+  no "not inside the Capiday repository"
 fi

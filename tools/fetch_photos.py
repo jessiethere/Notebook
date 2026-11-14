@@ -1,4 +1,4 @@
-"""Download the Little Days photo library: real photos for a page's picture,
+"""Download the Capiday photo library: real photos for a page's picture,
 grouped by mood and moment (coffee, good food, the sea, a quiet day ...).
 
 Every photo comes from Unsplash under the Unsplash License
@@ -160,7 +160,7 @@ def main():
             with urllib.request.urlopen(f'{source(uid)}?{SIZE}', timeout=60) as response:
                 target.write_bytes(response.read())
             print('saved', target.name)
-    lines = ['Little Days photo library (LD-photo-*.jpg)', '',
+    lines = ['Capiday photo library (LD-photo-*.jpg)', '',
              'Photos from Unsplash, used under the Unsplash License: https://unsplash.com/license',
              'Downloaded once by tools/fetch_photos.py and bundled with the app (JPEG, original shape,',
              'long side 1000px);',

@@ -1,4 +1,4 @@
-# Windows 打开 Little Days（localhost 链接）
+# Windows 打开 Capiday（localhost 链接）
 
 日常检查更新只需要点 **[http://localhost:8080](http://localhost:8080)**。这个页面就是 iOS App（Swift 外壳）里运行的同一个界面，不需要 Mac、Xcode，也不需要下载 ZIP。
 
@@ -8,12 +8,12 @@
 2. 在想存放项目的文件夹地址栏输入 `cmd` 回车，运行：
 
 ```cmd
-git clone https://github.com/jessiethere/Notebook.git
+git clone https://github.com/jessiethere/Capiday.git
 ```
 
 ## 以后每次查看
 
-1. 双击 `Notebook` 文件夹里的 **Start-Windows.cmd**：它会先自动 `git pull --ff-only` 获取最新代码，再启动服务并打开浏览器。
+1. 双击项目文件夹（新克隆的叫 `Capiday`，以前克隆的叫 `Notebook`）里的 **Start-Windows.cmd**：它会先自动 `git pull --ff-only` 获取最新代码，再启动服务并打开浏览器。
 2. 点 **[http://localhost:8080](http://localhost:8080)**（README 顶部也有这个链接）。保持黑色窗口开启，Ctrl+C 停止。
 
 ## 手动启动
@@ -31,7 +31,7 @@ py -3 tools\preview.py --open
 | 报错 | 原因和操作 |
 | --- | --- |
 | `'git' is not recognized` | 安装 Git for Windows 后重新打开终端；没有 Git 时 Start-Windows.cmd 会跳过更新，显示电脑上已有的版本。 |
-| `can't open file C:\Users\...\tools\preview.py` | 终端仍在用户目录。先 `cd Notebook`，或直接双击目录内的 Start-Windows.cmd。 |
+| `can't open file C:\Users\...\tools\preview.py` | 终端仍在用户目录。先 `cd Capiday`，或直接双击目录内的 Start-Windows.cmd。 |
 | 文件路径写成 `preview\.py` | 正确文件名是 `preview.py`；只有 tools 与文件名之间有一个反斜杠。 |
 | Python 未找到或版本过旧 | 安装 Python 3.10+，启用 Python Launcher；安装后重新打开终端。 |
 | Incomplete project | 不在完整的项目目录里运行；Public、tools、Packages 必须同在项目目录。 |

@@ -14,7 +14,7 @@ import { validateStateSnapshot } from "./model.mjs";
 // (a damaged newest copy when the person goes on with an earlier one).
 export const RESCUE_KEY = "little-days.v1.rescue";
 
-// Signs that this device used Little Days before (any of them means a
+// Signs that this device used Capiday before (any of them means a
 // missing journal is not a first start).
 export const TRACE_KEYS = [
   "little-days.account",

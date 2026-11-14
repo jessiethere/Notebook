@@ -10,7 +10,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack { Text("✿").foregroundStyle(store.color("accent")); Text("Little Days").font(.system(size: 30, design: .serif)) }
+                HStack { Text("✿").foregroundStyle(store.color("accent")); Text("Capiday").font(.system(size: 30, design: .serif)) }
                 VStack(alignment: .leading, spacing: 8) {
                     Text(Date(), format: .dateTime.weekday(.wide).month().day()).font(.caption).foregroundStyle(.secondary)
                     Text(store.t("home.greeting") + " ☀️").font(.title2)

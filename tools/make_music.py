@@ -1,4 +1,4 @@
-"""Compose the original Little Days background music: eight soft loops
+"""Compose the original Capiday background music: eight soft loops
 (lofi, piano, upbeat ukulele and a jazzy café trio).
 
 Every note, drum and texture here is synthesised from code (FM electric

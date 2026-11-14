@@ -591,7 +591,7 @@ a {
   width: 3px;
 }
 .book-cover:after {
-  content: "Little Days";
+  content: "Capiday";
   position: absolute;
   bottom: 13px;
   font:
@@ -9873,7 +9873,7 @@ html[data-shell="ios"] body.typing .phone .app-scroll {
 
 /* ---------- One UI typeface: the system sans (PingFang on iPhone) ----------
    Everything that is app interface uses it. What stays as chosen: the words
-   on journal pages, book covers and spines, the "Little Days" wordmark and
+   on journal pages, book covers and spines, the "Capiday" wordmark and
    magazine mastheads. */
 :root {
   --ui-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
@@ -19906,7 +19906,7 @@ button.book-detail-showcase {
 .pmark.pm-sample .pm-letter {
   opacity: 0.38;
 }
-/* The sprout (the mark beside the Little Days wordmark), on ivory paper. */
+/* The sprout (the mark beside the Capiday wordmark), on ivory paper. */
 .pm-sprout-chip .pm-sprout {
   width: 56%;
   height: 56%;
@@ -21756,7 +21756,7 @@ body.typing .ctx-caption {
 .samples-day { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 8px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--c-dfdfd0, #dfdfd0); background: var(--paper, #fffdf8); color: inherit; font-size: 14px; }
 .samples-day small { opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .samples-day .badge { margin: 0; }
-/* S3 (V10.43): use a photo already in Little Days. */
+/* S3 (V10.43): use a photo already in Capiday. */
 .ps-sheet { gap: 10px; }
 .ps-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ps-head h2 { margin: 0; font-size: 18px; }

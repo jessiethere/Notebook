@@ -1,19 +1,19 @@
-# Little Days · 手帐文具店
+# Capiday · 手帐文具店
 
 **记录生活的美好，也收藏一点点变好的自己。**
 **Collect moments, grow gently.**
 
-## 👉 [点这里直接打开 Little Days（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
+## 👉 [点这里直接打开 Capiday（在线链接）](https://claude.ai/artifact/VYUJ38K5TBqcZPB8VzJS7A)
 
 > 不用安装、不用运行任何东西，点开就是最新版；只有你自己能打开（登录 claude.ai）。每次更新都会发布到这同一个链接。
 >
-> **随手就能打开的地方**：① 已固定（pin）在 claude.ai 左侧栏，名字是「Little Days · 手帐文具店」；② 项目文件夹里双击 **Open-Little-Days.url**，直接用浏览器打开在线链接；③ 也可以把这个链接加到浏览器书签栏。
+> **随手就能打开的地方**：① 已固定（pin）在 claude.ai 左侧栏，名字是「Capiday · 手帐文具店」；② 项目文件夹里双击 **Open-Capiday.url**，直接用浏览器打开在线链接；③ 也可以把这个链接加到浏览器书签栏。
 > 查看方式统一用这个在线链接；iPhone 上最终是 Swift / SwiftUI 外壳里运行同一个界面。
 > 在线链接里不能录音、也不能下载备份/导出图片（浏览器安全限制）；需要这些功能时用下面的本机链接。数据只保存在当前浏览器里，和本机预览、iPhone App 互不相通。
 
 备用（一般不需要）：本机预览 [http://localhost:8080](http://localhost:8080)，只在要录音、下载导出文件时用（双击 **Start-Windows.cmd** 启动）。
 
-**在 Claude 桌面 App 里随时点击**：用 Claude 桌面 App 新建一个**本地**会话并选择 `Notebook` 文件夹，在 Browser 面板的 **Dev servers** 菜单里点 **Little Days (Windows)** 即可启动并打开（配置在 `.claude/launch.json`）。网页版/云端会话的侧栏目前没有这个服务器列表。
+**在 Claude 桌面 App 里随时点击**：用 Claude 桌面 App 新建一个**本地**会话并选择 `Notebook` 文件夹，在 Browser 面板的 **Dev servers** 菜单里点 **Capiday (Windows)** 即可启动并打开（配置在 `.claude/launch.json`）。网页版/云端会话的侧栏目前没有这个服务器列表。
 
 最新完成 **V3.1：自由排版、多事件日记、完整回忆浏览与成长感想**。
 
@@ -28,7 +28,7 @@
 1. 第一次：安装 [Git for Windows](https://git-scm.com/download/win) 和 Python 3.10+，在想放项目的文件夹里运行：
 
 ```cmd
-git clone https://github.com/jessiethere/Notebook.git
+git clone https://github.com/jessiethere/Capiday.git
 ```
 
 2. 以后每次：双击 `Notebook` 文件夹里的 **Start-Windows.cmd**。它会先自动 `git pull` 拿到最新代码，再打开 **http://localhost:8080**。保持窗口开启，Ctrl+C 停止。
@@ -75,7 +75,7 @@ py -3 tools\preview.py --open
 - **数据保护**：新媒体放进 IndexedDB，LocalStorage 存元数据和引用；旧主照片安全迁移。Settings 可导出/确认恢复完整本机备份；旧标签页更新会提示冲突。
 - **始终私人**：新旧书本默认 Private，Public / Shared 暂禁用。没有联网社区、好友、私信或协作，不假装已经有服务端权限控制。背景音乐只有 App 自带的 8 首原创音乐（V6.0 / V6.2），不连接任何音乐平台。
 
-![Little Days V3 Web 手帐本界面，非 SwiftUI 截图](docs/images/little-days-v3-books.png)
+![Capiday V3 Web 手帐本界面，非 SwiftUI 截图](docs/images/little-days-v3-books.png)
 
 ## 原生 SwiftUI 与共享资源
 
@@ -173,13 +173,19 @@ npm run test:browser:v65
 
 ## 产品方向（Vision 2.0，2026-11-10）
 
-**Little Days — Your life, a little world growing with you.**
+**Capiday — Your life, a little world growing with you.**
 
 - 产品围绕 **Today（首页）· Calendar（日历）· My Books（书架）· Journal Studio（写一页，从 ＋ 进入）**。独立的 Growth 模块已经移除，不会再加回来。
 - **Little Keeper**（**V7.7 已实现 MVP**：可选、默认关闭；收藏品小世界仍在计划中）：一个可选的小伙伴，随你记录生活自然成长；它的小世界里的物件代表真实的记忆（例如旅行手帐的第一页 → 一张明信片）。不需要追踪任何东西，没有每日任务和连续天数惩罚，可以关掉；只用日期、手帐本类别 / 标签等元数据在本机计算，不读取、不上传正文。
 - 详见 [docs/PRODUCT_VISION_2.md](docs/PRODUCT_VISION_2.md)。
 
 ## 更新日志
+
+### 2026-11-14 — 改名为 Capiday（V10.45）
+
+- App 名字从 Little Days 改为 **Capiday**（中英文都叫 Capiday，副标题仍是「手帐文具店」）。GitHub 仓库现在是 https://github.com/jessiethere/Capiday ，Xcode 显示名 Capiday、Bundle ID `com.capiday.app`。
+- 手帐、照片、设置和以前的备份都不受影响（内部存储名没改）。
+- 还没换：App 图标里的「Little Days」字样，需要新的图标稿。
 
 ### 2026-11-13 — S1–S4 在 iOS 模拟器里验证；V10.44 发布到固定链接
 

@@ -13,7 +13,7 @@ struct BookCoverView: View {
                 if let asset = store.catalog.stickers.first(where: { $0.id == (book.coverDecoration ?? "tulip") }), let data = try? SharedResources.libraryData(category: "stickers", filename: asset.nativeFile), let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 45)
                 }
-                Text("LITTLE DAYS").font(.system(size: 6)).tracking(1.7).opacity(0.5)
+                Text("CAPIDAY").font(.system(size: 6)).tracking(1.7).opacity(0.5)
             }.padding(.leading, 15).padding(.trailing, 10).padding(.vertical, 15).frame(maxWidth: .infinity, maxHeight: .infinity)
             Rectangle().fill(.black.opacity(0.05)).frame(width: 6).padding(.leading, 6)
         }

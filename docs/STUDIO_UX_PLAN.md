@@ -1,6 +1,6 @@
 # Journal Studio 交互重设计（方案，待用户确认；尚未实现）
 
-> 2026-11-11 记录。来源：用户「Little Days V9.0 — Journal Studio UX Redesign」。**本轮只有设计稿，没有改代码。**
+> 2026-11-11 记录。来源：用户「Capiday V9.0 — Journal Studio UX Redesign」。**本轮只有设计稿，没有改代码。**
 > 设计稿（Design 画布，私有）：https://claude.ai/artifact/4tXVQfHSSPvQxJZqJFPTUG → 「Journal Studio · 新的三种编辑状态」一行 9 张板。
 > 方向：Creative Freedom Without Complexity；视觉沿用 Tactile Stationery × Cozy Editorial。功能一个不删，只重新安排层次。
 

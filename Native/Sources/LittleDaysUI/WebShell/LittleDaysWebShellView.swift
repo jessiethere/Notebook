@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import WebKit
 
-/// The Little Days iPhone app: a thin SwiftUI shell around the same Web app
+/// The Capiday iPhone app: a thin SwiftUI shell around the same Web app
 /// that the localhost preview shows (http://localhost:8080). Every feature —
 /// Journal Studio, Moments, Day Detail, Growth, books, media, backup — comes
 /// from the shared HTML/CSS/JavaScript, so the iPhone app never falls behind.
@@ -22,7 +22,7 @@ public struct LittleDaysWebShellView: View {
                 if privacy.lockEnabled && scenePhase != .active {
                     ZStack {
                         Color(red: 246 / 255, green: 241 / 255, blue: 231 / 255)
-                        Text("Little Days").font(.system(size: 30, weight: .regular, design: .serif))
+                        Text("Capiday").font(.system(size: 30, weight: .regular, design: .serif))
                             .foregroundStyle(Color(red: 47 / 255, green: 42 / 255, blue: 38 / 255))
                     }
                     .ignoresSafeArea()
@@ -86,7 +86,7 @@ final class LittleDaysPrivacy: ObservableObject {
 }
 
 /// The page's app lock asks iOS for Face ID / Touch ID here and gets the
-/// answer back; Little Days never sees the face or fingerprint itself.
+/// answer back; Capiday never sees the face or fingerprint itself.
 @MainActor
 final class LittleDaysLockBridge: NSObject, WKScriptMessageHandler {
     static let name = "littleDaysLock"
@@ -110,7 +110,7 @@ final class LittleDaysLockBridge: NSObject, WKScriptMessageHandler {
             return
         }
         guard type == "unlock" else { return }
-        let reason = (body["reason"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "Unlock Little Days"
+        let reason = (body["reason"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "Unlock Capiday"
         let context = LAContext()
         // No system passcode fallback: the page's own keypad is the fallback.
         context.localizedFallbackTitle = ""
@@ -322,7 +322,7 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
         // Backups and PNG exports land in the app's Documents folder (visible in Files).
         let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let safeName = suggestedFilename.replacingOccurrences(of: "/", with: "-")
-        let destination = folder.appendingPathComponent(safeName.isEmpty ? "Little-Days-Export" : safeName)
+        let destination = folder.appendingPathComponent(safeName.isEmpty ? "Capiday-Export" : safeName)
         try? FileManager.default.removeItem(at: destination)
         downloads[ObjectIdentifier(download)] = destination
         completionHandler(destination)

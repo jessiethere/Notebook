@@ -14,7 +14,7 @@ const TITLES = { none: "", short: "周六的咖啡", long: "今天和朋友在�
 
 function check(set, titleKey, style, variant, captions) {
   const visuals = [...set].map((c, i) => ({ id: "p" + i, aspect: A[c], caption: captions && i < 2 ? (i ? "第二张照片的一句话" : "拿铁") : "" }));
-  const out = layoutMoment({ visuals, title: TITLES[titleKey], time: "14:42", folio: "LITTLE DAYS · NO. 13" }, style, variant);
+  const out = layoutMoment({ visuals, title: TITLES[titleKey], time: "14:42", folio: "CAPIDAY · NO. 13" }, style, variant);
   const where = `${set} · ${titleKey} · ${style} · layout ${variant + 1}${captions ? " · photo words" : ""}`;
   const boxes = visuals.map((v) => out.place[v.id]);
   for (const [i, b] of boxes.entries()) {

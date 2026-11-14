@@ -55,12 +55,12 @@ test("words are read from the photo itself, by its id", () => {
 test("quick type: the page's own words only, in Studio's fields; bigger type keeps the room", () => {
   const visuals = [{ id: "a", aspect: 1.5, caption: "拉花是一只小熊" }, { id: "b", aspect: 1, caption: "" }];
   const type = { fontId: "song", color: "#6D8299", bold: true, align: "left", scale: 1.3 };
-  const r = L.layoutMoment({ visuals, title: "周末的咖啡馆", time: "14:18", folio: "LITTLE DAYS · NO. 12", type }, "editorial", 0);
+  const r = L.layoutMoment({ visuals, title: "周末的咖啡馆", time: "14:18", folio: "CAPIDAY · NO. 12", type }, "editorial", 0);
   const own = r.layers.filter((l) => ["title", "caption"].includes(l.bind) && !l.prefix);
   assert.equal(own.length, 2);
   for (const l of own) assert.deepEqual([l.fontId, l.color, l.weight, l.align], ["song", "#6D8299", 700, "left"]);
   // The time kicker and the folio keep the style's own look.
-  assert.ok(r.layers.filter((l) => l.prefix === "kicker" || /LITTLE DAYS/.test(l.text || "")).every((l) => l.fontId !== "song"));
+  assert.ok(r.layers.filter((l) => l.prefix === "kicker" || /CAPIDAY/.test(l.text || "")).every((l) => l.fontId !== "song"));
   const plain = L.layoutMoment({ visuals, title: "周末的咖啡馆", time: "14:18" }, "editorial", 0);
   const size = (res) => res.layers.find((l) => l.bind === "title").fontSize;
   assert.ok(size(r) > size(plain), "A+ makes the line bigger (and laid out for it)");

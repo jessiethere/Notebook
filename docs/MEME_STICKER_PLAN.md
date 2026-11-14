@@ -1,4 +1,4 @@
-# Little Days — Meme & Sticker Studio 设计方案（最终设计 v2）
+# Capiday — Meme & Sticker Studio 设计方案（最终设计 v2）
 
 > 状态：**v2 设计已通过（2026-11-13，D1–D8 不变）**。按用户调整后的优先级，Phase A **暂不展开实施**，只做低风险准备和任务拆分（第 10 节）；先做 P0 和核心流程。
 > 设计板：https://claude.ai/artifact/4EEpdtVnJ55zG3mrYdgkdK （v2：9 个画面 × 375 / 430 × 中 / 英 = 36 张；v1 的 28 张也留在页面里对照）。截图是把设计稿注入**真实运行的 App**（容器里的 Chromium 模拟手机）拍的，不是 iPhone 实机画面。
@@ -272,7 +272,7 @@ docs/brand/captain-reactions/
 - 结果：「这台设备上的手帐还没有用到照片或视频」。
 - **还不能下结论**，要看截图前有没有先加照片再强制退出：
   - **没有加照片**：说明检查本身正常，只是这次没有可检查的东西。
-  - **加了照片、强制退出、重开后变成这样**：说明那一页连同照片引用一起没了。最可能的原因是 Claude App 的内嵌网页在 App 重启后清掉了这个 frame 的本地存储（persisted=否）。这是宿主环境的行为，App 代码修不了；真正的 Little Days iOS App 用自己的 WKWebView 存储，不受影响。
+  - **加了照片、强制退出、重开后变成这样**：说明那一页连同照片引用一起没了。最可能的原因是 Claude App 的内嵌网页在 App 重启后清掉了这个 frame 的本地存储（persisted=否）。这是宿主环境的行为，App 代码修不了；真正的 Capiday iOS App 用自己的 WKWebView 存储，不受影响。
 - 为了分清这两种情况，设计板第 9 节放了一个「**存储保持测试**」：写一个标记 → 强制退出 Claude → 重开看标记还在不在。不涉及任何手帐内容。
 
 ### 8.2 Meme 持久化
@@ -291,7 +291,7 @@ docs/brand/captain-reactions/
 | Swift Core | 新的可选字段能解码、往返不丢；旧 JSON 不变 |
 | 外壳一致性 | `test_native_shell.py` |
 | 引擎 | Chromium（容器）+ WebKit（Mac Playwright） |
-| 模拟器 / 真机 | Little Days 外壳：导入一张透明 PNG，杀掉 App 后重开；Claude iOS App：存储保持测试 + GIF 选择测试（设计板第 9 节） |
+| 模拟器 / 真机 | Capiday 外壳：导入一张透明 PNG，杀掉 App 后重开；Claude iOS App：存储保持测试 + GIF 选择测试（设计板第 9 节） |
 
 Chromium 或 WebKit 通过，不写成 iPhone 通过。
 
@@ -309,7 +309,7 @@ Chromium 或 WebKit 通过，不写成 iPhone 通过。
 
 - 需要补测的环境：
   - **iPhone 真机上的 Claude App**：用设计板第 9 节的「GIF 选择测试」，分别从「照片」和「文件」选同一张 GIF，看文件头和帧数；
-  - **iOS 模拟器上的 Little Days 外壳**（这台模拟器的相册里已经有 IMG_0011.GIF），手动点选。
+  - **iOS 模拟器上的 Capiday 外壳**（这台模拟器的相册里已经有 IMG_0011.GIF），手动点选。
 - 结论用于 Phase B：
   - 不论相册是否转换，**现在的照片路径一定会转成 JPG**，所以 Meme 必须走单独的导入路径；
   - Phase A 只要看到文件头是 GIF，就停下来说明，不保存。

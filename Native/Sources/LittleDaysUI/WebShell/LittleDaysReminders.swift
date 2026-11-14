@@ -38,7 +38,7 @@ public final class LittleDaysReminders: NSObject, WKScriptMessageHandler, UNUser
         let hour = body["hour"] as? Int ?? 21
         let minute = body["minute"] as? Int ?? 0
         let skipToday = (body["skipToday"] as? Bool) == true
-        let title = body["title"] as? String ?? "Little Days"
+        let title = body["title"] as? String ?? "Capiday"
         let text = body["body"] as? String ?? ""
         let offTitle = body["offTitle"] as? String ?? "Turn off"
         let off = UNNotificationAction(identifier: Self.offAction, title: offTitle, options: [])

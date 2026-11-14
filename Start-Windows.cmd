@@ -1,14 +1,14 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Little Days - Local Preview
+title Capiday - Local Preview
 if not exist "tools\preview.py" goto missingfiles
 if not exist "Public\index.html" goto missingfiles
-rem Get the newest Little Days first when this folder is a Git clone (no ZIP needed).
+rem Get the newest Capiday first when this folder is a Git clone (no ZIP needed).
 if exist ".git" (
   where git >nul 2>nul
   if not errorlevel 1 (
-    echo Updating Little Days from GitHub...
+    echo Updating Capiday from GitHub...
     git pull --ff-only
     if errorlevel 1 echo Update skipped. Showing the version already on this computer.
   )

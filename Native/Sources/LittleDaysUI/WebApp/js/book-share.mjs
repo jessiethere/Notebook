@@ -30,7 +30,7 @@ export function dateRange(pages) {
 // ---------- A minimal PDF: one full-page JPEG per page ----------
 const encoder = new TextEncoder();
 // jpegs: [{ bytes: Uint8Array, width, height }] (pixel size of each JPEG).
-export function buildPdf(jpegs, { title = "Little Days" } = {}) {
+export function buildPdf(jpegs, { title = "Capiday" } = {}) {
   const chunks = [];
   let length = 0;
   const offsets = [];
@@ -57,7 +57,7 @@ export function buildPdf(jpegs, { title = "Little Days" } = {}) {
   object(2, () => push(`<< /Type /Pages /Count ${n} /Kids [${jpegs.map((_, i) => `${pageId(i)} 0 R`).join(" ")}] >>`));
   // Title as UTF-16BE hex so any language shows correctly.
   const hex = [...String(title).slice(0, 80)].map((ch) => ch.codePointAt(0) > 0xffff ? "" : ch.charCodeAt(0).toString(16).padStart(4, "0")).join("");
-  object(3, () => push(`<< /Title <FEFF${hex}> /Producer (Little Days) >>`));
+  object(3, () => push(`<< /Title <FEFF${hex}> /Producer (Capiday) >>`));
   jpegs.forEach((jpeg, i) => {
     const id = pageId(i);
     const H = pageHeight(jpeg);

@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Notebook",
-    // iOS 17 is the minimum for every Little Days package (LittleDaysCore,
+    // iOS 17 is the minimum for every Capiday package (LittleDaysCore,
     // Native/LittleDaysUI and the app target). This package is the local
     // Vapor server, run on the Mac; the iOS line keeps the deployment target
     // the same as LittleDaysCore's if Xcode builds it for an iPhone

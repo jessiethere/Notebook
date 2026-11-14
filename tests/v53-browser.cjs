@@ -71,7 +71,7 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
     const download = page.waitForEvent("download");
     await page.locator(".book-share").tap();
     const file = await download;
-    assert.match(file.suggestedFilename(), /^Little-Days-book-\d{4}-\d{2}-\d{2}\.pdf$/, "a safe file name (the title is inside the PDF)");
+    assert.match(file.suggestedFilename(), /^Capiday-book-\d{4}-\d{2}-\d{2}\.pdf$/, "a safe file name (the title is inside the PDF)");
     const pdf = fs.readFileSync(await file.path()).toString("latin1");
     assert.ok(pdf.startsWith("%PDF-1.4"));
     assert.equal(pdf.match(/\/Type \/Page /g).length, 3, "a title page + two pages");

@@ -56,14 +56,14 @@ function magazineCoverHTML(book, ctx, template) {
   const now = new Date();
   const issue = now.toLocaleDateString("en", { month: "short", year: "numeric" }).toUpperCase();
   const topic = String(book.category || "Journal").toUpperCase();
-  const title = esc(book.title || "Little Days");
+  const title = esc(book.title || "Capiday");
   const line = esc((book.description || "").trim());
   const img = photo ? `<img class="mag-photo" src="${esc(photo)}" alt="">` : `<span class="mag-photo mag-photo-empty"></span>`;
   const date = `'${String(now.getFullYear()).slice(2)} ${String(now.getMonth() + 1).padStart(2, "0")} ${String(now.getDate()).padStart(2, "0")}`;
   if (template === "magazine-mono")
-    return `<div class="book-cover cover-magazine-mono" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span>LITTLE DAYS</span><span>NO.${String(now.getMonth() + 1).padStart(2, "0")}</span></span><b class="cover-title">${title}</b><span class="mag-frame">${img}</span><span class="mag-foot"><span>${esc(topic)}</span><span>${esc(issue)}</span></span></div>`;
+    return `<div class="book-cover cover-magazine-mono" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span>CAPIDAY</span><span>NO.${String(now.getMonth() + 1).padStart(2, "0")}</span></span><b class="cover-title">${title}</b><span class="mag-frame">${img}</span><span class="mag-foot"><span>${esc(topic)}</span><span>${esc(issue)}</span></span></div>`;
   if (template === "magazine-film")
-    return `<div class="book-cover cover-magazine-film" style="--cover-color:${coverColor(book, tokens)}"><span class="film-holes" aria-hidden="true"></span><span class="mag-frame">${img}<i class="film-date">${esc(date)}</i></span><span class="film-holes bottom" aria-hidden="true"></span><span class="mag-foot"><b class="cover-title">${title}</b><span>${esc(topic)} · LITTLE DAYS</span></span></div>`;
+    return `<div class="book-cover cover-magazine-film" style="--cover-color:${coverColor(book, tokens)}"><span class="film-holes" aria-hidden="true"></span><span class="mag-frame">${img}<i class="film-date">${esc(date)}</i></span><span class="film-holes bottom" aria-hidden="true"></span><span class="mag-foot"><b class="cover-title">${title}</b><span>${esc(topic)} · CAPIDAY</span></span></div>`;
   if (template === "magazine-minimal")
     return `<div class="book-cover cover-magazine-minimal" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-brand">little days</span><span class="mag-frame">${img}</span><b class="cover-title">${title}</b><span class="mag-foot">${line || esc(issue)}</span></div>`;
   if (template === "magazine-collage") {
@@ -72,8 +72,8 @@ function magazineCoverHTML(book, ctx, template) {
     return `<div class="book-cover cover-magazine-collage" style="--cover-color:${coverColor(book, tokens)}"><span class="collage-grid"><span class="c-main">${img}</span><span class="c-a">${extra(second)}</span><span class="c-b">${extra(third)}</span></span><span class="collage-band"><b class="cover-title">${title}</b><span>${esc(topic)} · ${esc(issue)}</span></span></div>`;
   }
   if (template === "magazine-west")
-    return `<div class="book-cover cover-magazine-west" style="--cover-color:${coverColor(book, tokens)}">${img}<span class="mag-shade" aria-hidden="true"></span><span class="mag-top"><span>${esc(issue)}</span><span>${esc(topic)}</span></span><span class="mag-masthead">LITTLE DAYS</span><span class="mag-lines"><b class="cover-title">${title}</b>${line ? `<i>${line}</i>` : ""}</span><span class="mag-barcode" aria-hidden="true"></span></div>`;
-  return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">little days</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Little Days")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;
+    return `<div class="book-cover cover-magazine-west" style="--cover-color:${coverColor(book, tokens)}">${img}<span class="mag-shade" aria-hidden="true"></span><span class="mag-top"><span>${esc(issue)}</span><span>${esc(topic)}</span></span><span class="mag-masthead">CAPIDAY</span><span class="mag-lines"><b class="cover-title">${title}</b>${line ? `<i>${line}</i>` : ""}</span><span class="mag-barcode" aria-hidden="true"></span></div>`;
+  return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">little days</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Capiday")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;
 }
 export function coverHTML(book, ctx) {
   const { catalog, tokens, media, t } = ctx;
@@ -85,7 +85,7 @@ export function coverHTML(book, ctx) {
     : "minimal-linen";
   const decoration = stickerURL(book.coverDecoration || "tulip", catalog);
   const photo = media.resolve(book.coverImage || "");
-  return `<div class="book-cover cover-${template}" style="--cover-color:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${photo ? `<img class="cover-photo" src="${esc(photo)}" alt="">` : ""}<span class="cover-rule"></span><span class="cover-title">${esc(book.title || "Little Days")}</span>${decoration && book.coverDecoration !== "none" ? `<img class="cover-decoration" src="${decoration}" alt="">` : ""}<span class="cover-imprint">LITTLE DAYS</span></div>`;
+  return `<div class="book-cover cover-${template}" style="--cover-color:${coverColor(book, tokens)};font-family:${esc(fontFamily(book.coverFont || "elegant", catalog))}">${photo ? `<img class="cover-photo" src="${esc(photo)}" alt="">` : ""}<span class="cover-rule"></span><span class="cover-title">${esc(book.title || "Capiday")}</span>${decoration && book.coverDecoration !== "none" ? `<img class="cover-decoration" src="${decoration}" alt="">` : ""}<span class="cover-imprint">CAPIDAY</span></div>`;
 }
 // Photos offered for a cover: the ones that suit the book first, then a mix.
 function coverPhotoPicks(book, catalog) {

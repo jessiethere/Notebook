@@ -15,7 +15,7 @@ const COMBOS = {
   "3:4 + 4:3": [3 / 4, 4 / 3],
   "9:16 + 9:16": [9 / 16, 9 / 16],
 };
-const pageOf = (a, b, extra = {}) => ({ visuals: [{ id: "a", aspect: a }, { id: "b", aspect: b }], title: "", time: "09:10", folio: "LITTLE DAYS · NO. 13", ...extra });
+const pageOf = (a, b, extra = {}) => ({ visuals: [{ id: "a", aspect: a }, { id: "b", aspect: b }], title: "", time: "09:10", folio: "CAPIDAY · NO. 13", ...extra });
 const areaOf = (box) => box.w * box.h;
 const edges = (box) => ({ left: box.x - box.w / 2, right: box.x + box.w / 2, top: box.y - box.h / 2, bottom: box.y + box.h / 2 });
 

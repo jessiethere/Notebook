@@ -13,7 +13,7 @@ public func configure(_ app: Application) throws {
     }
 
     app.get("api", "health") { _ in
-        HealthResponse(status: "ok", app: "Little Days", framework: "Vapor")
+        HealthResponse(status: "ok", app: "Capiday", framework: "Vapor")
     }
 
     app.get("shared", ":name") { request -> Response in

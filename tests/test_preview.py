@@ -71,7 +71,7 @@ class PreviewTests(unittest.TestCase):
             opener.assert_not_called()
 
     def test_cli_launches_from_extracted_zip_with_spaces_without_git_or_project_cwd(self):
-        with tempfile.TemporaryDirectory(prefix='Little Days ZIP ') as directory:
+        with tempfile.TemporaryDirectory(prefix='Capiday ZIP ') as directory:
             extracted = Path(directory) / 'Notebook-main'
             extracted.mkdir()
             shutil.copytree(ROOT / 'Public', extracted / 'Public')

@@ -787,7 +787,7 @@ function home() {
   const weekday = now.toLocaleDateString(locale(), { weekday: "long" });
   const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
   const books = homeLibraryHTML();
-  return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Little Days${BRAND_SPROUT}</div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
+  return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title">Capiday${BRAND_SPROUT}</div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
  ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div><div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${keeperInviteHTML()}${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
  ${books}<p class="home-quote hs-colophon">Collect moments, grow gently.</p></div>`;
 }
@@ -2084,7 +2084,7 @@ function syncReminder() {
   const { on, time } = readReminder();
   const [hour, minute] = time.split(":").map(Number);
   try {
-    bridge.postMessage({ type: "schedule", on, hour, minute, skipToday: keptToday(), title: "Little Days", body: t("reminder.body"), offTitle: t("reminder.offAction") });
+    bridge.postMessage({ type: "schedule", on, hour, minute, skipToday: keptToday(), title: "Capiday", body: t("reminder.body"), offTitle: t("reminder.offAction") });
   } catch {}
 }
 // From the iPhone app: scheduling result, a tap on a reminder, or "turn off".
@@ -2304,7 +2304,7 @@ function renderLock() {
     mode === "unlock"
       ? `<button type="button" class="text-button" data-lock-key="forgot">${t("lock.forgot")}</button>${lockUI.forgot ? `<p class="lock-forgot">${t("lock.forgotText")}</p>` : ""}`
       : `<button type="button" class="text-button" data-lock-key="cancel">${t("cancel")}</button>`;
-  dialog.innerHTML = `<div class="lock-inner" tabindex="-1" autofocus><div class="brand-title lock-brand">Little Days</div><h2 id="lock-title">${t(title)}</h2><div class="lock-dots ${message ? "shake" : ""}" aria-hidden="true">${dots}</div><p class="lock-message" role="status">${esc(pause ? t("lock.pause", { seconds: pause }) : message)}</p><div class="lock-keys">${keys}</div>${foot}</div>`;
+  dialog.innerHTML = `<div class="lock-inner" tabindex="-1" autofocus><div class="brand-title lock-brand">Capiday</div><h2 id="lock-title">${t(title)}</h2><div class="lock-dots ${message ? "shake" : ""}" aria-hidden="true">${dots}</div><p class="lock-message" role="status">${esc(pause ? t("lock.pause", { seconds: pause }) : message)}</p><div class="lock-keys">${keys}</div>${foot}</div>`;
   if (pause) setTimeout(() => lockUI.mode && renderLock(), 1000);
 }
 function askBiometric() {
@@ -4649,7 +4649,7 @@ function layoutStoryPage(target, isCover) {
     const visuals = visualLayers(target);
     const audio = target.layers.filter((l) => l.kind === "audio");
     const day = new Date(`${story.date}T12:00:00`);
-    const folio = `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`;
+    const folio = `CAPIDAY · NO. ${String(day.getDate()).padStart(2, "0")}`;
     // V10.19: each photo's own words (on the photo layer, by its id) are laid
     // out right by that photo; the page's quick type comes along.
     result = layoutMoment({ visuals: visuals.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: audio.map((l) => ({ id: l.id })), title: target.title, time: target.time, folio, type: target.typeStyle, measure: measureWords }, style, variant);
@@ -4834,7 +4834,7 @@ function storySplitFor(current) {
   story.splits ||= {};
   if (story.splits[m.id]?.sig !== sig) {
     const day = new Date(`${story.date}T12:00:00`);
-    const input = { visuals: photos.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: m.layers.filter((l) => l.kind === "audio").map((l) => ({ id: l.id })), title: m.title, time: m.time, folio: `LITTLE DAYS · NO. ${String(day.getDate()).padStart(2, "0")}`, type: m.typeStyle, measure: measureWords };
+    const input = { visuals: photos.map((l) => ({ id: l.id, aspect: layerAspect(l), caption: l.kind === "photo" ? l.caption || "" : "" })), audio: m.layers.filter((l) => l.kind === "audio").map((l) => ({ id: l.id })), title: m.title, time: m.time, folio: `CAPIDAY · NO. ${String(day.getDate()).padStart(2, "0")}`, type: m.typeStyle, measure: measureWords };
     const style = styleOf(m.layoutStyle || story.style);
     // The photos over more pages first; when the words are what does not
     // fit (A3), the words continue on the pages after (cut between sentences).
@@ -6062,7 +6062,7 @@ async function shareBook(bookId) {
       $("#export-time").textContent = t("bookShare.progress", { now: i + 1, total: pages.length });
     }
     const pdf = buildPdf(images, { title: book.title });
-    const name = `Little-Days-${book.title.replace(/[\\/:*?"<>|]+/g, "").slice(0, 40) || "book"}.pdf`;
+    const name = `Capiday-${book.title.replace(/[\\/:*?"<>|]+/g, "").slice(0, 40) || "book"}.pdf`;
     const file = new File([pdf], name, { type: "application/pdf" });
     dialog.close();
     let how = "saved";
@@ -6078,7 +6078,7 @@ async function shareBook(bookId) {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(file);
       // Some browsers drop non-Latin download names; the PDF keeps the title.
-      link.download = /^[\w .()-]+\.pdf$/.test(name) ? name : `Little-Days-book-${dateKey()}.pdf`;
+      link.download = /^[\w .()-]+\.pdf$/.test(name) ? name : `Capiday-book-${dateKey()}.pdf`;
       link.hidden = true;
       document.body.append(link);
       link.click();
@@ -6243,17 +6243,17 @@ function openWhatsNew() {
 // Every control keeps its old data-action; details open in a bottom sheet.
 let settingsSheet = ""; // which detail sheet is open (re-drawn after a change)
 // The default personal mark before a name is chosen: a small sprout in sage
-// line art (the same sprout as on the Little Days wordmark). Not an emoji.
+// line art (the same sprout as on the Capiday wordmark). Not an emoji.
 function settingsPageHTML() {
   const en = languageCode() === "en";
   const title = (key, aside = "") => `<div class="s2-h"><h2 class="${en ? "en" : "zh"}">${t(key)}</h2>${aside}</div>`;
   const toggle = (attrs, on, name, hint, disabled = false) => `<button class="privacy-row s2-toggle" ${attrs} role="switch" aria-checked="${Boolean(on)}" ${disabled ? "disabled" : ""}><span><b>${name}</b>${hint ? `<small>${hint}</small>` : ""}</span><i class="switch ${on ? "on" : ""}" aria-hidden="true"></i></button>`;
   const more = (attrs, name, value = "", dot = false) => `<button class="s2-more-row" ${attrs}><span><b>${name}</b>${dot ? '<i class="s2-dot" aria-hidden="true"></i>' : ""}</span><span class="v">${value}<i class="s2-chev" aria-hidden="true">›</i></span></button>`;
-  // -- My Little Days: this device's own space (there is no cloud account).
+  // -- My Capiday: this device's own space (there is no cloud account).
   const name = String(account?.name || "").trim();
   // V10.16: the personal mark (js/profile-mark.mjs) — the sprout when nothing
   // was chosen, a monogram of the name, or an emoji chosen before (kept).
-  const me = `<section class="s2-me account-card"><span class="s2-avatar pm-host">${profileMarkHTML(account?.avatar, name, 68)}</span><div><small class="s2-kicker">My Little Days</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.myWorld"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t(name ? "s2.editProfile" : "s2.nameWorld")} ›</button></div></section>`;
+  const me = `<section class="s2-me account-card"><span class="s2-avatar pm-host">${profileMarkHTML(account?.avatar, name, 68)}</span><div><small class="s2-kicker">My Capiday</small><b class="s2-name ${/[㐀-鿿]/.test(name || (en ? "" : "名")) ? "zh" : ""}">${esc(name || t("s2.myWorld"))}</b><p>${t("s2.localSpace")}</p><button class="s2-link" data-action="settings-sheet" data-sheet="profile">${t(name ? "s2.editProfile" : "s2.nameWorld")} ›</button></div></section>`;
   // -- Little Keeper: a preview and the companion mode; the rest is in its sheet.
   const k = keeperNow();
   let keeper;
@@ -6277,7 +6277,7 @@ function settingsPageHTML() {
   // -- About & more.
   const samples = state().entries.filter((e) => e.isDemo).length;
   const about = `<section class="s2-sec s2-about">${title("s2.about")}${more('data-action="whats-new"', t("news.title"), `V${esc(LATEST)}`, hasUnseen())}${more('data-action="tour-replay"', t("s2.tour"), t("s2.tourAgain"))}${more('data-action="settings-sheet" data-sheet="licenses"', t("settings.licenses"))}${samples ? more('data-action="settings-sheet" data-sheet="samples"', t("samples.title"), t("s2.sampleDays", { count: samples })) : ""}${more('data-action="settings-sheet" data-sheet="testlog"', t("testlog.title"))}${more('data-action="settings-sheet" data-sheet="labs"', t("labs.title"), t(labsOn() ? "s2.on" : "s2.off"))}${labsOn() && account ? more('data-action="sign-out"', t("s2.welcome"), t("s2.dataKept")) : ""}</section>`;
-  return `<div class="s2"><div class="settings-nav s2-nav"><button class="back-button" data-action="settings-back">‹ ${t("settings.back")}</button><span>${t("s2.kicker")}</span><i aria-hidden="true"></i></div><h1 class="page-title visually-hidden">${t("settings.title")}</h1>${me}${keeper}${look}${data}${about}<p class="s2-foot">Little Days<small>V${esc(LATEST)} · ${t("settings.subtitle")}</small></p></div>`;
+  return `<div class="s2"><div class="settings-nav s2-nav"><button class="back-button" data-action="settings-back">‹ ${t("settings.back")}</button><span>${t("s2.kicker")}</span><i aria-hidden="true"></i></div><h1 class="page-title visually-hidden">${t("settings.title")}</h1>${me}${keeper}${look}${data}${about}<p class="s2-foot">Capiday<small>V${esc(LATEST)} · ${t("settings.subtitle")}</small></p></div>`;
 }
 // One personal mark (Settings header, the editor, the welcome page).
 function profileMarkHTML(avatar, name, size, label = "") {
@@ -6297,7 +6297,7 @@ function profileSheetHTML(head) {
   // The sprout (the default) and an emoji chosen before: two small pills at the top.
   const pill = (value, label, cls) => `<button class="pf-choice pf-pill ${cls}" data-action="profile-avatar" data-avatar="${esc(value)}" aria-pressed="${picked === value}">${profileMarkHTML(value, name, 36)}<span>${label}</span></button>`;
   const pills = `<div class="pf-pills">${pill(PM.SPROUT, t("pf.sproutDefault"), "pf-sprout")}${legacy ? pill(legacy, t("pf.current"), "pf-legacy") : ""}</div>`;
-  const card = `<div class="pf-card" aria-hidden="true"><i class="pf-tape"></i><span class="pf-card-mark">${profileMarkHTML(picked, name, 64)}</span><span class="pf-card-copy"><small>My Little Days</small><b class="pf-card-name ${name.trim() ? "" : "empty"} ${/[\u3400-\u9fff]/.test(name || (languageCode() === "en" ? "" : "名")) ? "zh" : ""}">${esc(name.trim() || t("s2.myWorld"))}</b><i class="pf-rule"></i></span></div>`;
+  const card = `<div class="pf-card" aria-hidden="true"><i class="pf-tape"></i><span class="pf-card-mark">${profileMarkHTML(picked, name, 64)}</span><span class="pf-card-copy"><small>My Capiday</small><b class="pf-card-name ${name.trim() ? "" : "empty"} ${/[\u3400-\u9fff]/.test(name || (languageCode() === "en" ? "" : "名")) ? "zh" : ""}">${esc(name.trim() || t("s2.myWorld"))}</b><i class="pf-rule"></i></span></div>`;
   return `${head("pf.title")}${card}<p class="pf-sub">${t("pf.sub")}</p><label class="s2-field pf-name">${t("pf.nameLabel")}<input data-profile-name maxlength="30" value="${esc(name)}" placeholder="${esc(t("pf.namePlaceholder"))}" autocomplete="nickname"></label><div class="pf-marks"><p class="s2-field-label">${t("pf.marks")}</p>${pills}<p class="pf-group-label">${t("pf.monograms")}</p><div class="pf-row" role="group" aria-label="${t("pf.monograms")}">${monos}</div></div><div class="pf-foot"><p class="s2-hint">${t("pf.local")}</p><button class="kp-main" data-action="profile-save">${t("s2.save")}</button></div>`;
 }
 // The detail sheets: profile, Keeper details, privacy notes, licences, samples, test log, labs.
@@ -6315,7 +6315,7 @@ function settingsSheetHTML(kind) {
     return `${head("s2.keeperManage")}<div class="keeper-profile">${keeperArt("idle")}<span><b>${esc(Keeper.keeperName(k, languageCode()))}</b><small>${esc(t("keeper.stage." + g.id))} · ${esc(t("keeper.settings.days", { count: g.reasons.days }))}</small><span class="keeper-leaves" aria-hidden="true">${leaves}</span></span></div>${keeperLooksHTML()}<label class="s2-field keeper-name-edit">${t("keeper.onboard.name")}<input data-keeper-rename maxlength="12" value="${esc(k.name)}" placeholder="${esc(Keeper.defaultName(k.animal, languageCode()))}"></label>${row("allowMemories", k.allowMemories, quiet ? t("s2.notInQuiet") : t("keeper.settings.allowMemoriesHint"), !quiet)}${row("proactive", k.proactive, interactive ? t("keeper.settings.proactiveHint") : t("keeper.settings.interactiveOnly"), interactive)}<p class="s2-hint">${t("keeper.settings.growthNote")}</p><button class="kp-quiet keeper-off" data-action="keeper-disable">${t("keeper.settings.turnOff")}</button><p class="s2-hint">${t("keeper.settings.offKeeps")}</p>`;
   }
   if (kind === "privacy") return `${head("s2.privacyNotes")}<ul class="privacy-facts"><li>${t("privacy.factDevice")}</li><li>${t("privacy.factPhotos")}</li><li>${t("privacy.factNothingSent")}</li><li>${t("privacy.factDemo")}</li><li>${t("settings.backupNote")}</li><li>${t("privacy.hideTodayHint")}</li><li>${t("privacy.shareListHint")}</li><li>${t("s2.aiNote")}</li></ul>`;
-  if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Little Days Original Artwork ↗</a></div>`;
+  if (kind === "licenses") return `${head("settings.licenses")}<p class="s2-hint">${t("settings.licensesNote")}</p><p class="s2-hint">${t("settings.systemFonts")}</p><div class="s2-links">${catalog.fonts.map((font) => `<a href="library/fonts/${font.license}" target="_blank" rel="noopener">${esc(font.name)} · SIL OFL 1.1 ↗</a>`).join("")}<a href="library/stickers/LittleDays-Original-Assets.txt" target="_blank" rel="noopener">Capiday Original Artwork ↗</a></div>`;
   if (kind === "samples") {
     // V10.41 (D2): samples stay in storage but out of books, Calendar and
     // reading; they are looked at only here, each day marked 示例.
@@ -6376,13 +6376,13 @@ document.addEventListener(
 
 /* ---------- Sign in (this device) and the welcome tour ---------- */
 
-// The sprout beside the Little Days wordmark (Home, the welcome page).
+// The sprout beside the Capiday wordmark (Home, the welcome page).
 const BRAND_SPROUT = '<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg>';
 function loginHTML() {
   // V10.16: the same profile record as Settings; no picker here (the mark is
   // chosen in Settings → 编辑资料). Shows the mark there is now.
   const back = account && !account.signedIn;
-  return `<section class="login"><div class="login-brand"><img class="login-icon" src="icons/icon-192.png" alt="" width="88" height="88"><h1 class="brand-title login-title">Little Days${BRAND_SPROUT}</h1></div><p class="login-tag">${t("login.tagline")}</p>${back ? `<p class="login-back">${t("login.welcomeBack", { name: account.name || t("community.me") })}</p>` : ""}<div class="login-form"><div class="login-me">${profileMarkHTML(account?.avatar, account?.name || "", 56)}<small>${t("login.markLater")}</small></div><label class="field">${t("login.name")}<input id="login-name" maxlength="30" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"></label><button class="primary full-width" data-action="login-local">${t(back ? "login.continue" : "login.start")}</button></div><div class="login-labs" role="group" aria-label="${t("login.labsOnly")}"><span class="login-labs-tag">${t("login.labsOnly")}</span><button class="login-provider" disabled> ${t("login.apple")}<small>${t("login.soon")}</small></button><button class="login-provider" disabled>✉︎ ${t("login.email")}<small>${t("login.soon")}</small></button></div><p class="login-note">🔒 ${t("login.note")}</p><div class="login-language"><button data-action="login-language" data-language="zh-CN" class="${languageCode() === "en" ? "" : "selected"}">中文</button><button data-action="login-language" data-language="en" class="${languageCode() === "en" ? "selected" : ""}">English</button></div></section>`;
+  return `<section class="login"><div class="login-brand"><img class="login-icon" src="icons/icon-192.png" alt="" width="88" height="88"><h1 class="brand-title login-title">Capiday${BRAND_SPROUT}</h1></div><p class="login-tag">${t("login.tagline")}</p>${back ? `<p class="login-back">${t("login.welcomeBack", { name: account.name || t("community.me") })}</p>` : ""}<div class="login-form"><div class="login-me">${profileMarkHTML(account?.avatar, account?.name || "", 56)}<small>${t("login.markLater")}</small></div><label class="field">${t("login.name")}<input id="login-name" maxlength="30" autocomplete="nickname" value="${esc(account?.name || "")}" placeholder="${t("login.namePlaceholder")}"></label><button class="primary full-width" data-action="login-local">${t(back ? "login.continue" : "login.start")}</button></div><div class="login-labs" role="group" aria-label="${t("login.labsOnly")}"><span class="login-labs-tag">${t("login.labsOnly")}</span><button class="login-provider" disabled> ${t("login.apple")}<small>${t("login.soon")}</small></button><button class="login-provider" disabled>✉︎ ${t("login.email")}<small>${t("login.soon")}</small></button></div><p class="login-note">🔒 ${t("login.note")}</p><div class="login-language"><button data-action="login-language" data-language="zh-CN" class="${languageCode() === "en" ? "" : "selected"}">中文</button><button data-action="login-language" data-language="en" class="${languageCode() === "en" ? "selected" : ""}">English</button></div></section>`;
 }
 function renderTour() {
   const box = $("#tour");
@@ -7614,10 +7614,10 @@ async function action(target) {
     // The local test log: what happened and when, no content. Shared only if
     // the tester chooses to send the file.
     const events = readEvents();
-    const file = new Blob([JSON.stringify({ app: "Little Days", exported: new Date().toISOString(), summary: summarize(events), events }, null, 2)], { type: "application/json" });
+    const file = new Blob([JSON.stringify({ app: "Capiday", exported: new Date().toISOString(), summary: summarize(events), events }, null, 2)], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(file);
-    link.download = `little-days-test-log-${dateKey()}.json`;
+    link.download = `capiday-test-log-${dateKey()}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
     toast(t("testlog.saved", { count: events.length }));
@@ -8674,7 +8674,7 @@ $("#backup-input").addEventListener("change", async (event) => {
 function applyShellLanguage() {
   $("#navigation").setAttribute("aria-label", t("nav.label"));
   document.title =
-    "Little Days · " +
+    "Capiday · " +
     (languageCode() === "en" ? "The Little Stationery Shop" : "手帐文具店");
   const preview = document.querySelector(".preview-label>span:last-child");
   if (preview) preview.textContent = t("preview.label");
@@ -8747,7 +8747,7 @@ function refreshBookPreview() {
   bookDraft = readBookForm();
   $("#book-cover-preview").innerHTML = coverHTML(bookDraft, ctx());
 }
-// ---------- S3 (V10.43) · Use a photo already in Little Days ----------
+// ---------- S3 (V10.43) · Use a photo already in Capiday ----------
 // Replacing a photo first offers the photos already imported: this page,
 // this day, this book (read only when that tab is opened), then the photo
 // library. Choosing one copies its reference into the chosen place: the
@@ -10145,7 +10145,7 @@ async function v3Action(target) {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Little-Days-Backup-${dateKey()}${backup.complete ? "" : "-incomplete"}.json`;
+    link.download = `Capiday-Backup-${dateKey()}${backup.complete ? "" : "-incomplete"}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     logEvent("backup", { complete: backup.complete, missing: backup.missing?.length || 0 });
@@ -11143,7 +11143,7 @@ function showJournalRescue(decision, meta) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `Little-Days-Journal-Copy-${dateKey()}.json`;
+        link.download = `Capiday-Journal-Copy-${dateKey()}.json`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 10000);
         draw(t("rescue.saved"));

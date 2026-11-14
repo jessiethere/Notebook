@@ -37,7 +37,7 @@ const path = require("node:path");
           .querySelector("#draft-status")
           ?.textContent.includes("草稿已保存在本机"),
       );
-    assert.equal(await page.title(), "Little Days · 手帐文具店");
+    assert.equal(await page.title(), "Capiday · 手帐文具店");
     // V10.41 (S1): the sample "today" page is no longer on Home, so the hero
     // shows its own photo-journal card; its picture must load.
     assert.equal(
@@ -156,7 +156,7 @@ const path = require("node:path");
     const downloadPromise = page.waitForEvent("download");
     await page.locator('[data-action="export"]').click();
     const download = await downloadPromise;
-    assert.match(download.suggestedFilename(), /Little-Days-.*\.png/);
+    assert.match(download.suggestedFilename(), /Capiday-.*\.png/);
     const stream = await download.createReadStream();
     let size = 0;
     for await (const chunk of stream) size += chunk.length;

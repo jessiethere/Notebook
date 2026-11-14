@@ -1,5 +1,5 @@
 #!/bin/bash
-# Little Days · screenshots of the real iPhone app in the Simulator (Debug build).
+# Capiday · screenshots of the real iPhone app in the Simulator (Debug build).
 #   bash tools/mac/sim-shots.sh                  # iPhone 18 Pro
 #   bash tools/mac/sim-shots.sh "iPhone 17e"     # another simulator (name from: xcrun simctl list devices)
 # Builds the app (Debug), installs it, then opens Home, Calendar, the shelf and

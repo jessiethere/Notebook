@@ -40,7 +40,7 @@ const shots = process.env.SHOTS_DIR || "";
     if (shots) await page.screenshot({ path: `${shots}/v68-nudge.png` });
     const download = page.waitForEvent("download");
     await page.locator('.backup-nudge [data-action="backup"]').click();
-    assert.match((await download).suggestedFilename(), /Little-Days-Backup-.*\.json/);
+    assert.match((await download).suggestedFilename(), /Capiday-Backup-.*\.json/);
     await page.locator('#choose-dialog [data-bk="yes"]').click(); // V10.40 (C3): say the file was kept
     await page.waitForSelector(".backup-nudge", { state: "detached" });
     await page.locator(".settings-gear").click();

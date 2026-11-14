@@ -1,4 +1,4 @@
-# Little Days · 产品差异化与 Quick Create v3 方案（2026-11-09，**提案，等待确认后实施**）
+# Capiday · 产品差异化与 Quick Create v3 方案（2026-11-09，**提案，等待确认后实施**）
 
 > 本文是讨论稿，没有改任何 App 代码。高保真界面画在设计稿里：https://claude.ai/artifact/Ex4FbaCRPNx9HZXNcuDuyt （6 屏，可点击跳转）。
 > 标记说明：**[事实]** 来自仓库代码或公开资料；**[假设]** 需要用户验证；**[待核实]** 我没能查证。
@@ -50,7 +50,7 @@
 
 ## 3. 产品定位
 
-**一句英文**：*Pick today's photos — Little Days turns them into a scrapbook page you'll love in a minute, and your days into a book.*
+**一句英文**：*Pick today's photos — Capiday turns them into a scrapbook page you'll love in a minute, and your days into a book.*
 
 更短的 App Store 副标题备选：*Scrapbook your day in a minute.*
 
@@ -248,7 +248,7 @@
 | 保存 / 分享 | 保存率；7 天内导出或分享的人 | 保存 ≥ 80%，分享 ≥ 40% | — | 分享 < 20% |
 | 主动再用 | 14 天内 ≥ 3 个不同日子做页 | ≥ 40% 的人 | 25–40% | < 25% |
 | Quick vs Creative | 生成后打开 Creative 的比例、改了什么 | < 40% 打开且改得少 | 40–60% | > 60%（说明自动排版不够好） |
-| 对比竞品 | 「更想留着哪个」 | ≥ 60% 选 Little Days | 40–60% | < 40% |
+| 对比竞品 | 「更想留着哪个」 | ≥ 60% 选 Capiday | 40–60% | < 40% |
 
 **新增本机事件**（不含内容）：`story_start`、`moments_count`、`grouping_edited`、`regenerate`、`creative_open`、`pinned_edit`、`story_saved`、`share`。
 
@@ -258,7 +258,7 @@
 
 ## 11. 三个问题的回答
 
-1. **为什么一个不擅长做手账的美国用户会选 Little Days？** 因为她已经每天在拍照，却没时间、也不会把它们做成好看的东西。Little Days 让她只做一件事——选今天的照片、最多写一句——就得到一套像手做的手账页，而且这些页会自己变成一本书。（这是假设，要用 §10 验证。）
+1. **为什么一个不擅长做手账的美国用户会选 Capiday？** 因为她已经每天在拍照，却没时间、也不会把它们做成好看的东西。Capiday 让她只做一件事——选今天的照片、最多写一句——就得到一套像手做的手账页，而且这些页会自己变成一本书。（这是假设，要用 §10 验证。）
 2. **应该在哪个具体体验上明显比竞品好？** **「从今天的相册到一套满意的手账页」这 60–90 秒**：自动按时间分成几个 Moment、封面 + 章节有层次、整套配色字体统一、默认不裁切、改了也不会被重排冲掉。Zinnia 要手做，Day One 和 Apple Journal 是信息流，Layout / Shuffles 只给一张拼图。
 3. **如果下一轮只能做三个功能？**
    1. 多 Moment 的 Quick Create（选照片 → 自动分组 → 一句话 → 保存进书）。

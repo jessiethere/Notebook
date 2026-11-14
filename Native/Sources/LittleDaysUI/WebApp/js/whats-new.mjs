@@ -4,6 +4,24 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.45",
+    date: "2026-11-14",
+    zh: {
+      title: "Little Days 改名为 Capiday",
+      items: [
+        "App 的名字从 Little Days 改为 Capiday：首页、设置、提示、导出的 PDF 和备份文件名、页面上的刊头和页脚都换成了新名字。",
+        "你的手帐、照片、视频和设置都原样保留，不需要做任何事情；以前导出的备份也照样可以恢复。",
+      ],
+    },
+    en: {
+      title: "Little Days is now Capiday",
+      items: [
+        "The app is now called Capiday: Home, Settings, messages, exported PDF and backup file names, and the masthead and footer on your pages all use the new name.",
+        "Your journal, photos, videos and settings stay exactly as they were — nothing to do. Backups you exported before still restore.",
+      ],
+    },
+  },
+  {
     version: "10.44",
     date: "2026-11-13",
     zh: {
@@ -31,7 +49,7 @@ export const UPDATES = [
     zh: {
       title: "换照片可以直接用已经导入的照片",
       items: [
-        "快速编辑和 Journal Studio 里点「换照片」，上方写着「正在替换照片 N」，下面先列出已经在 Little Days 里的照片：这一页、这一天、这本书；也可以照常「从相册添加」。",
+        "快速编辑和 Journal Studio 里点「换照片」，上方写着「正在替换照片 N」，下面先列出已经在 Capiday 里的照片：这一页、这一天、这本书；也可以照常「从相册添加」。",
         "选中的照片会复制到这个位置，原来的那张留在原处，不会交换位置，也不会再存一份文件。",
         "这个位置原来的那句话会保留，不会带上来源照片的说明。可以撤销，换完可以接着写字、改字体、换排版。",
       ],
@@ -39,7 +57,7 @@ export const UPDATES = [
     en: {
       title: "Replace a photo with one you already imported",
       items: [
-        "In Quick Edit and Journal Studio, Replace photo now says \"Replacing photo N\" and first shows the photos already in Little Days — this page, this day, this book — with Add from Photos still there.",
+        "In Quick Edit and Journal Studio, Replace photo now says \"Replacing photo N\" and first shows the photos already in Capiday — this page, this day, this book — with Add from Photos still there.",
         "The photo you pick is copied into that place; the original stays where it was (no swapping), and no extra copy of the file is saved.",
         "That place keeps its own words (the other photo's caption isn't copied). You can undo, then carry on writing, changing the type or the layout.",
       ],
@@ -643,7 +661,7 @@ export const UPDATES = [
     zh: {
       title: "细节打磨：欢迎页换上 App 图标和小芽字标，五种字母印记更统一",
       items: [
-        "欢迎页（实验室里才会出现）用 App 图标和带小芽的 Little Days 字标，去掉了像素小花和散落的表情。",
+        "欢迎页（实验室里才会出现）用 App 图标和带小芽的 Capiday 字标，去掉了像素小花和散落的表情。",
         "Apple 登录、邮箱登录还没有开放，只放在欢迎页底部标着「实验室 · 还没有开放」的虚线框里，不能点。",
         "五种字母印记的字母大小、边框粗细统一了：牛皮纸的字母变大，朱印的双圈变轻，手写体的中文不再压到下划线。",
         "选中的印记只有一圈细细的绿色描边，不再显得太重。",
@@ -652,7 +670,7 @@ export const UPDATES = [
     en: {
       title: "Polish: the welcome page wears the app icon and sprout wordmark; the five monograms match",
       items: [
-        "The welcome page (only in Labs) now shows the app icon and the Little Days wordmark with its sprout, instead of a pixel flower and scattered emoji.",
+        "The welcome page (only in Labs) now shows the app icon and the Capiday wordmark with its sprout, instead of a pixel flower and scattered emoji.",
         "Apple and email sign-in are not available yet: they sit, disabled, in a dashed tray labelled “Labs · not available yet”.",
         "The five monograms now share one letter size and ring weight: Kraft's letter is larger, Seal's double ring lighter, and Script's Chinese no longer touches its stroke.",
         "The chosen monogram has one thin sage ring instead of a heavy outline.",
@@ -709,7 +727,7 @@ export const UPDATES = [
     zh: {
       title: "iPhone App 第一次在模拟器里跑起来了",
       items: [
-        "Little Days 的 iPhone App 第一次在 Mac 的 Xcode 模拟器里构建并运行成功：首页、日历、书架和写手帐的页面都能正常打开。",
+        "Capiday 的 iPhone App 第一次在 Mac 的 Xcode 模拟器里构建并运行成功：首页、日历、书架和写手帐的页面都能正常打开。",
         "修好了操作指南在 iPhone App 里的位置：绿色圆环原来会比纸张低一截，现在会跟着纸张走，准确圈住要讲的地方。",
         "开发用的 Captain 本地模型对话换了一版说法：不再一直「喵」，不猜你的手帐里写了什么，也不老是劝你去写。这个只在 Mac 上开发时使用，这个链接里看不到。",
       ],
@@ -717,7 +735,7 @@ export const UPDATES = [
     en: {
       title: "The iPhone app runs in the Simulator for the first time",
       items: [
-        "The Little Days iPhone app was built and run in Xcode's Simulator on a Mac for the first time: Home, Calendar, the shelf and the page editor all open.",
+        "The Capiday iPhone app was built and run in Xcode's Simulator on a Mac for the first time: Home, Calendar, the shelf and the page editor all open.",
         "Fixed the guide's position in the iPhone app: the green ring used to sit a little below the page; it now follows the page and circles the right spot.",
         "Captain's development-only local-model chat got a new voice: no more \u201cmeow\u201d in every line, no guessing what's in your journal, no nudging you to write. It is only used while developing on a Mac — not in this link.",
       ],
@@ -976,29 +994,29 @@ export const UPDATES = [
     version: "10.4",
     date: "2026-11-11",
     zh: {
-      title: "设置页重新整理：My Little Days · 本机个人空间",
+      title: "设置页重新整理：My Capiday · 本机个人空间",
       items: [
         "设置页不再是 12 张大卡片，改成五组：个人资料、Little Keeper、外观与偏好、数据与隐私、关于与更多。整页长度不到原来的一半。",
-        "最上面是「My Little Days · 本机个人空间」：如实写明资料和手帐只保存在这台设备、没有云端账号。点「编辑资料」可以改名字和头像。",
+        "最上面是「My Capiday · 本机个人空间」：如实写明资料和手帐只保存在这台设备、没有云端账号。点「编辑资料」可以改名字和头像。",
         "默认头像改成名字首字的圆形纸片；你选过的头像会继续保留。",
         "Little Keeper 只留预览和一行陪伴方式（安静 / 温柔 / 互动 / 关闭）；改名、翻看以前的页面、主动打招呼收进「角色与装扮」。",
         "主题颜色变成一行圆形色板；界面语言和每天提醒放在一起。",
         "数据与隐私：本机存储、备份与恢复、App 锁、两个隐私开关、隐私说明。「AI 小管家」标着「尚未接入」，开关不能打开——现在没有任何 AI。",
         "更新记录、功能介绍、许可证、示例内容、测试记录、实验室移到页面最下方，点开才显示。",
-        "「退出登录」改名为「回到欢迎页（数据保留）」，只在实验室的登录页开启时出现——Little Days 没有云端账号，谈不上退出。",
+        "「退出登录」改名为「回到欢迎页（数据保留）」，只在实验室的登录页开启时出现——Capiday 没有云端账号，谈不上退出。",
       ],
     },
     en: {
-      title: "Settings, tidied: My Little Days · your space on this device",
+      title: "Settings, tidied: My Capiday · your space on this device",
       items: [
         "Settings is no longer twelve large cards but five groups: profile, Little Keeper, look & preferences, data & privacy, about & more. The page is less than half as long.",
-        "At the top, “My Little Days · your space on this device”: it says plainly that profile and journals stay on this device and there is no cloud account. “Edit profile” changes the name and avatar.",
+        "At the top, “My Capiday · your space on this device”: it says plainly that profile and journals stay on this device and there is no cloud account. “Edit profile” changes the name and avatar.",
         "The default avatar is now a round paper chip with the first letter of your name; an avatar you chose is kept.",
         "Little Keeper keeps a preview and one line for the companion mode (Quiet / Gentle / Interactive / Off); renaming, looking back at earlier pages and greeting first moved into “Character & look”.",
         "Colour themes are a single row of round swatches; interface language and the daily reminder sit with them.",
         "Data & privacy: storage on this device, backup & restore, app lock, two privacy switches, privacy notes. “AI Keeper” is marked “Not available yet” and cannot be switched on — there is no AI at present.",
         "Update notes, feature tour, licences, sample content, test log and Labs moved to the bottom and open when tapped.",
-        "“Sign out” is now “Back to the welcome page (data kept)”, shown only when the Labs sign-in page is on — Little Days has no cloud account to sign out of.",
+        "“Sign out” is now “Back to the welcome page (data kept)”, shown only when the Labs sign-in page is on — Capiday has no cloud account to sign out of.",
       ],
     },
   },
@@ -1188,7 +1206,7 @@ export const UPDATES = [
     zh: {
       title: "正式 App 图标：探头的 Captain",
       items: [
-        "Little Days 用上了你确认的正式 App 图标：戴柠檬帽的 Captain 从奶油色手帐边探头，旁边是小花回形针、Little Days 字样和小芽。",
+        "Capiday 用上了你确认的正式 App 图标：戴柠檬帽的 Captain 从奶油色手帐边探头，旁边是小花回形针、Capiday 字样和小芽。",
         "iPhone App 的图标资源已经换好（1024 × 1024，不透明正方形，圆角由 iOS 自己加）。浏览器标签页的小图标、加到 iPhone 主屏幕时的图标也一起换了。",
         "图标直接使用原图，没有重画；只是去掉了原图外面一圈的空白和阴影，让图标铺满。",
       ],
@@ -1196,7 +1214,7 @@ export const UPDATES = [
     en: {
       title: "Official app icon: Captain peeking",
       items: [
-        "Little Days now uses your approved official app icon: Captain in the lemon hat peeking over a cream journal plaque, with the flower paper clip, the Little Days wordmark and the sprout.",
+        "Capiday now uses your approved official app icon: Captain in the lemon hat peeking over a cream journal plaque, with the flower paper clip, the Capiday wordmark and the sprout.",
         "The iPhone app icon is in place (1024 × 1024, an opaque square; iOS adds the rounded shape). The browser tab icon and the “Add to Home Screen” icon changed too.",
         "The artwork is used as it is, never redrawn — only the empty margin and shadow around the original picture were left out so the icon fills its square.",
       ],
@@ -1352,20 +1370,20 @@ export const UPDATES = [
     zh: {
       title: "App 锁：4 位密码，iPhone App 里可以用面容 ID",
       items: [
-        "设置 →「隐私」→「App 锁」：设置 4 位密码（输入两次）。之后打开 Little Days 要先输入密码，锁着的时候下面的内容不能点也看不到。",
+        "设置 →「隐私」→「App 锁」：设置 4 位密码（输入两次）。之后打开 Capiday 要先输入密码，锁着的时候下面的内容不能点也看不到。",
         "可以选离开多久后再锁上：立即、1 分钟或 5 分钟。",
         "密码只保存在这台设备上，而且只存加密后的校验值，不存密码本身。连续输错 5 次要等 30 秒再试（刷新页面也不能跳过）。",
-        "iPhone App 里可以用面容 ID（或触控 ID）解锁，由 iOS 验证，Little Days 拿不到你的面容或指纹；打开 App 锁后，切换 App 的预览里也只显示「Little Days」，不显示手帐内容。",
+        "iPhone App 里可以用面容 ID（或触控 ID）解锁，由 iOS 验证，Capiday 拿不到你的面容或指纹；打开 App 锁后，切换 App 的预览里也只显示「Capiday」，不显示手帐内容。",
         "关掉或修改密码都要先输入现在的密码。「忘记密码？」会如实说明：我们无法帮你找回，记得定期备份。",
       ],
     },
     en: {
       title: "App lock: a 4-digit passcode, Face ID in the iPhone app",
       items: [
-        "Settings → Privacy → App lock: set a 4-digit passcode (twice). Little Days then asks for it when opened; while locked, nothing underneath can be seen or tapped.",
+        "Settings → Privacy → App lock: set a 4-digit passcode (twice). Capiday then asks for it when opened; while locked, nothing underneath can be seen or tapped.",
         "Choose how long you can be away before it locks again: immediately, 1 minute or 5 minutes.",
         "The passcode stays on this device, stored only as a salted hash — never the passcode itself. Five wrong tries in a row mean a 30-second wait (a reload doesn't skip it).",
-        "In the iPhone app, Face ID (or Touch ID) unlocks it — iOS checks it, Little Days never sees your face or fingerprint; with the lock on, the app switcher shows just “Little Days”, not your journal.",
+        "In the iPhone app, Face ID (or Touch ID) unlocks it — iOS checks it, Capiday never sees your face or fingerprint; with the lock on, the app switcher shows just “Capiday”, not your journal.",
         "Turning it off or changing the passcode asks for the current one first. “Forgot passcode?” says honestly that we can't recover it — back up now and then.",
       ],
     },
@@ -1506,7 +1524,7 @@ export const UPDATES = [
         "编辑封面时，纸下面重复的「今天的标题和文字」框去掉了，直接在纸上打字；在纸上打完字马上就能点「撤销」。",
         "在「自定义」里，把一张照片拖到另一张上面松手，两张就会换位置；每张按自己的比例放进对方的框里，不会被裁掉。",
         "选中照片，工具条里多了「替换」：换一张照片，位置不变，框会跟着新照片的横竖比例调整。",
-        "杂志风格：每页上方有「— 08:10 · MORNING」小标，标题更大、更像杂志标题，页脚有「LITTLE DAYS · NO. 09」；当天跨页有「LITTLE DAYS」刊头和大号日期，像一期杂志的封面。",
+        "杂志风格：每页上方有「— 08:10 · MORNING」小标，标题更大、更像杂志标题，页脚有「CAPIDAY · NO. 09」；当天跨页有「CAPIDAY」刊头和大号日期，像一期杂志的封面。",
         "装饰贴纸会避开多行文字，不再碰到长句子。",
         "点「保存」后会直接翻到你刚写好的那一页（在手帐本里一页页翻），不再一下子跳回首页。",
         "首页「今天」卡片可以向右滑，下面有小圆点：一页页预览今天写过的字和放过的照片，点一下就打开那一页。",
@@ -1524,7 +1542,7 @@ export const UPDATES = [
         "The cover's duplicate “Today's title and words” box under the paper is gone — type on the paper; typing there can be undone right away.",
         "In Customize, drag a photo onto another and let go: they change places, each fitted into the other's frame in its own shape, never cropped.",
         "Select a photo and tap “Replace”: the new photo takes the same place, and the frame follows its shape.",
-        "Editorial: a “— 08:10 · MORNING” kicker on each page, a bigger headline and a “LITTLE DAYS · NO. 09” folio; the day spread gets a LITTLE DAYS masthead and a big date, like a magazine cover.",
+        "Editorial: a “— 08:10 · MORNING” kicker on each page, a bigger headline and a “CAPIDAY · NO. 09” folio; the day spread gets a CAPIDAY masthead and a big date, like a magazine cover.",
         "Stickers now keep clear of longer, multi-line words.",
         "After Save you see the page you just made, open in its journal (turn the pages), instead of jumping back to Home.",
         "Home's “Today” card swipes sideways, with dots below: preview today's words and photos page by page; tap one to open it.",
@@ -1676,7 +1694,7 @@ export const UPDATES = [
     zh: {
       title: "给页面配一首背景音乐",
       items: [
-        "新增 5 首 Little Days 原创轻音乐：午后咖啡、窗外下雨、出门散步、晚安、海边。不是从音乐平台抓的歌，可以放心用在页面、视频和书里。",
+        "新增 5 首 Capiday 原创轻音乐：午后咖啡、窗外下雨、出门散步、晚安、海边。不是从音乐平台抓的歌，可以放心用在页面、视频和书里。",
         "写一页时点「♫ 声音 → 背景音乐」，或者在做好一页后点「♫ 配乐」，可以先试听再选。写的时候不会自动播放。",
         "在日历里看这一天、或用「翻页」看书翻到这一页时，音乐会轻轻循环播放；点「♫ 曲名」可以暂停。离开就停；放录音或视频时音乐会先暂停。",
         "导出这一页的视频时会带上这首音乐（只有音乐的页面导出 15 秒，结尾淡出）。",
@@ -1685,7 +1703,7 @@ export const UPDATES = [
     en: {
       title: "Give a page some background music",
       items: [
-        "Five original Little Days pieces: Afternoon coffee, Rain on the window, A little walk, Good night and By the sea. They are not songs taken from a music service, so they are free to use in your pages, videos and books.",
+        "Five original Capiday pieces: Afternoon coffee, Rain on the window, A little walk, Good night and By the sea. They are not songs taken from a music service, so they are free to use in your pages, videos and books.",
         "While writing, tap “♫ Sound → Background music”, or “♫ Music” after making a page; listen first, then choose. Nothing plays while you write.",
         "Reading the day in the calendar, or flipping the book to that page, plays it softly on a loop; tap “♫ name” to pause. It stops when you leave, and pauses when a voice note or video plays.",
         "The page's video carries the music (a page with only music makes a 15-second video that fades out).",

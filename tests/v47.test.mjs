@@ -49,7 +49,7 @@ test("a magazine cover uses the book's photo, or a library photo that suits it",
   assert.equal(coverPhotoRef({ ...book, coverImage: "photo:waves" }, library), "photo:waves");
   const west = coverHTML(book, ctx);
   assert.match(west, /cover-magazine-west/);
-  assert.match(west, /LITTLE DAYS/);
+  assert.match(west, /CAPIDAY/);
   assert.match(west, /健身记录/);
   const jp = coverHTML({ ...book, coverTemplate: "magazine-jp", coverImage: "media:abc" }, ctx);
   assert.match(jp, /cover-magazine-jp/);

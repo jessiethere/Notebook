@@ -1,4 +1,4 @@
-# Little Days — Quick Create / Quick Edit UX Sprint
+# Capiday — Quick Create / Quick Edit UX Sprint
 
 > 2026-11-13。产品定位：*Your life, a little world growing with you.* 核心承诺：*Turn everyday photos into beautiful journal pages in under a minute.*
 > 本轮做了什么：

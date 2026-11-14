@@ -1,4 +1,4 @@
-"""Original "wallpaper-style" scene collections for Little Days (portrait 3:4).
+"""Original "wallpaper-style" scene collections for Capiday (portrait 3:4).
 
 Five procedural collections — color, ribbons, kaleidoscope, patterns, sky —
 drawn with smooth gradients and soft light (no third-party art). Generated

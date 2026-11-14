@@ -1,4 +1,4 @@
-// V10.4 · Settings V2: “My Little Days · this device's own space” (no cloud
+// V10.4 · Settings V2: “My Capiday · this device's own space” (no cloud
 // account), the companion preview, look & preferences, data & privacy, and
 // “About & more” as rows that open sheets. Every old control still works;
 // journals are never touched by a profile change or by going back to the
@@ -38,14 +38,14 @@ const shots = process.env.SHOTS || "";
     await settings();
     const me = page.locator(".s2-me");
     // V10.10: no name yet → 我的小世界 and a sprout mark (not “还没有名字”, not a letter, not an emoji).
-    assert.match(await me.innerText(), /MY LITTLE DAYS[\s\S]*我的小世界[\s\S]*本机个人空间[\s\S]*没有云端账号[\s\S]*给这个世界起个名字吧/);
+    assert.match(await me.innerText(), /MY CAPIDAY[\s\S]*我的小世界[\s\S]*本机个人空间[\s\S]*没有云端账号[\s\S]*给这个世界起个名字吧/);
     assert.equal(await page.locator(".s2-avatar .pm-sprout-chip svg").count(), 1, "no name yet: the sprout mark");
     assert.equal(await page.locator(".s2-avatar .pm-emoji").count(), 0);
     assert.equal(await page.locator(".settings-card").count(), 0, "no stack of big cards");
     assert.doesNotMatch(await page.locator(".s2").innerText(), /退出登录|Sign out/, "no “sign out”: there is no account to sign out of");
     await noOverflow("zh 390");
     await shot("01-top");
-    passed.push("profile area: “My Little Days · your space on this device — no cloud account”; unnamed: 我的小世界 + sprout mark; no card stack");
+    passed.push("profile area: “My Capiday · your space on this device — no cloud account”; unnamed: 我的小世界 + sprout mark; no card stack");
 
     // 2. Edit profile: a name and an avatar, saved on this device only; journals untouched.
     await SS.settingsSheet(page, "profile");

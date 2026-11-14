@@ -1,4 +1,4 @@
-"""Dependency-free Little Days localhost preview. Works with Windows Python 3."""
+"""Dependency-free Capiday localhost preview. Works with Windows Python 3."""
 import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -17,7 +17,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split('?', 1)[0]
         if path == '/api/health':
-            data = json.dumps({'status': 'ok', 'app': 'Little Days', 'framework': 'Python preview'}).encode()
+            data = json.dumps({'status': 'ok', 'app': 'Capiday', 'framework': 'Python preview'}).encode()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.send_header('Content-Length', str(len(data)))
@@ -102,7 +102,7 @@ def main(argv=None):
         alternative = args.port + 1 if args.port < 65535 else 8080
         print(f'Cannot start localhost:{args.port}: {error}. Try --port {alternative}.', file=sys.stderr)
         return 1
-    print(f'Little Days Web preview: http://localhost:{args.port}', flush=True)
+    print(f'Capiday Web preview: http://localhost:{args.port}', flush=True)
     print('Same Web app as the iOS Swift shell. Ctrl+C to stop.', flush=True)
     if args.open:
         threading.Thread(target=open_browser, args=(f'http://localhost:{args.port}',), daemon=True).start()

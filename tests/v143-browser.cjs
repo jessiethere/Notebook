@@ -1,4 +1,4 @@
-// V10.43 · S3: use a photo already in Little Days instead of picking it again.
+// V10.43 · S3: use a photo already in Capiday instead of picking it again.
 //  Quick Edit: tap photo 3 → 换照片 → 「正在替换照片 3」, sources 这一页 /
 //  这一天 / 这本书 + 从相册添加. Choosing photo 2 copies its reference into
 //  place 3: photo 2 stays, photo 3's words stay with place 3 (photo 2's are

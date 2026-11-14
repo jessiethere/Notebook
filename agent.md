@@ -1,8 +1,8 @@
-# Little Days · 开发日志与会话交接
+# Capiday · 开发日志与会话交接
 
 ## 固定约定
 
-- 仓库：https://github.com/jessiethere/Notebook；产品 Little Days（手帐文具店）。理念：记录生活的美好，也收藏一点点变好的自己 / Collect moments, grow gently.
+- 仓库：https://github.com/jessiethere/Capiday；产品 Capiday（手帐文具店）。理念：记录生活的美好，也收藏一点点变好的自己 / Collect moments, grow gently.
 - 继续在现有 SwiftUI + HTML 交互预览 + Vapor + 共享 Core 上增量开发，不重建、不未经确认切换 React。
 - 开始先读 AGENTS.md、agent.md、README.md、PRODUCT_SPEC、DESIGN_SYSTEM、ARCHITECTURE，检查最新分支/代码/提交。
 - 每次改动同步维护本文件与 README 的日志，一起提交；保留历史。真实用户记录、媒体、备份和密钥不能提交公开 GitHub。
@@ -47,6 +47,18 @@
 - Phase 2 明确标记社交演示，Phase 3 真实 Vapor 后端，Phase 4 协作，Phase 5 高级创作/授权音乐；具体见 ROADMAP。
 
 ## 更新日志
+
+### 2026-11-14 — V10.45 App 改名：Little Days → Capiday（App、GitHub、Xcode、固定链接）
+
+- **需求**：用户说 Little Days 这个名字已经被用了，全面改名为 Capiday。用户确认：中英文都叫 Capiday，保留「手帐文具店」；GitHub 仓库改名为 Capiday；Mac 上的 Xcode 改动原样提交；内部名称全部保持不变。
+- **Xcode**：Mac 上一直没提交的 `project.pbxproj` 改动是用户自己在 Xcode 里做的（显示名 Capiday、Bundle ID `com.capiday.app`、签名团队 7VFYCTCXRS、Xcode 升级了项目格式），用户确认后在 Mac 上原样提交（1fe6171）并推送。`Package.resolved` 和 4 个 Qwen 结果文件仍未提交，没有动。
+- **GitHub**：在 Mac 上用 `gh repo rename` 把 jessiethere/Notebook 改为 **jessiethere/Capiday**（公开仓库；GitHub 会把旧地址转到新地址）。Mac 和这个会话的 remote 都改成新地址。用户本机的文件夹名仍是 `Notebook`，不影响使用。
+- **看得见的名字全部换成 Capiday**：`Public/`（首页刊头、设置、提示、Captain 提示词、页面刊头/页脚 `CAPIDAY · NO.`、「made with Capiday」）、`shared/i18n.json`、原生 SwiftUI 文字、通知标题、Face ID 提示、麦克风权限说明、Vapor 健康检查、导出文件名 `Capiday-*.pdf/json`、工具脚本、测试断言、`.claude/launch.json`、`Start-Windows.cmd`、素材说明文件；`Open-Little-Days.url` 改名为 `Open-Capiday.url`；AGENTS.md 加了改名规则；docs/*.md、README 和本文件的「当前状态」部分。旧日志保留原来的名字（历史记录）。
+- **刻意不改的内部名称**：存储键 `little-days.*`、IndexedDB `little-days-meta` / `little-days-media`、`littledays://`、Swift 模块 `LittleDaysCore` / `LittleDaysUI`、`LittleDays.xcodeproj`、素材文件名 `LD-*` / `LittleDays-*.txt`。改了旧手帐会读不到；用户看不到这些名字。逐个确认了备份格式、存储和 Swift 里没有用 App 名字做校验的地方，所以以前的备份照样能恢复。
+- **App 图标还带着旧名字**：`tools/make_app_icon.py` 说明正式图标里有「Little Days」字样。这是用户提供并确认的美术稿，没有改；需要一版 Capiday 的图标稿。
+- **测试**：`npm test` 281/281；`tests/test_native_shell.py`、`tests/test_preview.py` OK；全量浏览器回归结果见下一条日志。
+- **发布**：同一个固定链接，标题变为「Capiday · 手帐文具店」。
+- **下一步**：新图标；在 App Store Connect 里尽快预留 Capiday 这个名字（网上搜不到同名 App，但只有预留才算数）。
 
 ### 2026-11-13 — S1–S4 收尾：iOS 模拟器验证、全量回归、发布 V10.44 到固定链接
 

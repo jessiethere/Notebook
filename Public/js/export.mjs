@@ -602,7 +602,7 @@ function withDayList(page, items, title = "") {
   return canvas;
 }
 const fileName = (editor, options, ext) =>
-  `Little-Days-${editor.date || options.date || "page"}${options.suffix ? "-" + options.suffix : ""}.${ext}`;
+  `Capiday-${editor.date || options.date || "page"}${options.suffix ? "-" + options.suffix : ""}.${ext}`;
 function download(href, name) {
   const link = document.createElement("a");
   link.download = name;
@@ -663,7 +663,7 @@ export async function renderBookTitleCanvas({ title = "", description = "", cove
   return canvas;
 }
 // A 9:16 picture for Stories: the page centred on paper, with a small
-// "made with Little Days" line at the bottom.
+// "made with Capiday" line at the bottom.
 export const STORY = { width: 1080, height: 1920 };
 export async function renderStoryCanvas(editor, options = {}) {
   const page = await renderJournalCanvas(editor, options);
@@ -688,7 +688,7 @@ export async function renderStoryCanvas(editor, options = {}) {
   ctx.fillStyle = "#9A8F80";
   ctx.font = '500 30px "PingFang SC", -apple-system, "Helvetica Neue", sans-serif';
   ctx.textAlign = "center";
-  ctx.fillText("made with Little Days", STORY.width / 2, STORY.height - 110);
+  ctx.fillText("made with Capiday", STORY.width / 2, STORY.height - 110);
   return canvas;
 }
 // Opens the share sheet with the Story picture where the browser / iOS shell
@@ -700,7 +700,7 @@ export async function shareStory(editor, options = {}) {
   const file = blob && typeof File === "function" ? new File([blob], name, { type: "image/png" }) : null;
   if (file && navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: "Little Days" });
+      await navigator.share({ files: [file], title: "Capiday" });
       return "shared";
     } catch (error) {
       if (error?.name === "AbortError") return "cancelled";

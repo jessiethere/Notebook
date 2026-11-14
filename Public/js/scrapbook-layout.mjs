@@ -633,7 +633,7 @@ export function layoutDay(moments, styleId = "editorial", variant = 0, { dateSma
 
   if (style === "editorial") {
     // A magazine cover's masthead: the name, the issue, then a big date.
-    layers.push(textLayer(look, { id: id(), text: "LITTLE DAYS", x: 30, y: 3.4, w: 46, fontId: look.meta, fontSize: 7.5, spacing: 3, color: look.accent, weight: 700 }));
+    layers.push(textLayer(look, { id: id(), text: "CAPIDAY", x: 30, y: 3.4, w: 46, fontId: look.meta, fontSize: 7.5, spacing: 3, color: look.accent, weight: 700 }));
     if (issue) layers.push(textLayer(look, { id: id(), text: issue, x: 70, y: 3.4, w: 46, fontId: look.meta, fontSize: 7.5, spacing: 2, color: look.muted, weight: 600, align: "right" }));
     layers.push(textLayer(look, { id: id(), text: dateBig, x: 38, y: 9.4, w: 62, fontId: look.latin, fontSize: 34, color: look.ink, weight: 500 }));
     if (dateSmall) layers.push(textLayer(look, { id: id(), text: dateSmall, x: 80, y: 10.6, w: 26, fontId: pickFont(dateSmall, look), fontSize: 10, color: look.muted, align: "right" }));

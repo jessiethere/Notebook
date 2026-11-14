@@ -1,4 +1,4 @@
-# Little Days · Mac 本地开发、本地 Qwen 与 iPhone 模拟器（2026-11-11）
+# Capiday · Mac 本地开发、本地 Qwen 与 iPhone 模拟器（2026-11-11）
 
 > 状态说明：本文件和 `tools/mac/`、`tools/captain-eval.mjs`、`Public/js/captain-ai.mjs` 是在**云端 Linux 容器**里准备的。**2026-11-11 更新**：已在 Mac 上的 Claude Code 会话里跑完第 2 节（环境检查和安装）、第 3 节（Qwen 实测）和第 4 节（Captain 评测）。第 7 节（Xcode / 模拟器）也已在 Mac 上跑通（见下表）。第 5 节（App 里的本地 AI 聊天）也已在 Mac 上实测通过（2026-11-12，见第 5 节末尾）。
 
@@ -6,7 +6,7 @@
 
 云端会话只能改仓库，不能在你的电脑上安装软件或启动模拟器。要让 Claude 实际检查、安装和运行，请在 **Mac 上**开一个会话，二选一：
 
-- **Claude 桌面 App**：打开 Little Days 文件夹，开始一个 Claude Code 会话。
+- **Claude 桌面 App**：打开 Capiday 文件夹，开始一个 Claude Code 会话。
 - **终端**：进入仓库目录后运行 `claude`。如果想在手机上的 Claude App 里继续，就运行 `claude remote-control`。
 
 然后把这份文件里的步骤交给它执行，第一步是 `bash tools/mac/doctor.sh`。

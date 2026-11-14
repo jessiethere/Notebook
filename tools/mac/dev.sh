@@ -1,5 +1,5 @@
 #!/bin/bash
-# Little Days · everyday Mac commands. Nothing starts at login; the model loads only when asked.
+# Capiday · everyday Mac commands. Nothing starts at login; the model loads only when asked.
 #   bash tools/mac/dev.sh web        # Web preview at http://127.0.0.1:8080 (this Mac only)
 #   bash tools/mac/dev.sh web-ai     # same, with Captain's local-model chat switched on (dev only)
 #   bash tools/mac/dev.sh open       # open the iPhone app in Xcode (LittleDays.xcworkspace), then ⌘R
@@ -21,7 +21,7 @@ web() {
     sleep 1
   elif ! ps -o command= -p "$pid" | grep -q "tools/preview.py"; then
     # e.g. the Vapor server (NotebookServer) left running from Xcode: it answers 8080 with errors.
-    echo "Port 8080 is used by another program, not the Little Days preview:"
+    echo "Port 8080 is used by another program, not the Capiday preview:"
     ps -o pid=,command= -p "$pid"
     echo "Stop it (in Xcode: ■ Stop, or: kill $pid), then run this again."
     exit 1

@@ -56,7 +56,7 @@ export class MediaStore {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
       request.onblocked = () =>
-        reject(new Error("Close older Little Days tabs and retry."));
+        reject(new Error("Close older Capiday tabs and retry."));
     });
     this.db.onversionchange = () => {
       this.db.close();

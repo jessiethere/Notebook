@@ -1,4 +1,4 @@
-Little Days photo library (LD-photo-*.jpg)
+Capiday photo library (LD-photo-*.jpg)
 
 Photos from Unsplash, used under the Unsplash License: https://unsplash.com/license
 Downloaded once by tools/fetch_photos.py and bundled with the app (JPEG, original shape,

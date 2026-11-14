@@ -36,11 +36,11 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
     // V10.44 (S4-A): the day spread is optional now — this suite adds it, as a person would.
     await page.locator('[data-action="story-cover-add"]').tap();
     await page.waitForTimeout(300);
-    assert.match(await page.locator(".story-canvas").innerText(), /LITTLE DAYS[\s\S]*NO\. \d\d/, "the spread's masthead");
+    assert.match(await page.locator(".story-canvas").innerText(), /CAPIDAY[\s\S]*NO\. \d\d/, "the spread's masthead");
     await page.locator('.story-tabs [data-action="story-page"]').nth(1).tap();
     const text = await page.locator(".story-canvas").innerText();
     assert.match(text, /— 08:10 · MORNING/, "a magazine kicker");
-    assert.match(text, /LITTLE DAYS · NO\. \d\d/, "a folio");
+    assert.match(text, /CAPIDAY · NO\. \d\d/, "a folio");
     if (shots) await page.screenshot({ path: `${shots}/v64-editorial.png` });
     passed.push("Editorial: masthead on the spread, kicker and folio on each page");
 

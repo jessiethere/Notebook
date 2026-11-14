@@ -1,8 +1,8 @@
-"""Build the Little Days app icons from the approved official icon artwork.
+"""Build the Capiday app icons from the approved official icon artwork.
 
 Usage: python3 tools/make_app_icon.py [docs/brand/LD-app-icon-original.png]
 
-Source: the "Little Days V1 Official App Icon" provided and approved by the
+Source: the "Little Days V1 Official App Icon" (the app is now Capiday; a new icon is still needed) provided and approved by the
 product owner on 2026-11-10 (Captain peeking over a cream journal plaque,
 lemon hat, flower paper clip, "Little Days" wordmark, sprout). The artwork is
 used as it is — nothing is redrawn or regenerated.

@@ -1,4 +1,4 @@
-# Little Days V3 · 多阶段任务清单
+# Capiday V3 · 多阶段任务清单
 
 > **2026-11-13 用户调整优先级**：核心承诺是「Turn everyday photos into beautiful journal pages in under a minute.」先证明这一条成立，再做创作增强。
 > 1. **P0 媒体持久化**：按 [P0_MEDIA_TEST.md](P0_MEDIA_TEST.md) 在 Claude App 内嵌链接和原生 iOS（模拟器 / 真机）分别验证；根因未定。
