@@ -40,11 +40,33 @@ async function record(mime) {
     r.decoded = { seconds: +buf.duration.toFixed(2), rms: +Math.sqrt(s / d.length).toFixed(5) };
     ctx.close();
   } catch (e) { r.decoded = "fail:" + e.name; }
+  r.blob = blob;
   return r;
 }
 for (const m of ["audio/webm;codecs=opus", "audio/mp4"]) {
   try { out[m] = await record(m); } catch (e) { out[m] = "error:" + e.name; }
 }
+// Then a real tap plays each file the way the app does (<audio> on a blob URL).
+const blobs = {};
+for (const [m, r] of Object.entries(out)) if (r && r.blob) { blobs[m] = r.blob; delete r.blob; }
+const play = (mime, label) => {
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.setAttribute("aria-label", label);
+  b.style.cssText = "position:fixed;left:20px;top:" + (label === "LDPLAY-webm" ? 200 : 300) + "px;width:200px;height:80px;z-index:2147483647;font-size:20px";
+  b.onclick = () => {
+    const a = document.createElement("audio");
+    a.src = URL.createObjectURL(blobs[mime]);
+    document.body.append(a);
+    const res = (out[mime].play = { events: [] });
+    for (const ev of ["loadedmetadata", "playing", "ended", "error", "stalled"]) a.addEventListener(ev, () => res.events.push(ev + (ev === "error" ? ":" + (a.error && a.error.code) : "")));
+    a.play().then(() => res.events.push("play-resolved"), (e) => res.events.push("play-rejected:" + e.name));
+    setTimeout(() => { res.t = +a.currentTime.toFixed(2); res.duration = String(a.duration); res.paused = a.paused; box.setAttribute("aria-label", "LDREC:" + JSON.stringify(out)); }, 2000);
+  };
+  document.documentElement.append(b);
+};
+play("audio/webm;codecs=opus", "LDPLAY-webm");
+play("audio/mp4", "LDPLAY-mp4");
 out.session = navigator.audioSession ? navigator.audioSession.type + "/" + navigator.audioSession.state : "none";
 box.setAttribute("aria-label", "LDREC:" + JSON.stringify(out));
 return JSON.stringify(out);

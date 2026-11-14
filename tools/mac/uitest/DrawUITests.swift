@@ -229,5 +229,12 @@ final class DrawUITests: XCTestCase {
         }
         print("LDSTEP voice \(result)")
         XCTAssertFalse(result.isEmpty, "the check finished")
+        // A real tap plays each file (the app plays only after a tap).
+        for name in ["LDPLAY-webm", "LDPLAY-mp4"] {
+            let b = app.buttons[name]
+            if b.waitForExistence(timeout: 5) { b.tap(); Thread.sleep(forTimeInterval: 3) }
+        }
+        let el = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDREC:'")).firstMatch
+        print("LDSTEP voice-played \(el.label)")
     }
 }
