@@ -197,11 +197,14 @@ final class DrawUITests: XCTestCase {
         XCTAssertEqual(state()["bgmPlaying"] as? Bool, true, "the piece plays")
         XCTAssertEqual(state()["bgmGain"] as? String, "1", "through the gain")
         guard let v = rect("musicVolume") else { XCTFail("slider"); return }
-        point(v, 0.5, 0.5).press(forDuration: 0.1, thenDragTo: point(v, 0.05, 0.5))
+        // An iOS slider moves only when the thumb itself is dragged: start on it.
+        let start = (Double((state()["volOut"] as? String ?? "70").filter(\.isNumber)) ?? 70) / 100
+        point(v, start, 0.5).press(forDuration: 0.3, thenDragTo: point(v, 0.05, 0.5))
         Thread.sleep(forTimeInterval: 1)
         log("m2-quiet")
         let quiet = state()["volOut"] as? String ?? ""
-        point(v, 0.05, 0.5).press(forDuration: 0.1, thenDragTo: point(v, 0.95, 0.5))
+        let now = (Double(quiet.filter(\.isNumber)) ?? 0) / 100
+        point(v, max(0.03, now), 0.5).press(forDuration: 0.3, thenDragTo: point(v, 0.95, 0.5))
         Thread.sleep(forTimeInterval: 1)
         log("m3-loud")
         let loud = state()["volOut"] as? String ?? ""
