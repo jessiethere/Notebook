@@ -73,7 +73,10 @@ const loadImage = (src) =>
 // Opens the board. `background` is the page drawn read-only underneath (HTML);
 // `base` an earlier drawing to keep working on ({ src, x, y, w, h, scale,
 // rotation } in layer units). Resolves { blob, layer } | { empty: true } | null.
-export function openDrawBoard({ dialog, background = "", base = null, t }) {
+// `confirmDiscard` (optional, async → boolean): asked before 取消 throws away
+// strokes that are not on the page yet (V10.46). An earlier drawing being
+// edited is never touched by 取消.
+export function openDrawBoard({ dialog, background = "", base = null, t, confirmDiscard = null }) {
   return new Promise((resolve) => {
     let tool = "pen",
       color = DRAW_COLORS[0],
@@ -219,6 +222,18 @@ export function openDrawBoard({ dialog, background = "", base = null, t }) {
       dialog.innerHTML = "";
       resolve(result);
     };
+    // 取消 with new strokes on the board asks first; nothing new → closes at once.
+    let asking = false;
+    const cancel = async () => {
+      if (finished || asking) return;
+      if ((strokes.length || current) && confirmDiscard) {
+        asking = true;
+        const sure = await confirmDiscard();
+        asking = false;
+        if (!sure) return;
+      }
+      finish(null);
+    };
     dialog.onclick = async (event) => {
       const el = event.target.closest("button");
       if (!el) return;
@@ -235,7 +250,7 @@ export function openDrawBoard({ dialog, background = "", base = null, t }) {
         undone = [];
         baseImage = null;
       }
-      if (name === "cancel") return finish(null);
+      if (name === "cancel") return cancel();
       if (name === "done") {
         if (!strokes.length && base && baseImage) return finish(null);
         const bounds = inkBounds(ctx.getImageData(0, 0, PAGE_W, PAGE_H).data, PAGE_W, PAGE_H);
@@ -254,7 +269,7 @@ export function openDrawBoard({ dialog, background = "", base = null, t }) {
     };
     dialog.oncancel = (event) => {
       event.preventDefault();
-      finish(null);
+      cancel();
     };
     dialog.showModal();
     sync();

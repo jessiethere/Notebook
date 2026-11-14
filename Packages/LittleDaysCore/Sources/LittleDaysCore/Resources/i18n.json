@@ -9122,5 +9122,13 @@
   "app.name": {
     "zh": "开铺手帐",
     "en": "Capiday"
+  },
+  "draw.discard": {
+    "zh": "放弃这次画的内容吗？还没放到页面上的笔画会丢掉。",
+    "en": "Discard this drawing? Strokes not yet on the page will be lost."
+  },
+  "draw.saveRetry": {
+    "zh": "手绘没能保存到这台设备上。再试一次吗？（选「取消」会放弃这次的手绘）",
+    "en": "The drawing could not be saved on this device. Try again? (Cancel discards this drawing.)"
   }
 }

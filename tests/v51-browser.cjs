@@ -198,6 +198,9 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await page.waitForSelector("#draw-dialog[open]");
     await stroke("mouse", [[0.3, 0.3], [0.4, 0.4]]);
     await page.locator('[data-draw="cancel"]').tap();
+    // V10.46: new strokes are not thrown away without asking.
+    await page.waitForSelector("#confirm-dialog[open]");
+    await page.locator("#confirm-ok").tap();
     await page.waitForSelector("#draw-dialog:not([open])", { state: "attached" });
     assert.equal(await page.locator("#journal-canvas .drawing-layer").count(), 0);
     passed.push("draw from the page bar; cancel keeps nothing");

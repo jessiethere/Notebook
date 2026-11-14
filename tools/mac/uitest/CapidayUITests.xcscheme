@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion = "1600" version = "1.7">
+   <BuildAction parallelizeBuildables = "NO" buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "NO" buildForArchiving = "NO" buildForAnalyzing = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "LittleDaysUI" BuildableName = "LittleDaysUI" BlueprintName = "LittleDaysUI" ReferencedContainer = "container:"></BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "NO" buildForArchiving = "NO" buildForAnalyzing = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "A00000000000000000000009" BuildableName = "LittleDays.app" BlueprintName = "LittleDays" ReferencedContainer = "container:LittleDays.xcodeproj"></BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+         <TestableReference skipped = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "BB0000000000000000000005" BuildableName = "CapidayUITests.xctest" BlueprintName = "CapidayUITests" ReferencedContainer = "container:LittleDays.xcodeproj"></BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+</Scheme>

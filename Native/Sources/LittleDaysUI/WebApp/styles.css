@@ -10642,7 +10642,10 @@ dialog h2,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  /* V10.46 (P0, TestFlight): on an iPhone the board fills the screen, so
+     取消 / 完成 sat under the status bar, where iOS keeps the taps — the board
+     could not be left. Keep the bar below the status bar / Dynamic Island. */
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
 }
 .draw-top b {
   font-size: 15px;

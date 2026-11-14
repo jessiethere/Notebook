@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.46",
+    date: "2026-11-14",
+    zh: {
+      title: "手绘：在 iPhone 上画完可以正常退出、选中和保存",
+      items: [
+        "修好了 iPhone 上手绘板顶部的「取消」「完成」被手机状态栏挡住、点不到的问题——之前画完会卡在画板里，没法回到页面保存。",
+        "手绘里空白的地方不再挡住下面的照片、文字和贴纸：点空白处会选中下面的东西，点到笔画才选中手绘。",
+        "画了新笔画后点「取消」，会先问一句要不要放弃；什么都没画就直接关闭。接着画以前的手绘时点取消，原来的手绘保持不变。",
+        "手绘保存失败时不再直接丢掉，会问你要不要再试一次。",
+      ],
+    },
+    en: {
+      title: "Drawing: on iPhone you can now finish, select and save",
+      items: [
+        "Fixed: on iPhone the drawing board's Cancel and Done sat under the status bar and could not be tapped, so you were stuck on the board and could not save.",
+        "Empty parts of a drawing no longer cover the photos, text and stickers underneath: tapping an empty spot picks what is below; tapping a stroke picks the drawing.",
+        "Cancel after drawing new strokes asks first; with nothing new it just closes. Cancelling while drawing more on an earlier drawing keeps it as it was.",
+        "If a drawing cannot be saved, it is no longer dropped: you are asked to try again.",
+      ],
+    },
+  },
+  {
     version: "10.45",
     date: "2026-11-14",
     zh: {

@@ -5618,6 +5618,7 @@ async function drawOnPage(layerId = null) {
     background: under,
     base: layer ? { src: safePhoto(layer.mediaRef), x: layer.x, y: layer.y, w: layer.w, h: layer.h, scale: layer.scale, rotation: layer.rotation } : null,
     t,
+    confirmDiscard: () => askConfirm(t("draw.discard")),
   });
   if (!result) return;
   if (result.empty) {
@@ -5628,8 +5629,21 @@ async function drawOnPage(layerId = null) {
     render();
     return;
   }
+  // V10.46: if the picture cannot be kept on this device, the drawing is not
+  // dropped silently — the person can try again (it stays in memory meanwhile).
+  let mediaId = null;
+  while (!mediaId) {
+    try {
+      mediaId = await media.put(result.blob, { kind: "photo", name: "drawing" });
+    } catch (error) {
+      console.warn("Drawing could not be saved", error?.name);
+      if (!(await askConfirm(t("draw.saveRetry")))) {
+        toast(t("media.failed"));
+        return;
+      }
+    }
+  }
   try {
-    const mediaId = await media.put(result.blob, { kind: "photo", name: "drawing" });
     const reference = `media:${mediaId}`;
     let placed;
     changeTarget((p) => {
@@ -5968,6 +5982,7 @@ function render() {
   afterReaderRender();
   pinStageForSheet();
   placeLayerBar();
+  warmDrawingInk();
   if (page === "studio") maybeStartGuide();
   if (guideStep != null) placeGuide();
   else if (page !== "studio") hideDoubleTapTip();
@@ -8285,6 +8300,83 @@ function localVector(point, center, rotation) {
     dy = point.clientY - center.y;
   return { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
 }
+// V10.46 (P0, TestFlight): a drawing is one picture as big as everything
+// drawn, so two strokes far apart made a see-through box over most of the
+// page and every photo / text / sticker under it could no longer be picked.
+// Where the drawing has no ink, the touch goes to what is underneath. The ink
+// is read once per drawing (a small alpha map); unknown → the drawing, as before.
+const inkMaps = new Map(); // mediaRef → { w, h, alpha } · null while loading or unreadable
+function loadDrawingInk(ref) {
+  if (!ref || inkMaps.has(ref)) return;
+  inkMaps.set(ref, null);
+  const image = new Image();
+  image.onload = () => {
+    const k = Math.min(1, 400 / Math.max(image.naturalWidth, image.naturalHeight, 1));
+    const w = Math.max(1, Math.round(image.naturalWidth * k)),
+      h = Math.max(1, Math.round(image.naturalHeight * k));
+    const board = document.createElement("canvas");
+    board.width = w;
+    board.height = h;
+    const g = board.getContext("2d", { willReadFrequently: true });
+    g.drawImage(image, 0, 0, w, h);
+    try {
+      const data = g.getImageData(0, 0, w, h).data;
+      const alpha = new Uint8Array(w * h);
+      for (let i = 0; i < alpha.length; i++) alpha[i] = data[i * 4 + 3];
+      inkMaps.set(ref, { w, h, alpha });
+    } catch {
+      // Not readable here: the drawing keeps taking every touch in its box.
+    }
+  };
+  image.src = safePhoto(ref);
+}
+function warmDrawingInk() {
+  if (page !== "studio") return;
+  for (const layer of activePage()?.layers || []) if (layer.drawing && layer.mediaRef) loadDrawingInk(layer.mediaRef);
+}
+// Is there ink within a fingertip (~14 px) of this point? true / false, or null when not known.
+function drawingInkAt(layer, clientX, clientY) {
+  const map = inkMaps.get(layer.mediaRef);
+  if (!map) {
+    loadDrawingInk(layer.mediaRef);
+    return null;
+  }
+  const rect = $("#journal-canvas")?.getBoundingClientRect();
+  if (!rect?.width) return null;
+  const s = Number(layer.scale) || 1;
+  const boxW = (Number(layer.w) / 100) * rect.width * s,
+    boxH = (Number(layer.h) / 100) * rect.height * s;
+  const turn = (-(Number(layer.rotation) || 0) * Math.PI) / 180;
+  const dx = clientX - (rect.left + (Number(layer.x) / 100) * rect.width),
+    dy = clientY - (rect.top + (Number(layer.y) / 100) * rect.height);
+  const lx = dx * Math.cos(turn) - dy * Math.sin(turn),
+    ly = dx * Math.sin(turn) + dy * Math.cos(turn);
+  // The picture is fitted (contain) inside its box.
+  const k = Math.min(boxW / map.w, boxH / map.h);
+  if (!(k > 0)) return null;
+  const px = (lx + (map.w * k) / 2) / k,
+    py = (ly + (map.h * k) / 2) / k,
+    r = Math.max(1, 14 / k);
+  for (let y = Math.max(0, Math.floor(py - r)); y <= Math.min(map.h - 1, Math.ceil(py + r)); y++)
+    for (let x = Math.max(0, Math.floor(px - r)); x <= Math.min(map.w - 1, Math.ceil(px + r)); x++)
+      if (map.alpha[y * map.w + x] > 16 && (x - px) ** 2 + (y - py) ** 2 <= r * r) return true;
+  return false;
+}
+// The layer element a touch belongs to: an empty part of a drawing passes it on.
+function layerUnderTouch(element, event) {
+  const layerOf = (el) => activePage().layers.find((l) => l.id === el.dataset.layer);
+  const seeThrough = (el) => {
+    const layer = layerOf(el);
+    return Boolean(layer?.drawing && drawingInkAt(layer, event.clientX, event.clientY) === false);
+  };
+  if (!seeThrough(element)) return element;
+  const below = [];
+  for (const el of document.elementsFromPoint(event.clientX, event.clientY)) {
+    const layerEl = el.closest?.("#journal-canvas [data-layer]");
+    if (layerEl && layerEl !== element && !below.includes(layerEl)) below.push(layerEl);
+  }
+  return below.find((el) => !seeThrough(el)) || element;
+}
 $("#app").addEventListener("pointerdown", (event) => {
   if (page !== "studio") return;
   // The ↻ and ● handles of the selected item (drawn above the paper).
@@ -8307,7 +8399,8 @@ $("#app").addEventListener("pointerdown", (event) => {
   if (event.target.closest('[data-inline], .layer-text[contenteditable="plaintext-only"], .layer-text[contenteditable="true"]')) return;
   // Touching the paper puts the keyboard away so the tools come back.
   if (document.activeElement?.matches?.(TYPING_FIELD)) document.activeElement.blur();
-  const element = event.target.closest("[data-layer]");
+  const touched = event.target.closest("[data-layer]");
+  const element = touched ? layerUnderTouch(touched, event) : null;
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   // A second finger anywhere on the canvas pinches the selected layer.
   if (pointers.size === 2 && drag?.layer) {
