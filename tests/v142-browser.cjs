@@ -23,6 +23,8 @@ if (require.main === module) (async () => {
       const where = `${run.lang} ${run.w}`;
       // A real first start (no helper): one book, then one day of three Moments.
       const context = await browser.newContext({ viewport: { width: run.w, height: run.h }, isMobile: true, hasTouch: true, locale: zh ? "zh-CN" : "en-US" });
+      // V10.58: the grouping preview — accept the suggestion with one tap (tests/v155 covers the preview).
+      await context.addInitScript(SS.acceptGroups);
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", (e) => errors.push(e.message));

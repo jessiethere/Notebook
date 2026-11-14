@@ -40,6 +40,44 @@ function readIfd(view, tiff, offset, little, wanted) {
   return found;
 }
 
+// V10.58 · Where a time came from, and whether it can be trusted as "when
+// the photo was taken":
+//   exif-original   EXIF DateTimeOriginal (0x9003) — the shutter. Reliable.
+//   exif-digitized  EXIF DateTimeDigitized (0x9004) — usually the same. Reliable.
+//   exif-modified   only IFD0 DateTime (0x0132) — written when a photo is
+//                   edited / exported (e.g. Photoshop in the evening). Not reliable.
+//   file            the file's date (created / modified). Not reliable.
+//   ""              no time at all.
+export const RELIABLE_TIME_SOURCES = ["exif-original", "exif-digitized"];
+export const reliableTime = (source) => RELIABLE_TIME_SOURCES.includes(source);
+
+// { date, source } from (the start of) a JPEG, or null.
+export function exifTime(buffer) {
+  const view = new DataView(buffer);
+  if (view.byteLength < 4 || view.getUint16(0) !== 0xffd8) return null;
+  let offset = 2;
+  while (offset + 4 <= view.byteLength) {
+    const marker = view.getUint16(offset);
+    if ((marker & 0xff00) !== 0xff00 || marker === 0xffda) break;
+    const size = view.getUint16(offset + 2);
+    if (marker === 0xffe1 && ascii(view, offset + 4, 4) === "Exif") {
+      const tiff = offset + 10;
+      if (tiff + 8 > view.byteLength) return null;
+      const little = view.getUint16(tiff) === 0x4949;
+      const ifd0 = readIfd(view, tiff, view.getUint32(tiff + 4, little), little, [0x8769, 0x0132]);
+      const exif = ifd0[0x8769] ? readIfd(view, tiff, ifd0[0x8769], little, [0x9003, 0x9004]) : {};
+      for (const [tag, source] of [[0x9003, "exif-original"], [0x9004, "exif-digitized"]]) {
+        const date = parseExifDate(exif[tag]);
+        if (date) return { date, source };
+      }
+      const modified = parseExifDate(ifd0[0x0132]);
+      return modified ? { date: modified, source: "exif-modified" } : null;
+    }
+    offset += 2 + size;
+  }
+  return null;
+}
+
 // The capture time in an ArrayBuffer holding (the start of) a JPEG, or null.
 export function exifDate(buffer) {
   const view = new DataView(buffer);
@@ -62,13 +100,13 @@ export function exifDate(buffer) {
   return null;
 }
 
-// { time: ms since epoch or null, source: "exif" | "file" | "" }.
+// { time: ms since epoch or null, source } — source as above.
 export async function photoTime(file) {
   try {
     if (/jpe?g$/i.test(file.type || "") || /\.jpe?g$/i.test(file.name || "")) {
       const head = await file.slice(0, 256 * 1024).arrayBuffer();
-      const date = exifDate(head);
-      if (date) return { time: date.getTime(), source: "exif" };
+      const found = exifTime(head);
+      if (found) return { time: found.date.getTime(), source: found.source };
     }
   } catch {}
   return Number.isFinite(file.lastModified) && file.lastModified > 0 ? { time: file.lastModified, source: "file" } : { time: null, source: "" };

@@ -28,6 +28,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
   const launch = async () => {
     const c = await chromium.launchPersistentContext(dir, opts);
     await c.addInitScript(SS.seed);
+    await c.addInitScript(SS.acceptGroups);
     return c;
   };
   let ctx = await launch();
@@ -264,6 +265,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
     const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), "ld-v121-new-"));
     ctx = await chromium.launchPersistentContext(dir2, opts);
     await ctx.addInitScript(SS.seed);
+    await ctx.addInitScript(SS.acceptGroups);
     page = ctx.pages()[0] || (await ctx.newPage());
     watch(page);
     await page.goto(base);
@@ -284,6 +286,7 @@ const PHOTOS = ["latte-art", "corner-cafe", "home-dinner", "coffee-cheers", "mor
     const dir3 = fs.mkdtempSync(path.join(os.tmpdir(), "ld-v121-mag-"));
     ctx = await chromium.launchPersistentContext(dir3, opts);
     await ctx.addInitScript(SS.seed);
+    await ctx.addInitScript(SS.acceptGroups);
     page = ctx.pages()[0] || (await ctx.newPage());
     watch(page);
     await page.goto(base);

@@ -20,7 +20,7 @@ test("reads when a JPEG was taken; no EXIF, no time", async () => {
   assert.equal(parseExifDate("0000:00:00 00:00:00"), null);
   assert.equal(parseExifDate("garbage"), null);
   const file = new File([tagged], "a.jpg", { type: "image/jpeg", lastModified: 5 });
-  assert.deepEqual(await photoTime(file), { time: at(8, 10), source: "exif" });
+  assert.deepEqual(await photoTime(file), { time: at(8, 10), source: "exif-original" }); // V10.58: where the time came from
   assert.deepEqual(await photoTime(new File([photo], "b.jpg", { type: "image/jpeg", lastModified: 5 })), { time: 5, source: "file" });
 });
 

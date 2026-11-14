@@ -9602,5 +9602,61 @@
   "draw.leaveStay": {
     "zh": "继续画",
     "en": "Keep drawing"
+  },
+  "story.modeLabel": {
+    "zh": "怎么分页",
+    "en": "How to make pages"
+  },
+  "story.modeSmart": {
+    "zh": "智能建议",
+    "en": "Suggested"
+  },
+  "story.modeOne": {
+    "zh": "全部放在一页",
+    "en": "All on one page"
+  },
+  "story.modeManual": {
+    "zh": "自己分组",
+    "en": "My own groups"
+  },
+  "story.hintTime": {
+    "zh": "按拍摄时间建议，仅供参考，可自由调整。照片保持你选择的顺序。",
+    "en": "Suggested by when they were taken — only a suggestion, change it freely. Photos keep the order you picked them in."
+  },
+  "story.hintNoTime": {
+    "zh": "这些照片没有可靠的拍摄时间（比如编辑后导出的照片），所以先放在一页。想分开时，点两张照片之间的「＋」。",
+    "en": "These photos have no reliable time they were taken (e.g. edited and exported), so they start on one page. Tap ＋ between two photos to split."
+  },
+  "story.hintMixed": {
+    "zh": "有些照片没有可靠的拍摄时间，所以先放在一页。想分开时，点两张照片之间的「＋」。",
+    "en": "Some photos have no reliable time they were taken, so they start on one page. Tap ＋ between two photos to split."
+  },
+  "story.hintOne": {
+    "zh": "全部放在一页，按你选择的顺序。想分开时，点两张照片之间的「＋」。",
+    "en": "All on one page, in the order you picked. Tap ＋ between two photos to split."
+  },
+  "story.hintManual": {
+    "zh": "长按照片可以拖动排序，也能拖到别的页；点两张照片之间的「＋」新起一页。",
+    "en": "Long-press a photo to drag it — within a page or to another; tap ＋ between two photos to start a new page."
+  },
+  "story.pageN": {
+    "zh": "第 {n} 页",
+    "en": "Page {n}"
+  },
+  "story.merge": {
+    "zh": "合并到上一页",
+    "en": "Merge with the page before"
+  },
+  "story.splitHereBtn": {
+    "zh": "从这里新起一页",
+    "en": "Start a new page here"
+  },
+  "story.makePages": {
+    "zh": "生成 {count} 页",
+    "en": "Make {count} pages"
+  },
+  "story.dropNew": {
+    "zh": "拖到这里，新起一页",
+    "en": "Drop here for a new page"
   }
 }

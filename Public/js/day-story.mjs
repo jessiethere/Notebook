@@ -23,8 +23,13 @@ export function partOfDay(ms) {
   return h < 5 ? "night" : h < 12 ? "morning" : h < 18 ? "afternoon" : h < 22 ? "evening" : "night";
 }
 
+// A Moment's time: the earliest photo time that can be trusted. Photos that
+// say where their time came from (V10.58 `timeSource`) count only with a
+// real capture time (a file's date or an editor's export time is not "when").
+const RELIABLE = ["exif-original", "exif-digitized"];
+const trusted = (item) => Number.isFinite(item.time) && (item.timeSource === undefined || RELIABLE.includes(item.timeSource));
 const startOf = (items) => {
-  const times = items.map((item) => item.time).filter(Number.isFinite);
+  const times = items.filter(trusted).map((item) => item.time);
   return times.length ? Math.min(...times) : null;
 };
 // A3: a page of only words (the rest of a long text) stays while it has words.
@@ -48,6 +53,56 @@ export function groupByTime(items, gap = STORY_GAP_MINUTES) {
     if (Number.isFinite(at)) previous = at;
   }
   return tidy(groups);
+}
+
+// V10.58 · Picking order first, capture time as a hint, the person decides.
+// Photos keep the order they were picked in (never re-sorted by time). Only
+// when every photo has a real capture time (EXIF original / digitized) are
+// pages suggested where more than `gap` minutes pass between neighbours;
+// otherwise (file dates, no EXIF, or a mix) everything starts on one page,
+// to split by hand. Returns { groups, mode: "time" | "single", reason }.
+export function suggestGroups(items, gap = STORY_GAP_MINUTES) {
+  const list = [...items];
+  if (!list.length) return { groups: [], mode: "single", reason: "none" };
+  const reliable = list.every((item) => RELIABLE.includes(item.timeSource) && Number.isFinite(item.time));
+  if (!reliable || list.length < 2) {
+    const some = list.some((item) => RELIABLE.includes(item.timeSource));
+    return { groups: tidy([{ items: list, line: "" }]), mode: "single", reason: list.length < 2 ? "one" : some ? "mixed" : "unreliable" };
+  }
+  const groups = [{ items: [list[0]], line: "" }];
+  for (let i = 1; i < list.length; i++) {
+    if (Math.abs(list[i].time - list[i - 1].time) > gap * 60000) groups.push({ items: [], line: "" });
+    groups.at(-1).items.push(list[i]);
+  }
+  return { groups: tidy(groups), mode: "time", reason: "reliable" };
+}
+// Everything on one page, in the order given (words kept).
+export function oneGroup(items, line = "") {
+  return tidy([{ items: [...items], line }]);
+}
+// Drag and drop: the photo at from {g, i} goes to to {g, i} (to.g may be
+// groups.length for a new page at the end). Nothing is copied or lost.
+export function movePhotoTo(groups, from, to) {
+  const next = groups.map((group) => ({ ...group, items: [...group.items] }));
+  const [item] = next[from.g]?.items.splice(from.i, 1) || [];
+  if (!item) return groups;
+  if (to.g >= next.length) next.push({ items: [], line: "" });
+  const target = next[to.g];
+  // In the same page, a place after the photo's old one moves up by one.
+  const wanted = to.g === from.g && to.i > from.i ? to.i - 1 : to.i;
+  const at = Math.max(0, Math.min(wanted, target.items.length));
+  target.items.splice(at, 0, item);
+  return tidy(next);
+}
+// Page g joins the page before it (its photos after that page's photos; the
+// earlier page's words stay, or this page's when the earlier had none).
+export function mergeWithPrevious(groups, g) {
+  if (g <= 0 || g >= groups.length) return groups;
+  const next = groups.map((group) => ({ ...group, items: [...group.items] }));
+  const [gone] = next.splice(g, 1);
+  next[g - 1].items.push(...gone.items);
+  if (!String(next[g - 1].line || "").trim()) next[g - 1].line = gone.line || "";
+  return tidy(next);
 }
 
 // Move one photo to the Moment before (dir -1) or after (+1); at either end

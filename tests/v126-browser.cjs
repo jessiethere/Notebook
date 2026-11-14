@@ -59,7 +59,8 @@ const sets = [["latte-art", "corner-cafe"], ["beach-day", "balloons", "above-clo
       await page.waitForSelector(".day-detail .day-contents");
       await noUntitled("calendar day");
       const rows = await page.$$eval(".day-contents button b", (els) => els.map((e) => e.innerText.trim()));
-      const want = zh ? [/^\d\d:\d\d · 2 张照片$/, /^\d\d:\d\d · 3 张照片$/, /^\d\d:\d\d · 1 张照片$/] : [/^\d\d:\d\d · 2 photos$/, /^\d\d:\d\d · 3 photos$/, /^\d\d:\d\d · 1 photo$/];
+      // V10.58: these sample files carry only a file date — not a capture time — so the page has no time of its own.
+      const want = zh ? [/^(\d\d:\d\d · )?2 张照片$/, /^(\d\d:\d\d · )?3 张照片$/, /^(\d\d:\d\d · )?1 张照片$/] : [/^(\d\d:\d\d · )?2 photos$/, /^(\d\d:\d\d · )?3 photos$/, /^(\d\d:\d\d · )?1 photo$/];
       rows.forEach((row, i) => assert.match(row, want[i], JSON.stringify(rows)));
       assert.equal(await page.locator(".day-contents img.day-contents-thumb").count(), 3, "a picture for each page");
       assert.equal(await page.locator(".day-detail .title-add").count(), 3);
@@ -89,7 +90,7 @@ const sets = [["latte-art", "corner-cafe"], ["beach-day", "balloons", "above-clo
       await page.keyboard.press("Backspace");
       await page.locator(".day-masthead").click();
       await page.waitForFunction(([d, id]) => JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d).moments.find((m) => m.id === id).title === "", [today, first.id]);
-      await page.waitForFunction((re) => new RegExp(re).test(document.querySelector(".day-contents button b")?.innerText || ""), zh ? "^\\d\\d:\\d\\d · 2 张照片$" : "^\\d\\d:\\d\\d · 2 photos$");
+      await page.waitForFunction((re) => new RegExp(re).test(document.querySelector(".day-contents button b")?.innerText || ""), zh ? "^(\\d\\d:\\d\\d · )?2 张照片$" : "^(\\d\\d:\\d\\d · )?2 photos$");
       const after = (await saved()).moments[0];
       assert.equal(after.layers.length, layersBefore, "photos and words untouched");
       await noUntitled("calendar after removing the title");

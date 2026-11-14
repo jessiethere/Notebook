@@ -222,6 +222,13 @@ public struct StickerLayer: Codable, Identifiable, Equatable {
     // (bind == "caption", captionOf = that photo layer's id).
     public var caption: String?
     public var captionOf: String?
+    // V10.58 (kind == "photo"): when it was taken and where that time came
+    // from ("exif-original" / "exif-digitized" are real capture times;
+    // "exif-modified" (an editor's export time), "file" and "none" are not),
+    // and its place in the order the person picked / arranged the photos.
+    public var capturedAt: String?
+    public var captureTimeSource: String?
+    public var photoOrder: Int?
 
     public init(text: String, x: Double = 80, y: Double = 60) {
         self.id = UUID().uuidString

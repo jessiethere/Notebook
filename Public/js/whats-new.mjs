@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.58",
+    date: "2026-11-14",
+    zh: {
+      title: "多张照片：先看分组，再生成页面",
+      items: [
+        "一次选多张照片后，会先看到分组预览：智能建议、全部放在一页、自己分组，三种随你选；确认后点「生成 N 页」才会做成页面。",
+        "照片保持你选择的顺序，不会被文件时间打乱。只有照片带着可靠的拍摄时间时，才会按相隔 90 分钟以上建议分页，并写明「仅供参考」。",
+        "编辑后导出的照片（比如晚上用修图软件导出的）、只有文件时间或没有拍摄信息的照片，会先放在同一页，你可以自己拆开。",
+        "预览里可以长按拖动照片排序或换页，点两张照片之间的「＋」新起一页，或者「合并到上一页」；做好的分组和顺序会照原样保存。",
+      ],
+    },
+    en: {
+      title: "Several photos: see the groups, then make the pages",
+      items: [
+        "Picking several photos now opens a grouping preview: Suggested, All on one page, or My own groups. Nothing becomes a page until you tap Make N pages.",
+        "Photos keep the order you picked them in, never re-sorted by file dates. Pages are suggested at gaps over 90 minutes only when photos carry a reliable time they were taken, marked as just a suggestion.",
+        "Edited and exported photos (say, from a photo editor in the evening), photos with only a file date or no capture info start on one page, to split as you like.",
+        "Long-press a photo to drag it within a page or to another, tap ＋ between two photos for a new page, or merge with the page before. Your groups and order are saved as you made them.",
+      ],
+    },
+  },
+  {
     version: "10.57",
     date: "2026-11-14",
     zh: {

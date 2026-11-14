@@ -37,7 +37,7 @@ import {
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
 import { bookSharePages, limitPages, dateRange, buildPdf } from "./js/book-share.mjs";
-import { photoTime } from "./js/exif.mjs";
+import { photoTime, reliableTime } from "./js/exif.mjs";
 import * as AppLock from "./js/app-lock.mjs";
 import { MetaStore } from "./js/meta-store.mjs";
 import { decideJournalOpen, hasTraces, RESCUE_KEY } from "./js/journal-open.mjs";
@@ -52,7 +52,7 @@ import * as Guide from "./js/studio-guide.mjs";
 import * as PM from "./js/profile-mark.mjs";
 import * as CaptainAI from "./js/captain-ai.mjs";
 import { keeperImage, keeperLooks, DEFAULT_OUTFIT } from "./js/keeper-art.mjs";
-import { groupByTime, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
+import { suggestGroups, oneGroup, movePhotoTo, mergeWithPrevious, movePhoto, splitAt, removePhoto, clockLabel, partOfDay, timelineLayers } from "./js/day-story.mjs";
 import { kitList, findKit, kitForBook, kitName, applyKit, firstLook, decorate } from "./js/story-style.mjs";
 import { STYLES, STYLE_LOOK, styleOf, layoutMoment, layoutDay, heroIndex, fitPhoto, applyType, typeScale, TYPE_SCALES, textBlock, pickFont, PAGE_RATIO, PAIR_KINDS, suggestSplit, suggestTextSplit } from "./js/scrapbook-layout.mjs";
 import { createMusicPlayer, musicTracks, findTrack, trackName, trackMood, clock, dayMusic, bookMusic, pageMusic, musicChipHTML, loadVolume, saveVolume } from "./js/music.mjs";
@@ -4811,7 +4811,8 @@ async function startQuickRecord() {
 // same pages in the studio. Pages edited by hand are never re-laid-out
 // without asking.
 let story = null; // { date, book, style, step: preview|group, groups, selected, made, index }
-function startStory(groups) {
+function startStory(suggestion) {
+  const groups = Array.isArray(suggestion) ? suggestion : suggestion.groups;
   const empty = activeMomentId;
   const book = activePage()?.bookId || editor.bookId || "daily";
   if (empty && !hasMomentContent(findMoment(editor, empty) || {})) changeEditor((e) => removeMoment(e, empty), false);
@@ -4826,12 +4827,21 @@ function startStory(groups) {
     openStudio(shotDay);
     moved = shotDay;
   }
-  story = { date: editor.date, book, style: "editorial", step: "preview", groups, selected: null, made: null, index: 0 };
+  // V10.58: several photos open the grouping preview first (picking order,
+  // pages suggested by capture time only when it can be trusted); nothing
+  // is made into pages until 生成.
+  const count = groups.reduce((n, g) => n + g.items.length, 0);
+  story = { date: editor.date, book, style: "editorial", step: count > 1 ? "group" : "preview", groups, selected: null, made: null, index: 0, mode: Array.isArray(suggestion) ? "time" : "smart", reason: suggestion.reason || "", suggested: suggestion.mode || "time" };
   page = "story";
   // No "a new page is open" note here: the story makes its own pages.
   clearTimeout(toastTimer);
   $("#toast").classList.remove("visible");
-  logEvent("story_start", { photos: groups.reduce((n, g) => n + g.items.length, 0), moments: groups.length, otherDay: Boolean(moved) });
+  logEvent("story_start", { photos: count, moments: groups.length, otherDay: Boolean(moved), kind: suggestion.mode || "" });
+  if (count > 1) {
+    render();
+    if (moved) toast(t("story.datedFromPhotos", { date: friendlyDate(moved) }));
+    return;
+  }
   makeStory();
   if (moved) toast(t("story.datedFromPhotos", { date: friendlyDate(moved) }));
 }
@@ -5022,6 +5032,14 @@ function undoStory() {
   }, false);
   story.made = null;
 }
+// V10.58: what a photo layer keeps about its time (optional fields; the time
+// is kept with its source, so a file date is never taken for a capture time).
+function photoTimeFields(item, order) {
+  const out = { photoOrder: order };
+  if (item.timeSource) out.captureTimeSource = item.timeSource;
+  if (Number.isFinite(item.time)) out.capturedAt = new Date(item.time).toISOString();
+  return out;
+}
 function makeStory() {
   undoStory();
   const ids = [];
@@ -5036,7 +5054,7 @@ function makeStory() {
       created.layoutStyle = story.style;
       created.layoutVariant = 0;
       if (Number.isFinite(group.start)) created.capturedAt = new Date(group.start).toISOString();
-      for (const item of group.items) created.layers.push(photoLayer(item.reference, item.name, { ...(item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}), ...(item.caption ? { caption: item.caption } : {}) }));
+      for (const [order, item] of group.items.entries()) created.layers.push(photoLayer(item.reference, item.name, { ...photoTimeFields(item, order), ...(item.aspect ? { aspect: Math.round(item.aspect * 1000) / 1000 } : {}), ...(item.caption ? { caption: item.caption } : {}) }));
       if (group.typeStyle) created.typeStyle = { ...group.typeStyle };
       entry.moments.push(created);
     }, false);
@@ -5073,19 +5091,35 @@ function storyPage() {
   const back = `<button class="studio-back story-back" data-action="story-back" aria-label="${t("studio.back")}">${icon("back")}</button>`;
   const total = story.groups.reduce((n, g) => n + g.items.length, 0);
   if (story.step === "group") {
+    // V10.58 · 分组预览: picking order, three ways (suggested / one page /
+    // my own), each page with its count; long-press to drag a photo (also to
+    // another page or a new one), ＋ between two photos starts a new page,
+    // 合并到上一页 joins pages. Nothing becomes a page until 生成.
+    const modes = [
+      ["smart", t("story.modeSmart")],
+      ["single", t("story.modeOne")],
+      ["manual", t("story.modeManual")],
+    ].map(([m, label]) => `<button data-action="story-mode" data-mode="${m}" class="${story.mode === m || (m === "smart" && story.mode === "time") ? "selected" : ""}" aria-pressed="${story.mode === m}">${label}</button>`).join("");
+    const hint = story.mode === "single" ? t("story.hintOne") : story.mode === "manual" ? t("story.hintManual") : story.reason === "reliable" ? t("story.hintTime") : story.reason === "mixed" ? t("story.hintMixed") : t("story.hintNoTime");
     const cards = story.groups
-      .map((group, g) => `${g ? `<div class="story-split" aria-hidden="true"><span></span>${t("story.splitHere")}<span></span></div>` : ""}<section class="story-group tone-${partOfDay(group.start) || "none"}"><header><b>${esc(storyTimeLabel(group))}</b><small>${group.items.length ? t("story.photos", { count: group.items.length }) : t("story.wordsOnly")}</small></header>${group.items.length ? "" : `<p class="story-words-only">${esc(String(group.line || "").slice(0, 120))}${[...String(group.line || "")].length > 120 ? "…" : ""}</p>`}<div class="story-thumbs">${group.items
-        .map((item, i) => {
-          const on = story.selected?.g === g && story.selected?.i === i;
-          return `<button class="story-thumb ${on ? "selected" : ""}" data-action="story-photo" data-g="${g}" data-i="${i}" aria-pressed="${on}" aria-label="${esc(item.name || t("photo.alt"))}"><img src="${esc(storyPhoto(item))}" alt=""></button>`;
-        })
-        .join("")}</div></section>`)
+      .map((group, g) => {
+        const thumbs = group.items
+          .map((item, i) => {
+            const on = story.selected?.g === g && story.selected?.i === i;
+            const cut = i > 0 ? `<button class="story-cut" data-action="story-split-at" data-g="${g}" data-i="${i}" aria-label="${esc(t("story.splitHereBtn"))}">＋</button>` : "";
+            return `${cut}<button class="story-thumb ${on ? "selected" : ""}" data-action="story-photo" data-g="${g}" data-i="${i}" aria-pressed="${on}" aria-label="${esc(item.name || t("photo.alt"))}"><img src="${esc(storyPhoto(item))}" alt="" draggable="false"></button>`;
+          })
+          .join("");
+        const when = group.start != null ? ` · ${esc(storyTimeLabel(group))}` : "";
+        return `<section class="story-group tone-${partOfDay(group.start) || "none"}" data-g="${g}"><header><b>${t("story.pageN", { n: g + 1 })}<small>${group.items.length ? t("story.photos", { count: group.items.length }) : t("story.wordsOnly")}${when}</small></b>${g ? `<button class="text-button story-merge" data-action="story-merge" data-g="${g}">${t("story.merge")}</button>` : ""}</header>${group.items.length ? "" : `<p class="story-words-only">${esc(String(group.line || "").slice(0, 120))}${[...String(group.line || "")].length > 120 ? "…" : ""}</p>`}<div class="story-thumbs">${thumbs}</div></section>`;
+      })
       .join("");
     const sel = story.selected;
     const bar = sel
       ? `<div class="story-photo-bar" role="group" aria-label="${t("story.photoActions")}"><button data-action="story-move" data-dir="-1">‹ ${t("story.toPrev")}</button><button data-action="story-move" data-dir="1">${t("story.toNext")} ›</button>${sel.i > 0 ? `<button data-action="story-split">${t("story.split")}</button>` : ""}<button class="danger-text" data-action="story-remove">${t("story.remove")}</button></div>`
       : "";
-    return `<header class="story-bar">${back}<h1>${t("story.photosTitle", { count: total })}</h1><span></span></header><p class="story-intro">${t("story.groupHint", { count: story.groups.length })}</p><div class="story-groups">${cards}</div>${bar}<div class="story-foot"><button class="primary full-width" data-action="story-regroup">${t("story.regroupDone")}</button></div>`;
+    const go = story.made ? t("story.regroupDone") : t("story.makePages", { count: story.groups.length });
+    return `<header class="story-bar">${back}<h1>${t("story.photosTitle", { count: total })}</h1><span></span></header><div class="story-group-step" data-first="${story.made ? 0 : 1}"><div class="story-modes" role="group" aria-label="${esc(t("story.modeLabel"))}">${modes}</div><p class="story-intro" data-reason="${esc(story.reason || "")}">${hint}</p><div class="story-groups">${cards}<div class="story-new-page" data-g="${story.groups.length}" aria-hidden="true">${t("story.dropNew")}</div></div></div>${bar}<div class="story-foot"><button class="primary full-width" data-action="story-regroup">${go}</button></div>`;
   }
   const pages = storyPages();
   story.index = Math.max(0, Math.min(pages.length - 1, story.index));
@@ -5716,6 +5750,90 @@ function showSavedPage() {
   // Today's first page: the stamp moment, right here on the page just made.
   setTimeout(() => maybeCelebrate(true), 260);
 }
+// V10.58 · Long-press a photo in the grouping preview to drag it: before /
+// after another photo, onto a page, or onto "a new page". A short tap still
+// selects; a move before the press is long scrolls as usual.
+let storyDrag = null;
+let storyDragEnded = 0;
+function storyDropAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const thumb = el?.closest?.(".story-group-step .story-thumb");
+  if (thumb) {
+    const r = thumb.getBoundingClientRect();
+    return { g: Number(thumb.dataset.g), i: Number(thumb.dataset.i) + (x > r.left + r.width / 2 ? 1 : 0), el: thumb, side: x > r.left + r.width / 2 ? "after" : "before" };
+  }
+  const zone = el?.closest?.(".story-group-step .story-group, .story-group-step .story-new-page");
+  if (!zone) return null;
+  const g = Number(zone.dataset.g);
+  return { g, i: story.groups[g]?.items.length ?? 0, el: zone, side: "into" };
+}
+function storyDragMark(drop) {
+  document.querySelectorAll(".story-group-step .drop-before, .story-group-step .drop-after, .story-group-step .drop-into").forEach((el) => el.classList.remove("drop-before", "drop-after", "drop-into"));
+  if (drop) drop.el.classList.add(`drop-${drop.side}`);
+}
+document.addEventListener("pointerdown", (event) => {
+  const thumb = event.target.closest?.(".story-group-step .story-thumb");
+  if (!thumb || !story || story.step !== "group" || event.button > 0) return;
+  const start = { x: event.clientX, y: event.clientY };
+  storyDrag = {
+    thumb,
+    start,
+    active: false,
+    timer: setTimeout(() => {
+      if (!storyDrag || storyDrag.thumb !== thumb) return;
+      storyDrag.active = true;
+      const r = thumb.getBoundingClientRect();
+      const ghost = thumb.cloneNode(true);
+      ghost.className = "story-thumb story-ghost";
+      ghost.style.width = `${r.width}px`;
+      ghost.style.height = `${r.height}px`;
+      ghost.style.left = `${start.x - r.width / 2}px`;
+      ghost.style.top = `${start.y - r.height / 2}px`;
+      document.body.append(ghost);
+      storyDrag.ghost = ghost;
+      thumb.classList.add("dragging");
+      navigator.vibrate?.(10);
+    }, 320),
+  };
+});
+document.addEventListener("pointermove", (event) => {
+  if (!storyDrag) return;
+  if (!storyDrag.active) {
+    if (Math.hypot(event.clientX - storyDrag.start.x, event.clientY - storyDrag.start.y) > 8) {
+      clearTimeout(storyDrag.timer);
+      storyDrag = null;
+    }
+    return;
+  }
+  event.preventDefault();
+  const g = storyDrag.ghost;
+  g.style.left = `${event.clientX - g.offsetWidth / 2}px`;
+  g.style.top = `${event.clientY - g.offsetHeight / 2}px`;
+  storyDragMark(storyDropAt(event.clientX, event.clientY));
+});
+const endStoryDrag = (event) => {
+  if (!storyDrag) return;
+  clearTimeout(storyDrag.timer);
+  const drag = storyDrag;
+  storyDrag = null;
+  if (!drag.active) return;
+  drag.ghost?.remove();
+  drag.thumb.classList.remove("dragging");
+  storyDragEnded = Date.now();
+  const drop = event.type === "pointerup" ? storyDropAt(event.clientX, event.clientY) : null;
+  storyDragMark(null);
+  if (!drop || !story) return;
+  const from = { g: Number(drag.thumb.dataset.g), i: Number(drag.thumb.dataset.i) };
+  story.groups = movePhotoTo(story.groups, from, drop);
+  story.mode = "manual";
+  story.selected = null;
+  logEvent("story_drag", {});
+  render();
+};
+document.addEventListener("pointerup", endStoryDrag);
+document.addEventListener("pointercancel", endStoryDrag);
+// While dragging, the page does not scroll under the finger.
+document.addEventListener("touchmove", (event) => storyDrag?.active && event.preventDefault(), { passive: false });
 async function storyAction(actionName, target) {
   if (!story) return;
   const sel = story.selected;
@@ -5840,6 +5958,12 @@ async function storyAction(actionName, target) {
     logEvent("story_relayout", { style: story.style, variant: v, kind: target.dataset.kind || "" });
   }
   if (actionName === "story-back") {
+    if (story.step === "group" && !story.made) {
+      // Nothing was made yet: leave (the photos stay in this device's media store).
+      story = null;
+      navigate("home");
+      return;
+    }
     if (story.step === "group") return storyAction("story-regroup", target);
     if (!(await askConfirm(t("story.discard")))) return;
     undoStory();
@@ -5875,12 +5999,36 @@ async function storyAction(actionName, target) {
     story.selected = null;
     return makeStory();
   }
+  if (actionName === "story-mode") {
+    const all = story.groups.flatMap((group) => group.items);
+    const mode = target.dataset.mode;
+    if (mode === "smart") {
+      const s2 = suggestGroups(all);
+      story.groups = s2.groups;
+      story.reason = s2.reason;
+    } else if (mode === "single") story.groups = oneGroup(all, story.groups.map((group) => group.line || "").find((line) => line.trim()) || "");
+    story.mode = mode;
+    story.selected = null;
+    logEvent("story_group_mode", { kind: mode });
+  }
+  if (actionName === "story-split-at") {
+    story.groups = splitAt(story.groups, Number(target.dataset.g), Number(target.dataset.i));
+    story.mode = "manual";
+    story.selected = null;
+  }
+  if (actionName === "story-merge") {
+    story.groups = mergeWithPrevious(story.groups, Number(target.dataset.g));
+    story.mode = "manual";
+    story.selected = null;
+  }
+  if (actionName === "story-photo" && Date.now() - storyDragEnded < 450) return;
   if (actionName === "story-photo") {
     const g = Number(target.dataset.g),
       i = Number(target.dataset.i);
     story.selected = sel?.g === g && sel?.i === i ? null : { g, i };
   }
   if (actionName === "story-move" && sel) {
+    story.mode = "manual";
     story.groups = movePhoto(story.groups, sel.g, sel.i, Number(target.dataset.dir));
     story.selected = null;
   }
@@ -11318,7 +11466,9 @@ async function handleImageUpload(event, target) {
         const blob = await imageBlob(file),
           aspect = imageAspects.get(blob),
           mediaId = await media.put(blob, { kind: "photo", name: file.name, aspect });
-        saved.push({ reference: `media:${mediaId}`, name: file.name, aspect, time: shot?.time ?? null, exif: shot?.source === "exif" });
+        // V10.58: the time and where it came from (only a real capture time is
+        // trusted), and the order the photos were picked in.
+        saved.push({ reference: `media:${mediaId}`, name: file.name, aspect, time: shot?.time ?? null, timeSource: shot?.source || "none", exif: reliableTime(shot?.source), order: saved.length });
       } catch (error) {
         if (!multiple) throw error;
         failed++;
@@ -11334,7 +11484,7 @@ async function handleImageUpload(event, target) {
       // Quick Create: my photos, laid out in their own shapes; no editor.
       // Taken at different times of the day: today's story (one page each).
       // Quick Create V2: every pick becomes a designed story (one Moment too).
-      startStory(groupByTime(saved));
+      startStory(suggestGroups(saved));
     } else if (target?.kind === "backdrop") {
       // My own photo as the whole page (photo + one line).
       changeTarget((p) => {

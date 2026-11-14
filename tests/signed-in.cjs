@@ -27,6 +27,28 @@ function seedAccount() {
       );
   } catch {}
 }
+// V10.58: several photos now open a grouping preview before any page is
+// made. Older suites were written before it: they accept the suggestion with
+// one tap, as a person would (生成). tests/v155 tests the preview itself and
+// turns this off with localStorage "test.keepGroups" = "1".
+function acceptGroups() {
+  const keep = () => {
+    try {
+      return localStorage.getItem("test.keepGroups") === "1";
+    } catch {
+      return false;
+    }
+  };
+  const watch = () =>
+    new MutationObserver(() => {
+      const step = document.querySelector('.story-group-step[data-first="1"]:not([data-accepted])');
+      if (!step || keep()) return;
+      step.dataset.accepted = "1";
+      setTimeout(() => document.querySelector('.story-foot [data-action="story-regroup"]')?.click(), 0);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  if (document.documentElement) watch();
+  else document.addEventListener("DOMContentLoaded", watch);
+}
 module.exports = function signedIn(chromium) {
   const launch = chromium.launch.bind(chromium);
   chromium.launch = async (options) => {
@@ -35,6 +57,7 @@ module.exports = function signedIn(chromium) {
     browser.newContext = async (contextOptions) => {
       const context = await newContext(contextOptions);
       await context.addInitScript(seedAccount);
+      await context.addInitScript(acceptGroups);
       return context;
     };
     browser.newPage = async (pageOptions) => (await browser.newContext(pageOptions)).newPage();
@@ -58,6 +81,7 @@ async function leaveStudio(page) {
 }
 module.exports.leaveStudio = leaveStudio;
 module.exports.seed = seedAccount; // for persistent profiles (launchPersistentContext)
+module.exports.acceptGroups = acceptGroups;
 // V10.11: saving opens the full-screen reader (no bottom menu there): ‹ goes back to the book.
 async function leaveReader(page) {
   if (!(await page.locator("#phone.in-reader").count())) return;
