@@ -48,6 +48,14 @@
 
 ## 更新日志
 
+### 2026-11-14 — V10.45 验证与发布（开铺手帐 / Capiday）
+
+- **网页**：全量浏览器回归 83 个套件，82 个通过；v3 那一次超时（回归过程中改过文件），单独重跑通过。`npm test` 281/281，`test_native_shell`、`test_preview` OK。
+- **iOS 模拟器**（Mac，Debug 构建，Bundle ID `com.capiday.app`）：S1–S4 检查脚本中文、英文各 6 项全部通过（加了 `.lproj` 之后网页拿到的语言仍然正确）；把测试模拟器系统语言设为简体中文后，主屏幕显示新图标，名称「开铺手帐」。旧的 `com.jessiethere.littledays` 测试 App 已从测试模拟器删除。真机没有测。
+- **固定链接**：同一个链接第 102 版，标题「开铺手帐 · Capiday」。上传 22 个变化的文件；发布前确认链接上这些旧文件与 V10.44 构建的哈希一致。
+- **仍需用户做**：在 App Store Connect 用 `com.capiday.app` 建 App，预留 Capiday / 开铺手帐 两个名字。
+- **说明**：这个云端会话的 git 代理只认原仓库名，所以这里的 remote 仍写 jessiethere/notebook（GitHub 自动转到 Capiday）；Mac 上已经是新地址。
+
 ### 2026-11-14 — 新的 Capiday App 图标（同属 V10.45）
 
 - **需求**：用户提供了新的图标图片（1254 × 1254，构图和旧图标相同：戴柠檬帽的 Captain、小花回形针、小芽，字样改为「Capiday」）。
