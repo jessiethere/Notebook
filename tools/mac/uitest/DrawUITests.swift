@@ -135,7 +135,11 @@ final class DrawUITests: XCTestCase {
         try? FileManager.default.createDirectory(atPath: "/tmp/ld-uitest/shots", withIntermediateDirectories: true)
         launch()
         for n in 1...2 {
-            if n > 1 { tap("navHome", wait: 1.5) }
+            if n > 1 {
+                // After 完成 the saved page opens in the Reader: back, then Home.
+                for _ in 0..<3 where rect("navHome") == nil && rect("readerBack") != nil { tap("readerBack", wait: 1.2) }
+                tap("navHome", wait: 1.5)
+            }
             let draw = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '手绘'")).firstMatch
             XCTAssertTrue(draw.waitForExistence(timeout: 30), "draw tile")
             draw.tap()
@@ -147,6 +151,7 @@ final class DrawUITests: XCTestCase {
         }
         log("c1-two-pages-saved")
         XCTAssertEqual(state()["saved"] as? Int, 2, "two pages with a drawing each")
+        for _ in 0..<3 where rect("navCal") == nil && rect("readerBack") != nil { tap("readerBack", wait: 1.2) }
         tap("navCal", wait: 1.5)
         tap("todayCell", wait: 2)
         tap("editDate", wait: 2)

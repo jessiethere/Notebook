@@ -22,7 +22,7 @@ const tick = () => {
     more: r('.tool-dock:not(.ctx) [data-tool="more"]'), drawNew: r('[data-action="draw-new"]'), drawCancel: r('#draw-dialog[open] [data-draw="cancel"]'),
     confirmOk: r("#confirm-dialog[open] #confirm-ok"), openDay: r('[data-action="open-day"]'),
     drawTile: r('[data-action="today-draw"]'), pagesManage: r('[data-action="pages-manage"]'), pageRemove: r('#choose-dialog[open] [data-action="page-remove"]'),
-    editDate: r('.day-detail-top [data-action="edit-date"]'), navCal: r('#navigation [data-page="calendar"]'), navHome: r('#navigation [data-page="home"]'),
+    editDate: r('.day-detail-top [data-action="edit-date"]'), navCal: r('#navigation [data-page="calendar"]'), navHome: r('#navigation [data-page="home"]'), readerBack: r('[data-action="reader-back"]'),
     todayCell: r('[data-action="select-date"].today'), restore: r('.summary-actions [data-action="day-restore"]'), calendar: !!document.querySelector(".calendar-grid"),
     confirmText: document.querySelector("#confirm-dialog[open] #confirm-message")?.textContent || "",
     dayInk: [...document.querySelectorAll(".chapter-canvas .drawing-layer img")].filter((i) => i.complete && i.naturalWidth > 0).length,
