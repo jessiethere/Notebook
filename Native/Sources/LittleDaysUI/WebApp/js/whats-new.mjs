@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.57",
+    date: "2026-11-14",
+    zh: {
+      title: "手绘面板更清爽",
+      items: [
+        "顶部：左边是关闭 ×，中间「手绘」，右边绿色「完成」；有还没放到页面上的笔画时，关闭会问你「保存到页面 / 放弃修改 / 继续画」。",
+        "钢笔、马克笔、铅笔、橡皮擦改成带名字的小按钮，选中时是柔和的绿色；颜色更小巧但依然好点；粗细旁边有一个跟着变化的小圆点。",
+        "撤销、重做换成一样的图标，用不了时会变淡；「清空画布」收进「···」，清空前会先问一下，清空后也能用撤销找回。",
+        "去掉了底部的大段说明，改成第一次使用时的一行小提示。",
+      ],
+    },
+    en: {
+      title: "A calmer drawing board",
+      items: [
+        "Top bar: a close × on the left, Draw in the middle, a green Done on the right. With strokes not yet on the page, closing asks: Save to the page, Discard changes, or Keep drawing.",
+        "Pen, Marker, Pencil and Eraser are compact buttons with their names and a soft green selection; colours are smaller but still easy to tap; a dot beside Size shows the brush.",
+        "Undo and Redo are matching icons that fade when not available; Clear canvas moved into ···, asks first, and can be undone.",
+        "The long note at the bottom became a one-time tip.",
+      ],
+    },
+  },
+  {
     version: "10.56",
     date: "2026-11-14",
     zh: {

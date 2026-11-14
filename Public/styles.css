@@ -23642,3 +23642,234 @@ body.typing .ctx-caption {
     display: none;
   }
 }
+
+/* V10.57 · Drawing board: a quiet × on the left, compact tools with
+   names, soft-green selection, small colours with 44px reach, a live size
+   dot, matching undo / redo icons and 清空画布 in ···. */
+.draw-top .draw-x {
+  width: 40px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--c-ece5d8, #ece5d8);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--t-4a433c, #4a433c);
+}
+.draw-top .primary.small {
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+}
+.draw-tools {
+  gap: 8px;
+  padding-top: 10px;
+}
+.draw-pens {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.draw-pens button {
+  min-height: 44px;
+  padding: 5px 0 4px;
+  gap: 2px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 11px;
+}
+.draw-pens button.selected {
+  border-color: var(--c-9fb08a, #9fb08a);
+  background: var(--c-e8eedf, #e8eedf);
+  color: var(--t-3f4d33, #3f4d33);
+  font-weight: 600;
+}
+.draw-pens .draw-glyph {
+  width: 18px;
+  height: 18px;
+}
+.draw-colors {
+  justify-content: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.draw-size input {
+  accent-color: var(--c-7d8e66, #7d8e66);
+}
+.draw-menu .danger-text {
+  color: var(--t-b5534a, #b5534a);
+}
+.draw-colors button {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  display: grid;
+  place-items: center;
+}
+.draw-colors button::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--c-d9d0c2, #d9d0c2);
+}
+.draw-colors button.selected::before {
+  box-shadow: 0 0 0 2px var(--c-fffdf9, #fffdf9), 0 0 0 4px var(--c-7d8e66, #7d8e66);
+}
+.draw-row {
+  gap: 10px;
+}
+.draw-size {
+  gap: 10px;
+}
+.draw-size span {
+  white-space: nowrap;
+}
+.draw-dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+.draw-dot::before {
+  content: "";
+  width: var(--dot, 8px);
+  height: var(--dot, 8px);
+  border-radius: 50%;
+  background: var(--ink, var(--c-2b2622, #2b2622));
+  box-shadow: 0 0 0 1px var(--c-d9d0c2, #d9d0c2);
+}
+.draw-dot.eraser::before {
+  background: var(--c-ffffff, #ffffff);
+  box-shadow: 0 0 0 1px var(--c-b9ad9c, #b9ad9c) inset, 0 0 0 1px var(--c-d9d0c2, #d9d0c2);
+}
+.draw-history {
+  display: flex;
+  gap: 6px;
+}
+.draw-row .draw-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--c-e0d8ca, #e0d8ca);
+  border-radius: 12px;
+  background: var(--c-fffdf9, #fffdf9);
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--t-4a433c, #4a433c);
+}
+.draw-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.draw-row .draw-icon:disabled {
+  opacity: 0.35;
+}
+.draw-tools {
+  position: relative;
+}
+.draw-menu {
+  position: absolute;
+  right: 14px;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 3;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 10px 30px var(--c-2b262233, #2b262233), 0 0 0 1px var(--c-e0d8ca, #e0d8ca);
+}
+.draw-menu button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+}
+.draw-menu button:disabled {
+  opacity: 0.4;
+}
+.draw-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px 8px 12px;
+  border-radius: 12px;
+  background: var(--c-e8eedf, #e8eedf);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--t-3f4d33, #3f4d33);
+}
+.draw-tip span {
+  flex: 1;
+}
+.draw-tip button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 18px;
+  color: var(--t-3f4d33, #3f4d33);
+}
+.draw-sheet {
+  position: relative;
+}
+.draw-ask {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--c-1f1c1980, #1f1c1980);
+}
+.draw-ask[hidden] {
+  display: none;
+}
+.draw-ask-card {
+  width: min(320px, 100%);
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--c-fffdf9, #fffdf9);
+  box-shadow: 0 20px 50px var(--c-0000004d, #0000004d);
+}
+.draw-ask-card p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+.draw-ask-card button {
+  min-height: 46px;
+}
+.draw-ask-card .danger-fill {
+  background: var(--c-b5534a, #b5534a);
+  border-color: var(--c-b5534a, #b5534a);
+}

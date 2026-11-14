@@ -188,7 +188,10 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await page.locator("#journal-canvas .drawing-layer").click();
     await page.locator('.tool-dock.ctx [data-action="draw-edit"]').click();
     await page.waitForSelector("#draw-dialog[open]");
+    // V10.57: 清空画布 is in ··· and asks first.
+    await page.locator('[data-draw="more"]').tap();
     await page.locator('[data-draw="clear"]').tap();
+    await page.locator('[data-draw-answer="clear"]').tap();
     await page.locator('[data-draw="done"]').tap();
     await page.waitForFunction(() => !document.querySelector("#journal-canvas .drawing-layer"));
     passed.push("draw again on the same drawing; clearing it removes it");
@@ -198,9 +201,9 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await page.waitForSelector("#draw-dialog[open]");
     await stroke("mouse", [[0.3, 0.3], [0.4, 0.4]]);
     await page.locator('[data-draw="cancel"]').tap();
-    // V10.46: new strokes are not thrown away without asking.
-    await page.waitForSelector("#confirm-dialog[open]");
-    await page.locator("#confirm-ok").tap();
+    // V10.46 / V10.57: new strokes are not thrown away without asking (in the board).
+    await page.waitForSelector("#draw-dialog .draw-ask:not([hidden])");
+    await page.locator('[data-draw-answer="discard"]').tap();
     await page.waitForSelector("#draw-dialog:not([open])", { state: "attached" });
     assert.equal(await page.locator("#journal-canvas .drawing-layer").count(), 0);
     passed.push("draw from the page bar; cancel keeps nothing");

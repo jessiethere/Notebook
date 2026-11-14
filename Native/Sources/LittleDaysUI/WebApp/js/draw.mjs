@@ -76,6 +76,20 @@ const loadImage = (src) =>
 // `confirmDiscard` (optional, async → boolean): asked before 取消 throws away
 // strokes that are not on the page yet (V10.46). An earlier drawing being
 // edited is never touched by 取消.
+// The one-time tip (instead of a note that is always there).
+const TIP_KEY = "little-days.drawTip";
+function tipSeen() {
+  try {
+    return localStorage.getItem(TIP_KEY) === "seen";
+  } catch {
+    return true;
+  }
+}
+function markTip() {
+  try {
+    localStorage.setItem(TIP_KEY, "seen");
+  } catch {}
+}
 export function openDrawBoard({ dialog, background = "", base = null, t, confirmDiscard = null }) {
   return new Promise((resolve) => {
     let tool = "pen",
@@ -83,13 +97,23 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
       size = 6,
       strokes = [],
       undone = [],
+      // Undo history: a stroke, or a whole clear (so 清空画布 can be undone).
+      history = [],
       current = null,
       penSeen = false,
       baseImage = null,
       finished = false;
     const swatch = (c) => `<button type="button" data-draw-color="${c}" style="--swatch:${c}" aria-label="${c}" aria-pressed="${c === color}" class="${c === color ? "selected" : ""}"></button>`;
     const toolButton = (id) => `<button type="button" data-draw-tool="${id}" aria-pressed="${id === tool}" class="${id === tool ? "selected" : ""}"><i class="draw-glyph draw-${id}" aria-hidden="true"></i><span>${t("draw." + id)}</span></button>`;
-    dialog.innerHTML = `<div class="draw-sheet"><header class="draw-top"><button type="button" class="draw-cancel" data-draw="cancel">${t("cancel")}</button><b>${t("draw.title")}</b><button type="button" class="primary small" data-draw="done">${t("draw.done")}</button></header><div class="draw-stage"><div class="draw-page"><div class="draw-under" aria-hidden="true">${background}</div><canvas class="draw-canvas" width="${PAGE_W}" height="${PAGE_H}" aria-label="${t("draw.canvas")}"></canvas><canvas class="draw-live" width="${PAGE_W}" height="${PAGE_H}" aria-hidden="true"></canvas></div></div><div class="draw-tools"><div class="draw-pens" role="group" aria-label="${t("draw.tools")}">${DRAW_TOOLS.map(toolButton).join("")}</div><div class="draw-colors" role="group" aria-label="${t("draw.colors")}">${DRAW_COLORS.map(swatch).join("")}</div><div class="draw-row"><label class="draw-size">${t("draw.size")}<input type="range" min="1" max="24" step="1" value="${size}" data-draw-size></label><button type="button" data-draw="undo" aria-label="${t("studio.undo")}">↶</button><button type="button" data-draw="redo" aria-label="${t("studio.redo")}">↷</button><button type="button" data-draw="clear">${t("draw.clear")}</button></div><p class="draw-hint">${t("draw.hint")}</p></div></div>`;
+    // V10.57: a quiet close (×) on the left, 手绘 in the middle, 完成 on the
+    // right; compact tools with their names; colours in one small row; size
+    // with a live dot; undo / redo as matching icons; 清空画布 in ··· (asks
+    // first, and can be undone). The long note is now a one-time tip.
+    const icon = (path) => `<svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+    const UNDO = icon('<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>');
+    const REDO = icon('<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>');
+    const tip = !tipSeen() ? `<p class="draw-tip" role="note"><span>${t("draw.tip")}</span><button type="button" data-draw="tip-ok" aria-label="${t("draw.tipOk")}">×</button></p>` : "";
+    dialog.innerHTML = `<div class="draw-sheet"><header class="draw-top"><button type="button" class="draw-cancel draw-x" data-draw="cancel" aria-label="${t("cancel")}">×</button><b>${t("draw.title")}</b><button type="button" class="primary small" data-draw="done">${t("draw.done")}</button></header><div class="draw-stage"><div class="draw-page"><div class="draw-under" aria-hidden="true">${background}</div><canvas class="draw-canvas" width="${PAGE_W}" height="${PAGE_H}" aria-label="${t("draw.canvas")}"></canvas><canvas class="draw-live" width="${PAGE_W}" height="${PAGE_H}" aria-hidden="true"></canvas></div></div><div class="draw-tools">${tip}<div class="draw-pens" role="group" aria-label="${t("draw.tools")}">${DRAW_TOOLS.map(toolButton).join("")}</div><div class="draw-colors" role="group" aria-label="${t("draw.colors")}">${DRAW_COLORS.map(swatch).join("")}</div><div class="draw-row"><label class="draw-size"><span>${t("draw.size")}</span><input type="range" min="1" max="24" step="1" value="${size}" data-draw-size aria-label="${t("draw.size")}"><i class="draw-dot" aria-hidden="true"></i></label><span class="draw-history"><button type="button" class="draw-icon" data-draw="undo" aria-label="${t("studio.undo")}">${UNDO}</button><button type="button" class="draw-icon" data-draw="redo" aria-label="${t("studio.redo")}">${REDO}</button><button type="button" class="draw-icon draw-more" data-draw="more" aria-label="${t("draw.more")}" aria-haspopup="menu" aria-expanded="false">···</button></span></div><div class="draw-menu" role="menu" hidden><button type="button" role="menuitem" class="danger-text" data-draw="clear">${t("draw.clearAll")}</button></div></div><div class="draw-ask" hidden></div></div>`;
     const board = dialog.querySelector(".draw-canvas"),
       live = dialog.querySelector(".draw-live"),
       ctx = board.getContext("2d"),
@@ -105,9 +129,16 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
         el.classList.toggle("selected", on);
         el.setAttribute("aria-pressed", String(on));
       });
-      dialog.querySelector('[data-draw="undo"]').disabled = !strokes.length;
+      dialog.querySelector('[data-draw="undo"]').disabled = !history.length;
       dialog.querySelector('[data-draw="redo"]').disabled = !undone.length;
       dialog.querySelector('[data-draw="clear"]').disabled = !strokes.length && !baseImage;
+      const dot = dialog.querySelector(".draw-dot");
+      if (dot) {
+        const px = Math.max(3, Math.min(28, Math.round(brush(tool === "eraser" ? "pen" : tool, size, 0.5).width / 2.4)));
+        dot.style.setProperty("--dot", `${px}px`);
+        dot.style.setProperty("--ink", tool === "eraser" ? "#ffffff" : color);
+        dot.classList.toggle("eraser", tool === "eraser");
+      }
     };
     const drawBase = () => {
       if (!baseImage || !base) return;
@@ -209,6 +240,7 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
       const { pointerId, ...stroke } = current;
       current = null;
       strokes.push(stroke);
+      history.push({ kind: "stroke" });
       undone = [];
       liveCtx.clearRect(0, 0, PAGE_W, PAGE_H);
       redraw();
@@ -222,18 +254,41 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
       dialog.innerHTML = "";
       resolve(result);
     };
-    // 取消 with new strokes on the board asks first; nothing new → closes at once.
+    // A question inside the board (no system dialog): 保存 / 放弃 / 继续画,
+    // or 清空 / 取消. Resolves with the chosen button's value.
+    const ask = (message, choices) =>
+      new Promise((answer) => {
+        const box = dialog.querySelector(".draw-ask");
+        box.innerHTML = `<div class="draw-ask-card" role="alertdialog" aria-modal="true" aria-label="${message}"><p>${message}</p>${choices.map((c) => `<button type="button" class="${c.cls || "secondary"}" data-draw-answer="${c.value}">${c.label}</button>`).join("")}</div>`;
+        box.hidden = false;
+        box.onclick = (event) => {
+          const el = event.target.closest("[data-draw-answer]");
+          if (!el) return;
+          event.stopPropagation();
+          box.hidden = true;
+          box.innerHTML = "";
+          answer(el.dataset.drawAnswer);
+        };
+        box.querySelector(".primary, button")?.focus();
+      });
+    // ×: nothing new → closes at once; new strokes → 保存 / 放弃修改 / 继续画.
     let asking = false;
     const cancel = async () => {
       if (finished || asking) return;
-      if ((strokes.length || current) && confirmDiscard) {
+      if (strokes.length || current || history.some((h) => h.kind === "clear")) {
         asking = true;
-        const sure = await confirmDiscard();
+        const choice = await ask(t("draw.leaveAsk"), [
+          { value: "save", label: t("draw.leaveSave"), cls: "primary" },
+          { value: "discard", label: t("draw.leaveDiscard"), cls: "secondary danger-text" },
+          { value: "stay", label: t("draw.leaveStay"), cls: "text-button" },
+        ]);
         asking = false;
-        if (!sure) return;
+        if (choice === "save") return done();
+        if (choice !== "discard") return;
       }
       finish(null);
     };
+    void confirmDiscard;
     dialog.onclick = async (event) => {
       const el = event.target.closest("button");
       if (!el) return;
@@ -243,15 +298,58 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
         if (tool === "eraser") tool = "pen";
       }
       const name = el.dataset.draw;
-      if (name === "undo" && strokes.length) undone.push(strokes.pop());
-      if (name === "redo" && undone.length) strokes.push(undone.pop());
+      const menu = dialog.querySelector(".draw-menu");
+      if (name !== "more" && menu && !menu.hidden) {
+        menu.hidden = true;
+        dialog.querySelector('[data-draw="more"]').setAttribute("aria-expanded", "false");
+      }
+      if (name === "more") {
+        menu.hidden = !menu.hidden;
+        el.setAttribute("aria-expanded", String(!menu.hidden));
+        return;
+      }
+      if (name === "tip-ok") {
+        markTip();
+        el.closest(".draw-tip")?.remove();
+        return;
+      }
+      if (name === "undo" && history.length) {
+        const step = history.pop();
+        if (step.kind === "clear") {
+          strokes = step.strokes;
+          baseImage = step.baseImage;
+        } else step.stroke = strokes.pop();
+        undone.push(step);
+      }
+      if (name === "redo" && undone.length) {
+        const step = undone.pop();
+        if (step.kind === "clear") {
+          step.strokes = strokes;
+          step.baseImage = baseImage;
+          strokes = [];
+          baseImage = null;
+        } else strokes.push(step.stroke);
+        history.push(step);
+      }
       if (name === "clear") {
-        strokes = [];
+        if (!strokes.length && !baseImage) return;
+        const sure = await ask(t("draw.clearAsk"), [
+          { value: "clear", label: t("draw.clearAll"), cls: "primary danger-fill" },
+          { value: "keep", label: t("cancel"), cls: "secondary" },
+        ]);
+        if (sure !== "clear") return;
+        history.push({ kind: "clear", strokes, baseImage });
         undone = [];
+        strokes = [];
         baseImage = null;
       }
       if (name === "cancel") return cancel();
-      if (name === "done") {
+      if (name === "done") return done();
+      redraw();
+    };
+    // 完成: the ink on the board becomes the drawing (nothing new → as it was).
+    const done = async () => {
+      {
         if (!strokes.length && base && baseImage) return finish(null);
         const bounds = inkBounds(ctx.getImageData(0, 0, PAGE_W, PAGE_H).data, PAGE_W, PAGE_H);
         if (!bounds) return finish(base ? { empty: true } : null);
@@ -262,13 +360,17 @@ export function openDrawBoard({ dialog, background = "", base = null, t, confirm
         const blob = await new Promise((done) => out.toBlob(done, "image/png"));
         return finish(blob ? { blob, layer: boxToLayer(bounds) } : null);
       }
-      redraw();
     };
     dialog.oninput = (event) => {
-      if (event.target.matches("[data-draw-size]")) size = Number(event.target.value) || 6;
+      if (event.target.matches("[data-draw-size]")) {
+        size = Number(event.target.value) || 6;
+        sync();
+      }
     };
     dialog.oncancel = (event) => {
       event.preventDefault();
+      const box = dialog.querySelector(".draw-ask");
+      if (box && !box.hidden) return box.querySelector('[data-draw-answer="stay"], [data-draw-answer="keep"]')?.click();
       cancel();
     };
     dialog.showModal();

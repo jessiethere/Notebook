@@ -5148,7 +5148,7 @@
     "en": "Pencil"
   },
   "draw.eraser": {
-    "zh": "橡皮",
+    "zh": "橡皮擦",
     "en": "Eraser"
   },
   "draw.again": {
@@ -9566,5 +9566,41 @@
   "lib.read": {
     "zh": "翻开《{name}》",
     "en": "Open {name}"
+  },
+  "draw.tip": {
+    "zh": "用手指直接画；用触控笔画时，线条会随力度变粗变细。",
+    "en": "Draw with your finger; with a stylus, lines follow how hard you press."
+  },
+  "draw.tipOk": {
+    "zh": "知道了",
+    "en": "Got it"
+  },
+  "draw.more": {
+    "zh": "更多",
+    "en": "More"
+  },
+  "draw.clearAll": {
+    "zh": "清空画布",
+    "en": "Clear canvas"
+  },
+  "draw.clearAsk": {
+    "zh": "清空整张画布吗？清空后还可以用「撤销」找回。",
+    "en": "Clear the whole canvas? You can still bring it back with Undo."
+  },
+  "draw.leaveAsk": {
+    "zh": "这次画的还没放到页面上。",
+    "en": "This drawing isn't on the page yet."
+  },
+  "draw.leaveSave": {
+    "zh": "保存到页面",
+    "en": "Save to the page"
+  },
+  "draw.leaveDiscard": {
+    "zh": "放弃修改",
+    "en": "Discard changes"
+  },
+  "draw.leaveStay": {
+    "zh": "继续画",
+    "en": "Keep drawing"
   }
 }
