@@ -257,17 +257,16 @@ const LONG = Array.from({ length: 14 }, (_, i) => `第 ${i + 1} 行：今天的�
     await page.keyboard.type("！");
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.waitForFunction(() => document.querySelector("#draft-status")?.dataset.state === "saved", null, { timeout: 15000 });
+    // V10.51: ‹ saves and leaves; a finished record stays finished.
     await page.locator('.sv-top [data-action="studio-back"]').tap();
-    await page.waitForSelector("#choose-dialog[open] .exit-sheet");
-    await page.locator('.exit-sheet [data-action="studio-draft-exit"]').tap();
     await page.waitForSelector(".reader");
     assert.equal(await label(), `第 ${total - 1} / ${total} 页`);
-    assert.equal(await page.locator(".reader-caption .draft-tag").count(), 1, "the Draft tag");
-    assert.equal((await stored()).entries.find((e) => e.date === today).status, "draft");
+    assert.equal(await page.locator(".reader-caption .draft-tag").count(), 0, "still finished: no Draft tag");
+    assert.equal((await stored()).entries.find((e) => e.date === today).status, "completed");
     const layers = (await stored()).entries.find((e) => e.date === today).moments[1].layers.map((l) => l.kind).sort();
     assert.deepEqual(layers, ["audio", "photo"], "the other page's photo and sound are untouched");
     await shot("09-draft");
-    passed.push("编辑 from the reader → 完成 → back on the same page, drawn with the change (Completed); → 保存草稿 → same page with a 草稿 tag (Draft); other pages untouched");
+    passed.push("编辑 from the reader → 完成 → back on the same page, drawn with the change (Completed); → changed again, ‹ → same page, still Completed (V10.51); other pages untouched");
 
     // 10. The book's music: silent until asked; play, pause, play again.
     await page.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); s.books.find((b) => b.id === "daily").music = "afternoon-coffee"; localStorage.setItem("little-days.v1", JSON.stringify(s)); });

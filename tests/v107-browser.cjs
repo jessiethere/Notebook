@@ -1,5 +1,6 @@
-// V10.7 · Leaving Journal Studio: finish the entry, keep it as a draft, or
-// keep editing. Saved (on this device) is not the same as Draft / Completed
+// V10.7 · Leaving Journal Studio. V10.51: ‹ saves and leaves (no question):
+// a draft stays a draft, a finished record stays finished with the changes;
+// 完成 (top right) finishes it. Saved (on this device) is not the same as Draft / Completed
 // (the record). The status belongs to the whole record (cover + pages).
 // Autosave still works; a failed save never leaves or claims success.
 const { chromium, devices } = require("playwright");
@@ -87,36 +88,15 @@ const shots = process.env.SHOTS || "";
     await SS.studioEdit(page);
     passed.push("switching pages, opening tools and the preview never ask; autosave keeps working (Saved ≠ Draft)");
 
-    // 3. ‹ asks; 继续编辑 (button, ×) changes nothing: paper, selected item, still editing.
-    await page.locator("#journal-canvas .text-layer").first().tap();
-    await page.waitForSelector("#journal-canvas .text-layer.active");
-    const paper = await page.locator("#journal-canvas").innerHTML();
-    await back();
-    await sheet.waitFor();
-    assert.match(await sheet.innerText(), /要先收好这一页吗？[\s\S]*完成手帐[\s\S]*保存草稿[\s\S]*继续编辑/);
-    assert.doesNotMatch(await sheet.innerText(), /放弃|丢弃|丢失|Discard|lose/i, "nothing scary: the work is safe either way");
-    assert.deepEqual(await sheet.locator("button[data-action]").evaluateAll((els) => els.map((el) => el.dataset.action)), ["choose-close", "save-entry", "studio-draft-exit", "choose-close"]);
-    const sizes = await sheet.locator(".exit-choice, .exit-stay").evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)));
-    assert.ok(sizes.every((h) => h >= 44), `44px targets (${sizes})`);
-    await shot("01-sheet");
-    await sheet.locator(".exit-stay").tap();
-    await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
-    assert.equal(await inStudio(), 1);
-    assert.equal(await page.locator("#journal-canvas").innerHTML(), paper, "the paper is exactly as it was");
-    assert.equal(await page.locator("#journal-canvas .text-layer.active").count(), 1, "the selected item is still selected");
-    await back();
-    await sheet.waitFor();
-    await sheet.locator(".kp-x").tap();
-    await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
-    assert.equal(await inStudio(), 1);
-    passed.push("‹ asks “要先收好这一页吗？” with three choices (no scary wording); 继续编辑 / × keep the paper, the selection and the editor as they were");
+    // 3. V10.51: ‹ never asks (the leaving sheet is gone).
+    passed.push("‹ asks nothing (V10.51: the leaving sheet is gone; ‹ saves and leaves)");
 
-    // 4. 保存草稿: everything is kept, the record is a Draft, the editor closes.
+    // 4. ‹ on a new record: everything is kept, the record is a Draft, the editor closes.
     const beforeDraft = shape((await stored()).draft);
     await back();
-    await sheet.waitFor();
-    await sheet.locator('[data-action="studio-draft-exit"]').tap();
     await page.waitForSelector("#phone:not(.in-studio)");
+    assert.equal(await sheet.count(), 0, "no question on the way out");
+    assert.match(await page.locator("#toast").innerText(), /已保存为草稿/);
     await page.waitForSelector(".hero");
     let now = await stored();
     assert.equal(now.entry.status, "draft");
@@ -146,7 +126,7 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".day-detail .draft-banner.is-draft");
     assert.match(await page.locator(".day-detail .draft-banner").innerText(), /草稿[\s\S]*继续编辑/);
     await shot("04-day-banner");
-    passed.push("保存草稿: the whole record (2 pages, formatting, photo and text box positions) is kept unchanged and marked Draft; a quiet 草稿 tag on Home, in the book and on the day — also after a reload");
+    passed.push("‹ = save as draft: the whole record (2 pages, formatting, photo and text box positions) is kept unchanged and marked Draft; a quiet 草稿 tag on Home, in the book and on the day — also after a reload");
 
     // 5. Continue the draft where it was left; change it; keep it as a draft again.
     await page.locator('.day-detail .draft-banner [data-action="draft-continue"]').tap();
@@ -163,8 +143,6 @@ const shots = process.env.SHOTS || "";
     await page.evaluate(() => document.activeElement?.blur?.());
     await savedNow();
     await back();
-    await sheet.waitFor();
-    await sheet.locator('[data-action="studio-draft-exit"]').tap();
     await page.waitForSelector("#phone:not(.in-studio)");
     now = await stored();
     assert.equal(now.entry.status, "draft");
@@ -172,13 +150,11 @@ const shots = process.env.SHOTS || "";
     assert.equal(now.entry.moments.length, 2);
     passed.push("a draft reopens on the page it was left on, with its content; changing it and keeping it as a draft again works");
 
-    // 6. Draft → Completed from the leaving sheet (the same step as 完成 at the top right).
+    // 6. Draft → Completed with 完成 at the top right.
     await page.waitForSelector(".day-detail");
     await page.locator('.day-detail .draft-banner [data-action="draft-continue"]').tap();
     await page.waitForSelector("#journal-canvas");
-    await back();
-    await sheet.waitFor(); // a draft asks even when nothing changed: it can be finished now
-    await sheet.locator('[data-action="save-entry"]').tap();
+    await page.locator('.sv-top [data-action="save-entry"]').tap();
     await page.waitForFunction(() => !document.querySelector("#phone.in-studio"));
     now = await stored();
     assert.equal(now.entry.status, "completed");
@@ -186,7 +162,7 @@ const shots = process.env.SHOTS || "";
     assert.equal(now.entry.moments.length, 2);
     const landedSheet = await page.evaluate(() => ({ day: Boolean(document.querySelector(".day-detail")), flip: Boolean(document.querySelector(".flip-page")) }));
     assert.equal(await page.locator(".draft-banner.is-draft, .flip-head .draft-tag").count(), 0, "no draft tag once finished");
-    passed.push("草稿 → 完成手帐 from the leaving sheet: saved, marked Completed, the draft tag goes");
+    passed.push("草稿 → 完成 (top right): saved, marked Completed, the draft tag goes");
 
     // 7. A finished record: looking does not ask; changing it asks; 完成 at the top right gives the same result.
     const openFinished = async () => {
@@ -212,7 +188,7 @@ const shots = process.env.SHOTS || "";
     assert.equal(now.entry.status, "completed");
     assert.equal(now.entry.moments[0].title, "第一页（改）");
     const landedTop = await page.evaluate(() => ({ day: Boolean(document.querySelector(".day-detail")), flip: Boolean(document.querySelector(".flip-page")) }));
-    assert.deepEqual(landedTop, landedSheet, "完成 (top right) and 完成手帐 (sheet) end in the same place");
+    assert.deepEqual(landedTop, landedSheet, "完成 always ends in the same place");
     // Finished, then changed and put away as a draft.
     await openFinished();
     await page.locator('#journal-canvas [data-inline="title"]').tap();
@@ -221,14 +197,13 @@ const shots = process.env.SHOTS || "";
     await page.evaluate(() => document.activeElement?.blur?.());
     await savedNow();
     await back();
-    await sheet.waitFor();
-    assert.match(await sheet.innerText(), /已经完成过/);
-    await sheet.locator('[data-action="studio-draft-exit"]').tap();
     await page.waitForSelector("#phone:not(.in-studio)");
+    assert.equal(await sheet.count(), 0);
     now = await stored();
-    assert.equal(now.entry.status, "draft");
-    assert.equal(now.entry.moments[0].title, "第一页（改）！");
-    passed.push("a finished record: only looking leaves without a question; 完成 (top right) = 完成手帐 (sheet) — same save, same status, same place; finished → changed → draft again works");
+    assert.equal(now.entry.status, "completed", "‹ keeps a finished record finished");
+    assert.equal(now.entry.moments[0].title, "第一页（改）！", "with the changes");
+    assert.match(await page.locator("#toast").innerText(), /修改已保存/);
+    passed.push("a finished record: only looking leaves without a question; 完成 finishes; changed then ‹ = the changes saved, still finished");
 
     // 8. A failed save never leaves and never says it worked.
     const failing = await browser.newContext({ ...devices["iPhone 13"] });
@@ -241,12 +216,12 @@ const shots = process.env.SHOTS || "";
     await fp.keyboard.type("存不下来的一页");
     await fp.evaluate(() => document.activeElement?.blur?.());
     await fp.waitForFunction(() => document.querySelector("#draft-status")?.dataset.state === "saved", null, { timeout: 15000 });
-    await fp.locator('.sv-top [data-action="studio-back"]').tap();
-    await fp.waitForSelector("#choose-dialog[open] .exit-sheet");
     // Another tab changed the journal meanwhile: this copy may not be written.
     await fp.evaluate(() => { const s = JSON.parse(localStorage.getItem("little-days.v1")); s.plans = { ...(s.plans || {}), "2000-01-01": [{ id: "x", text: "elsewhere", done: false }] }; localStorage.setItem("little-days.v1", JSON.stringify(s)); });
-    await fp.locator('.exit-sheet [data-action="studio-draft-exit"]').tap();
+    await fp.locator('.sv-top [data-action="studio-back"]').tap();
     await fp.waitForFunction(() => document.querySelector("#draft-status")?.dataset.state === "failed");
+    await fp.waitForSelector("#confirm-dialog[open]");
+    await fp.locator("#confirm-cancel").tap();
     assert.equal(await fp.locator("#phone.in-studio").count(), 1, "still in the editor");
     const said = await fp.locator(".toast").innerText();
     assert.doesNotMatch(said, /收好了|Draft kept/);
@@ -258,7 +233,7 @@ const shots = process.env.SHOTS || "";
     await failing.close();
     passed.push("a failed save: no “kept” message, the state reads 保存失败, the editor stays open with the work on the page");
 
-    // 9. Small phone and English.
+    // 9. Small phone and English: ‹ leaves with a short note.
     const small = await browser.newContext({ viewport: { width: 375, height: 667 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     const sp = await small.newPage();
     sp.on("pageerror", (error) => errors.push(error.message));
@@ -270,13 +245,10 @@ const shots = process.env.SHOTS || "";
     await sp.keyboard.type("A small page");
     await sp.evaluate(() => document.activeElement?.blur?.());
     await sp.locator('.sv-top [data-action="studio-back"]').tap();
-    await sp.waitForSelector("#choose-dialog[open] .exit-sheet");
-    const fit = await sp.evaluate(() => { const r = document.querySelector(".exit-sheet").getBoundingClientRect(); return { inside: r.top >= 0 && r.bottom <= innerHeight + 1, wide: document.documentElement.scrollWidth <= innerWidth + 1, text: document.querySelector(".exit-sheet").innerText }; });
-    assert.ok(fit.inside && fit.wide, JSON.stringify({ inside: fit.inside, wide: fit.wide }));
-    if (/Finish entry/.test(fit.text)) assert.match(fit.text, /Finish entry[\s\S]*Keep as draft[\s\S]*Keep editing/);
-    if (shots) await sp.screenshot({ path: `${shots}/05-375-en.png` });
+    await sp.waitForSelector("#phone:not(.in-studio)");
+    assert.match(await sp.locator("#toast").innerText(), /Saved as a draft/);
     await small.close();
-    passed.push("375×667: the sheet fits on screen");
+    passed.push("375×667, English: ‹ leaves at once with “Saved as a draft”");
 
     assert.deepEqual(errors, []);
     console.log(`V10.7 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

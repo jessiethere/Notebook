@@ -6869,7 +6869,7 @@ function accountAction(target) {
         draftDirty = false;
         leaveStudio();
       } else if (editorStatus() === "completed" && !studioTouched) leaveStudio();
-      else openExitSheet();
+      else saveAndLeave();
       return true;
     }
     case "studio-draft-exit": {
@@ -6919,19 +6919,47 @@ function accountAction(target) {
   return false;
 }
 
+// V10.51 · ← = save and leave. No question on the way out: the record is
+// kept as it is (a draft stays a draft, a finished record stays finished,
+// with the changes), and the editor closes only once the words are in the
+// journal database and every photo / video / sound it uses is stored. A
+// failed save stays in the editor and says so (保存失败 · 重试).
+let leaving = false;
+async function saveAndLeave() {
+  if (leaving) return;
+  if (busyMedia || recorder) return toast(t("media.busy"));
+  leaving = true;
+  const status = editorStatus();
+  clearTimeout(draftTimer);
+  setDraftState("saving");
+  try {
+    try {
+      store.update((s) => saveEntry(s, editor, status));
+    } catch (error) {
+      throw Object.assign(new Error("save"), { code: error?.code === "stale-state" ? "stale-state" : "save" });
+    }
+    const ids = [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })];
+    const [stored, missing] = await Promise.all([store.stored(), ids.length ? media.missing(ids).catch(() => ids) : []]);
+    if (!stored || missing.length) throw Object.assign(new Error("save"), { code: missing.length ? "media" : "store" });
+    draftDirty = false;
+    setDraftState("saved");
+    rememberDraftPage();
+    logEvent("studio_saved_leave", { stage: status, pages: editor.moments.length });
+    leaveStudio();
+    toast(t(status === "draft" ? "exit.savedDraft" : "exit.savedChanges"));
+  } catch (error) {
+    setDraftState("failed");
+    logEvent("studio_leave_failed", { err: error?.code || "save" });
+    const retry = await askConfirm(t(error?.code === "stale-state" ? "error.conflict" : "exit.saveFailed"), { ok: t("exit.retry") });
+    leaving = false;
+    if (retry) return saveAndLeave();
+  }
+  leaving = false;
+}
 function leaveStudio() {
   studioPreview = false;
   if (readReturn) returnToReading();
   else navigate(studioReturn && !["studio", "settings"].includes(studioReturn) ? studioReturn : "home");
-}
-// The question asked on the way out. Closing it (继续编辑, ×, pulling it
-// down) changes nothing: the paper, the selected item and the caret stay.
-function openExitSheet() {
-  const status = editorStatus();
-  const pages = (hasDayPageContent(editor) && editor.dayCoverHidden !== true ? 1 : 0) + editor.moments.length;
-  const dialog = $("#choose-dialog");
-  dialog.innerHTML = `<div class="choose-sheet kp exit-sheet" data-status="${status}"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("exit.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("exit.keepEditing")}">×</button></div><p class="exit-note">${t(status === "completed" ? "exit.noteCompleted" : "exit.note", { count: pages })}</p><button class="exit-choice primary" data-action="save-entry"><b>${t("exit.complete")}</b><small>${t("exit.completeHint")}</small></button><button class="exit-choice" data-action="studio-draft-exit"><b>${t("exit.draft")}</b><small>${t("exit.draftHint")}</small></button><button class="exit-stay" data-action="choose-close">${t("exit.keepEditing")}</button></div>`;
-  if (!dialog.open) dialog.showModal();
 }
 // V10.22 · 检查照片和视频: a read-only check (nothing is written, converted,
 // deleted or sent). The report has no names or words, so it can be copied.

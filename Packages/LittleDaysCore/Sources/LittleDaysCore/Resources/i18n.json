@@ -9194,5 +9194,21 @@
   "voice.pendingFirst": {
     "zh": "上一段录音还没保存，请先保存或放弃它。",
     "en": "The last recording isn't saved yet — save or discard it first."
+  },
+  "exit.savedDraft": {
+    "zh": "已保存为草稿，随时可以回来接着写。",
+    "en": "Saved as a draft — come back to it any time."
+  },
+  "exit.savedChanges": {
+    "zh": "修改已保存。",
+    "en": "Your changes are saved."
+  },
+  "exit.saveFailed": {
+    "zh": "这一页还没保存下来，内容都还在。要再试一次吗？",
+    "en": "This page hasn't been saved yet — everything is still here. Try again?"
+  },
+  "exit.retry": {
+    "zh": "再试一次",
+    "en": "Try again"
   }
 }
