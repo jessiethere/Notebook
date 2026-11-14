@@ -76,7 +76,10 @@ final class DrawUITests: XCTestCase {
         // 3. B: text added, then a second drawing over it; tap the text.
         tap("back")
         tap("addText", wait: 1.2)
-        log("4b-text-added") // a new box has its default words; nothing to type
+        // V10.51: a new box starts empty with the caret; an empty one goes away.
+        if app.keyboards.count > 0 { app.typeText("Hi") }
+        Thread.sleep(forTimeInterval: 0.6)
+        log("4b-text-added")
         // Put the keyboard away and leave the text, as a person would: tap the
         // bare paper outside the drawing (bottom-left corner).
         for _ in 0..<2 where state()["ctx"] as? String != "" || app.keyboards.count > 0 {
