@@ -89,10 +89,11 @@ export function coverHTML(book, ctx) {
 }
 // Photos offered for a cover: the ones that suit the book first, then a mix.
 function coverPhotoPicks(book, catalog) {
+  // V10.52: the whole photo library (the ones that suit the book first).
   const photos = catalog.photos || [];
   const suited = photos.filter((photo) => photo.collection === coverCollection(book));
-  const others = photos.filter((photo, k) => photo.collection !== coverCollection(book) && k % 6 === 0);
-  return [...suited, ...others].slice(0, 14);
+  const others = photos.filter((photo) => photo.collection !== coverCollection(book));
+  return [...suited, ...others];
 }
 // V10.51 · Tags as chips: type a tag and press return (or a comma) — it
 // becomes a chip with ×. Chinese, English and tags with spaces need no "#".
@@ -108,27 +109,26 @@ export function tagChipsHTML(tags, t) {
   const full = list.length >= TAGS_MAX;
   return `<div class="field tag-field"><span class="field-label" id="tag-label">${t("books.tags")}</span><div class="tag-chips" data-tag-chips role="group" aria-labelledby="tag-label">${chips}<input class="tag-entry" data-tag-entry maxlength="16" enterkeyhint="done" autocomplete="off" placeholder="${esc(t(full ? "tags.full" : list.length ? "tags.more" : "tags.placeholder"))}" aria-label="${esc(t("tags.add"))}" ${full ? "disabled" : ""}></div><input type="hidden" name="tags" value="${esc(tagsValue(list))}"><small class="field-hint">${t("tags.hint", { max: TAGS_MAX })}</small></div>`;
 }
+// V10.52 · One screen for what matters: the cover (with the name and the
+// words beside it), a row of cover styles and a row of cover photos — both
+// swipe sideways. Tags, colour / font / decoration, privacy and record fields
+// fold away. Every field keeps its name, so saving is unchanged.
 export function bookDialogHTML(book, ctx) {
-  const { catalog, t, tokens } = ctx;
-  return `<h2>${t(book.id ? "books.dialogEdit" : "books.dialogNew")}</h2><p class="dialog-description">${t("books.dialogDescription")}</p><div id="book-cover-preview" class="book-cover-preview">${coverHTML(book, ctx)}</div><div class="dialog-fields">
- <label class="field">${t("books.name")}<input name="title" required maxlength="60" placeholder="${t("books.namePlaceholder")}" value="${esc(book.title || "")}"></label><label class="field">${t("books.description")}<textarea name="description" maxlength="300">${esc(book.description || "")}</textarea></label>${tagChipsHTML(book.tags || [], t)}<label class="field">${t("books.category")}<input name="category" required maxlength="40" value="${esc(book.category || "Daily Life")}"></label>
- <label class="field">${t("books.cover")}</label><input name="coverTemplate" type="hidden" value="${esc(book.coverTemplate || "minimal-linen")}"><div class="cover-template-grid">${catalog.coverTemplates.map((template) => `<button type="button" data-action="cover-template" data-template="${template.id}" class="cover-option ${(book.coverTemplate || "minimal-linen") === template.id ? "selected" : ""}">${coverHTML({ ...book, coverTemplate: template.id, coverImage: MAGAZINE_COVERS.includes(template.id) ? book.coverImage : "" }, ctx)}<span>${t("cover." + template.id)}</span></button>`).join("")}</div>
- <label class="field">${t("books.coverPhotoPick")}</label><div class="cover-photo-picks">${coverPhotoPicks(book, catalog)
-   .map((photo) => `<button type="button" data-action="cover-library-photo" data-photo="${esc(photo.id)}" class="${book.coverImage === `photo:${photo.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? photo.nameEn : photo.nameZh)}"><img src="${esc(ctx.media.resolve(`photo:${photo.id}`))}" alt="" loading="lazy"></button>`)
-   .join("")}</div>
- <div class="field-row"><label class="field">${t("books.color")}<select name="color">${["blush", "sage", "butter", "blue", "cream"].map((color) => `<option value="${color}" ${book.color === color ? "selected" : ""}>${t("color." + color)}</option>`).join("")}</select></label><label class="field">${t("books.font")}<select name="coverFont">${catalog.fonts.map((font) => `<option value="${font.id}" ${(book.coverFont || "elegant") === font.id ? "selected" : ""}>${font.name}</option>`).join("")}</select></label></div>
- <label class="field">${t("books.decoration")}<select name="coverDecoration"><option value="none" ${book.coverDecoration === "none" ? "selected" : ""}>${t("books.none")}</option>${catalog.stickers
-   .slice(0, 16)
-   .map(
-     (s) =>
-       `<option value="${s.id}" ${(book.coverDecoration || "tulip") === s.id ? "selected" : ""}>${ctx.language === "en" ? s.nameEn : s.nameZh}</option>`,
-   )
-   .join(
-     "",
-   )}</select></label><div class="editor-actions"><button type="button" data-action="cover-photo">${t("books.coverPhoto")}</button><button type="button" data-action="cover-photo-remove">${t("books.removePhoto")}</button></div>
- <label class="field">${t("books.permission")}<select name="visibility"><option value="private">${t("private")}</option><option value="public" disabled>${t("public")}</option><option value="shared" disabled>${t("shared")}</option></select></label><p class="save-help">${t("books.privateNotice")}</p>
- <label class="field">${t("books.preset")}<select id="book-preset"><option value="blank">${t("books.blank")}</option>${(catalog.recordTemplates || []).map((item) => `<option value="${item.id}">${ctx.language === "en" ? item.nameEn : item.nameZh}</option>`).join("")}</select></label><h3 class="field-section-title">${t("books.fields")}</h3><div id="book-field-list">${(book.fields || []).map((f) => fieldDefinitionHTML(f, ctx)).join("")}</div><button class="secondary" type="button" data-action="field-add">${t("books.fieldAdd")}</button>
- </div><div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(book.id ? "save" : "create")}</button></div>`;
+  const { catalog, t } = ctx;
+  const tpl = book.coverTemplate || "minimal-linen";
+  const templates = catalog.coverTemplates.map((template) => `<button type="button" data-action="cover-template" data-template="${template.id}" class="cover-option ${tpl === template.id ? "selected" : ""}" aria-pressed="${tpl === template.id}">${coverHTML({ ...book, coverTemplate: template.id, coverImage: MAGAZINE_COVERS.includes(template.id) ? book.coverImage : "" }, ctx)}<span>${t("cover." + template.id)}</span></button>`).join("");
+  const photos = coverPhotoPicks(book, catalog).map((photo) => `<button type="button" data-action="cover-library-photo" data-photo="${esc(photo.id)}" class="${book.coverImage === `photo:${photo.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? photo.nameEn : photo.nameZh)}"><img src="${esc(ctx.media.resolve(`photo:${photo.id}`))}" alt="" loading="lazy"></button>`).join("");
+  const tags = book.tags || [];
+  const section = (id, title, hint, body) => `<details class="book-more" data-book-section="${id}"><summary><span><b>${title}</b><small>${esc(hint)}</small></span><i aria-hidden="true">›</i></summary><div class="book-more-body">${body}</div></details>`;
+  const tagsBody = `${tagChipsHTML(tags, t)}<label class="field">${t("books.category")}<input name="category" required maxlength="40" value="${esc(book.category || "Daily Life")}"></label>`;
+  const lookBody = `<div class="field-row"><label class="field">${t("books.color")}<select name="color">${["blush", "sage", "butter", "blue", "cream"].map((color) => `<option value="${color}" ${book.color === color ? "selected" : ""}>${t("color." + color)}</option>`).join("")}</select></label><label class="field">${t("books.font")}<select name="coverFont">${catalog.fonts.map((font) => `<option value="${font.id}" ${(book.coverFont || "elegant") === font.id ? "selected" : ""}>${font.name}</option>`).join("")}</select></label></div><label class="field">${t("books.decoration")}<select name="coverDecoration"><option value="none" ${book.coverDecoration === "none" ? "selected" : ""}>${t("books.none")}</option>${catalog.stickers.slice(0, 16).map((sticker) => `<option value="${sticker.id}" ${(book.coverDecoration || "tulip") === sticker.id ? "selected" : ""}>${ctx.language === "en" ? sticker.nameEn : sticker.nameZh}</option>`).join("")}</select></label>`;
+  const recordsBody = `<label class="field">${t("books.permission")}<select name="visibility"><option value="private">${t("private")}</option><option value="public" disabled>${t("public")}</option><option value="shared" disabled>${t("shared")}</option></select></label><p class="save-help">${t("books.privateNotice")}</p><label class="field">${t("books.preset")}<select id="book-preset"><option value="blank">${t("books.blank")}</option>${(catalog.recordTemplates || []).map((item) => `<option value="${item.id}">${ctx.language === "en" ? item.nameEn : item.nameZh}</option>`).join("")}</select></label><h3 class="field-section-title">${t("books.fields")}</h3><div id="book-field-list">${(book.fields || []).map((f) => fieldDefinitionHTML(f, ctx)).join("")}</div><button class="secondary" type="button" data-action="field-add">${t("books.fieldAdd")}</button>`;
+  const tagHint = tags.length ? tags.slice(0, 3).map((tag) => `#${tag}`).join(" ") + (tags.length > 3 ? ` +${tags.length - 3}` : "") : t("books.moreTagsHint");
+  return `<h2>${t(book.id ? "books.dialogEdit" : "books.dialogNew")}</h2><div class="book-top"><div id="book-cover-preview" class="book-cover-preview">${coverHTML(book, ctx)}</div><div class="book-top-fields"><label class="field">${t("books.name")}<input name="title" required maxlength="60" placeholder="${t("books.namePlaceholder")}" value="${esc(book.title || "")}"></label><label class="field">${t("books.description")}<textarea name="description" rows="2" maxlength="300" placeholder="${esc(t("books.descriptionPlaceholder"))}">${esc(book.description || "")}</textarea></label></div></div>
+ <div class="book-pick"><div class="book-pick-head"><b>${t("books.cover")}</b><small>${t("books.swipeAll", { count: catalog.coverTemplates.length })}</small></div><input name="coverTemplate" type="hidden" value="${esc(tpl)}"><div class="cover-template-grid cover-template-row">${templates}</div></div>
+ <div class="book-pick"><div class="book-pick-head"><b>${t("books.coverPhotoPick")}</b><button type="button" class="text-button" data-action="cover-photo-remove">${t("books.noPhoto")}</button></div><div class="cover-photo-picks"><button type="button" class="cover-upload" data-action="cover-photo" aria-label="${esc(t("books.coverPhoto"))}"><span aria-hidden="true">＋</span><small>${t("books.upload")}</small></button>${photos}</div></div>
+ ${section("tags", t("books.moreTags"), tagHint, tagsBody)}${section("look", t("books.moreLook"), t("books.moreLookHint"), lookBody)}${section("records", t("books.moreRecords"), t("books.moreRecordsHint"), recordsBody)}
+ <div class="dialog-actions"><button type="button" class="secondary" data-action="close-dialog">${t("cancel")}</button><button type="submit" class="primary">${t(book.id ? "save" : "create")}</button></div>`;
 }
 export function fieldDefinitionHTML(field, ctx) {
   const { catalog, t, language } = ctx;

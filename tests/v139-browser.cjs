@@ -75,9 +75,8 @@ const ACCOUNT = JSON.stringify({ version: 1, method: "local", name: "", avatar: 
       await page.waitForSelector('#journal-canvas [data-inline="title"]');
       await page.keyboard.type(run.zh ? "第一页" : "My first page");
       await page.waitForFunction(() => document.querySelector("#draft-status")?.dataset.state === "saved", null, { timeout: 15000 });
-      await page.locator('.sv-top [data-action="studio-back"]').tap();
-      await page.waitForSelector('#choose-dialog[open] [data-action="save-entry"]');
-      await page.locator('#choose-dialog [data-action="save-entry"]').tap();
+      // V10.51: ‹ saves and leaves; 完成 (top right) finishes the page.
+      await page.locator('.sv-top [data-action="save-entry"]').tap();
       await page.waitForTimeout(600);
       await require("./signed-in.cjs").leaveReader(page);
       await page.locator('#navigation [data-page="home"]').tap().catch(() => {});

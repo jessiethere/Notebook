@@ -9286,5 +9286,45 @@
   "shelf.deleted": {
     "zh": "已删除《{name}》",
     "en": "Deleted “{name}”"
+  },
+  "books.swipeAll": {
+    "zh": "左右滑动，共 {count} 种",
+    "en": "Swipe for all {count}"
+  },
+  "books.upload": {
+    "zh": "上传",
+    "en": "Upload"
+  },
+  "books.noPhoto": {
+    "zh": "不用照片",
+    "en": "No photo"
+  },
+  "books.descriptionPlaceholder": {
+    "zh": "这本书想收藏什么？（可以不写）",
+    "en": "What will this book keep? (optional)"
+  },
+  "books.moreTags": {
+    "zh": "标签与类别",
+    "en": "Tags and category"
+  },
+  "books.moreTagsHint": {
+    "zh": "还没有标签",
+    "en": "No tags yet"
+  },
+  "books.moreLook": {
+    "zh": "封面细节",
+    "en": "Cover details"
+  },
+  "books.moreLookHint": {
+    "zh": "颜色 · 字体 · 装饰",
+    "en": "Colour · font · decoration"
+  },
+  "books.moreRecords": {
+    "zh": "隐私与记录字段",
+    "en": "Privacy and record fields"
+  },
+  "books.moreRecordsHint": {
+    "zh": "私人 · 记录模板 · 自定义字段",
+    "en": "Private · record template · custom fields"
   }
 }

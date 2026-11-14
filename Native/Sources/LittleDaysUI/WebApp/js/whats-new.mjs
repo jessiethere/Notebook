@@ -4,6 +4,26 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.52",
+    date: "2026-11-14",
+    zh: {
+      title: "新建手帐本更简单",
+      items: [
+        "新建 / 编辑手帐本时，封面预览就在名称旁边，一眼能看到最要紧的：名称、描述、封面样式、封面照片。",
+        "封面样式和封面照片都改成左右滑动的一行；封面照片可以从整个图库里选（适合这本书的排在前面），第一格就是「上传」。",
+        "标签与类别、封面细节（颜色 · 字体 · 装饰）、隐私与记录字段都收进了可以展开的小栏里，不再一长串。",
+      ],
+    },
+    en: {
+      title: "A simpler new book",
+      items: [
+        "Creating or editing a book: the cover preview sits beside the name, so the essentials — name, words, cover style and photo — are all in view.",
+        "Cover styles and cover photos are sideways rows; pick from the whole photo library (the ones that suit the book first), with Upload as the first tile.",
+        "Tags and category, cover details (colour · font · decoration), and privacy and record fields fold away until you need them.",
+      ],
+    },
+  },
+  {
     version: "10.51",
     date: "2026-11-14",
     zh: {
