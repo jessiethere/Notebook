@@ -189,6 +189,7 @@ final class DrawUITests: XCTestCase {
         launch()
         if rect("skip") != nil { tap("skip") }
         tap("navBooks", wait: 1.5)
+        tap("shelfSpine", wait: 1.5)
         tap("shelfBook", wait: 2)
         tap("bookMusic", wait: 1.5)
         tap("musicPreview", 0.5, 0.5, wait: 3)

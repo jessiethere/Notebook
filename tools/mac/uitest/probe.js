@@ -24,7 +24,7 @@ const tick = () => {
     drawTile: r('[data-action="today-draw"]'), pagesManage: r('[data-action="pages-manage"]'), pageRemove: r('#choose-dialog[open] [data-action="page-remove"]'),
     editDate: r('.day-detail-top [data-action="edit-date"]'), navCal: r('#navigation [data-page="calendar"]'), navHome: r('#navigation [data-page="home"]'), readerBack: r('[data-action="reader-back"]'),
     todayCell: r('[data-action="select-date"].today'), restore: r('.summary-actions [data-action="day-restore"]'), calendar: !!document.querySelector(".calendar-grid"),
-    navBooks: r('#navigation [data-page="books"]'), shelfBook: r('.bookshelf [data-action="book"]'), bookMusic: r('.book-music [data-action="music-sheet"]'),
+    navBooks: r('#navigation [data-page="books"]'), shelfSpine: r('[data-action="pull-book"]'), shelfBook: r('[data-action="book"]'), bookMusic: r('.book-music [data-action="music-sheet"]'),
     musicPreview: r('#choose-dialog[open] [data-action="music-preview"]'), musicVolume: r('#choose-dialog[open] [data-music-volume]'),
     bgmPlaying: !!(document.querySelector("#background-music") && !document.querySelector("#background-music").paused), bgmGain: document.querySelector("#background-music")?.dataset.gain || "",
     volOut: document.querySelector("#choose-dialog[open] .music-volume output")?.textContent || "",
