@@ -807,14 +807,33 @@ function storyCardHTML(entry, { recent = false } = {}) {
   const book = state().books.find((bk) => bk.id === lead.bookId);
   const count = pages.length;
   const card = `<article class="ts-card ${shown.length ? "" : "ts-paper"} ${recent ? "ts-recent" : ""}" data-photos="${pool.length}"><button class="ts-open today-preview" ${open(lead)} aria-label="${t(recent ? "ts.readRecent" : "home.readToday")}">${meta}${photos}<b class="ts-title" style="font-family:${esc(lead.titleFont)}">${esc(lead.title || PL.pageLabel(lead.page, { t, dayPage: lead.page === entry, words: !lead.words }).label)}</b>${lead.words ? `<span class="ts-words" style="font-family:${esc(lead.bodyFont)}">${esc(lead.words.slice(0, 220))}</span>` : ""}${chips ? `<span class="ts-chips">${chips}</span>` : ""}</button><div class="ts-foot">${book ? `<button class="ts-book" data-action="book" data-book="${esc(book.id)}"><small>${t("ts.keptIn")}</small><b>${esc(book.title)}</b></button>` : "<span></span>"}<button class="ts-go" ${open(lead)}>${count > 1 ? `<i>${String(pages.indexOf(lead) + 1).padStart(2, "0")} / ${String(count).padStart(2, "0")}</i>` : ""}${t("ts.open")} →</button></div></article>`;
-  // Every other page of the day keeps its own line: name, time, journal.
-  const row = (pg) => {
-    const bk = state().books.find((x) => x.id === pg.bookId);
-    const marks = (pg.videos.length ? " ▶" : "") + (pg.audios.length ? " ♪" : "");
-    return `<li><button ${open(pg)}><span class="ts-thumb ${pg.refs[0] ? "" : "words"}">${pg.refs[0] ? `<img src="${esc(safePhoto(pg.refs[0]))}" alt="" width="80" height="96" loading="lazy" decoding="async">` : "<i></i><i></i><i></i>"}</span><span class="ts-row-copy"><b style="font-family:${esc(pg.titleFont)}">${esc(pg.title || pg.words || PL.pageLabel(pg.page, { t, dayPage: pg.page === entry }).label)}</b>${!pg.refs[0] && pg.title && pg.words ? `<em style="font-family:${esc(pg.bodyFont)}">${esc(pg.words.slice(0, 80))}</em>` : ""}<small>${esc([pg.time, bk?.title].filter(Boolean).join(" · "))}${marks}</small></span><i class="ts-num">${String(pages.indexOf(pg) + 1).padStart(2, "0")}</i></button></li>`;
-  };
-  const also = others.length && !recent ? `<ul class="ts-also" aria-label="${t("ts.also")}">${others.slice(0, 3).map(row).join("")}</ul>${others.length > 3 ? `<button class="text-button ts-all" data-action="open-day" data-date="${esc(date)}">${t("ts.all", { count })} ›</button>` : ""}` : "";
-  return card + also;
+  // V10.56: Home shows one summary card for the day (no list of every page
+  // under it); the numbers come from the same rules as the Calendar and the
+  // book, and 查看今天全部记录 opens the whole day.
+  if (recent) return card;
+  const stats = dayStatsLine(entry);
+  return `${card}<div class="ts-summary"><span class="ts-stats">${esc(stats)}</span><button class="text-button ts-all" data-action="open-day" data-date="${esc(date)}">${t("ts.viewAll")} ›</button></div>`;
+}
+// "3 页 · 5 张照片 · 1 段声音": pages as the Calendar counts them (blank,
+// photo, sound and video pages alike); photos are different pictures on those
+// pages (a day cover's copies and hand drawings are not counted again).
+function dayStatsLine(entry) {
+  const counts = dayCounts(state(), entry.date);
+  const pages = visiblePages(state(), { date: entry.date });
+  const photos = new Set();
+  let audio = 0,
+    video = 0;
+  for (const { entry: e, moment } of pages) {
+    const p = moment || e;
+    if (!moment && e.photo) photos.add(e.photo);
+    if (p.backdrop && /^(media:|photo:|data:image)/.test(p.backdrop)) photos.add(p.backdrop);
+    for (const layer of p.layers || []) if (layer.kind === "photo" && layer.mediaRef && !layer.drawing && !layer.gen) photos.add(layer.mediaRef);
+    for (const clip of p.media || []) {
+      if (clip.kind === "audio" || /^audio\//.test(clip.mime || "")) audio++;
+      else if (clip.kind === "video" || /^video\//.test(clip.mime || "")) video++;
+    }
+  }
+  return [t("ts.statPages", { count: counts.pages }), photos.size ? t("ts.statPhotos", { count: photos.size }) : "", audio ? t("ts.statAudio", { count: audio }) : "", video ? t("ts.statVideo", { count: video }) : ""].filter(Boolean).join(" · ");
 }
 // The most recent day the user really kept (never a sample day).
 function recentStoryEntry() {
@@ -864,8 +883,12 @@ function homeLibraryHTML() {
   const day = first.last.slice(0, 10);
   const updated = !day ? "" : day === dateKey() ? t("lib.today") : day === addDays(dateKey(), -1) ? t("lib.yesterday") : t("lib.on", { date: new Date(`${day}T12:00:00`).toLocaleDateString(locale(), { month: "short", day: "numeric" }) });
   const small = rest.slice(0, 2);
-  const book = (bk, cls = "") => `<button class="lib-book home-book-cover ${cls}" data-action="book" data-book="${esc(bk.id)}" aria-label="${esc(bk.title)}"><span class="lib-cover">${coverHTML(bk, ctx())}</span></button>`;
-  return `<section class="home-section home-books hs-collect">${head(mine.length)}<div class="lib"><div class="lib-shelf home-book"><div class="lib-slot">${book(f, "lib-feature")}</div><div class="lib-side"><div class="lib-now"><small>${t(first.last ? "lib.now" : "lib.start")}</small><b>${esc(f.title)}</b><span>${[daysPagesLabel(countDays, count), updated].filter(Boolean).join(" · ")}</span><button class="lib-write home-book-write" data-action="book-write" data-book="${esc(f.id)}">${t(count ? "lib.write" : "lib.writeFirst")} →</button></div><div class="lib-others">${small.map((x) => book(x.bk)).join("")}${rest.length > 2 ? `<button class="lib-count" data-action="nav" data-page="books" aria-label="${t("lib.all")}">+${rest.length - 2}</button>` : mine.length < 3 ? `<button class="lib-new home-book-new" data-action="new-book" aria-label="${t("home.newBook")}">${icon("plus")}</button>` : ""}</div></div></div>${small.length ? `<div class="lib-names" aria-hidden="true"><span></span><div>${small.map((x) => `<span>${esc(x.bk.title)}</span>`).join("")}</div></div>` : ""}</div></section>`;
+  // V10.56: one compact row — the journal in use (small cover, name, pages,
+  // 接着记一页), two small covers beside it; the whole shelf is in 书架.
+  // Its cover opens the reader (an empty journal opens its page instead).
+  const mini = (bk) => `<button class="lib-mini home-book-cover" data-action="book" data-book="${esc(bk.id)}" aria-label="${esc(bk.title)}"><span class="lib-cover">${coverHTML(bk, ctx())}</span></button>`;
+  const more = rest.length > 2 ? `<button class="lib-count" data-action="nav" data-page="books" aria-label="${t("lib.all")}">+${rest.length - 2}</button>` : "";
+  return `<section class="home-section home-books hs-collect">${head(mine.length)}<div class="lib-compact home-book"><button class="lib-c-cover home-book-cover lib-feature" data-action="home-book-read" data-book="${esc(f.id)}" aria-label="${esc(t("lib.read", { name: f.title }))}"><span class="lib-cover">${coverHTML(f, ctx())}</span></button><div class="lib-c-copy lib-now"><small>${t(first.last ? "lib.now" : "lib.start")}</small><b>${esc(f.title)}</b><span>${[daysPagesLabel(countDays, count), updated].filter(Boolean).join(" · ")}</span><button class="lib-write home-book-write" data-action="book-write" data-book="${esc(f.id)}">${t(count ? "lib.write" : "lib.writeFirst")} →</button></div>${small.length || more ? `<div class="lib-c-others lib-others">${small.map((x) => mini(x.bk)).join("")}${more}</div>` : ""}</div></section>`;
 }
 
 function home() {
@@ -878,7 +901,7 @@ function home() {
   const day = now.toLocaleDateString(locale(), { month: "long", day: "numeric" });
   const books = homeLibraryHTML();
   return `<div class="home-mag"><header class="home-top"><div class="masthead"><div class="brand-title${languageCode() === "en" ? "" : " brand-zh"}" lang="${languageCode() === "en" ? "en" : "zh-Hans"}">${t("brand.wordmark")}${BRAND_SPROUT}</div></div><span class="home-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button>${bell()}<button class="icon-button settings-gear" data-action="nav" data-page="settings" aria-label="${hasUnseen() ? t("news.dotLabel", { version: LATEST }) : t("settings")}">${icon("gear")}${hasUnseen() ? `<i class="news-dot" aria-hidden="true"></i>` : ""}</button></span></header>
- ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div><div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${keeperInviteHTML()}${todayStoryHTML()}${todayListHTML()}</section>${memoryHTML()}
+ ${backupNudgeHTML()}<section class="hero today-card v9-home"><div class="story-start-card"><div class="v9-masthead"><span class="v9-daynum" aria-hidden="true">${now.getDate()}</span><div class="v9-greet"><small class="v9-kicker">${esc(now.toLocaleDateString(locale(), { month: "long" }))} · ${now.getFullYear()}</small>${greetingHTML(weekday, day)}<h1 class="today-prompt">${t("story.prompt")}</h1></div></div><div class="v9-hero-wrap">${keeperPerchHTML()}<div class="v9-hero"><div class="v9-hero-copy"><small class="v9-kicker v9-sage">Photo Journal</small><h2>${t("tile.photo")}</h2><p>${t("story.promptHint")}</p></div><div class="v9-polaroids" aria-hidden="true"><i class="v9-pol v9-pol-back" style="background-image:url('${esc(safePhoto("photo:brunch"))}')"></i><i class="v9-pol v9-pol-front" style="background-image:url('${esc(safePhoto("photo:latte-art"))}')"><em>${esc(now.toLocaleDateString(locale(), { month: "short", day: "numeric" }))}</em></i><i class="v9-tape"></i></div><button class="story-photos v9-cta" data-action="today-photos">${t("v9.pickPhotos")}<span aria-hidden="true">→</span></button></div></div><div class="story-start-row today-tiles v9-secondary"><button class="today-tile" data-action="today-write" title="${t("story.justWriteHint")}">${v9Icon("write")}<b>${t("story.justWrite")}</b><small>${t("v9.writeHint")}</small></button><button class="today-tile" data-action="today-draw">${v9Icon("draw")}<b>${t("tile.draw")}</b><small>${t("v9.drawHint")}</small></button><button class="today-tile moment-cta" data-action="quick-open" data-photo="">${v9Icon("more")}<b>${t("tile.more")}</b><small>${t("v9.moreHint")}</small></button></div><button class="text-button backfill-link" data-action="backfill" data-date="${addDays(dateKey(), -1)}">${t("story.backfill")} ›</button></div>${keeperInviteHTML()}${todayListHTML()}${todayStoryHTML()}</section>${memoryHTML()}
  ${books}<p class="home-quote hs-colophon">Collect moments, grow gently.</p></div>`;
 }
 // ---------- Today: habits and (Labs) things to do, on Home ----------
@@ -886,6 +909,7 @@ function home() {
 // was done shows on that day's page as "today's list"; the habit book on the
 // shelf keeps the journey, stats and reflections.
 const MAX_PLANS = 8;
+const PLANS_SHOWN = 3;
 function plansOf(date) {
   return (state().plans?.[date] || []).filter((p) => p && typeof p.text === "string");
 }
@@ -896,21 +920,29 @@ function todayListHTML() {
   const done = state().checks.filter((check) => check.date === today).length;
   const items = plansOf(today);
   const yesterday = plansOf(addDays(today, -1)).filter((p) => !p.done);
-  const list = items.length
-    ? `<ul>${items
+  // V10.56: up to three in sight (what is left first), the rest one tap
+  // away; all done folds to one line. No folding when there is nothing yet:
+  // one quiet line to add the first thing.
+  const open = plansOpen();
+  const left = items.filter((p) => !p.done).length;
+  const allDone = items.length > 0 && !left;
+  const ordered = [...items.filter((p) => !p.done), ...items.filter((p) => p.done)];
+  const shown = allDone && !open ? [] : open ? ordered : ordered.slice(0, PLANS_SHOWN);
+  const hiddenCount = ordered.length - shown.length;
+  const list = shown.length
+    ? `<ul>${shown
         .map((p) => `<li class="${p.done ? "done" : ""}"><button class="plan-check" data-action="plan-toggle" data-plan="${esc(p.id)}" aria-pressed="${p.done}" aria-label="${esc(p.text)}">${p.done ? "✓" : ""}</button><span>${esc(p.text)}</span><button class="plan-remove" data-action="plan-remove" data-plan="${esc(p.id)}" aria-label="${t("plan.remove")}">×</button></li>`)
         .join("")}</ul>`
     : "";
-  const add = items.length < MAX_PLANS ? `<div class="plan-add"><input type="text" maxlength="60" data-plan-input placeholder="${t("plan.placeholder")}" aria-label="${t("plan.placeholder")}"><button data-action="plan-add">${t("plan.add")}</button></div>` : "";
+  const add = items.length < MAX_PLANS && !(allDone && !open) ? `<div class="plan-add"><input type="text" maxlength="60" data-plan-input placeholder="${t(items.length ? "plan.placeholder" : "qu.firstPlaceholder")}" aria-label="${t("plan.placeholder")}" enterkeyhint="done"><button data-action="plan-add">${t("plan.add")}</button></div>` : "";
   const carry = yesterday.length && !items.length ? `<button class="text-button plan-carry" data-action="plan-carry">${t("plan.carry", { count: yesterday.length })}</button>` : "";
   // Habits live in "My habits" on the shelf; Home keeps one line to them.
   const habitsLink = `<button class="today-habits-link" data-action="nav" data-page="growth"><span>${t("habits.book")}</span><small>${habits.length ? t("home.completed", { done, total: habits.length }) : t("habits.none")}</small><i aria-hidden="true">›</i></button>`;
-  // Quiet utility (V10.2): one line under today's story; it opens into the
-  // list. Folded or open is remembered on this device; the data is untouched.
-  const open = plansOpen();
-  const left = items.filter((p) => !p.done).length;
-  const summary = [items.length ? (left ? t("qu.left", { count: left }) : t("qu.allDone")) : t("qu.none"), habits.length ? `${t("qu.habits")} ${done}/${habits.length}` : ""].filter(Boolean).join(" · ");
-  return `<section class="today-list today-planner qu" data-open="${open}" aria-label="${t("qu.title")}"><button class="qu-row" data-action="plans-toggle" aria-expanded="${open}" aria-controls="qu-body"><i class="qu-box" aria-hidden="true"></i><b>${t("qu.title")}</b><small data-qu-summary>${esc(summary)}</small><span class="qu-chev" aria-hidden="true">▾</span></button><div class="qu-body" id="qu-body" ${open ? "" : "hidden"}><p class="qu-hint">${t("plan.hint")}</p><div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${labsOn() ? habitsLink : ""}</div></section>`;
+  const summary = [items.length ? (left ? t("qu.left", { count: left }) : t("qu.allDone")) : "", habits.length ? `${t("qu.habits")} ${done}/${habits.length}` : ""].filter(Boolean).join(" · ");
+  const more = allDone ? (open ? t("qu.less") : t("qu.showDone")) : hiddenCount > 0 ? t("qu.more", { count: hiddenCount }) : open && ordered.length > PLANS_SHOWN ? t("qu.less") : "";
+  const toggle = more ? `<button class="qu-more" data-action="plans-toggle" aria-expanded="${open}" aria-controls="qu-body">${more}</button>` : "";
+  const mode = !items.length ? "empty" : allDone ? "done" : "active";
+  return `<section class="today-list today-planner qu" data-open="${open}" data-state="${mode}" aria-label="${t("qu.title")}"><div class="qu-row"><i class="qu-box" aria-hidden="true"></i><b>${t("qu.title")}</b><small data-qu-summary>${esc(summary)}</small>${toggle}</div><div class="qu-body" id="qu-body">${allDone && !open ? `<p class="qu-done"><span aria-hidden="true">✓</span>${t("qu.doneAll", { count: items.length })}</p>` : ""}<div class="today-plans${items.length ? "" : " empty"}">${list}${add}${carry}</div>${labsOn() ? habitsLink : ""}</div></section>`;
 }
 const PLANS_OPEN_KEY = "little-days.homePlans";
 function plansOpen() {
@@ -925,12 +957,13 @@ function togglePlans() {
   try {
     localStorage.setItem(PLANS_OPEN_KEY, open ? "open" : "closed");
   } catch {}
-  // No re-render: the page keeps its place.
-  const section = $(".today-planner.qu");
-  if (!section) return;
-  section.dataset.open = String(open);
-  section.querySelector(".qu-row").setAttribute("aria-expanded", String(open));
-  section.querySelector(".qu-body").hidden = !open;
+  // "Show all" or the first three (render keeps the scroll position).
+  render();
+}
+function setPlansOpen(open) {
+  try {
+    localStorage.setItem(PLANS_OPEN_KEY, open ? "open" : "closed");
+  } catch {}
 }
 function savePlans(date, change) {
   store.update((next) => {
@@ -7678,6 +7711,19 @@ async function action(target) {
     calendarMode = "growth";
     render();
   }
+  // V10.56: Home's journal cover opens the reader (an empty one, its page).
+  if (actionName === "home-book-read") {
+    const bookId = target.dataset.book;
+    if (bookCounts(state(), bookId).pages) return openReader(bookId);
+    booksView = "shelf";
+    pulledBook = bookId;
+    selectedBook = bookId;
+    bookFilter = { month: "", date: "" };
+    page = "books";
+    render();
+    $("#app-scroll").scrollTop = 0;
+    return;
+  }
   if (actionName === "book") {
     booksView = "shelf";
     // Opening a book from the shelf uses my own list / flip choice (after a
@@ -8317,11 +8363,16 @@ async function action(target) {
   }
   if (actionName === "plans-toggle") return togglePlans();
   if (actionName === "plan-add") return addPlan();
-  if (actionName === "plan-toggle")
+  if (actionName === "plan-toggle") {
+    // V10.56: the last one ticked folds the list to "all done".
+    const before = plansOf(dateKey());
+    const lastOne = before.length && before.filter((p) => !p.done).length === 1 && before.find((p) => p.id === target.dataset.plan && !p.done);
+    if (lastOne) setPlansOpen(false);
     return savePlans(dateKey(), (list) => {
       const item = list.find((p) => p.id === target.dataset.plan);
       if (item) item.done = !item.done;
     });
+  }
   if (actionName === "plan-remove") return savePlans(dateKey(), (list) => list.splice(list.findIndex((p) => p.id === target.dataset.plan), 1));
   if (actionName === "plan-carry") {
     // Yesterday's unfinished things, only when asked (nothing moves by itself).

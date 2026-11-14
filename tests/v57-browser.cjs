@@ -82,7 +82,7 @@ const shots = process.env.SHOTS_DIR || "";
     // 3. Flipping the book: the page with music plays it.
     await page.locator('#navigation [data-page="home"]').tap();
     await page.waitForSelector(".hero");
-    await page.locator(`.home-book-cover[data-book="${withMusic.bookId || saved.bookId}"]`).first().tap();
+    await require("./signed-in.cjs").openBookPage(page, withMusic.bookId || saved.bookId);
     // V10.11: in the full-screen reader a book is silent until ♪ is tapped;
     // then the page's own piece plays.
     await page.waitForSelector(".reader-start");

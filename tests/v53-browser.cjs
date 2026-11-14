@@ -66,7 +66,7 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
       await page.waitForSelector(".flip-page");
     }
     await menu(page, "home");
-    await page.locator(`.home-book-cover[data-book="${bookId}"]`).tap();
+    await require("./signed-in.cjs").openBookPage(page, bookId);
     await page.waitForSelector(".book-share");
     assert.match(await page.locator(".book-share-help").innerText(), /PDF/);
     const download = page.waitForEvent("download");

@@ -43,7 +43,7 @@ const shots = process.env.SHOTS_DIR || "";
     };
 
     // 1. The book, page by page: ✎ on the page opens it; Save comes back here.
-    await page.locator('.home-book-cover[data-book="food"]').tap();
+    await require("./signed-in.cjs").openBookPage(page, "food");
     // V10.11: the full-screen reader, from the cover.
     await page.waitForSelector(".reader-start");
     await page.locator('.book-detail-showcase').tap(); // the cover opens the reader at the cover

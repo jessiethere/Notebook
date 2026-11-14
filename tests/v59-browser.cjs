@@ -36,7 +36,7 @@ const shots = process.env.SHOTS_DIR || "";
     const playing = (id) => page.waitForFunction((id) => { const a = document.querySelector("#background-music"); return a && !a.paused && a.dataset.music === id; }, id);
 
     // 1. The book: ♫ add music to this book → the sheet (with a volume) → choose.
-    await page.locator('.home-book-cover[data-book="food"]').tap();
+    await require("./signed-in.cjs").openBookPage(page, "food");
     await page.waitForSelector(".book-music");
     assert.match(await page.locator(".book-music").innerText(), /给这本书配音乐/);
     assert.equal((await bgm()).playing, false, "no music before one is chosen");
@@ -99,7 +99,7 @@ const shots = process.env.SHOTS_DIR || "";
     // 4. The volume is remembered; the book's music can be taken off again.
     await page.reload();
     await page.waitForSelector(".hero");
-    await page.locator('.home-book-cover[data-book="food"]').tap();
+    await require("./signed-in.cjs").openBookPage(page, "food");
     await page.locator('.book-music [data-action="music-sheet"]').tap();
     assert.equal(await page.locator("[data-music-volume]").inputValue(), "30");
     await page.locator('[data-action="music-none"]').tap();

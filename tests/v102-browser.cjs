@@ -23,9 +23,10 @@ const shots = process.env.SHOTS || "";
     const today = await key(0), earlier = await key(3);
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
     const shot = async (name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }); };
-    // First use: plans and habits are one folded line.
-    assert.equal(await page.locator('.today-planner.qu[data-open="false"]').count(), 1, "folded by default");
-    assert.equal(await page.locator(".qu-body").isVisible(), false);
+    // V10.56: the plans are in sight (with nothing yet, one quiet line to add).
+    assert.equal(await page.locator('.today-planner.qu[data-state="empty"]').count(), 1);
+    assert.equal(await page.locator(".qu-body").isVisible(), true);
+    assert.ok((await page.evaluate(() => document.querySelector(".today-planner.qu").getBoundingClientRect().height)) <= 180, "no big empty block: a title, one line to add, my habits");
     // Write the journal once (so it is in LocalStorage), then set the days directly.
     await touchStore(page);
     const photo = (id, ref) => ({ id, kind: "photo", text: "", mediaRef: ref, x: 50, y: 50, w: 40, h: 30, rotation: 0, scale: 1 });
@@ -66,15 +67,13 @@ const shots = process.env.SHOTS || "";
     assert.match(await page.locator(".ts-card .ts-more").innerText(), /\+2/, "five photos today, three shown");
     assert.match(await page.locator(".ts-card .ts-chips").innerText(), /♪ 0:31/, "the sound on the page is marked");
     assert.match(await page.locator(".ts-card .ts-book").innerText(), /收藏于[\s\S]*平凡日子里的小确幸/);
-    // Each other page keeps its own line: name, time, journal.
-    const rows = await page.$$eval(".ts-also li", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-    assert.equal(rows.length, 2);
-    assert.match(rows[0], /早晨的散步.*08:10 · 去看更大的世界/);
-    assert.match(rows[1], /睡前.*慢一点也没关系.*22:05 · 好好吃饭/);
+    // V10.56: one summary card — the day's numbers (no list of every page on Home).
+    assert.equal(await page.locator(".ts-also").count(), 0);
+    assert.match(await page.locator(".ts-summary .ts-stats").innerText(), /3 页 · 5 张照片 · 1 段声音/);
     // No sideways scroll; images have boxes before they load (no jumps).
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.querySelector(".app-scroll").scrollWidth <= document.querySelector(".app-scroll").clientWidth), true);
     assert.equal(await page.$$eval(".ts-card .ts-pol img", (els) => els.every((el) => el.hasAttribute("width") && el.hasAttribute("height"))), true);
-    await page.waitForFunction(() => [...document.querySelectorAll(".ts-card .ts-pol img, .ts-also img")].every((img) => img.complete && img.naturalWidth > 0));
+    await page.waitForFunction(() => [...document.querySelectorAll(".ts-card .ts-pol img")].every((img) => img.complete && img.naturalWidth > 0));
     await page.locator(".hs-remember").scrollIntoViewIfNeeded();
     await shot("v102-story");
     // Showing them together changed nothing in the journal.
@@ -83,15 +82,15 @@ const shots = process.env.SHOTS || "";
     await page.locator(".ts-card .ts-open").tap();
     await page.waitForSelector(".day-detail");
     await page.locator('#navigation [data-page="home"]').tap();
-    await page.locator(".ts-also li button").first().tap();
+    await page.locator(".ts-summary .ts-all").tap();
     await page.waitForSelector(".day-detail");
-    assert.match(await page.locator(".day-detail").innerText(), /早晨的散步/);
+    assert.match(await page.locator(".day-detail").innerText(), /早晨的散步[\s\S]*睡前|睡前[\s\S]*早晨的散步/);
     await page.locator('#navigation [data-page="home"]').tap();
     await page.locator(".ts-card .ts-book").tap();
     await page.waitForFunction(() => /平凡日子里的小确幸/.test(document.querySelector("#app")?.innerText || "") && !document.querySelector(".hs-remember"));
     await page.locator('#navigation [data-page="home"]').tap();
     assert.equal(JSON.stringify((await stored()).entries.find((e) => e.date === today)), before);
-    passed.push("several pages in one day: one story (lead page, photos from across the day, +N, media mark, kept-in journal), a line for each other page with its own time and journal; every page opens on its own; the data is untouched");
+    passed.push("several pages in one day: one summary card (lead page, photos from across the day, +N, media mark, kept-in journal, 3 页 · 5 张照片 · 1 段声音); 查看今天全部记录 opens the whole day; the data is untouched");
 
     // 2. Words only: diary paper; long words are folded, the full page is one tap away.
     await setDays((s, today) => {
@@ -133,29 +132,34 @@ const shots = process.env.SHOTS || "";
     assert.equal(await page.locator(".ts-recent-head, .ts-card").count(), 0, "no made-up latest story");
     passed.push("no record today: an invitation with one way to start, then the latest real story (opens the original); with no history of my own, only the invitation");
 
-    // 4. Plans and habits: one folded line by default; open / closed is remembered; nothing is lost.
-    // (It was opened once above to add a plan: that choice has been kept through every reload since.)
-    assert.equal(await page.locator('.today-planner.qu[data-open="true"]').count(), 1, "opened earlier, still open");
+    // 4. V10.56 plans: in sight, three at most (what is left first), the rest one tap away;
+    // ticking the last one folds the list to one line; nothing is lost.
     await openPlans(page);
-    for (const text of ["买咖啡豆", "给妈妈打个电话", "浇花"]) { await page.locator("[data-plan-input]").fill(text); await page.locator('[data-action="plan-add"]').tap(); }
-    await page.locator('[data-action="plan-toggle"]').first().tap();
-    await page.waitForFunction((d) => (JSON.parse(localStorage.getItem("little-days.v1")).plans?.[d] || []).filter((p) => p.done).length === 1, today);
-    assert.equal(await page.locator('.today-planner.qu[data-open="true"]').count(), 1, "adding and ticking keeps it open");
+    for (const text of ["买咖啡豆", "给妈妈打个电话", "浇花", "散步"]) { await page.locator("[data-plan-input]").fill(text); await page.locator('[data-action="plan-add"]').tap(); }
+    await page.evaluate(() => document.activeElement?.blur());
+    assert.equal(await page.locator(".qu .today-plans li").count(), 3, "three in sight");
+    assert.match(await page.locator(".qu-more").innerText(), /还有 1 项/);
+    await page.locator(".qu-more").tap();
+    assert.equal(await page.locator(".qu .today-plans li").count(), 4);
     await page.reload();
     await page.waitForSelector(".hero");
-    assert.equal(await page.locator('.today-planner.qu[data-open="true"]').count(), 1, "open is remembered after a reload");
+    assert.equal(await page.locator(".qu .today-plans li").count(), 4, "show-all is remembered");
+    await page.locator(".qu-more").tap();
     assert.equal(await page.locator(".qu .today-plans li").count(), 3);
-    await page.locator('[data-action="plans-toggle"]').tap();
-    assert.equal(await page.locator(".qu-body").isVisible(), false);
-    await page.locator('#navigation [data-page="calendar"]').tap();
-    await page.locator('#navigation [data-page="home"]').tap();
-    await page.waitForSelector(".hero");
-    assert.equal(await page.locator('.today-planner.qu[data-open="false"]').count(), 1, "closed is remembered too — unfinished things do not force it open");
-    assert.match(await page.locator(".qu-row").innerText(), /今天的小计划[\s\S]*还有 2 件事 · 习惯 0\/\d+/);
-    assert.equal(((await stored()).plans[today] || []).length, 3, "folding loses nothing");
+    for (let i = 0; i < 4; i++) {
+      await page.locator('.qu .plan-check[aria-pressed="false"]').first().tap();
+      await page.waitForFunction(([d, n]) => (JSON.parse(localStorage.getItem("little-days.v1")).plans?.[d] || []).filter((p) => p.done).length === n, [today, i + 1]);
+    }
+    await page.waitForSelector('.today-planner.qu[data-state="done"]');
+    assert.equal(await page.locator(".qu .today-plans li").count(), 0, "all done folds by itself");
+    assert.match(await page.locator(".qu-done").innerText(), /4 件小事都完成啦/);
     const quiet = await page.evaluate(() => document.querySelector(".today-planner.qu").getBoundingClientRect().height);
-    assert.ok(quiet <= 60, `the folded line is small (${quiet}px)`);
-    passed.push("plans + habits: folded by default with a summary, open / closed remembered across reloads and pages, data intact");
+    assert.ok(quiet <= 150, `the done state is small (title, one done line, my habits) (${quiet}px)`);
+    assert.equal(((await stored()).plans[today] || []).filter((p) => p.done).length, 4, "folding loses nothing");
+    await page.locator(".qu-more").tap();
+    assert.equal(await page.locator(".qu .today-plans li.done").count(), 4, "the done list is one tap away");
+    await page.locator(".qu-more").tap();
+    passed.push("plans: in sight with three at most and 还有 N 项, show-all remembered, ticking the last folds to one done line, data intact");
 
     // 5. My Library: the journal written in most recently leads; one write link; covers open the real journal; no My / Shared switch on Home.
     await setDays((s, today, earlier, photo) => {
@@ -169,12 +173,18 @@ const shots = process.env.SHOTS || "";
     assert.match(await page.locator(".lib-now").innerText(), /正在记录[\s\S]*好好吃饭，好好生活[\s\S]*今天更新[\s\S]*接着记一页/);
     assert.equal(await page.locator(".hs-collect .home-book-write").count(), 1, "one write link, not one per book");
     assert.equal(await page.locator(".hs-collect .home-book-tabs, .hs-collect [data-action='home-books']").count(), 0, "no My / Shared switch on Home");
-    const sizes = await page.evaluate(() => { const w = (sel) => document.querySelector(sel).getBoundingClientRect().width; return { feature: w(".lib-feature"), small: w(".lib-others .lib-book") }; });
+    const sizes = await page.evaluate(() => { const w = (sel) => document.querySelector(sel).getBoundingClientRect().width; return { feature: w(".lib-feature"), small: w(".lib-others .lib-mini"), row: document.querySelector(".lib-compact").getBoundingClientRect().height }; });
+    assert.ok(sizes.row <= 200, `a compact row (${sizes.row}px)`);
     assert.ok(sizes.feature > sizes.small * 1.8, `the featured journal is larger (${JSON.stringify(sizes)})`);
     await page.locator(".hs-collect").scrollIntoViewIfNeeded();
     await shot("v102-library");
     await page.locator('.hs-collect .home-book-cover[data-book="travel"]').tap();
     await page.waitForFunction(() => /去看更大的世界/.test(document.querySelector("#app")?.innerText || "") && !document.querySelector(".hs-collect"));
+    await page.locator('#navigation [data-page="home"]').tap();
+    // V10.56: the journal in use opens in the reader.
+    await page.locator('.hs-collect .lib-feature[data-book="food"]').tap();
+    await page.waitForSelector(".flip-page");
+    await page.locator('[data-action="reader-back"]').tap();
     await page.locator('#navigation [data-page="home"]').tap();
     await page.locator(".hs-collect .home-book-write").tap();
     await page.waitForSelector('#choose-dialog[open] [data-action="quick-book"][data-book="food"][aria-pressed="true"]');
@@ -183,7 +193,7 @@ const shots = process.env.SHOTS || "";
     await page.waitForSelector(".shelf-switch");
     assert.equal(await page.locator('.shelf-switch [role="tab"]').count() >= 2, true, "My / Shared stays on the bookshelf page");
     await page.locator('#navigation [data-page="home"]').tap();
-    passed.push("My Library: the journal in use leads (larger, with the only write link); covers open the real journals; All opens the bookshelf, where My / Shared lives");
+    passed.push("My Library: one compact row — the journal in use (its cover opens the reader, the only write link), two small covers open their journals; All opens the bookshelf, where My / Shared lives");
 
     // 6. English: translated titles in the Latin serif; the user's words stay as written; no overflow at 375 / 430.
     await page.evaluate(() => localStorage.setItem("little-days.language", "en"));
@@ -194,7 +204,7 @@ const shots = process.env.SHOTS || "";
     assert.match(await page.locator(".hs-remember .hs-title").evaluate((el) => getComputedStyle(el).fontFamily), /LD-elegant/);
     assert.match(await page.locator(".ts-card .ts-title").innerText(), /午饭/, "the page's own words are not translated");
     assert.match(await page.locator(".ts-card .ts-book").innerText(), /In[\s\S]*好好吃饭，好好生活/);
-    assert.match(await page.locator(".qu-row").innerText(), /Today's little plans[\s\S]*2 left/);
+    assert.match(await page.locator(".qu-row").innerText(), /Today's little plans[\s\S]*All done/);
     for (const [w, h] of [[375, 667], [430, 932]]) {
       await page.setViewportSize({ width: w, height: h });
       await page.waitForTimeout(200);

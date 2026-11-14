@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.56",
+    date: "2026-11-14",
+    zh: {
+      title: "首页更短，常用的在前面",
+      items: [
+        "首页顺序：今天的问候和快捷入口 → 今天的小计划 → 今天的故事 → 我的手帐。",
+        "今天的小计划直接摊开：最多显示 3 项，多的点「还有 N 项」；可以直接勾选、新增、删除；全部完成后自动收起成一行。",
+        "今天的故事只留一张摘要卡，下面写着「几页 · 几张照片 · 几段声音」，点「查看今天全部记录」看当天所有页面。",
+        "我的手帐变成紧凑的一行：正在写的这本（点封面直接翻开阅读）、页数和「接着记一页」，旁边是另外两本的小封面；完整书架还在「书架」。",
+      ],
+    },
+    en: {
+      title: "A shorter Home, with what you use first",
+      items: [
+        "Home now goes: today's greeting and quick ways → Today's little plans → Today's Story → My Library.",
+        "Your plans are open right there: three at a time (tap “N more” for the rest), tick, add or delete in place; when everything is done they fold into one line.",
+        "Today's Story is one summary card with “pages · photos · sounds”, and See all of today opens every page.",
+        "My Library is one compact row: the journal you're writing (tap the cover to read it), its pages and Write the next page, with two small covers beside it. The full shelf is still in Books.",
+      ],
+    },
+  },
+  {
     version: "10.55",
     date: "2026-11-14",
     zh: {

@@ -18,7 +18,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector(".hero");
     await require("./signed-in.cjs").ownSamples(page); // V10.41: the sample days as the person's own (see signed-in.cjs)
     // V10.11: the book page lists its days; reading opens the full-screen reader.
-    await page.locator('.home-book-cover[data-book="food"]').tap();
+    await require("./signed-in.cjs").openBookPage(page, "food");
     await page.waitForSelector(".reader-start");
     assert.equal(await page.locator(".book-view-switch").count(), 0);
     assert.ok((await page.locator(".day-covers .day-cover:not(.cover-entry)").count()) >= 2);
@@ -60,7 +60,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForSelector(".day-detail");
     await page.reload();
     await page.waitForSelector(".hero");
-    await page.locator('.home-book-cover[data-book="food"]').tap();
+    await require("./signed-in.cjs").openBookPage(page, "food");
     await page.waitForSelector(".reader-start");
     assert.match(await page.locator(".reader-start").innerText(), /继续翻阅 · 第 1 页/);
     passed.push("open this day from a page (More); the reading place is remembered");

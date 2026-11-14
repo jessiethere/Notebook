@@ -23503,3 +23503,142 @@ body.typing .ctx-caption {
     transition: none;
   }
 }
+
+/* V10.56 · Home: plans first (three in sight), one summary card for today,
+   a compact row for the journal in use. */
+.qu .qu-row {
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  min-height: 48px;
+}
+.qu-more {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper, var(--c-fffdfa, #fffdfa));
+  font: 500 12px var(--ui-sans);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.qu-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font: 400 13px/1.5 var(--ui-sans);
+  color: var(--t-5f6b4e, #5f6b4e);
+}
+.qu-done span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--c-e6ecdc, #e6ecdc);
+  font-size: 12px;
+}
+.qu[data-state="empty"] .today-plans.empty {
+  padding: 0;
+  background: none;
+}
+.qu[data-state="empty"] .qu-body {
+  padding-bottom: 6px;
+}
+.ts-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 8px 2px 0;
+}
+.ts-stats {
+  font: 400 13px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.ts-summary .ts-all {
+  min-height: 40px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.lib-compact {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--paper, var(--c-fffdfa, #fffdfa));
+  box-shadow: 0 1px 0 var(--line), 0 8px 20px -16px var(--c-3f362c66, #3f362c66);
+}
+.lib-compact .lib-c-cover {
+  width: 74px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.lib-compact .lib-c-cover .book-cover {
+  width: 74px;
+  height: 98px;
+}
+.lib-compact .lib-c-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.lib-compact .lib-c-copy small {
+  font: 500 11px var(--ui-sans);
+  letter-spacing: 0.06em;
+  color: var(--t-8a7f70, #8a7f70);
+}
+.lib-compact .lib-c-copy b {
+  font-size: 16px;
+  line-height: 1.3;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lib-compact .lib-c-copy span {
+  font: 400 12px var(--ui-sans);
+  color: var(--t-675d54, #675d54);
+}
+.lib-compact .lib-write {
+  justify-self: start;
+  margin-top: 6px;
+}
+.lib-compact .lib-c-others {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.lib-compact .lib-mini {
+  width: 34px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.lib-compact .lib-mini .book-cover {
+  width: 34px;
+  height: 45px;
+  font-size: 0;
+}
+.lib-compact .lib-mini .cover-title,
+.lib-compact .lib-mini .cover-imprint {
+  display: none;
+}
+.lib-compact .lib-count {
+  min-height: 0;
+  width: 34px;
+  height: 24px;
+  padding: 0;
+  font-size: 11px;
+}
+@media (max-width: 340px) {
+  .lib-compact {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .lib-compact .lib-c-others {
+    display: none;
+  }
+}

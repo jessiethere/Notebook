@@ -132,9 +132,17 @@ module.exports.homeAfterSave = async (page) => {
 // habits". Suites that ticked a habit on Home only to write storage once add
 // and remove a plan instead; the others open "My habits" first.
 // V10.2: Home keeps the plans and habits folded into one line; open it first.
+// V10.56: the plans are always open on Home (three in sight); nothing to unfold.
 module.exports.openPlans = async (page) => {
-  if (await page.locator('.today-planner.qu[data-open="false"]').count()) await page.locator('[data-action="plans-toggle"]').click();
   await page.locator(".today-planner.qu .qu-body").waitFor();
+};
+// V10.56: Home's journal cover opens the reader; a book's own page is
+// reached from the shelf (pull the spine out, then 打开这本).
+module.exports.openBookPage = async (page, id) => {
+  await module.exports.menu(page, "books");
+  const open = page.locator(`.pulled-book [data-action="book"][data-book="${id}"]`);
+  if (!(await open.count())) await page.locator(`[data-action="pull-book"][data-book="${id}"]`).first().tap();
+  await open.tap();
 };
 module.exports.touchStore = async (page) => {
   await module.exports.openPlans(page);

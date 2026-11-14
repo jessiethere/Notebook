@@ -9522,5 +9522,49 @@
   "wall.next": {
     "zh": "下一张",
     "en": "Next photo"
+  },
+  "qu.more": {
+    "zh": "还有 {count} 项",
+    "en": "{count} more"
+  },
+  "qu.less": {
+    "zh": "收起",
+    "en": "Show less"
+  },
+  "qu.showDone": {
+    "zh": "查看",
+    "en": "Show"
+  },
+  "qu.doneAll": {
+    "zh": "今天的 {count} 件小事都完成啦",
+    "en": "All {count} done for today"
+  },
+  "qu.firstPlaceholder": {
+    "zh": "写一件今天想做的小事",
+    "en": "One little thing for today"
+  },
+  "ts.viewAll": {
+    "zh": "查看今天全部记录",
+    "en": "See all of today"
+  },
+  "ts.statPages": {
+    "zh": "{count} 页",
+    "en": "{count} pages"
+  },
+  "ts.statPhotos": {
+    "zh": "{count} 张照片",
+    "en": "{count} photos"
+  },
+  "ts.statAudio": {
+    "zh": "{count} 段声音",
+    "en": "{count} sounds"
+  },
+  "ts.statVideo": {
+    "zh": "{count} 段视频",
+    "en": "{count} videos"
+  },
+  "lib.read": {
+    "zh": "翻开《{name}》",
+    "en": "Open {name}"
   }
 }

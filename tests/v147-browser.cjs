@@ -40,7 +40,7 @@ async function run(browser, iosVolume, device = devices["iPhone 13"]) {
   await require("./signed-in.cjs").touchStore(page);
   await page.reload();
   await page.waitForSelector(".hero");
-  await page.locator('.home-book-cover[data-book="food"]').tap();
+  await require("./signed-in.cjs").openBookPage(page, "food");
   await page.waitForSelector(".book-music");
   await page.locator('.book-music [data-action="music-sheet"]').tap();
   await page.waitForSelector('#choose-dialog[open] .music-sheet[data-target="book"]');

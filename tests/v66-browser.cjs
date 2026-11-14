@@ -92,17 +92,22 @@ const shots = process.env.SHOTS_DIR || "";
     assert.match(await page.locator(".ts-card .ts-title").innerText(), /下午的咖啡/);
     assert.equal(await page.locator(".ts-card .ts-pol").count(), 3, "up to three photos on the spread");
     assert.match(await page.locator(".ts-card .ts-more").innerText(), /\+1/, "four photos today: +1");
-    assert.equal(await page.locator(".ts-also li").count(), 2, "the other two pages each keep a line");
+    // V10.56: one summary card (no list of every page under it): the numbers, and the whole day one tap away.
+    assert.equal(await page.locator(".ts-also").count(), 0, "no list of pages on Home");
+    // Pages as the Calendar and the reader count them (the day cover is a page too).
+    const statPages = Number((await page.locator(".ts-summary .ts-stats").innerText()).match(/(\d+) 页/)[1]);
+    assert.match(await page.locator(".hs-remember .hs-title").innerText(), new RegExp(`今天留下的 ${statPages} 页`));
+    assert.match(await page.locator(".ts-summary .ts-stats").innerText(), /\d+ 页 · 4 张照片/);
     const text = await page.locator(".hs-remember").innerText();
-    for (const piece of [/下午的咖啡/, /图库里的一张/, /早点睡/]) assert.match(text, piece, `every page of the day is there (${piece}) in: ${text.replace(/\n/g, " | ")}`);
     assert.match(text, /收藏于/);
     assert.ok(await page.locator(".ts-card .ts-title").evaluate((el) => el.style.fontFamily.length > 0), "the card uses the page's own font");
-    assert.equal(await page.locator(".ts-also .ts-thumb.words").count(), 1, "the words-only page has a paper thumbnail");
     if (shots) await page.screenshot({ path: `${shots}/v66-peek.png` });
-    await page.locator(".ts-also li button").last().click();
+    await page.locator(".ts-summary .ts-all").click();
     await page.waitForSelector(".day-detail");
+    const all = await page.locator(".day-detail").innerText();
+    for (const piece of [/下午的咖啡/, /早点睡/]) assert.match(all, piece, `every page of the day is in 查看今天全部记录 (${piece})`);
     await page.locator('#navigation [data-page="home"]').click();
-    passed.push("Home: today's pages as one story — photos from across the day, a line for each other page; a tap opens that page");
+    passed.push("Home: today's pages as one summary card — photos from across the day, pages and 4 photos counted like the Calendar, the whole day one tap away");
 
     // 5. The type bar: a font chosen for the words leaves the title alone (and back).
     await page.locator('[data-action="today-write"]').tap();
