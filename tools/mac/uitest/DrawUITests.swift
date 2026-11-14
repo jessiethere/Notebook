@@ -242,7 +242,7 @@ final class DrawUITests: XCTestCase {
     // after a real tap (tools/mac/uitest/video-check.js).
     func testVideoMetadata() throws {
         launch(check: "/tmp/ld-uitest/video-check.js")
-        let label = { () -> String in app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDVID:'")).firstMatch.label }
+        let label = { () -> String in self.app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDVID:'")).firstMatch.label }
         let end = Date().addingTimeInterval(40)
         while Date() < end, !(label().contains("noTap")) { Thread.sleep(forTimeInterval: 0.5) }
         let b = app.buttons["LDVID-tap"]
