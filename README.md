@@ -186,7 +186,7 @@ npm run test:browser:v65
 ### 2026-11-14 — 第一次上传到 App Store Connect
 
 - 0.1.0 (1) 已上传，商店名称 Capiday 已预留（App ID 6834636756）。下一次构建号自动是 2，并且不再问出口合规问题。
-- 下一步：在 App Store Connect 加中文名「开铺手帐」，用 TestFlight 装到 iPhone 上测试。
+- 中文商店名「开铺手帐」也已保存。下一步：用 TestFlight 装到 iPhone 上测试。
 
 ### 2026-11-14 — 改名为开铺手帐 / Capiday（V10.45）
 

@@ -52,7 +52,8 @@
 
 - **用户在 Mac 的 Xcode 里完成**：归档 0.1.0 (1)（Release，`com.capiday.app`）→ Distribute → App Store Connect。第一次 Xcode 报 `DistributionAppRecordProviderError error 0`：读了 Xcode 的分发日志，App 记录其实已经创建成功（POST 返回 201，App ID 6834636756，名称 Capiday，主语言 en-US，SKU com.capiday.app），只是 1 秒后再查时 Apple 还没同步，Xcode 误判为找不到。用户重试后上传成功（用户告知）。**「Capiday」这个商店名称已预留。**
 - **为下一次准备**（`project.pbxproj`）：构建号 `CURRENT_PROJECT_VERSION` 1 → 2（每次上传必须更大）；加 `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO`（App 只用系统自带的加密），以后的构建不再需要手动回答出口合规问题。0.1.0 (1) 这一版在 TestFlight 里仍需手动选一次「无」。
-- **还没做**：App Store Connect 里加简体中文本地化名称「开铺手帐」；TestFlight 内部测试；真机测试。
+- **用户随后完成**（用户截图确认）：TestFlight 里 0.1.0 (1) 出口合规选「无」，状态 Ready to Submit；App Information 加简体中文本地化，名称「开铺手帐」保存成功（Saved，无占用提示）。英文 / 主语言名称 Capiday。
+- **还没做**：TestFlight 内部测试组与真机安装；上架前要填 Category、截图、描述等（不急）。
 
 ### 2026-11-14 — V10.45 验证与发布（开铺手帐 / Capiday）
 
