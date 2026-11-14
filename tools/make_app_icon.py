@@ -1,10 +1,13 @@
 """Build the Capiday app icons from the approved official icon artwork.
 
-Usage: python3 tools/make_app_icon.py [docs/brand/LD-app-icon-original.png]
+Usage: python3 tools/make_app_icon.py [docs/brand/capiday-app-icon-original.png]
 
-Source: the "Little Days V1 Official App Icon" (the app is now Capiday; a new icon is still needed) provided and approved by the
-product owner on 2026-11-10 (Captain peeking over a cream journal plaque,
-lemon hat, flower paper clip, "Little Days" wordmark, sprout). The artwork is
+Source (2026-11-14): the Capiday icon provided by the product owner after the
+rename (docs/brand/capiday-app-icon-original.png, 1254x1254: Captain peeking
+over a cream journal plaque, lemon hat, flower paper clip, "Capiday" wordmark,
+sprout). Same layout as the earlier "Little Days V1 Official App Icon"
+(docs/brand/LD-app-icon-original.png, 2026-11-10, kept for history), so the
+same tile measurements apply. The artwork is
 used as it is — nothing is redrawn or regenerated.
 
 The supplied picture (1254x1254) shows the icon as a rounded tile (about
@@ -37,7 +40,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs/brand/LD-app-icon-original.png"
+SOURCE = ROOT / "docs/brand/capiday-app-icon-original.png"
 APPICON = ROOT / "Native/App/Assets.xcassets/AppIcon.appiconset"
 WEB = ROOT / "Public/icons"
 

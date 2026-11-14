@@ -187,7 +187,7 @@ npm run test:browser:v65
 
 - App 名字从 Little Days 改为中文「**开铺手帐**」、英文「**Capiday**」。中文界面写开铺手帐，iPhone 主屏幕在中文系统下显示开铺手帐；首页字标、页面刊头和导出文件名用 Capiday。GitHub 仓库现在是 https://github.com/jessiethere/Capiday ，Xcode 显示名 Capiday、Bundle ID `com.capiday.app`。
 - 手帐、照片、设置和以前的备份都不受影响（内部存储名没改）。
-- 还没换：App 图标里的「Little Days」字样，需要新的图标稿。
+- App 图标换成了你提供的新 Capiday 图标（同样的 Captain 构图）。
 
 ### 2026-11-13 — S1–S4 在 iOS 模拟器里验证；V10.44 发布到固定链接
 

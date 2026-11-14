@@ -62,7 +62,7 @@ npm 包里是按 unicode-range 切开的网页子集。`tools/merge_font_slices.
 
 ## V8.1 正式 App Icon（2026-11-10）
 
-- 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」（图标上的字样仍是 Little Days；改名为 Capiday 后需要新图标），保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
+- 来源：产品负责人 2026-11-10 上传并确认的「Little Days V1 Official App Icon」（旧图标，字样是 Little Days）。**2026-11-14 起使用新的 Capiday 图标**：产品负责人提供的 `docs/brand/capiday-app-icon-original.png`（1254 × 1254，同样的构图，字样 Capiday），用同一个 `tools/make_app_icon.py` 生成，没有重画，保存为 `docs/brand/LD-app-icon-original.png`（1254 × 1254 PNG，原样保存，未改动）。
 - 生成：`python3 tools/make_app_icon.py` → iOS `Native/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`；Web `Public/icons/favicon-32.png`、`icon-192.png`、`apple-touch-icon.png`（同步进 iOS 外壳 WebApp 与在线链接）。
 - 处理说明见 DESIGN_SYSTEM.md「V8.1 正式 App Icon」。只限 Capiday 使用。
 

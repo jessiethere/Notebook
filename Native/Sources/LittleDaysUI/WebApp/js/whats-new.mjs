@@ -10,6 +10,7 @@ export const UPDATES = [
       title: "改名了：中文叫开铺手帐，英文叫 Capiday",
       items: [
         "App 从 Little Days 改名：中文名「开铺手帐」，英文名「Capiday」。中文界面里的提示和说明写开铺手帐；首页和页面上的刊头、页脚，以及导出的 PDF、备份文件名用 Capiday。",
+        "App 图标换成了新的 Capiday 图标（还是戴柠檬帽的 Captain）。",
         "你的手帐、照片、视频和设置都原样保留，不需要做任何事情；以前导出的备份也照样可以恢复。",
       ],
     },
@@ -17,6 +18,7 @@ export const UPDATES = [
       title: "Little Days is now Capiday",
       items: [
         "The app is now called Capiday (in Chinese: 开铺手帐): Home, Settings, messages, exported PDF and backup file names, and the masthead and footer on your pages all use the new name.",
+        "A new Capiday app icon (still Captain in the lemon hat).",
         "Your journal, photos, videos and settings stay exactly as they were — nothing to do. Backups you exported before still restore.",
       ],
     },

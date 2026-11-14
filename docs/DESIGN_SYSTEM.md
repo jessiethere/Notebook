@@ -237,7 +237,7 @@ Web 运行时加载共享 JSON。`Public/tokens.css` 是加载前的回退，由
 | 眨眼、说话、伸懒腰等 | **未实现** | 需要美术提供连贯的动画帧（同一角度、同一光照的序列），不用表情图片突然切换冒充动画 |
 | 写字 | **未实现** | 没有写字动作素材，写字时用 Normal |
 
-## 2026-11-10 V8.1 正式 App Icon（Little Days V1 Official App Icon；2026-11-14 改名 Capiday 后图标仍是旧字样，待换新图标）
+## 2026-11-10 V8.1 正式 App Icon（Little Days V1 Official App Icon；2026-11-14 换成产品负责人提供的 Capiday 版，构图相同，见 docs/brand/capiday-app-icon-original.png）
 
 > 产品负责人 2026-11-10 确认的最终图标，本轮不再探索其他方案。原图：`docs/brand/LD-app-icon-original.png`（1254 × 1254）。**直接使用原图，不重新生成、不重绘、不用 SVG / CSS 模仿。**
 

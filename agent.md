@@ -48,6 +48,12 @@
 
 ## 更新日志
 
+### 2026-11-14 — 新的 Capiday App 图标（同属 V10.45）
+
+- **需求**：用户提供了新的图标图片（1254 × 1254，构图和旧图标相同：戴柠檬帽的 Captain、小花回形针、小芽，字样改为「Capiday」）。
+- **做法**：原图保存为 `docs/brand/capiday-app-icon-original.png`（旧的 `LD-app-icon-original.png` 保留作历史）；用原来的 `tools/make_app_icon.py` 原样生成 `AppIcon-1024.png`、`apple-touch-icon.png`、`icon-192.png`、`favicon-32.png`，没有重画。先量了新旧两张图的图块边缘（相差约 4 px），原来的裁切参数适用；生成后看了 1024 和 192 两个尺寸，边角和叶子、回形针都完整。工具默认源图改为新图。
+- **文件**：上述 4 个图标、`docs/brand/capiday-app-icon-original.png`、`tools/make_app_icon.py`、`docs/ASSETS.md`、`docs/DESIGN_SYSTEM.md`、更新记录 10.45 加一条。
+
 ### 2026-11-14 — 中文名「开铺手帐」（同属 V10.45，发布前补上）
 
 - **需求**：用户确认中文名叫「开铺手帐」，英文名 Capiday。
