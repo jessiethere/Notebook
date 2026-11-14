@@ -48,6 +48,28 @@
 
 ## 更新日志
 
+### 2026-11-14 — V10.46 P0（TestFlight）：手绘画完无法退出 / 选中 / 保存
+
+- **需求**：用户在真实 iPhone（TestFlight 0.1.0 (1)）上反馈：手绘能画，但画完页面选不中、操作不了，没法保存。要求先定位根因、不预设；三类问题（画布选中 / 目标页面 / 保存持久化）分开报告；Web 和 iOS 结果分开写。
+- **调查方式**
+  - 网页：Chromium 模拟 iPhone 13 + 触摸。
+  - iOS：新增 `tools/mac/uitest`，在 Mac 上 `/tmp` 的项目副本里加临时的 XCUITest 目标，向模拟器发送**真实触摸**。Debug 探针 `probe.js` 通过 `-LittleDaysCheck` 运行，把页面状态写进无障碍标签：画板是否打开、选中了什么、按下 / 抬起次数。
+  - 仓库里的 Xcode 工程没有改。
+- **结论：四个独立问题**（详见 `docs/BUGFIX_LOG.md`）
+  - **A. 根因，已确认**：画板占满整个屏幕，顶部没给状态栏留位置，「取消 / 完成」在 iPhone 状态栏下面，iOS 把这些点按留给系统。真实触摸下点「完成」，页面收不到任何事件，人被卡在画板里。修改：`Public/styles.css` 的 `.draw-top` 上边距加 `env(safe-area-inset-top)`。
+  - **B. 已确认**：手绘是一张「画到的最外边」大小的透明图片，透明部分挡住下面的照片、文字、贴纸。修改：`Public/app.js` 按下时检查手指附近约 14 px 内有没有笔画（`inkMaps`，每张手绘读一次透明度，最长边 400 px，旋转和缩放都算进去）；没有笔画就交给下面的东西；读不到透明度时保持原样。
+  - **C. 已确认**：「取消」会直接丢掉新笔画。修改：`draw.mjs` 新增 `confirmDiscard`，有新笔画时先用 `askConfirm` 询问，系统返回 / Esc 也一样；接着画以前的手绘时取消，原来的不变。
+  - **D. 已确认**：保存失败时手绘直接丢失。修改：`drawOnPage` 失败时询问「再试一次」，手绘留在内存里。
+  - **排除**：「幽灵手指」（抬起事件丢失）。真实触摸下按下和抬起一一对应，没有改那段代码。
+  - **不是问题**：从首页进入时，画之前就已经在今天新建了一页；空白画板点「完成」不会生成图层。
+- **测试**
+  - 新增 `tests/v145-browser.cjs`，6 组全部通过：A 的样式、首页先建页、空白不生成图层、B、移动、C（两种情况）、D、保存后重新加载仍在。
+  - `tests/v51-browser.cjs` 跟着「取消先询问」更新。
+  - v100 / v125 / v37 / v64 / v133 通过；`npm test` 281/281；`test_native_shell` OK。全量回归结果见下一条日志。
+  - **iOS 模拟器（真实触摸）**：修复前点「完成」没有反应；修复后完整流程全部通过，包括完全关闭 App 再打开后手绘仍在、能画出来。
+- **没有验证**：真机（需要上传新的 TestFlight 构建 0.1.0 (2)）、双指缩放、Apple Pencil。
+- **下一步**：发布 V10.46 到固定链接；用户在 Mac 上 Archive → 上传构建 2 → 用 TestFlight 在 iPhone 上按 BUGFIX_LOG 里的 4 步确认。
+
 ### 2026-11-14 — 第一次上传到 App Store Connect；为下一次上传做准备
 
 - **用户在 Mac 的 Xcode 里完成**：归档 0.1.0 (1)（Release，`com.capiday.app`）→ Distribute → App Store Connect。第一次 Xcode 报 `DistributionAppRecordProviderError error 0`：读了 Xcode 的分发日志，App 记录其实已经创建成功（POST 返回 201，App ID 6834636756，名称 Capiday，主语言 en-US，SKU com.capiday.app），只是 1 秒后再查时 Apple 还没同步，Xcode 误判为找不到。用户重试后上传成功（用户告知）。**「Capiday」这个商店名称已预留。**

@@ -63,7 +63,7 @@ final class DrawUITests: XCTestCase {
         if rect("skip") != nil { tap("skip") }
         // 2. Select by tapping ink, move it.
         guard let canvas = rect("canvas") else { XCTFail("canvas"); return }
-        point(canvas, 0.78, 0.82).tap()
+        point(canvas, 0.78, 0.82).tap() // the first drawing's lower stroke
         Thread.sleep(forTimeInterval: 1.0)
         log("3-tap-ink")
         XCTAssertEqual(state()["ctx"] as? String, "drawing", "ink selects the drawing")
@@ -75,10 +75,13 @@ final class DrawUITests: XCTestCase {
         // 3. B: text added, then a second drawing over it; tap the text.
         tap("back")
         tap("addText", wait: 1.2)
-        app.typeText("Hi")
-        Thread.sleep(forTimeInterval: 0.6)
-        if rect("back") != nil { tap("back") }
-        if rect("back") != nil { tap("back") }
+        log("4b-text-added") // a new box has its default words; nothing to type
+        // Put the keyboard away and leave the text, as a person would: tap the
+        // bare paper outside the drawing (bottom-left corner).
+        for _ in 0..<2 where state()["ctx"] as? String != "" || app.keyboards.count > 0 {
+            if let c = rect("canvas") { point(c, 0.04, 0.97).tap(); Thread.sleep(forTimeInterval: 1.0) }
+        }
+        log("4c-left-text")
         tap("more")
         tap("drawNew", wait: 1.5)
         if let b2 = waitFor("drawCanvas") {
@@ -93,9 +96,11 @@ final class DrawUITests: XCTestCase {
         log("6-tap-text-under-drawing")
         XCTAssertEqual(state()["ctx"] as? String, "text", "B: the text under the empty part is picked")
         // 4. C: 接着画 + a stroke + 取消 asks first.
-        tap("back")
-        point(canvas, 0.86, 0.92).tap()
-        Thread.sleep(forTimeInterval: 1.0)
+        for _ in 0..<2 where state()["ctx"] as? String != "" || app.keyboards.count > 0 {
+            if let c = rect("canvas") { point(c, 0.04, 0.97).tap(); Thread.sleep(forTimeInterval: 1.0) }
+        }
+        if let c = rect("canvas") { point(c, 0.86, 0.92).tap(); Thread.sleep(forTimeInterval: 1.0) }
+        log("6b-tap-second-ink")
         if rect("again") != nil {
             tap("again", wait: 1.5)
             if let b3 = waitFor("drawCanvas") { stroke(b3, (0.4, 0.4), (0.6, 0.5)) }
@@ -103,7 +108,8 @@ final class DrawUITests: XCTestCase {
             log("7-cancel-asks")
             XCTAssertEqual(state()["dlg"] as? String, "confirm-dialog", "C: 取消 with new strokes asks first")
             tap("confirmOk", wait: 1.2)
-        }
+        } else { XCTFail("the second drawing was not selected by its ink") }
+        if rect("back") != nil { tap("back") }
         // 5. Save → Reader.
         tap("save", wait: 3)
         log("8-saved")
@@ -112,6 +118,11 @@ final class DrawUITests: XCTestCase {
         app.terminate()
         launch()
         Thread.sleep(forTimeInterval: 2)
+        // Today's pages are further down Home: scroll until the entry is on screen.
+        for _ in 0..<4 where (rect("openDay")?.maxY ?? 9999) > app.webViews.firstMatch.frame.height - 120 {
+            app.webViews.firstMatch.swipeUp(velocity: .slow)
+            Thread.sleep(forTimeInterval: 0.8)
+        }
         tap("openDay", wait: 3)
         log("9-reopened")
         XCTAssertGreaterThanOrEqual(state()["saved"] as? Int ?? 0, 2, "both drawings saved")
