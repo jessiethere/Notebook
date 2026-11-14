@@ -9758,14 +9758,30 @@ async function v31Action(target) {
       // From the selected video's tools (V10.23) or the play button on the paper.
       const element = name === "ctx-play" ? document.querySelector(`#journal-canvas [data-layer="${CSS.escape(selectedLayer || "")}"] :is(video,audio)`) : target.closest(".media-layer")?.querySelector("video,audio");
       if (!element) return true;
-      if (element.paused)
-        element.play().catch((error) => {
-          if (error?.name === "NotAllowedError") return toast(t("media.tapAgain"));
-          // iPhones sometimes need the file reloaded before the first play.
-          element.load();
-          element.play().catch((again) => toast(t(again?.name === "NotSupportedError" ? "media.unsupported" : "media.missing")));
-        });
-      else element.pause();
+      if (element.paused) {
+        if (!recorder) setAudioSession("playback");
+        const kind = element.tagName === "VIDEO" ? "video" : "audio";
+        const started = Date.now();
+        const played = () => logEvent("media_play", { kind, stage: "playing", ms: Date.now() - started });
+        element
+          .play()
+          .then(played)
+          .catch((error) => {
+            if (error?.name === "NotAllowedError") {
+              logEvent("media_play", { kind, stage: "failed", err: "notallowed" });
+              return toast(t("media.tapAgain"));
+            }
+            // iPhones sometimes need the file reloaded before the first play.
+            element.load();
+            element
+              .play()
+              .then(played)
+              .catch((again) => {
+                logEvent("media_play", { kind, stage: "failed", err: playErr(again, element) });
+                toast(t(again?.name === "NotSupportedError" ? "media.unsupported" : "media.missing"));
+              });
+          });
+      } else element.pause();
       return true;
     }
     case "book-filter-clear":
@@ -10784,10 +10800,18 @@ async function mediaMetadata(file, kind) {
       url = URL.createObjectURL(file);
     // V10.26 (P0): say which way it failed — no metadata within 10 s, or the
     // media element's own error code (MediaError 1–4) — in the local log.
-    const timer = setTimeout(
-      () => finish(Object.assign(new Error("Unsupported media"), { code: "media-timeout" })),
-      10000,
-    );
+    // V10.50 (P0 video): the iPhone web view did not load a file's details
+    // without a fresh tap, so right after the photo picker every import
+    // waited 10 s and failed ("media-timeout"; 重试 is a tap, so it worked).
+    // No details in time now means "not known yet": the file is still saved
+    // (its length is read when it plays). A real error still stops it.
+    const timer = setTimeout(() => {
+      logEvent("media_meta_timeout", { kind });
+      element.onloadedmetadata = null;
+      element.onerror = null;
+      finish();
+      resolve({ duration: 0, unknown: true });
+    }, 10000);
     const finish = (error) => {
       clearTimeout(timer);
       element.removeAttribute("src");
@@ -10990,6 +11014,22 @@ async function runImport() {
     toast(t(err === "too-big" ? (kind === "video" ? "import.tooBigVideo" : "import.tooBigAudio") : err === "unsupported" ? "media.unsupported" : "import.failedToast"));
   }
 }
+// V10.50 (P0 voice): once the microphone has been used, the iPhone web view
+// keeps the audio session in "play and record", where sound comes out of the
+// earpiece (very quiet — a just-recorded voice note seemed silent). The
+// session is set to recording only while recording and back to playback
+// after it, and before a clip plays (iOS 17+ navigator.audioSession).
+// A short id for the local log: the media element's own error code when it
+// has one (media-err-1…4), else the play() error's name ("notsupported" …).
+function playErr(error, element) {
+  if (element?.error?.code) return `media-err-${element.error.code}`;
+  return String(error?.name || "error").toLowerCase().replace(/error$/, "").slice(0, 16) || "error";
+}
+function setAudioSession(type) {
+  try {
+    if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type;
+  } catch {}
+}
 async function startRecording() {
   if (!navigator.mediaDevices?.getUserMedia || !globalThis.MediaRecorder) {
     toast(t("media.recordUnsupported"));
@@ -10997,6 +11037,7 @@ async function startRecording() {
   }
   busyMedia = true;
   try {
+    setAudioSession("play-and-record");
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     recordingStream = stream;
     const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(
@@ -11021,6 +11062,7 @@ async function startRecording() {
       clearInterval(recordingTimer);
       clearTimeout(recordingTimeout);
       stream.getTracks().forEach((track) => track.stop());
+      setAudioSession("playback");
       busyMedia = true;
       try {
         const blob = new Blob(chunks, { type: current.mimeType });
@@ -11046,6 +11088,7 @@ async function startRecording() {
     current.onerror = () => {
       recordingFailed = true;
       stream.getTracks().forEach((track) => track.stop());
+      setAudioSession("playback");
       if (current.state === "recording") current.stop();
       toast(t("media.failed"));
     };
@@ -11066,6 +11109,7 @@ async function startRecording() {
     render();
   } catch (error) {
     recordingStream?.getTracks().forEach((track) => track.stop());
+    setAudioSession("playback");
     recordingStream = null;
     recorder = null;
     busyMedia = false;
@@ -11116,8 +11160,13 @@ $("#lightbox").addEventListener("close", () =>
 function togglePlayer(button) {
   const audio = button.closest("[data-player]")?.querySelector("audio");
   if (!audio) return;
-  if (audio.paused) audio.play().catch(() => toast(t("media.missing")));
-  else audio.pause();
+  if (audio.paused) {
+    if (!recorder) setAudioSession("playback");
+    audio.play().catch((error) => {
+      logEvent("media_play", { kind: "audio", stage: "failed", err: playErr(error, audio) });
+      toast(t("media.missing"));
+    });
+  } else audio.pause();
 }
 function playerDuration(audio, player) {
   return Number.isFinite(audio.duration) && audio.duration > 0
@@ -11409,13 +11458,15 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") openJourney(journeyHabit, journeyPage + 1);
   if (event.key === "ArrowLeft") openJourney(journeyHabit, journeyPage - 1);
 });
-// Clips on the paper show their own playing state.
-for (const type of ["play", "pause", "ended"])
+// Clips on the paper show their own playing state — only once sound is
+// really playing ("playing"), not when play was merely asked for (V10.50:
+// no "playing" look on a clip that stays silent).
+for (const type of ["playing", "pause", "ended", "error", "emptied"])
   document.addEventListener(
     type,
     (event) => {
       const layer = event.target.closest?.(".media-layer");
-      if (layer) layer.classList.toggle("playing", type === "play");
+      if (layer) layer.classList.toggle("playing", type === "playing");
     },
     true,
   );

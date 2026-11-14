@@ -28,6 +28,11 @@ const tick = () => {
     musicPreview: r('#choose-dialog[open] [data-action="music-preview"]'), musicVolume: r('#choose-dialog[open] [data-music-volume]'),
     bgmPlaying: !!(document.querySelector("#background-music") && !document.querySelector("#background-music").paused), bgmGain: document.querySelector("#background-music")?.dataset.gain || "",
     volOut: document.querySelector("#choose-dialog[open] .music-volume output")?.textContent || "",
+    quickOpen: r('[data-action="quick-open"]'), quickVoice: r('#choose-dialog[open] [data-action="quick-way"][data-way="voice"]'), quickStart: r("#choose-dialog[open] .quick-start"),
+    recordAudio: r('[data-action="record-audio"]'), stopRecording: r('[data-action="stop-recording"]'), recordStatus: document.querySelector("#record-status")?.textContent || "",
+    voicePlay: r(".audio-layer .layer-play"), voicePlaying: !!document.querySelector(".audio-layer.playing"), voiceT: Math.round((document.querySelector(".audio-layer audio")?.currentTime || 0) * 10) / 10,
+    voiceSrc: !!document.querySelector('.audio-layer audio[src^="blob:"]'), session: navigator.audioSession ? navigator.audioSession.type : "none",
+    voices: (() => { try { const s = JSON.parse(localStorage.getItem("little-days.v1") || "null"); return (s?.entries || []).flatMap((e) => [e, ...(e.moments || [])]).flatMap((p) => p.media || []).filter((c) => c.origin === "recording").length; } catch { return -1; } })(),
     confirmText: document.querySelector("#confirm-dialog[open] #confirm-message")?.textContent || "",
     dayInk: [...document.querySelectorAll(".chapter-canvas .drawing-layer img")].filter((i) => i.complete && i.naturalWidth > 0).length,
     saved, draftDrawings, down: ev.down, up: ev.up, cancel: ev.cancel, appUp: ev.appUp, log: ev.log.slice(-8).join(" ") };

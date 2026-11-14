@@ -144,7 +144,12 @@ struct LittleDaysWebView: UIViewRepresentable {
         // Persistent store: journal metadata (LocalStorage) and media (IndexedDB) survive relaunches.
         configuration.websiteDataStore = .default()
         configuration.allowsInlineMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = .all
+        // V10.50 (P0 video import): with `.all`, iOS WebKit also would not load a
+        // video's or sound's details without a fresh tap, so the first import
+        // right after the photo picker timed out (`media-timeout`) and only the
+        // retry (a tap) worked. Nothing in the app starts sound on its own:
+        // every clip and the music play only from a tap (Public/app.js).
+        configuration.mediaTypesRequiringUserActionForPlayback = []
         // Lets the shared CSS drop the "web preview" phone frame and use real safe areas.
         let marker = WKUserScript(
             source: "window.littleDaysBiometry = '\(LittleDaysLockBridge.biometry())'; document.documentElement.dataset.shell = 'ios'; document.documentElement.dataset.biometric = window.littleDaysBiometry;",
@@ -208,8 +213,11 @@ final class LittleDaysWebCoordinator: NSObject, WKUIDelegate, WKNavigationDelega
     // MARK: Microphone (voice notes). iOS still asks the person via NSMicrophoneUsageDescription.
 
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+        // V10.50: the app's own page gets the microphone without WebKit's extra
+        // in-app question every launch; iOS itself still asks once
+        // (NSMicrophoneUsageDescription) and the person can turn it off in Settings.
         let ownOrigin = origin.protocol == LittleDaysWebResources.scheme || origin.host == LittleDaysWebResources.launchURL.host
-        decisionHandler(ownOrigin && type == .microphone ? .prompt : .deny)
+        decisionHandler(ownOrigin && type == .microphone ? .grant : .deny)
     }
 
     // MARK: Debug: open a screen from the command line

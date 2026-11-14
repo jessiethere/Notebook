@@ -14,7 +14,7 @@ final class DrawUITests: XCTestCase {
     }
     func log(_ step: String) {
         let s = state()
-        let keys = ["dlg", "studio", "reader", "ctx", "drawing", "saved", "draftDrawings", "dayInk", "bgmPlaying", "bgmGain", "volOut", "down", "up"]
+        let keys = ["dlg", "studio", "reader", "ctx", "drawing", "saved", "draftDrawings", "dayInk", "bgmPlaying", "bgmGain", "volOut", "recordStatus", "voiceSrc", "voicePlaying", "voiceT", "voices", "session", "down", "up"]
         print("LDSTEP \(step) | " + keys.map { "\($0)=\(s[$0].map { "\($0)" }?.replacingOccurrences(of: "\n", with: "") ?? "-")" }.joined(separator: " "))
         try? XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: "/tmp/ld-uitest/shots/\(step).png"))
     }
@@ -250,5 +250,48 @@ final class DrawUITests: XCTestCase {
         let end2 = Date().addingTimeInterval(15)
         while Date() < end2, !(label().contains("afterTap")) { Thread.sleep(forTimeInterval: 0.5) }
         print("LDSTEP video \(label())")
+    }
+
+    // V10.50 · P0 voice: record 5 s with real taps → stop → play right away
+    // (really playing: time moves) → save → close the app → play again.
+    // The Simulator plays through the Mac's speakers, so the iPhone earpiece
+    // problem itself can only be checked on a real iPhone.
+    func testVoiceRecordPlay() throws {
+        try? FileManager.default.createDirectory(atPath: "/tmp/ld-uitest/shots", withIntermediateDirectories: true)
+        launch()
+        if rect("skip") != nil { tap("skip") }
+        tap("quickOpen", wait: 1.2)
+        tap("quickVoice", wait: 0.8)
+        tap("quickStart", wait: 2)
+        if rect("skip") != nil { tap("skip") }
+        tap("recordAudio", wait: 1)
+        for name in ["允许", "Allow", "好"] where app.alerts.buttons[name].exists { app.alerts.buttons[name].tap() }
+        Thread.sleep(forTimeInterval: 5)
+        log("v1-recording")
+        XCTAssertEqual(state()["session"] as? String, "play-and-record")
+        tap("stopRecording", wait: 4)
+        log("v2-stopped")
+        XCTAssertEqual(state()["voiceSrc"] as? Bool, true, "the clip is on the page")
+        XCTAssertEqual(state()["session"] as? String, "playback", "back to playback after recording")
+        tap("voicePlay", wait: 2.5)
+        log("v3-playing")
+        XCTAssertEqual(state()["voicePlaying"] as? Bool, true, "really playing")
+        XCTAssertGreaterThan(state()["voiceT"] as? Double ?? 0, 0.5, "time moves")
+        tap("save", wait: 3)
+        log("v4-saved")
+        XCTAssertEqual(state()["voices"] as? Int, 1, "saved in the journal")
+        app.terminate()
+        launch()
+        Thread.sleep(forTimeInterval: 2)
+        for _ in 0..<4 where (rect("openDay")?.maxY ?? 9999) > app.webViews.firstMatch.frame.height - 120 {
+            app.webViews.firstMatch.swipeUp(velocity: .slow)
+            Thread.sleep(forTimeInterval: 0.8)
+        }
+        tap("openDay", wait: 3)
+        log("v5-reopened")
+        tap("voicePlay", wait: 2.5)
+        log("v6-playing-again")
+        XCTAssertEqual(state()["voicePlaying"] as? Bool, true, "plays after the app was closed")
+        XCTAssertGreaterThan(state()["voiceT"] as? Double ?? 0, 0.5)
     }
 }
