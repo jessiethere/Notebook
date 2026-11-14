@@ -48,6 +48,39 @@
 
 ## 更新日志
 
+### 2026-11-14 — V10.50 P0：语音日记播放无声、录音状态、视频第一次导入失败
+
+- **需求**：
+  - TestFlight 真机发现：录音保存后播放没有声音（P0）；录音过程不清楚、停止后约 3 秒没有反馈；10.5 MB 视频第一次导入失败（`media-timeout`），重试才成功。
+  - 要求先查根因，Web / 模拟器 / 真机分开写，最小修复。
+- **根因**（详见 `docs/BUGFIX_LOG.md` V10.50）
+  - **语音**：
+    - 模拟器用真实麦克风和真实点按查过：格式（webm/opus）、数据（能解码，有真实声音）、文件和引用、重开后播放，都正常。
+    - 最可能的原因是真机音频会话停在 play-and-record，声音走听筒。模拟器复现不了。
+    - 另一个问题：页面播放状态在 `play` 时就切成播放中，属于假成功。
+  - **视频**：外壳设置 `mediaTypesRequiringUserActionForPlayback = .all` 时，WKWebView 没有点按就不加载元数据。导入是在选完文件后进行的，等 10 秒就超时；重试是一次点按，所以成功。模拟器已证实：修复前不点按超时，修复后 156 ms 加载。
+- **修改**
+  - `Public/app.js`：`setAudioSession()`；播放状态改用 `playing` 事件；播放失败提示并记日志（`playErr`、`media_play`）；录音状态机（`voice`、`saveVoice`、`stopRecording`、`startWave`、切后台自动停止保存）；`mediaMetadata` 超时不再算失败。
+  - `Public/js/personal-ui.mjs`：`voiceRecorderHTML`、`clockText`；录音区放在面板最上面。
+  - `Public/styles.css`：`.voice-rec` 和 `.vr-*` 样式。
+  - i18n：`voice.*`（18 条）。whats-new 10.50。
+  - 外壳 `LittleDaysWebShellView.swift`：`mediaTypesRequiringUserActionForPlayback = []`；麦克风 `.grant`（iOS 系统仍会问一次）。
+  - `tools/mac/uitest`：`voice-check.js`、`video-check.js`；测试 `testVoiceFormats`、`testVideoMetadata`、`testVoiceRecordPlay`；探针加了录音相关字段。
+- **决定**
+  - 不重写录音存储：仍然是 `attachClip` → `media.put`，读回校验后才算保存成功。
+  - 录音标题编辑、三种播放器外观等 Phase B 设计确认后再做。
+  - 黑胶 / 录音机外观的利弊在设计稿里写。
+- **测试**
+  - 新增 `tests/v148-browser.cjs`，7 组通过。
+  - v3 / v31 / v34 / v57 / v59 / v111 / v116 / v123 通过；`npm test` 281/281；`test_native_shell` OK。
+  - **模拟器真实触摸**：`testVoiceRecordPlay`、`testVideoMetadata`、`testDrawSelectSave`、`testClearDay`、`testMusicVolume` 全部通过。
+- **没有验证**：
+  - 真机扬声器 / 听筒 / 蓝牙 / 静音开关；真机上第一次导入真实 10.5 MB 视频；备份恢复后播放（只有网页 v31）。
+  - **限制**：录音中 App 被系统直接杀掉时，内存里的录音片段会丢失（录音中分段写盘还没做）。
+- **下一步**：
+  - 需要新的 TestFlight 构建（外壳有改动）。按 BUGFIX_LOG 的 10 项在真机上确认。
+  - 继续：Studio 返回自动保存、文字编辑、今天的故事、字标、书架、设计轮。
+
 ### 2026-11-14 — V10.49 iPhone 上音乐音量滑块没有用；全量回归结果
 
 - **需求**：用户在 TestFlight 上发现「这本书的音乐」的音量滑块没有作用。
