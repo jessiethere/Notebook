@@ -9122,5 +9122,77 @@
   "pages.empty": {
     "zh": "这一天还没有页面。",
     "en": "No pages on this day yet."
+  },
+  "voice.label": {
+    "zh": "录音",
+    "en": "Voice recording"
+  },
+  "voice.start": {
+    "zh": "开始录音",
+    "en": "Start recording"
+  },
+  "voice.hintPrompt": {
+    "zh": "第一次录音时，iPhone 会询问能否使用麦克风。",
+    "en": "The first time, your iPhone asks to use the microphone."
+  },
+  "voice.hintGranted": {
+    "zh": "麦克风已开启。录音只保存在这台设备上。",
+    "en": "Microphone is on. Recordings stay on this device."
+  },
+  "voice.hintDenied": {
+    "zh": "麦克风权限已关闭：请到 iPhone「设置 › 开铺手帐」里打开麦克风。",
+    "en": "Microphone access is off: turn it on in iPhone Settings › Capiday."
+  },
+  "voice.recording": {
+    "zh": "正在录音",
+    "en": "Recording"
+  },
+  "voice.stop": {
+    "zh": "停止并保存",
+    "en": "Stop and save"
+  },
+  "voice.saving": {
+    "zh": "正在保存录音…",
+    "en": "Saving the recording…"
+  },
+  "voice.savingHint": {
+    "zh": "请稍等，保存好之前不要关掉 App。",
+    "en": "One moment — please don't close the app until it's saved."
+  },
+  "voice.saved": {
+    "zh": "录音已保存",
+    "en": "Recording saved"
+  },
+  "voice.savedHint": {
+    "zh": "已经放到页面上，点 ▶ 就能听。",
+    "en": "It's on the page — tap ▶ to listen."
+  },
+  "voice.again": {
+    "zh": "再录一段",
+    "en": "Record another"
+  },
+  "voice.failed": {
+    "zh": "录音没有保存成功",
+    "en": "The recording wasn't saved"
+  },
+  "voice.failedHint": {
+    "zh": "录音还在，没有丢。可以再试一次保存。",
+    "en": "Your recording is still here. Try saving it again."
+  },
+  "voice.retry": {
+    "zh": "重新保存",
+    "en": "Save again"
+  },
+  "voice.discard": {
+    "zh": "放弃这段录音",
+    "en": "Discard this recording"
+  },
+  "voice.discardAsk": {
+    "zh": "确定放弃这段录音吗？放弃后无法找回。",
+    "en": "Discard this recording? It can't be brought back."
+  },
+  "voice.pendingFirst": {
+    "zh": "上一段录音还没保存，请先保存或放弃它。",
+    "en": "The last recording isn't saved yet — save or discard it first."
   }
 }

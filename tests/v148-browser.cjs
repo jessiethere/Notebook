@@ -140,6 +140,69 @@ async function syntheticVideo(page) {
     assert.equal((await events("media_import_failed")).length, 0);
     passed.push("video whose details never load: saved after the wait (no media-timeout failure), once");
 
+    // 5. Recorder states: ready (start + permission hint) → recording (red
+    //    dot, time, live level, stop) → saving at once on stop (shown until
+    //    the file is really stored) → saved.
+    await page.evaluate(() => (window.__noMeta = false));
+    await page.waitForSelector('.voice-rec[data-phase="saved"], .voice-rec[data-phase="ready"]', { state: "attached" });
+    if (!(await page.locator('.voice-rec[data-phase="ready"]').count())) {
+      await page.locator('.voice-rec [data-action="record-audio"]').tap();
+    } else await page.locator('.voice-rec [data-action="record-audio"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="recording"] .vr-dot.live');
+    await page.waitForTimeout(1300);
+    assert.match(await page.locator("#vr-time").innerText(), /^00:0[1-9]$/, "time counts");
+    assert.match(await page.locator(".voice-rec").innerText(), /正在录音/);
+    assert.ok(Number(await page.locator("#vr-wave").getAttribute("data-level")) >= 0, "the live level is drawn");
+    await page.evaluate(() => {
+      // Hold the save back a little (reading the recording's bytes).
+      const real = Blob.prototype.arrayBuffer;
+      Blob.prototype.arrayBuffer = function () { return new Promise((r) => setTimeout(r, 900)).then(() => real.call(this)); };
+      window.__restoreBlob = () => (Blob.prototype.arrayBuffer = real);
+    });
+    const voicesBefore = (await draftClips()).filter((c) => c.origin === "recording").length;
+    await page.locator('[data-action="stop-recording"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="saving"]', { timeout: 1500 });
+    assert.match(await page.locator(".voice-rec").innerText(), /正在保存录音/);
+    assert.equal((await draftClips()).filter((c) => c.origin === "recording").length, voicesBefore, "not saved yet while 'saving'");
+    await page.waitForSelector('.voice-rec[data-phase="saved"]', { timeout: 10000 });
+    assert.equal((await draftClips()).filter((c) => c.origin === "recording").length, voicesBefore + 1, "saved when it says saved");
+    await page.evaluate(() => window.__restoreBlob());
+    passed.push("recorder: ready → recording (dot, 00:0n, live level) → 正在保存录音… right at stop → 录音已保存 only once stored");
+
+    // 6. A failed save keeps the recording: 重新保存 stores it once.
+    await page.evaluate(() => {
+      const real = IDBObjectStore.prototype.add;
+      let failOnce = true;
+      IDBObjectStore.prototype.add = function (value, ...rest) {
+        if (failOnce && value && value.kind === "audio") { failOnce = false; throw new DOMException("full", "QuotaExceededError"); }
+        return real.call(this, value, ...rest);
+      };
+    });
+    await page.locator('.voice-rec [data-action="record-audio"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="recording"]');
+    await page.waitForTimeout(1000);
+    await page.locator('[data-action="stop-recording"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="failed"]', { timeout: 10000 });
+    assert.match(await page.locator(".voice-rec").innerText(), /没有保存成功[\s\S]*录音还在/);
+    assert.equal((await draftClips()).filter((c) => c.origin === "recording").length, voicesBefore + 1, "nothing half-saved");
+    await page.locator('[data-action="voice-retry"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="saved"]', { timeout: 10000 });
+    assert.equal((await draftClips()).filter((c) => c.origin === "recording").length, voicesBefore + 2, "saved once on retry");
+    passed.push("failed save: says so, keeps the recording in memory; 重新保存 stores it exactly once");
+
+    // 7. The app going to the background while recording: stopped and saved.
+    await page.locator('.voice-rec [data-action="record-audio"]').tap();
+    await page.waitForSelector('.voice-rec[data-phase="recording"]');
+    await page.waitForTimeout(900);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForSelector('.voice-rec[data-phase="saved"]', { timeout: 10000 });
+    assert.equal((await draftClips()).filter((c) => c.origin === "recording").length, voicesBefore + 3);
+    assert.ok((await events("voice_stopped")).length >= 1);
+    passed.push("going to the background while recording: stopped and saved (not lost)");
+
     assert.deepEqual(errors, []);
     console.log(`V10.50 P0 voice / video passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
   } finally {

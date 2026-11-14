@@ -140,11 +140,35 @@ export function customFieldsHTML(book, entry, ctx) {
     })
     .join("")}</section>`;
 }
-export function mediaPanelHTML(entry, ctx, recording) {
+// V10.50 · the voice recorder's five states, each said plainly: ready (with
+// the microphone permission), recording (red dot, time, live sound level,
+// a clear stop), saving (until the file is really stored), saved, failed
+// (the recording is kept in memory and can be saved again).
+export function clockText(seconds) {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+export function voiceRecorderHTML(voice, t) {
+  const v = typeof voice === "object" && voice ? voice : { phase: voice ? "recording" : "ready" };
+  const phase = ["ready", "recording", "saving", "saved", "failed"].includes(v.phase) ? v.phase : "ready";
+  const hint = v.mic === "denied" ? t("voice.hintDenied") : v.mic === "granted" ? t("voice.hintGranted") : t("voice.hintPrompt");
+  const body = {
+    ready: `<button class="vr-start" data-action="record-audio"><span class="vr-dot" aria-hidden="true"></span>${t("voice.start")}</button><p class="vr-hint ${v.mic === "denied" ? "warn" : ""}">${hint}</p>`,
+    recording: `<canvas id="vr-wave" class="vr-wave" width="560" height="52" aria-hidden="true"></canvas><div class="vr-row"><div class="vr-line" role="status"><span class="vr-dot live" aria-hidden="true"></span><b>${t("voice.recording")}</b><time id="vr-time" aria-live="off">${clockText(v.seconds)}</time></div><button class="vr-stop" data-action="stop-recording"><span class="vr-square" aria-hidden="true"></span>${t("voice.stop")}</button></div>`,
+    saving: `<div class="vr-line" role="status"><span class="vr-spin" aria-hidden="true"></span><b>${t("voice.saving")}</b></div><p class="vr-hint">${t("voice.savingHint")}</p>`,
+    saved: `<div class="vr-line ok" role="status"><span class="vr-check" aria-hidden="true">✓</span><b>${t("voice.saved")}</b></div><p class="vr-hint">${t("voice.savedHint")}</p><button class="vr-again" data-action="record-audio">${t("voice.again")}</button>`,
+    failed: `<div class="vr-line err" role="alert"><b>${t("voice.failed")}</b></div><p class="vr-hint">${t("voice.failedHint")}</p><div class="vr-actions"><button class="primary" data-action="voice-retry">${t("voice.retry")}</button><button class="text-button danger-text" data-action="voice-discard">${t("voice.discard")}</button></div>`,
+  }[phase];
+  return `<div class="voice-rec" data-phase="${phase}" aria-label="${t("voice.label")}">${body}</div>`;
+}
+export function mediaPanelHTML(entry, ctx, voice) {
   const { t } = ctx;
-  const add = `<div class="media-add-actions"><button class="secondary" data-action="upload-video">${t("media.video")}</button><button class="secondary" data-action="upload-audio">${t("media.audio")}</button><button class="secondary ${recording ? "is-recording" : ""}" data-action="${recording ? "stop-recording" : "record-audio"}">${t(recording ? "media.stop" : "media.record")}</button></div><p id="record-status" class="record-status" role="status">${recording ? t("media.recording", { seconds: 0 }) : ""}</p><p class="save-help">${t("media.limit")}</p>`;
+  const add = `<div class="media-add-actions"><button class="secondary" data-action="upload-video">${t("media.video")}</button><button class="secondary" data-action="upload-audio">${t("media.audio")}</button></div><p class="save-help">${t("media.limit")}</p>`;
   const cards = (entry.media || []).map((clip) => mediaCardHTML(clip, ctx, { editable: true, onPage: (entry.layers || []).some((layer) => layer.clipId === clip.id) })).join("");
   // V10.23: a page's own clips (with 换封面 / 从页面移除) come first; adding
   // more is below them. An empty page shows the ways to add first.
-  return `<section class="media-section"><div class="section-heading"><h2>${t("media.title")}</h2><span class="badge">${t("media.local")}</span></div>${cards ? cards + add : add + `<p class="empty">${t("media.empty")}</p>`}</section>`;
+  // V10.50: the recorder comes first, so "正在录音 / 正在保存" is always in
+  // sight (the sheet is short on a small iPhone).
+  const rec = voiceRecorderHTML(voice, t);
+  return `<section class="media-section"><div class="section-heading"><h2>${t("media.title")}</h2><span class="badge">${t("media.local")}</span></div>${rec}${cards ? cards + add : add + `<p class="empty">${t("media.empty")}</p>`}</section>`;
 }

@@ -4,6 +4,34 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.50",
+    date: "2026-11-14",
+    zh: {
+      title: "语音日记能听到了；视频第一次就能导入",
+      items: [
+        "修好了：录完语音日记后播放没有声音。原因是录音后 iPhone 一直停在「录音」模式，声音从听筒（打电话的位置）出来、非常小。现在录完就切回正常播放，从扬声器出声。",
+        "录音时更清楚：红色指示灯、「正在录音」和实时时长 00:12，下面有跟着你声音跳动的声波，「停止并保存」放在旁边。",
+        "点停止后马上显示「正在保存录音…」，真正存好才显示「录音已保存」；万一没存好，录音还在，可以「重新保存」。",
+        "录音时切到别的 App、来电或锁屏，会自动停止并保存，不会丢。",
+        "页面上的声音和视频，只有真的开始播放才显示「正在播放」；播放不了会直接告诉你。",
+        "修好了：第一次导入视频总是失败（要点「重试」才行）。",
+        "不再每次打开 App 都问一遍能不能用麦克风；iPhone 系统只会问一次。",
+      ],
+    },
+    en: {
+      title: "Voice notes play out loud; videos import the first time",
+      items: [
+        "Fixed: a voice note played no sound right after recording. The iPhone stayed in recording mode and played through the earpiece, very quietly. It now switches back to normal playback through the speaker.",
+        "Clearer while recording: a red light, “Recording” with the time (00:12), a sound level that follows your voice, and “Stop and save” right beside it.",
+        "Stop shows “Saving the recording…” at once and “Recording saved” only once it really is; if saving fails, the recording is kept and you can save it again.",
+        "Switching apps, a call or locking the phone while recording stops and saves it — nothing is lost.",
+        "Sounds and videos on a page show “playing” only when they really play, and say so when they can't.",
+        "Fixed: the first video import always failed and needed a retry.",
+        "The app no longer asks about the microphone every time it opens; iOS asks once.",
+      ],
+    },
+  },
+  {
     version: "10.49",
     date: "2026-11-14",
     zh: {

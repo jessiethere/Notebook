@@ -22,6 +22,8 @@ import {
   fieldDefinitionHTML,
   customFieldsHTML,
   mediaPanelHTML,
+  voiceRecorderHTML,
+  clockText,
   fieldLabel,
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
@@ -4155,7 +4157,7 @@ function studioTools() {
       icon: "♫",
       label: "tool.media",
       value: counts.videos || counts.audios ? [counts.videos ? t("day.statVideos", { count: counts.videos }) : "", counts.audios ? t("day.statAudios", { count: counts.audios }) : ""].filter(Boolean).join(" · ") : t("tool.none"),
-      body: () => mediaPanelHTML(page, ctx(), Boolean(recorder)),
+      body: () => (checkMic(), mediaPanelHTML(page, ctx(), voiceView())),
     });
   if (checks.length)
     tools.push({
@@ -10343,7 +10345,19 @@ async function v3Action(target) {
     return true;
   }
   if (name === "stop-recording") {
-    if (recorder?.state === "recording") recorder.stop();
+    stopRecording();
+    return true;
+  }
+  if (name === "voice-retry") {
+    if (voice.pending) await saveVoice(voice.pending);
+    return true;
+  }
+  if (name === "voice-discard") {
+    if (voice.pending && (await askConfirm(t("voice.discardAsk"), { ok: t("voice.discard") }))) {
+      voice.pending = null;
+      setVoice({ phase: "ready" });
+      logEvent("voice_discarded", {});
+    }
     return true;
   }
   if (name === "restore-backup") {
@@ -11030,15 +11044,116 @@ function setAudioSession(type) {
     if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type;
   } catch {}
 }
+// V10.50 · the recorder's state, shown in the sound panel (personal-ui.mjs
+// voiceRecorderHTML): ready → recording → saving → saved | failed. "Saved"
+// only once attachClip has written the file and read it back; a failed save
+// keeps the recording in memory (voice.pending) so it can be saved again.
+let voice = { phase: "ready", mic: "", seconds: 0, at: 0, pending: null },
+  waveCtx = null,
+  waveRaf = 0;
+function voiceView() {
+  // "Saved" is news for a little while, then the panel is ready again.
+  if (voice.phase === "saved" && Date.now() - voice.at > 20000) voice.phase = "ready";
+  return voice;
+}
+function refreshVoice() {
+  const el = document.querySelector(".voice-rec");
+  if (el) el.outerHTML = voiceRecorderHTML(voiceView(), t);
+}
+function setVoice(changes) {
+  Object.assign(voice, changes, { at: Date.now() });
+  refreshVoice();
+}
+// The microphone permission, for the hint under 开始录音 (no question asked).
+async function checkMic() {
+  try {
+    const status = await navigator.permissions?.query({ name: "microphone" });
+    if (status?.state && status.state !== voice.mic) {
+      voice.mic = status.state;
+      if (voice.phase === "ready") refreshVoice();
+    }
+  } catch {}
+}
+// A live sound level from the microphone itself (not a looping animation).
+function startWave(stream) {
+  try {
+    const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!AC) return;
+    const ctxA = new AC();
+    const analyser = ctxA.createAnalyser();
+    analyser.fftSize = 512;
+    ctxA.createMediaStreamSource(stream).connect(analyser);
+    const data = new Uint8Array(analyser.fftSize);
+    const levels = [];
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let last = 0;
+    const tick = (now) => {
+      if (waveCtx !== ctxA) return;
+      if (now - last > (reduce ? 500 : 70)) {
+        last = now;
+        analyser.getByteTimeDomainData(data);
+        let peak = 0;
+        for (const value of data) peak = Math.max(peak, Math.abs(value - 128));
+        levels.push(Math.min(1, (peak / 128) * 1.8));
+        if (levels.length > 32) levels.shift();
+        const canvas = document.getElementById("vr-wave");
+        if (canvas) {
+          const g = canvas.getContext("2d");
+          g.clearRect(0, 0, canvas.width, canvas.height);
+          g.fillStyle = getComputedStyle(canvas).color;
+          const w = canvas.width / 32;
+          levels.forEach((level, i) => {
+            const h = Math.max(6, level * canvas.height);
+            g.fillRect(i * w + w * 0.3, (canvas.height - h) / 2, w * 0.4, h);
+          });
+          canvas.dataset.level = String(Math.round((levels.at(-1) || 0) * 100));
+        }
+      }
+      waveRaf = requestAnimationFrame(tick);
+    };
+    waveCtx = ctxA;
+    ctxA.resume?.().catch(() => {});
+    waveRaf = requestAnimationFrame(tick);
+  } catch {}
+}
+function stopWave() {
+  cancelAnimationFrame(waveRaf);
+  const ctxA = waveCtx;
+  waveCtx = null;
+  try {
+    ctxA?.close();
+  } catch {}
+}
+// Saves a finished recording onto its page; on failure it stays in memory.
+async function saveVoice(pending) {
+  busyMedia = true;
+  setVoice({ phase: "saving", pending });
+  try {
+    if (!pending.blob.size || pending.blob.size > 20 * 1024 * 1024) throw new Error("Recording size");
+    await attachClip(pending.blob, "audio", pending.name, pending.duration, { targetId: pending.targetId, origin: "recording" });
+    logEvent("voice_saved", { ms: Date.now() - pending.stopped, size: Math.round(pending.blob.size / 1024) });
+    voice.pending = null;
+    voice.phase = "saved";
+  } catch (error) {
+    logEvent("voice_save_failed", { err: playErr(error) });
+    voice.phase = "failed";
+  } finally {
+    voice.at = Date.now();
+    busyMedia = false;
+    render();
+  }
+}
 async function startRecording() {
   if (!navigator.mediaDevices?.getUserMedia || !globalThis.MediaRecorder) {
     toast(t("media.recordUnsupported"));
     return;
   }
+  if (voice.pending) return toast(t("voice.pendingFirst"));
   busyMedia = true;
   try {
     setAudioSession("play-and-record");
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voice.mic = "granted";
     recordingStream = stream;
     const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"].find(
       (type) => MediaRecorder.isTypeSupported(type),
@@ -11061,45 +11176,39 @@ async function startRecording() {
     current.onstop = async () => {
       clearInterval(recordingTimer);
       clearTimeout(recordingTimeout);
+      stopWave();
       stream.getTracks().forEach((track) => track.stop());
       setAudioSession("playback");
-      busyMedia = true;
-      try {
-        const blob = new Blob(chunks, { type: current.mimeType });
-        if (recordingFailed || !blob.size || blob.size > 20 * 1024 * 1024)
-          throw new Error("Recording size");
-        await attachClip(
-          blob,
-          "audio",
-          `${t("media.voiceName")} · ${shortDate(editor.date)}`,
-          Math.round((Date.now() - recordingStarted) / 1000),
-          { targetId: recordingTargetId, origin: "recording" },
-        );
-        toast(t("media.saved"));
-      } catch {
-        toast(t("media.failed"));
-      } finally {
-        recorder = null;
-        recordingStream = null;
+      recorder = null;
+      recordingStream = null;
+      const blob = new Blob(chunks, { type: current.mimeType });
+      if (recordingFailed && !blob.size) {
         busyMedia = false;
-        render();
+        setVoice({ phase: "failed", pending: null });
+        return render();
       }
+      await saveVoice({
+        blob,
+        name: `${t("media.voiceName")} · ${shortDate(editor.date)}`,
+        duration: Math.round((Date.now() - recordingStarted) / 1000),
+        targetId: recordingTargetId,
+        stopped: Date.now(),
+      });
     };
     current.onerror = () => {
+      // What was recorded so far is still saved (onstop follows).
       recordingFailed = true;
-      stream.getTracks().forEach((track) => track.stop());
-      setAudioSession("playback");
       if (current.state === "recording") current.stop();
-      toast(t("media.failed"));
     };
     current.start(250);
     busyMedia = false;
+    voice.phase = "recording";
+    voice.seconds = 0;
     recordingTimer = setInterval(() => {
-      if ($("#record-status"))
-        $("#record-status").textContent = t("media.recording", {
-          seconds: Math.floor((Date.now() - recordingStarted) / 1000),
-        });
-    }, 500);
+      voice.seconds = Math.floor((Date.now() - recordingStarted) / 1000);
+      const time = $("#vr-time");
+      if (time) time.textContent = clockText(voice.seconds);
+    }, 250);
     recordingTimeout = setTimeout(
       () => {
         if (current.state === "recording") current.stop();
@@ -11107,17 +11216,39 @@ async function startRecording() {
       5 * 60 * 1000,
     );
     render();
+    // The state line stays in sight in the short sheet of a small iPhone.
+    document.querySelector(".voice-rec")?.scrollIntoView({ block: "start" });
+    startWave(stream);
   } catch (error) {
     recordingStream?.getTracks().forEach((track) => track.stop());
     setAudioSession("playback");
     recordingStream = null;
     recorder = null;
     busyMedia = false;
+    if (error?.name === "NotAllowedError") voice.mic = "denied";
+    voice.phase = "ready";
+    render();
     toast(
       t(error.name === "NotAllowedError" ? "media.denied" : "media.failed"),
     );
   }
 }
+// Stop pressed: say "saving" at once (the file is written after the recorder
+// hands over its last piece).
+function stopRecording() {
+  if (recorder?.state !== "recording") return;
+  busyMedia = true;
+  setVoice({ phase: "saving" });
+  recorder.stop();
+}
+// The app going to the background (another app, a call, the lock button)
+// ends a recording and saves it, instead of leaving it to be cut off.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && recorder?.state === "recording") {
+    logEvent("voice_stopped", { stage: "hidden" });
+    stopRecording();
+  }
+});
 $("#form-dialog").addEventListener("close", () =>
   $("#form-dialog").classList.remove("book-editor-dialog"),
 );
