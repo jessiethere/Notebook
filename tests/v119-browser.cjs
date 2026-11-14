@@ -172,9 +172,10 @@ const lib = path.join(__dirname, "../Packages/LittleDaysCore/Sources/LittleDaysC
         const sheet = document.querySelector("#choose-dialog .sw").getBoundingClientRect();
         const field = document.querySelector("#choose-dialog [data-sw-text]").getBoundingClientRect();
         const done = document.querySelector("#choose-dialog .sw-done").getBoundingClientRect();
-        return { sheetTop: sheet.top, field: field.bottom <= innerHeight && field.top >= sheet.top, done: done.top >= 0 && done.bottom <= innerHeight, side: document.querySelector("#choose-dialog .sw").scrollWidth <= document.querySelector("#choose-dialog .sw").clientWidth + 1, canvasSeen: document.querySelector(".story-canvas").getBoundingClientRect().bottom > 80 };
+        return { sheetTop: sheet.top, field: field.bottom <= innerHeight && field.top >= sheet.top, done: done.top >= 0 && done.bottom <= innerHeight, side: document.querySelector("#choose-dialog .sw").scrollWidth <= document.querySelector("#choose-dialog .sw").clientWidth + 1, canvasSeen: document.querySelector(".story-canvas").getBoundingClientRect().bottom > 80, preview: (() => { const r = document.querySelector("#choose-dialog .sw-preview")?.getBoundingClientRect(); return Boolean(r && r.height >= 110 && r.top >= 0 && r.bottom <= innerHeight); })() };
       });
-      assert.ok(fit.field && fit.done && fit.side && fit.canvasSeen && fit.sheetTop > h * 0.3, `${w}: ${JSON.stringify(fit)}`);
+      // V10.51: the page shows live at the top of the sheet (the sheet may now be taller).
+      assert.ok(fit.field && fit.done && fit.side && fit.canvasSeen && fit.preview, `${w}: ${JSON.stringify(fit)}`);
       await shot(`03-${w}`);
       await page.locator('#choose-dialog [data-action="story-text-done"]').tap();
       await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });

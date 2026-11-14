@@ -5241,9 +5241,18 @@ function openStoryText(target = null) {
   else if (!storyWords || !moments.some((m) => m.id === storyWords.momentId)) storyWords = { momentId: moments[0].id, target: "moment" };
   const dialog = $("#choose-dialog");
   dialog.classList.add("see-through");
-  dialog.innerHTML = `<div class="choose-sheet story-text-sheet sw"><div class="choose-grabber" aria-hidden="true"></div><div class="sw-head"><h2>${t("sw.title")}</h2><button class="sw-done" data-action="story-text-done">${t("pages.done")}</button></div><div class="sw-body">${storyWordsHTML()}</div></div>`;
+  dialog.innerHTML = `<div class="choose-sheet story-text-sheet sw"><div class="choose-grabber" aria-hidden="true"></div><div class="sw-head"><h2>${t("sw.title")}</h2><button class="sw-done" data-action="story-text-done">${t("pages.done")}</button></div><div class="sw-preview" aria-hidden="true"></div><div class="sw-body">${storyWordsHTML()}</div></div>`;
   if (!dialog.open) dialog.showModal();
-  dialog.addEventListener("close", () => dialog.classList.remove("see-through"), { once: true });
+  watchStoryPreview();
+  dialog.addEventListener(
+    "close",
+    () => {
+      dialog.classList.remove("see-through");
+      swObserver?.disconnect();
+      swObserver = null;
+    },
+    { once: true },
+  );
   // V10.29: ready to type at once (in the same tap, so iOS shows the keyboard).
   const field = dialog.querySelector("[data-sw-text]");
   if (field) {
@@ -5257,16 +5266,64 @@ function refreshStoryWords(focus = false) {
   if (!body) return;
   body.innerHTML = storyWordsHTML();
   if (focus) body.querySelector("[data-sw-text]")?.focus();
+  queueStoryPreview();
   revealStoryTarget();
 }
 // Keep the photo being written for (or the page's line) in view above the sheet.
+// The layer on the page that the words being written show up in.
+function storyTargetLayer() {
+  if (!story || !storyWords) return null;
+  const current = storyPages()[story.index];
+  const page = current?.cover ? editor : current?.page;
+  return (page?.layers || []).find((l) => (storyWords.target === "moment" ? l.bind === "title" && (!l.of || l.of === storyWords.momentId) : l.id === storyWords.target || (l.gen && l.mediaRef && l.mediaRef === findMoment(editor, storyWords.momentId)?.layers.find((p) => p.id === storyWords.target)?.mediaRef))) || null;
+}
+// V10.51 · 今天的故事: the words sheet (and the keyboard) used to cover the
+// page, so a new font or A+ could not be seen until the sheet was closed.
+// A live window at the top of the sheet now shows the real page — a copy of
+// the very page rendered behind it (same renderer, nothing redrawn
+// separately), zoomed to the width of the sheet and centred on the words
+// being written. Every change to the page (typing, font, size, colour,
+// alignment) is copied over at once.
+let swObserver = null,
+  swPreviewRaf = 0;
+function syncStoryPreview() {
+  const box = $("#choose-dialog .sw-preview");
+  const paper = $(".story-canvas")?.firstElementChild;
+  if (!box || !paper) return;
+  const w0 = paper.offsetWidth,
+    h0 = paper.offsetHeight;
+  const W = box.clientWidth,
+    H = box.clientHeight;
+  if (!w0 || !h0 || !W || !H) return;
+  const clone = paper.cloneNode(true);
+  clone.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+  clone.removeAttribute("id");
+  const scale = W / w0;
+  const layer = storyTargetLayer();
+  const y = ((layer ? Number(layer.y) || 50 : 50) / 100) * h0 * scale;
+  const top = h0 * scale <= H ? -(H - h0 * scale) / 2 : Math.max(0, Math.min(h0 * scale - H, y - H / 2));
+  Object.assign(clone.style, { position: "absolute", left: "0", top: "0", width: `${w0}px`, height: `${h0}px`, transformOrigin: "0 0", transform: `translateY(${-top}px) scale(${scale})`, pointerEvents: "none" });
+  box.replaceChildren(clone);
+  box.dataset.synced = String(Date.now());
+}
+function queueStoryPreview() {
+  cancelAnimationFrame(swPreviewRaf);
+  swPreviewRaf = requestAnimationFrame(syncStoryPreview);
+}
+function watchStoryPreview() {
+  swObserver?.disconnect();
+  swObserver = new MutationObserver(queueStoryPreview);
+  swObserver.observe($("#app"), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["style", "class", "src"] });
+  queueStoryPreview();
+}
+window.visualViewport?.addEventListener("resize", () => {
+  if ($("#choose-dialog .sw-preview")) queueStoryPreview();
+});
 function revealStoryTarget() {
   const scroll = $("#app-scroll"),
     canvas = $(".story-canvas");
   if (!scroll || !canvas || !storyWords) return;
-  const current = storyPages()[story.index];
-  const page = current?.cover ? editor : current?.page;
-  const layer = (page?.layers || []).find((l) => (storyWords.target === "moment" ? l.bind === "title" && (!l.of || l.of === storyWords.momentId) : l.id === storyWords.target || (l.gen && l.mediaRef && l.mediaRef === findMoment(editor, storyWords.momentId)?.layers.find((p) => p.id === storyWords.target)?.mediaRef)));
+  const layer = storyTargetLayer();
   const rect = canvas.getBoundingClientRect();
   const y = layer ? rect.top + (rect.height * (Number(layer.y) || 50)) / 100 : rect.top;
   const sheetTop = $("#choose-dialog .sw")?.getBoundingClientRect().top || innerHeight * 0.55;
@@ -5373,12 +5430,42 @@ async function saveStoryText() {
   logEvent("story_words", { photos: storyMomentsOf(storyPages()[story.index]).reduce((n, m) => n + storyPhotosOf(m).filter((p) => (p.caption || "").trim()).length, 0) });
   render();
 }
-function finishStory() {
+// V10.51 · 保存: the button shows 保存中… (one save at a time); the reader
+// opens only once the day is in the journal database and every photo it
+// uses is stored — on the first page this story made (not the day's first
+// page, which may be an older one). A failed save stays here with
+// everything on it and offers 再试一次.
+let storySaving = false;
+async function finishStory() {
+  if (storySaving || !story) return;
   const { book, date } = story;
-  const lastId = story.made?.ids?.at(-1);
-  if (lastId) captainSaved = { date, momentId: lastId, at: Date.now() };
+  const madeIds = [...(story.made?.ids || [])];
+  const lastId = madeIds.at(-1);
+  storySaving = true;
+  const button = $(".qe-save");
+  if (button) {
+    button.disabled = true;
+    button.dataset.label = button.textContent;
+    button.textContent = t("draft.saving");
+  }
   clearTimeout(draftTimer);
-  store.update((s) => saveEntry(s, editor));
+  try {
+    store.update((s) => saveEntry(s, editor));
+    const ids = [...mediaReferences({ entries: [], books: [], checks: [], drafts: { day: editor } })];
+    const [stored, missing] = await Promise.all([store.stored(), ids.length ? media.missing(ids).catch(() => ids) : []]);
+    if (!stored || missing.length) throw new Error(missing.length ? "media" : "store");
+  } catch (error) {
+    storySaving = false;
+    if (button?.isConnected) {
+      button.disabled = false;
+      button.textContent = button.dataset.label || t("save");
+    }
+    logEvent("story_save_failed", { err: error?.code === "stale-state" ? "stale-state" : String(error?.message || "save").slice(0, 16) });
+    if (await askConfirm(t(error?.code === "stale-state" ? "error.conflict" : "exit.saveFailed"), { ok: t("exit.retry") })) return finishStory();
+    return;
+  }
+  storySaving = false;
+  if (lastId) captainSaved = { date, momentId: lastId, at: Date.now() };
   draftDirty = false;
   syncReminder();
   logEvent("story_saved", { moments: story.made?.ids.length || 0, style: story.style });
@@ -5398,9 +5485,10 @@ function finishStory() {
   }
   story = null;
   readReturn = null;
-  // Straight into the book, in the reader, at the first page of this day.
+  // Straight into the book, in the reader, at the first page this story made.
   const pagesNow = flipPages(book);
-  const first = pagesNow.find((p) => p.date === date);
+  const made = madeIds.map((momentId) => pagesNow.find((p) => p.date === date && p.moment?.id === momentId)).find(Boolean);
+  const first = made || pagesNow.find((p) => p.date === date);
   openReader(book, first ? Reader.keyOf(first) : Reader.COVER);
   toast(t("story.saved", { name: state().books.find((b) => b.id === book)?.title || "" }));
 }
