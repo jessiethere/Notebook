@@ -6685,6 +6685,16 @@ document.addEventListener("focusout", (event) => {
   const entry = event.target.closest?.("[data-tag-entry]");
   if (entry && entry.value.trim()) addTagsFrom(entry, false);
 });
+// A field that the form refuses, inside a folded section: open the section so
+// the person sees what to fix (instead of 创建 seemingly doing nothing).
+document.addEventListener(
+  "invalid",
+  (event) => {
+    const fold = event.target.closest?.("details.book-more");
+    if (fold && !fold.open) fold.open = true;
+  },
+  true,
+);
 // The sprout beside the Capiday wordmark (Home, the welcome page).
 const BRAND_SPROUT = '<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg>';
 function loginHTML() {
@@ -8454,6 +8464,8 @@ $("#dialog-form").addEventListener("submit", (event) => {
     event.preventDefault();
     try {
       const book = readBookForm();
+      // V10.52: the category sits in a folded section — an empty one is the default, never a silent block.
+      if (!String(book.category || "").trim()) book.category = "Daily Life";
       validateFieldDefinitions(book.fields);
       book.id ||= id();
       if (dialogKind === "book") logEvent("book_create");

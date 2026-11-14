@@ -43,8 +43,9 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
     passed.push("the 我们俩 preset makes a private book; no suggestion cards on the shelf (V10.41)");
 
     // 2. An empty book cannot be shared yet.
-    await page.locator(`[data-action="book"][data-book="${bookId}"], [data-book="${bookId}"]`).first().tap();
-    if (!(await page.locator(".book-share").count())) await page.locator(`[data-book="${bookId}"]`).first().tap();
+    // Pull the spine out, then 打开这本 (V10.51: the ··· menu sits first in the pulled book).
+    await page.locator(`[data-action="pull-book"][data-book="${bookId}"]`).first().tap();
+    await page.locator(`.pulled-book [data-action="book"][data-book="${bookId}"]`).tap();
     await page.waitForSelector(".book-share");
     await page.locator(".book-share").tap();
     await page.waitForSelector(".toast.show, #toast:not(:empty)");

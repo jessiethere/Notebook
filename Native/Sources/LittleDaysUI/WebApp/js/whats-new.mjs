@@ -4,6 +4,24 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.53",
+    date: "2026-11-14",
+    zh: {
+      title: "新建手帐本：「创建」不会没反应",
+      items: [
+        "类别清空也能创建，会自动用默认类别。",
+        "如果某一项需要修改，它所在的折叠小栏会自动展开，让你看到要改哪里。",
+      ],
+    },
+    en: {
+      title: "New book: Create always responds",
+      items: [
+        "An empty category no longer blocks Create; the default category is used.",
+        "If a field needs fixing, the folded section it sits in opens so you can see it.",
+      ],
+    },
+  },
+  {
     version: "10.52",
     date: "2026-11-14",
     zh: {
