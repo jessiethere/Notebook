@@ -78,10 +78,12 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('[data-action="pull-book"][data-book="daily"]').tap();
     await page.locator('.pulled-book [data-action="book"]').tap();
     await page.locator('[data-action="edit-book"]').tap();
-    const mags = await page.$$eval(".cover-template-grid .cover-option", (els) => els.map((el) => el.dataset.template).filter((id) => id.startsWith("magazine")));
+    await page.locator(".cover-more-link").tap();
+    await page.waitForSelector("#cover-browser-grid .cover-option");
+    const mags = await page.$$eval("#cover-browser-grid .cover-option", (els) => els.map((el) => el.dataset.template).filter((id) => id.startsWith("magazine")));
     assert.deepEqual(mags, ["magazine-jp", "magazine-west", "magazine-mono", "magazine-film", "magazine-minimal", "magazine-collage"]);
-    for (const id of mags) assert.equal(await page.locator(`.cover-option[data-template="${id}"] .cover-${id}`).count(), 1, id);
-    assert.equal(await page.locator('.cover-option[data-template="magazine-collage"] .mag-photo').count(), 3);
+    for (const id of mags) assert.equal(await page.locator(`#cover-browser-grid .cover-option[data-template="${id}"] .cover-${id}`).count(), 1, id);
+    assert.equal(await page.locator('#cover-browser-grid .cover-option[data-template="magazine-collage"] .mag-photo').count(), 3);
     passed.push("six magazine covers: Japanese, Western, mono, film, minimal, collage");
 
     assert.deepEqual(errors, []);

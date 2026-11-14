@@ -9326,5 +9326,157 @@
   "books.moreRecordsHint": {
     "zh": "私人 · 记录模板 · 自定义字段",
     "en": "Private · record template · custom fields"
+  },
+  "cover.botanical-herbarium": {
+    "zh": "植物标本",
+    "en": "Botanical Herbarium"
+  },
+  "cover.cafe-receipt": {
+    "zh": "咖啡小票",
+    "en": "Café Receipt"
+  },
+  "cover.food-recipe": {
+    "zh": "食谱卡片",
+    "en": "Recipe Card"
+  },
+  "cover.travel-postcard": {
+    "zh": "旅行明信片",
+    "en": "Travel Postcard"
+  },
+  "cover.pet-tag": {
+    "zh": "毛孩子名牌",
+    "en": "Pet Tag"
+  },
+  "cover.everyday-polaroid": {
+    "zh": "生活碎片",
+    "en": "Everyday Polaroids"
+  },
+  "cover.vintage-ticket": {
+    "zh": "复古票根",
+    "en": "Vintage Ticket"
+  },
+  "cover.editorial-grid": {
+    "zh": "简约杂志",
+    "en": "Minimal Editorial"
+  },
+  "cover.pastel-cloud": {
+    "zh": "柔彩云朵",
+    "en": "Pastel Cloud"
+  },
+  "cover.seasonal-almanac": {
+    "zh": "四季流转",
+    "en": "Through the Seasons"
+  },
+  "coverGroup.featured": {
+    "zh": "精选",
+    "en": "Featured"
+  },
+  "coverGroup.all": {
+    "zh": "全部",
+    "en": "All"
+  },
+  "coverGroup.life": {
+    "zh": "生活主题",
+    "en": "Life themes"
+  },
+  "coverGroup.magazine": {
+    "zh": "杂志",
+    "en": "Magazine"
+  },
+  "coverGroup.paper": {
+    "zh": "纸张手作",
+    "en": "Paper & craft"
+  },
+  "coverGroup.cute": {
+    "zh": "柔和可爱",
+    "en": "Soft & cute"
+  },
+  "books.coverStyle": {
+    "zh": "封面风格",
+    "en": "Cover style"
+  },
+  "books.moreCovers": {
+    "zh": "查看更多封面",
+    "en": "More covers"
+  },
+  "books.moreCoversCount": {
+    "zh": "全部 {count} 种",
+    "en": "All {count}"
+  },
+  "books.coverBrowser": {
+    "zh": "选择封面",
+    "en": "Choose a cover"
+  },
+  "books.coverDone": {
+    "zh": "用这个封面",
+    "en": "Use this cover"
+  },
+  "books.coverReset": {
+    "zh": "恢复默认",
+    "en": "Reset to default"
+  },
+  "books.coverPhotoTitle": {
+    "zh": "封面照片",
+    "en": "Cover photo"
+  },
+  "books.coverPhotoHint": {
+    "zh": "用你自己的照片，或者从图库里选一张。不选也可以，封面会用适合主题的图库照片。",
+    "en": "Use your own photo, or pick one from the library. Or leave it — the cover uses a library photo that suits it."
+  },
+  "books.photoAuto": {
+    "zh": "自动",
+    "en": "Auto"
+  },
+  "books.seasonNote": {
+    "zh": "「四季流转」的封面会跟着季节换装。",
+    "en": "Through the Seasons changes with the season."
+  },
+  "books.morePersonal": {
+    "zh": "更多个性化设置",
+    "en": "More personal touches"
+  },
+  "books.morePersonalHint": {
+    "zh": "都可以以后再补充",
+    "en": "All of these can wait"
+  },
+  "books.moreBasics": {
+    "zh": "基本信息",
+    "en": "About this book"
+  },
+  "books.moreBasicsHint": {
+    "zh": "描述 · 标签 · 主题分类",
+    "en": "Description · tags · theme"
+  },
+  "books.moreBook": {
+    "zh": "手帐设置",
+    "en": "Book settings"
+  },
+  "books.fieldsCount": {
+    "zh": "{count} 个记录字段",
+    "en": "{count} record fields"
+  },
+  "books.noFields": {
+    "zh": "没有记录字段",
+    "en": "No record fields"
+  },
+  "books.creating": {
+    "zh": "正在创建…",
+    "en": "Creating…"
+  },
+  "books.saving": {
+    "zh": "正在保存…",
+    "en": "Saving…"
+  },
+  "books.saveFailed": {
+    "zh": "这本手帐还没保存好。你填的内容和选的封面都还在，可以再试一次。",
+    "en": "This book isn't saved yet. Everything you filled in and picked is still here — try again."
+  },
+  "books.photoOwn": {
+    "zh": "我的照片",
+    "en": "My photo"
+  },
+  "books.moreCoversShort": {
+    "zh": "更多封面",
+    "en": "More covers"
   }
 }

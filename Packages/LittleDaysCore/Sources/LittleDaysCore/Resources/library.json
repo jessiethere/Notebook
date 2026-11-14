@@ -368,51 +368,119 @@
   "coverTemplates": [
     {
       "id": "magazine-jp",
-      "title": "Japanese Magazine"
+      "title": "Japanese Magazine",
+      "group": "magazine",
+      "featured": true
     },
     {
       "id": "magazine-west",
-      "title": "Western Magazine"
+      "title": "Western Magazine",
+      "group": "magazine"
     },
     {
       "id": "magazine-mono",
-      "title": "Mono Magazine"
+      "title": "Mono Magazine",
+      "group": "magazine"
     },
     {
       "id": "magazine-film",
-      "title": "Film Magazine"
+      "title": "Film Magazine",
+      "group": "magazine"
     },
     {
       "id": "magazine-minimal",
-      "title": "Minimal Magazine"
+      "title": "Minimal Magazine",
+      "group": "magazine"
     },
     {
       "id": "magazine-collage",
-      "title": "Collage Magazine"
+      "title": "Collage Magazine",
+      "group": "magazine"
     },
     {
       "id": "minimal-linen",
-      "title": "Minimal Linen"
+      "title": "Minimal Linen",
+      "group": "paper",
+      "featured": true
     },
     {
       "id": "vintage-leather",
-      "title": "Vintage Leather"
+      "title": "Vintage Leather",
+      "group": "paper"
     },
     {
       "id": "floral-notebook",
-      "title": "Floral Notebook"
+      "title": "Floral Notebook",
+      "group": "paper"
     },
     {
       "id": "pastel-cute",
-      "title": "Pastel Cute"
+      "title": "Pastel Cute",
+      "group": "cute"
     },
     {
       "id": "travel-album",
-      "title": "Travel Album"
+      "title": "Travel Album",
+      "group": "paper"
     },
     {
       "id": "scrapbook-collage",
-      "title": "Scrapbook Collage"
+      "title": "Scrapbook Collage",
+      "group": "paper"
+    },
+    {
+      "id": "botanical-herbarium",
+      "title": "Botanical Herbarium",
+      "group": "life",
+      "featured": true
+    },
+    {
+      "id": "cafe-receipt",
+      "title": "Café Receipt",
+      "group": "life",
+      "featured": true
+    },
+    {
+      "id": "food-recipe",
+      "title": "Recipe Card",
+      "group": "life"
+    },
+    {
+      "id": "travel-postcard",
+      "title": "Travel Postcard",
+      "group": "life",
+      "featured": true
+    },
+    {
+      "id": "pet-tag",
+      "title": "Pet Tag",
+      "group": "life"
+    },
+    {
+      "id": "everyday-polaroid",
+      "title": "Everyday Polaroids",
+      "group": "life",
+      "featured": true
+    },
+    {
+      "id": "vintage-ticket",
+      "title": "Vintage Ticket",
+      "group": "paper"
+    },
+    {
+      "id": "editorial-grid",
+      "title": "Minimal Editorial",
+      "group": "magazine"
+    },
+    {
+      "id": "pastel-cloud",
+      "title": "Pastel Cloud",
+      "group": "cute"
+    },
+    {
+      "id": "seasonal-almanac",
+      "title": "Seasonal Almanac",
+      "group": "life"
     }
   ],
   "fieldTypes": [

@@ -85,13 +85,15 @@ async function streamBytes(download) {
     await page
       .locator('#dialog-form [name="title"]')
       .fill("小小植物园 · Plant Days");
+    await require("./signed-in.cjs").openBookSections(page);
     await page
       .locator('#dialog-form [name="description"]')
       .fill("保持我的文字，不要自动翻译。");
-    await require("./signed-in.cjs").openBookSections(page);
     await page
       .locator('#dialog-form [name="category"]')
       .fill("Plant care / 自定义");
+    // V10.54: every template is in the cover browser.
+    await page.locator(".cover-more-link").click();
     for (const template of [
       "vintage-leather",
       "pastel-cute",
@@ -107,6 +109,7 @@ async function streamBytes(download) {
         template,
       );
     }
+    await page.locator(".cb-done").click();
     await page.locator('[name="coverFont"]').selectOption("handwritten");
     await page.locator('[name="color"]').selectOption("blue");
     await page.locator('[name="coverDecoration"]').selectOption("bear");

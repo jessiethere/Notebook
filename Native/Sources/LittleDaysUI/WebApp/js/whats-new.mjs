@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.54",
+    date: "2026-11-14",
+    zh: {
+      title: "新建手帐本：先起名字，其他慢慢来",
+      items: [
+        "打开就是封面、名称、6 个精选封面和「创建」；描述、标签、封面细节、手帐设置都收进「更多个性化设置」，收起时也能看到当前设置的摘要。",
+        "「查看更多封面」：按生活主题、杂志、纸张手作、柔和可爱分类浏览全部 22 种封面，还能从整个图库选照片或上传自己的；返回时名字和选择都还在。",
+        "新增 10 种封面：植物标本、咖啡小票、食谱卡片、旅行明信片、毛孩子名牌、生活碎片、复古票根、简约杂志、柔彩云朵、四季流转（会跟着季节换装）。",
+        "点「创建」后，确认真正保存好了才打开新的手帐本；没保存好时你填的内容都还在，可以再试一次，连点两下也只会建一本。",
+      ],
+    },
+    en: {
+      title: "A new book: name it now, the rest can wait",
+      items: [
+        "First you see the cover, the name, six featured covers and Create. Description, tags, cover details and book settings fold under More personal touches, each with a short summary.",
+        "More covers: browse all 22 by Life themes, Magazine, Paper & craft and Soft & cute; pick from the whole photo library or upload your own. Going back keeps your name and choices.",
+        "Ten new covers: Botanical Herbarium, Café Receipt, Recipe Card, Travel Postcard, Pet Tag, Everyday Polaroids, Vintage Ticket, Minimal Editorial, Pastel Cloud and Through the Seasons (it changes with the season).",
+        "Create opens your new book only once it is really saved. If it isn't, everything you filled in stays to try again — and two quick taps still make one book.",
+      ],
+    },
+  },
+  {
     version: "10.53",
     date: "2026-11-14",
     zh: {

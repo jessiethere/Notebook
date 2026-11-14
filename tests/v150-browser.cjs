@@ -62,8 +62,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
       let saved = (await books()).find((b) => b.id === first.id);
       assert.deepEqual(saved.tags.slice(0, 5), ["旧标签", "self awareness", lang === "en" ? "slow living" : "慢生活", "咖啡", "morning walk"]);
       assert.equal(saved.tags.length, 8);
-      await page.waitForSelector(".pulled-book h2");
-      assert.equal(await page.locator(".pulled-book h2").innerText(), lang === "en" ? "Little things" : "小事收集", "the shelf updates at once");
+      // V10.54: the shelf shows the change once it is really stored.
+      await page.waitForFunction((t) => document.querySelector(".pulled-book h2")?.innerText === t, lang === "en" ? "Little things" : "小事收集");
       await page.reload();
       await page.waitForSelector(".hero, .bookshelf");
       saved = (await books()).find((b) => b.id === first.id);

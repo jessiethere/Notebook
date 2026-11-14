@@ -19,6 +19,13 @@ import {
   coverPhotoRef,
   MAGAZINE_COVERS,
   bookDialogHTML,
+  coverBrowserGridHTML,
+  coverBrowserPhotosHTML,
+  coverPhotoQuickHTML,
+  coverOptionHTML,
+  featuredCoverTemplates,
+  bookSectionHints,
+  DEFAULT_COVER_TEMPLATE,
   fieldDefinitionHTML,
   customFieldsHTML,
   mediaPanelHTML,
@@ -6685,6 +6692,15 @@ document.addEventListener("focusout", (event) => {
   const entry = event.target.closest?.("[data-tag-entry]");
   if (entry && entry.value.trim()) addTagsFrom(entry, false);
 });
+// V10.54: return in the book name closes the keyboard; it does not create the
+// book before a cover is chosen (创建 does that).
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
+  const field = event.target.closest?.('#dialog-form .book-name input, #dialog-form [name="category"]');
+  if (!field) return;
+  event.preventDefault();
+  field.blur();
+});
 // A field that the form refuses, inside a folded section: open the section so
 // the person sees what to fix (instead of 创建 seemingly doing nothing).
 document.addEventListener(
@@ -8462,24 +8478,7 @@ $("#dialog-form").addEventListener("submit", (event) => {
   }
   if (dialogKind === "book" || dialogKind === "edit-book") {
     event.preventDefault();
-    try {
-      const book = readBookForm();
-      // V10.52: the category sits in a folded section — an empty one is the default, never a silent block.
-      if (!String(book.category || "").trim()) book.category = "Daily Life";
-      validateFieldDefinitions(book.fields);
-      book.id ||= id();
-      if (dialogKind === "book") logEvent("book_create");
-      // V10.51: edited from the shelf's ··· → back on the shelf with the card still out.
-      const fromShelf = dialogKind === "edit-book" && page === "books" && !selectedBook && pulledBook === book.id;
-      store.update((next) => saveBook(next, book));
-      if (!fromShelf) selectedBook = book.id;
-      page = "books";
-      $("#form-dialog").close();
-      render();
-      toast(t("entry.saved"));
-    } catch (error) {
-      toast(t(error.message || "error.generic"));
-    }
+    saveBookForm();
     return;
   }
   event.preventDefault();
@@ -9151,9 +9150,71 @@ function openBookDialog(book = null) {
         visibility: "private",
       };
   dialogKind = book ? "edit-book" : "book";
+  bookSaving = false;
+  $("#dialog-form").classList.remove("browsing");
   $("#dialog-form").innerHTML = bookDialogHTML(bookDraft, ctx());
   $("#form-dialog").classList.add("book-editor-dialog");
   $("#form-dialog").showModal();
+}
+// V10.54 · 创建 / 保存: checked, once only (the button says 正在创建…), kept in
+// the store and then waited for until it is really stored (and its own cover
+// photo is in the media store) — only then the dialog closes and the new book
+// opens. If it fails, the dialog stays with everything filled in, to retry.
+let bookSaving = false;
+async function saveBookForm() {
+  if (bookSaving) return;
+  const button = $("#dialog-form .book-submit");
+  const label = button?.textContent || "";
+  const isNew = dialogKind === "book";
+  let book;
+  try {
+    book = readBookForm();
+    // V10.52: the category sits in a folded section — an empty one is the default, never a silent block.
+    if (!String(book.category || "").trim()) book.category = "Daily Life";
+    validateFieldDefinitions(book.fields);
+  } catch (error) {
+    toast(t(error.message || "error.generic"));
+    return;
+  }
+  // The same id on a retry, so a second try never makes a second book.
+  book.id ||= bookDraft.pendingId || id();
+  delete book.pendingId;
+  if (isNew) bookDraft.pendingId = book.id;
+  bookSaving = true;
+  if (button) {
+    button.disabled = true;
+    button.textContent = t(isNew ? "books.creating" : "books.saving");
+  }
+  try {
+    // V10.51: edited from the shelf's ··· → back on the shelf with the card still out.
+    const fromShelf = dialogKind === "edit-book" && page === "books" && !selectedBook && pulledBook === book.id;
+    try {
+      store.update((next) => saveBook(next, book));
+    } catch (error) {
+      throw Object.assign(new Error(error?.message || "save"), { code: error?.code === "stale-state" ? "stale-state" : error?.message?.startsWith("error.") ? error.message : "save" });
+    }
+    const refs = book.coverImage?.startsWith("media:") ? [book.coverImage.slice(6)] : [];
+    const [stored, missing] = await Promise.all([store.stored(), refs.length ? media.missing(refs).catch(() => refs) : []]);
+    if (!stored || missing.length) throw Object.assign(new Error("save"), { code: missing.length ? "media" : "store" });
+    if (isNew) logEvent("book_create", { stage: "saved" });
+    if (!fromShelf) selectedBook = book.id;
+    page = "books";
+    $("#form-dialog").close();
+    render();
+    toast(t("entry.saved"));
+  } catch (error) {
+    logEvent("book_save_failed", { err: String(error?.code || "save").replace(/^error\./, "").toLowerCase().replace(/[^a-z0-9-]/g, "-").slice(0, 16) });
+    if (button) {
+      button.disabled = false;
+      button.textContent = label;
+    }
+    bookSaving = false;
+    if (String(error?.code || "").startsWith("error.")) return toast(t(error.code));
+    const retry = await askConfirm(t(error?.code === "stale-state" ? "error.conflict" : "books.saveFailed"), { ok: t("exit.retry") });
+    if (retry) return saveBookForm();
+    return;
+  }
+  bookSaving = false;
 }
 function readBookForm() {
   const values = Object.fromEntries(new FormData($("#dialog-form")));
@@ -9191,10 +9252,80 @@ function readBookForm() {
     visibility: "private",
   };
 }
-function refreshBookPreview() {
+function refreshBookPreview({ covers = false } = {}) {
   if (!$("#book-cover-preview")) return;
   bookDraft = readBookForm();
-  $("#book-cover-preview").innerHTML = coverHTML(bookDraft, ctx());
+  const html = coverHTML(bookDraft, ctx());
+  $("#book-cover-preview").innerHTML = html;
+  if ($("#cover-browser-preview")) $("#cover-browser-preview").innerHTML = html;
+  const name = $("#cover-browser-name");
+  if (name) name.textContent = t("cover." + (bookDraft.coverTemplate || "minimal-linen"));
+  // V10.54: the folded sections say what they hold.
+  const hints = bookSectionHints(bookDraft, ctx());
+  for (const [key, text] of Object.entries(hints)) {
+    const el = document.querySelector(`[data-section-hint="${key}"]`);
+    if (el) el.textContent = text;
+  }
+  // The style thumbnails carry the name too; a new photo redraws them.
+  if (covers) refreshCoverThumbs();
+  else
+    document.querySelectorAll("#dialog-form .cover-option .cv-title, #dialog-form .cover-option .cover-title").forEach((el) => {
+      el.textContent = bookDraft.title || "Capiday";
+    });
+}
+function refreshCoverThumbs() {
+  const row = $("#dialog-form .cover-featured");
+  if (row) {
+    const left = row.scrollLeft;
+    const more = row.querySelector(".cover-more-tile")?.outerHTML || "";
+    row.innerHTML = featuredCoverTemplates(bookDraft, catalog).map((tpl) => coverOptionHTML(bookDraft, ctx(), tpl)).join("") + more;
+    row.scrollLeft = left;
+  }
+  const grid = $("#cover-browser-grid");
+  if (grid && !$("#cover-browser").hidden) grid.innerHTML = coverBrowserGridHTML(bookDraft, ctx(), grid.dataset.group || "all");
+  else if (grid) grid.innerHTML = "";
+  const quick = $("[data-cover-photo-quick]");
+  if (quick) quick.innerHTML = coverPhotoQuickHTML(bookDraft, ctx());
+  const photos = $("#cover-browser-photos");
+  if (photos && photos.childElementCount) {
+    const top = photos.scrollTop;
+    photos.innerHTML = coverBrowserPhotosHTML(bookDraft, ctx());
+    photos.scrollTop = top;
+  }
+}
+// V10.54 · The cover browser lives inside the book form: opening it hides the
+// short first view, closing it shows the first view again with every value
+// as it was (nothing is re-rendered, so nothing is lost).
+function openCoverBrowser(focus = "") {
+  const browser = $("#cover-browser");
+  if (!browser) return;
+  bookDraft = readBookForm();
+  const grid = $("#cover-browser-grid");
+  grid.innerHTML = coverBrowserGridHTML(bookDraft, ctx(), grid.dataset.group || "all");
+  $("#cover-browser-photos").innerHTML = coverBrowserPhotosHTML(bookDraft, ctx());
+  $("#dialog-form .book-main").hidden = true;
+  browser.hidden = false;
+  $("#dialog-form").classList.add("browsing");
+  $("#cover-browser-preview").innerHTML = coverHTML(bookDraft, ctx());
+  logEvent("cover_browser", { stage: "open" });
+  requestAnimationFrame(() => {
+    if (focus === "photos") $(".cb-photos")?.scrollIntoView({ block: "start" });
+    else $("#form-dialog").scrollTop = 0;
+  });
+}
+function closeCoverBrowser() {
+  const browser = $("#cover-browser");
+  if (!browser || browser.hidden) return;
+  browser.hidden = true;
+  $("#dialog-form").classList.remove("browsing");
+  $("#dialog-form .book-main").hidden = false;
+  $("#cover-browser-grid").innerHTML = "";
+  $("#cover-browser-photos").innerHTML = "";
+  refreshBookPreview({ covers: true });
+  requestAnimationFrame(() => {
+    $("#form-dialog").scrollTop = 0;
+    $("#dialog-form .cover-featured .cover-option.selected")?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  });
 }
 // ---------- S3 (V10.43) · Use a photo already in Capiday ----------
 // Replacing a photo first offers the photos already imported: this page,
@@ -10400,6 +10531,34 @@ async function v3Action(target) {
     );
     return true;
   }
+  if (name === "cover-browse") {
+    openCoverBrowser(target.dataset.focus || "");
+    return true;
+  }
+  if (name === "cover-browse-close") {
+    closeCoverBrowser();
+    return true;
+  }
+  if (name === "cover-group") {
+    const grid = $("#cover-browser-grid");
+    grid.dataset.group = target.dataset.group;
+    document.querySelectorAll(".cb-tabs [data-action=cover-group]").forEach((tab) => {
+      const on = tab === target;
+      tab.classList.toggle("selected", on);
+      tab.setAttribute("aria-selected", String(on));
+    });
+    bookDraft = readBookForm();
+    grid.innerHTML = coverBrowserGridHTML(bookDraft, ctx(), target.dataset.group);
+    return true;
+  }
+  if (name === "cover-reset") {
+    bookDraft = readBookForm();
+    bookDraft.coverTemplate = DEFAULT_COVER_TEMPLATE;
+    bookDraft.coverImage = "";
+    $('#dialog-form [name="coverTemplate"]').value = DEFAULT_COVER_TEMPLATE;
+    refreshBookPreview({ covers: true });
+    return true;
+  }
   if (name === "cover-template") {
     bookDraft = readBookForm();
     bookDraft.coverTemplate = target.dataset.template;
@@ -10422,14 +10581,13 @@ async function v3Action(target) {
   if (name === "cover-library-photo") {
     bookDraft = readBookForm();
     bookDraft.coverImage = `photo:${target.dataset.photo}`;
-    document.querySelectorAll(".cover-photo-picks button").forEach((b) => b.classList.toggle("selected", b === target));
-    refreshBookPreview();
+    refreshBookPreview({ covers: true });
     return true;
   }
   if (name === "cover-photo-remove") {
     bookDraft = readBookForm();
     bookDraft.coverImage = "";
-    refreshBookPreview();
+    refreshBookPreview({ covers: true });
     return true;
   }
   if (name === "field-add") {
@@ -10977,7 +11135,7 @@ async function handleImageUpload(event, target) {
     } else if (target?.kind === "cover") {
       bookDraft = readBookForm();
       bookDraft.coverImage = reference;
-      refreshBookPreview();
+      refreshBookPreview({ covers: true });
     } else if (target?.kind === "check-photo") {
       dialogPayload.photo = reference;
       const preview = $("#check-photo-preview");

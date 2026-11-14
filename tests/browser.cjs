@@ -71,6 +71,7 @@ const path = require("node:path");
     await nav("books");
     await page.getByRole("button", { name: "创建手帐本", exact: true }).click();
     await page.locator('#dialog-form [name="title"]').fill("测试小日子");
+    await require("./signed-in.cjs").openBookSections(page);
     await page.locator('#dialog-form [name="color"]').selectOption("blue");
     await page.locator('#dialog-form [type="submit"]').click();
     const bookId = (await savedState()).books.at(-1).id;
