@@ -38,10 +38,11 @@ final class DrawUITests: XCTestCase {
     func stroke(_ board: CGRect, _ a: (Double, Double), _ b: (Double, Double)) {
         point(board, a.0, a.1).press(forDuration: 0.05, thenDragTo: point(board, b.0, b.1))
     }
-    func launch() {
+    func launch(check: String = "/tmp/ld-uitest/probe.js") {
         app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-LittleDaysCheck", "/tmp/ld-uitest/probe.js"]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-LittleDaysCheck", check]
         app.launch()
+        if check != "/tmp/ld-uitest/probe.js" { return }
         let probe = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDSTATE:'")).firstMatch
         XCTAssertTrue(probe.waitForExistence(timeout: 90), "probe")
     }
@@ -211,5 +212,22 @@ final class DrawUITests: XCTestCase {
         print("LDSTEP volume \(quiet) -> \(loud)")
         XCTAssertNotEqual(quiet, loud, "the slider moves")
         XCTAssertEqual(state()["bgmPlaying"] as? Bool, true, "still playing after changing the volume")
+    }
+
+    // P0 voice: what the iPhone web view really records, and whether that file
+    // loads and decodes (tools/mac/uitest/voice-check.js). Allows the in-app
+    // microphone question when WebKit asks it.
+    func testVoiceFormats() throws {
+        launch(check: "/tmp/ld-uitest/voice-check.js")
+        let end = Date().addingTimeInterval(60)
+        var result = ""
+        while Date() < end {
+            for name in ["允许", "Allow"] where app.alerts.buttons[name].exists { app.alerts.buttons[name].tap() }
+            let el = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDREC:'")).firstMatch
+            if el.exists, !el.label.contains("running") { result = el.label; break }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        print("LDSTEP voice \(result)")
+        XCTAssertFalse(result.isEmpty, "the check finished")
     }
 }
