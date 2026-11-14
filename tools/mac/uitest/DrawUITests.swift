@@ -128,4 +128,51 @@ final class DrawUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(state()["saved"] as? Int ?? 0, 2, "both drawings saved")
         XCTAssertGreaterThanOrEqual(state()["dayInk"] as? Int ?? 0, 2, "and drawn after a restart")
     }
+
+    // V10.47 · Bug 2: two pages on one day, both deleted from 页面目录 → asked →
+    // the day is empty; after closing the app it stays empty; 恢复 brings it back.
+    func testClearDay() throws {
+        try? FileManager.default.createDirectory(atPath: "/tmp/ld-uitest/shots", withIntermediateDirectories: true)
+        launch()
+        for n in 1...2 {
+            if n > 1 { tap("navHome", wait: 1.5) }
+            let draw = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '手绘'")).firstMatch
+            XCTAssertTrue(draw.waitForExistence(timeout: 30), "draw tile")
+            draw.tap()
+            guard let board = waitFor("drawCanvas") else { XCTFail("board"); return }
+            stroke(board, (0.3, 0.3), (0.6, 0.5))
+            tap("drawDone", wait: 2.5)
+            if rect("skip") != nil { tap("skip") }
+            tap("save", wait: 3)
+        }
+        log("c1-two-pages-saved")
+        XCTAssertEqual(state()["saved"] as? Int, 2, "two pages with a drawing each")
+        tap("navCal", wait: 1.5)
+        tap("todayCell", wait: 2)
+        tap("editDate", wait: 2)
+        if rect("skip") != nil { tap("skip") }
+        tap("pagesManage", wait: 1.2)
+        tap("pageRemove", wait: 1.0)
+        if (state()["dlg"] as? String) == "confirm-dialog" { tap("confirmOk", wait: 1.2) }
+        if rect("pageRemove") == nil { tap("pagesManage", wait: 1.2) }
+        tap("pageRemove", wait: 1.2)
+        log("c2-last-page-asks")
+        XCTAssertEqual(state()["confirmText"] as? String, "删除这一页后，这一天将没有记录。")
+        tap("confirmOk", wait: 2)
+        log("c3-cleared")
+        XCTAssertEqual(state()["calendar"] as? Bool, true, "back on the Calendar")
+        XCTAssertEqual(state()["saved"] as? Int, 0)
+        XCTAssertEqual(state()["draftDrawings"] as? Int, 0)
+        app.terminate()
+        launch()
+        Thread.sleep(forTimeInterval: 2)
+        log("c4-reopened")
+        XCTAssertEqual(state()["saved"] as? Int, 0, "still empty after closing the app")
+        XCTAssertEqual(state()["draftDrawings"] as? Int, 0)
+        tap("navCal", wait: 1.5)
+        tap("todayCell", wait: 1.5)
+        tap("restore", wait: 2)
+        log("c5-restored")
+        XCTAssertEqual(state()["saved"] as? Int, 2, "恢复 brings both pages back")
+    }
 }
