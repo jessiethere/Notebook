@@ -183,6 +183,11 @@ npm run test:browser:v65
 
 ## 更新日志
 
+### 2026-11-14 — 第一次上传到 App Store Connect
+
+- 0.1.0 (1) 已上传，商店名称 Capiday 已预留（App ID 6834636756）。下一次构建号自动是 2，并且不再问出口合规问题。
+- 下一步：在 App Store Connect 加中文名「开铺手帐」，用 TestFlight 装到 iPhone 上测试。
+
 ### 2026-11-14 — 改名为开铺手帐 / Capiday（V10.45）
 
 - App 名字从 Little Days 改为中文「**开铺手帐**」、英文「**Capiday**」。中文界面写开铺手帐，iPhone 主屏幕在中文系统下显示开铺手帐；首页字标、页面刊头和导出文件名用 Capiday。GitHub 仓库现在是 https://github.com/jessiethere/Capiday ，Xcode 显示名 Capiday、Bundle ID `com.capiday.app`。

@@ -179,7 +179,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7VFYCTCXRS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Capiday;
@@ -187,6 +187,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Capiday can use the camera to take photos for your journal.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Capiday uses Face ID to unlock your private journal.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Capiday uses the microphone to record voice notes.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -206,7 +207,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7VFYCTCXRS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Capiday;
@@ -214,6 +215,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Capiday can use the camera to take photos for your journal.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Capiday uses Face ID to unlock your private journal.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Capiday uses the microphone to record voice notes.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
