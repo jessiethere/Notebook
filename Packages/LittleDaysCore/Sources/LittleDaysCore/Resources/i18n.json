@@ -9130,5 +9130,33 @@
   "draw.saveRetry": {
     "zh": "手绘没能保存到这台设备上。再试一次吗？（选「取消」会放弃这次的手绘）",
     "en": "The drawing could not be saved on this device. Try again? (Cancel discards this drawing.)"
+  },
+  "day.clearLast": {
+    "zh": "删除这一页后，这一天将没有记录。",
+    "en": "After deleting this page, this day will have no record."
+  },
+  "day.clearCoverLast": {
+    "zh": "清空封面后，这一天将没有记录。",
+    "en": "After clearing the cover, this day will have no record."
+  },
+  "day.clearEmpty": {
+    "zh": "这一天的页面都已经删掉了。确定后，这一天将没有记录。",
+    "en": "Every page of this day has been deleted. This day will then have no record."
+  },
+  "day.cleared": {
+    "zh": "这一天已经清空。",
+    "en": "This day is now empty."
+  },
+  "day.restore": {
+    "zh": "恢复刚删除的这一天",
+    "en": "Restore the day you just deleted"
+  },
+  "day.restored": {
+    "zh": "这一天已经恢复。",
+    "en": "The day is back."
+  },
+  "pages.empty": {
+    "zh": "这一天还没有页面。",
+    "en": "No pages on this day yet."
   }
 }

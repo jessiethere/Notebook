@@ -222,7 +222,8 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQ
     await studioClose(page);
     await page.locator('.sv-title[data-action="pages-manage"]').tap();
     await page.waitForSelector("#choose-dialog[open] .pages-sheet");
-    assert.equal(await page.locator(".pages-row.cover-row").count(), 1);
+    // V10.47: the directory lists a cover only when the day has one (this day has none).
+    assert.equal(await page.locator(".pages-row.cover-row").count(), 0);
     assert.equal(await page.locator(".pages-row:not(.cover-row)").count(), before.length);
     assert.equal(await page.locator('.pages-row [data-action="page-move"][data-dir="-1"]').first().isDisabled(), true, "the first page cannot move up");
     await page.locator('[data-action="page-move"][data-dir="1"]').first().tap();

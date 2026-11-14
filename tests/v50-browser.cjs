@@ -99,12 +99,14 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.waitForFunction(() => !document.querySelector(".chapter-chips")?.innerText.includes("不想要的这页"));
     await studioDetails(page);
     await page.locator('.page-bar [data-action="day-page-clear"]').dispatchEvent("click");
+    // V10.47: no page is left, so clearing the cover clears the day (asked first).
+    await page.waitForSelector("#confirm-dialog[open]");
+    assert.match(await page.locator("#confirm-message").innerText(), /清空封面后，这一天将没有记录/);
     await page.locator("#confirm-ok").tap();
-    await page.waitForFunction(() => !document.querySelector('.page-bar [data-action="day-page-clear"]'));
-    await page.waitForTimeout(1300);
-    const draft = (await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")))).drafts[today];
-    assert.ok(draft && !draft.title && !draft.body && !draft.photo && !(draft.layers || []).length, "day page cleared");
-    assert.ok(!draft.moments.some((m) => m.title === "不想要的这页"), "story deleted");
+    await page.waitForSelector(".calendar-grid");
+    await page.waitForTimeout(800);
+    const after = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")));
+    assert.ok(!after.drafts[today] && !after.entries.some((e) => e.date === today && !e.isDemo), "story deleted, day page cleared — the day is empty");
     passed.push("delete this page (story) and remove the day page, right on the writing card");
 
     assert.deepEqual(errors, []);

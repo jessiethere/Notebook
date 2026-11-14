@@ -316,11 +316,89 @@ const daysPagesLabel = (days, pages) => `${t(days === 1 ? "count.day" : "count.d
 const todayEntry = () =>
   state().entries.find((entry) => entry.date === dateKey() && !isSampleDay(entry));
 
-function toast(message) {
-  $("#toast").textContent = message;
-  $("#toast").classList.add("visible");
+function toast(message, undo = null) {
+  // V10.47: a toast may carry one button (撤销 after a day was cleared).
+  const box = $("#toast");
+  box.textContent = message;
+  box.classList.toggle("has-action", Boolean(undo));
+  if (undo) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "toast-action";
+    button.dataset.action = undo.action;
+    button.textContent = undo.label;
+    box.append(" ", button);
+  }
+  box.classList.add("visible");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3200);
+  toastTimer = setTimeout(() => box.classList.remove("visible", "has-action"), undo ? 6000 : 3200);
+}
+// ---------- V10.47 · Clearing a day (P0, TestFlight) ----------
+// When the last page of a day goes (and there is no cover), the day itself
+// goes: its saved copy and its draft. Nothing is kept as an empty "cover".
+// The removed day is kept here (and on this device, without media bytes) so
+// it can be brought back: 撤销 on the toast, or 恢复 on that date in the
+// Calendar, also after the app was closed. Media files are never deleted.
+const CLEARED_DAY_KEY = "little-days.cleared-day";
+function clearedDay() {
+  try {
+    return JSON.parse(localStorage.getItem(CLEARED_DAY_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+function clearDay(date) {
+  const s = state();
+  const kept = {
+    date,
+    at: new Date().toISOString(),
+    entry: structuredClone(s.entries.find((e) => e.date === date) || null),
+    draft: structuredClone(s.drafts[date] || null),
+  };
+  store.update((next) => {
+    next.entries = next.entries.filter((e) => e.date !== date);
+    delete next.drafts[date];
+  });
+  try {
+    localStorage.setItem(CLEARED_DAY_KEY, JSON.stringify(kept));
+  } catch {
+    // Too big for this device's small store: 撤销 still works in this session.
+  }
+  clearedDayMemo = kept;
+  if (editor?.date === date) {
+    // The editor must not write the day back when the Studio closes.
+    editor = { ...editor, title: "", body: "", photo: "", layers: [], media: [], fieldValues: {}, moments: [] };
+    draftDirty = false;
+    activeMomentId = null;
+    selectedLayer = null;
+  }
+}
+let clearedDayMemo = null;
+function restoreClearedDay() {
+  const kept = clearedDayMemo || clearedDay();
+  if (!kept?.date) return;
+  store.update((next) => {
+    if (kept.entry && !next.entries.some((e) => e.date === kept.date)) next.entries.push(kept.entry);
+    if (kept.draft && !next.drafts[kept.date]) next.drafts[kept.date] = kept.draft;
+  });
+  clearedDayMemo = null;
+  try {
+    localStorage.removeItem(CLEARED_DAY_KEY);
+  } catch {}
+  $("#toast").classList.remove("visible", "has-action");
+  selectedDate = kept.date;
+  render();
+  toast(t("day.restored"));
+}
+// From the Studio: clear the day, then the Calendar on that date (empty, with 恢复).
+function clearDayAndLeave(date) {
+  clearDay(date);
+  if ($("#choose-dialog")?.open) $("#choose-dialog").close();
+  studioPreview = false;
+  readReturn = null;
+  selectedDate = date;
+  navigate("calendar");
+  toast(t("day.cleared"), { action: "day-restore", label: t("studio.undo") });
 }
 function flushDraft() {
   clearTimeout(draftTimer);
@@ -1007,7 +1085,7 @@ function calendarPage() {
   const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><span class="page-top-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></span></header>`;
   if (calendarMode === "wall")
     return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
-  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span>${labsOn() ? `<span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span>` : ""}<span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}</span></div>${
+  return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span>${labsOn() ? `<span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span>` : ""}<span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}${!entry && (clearedDayMemo || clearedDay())?.date === selectedDate ? `<button data-action="day-restore">${t("day.restore")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
         ? memoryCard(entry)
@@ -3256,16 +3334,32 @@ function renderPagesManage() {
   const moments = editor.moments || [];
   const book = (id) => state().books.find((b) => b.id === id)?.title || "";
   const hasCover = hasDayPageContent(editor);
-  $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list"><li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button>${hasCover ? `<button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button>` : ""}</li>${moments
+  // V10.47: the cover row only when the day has a cover (it can be cleared);
+  // no cover and no pages → an empty state, never a placeholder cover.
+  const coverRow = hasCover
+    ? `<li class="pages-row cover-row">${pageThumbHTML(editor, true)}<button class="pages-open" data-action="pages-open" data-moment=""><small>${t("day.cover")}</small><b>${esc(editor.title || t("cover.empty"))}</b></button><button class="pages-del" data-action="day-page-clear">${t("pages.clearCover")}</button></li>`
+    : moments.length
+      ? ""
+      : `<li class="pages-empty">${t("pages.empty")}</li>`;
+  $("#choose-dialog").innerHTML = `<div class="choose-sheet pages-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("pages.title")}</h2><p class="save-help">${t("pages.help")}</p><ul class="pages-list">${coverRow}${moments
     .map(
       (m, i) =>
         `<li class="pages-row${m.id === activeMomentId ? " current" : ""}">${pageThumbHTML(m)}<button class="pages-open" data-action="pages-open" data-moment="${esc(m.id)}"><small>${t("moment.chapter", { number: String(i + 1).padStart(2, "0") })}${m.time ? " · " + esc(m.time) : ""}${book(m.bookId) ? " · " + esc(book(m.bookId)) : ""}</small><b>${esc(PL.pageLabel(m, { t, index: i }).label)}</b></button><span class="pages-move"><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="-1" aria-label="${t("pages.up")}" ${i ? "" : "disabled"}>↑</button><button data-action="page-move" data-moment="${esc(m.id)}" data-dir="1" aria-label="${t("pages.down")}" ${i < moments.length - 1 ? "" : "disabled"}>↓</button></span><button class="pages-copy" data-action="page-copy" data-moment="${esc(m.id)}" aria-label="${t("pages.copyLabel")}">${t("copy")}</button><button class="pages-del" data-action="page-remove" data-moment="${esc(m.id)}" aria-label="${t("write.deleteStory")}">🗑 ${t("delete")}</button></li>`,
     )
     .join("")}</ul><div class="pages-actions"><button class="secondary" data-action="pages-add">＋ ${t("moment.addShort")}</button><button class="secondary" data-action="pages-details">${t("more.details")}</button></div><button class="text-button pages-more" data-action="pages-more">${t("pages.more")} ›</button><button class="primary full-width" data-action="choose-close">${t("pages.done")}</button></div>`;
 }
+// V10.47: the last page of a day without a cover — the day is cleared (after asking).
+function isLastPage(momentId) {
+  return editor.moments.length === 1 && editor.moments[0].id === momentId && !hasDayPageContent(editor);
+}
+async function removeLastPage() {
+  if (!(await askConfirm(t("day.clearLast"), { ok: t("delete") }))) return;
+  clearDayAndLeave(editor.date);
+}
 async function removePage(momentId) {
   const moment = findMoment(editor, momentId);
   if (!moment) return;
+  if (isLastPage(momentId)) return removeLastPage();
   if (hasMomentContent(moment) && !(await askConfirm(t("moment.deleteConfirm")))) return;
   changeEditor((entry) => removeMoment(entry, momentId), false);
   if (activeMomentId === momentId || !findMoment(editor, activeMomentId))
@@ -5810,7 +5904,11 @@ function studioTitleHTML() {
   const day = isDayPage();
   const current = activePage();
   const name = day ? t("day.cover") : current.title || studioDateLabel();
-  const count = day ? t("studio.coverOf", { count: moments.length }) : t("studio.pageOf", { n: moments.indexOf(current) + 1, count: moments.length });
+  // V10.47 (counts): the same rule as the Reader, Calendar and books
+  // (js/pages.mjs) — a day cover counts as page 1 while it is shown.
+  const cover = hasDayPageContent(editor) && editor.dayCoverHidden !== true ? 1 : 0;
+  const total = moments.length + cover;
+  const count = day ? t("studio.coverOf", { count: total }) : t("studio.pageOf", { n: moments.indexOf(current) + 1 + cover, count: total });
   return `<button class="sv-title" data-action="pages-manage" aria-label="${t("pages.title")}"><b data-studio-title>${esc(name)}</b><small>${esc(count)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></small></button>`;
 }
 function refreshStudioTitle() {
@@ -6230,6 +6328,18 @@ function openPageMenu(date, momentId) {
   dialog.showModal();
 }
 async function deleteReadPage(date, momentId) {
+  // V10.47: the day's last page (no cover left), or a cover with no pages —
+  // the day is cleared instead of leaving an empty day behind.
+  const day = dayOf(state(), date);
+  const left = day ? (day.moments || []).filter((m) => m.id !== momentId).length + (momentId && hasDayPageContent(day) ? 1 : 0) : 1;
+  if (day && !left) {
+    if (!(await askConfirm(t(momentId ? "day.clearLast" : "day.clearCoverLast"), { ok: t("delete") }))) return;
+    clearDay(date);
+    if (page === "reader" && !readerPages().length) page = "calendar";
+    render();
+    toast(t("day.cleared"), { action: "day-restore", label: t("studio.undo") });
+    return;
+  }
   if (!(await askConfirm(t(momentId ? "moment.deleteConfirm" : "write.clearDayConfirm")))) return;
   store.update((next) => {
     for (const day of readCopies(date)(next)) {
@@ -6824,7 +6934,7 @@ function leaveStudio() {
 // down) changes nothing: the paper, the selected item and the caret stay.
 function openExitSheet() {
   const status = editorStatus();
-  const pages = (hasDayPageContent(editor) ? 1 : 0) + editor.moments.length;
+  const pages = (hasDayPageContent(editor) && editor.dayCoverHidden !== true ? 1 : 0) + editor.moments.length;
   const dialog = $("#choose-dialog");
   dialog.innerHTML = `<div class="choose-sheet kp exit-sheet" data-status="${status}"><div class="choose-grabber" aria-hidden="true"></div><div class="kp-title"><span></span><b>${t("exit.title")}</b><button class="kp-x" data-action="choose-close" aria-label="${t("exit.keepEditing")}">×</button></div><p class="exit-note">${t(status === "completed" ? "exit.noteCompleted" : "exit.note", { count: pages })}</p><button class="exit-choice primary" data-action="save-entry"><b>${t("exit.complete")}</b><small>${t("exit.completeHint")}</small></button><button class="exit-choice" data-action="studio-draft-exit"><b>${t("exit.draft")}</b><small>${t("exit.draftHint")}</small></button><button class="exit-stay" data-action="choose-close">${t("exit.keepEditing")}</button></div>`;
   if (!dialog.open) dialog.showModal();
@@ -6981,11 +7091,11 @@ function openReflectionDialog(period, key) {
 }
 // In-page confirmation: works the same on localhost, in the iOS shell and on a
 // hosted link (where browser confirm() dialogs are unavailable).
-function askConfirm(message) {
+function askConfirm(message, { ok = "" } = {}) {
   const dialog = $("#confirm-dialog");
   $("#confirm-message").textContent = message;
   $("#confirm-cancel").textContent = t("cancel");
-  $("#confirm-ok").textContent = t("confirm.ok");
+  $("#confirm-ok").textContent = ok || t("confirm.ok");
   dialog.returnValue = "";
   dialog.showModal();
   $("#confirm-cancel").focus();
@@ -7366,6 +7476,7 @@ async function action(target) {
     $("#choose-dialog").close();
     await deleteReadPage(target.dataset.date, target.dataset.moment || "");
   }
+  if (actionName === "day-restore") restoreClearedDay();
   if (actionName === "rich-demo") return addRichDemoPage();
   if (actionName === "samples-remove") {
     if (!(await askConfirm(t("samples.confirm")))) return;
@@ -7880,6 +7991,13 @@ async function action(target) {
     // step: save everything, mark the record Completed, show the finished page.
     if ($("#choose-dialog")?.open) $("#choose-dialog").close();
     if (editorIsEmpty()) {
+      // V10.47: every page was deleted from a day that is saved — 完成 clears
+      // the day (after asking) instead of refusing and keeping the old pages.
+      const savedDay = state().entries.find((e) => e.date === editor.date && !e.isDemo);
+      if (savedDay) {
+        if (await askConfirm(t("day.clearEmpty"), { ok: t("delete") })) clearDayAndLeave(editor.date);
+        return;
+      }
       toast(t("先留下一张照片，或者写点什么吧。"));
       return;
     }
@@ -9762,6 +9880,11 @@ async function v31Action(target) {
       return true;
     }
     case "day-page-clear": {
+      // V10.47: a cover with no pages left — clearing it clears the day.
+      if (!editor.moments.length) {
+        if (await askConfirm(t("day.clearCoverLast"), { ok: t("delete") })) clearDayAndLeave(editor.date);
+        return true;
+      }
       // "I don't want a day page": clear it (the day's stories stay).
       if (!(await askConfirm(t("write.clearDayConfirm")))) return true;
       changeEditor((entry) => {
@@ -9781,6 +9904,10 @@ async function v31Action(target) {
     case "moment-delete": {
       const moment = findMoment(editor, activeMomentId);
       if (!moment) return true;
+      if (isLastPage(moment.id)) {
+        await removeLastPage();
+        return true;
+      }
       if (
         hasMomentContent(moment) &&
         !(await askConfirm(t("moment.deleteConfirm")))

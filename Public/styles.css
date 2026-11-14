@@ -21781,3 +21781,26 @@ body.typing .ctx-caption {
 /* S4 (V10.44): the optional day cover. */
 .story-tabs .story-cover-add { border-style: dashed; opacity: 0.85; }
 .day-cover-hidden { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; margin: 8px 0; border: 1px dashed var(--c-dfdfd0, #dfdfd0); border-radius: 12px; font-size: 14px; }
+
+/* V10.47 · a toast with one button (撤销 after a day was cleared); the
+   page directory's empty state. */
+.toast.visible.has-action {
+  pointer-events: auto;
+}
+.toast-action {
+  margin-left: 6px;
+  padding: 2px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+}
+.pages-empty {
+  padding: 18px 4px;
+  color: var(--t-6f675d, #6f675d);
+  font-size: 14px;
+  text-align: center;
+  list-style: none;
+}

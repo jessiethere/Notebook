@@ -4,6 +4,32 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.47",
+    date: "2026-11-14",
+    zh: {
+      title: "可以把一天彻底清空了",
+      items: [
+        "修好了：删掉一天的所有页面后，「页面目录」里会留下一个删不掉的「封面」。现在没有封面就不显示封面这一行；什么都没有时显示「这一天还没有页面」。",
+        "删除一天的最后一页时会提示「删除这一页后，这一天将没有记录。」，选「删除」后回到日历，这一天变成空的。",
+        "以前删掉页面后，点「完成」保存不了，删掉的页面其实还留在已保存的手帐里；现在会正确清空。",
+        "清空后可以点提示里的「撤销」，或在日历的这一天点「恢复刚删除的这一天」（关掉 App 再打开也可以）。照片、视频文件不会被删除。",
+        "只剩封面时可以直接删除封面；以前自动生成的封面会保留，由你决定隐藏还是删除。",
+        "编辑器顶部的「第几页 · 共几页」和阅读器、日历使用同一个计数：显示中的封面算一页，隐藏的封面不算。",
+      ],
+    },
+    en: {
+      title: "A day can now be emptied completely",
+      items: [
+        "Fixed: after deleting every page of a day, the page list kept a cover that could not be deleted. Now the cover row shows only when the day has a cover; an empty day says “No pages on this day yet.”",
+        "Deleting a day's last page says “After deleting this page, this day will have no record.” — Delete takes you back to the Calendar with the day empty.",
+        "Before, after deleting pages, Done could not save and the deleted pages stayed in the saved journal; this now clears correctly.",
+        "Undo on the message, or “Restore the day you just deleted” on that date in the Calendar (also after closing the app). Photo and video files are never deleted.",
+        "When only a cover is left it can be deleted; covers made automatically by older versions are kept for you to hide or delete.",
+        "“Page n of N” in the editor now counts like the Reader and Calendar: a shown cover is a page, a hidden one is not.",
+      ],
+    },
+  },
+  {
     version: "10.46",
     date: "2026-11-14",
     zh: {

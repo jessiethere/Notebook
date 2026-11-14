@@ -97,7 +97,8 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator(`.day-detail .chapter-more[data-moment="page-${d1}"]`).tap();
     await page.locator('#choose-dialog [data-action="read-delete"]').tap();
     await page.locator("#confirm-ok").tap();
-    await page.waitForFunction((d) => !JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d).moments.length, d1);
+    // V10.47: it was the day's only page (no cover) — the day itself is cleared.
+    await page.waitForFunction((d) => !JSON.parse(localStorage.getItem("little-days.v1")).entries.find((e) => e.date === d)?.moments.length, d1);
     assert.equal(await page.locator(`[data-moment-view="page-${d1}"]`).count(), 0);
     passed.push("⋯ on a page: edit opens it in the studio; delete (confirmed) removes it");
 
