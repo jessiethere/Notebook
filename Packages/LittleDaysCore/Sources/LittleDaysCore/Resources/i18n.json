@@ -9222,5 +9222,9 @@
   "type.done": {
     "zh": "完成",
     "en": "Done"
+  },
+  "brand.wordmark": {
+    "zh": "开铺手帐",
+    "en": "Capiday"
   }
 }

@@ -65,7 +65,7 @@ function magazineCoverHTML(book, ctx, template) {
   if (template === "magazine-film")
     return `<div class="book-cover cover-magazine-film" style="--cover-color:${coverColor(book, tokens)}"><span class="film-holes" aria-hidden="true"></span><span class="mag-frame">${img}<i class="film-date">${esc(date)}</i></span><span class="film-holes bottom" aria-hidden="true"></span><span class="mag-foot"><b class="cover-title">${title}</b><span>${esc(topic)} · CAPIDAY</span></span></div>`;
   if (template === "magazine-minimal")
-    return `<div class="book-cover cover-magazine-minimal" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-brand">little days</span><span class="mag-frame">${img}</span><b class="cover-title">${title}</b><span class="mag-foot">${line || esc(issue)}</span></div>`;
+    return `<div class="book-cover cover-magazine-minimal" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-brand">capiday</span><span class="mag-frame">${img}</span><b class="cover-title">${title}</b><span class="mag-foot">${line || esc(issue)}</span></div>`;
   if (template === "magazine-collage") {
     const [, second, third] = extraPhotoRefs(book, ctx.catalog, 2);
     const extra = (ref) => (media.resolve(ref) ? `<img class="mag-photo" src="${esc(media.resolve(ref))}" alt="">` : `<span class="mag-photo mag-photo-empty"></span>`);
@@ -73,7 +73,7 @@ function magazineCoverHTML(book, ctx, template) {
   }
   if (template === "magazine-west")
     return `<div class="book-cover cover-magazine-west" style="--cover-color:${coverColor(book, tokens)}">${img}<span class="mag-shade" aria-hidden="true"></span><span class="mag-top"><span>${esc(issue)}</span><span>${esc(topic)}</span></span><span class="mag-masthead">CAPIDAY</span><span class="mag-lines"><b class="cover-title">${title}</b>${line ? `<i>${line}</i>` : ""}</span><span class="mag-barcode" aria-hidden="true"></span></div>`;
-  return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">little days</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Capiday")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;
+  return `<div class="book-cover cover-magazine-jp" style="--cover-color:${coverColor(book, tokens)}"><span class="mag-top"><span class="mag-brand">capiday</span><span>${esc(issue)}</span></span><span class="mag-frame">${img}</span><b class="mag-vertical cover-title" style="--n:${Math.max(4, [...String(book.title || "Capiday")].length)}">${title}</b><span class="mag-foot"><span>${esc(topic)}</span><i></i><span>${line || "LIFESTYLE JOURNAL"}</span></span></div>`;
 }
 export function coverHTML(book, ctx) {
   const { catalog, tokens, media, t } = ctx;

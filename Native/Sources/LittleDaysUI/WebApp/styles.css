@@ -22030,3 +22030,15 @@ body.typing .ctx-caption {
 #choose-dialog .choose-sheet.sw {
   max-height: min(calc(var(--vv-h, 100dvh) - 16px), 720px);
 }
+
+/* V10.51 · Home wordmark in Chinese: 开铺手帐 in an elegant display serif
+   (ZCOOL XiaoWei, bundled, OFL) beside the sprout; English stays Capiday. */
+.home-mag .brand-title.brand-zh {
+  font-family: "LD-zh-xiaowei", "Songti SC", "STSong", "Noto Serif SC", serif;
+  font-size: 23px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+.home-mag .brand-title.brand-zh .brand-sprout {
+  margin-top: -4px;
+}
