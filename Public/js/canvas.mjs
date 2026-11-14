@@ -146,7 +146,9 @@ export function layerHTML(layer, ctx, options = {}) {
       if (layer.bind && !words && readOnly) return "";
       classes += ` text-layer${layer.bind ? " bound-text" : ""}${layer.chip ? " chip-text" : ""}`;
       extraStyle = `;${textCSS({ size: layer.fontSize, color: layer.color, weight: layer.weight, spacing: layer.spacing }, layer.fontId || defaultFont, 16, catalog)};text-align:${["left", "center", "right"].includes(layer.align) ? layer.align : "left"}${/^#[0-9a-f]{6}$/i.test(layer.chip || "") ? `;--chip:${layer.chip}` : ""}`;
-      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${layer.bind && !words ? ` data-placeholder="${esc(t("story.linePlaceholder"))}"` : ""}>${rich(words, layer.bind ? boundMarks(layer, options.page, words) : layer.marks)}</span>`;
+      // V10.51: an empty box being written shows a soft hint (a new box starts empty).
+      const hint = !words ? (layer.bind ? t("story.linePlaceholder") : readOnly ? "" : t("layer.placeholder")) : "";
+      inner = `<span class="layer-text" data-inline-layer="${esc(layer.id)}"${hint ? ` data-placeholder="${esc(hint)}"` : ""}>${rich(words, layer.bind ? boundMarks(layer, options.page, words) : layer.marks)}</span>`;
     } else inner = esc(layer.text);
   }
   // The handles are drawn by the editor above the paper (V10.12, app.js

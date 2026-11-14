@@ -108,6 +108,7 @@ const lake = fs.readFileSync(path.join(__dirname, "../Packages/LittleDaysCore/So
     await studioEdit(page);
     await page.locator('.tool-dock [data-action="add-text-layer"]').tap();
     await page.waitForFunction(() => document.activeElement?.classList.contains("layer-text") && document.body.classList.contains("typing"));
+    await page.keyboard.type("一句话"); // V10.51: a new box left empty is taken away again
     await page.evaluate(() => document.activeElement.blur());
     // 图层 holds the text box's full panel; typing in it keeps it above the keyboard.
     await studioTool(page, "layer");

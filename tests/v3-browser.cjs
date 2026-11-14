@@ -206,11 +206,13 @@ async function streamBytes(download) {
     assert.equal(await page.locator(".layer img").count(), 2);
     await tool("stickers");
     await page.locator('[data-action="add-text-layer"]').first().click();
+    await page.keyboard.type("x"); // V10.51: a new box left empty is taken away again
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("Grow gently");
     await page.locator('[data-layer-text="fontId"]').selectOption("decorative");
     await tool("stickers");
     await page.locator('[data-action="add-text-layer"]').first().click();
+    await page.keyboard.type("x"); // V10.51: a new box left empty is taken away again
     await tool("layer");
     await page.locator('[data-layer-text="text"]').fill("慢慢长大");
     await page.locator('[data-layer-text="fontId"]').selectOption("chinese");

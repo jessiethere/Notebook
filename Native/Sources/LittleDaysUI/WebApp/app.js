@@ -3582,8 +3582,15 @@ const rgbHex = (value) => {
   const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(value || "");
   return m ? "#" + m.slice(1, 4).map((n) => Number(n).toString(16).padStart(2, "0")).join("") : "";
 };
+// V10.51: typing in a text box on the paper shows one short row — 样式 (font,
+// size, colour, alignment open in their own panel, keyboard down), B I U S on
+// the words being typed, and 完成 — instead of two rows of every control
+// stacked over the keyboard. A note's title / words keep the full bar.
 function typeBarHTML() {
-  return `<div class="type-bar type-controls" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}">${typeControlsHTML()}</div>`;
+  const styleOpen = `<button type="button" class="type-style-open" data-action="type-style"><span aria-hidden="true">Aa</span>${t("type.style")}</button>`;
+  const done = `<button type="button" class="primary type-done" data-action="type-done">${t("type.done")}</button>`;
+  const controls = typeControlsHTML().replace('<div class="type-row type-main-row">', `<div class="type-row type-main-row">${styleOpen}`).replace(/(<div class="type-row type-main-row">[\s\S]*?)(<\/div><div class="type-row type-color-row">)/, `$1${done}$2`);
+  return `<div class="type-bar type-controls" id="type-bar" hidden role="toolbar" aria-label="${t("type.label")}">${controls}</div>`;
 }
 function typeTargetOf(el) {
   if (!el?.closest?.("#journal-canvas")) return null;
@@ -3655,6 +3662,7 @@ document.addEventListener("focusin", (event) => {
   if (target) {
     typeTarget = target;
     bar.hidden = false;
+    bar.dataset.mode = target.kind === "layer" ? "box" : "field";
     syncTypeBar();
   }
 });
@@ -4047,10 +4055,31 @@ document.addEventListener("focusout", (event) => {
   if (el.dataset.inlineLayer) {
     el.contentEditable = "false";
     el.closest("[data-layer]")?.classList.remove("editing");
+    dropFreshText(el.dataset.inlineLayer);
   }
   const undo = document.querySelector('[data-action="undo"]');
   if (undo) undo.disabled = history.length === 0;
 });
+// V10.51: a box just added and left without a word is taken away again, as
+// if it had never been added (no empty box, nothing to undo).
+let freshText = null;
+function dropFreshText(layerId) {
+  const fresh = freshText;
+  if (!fresh || fresh.id !== layerId) return;
+  freshText = null;
+  setTimeout(() => {
+    if (document.activeElement?.dataset?.inlineLayer === layerId) return; // typing again
+    const page = activePage();
+    const layer = page?.layers.find((l) => l.id === layerId);
+    if (!layer || String(layer.text || "").trim()) return;
+    page.layers = page.layers.filter((l) => l.id !== layerId);
+    if (history.length >= fresh.at) history.length = Math.max(0, fresh.at - 1);
+    future = [];
+    if (selectedLayer === layerId) selectedLayer = null;
+    scheduleDraft();
+    render();
+  }, 0);
+}
 function writeCardHTML() {
   const page = activePage();
   // The cover's title and words are typed on the paper itself (V6.7): the
@@ -10073,6 +10102,21 @@ async function v31Action(target) {
       render();
       syncTypeBar();
       return true;
+    case "type-done":
+      // 完成: the words are kept (they are saved as they are typed); the box stays selected.
+      document.activeElement?.blur?.();
+      return true;
+    case "type-style": {
+      // From typing to the style panel: keyboard down, the same box selected.
+      const box = typeTarget?.kind === "layer" ? typeTarget.id : selectedLayer;
+      document.activeElement?.blur?.();
+      if (box) selectedLayer = box;
+      textTab = "font";
+      studioTool = "textstyle";
+      render();
+      syncTypeBar();
+      return true;
+    }
     case "ctx-edit-text":
       // Type right on the paper.
       if (["layer", "textstyle"].includes(studioTool)) studioTool = null;
@@ -10284,7 +10328,9 @@ async function v3Action(target) {
       const layer = {
         id: id(),
         kind: "text",
-        text: t("layer.newText"),
+        // V10.51: a new box starts empty with a caret (no words selected:
+        // on iPhone a selection brings up Cut / Copy / Paste over the paper).
+        text: "",
         x: 50,
         // In a free spot, not on top of the words already on the paper.
         y: [60, 78, 40, 18].find((y) => !entry.layers.some((l) => l.kind === "text" && Math.abs((l.y ?? 50) - y) < 12)) ?? 60,
@@ -10300,7 +10346,8 @@ async function v3Action(target) {
       entry.layers.push(layer);
       selectedLayer = layer.id;
     });
-    editTextLayer(selectedLayer, true);
+    freshText = { id: selectedLayer, at: history.length };
+    editTextLayer(selectedLayer);
     return true;
   }
   if (name === "collage-photo") {

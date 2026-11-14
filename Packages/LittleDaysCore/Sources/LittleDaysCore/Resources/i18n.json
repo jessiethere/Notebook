@@ -9210,5 +9210,17 @@
   "exit.retry": {
     "zh": "再试一次",
     "en": "Try again"
+  },
+  "layer.placeholder": {
+    "zh": "写点什么…",
+    "en": "Write something…"
+  },
+  "type.style": {
+    "zh": "样式",
+    "en": "Style"
+  },
+  "type.done": {
+    "zh": "完成",
+    "en": "Done"
   }
 }

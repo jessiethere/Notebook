@@ -373,26 +373,23 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       assert.equal(l.color, "#B5838D");
       assert.deepEqual(l.marks, [{ start: 0, end: 3, bold: true }], "bold kept");
       assert.deepEqual(await paperLook(), look0, "the paper and the page background are untouched");
-      // While typing: the colours are a row of their own, each big enough to tap.
+      // V10.51: typing in a box shows one short row (样式 · B I U S · 完成);
+      // fonts and colours open from 样式 with the keyboard down.
       await page.locator('.tool-dock.ctx [data-action="text-style"][data-tab="color"]').tap(); // close
       const c = await center(page, `${BOX} .layer-text`);
       await T.doubleTap(c.x, c.y);
       await page.waitForFunction(() => document.activeElement?.classList.contains("layer-text"));
-      await page.waitForSelector("#type-bar:not([hidden]) .type-color-now");
-      // The dot shows the colour in use; tapping it turns the row into the colours.
-      assert.equal(await page.locator("#type-bar .type-color-now i").evaluate((el) => getComputedStyle(el).backgroundColor), "rgb(181, 131, 141)");
-      const barH = (await page.locator("#type-bar").boundingBox()).height;
-      await page.locator("#type-bar .type-color-now").tap();
-      await page.waitForSelector("#type-bar.show-colors .type-color-row");
-      assert.ok(Math.abs((await page.locator("#type-bar").boundingBox()).height - barH) <= 2, "the bar keeps its height");
-      const row = await page.$$eval("#type-bar .type-color-row [data-type-color]", (els) => els.map((e) => e.getBoundingClientRect().width));
-      assert.ok(row.length === 8 && row.every((w) => w >= 28), `colour swatches while typing: ${row}`);
-      await page.locator('#type-bar [data-type-color="#6D8299"]').scrollIntoViewIfNeeded();
-      await page.locator('#type-bar [data-type-color="#6D8299"]').tap();
-      assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("layer-text")), true, "the caret stays in the words");
-      assert.equal(await page.locator('#type-bar [data-type-color="#6D8299"]').getAttribute("aria-pressed"), "true");
-      await page.locator("#type-bar .type-color-back").tap();
-      assert.equal(await page.locator("#type-bar .type-main-row").isVisible(), true, "‹ goes back to size / B I U S");
+      await page.waitForSelector('#type-bar:not([hidden])[data-mode="box"] .type-done');
+      assert.equal(await page.locator("#type-bar .type-color-now").isVisible(), false, "no colours stacked over the keyboard");
+      assert.equal(await page.locator("#type-bar .type-fonts").isVisible(), false, "no font row over the keyboard");
+      assert.ok((await page.locator("#type-bar").boundingBox()).height <= 64, "one short row");
+      await page.locator("#type-bar .type-style-open").tap();
+      await page.waitForFunction(() => !document.activeElement?.classList.contains("layer-text"));
+      await page.waitForSelector(".type-sheet");
+      await page.locator('.tool-dock.ctx [data-action="text-style"][data-tab="color"]').tap();
+      await page.locator('.type-sheet [data-type-color="#6D8299"]').first().tap();
+      await settle(page);
+      assert.equal((await layerNow(page, id)).color, "#6D8299", "the colour from 样式 lands on the box");
       if (shots) await page.screenshot({ path: `${shots}/08-colour-typing.png` });
       await page.evaluate(() => document.activeElement.blur());
       await settle(page);
@@ -416,7 +413,7 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       }
       assert.deepEqual(errors, []);
       await context.close();
-      passed.push("colour: 8 named swatches (36–40 px, all tappable, in view), the colour in use is marked, applies at once with bold kept, paper / background untouched; while typing a colour dot opens the colours in the same row (bar keeps its height, swatches ≥ 28 px, ‹ back) and the caret stays; saved, and the same after leaving, reloading and reopening");
+      passed.push("colour: 8 named swatches (36–40 px, all tappable, in view), the colour in use is marked, applies at once with bold kept, paper / background untouched; while typing one short row (样式 · B I U S · 完成, V10.51) and the colours open from 样式; saved, and the same after leaving, reloading and reopening");
     }
     // ---------------------------------------------------------------- 5
     // iPhone SE-size 375×667 (Chinese) and 430×932 (English).
@@ -472,17 +469,16 @@ const editing = (page) => page.evaluate(() => document.activeElement?.classList?
       // Colours while typing, at this size.
       c = await center(page, `${BOX} .layer-text`);
       await T.doubleTap(c.x, c.y);
-      await page.waitForSelector("#type-bar:not([hidden]) .type-color-now");
-      await page.locator("#type-bar .type-color-now").tap();
-      const row = await page.$$eval("#type-bar .type-color-row [data-type-color]", (els) => els.map((e) => e.getBoundingClientRect().width));
-      assert.ok(row.every((w) => w >= 28), String(row));
+      await page.waitForSelector('#type-bar:not([hidden])[data-mode="box"] .type-done');
+      const row = await page.$$eval("#type-bar .type-main-row > *", (els) => els.filter((e) => e.getClientRects().length && getComputedStyle(e).display !== "none").map((e) => Math.round(e.getBoundingClientRect().height)));
+      assert.ok(row.length >= 3 && row.every((h) => h >= 28), String(row));
       const noSide = await page.evaluate(() => { const s = document.querySelector("#app-scroll"); return s.scrollWidth <= s.clientWidth + 1; });
       assert.ok(noSide, "no sideways scroll");
       if (shots) await page.screenshot({ path: `${shots}/11-typing-${label}.png` });
       assert.deepEqual(errors, []);
       await context.close();
     }
-    passed.push("375×667 (中文) and 430×932 (English): the guide card fits, English copy; the one-time 「双击即可编辑」 tip points at the first selected box and goes once typing starts; handles apart; colours ≥ 28 px while typing; no sideways scroll");
+    passed.push("375×667 (中文) and 430×932 (English): the guide card fits, English copy; the one-time 「双击即可编辑」 tip points at the first selected box and goes once typing starts; handles apart; the typing row's buttons ≥ 28 px; no sideways scroll");
     // ---------------------------------------------------------------- 5b
     // The iPhone shell's layout (?shell=ios): the ring sits exactly on the paper
     // (found in the Xcode Simulator: it was drawn ~30 px too low there).

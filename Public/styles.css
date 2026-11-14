@@ -21959,3 +21959,54 @@ body.typing .ctx-caption {
     animation: none;
   }
 }
+
+/* V10.51 · typing in a text box: one short row (样式 · B I U S · 完成);
+   fonts, size, alignment and colour open from 样式 (keyboard down). */
+.type-bar .type-style-open,
+.type-bar .type-done {
+  display: none;
+}
+.type-bar[data-mode="box"] .type-style-open,
+.type-bar[data-mode="box"] .type-done {
+  display: inline-flex;
+}
+.type-bar[data-mode="box"] .type-fonts,
+.type-bar[data-mode="box"] .type-color-row,
+.type-bar[data-mode="box"] [data-type-size],
+.type-bar[data-mode="box"] .type-align-cycle,
+.type-bar[data-mode="box"] .type-color-now {
+  display: none !important;
+}
+.type-bar .type-style-open {
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper, #fffdfa);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  flex: none;
+}
+.type-bar .type-style-open span {
+  font-family: Georgia, "Songti SC", serif;
+  font-weight: 700;
+}
+.type-bar .type-done {
+  margin-left: auto;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  align-items: center;
+  flex: none;
+}
+.text-layer .layer-text:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.45;
+}
+.text-layer .layer-text:empty {
+  display: inline-block;
+  min-width: 5em;
+}
