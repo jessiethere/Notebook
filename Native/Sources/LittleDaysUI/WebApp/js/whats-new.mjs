@@ -4,6 +4,12 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.59",
+    date: "2026-11-14",
+    zh: { title: "首页字标换了字体", items: ["左上角的「开铺手帐」改用和「照片手帐」一样的字体，更清爽统一。"] },
+    en: { title: "Home wordmark font", items: ["The Chinese wordmark 开铺手帐 now uses the same type as 照片手帐 (the English Capiday is unchanged)."] },
+  },
+  {
     version: "10.58",
     date: "2026-11-14",
     zh: {
