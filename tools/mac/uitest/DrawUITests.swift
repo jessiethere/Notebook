@@ -40,7 +40,7 @@ final class DrawUITests: XCTestCase {
     }
     func launch(check: String = "/tmp/ld-uitest/probe.js") {
         app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-LittleDaysCheck", check]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-AppleKeyboards", "(en_US@sw=QWERTY;hw=Automatic)", "-LittleDaysCheck", check]
         app.launch()
         if check != "/tmp/ld-uitest/probe.js" { return }
         let probe = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'LDSTATE:'")).firstMatch
@@ -77,7 +77,11 @@ final class DrawUITests: XCTestCase {
         tap("back")
         tap("addText", wait: 1.2)
         // V10.51: a new box starts empty with the caret; an empty one goes away.
-        if app.keyboards.count > 0 { app.typeText("Hi") }
+        // typeText cannot reach words in a web view: tap the keys themselves.
+        for key in ["H", "i", "h", "I"] {
+            let k = app.keyboards.keys[key]
+            if k.exists && k.isHittable { k.tap(); Thread.sleep(forTimeInterval: 0.2) }
+        }
         Thread.sleep(forTimeInterval: 0.6)
         log("4b-text-added")
         // Put the keyboard away and leave the text, as a person would: tap the
