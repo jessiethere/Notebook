@@ -48,6 +48,155 @@
 
 ## 更新日志
 
+### 2026-11-14 — Share & Export（分享与导出）产品方案与技术可行性审查（只规划，未编码）
+
+- **范围**：只做方案，等确认后再编码。本次只修改 agent.md 和 README。
+- **已有能力（代码证据）**
+  - 页面渲染为图片：`Public/js/export.mjs:232` 的 `renderJournalCanvas`，在离屏 canvas 上**另外画一遍**页面（1080×1350，也就是 4:5），能画背景、照片、文字、贴纸、手绘、视频静帧（`videoStill`）。
+  - 9:16 Story：`export.mjs:667-710`（`STORY` 1080×1920，`renderStoryCanvas` 把页面缩放居中，底部加「made with Capiday」）。`shareStory` 优先用 `navigator.share({files})`，不支持时下载。
+  - 单页 PNG：`exportJournalImage`（`export.mjs:712`）。
+  - 页面视频导出：`exportJournalVideo`（`export.mjs:841`），带进度和取消。
+  - 整本 PDF：`Public/js/book-share.mjs`（`buildPdf`，每页 432×540 pt 的 JPEG，最多 60 页 `MAX_SHARE_PAGES`）和 `app.js:6610` 的 `shareBook`。
+  - 入口：Studio 预览底部的「分享 Story / 导出图片 / 导出视频」（`app.js:6401` 的 `sv-export`）；书本详情页的「分享」（PDF）。
+  - iOS 外壳：下载落到 App 的 Documents，然后自动弹出系统分享面板（`LittleDaysWebShellView.swift:329-342`），面板里可以选「存储图像」或「存储到文件」。目前没有直接写入照片图库的原生桥接。
+- **约束（来自数据审查）**
+  - **照片只保存了压缩后的版本**（长边 1200 px，JPEG 0.84，`app.js:11311-11335`）。「保存照片」只能导出这个版本，**界面不能写「原图」**；视频和音频保存的是原文件。
+  - 页面比例固定为 4:5（1080×1350），所以「原始页面」导出就是 1080×1350。
+  - `renderJournalCanvas` 和编辑器的 DOM 渲染是两套代码，有视觉不一致的风险（风险 R10）。Phase 1 需要逐图层对照测试。
+- **推荐方案**
+  - **一个入口**：阅读器顶部和 Studio 预览各放一个「分享与导出」，书本的 ··· 菜单里放「分享整本」。点开后是一张底部面板（复用 `#choose-dialog` 面板样式），两个选项：
+    - **分享我的手帐**：保留排版，生成可以分享的图片；
+    - **保存照片与视频**：把这一页里你自己的照片和视频存到相册或文件。
+  - **Phase 1：单页作品**
+    - 比例：9:16（1080×1920）/ 4:5（1080×1350）/ 1:1（1080×1080）/ 原比例（1080×1350）。
+    - 适配：「完整适配」（默认，整页等比放进去，空白处用页面纸色或柔和米色填充）和「铺满画面」（等比放大后裁切，预览里画出裁切框，导出时没有框）。
+    - 实时预览：同一个合成函数，预览时缩小绘制。
+    - 格式：默认 PNG，可选「高清 JPEG（更小）」。
+    - 输出：系统分享面板（里面可以「存储图像」到相册）；不支持时下载到「文件」。
+    - 含视频的页面：用封面帧，并明确提示「图片里是视频的封面画面，不能播放」。
+    - 「made with Capiday」改为可选（需要确认）。
+  - **Phase 2：保存照片与视频**
+    - 单张、多选、当前页、整本；按媒体 ID 去重，按页面顺序加图层顺序排序。
+    - 直接取 `media.get(id).bytes`，不重新编码。
+    - 通过分享面板交给系统（多个文件一次传给 `navigator.share`）。
+    - 缺失或损坏的文件单独计数，告诉用户成功几个、失败几个。
+  - **Phase 3**：PDF 和多页图片，支持指定页面、超过 60 页分批、显示进度和取消、逐页渲染后释放。
+  - **Phase 4**：自定义背景、Story 安全区参考线、分享版本（隐藏文字）、重新排版、动态故事。
+- **技术架构**
+  - 新增纯函数模块 `js/share-export.mjs`：尺寸预设、完整适配 / 铺满的几何计算、裁切框、文件名。这部分单元测试。
+  - 合成层复用 `renderJournalCanvas` 输出的 1080×1350 页面画布，再按目标尺寸用 `drawImage` 合成，**不重写 Studio，也不重新排版**。
+  - 媒体导出复用 `MediaStore.get` / `readable`。
+  - 外壳复用现有下载加分享面板。
+  - 如果要「直接存进相册」而不经过分享面板：需要原生桥接 `PHPhotoLibrary`（只申请「添加照片」权限，Info.plist 加 `NSPhotoLibraryAddUsageDescription`），放到 Phase 2 评估。
+- **风险**
+  - 画布渲染和编辑器不一致（R10）。缓解：逐图层对照测试，有问题的图层逐个修 `renderJournalCanvas`。
+  - 大视频导出时的内存。
+  - iOS WKWebView 中 `navigator.share` 传文件的支持程度（需要真机验证），不支持时退回下载。
+- **需要产品负责人确认的决策**
+  1. 照片只能导出压缩版。是先接受，还是先改存储、保留原图（关联数据审查 R3）？
+  2. 「made with Capiday」水印：保留 / 去掉 / 可选。
+  3. 默认格式：PNG 还是 JPEG。
+  4. 存相册：Phase 1 先走分享面板（不需要权限），还是直接做原生「存储到相册」。
+  5. 入口位置：阅读器顶部加 Studio 预览，加书本 ··· 菜单。Studio 预览里现有的三个按钮是否合并进新入口。
+- **Phase 1 验收标准**
+  - 四种比例的输出像素正确（1080×1920 / 1080×1350 / 1080×1080 / 1080×1350）。
+  - 完整适配时，页面的四个角都在画布内，内容不被裁切。
+  - 铺满时，裁切区域与预览框一致。
+  - 照片、文字、字体、颜色、贴纸、手绘、图层顺序和编辑器一致（逐项截图对比）。
+  - 含视频的页面有提示。
+  - 导出前后 `little-days.v1` 和媒体库字节完全相同。
+  - 导出失败可以重试，不影响已经保存的内容。
+  - 中英文文案都正确。
+
+### 2026-11-14 — 数据存储架构与数据安全审查（只读，未改任何代码）
+
+- **范围**：只读审查，没有改动业务代码、数据库或存储逻辑，也没有删除或迁移数据。唯一的改动是本条日志和 README 摘要。所有结论都来自当前代码（V10.59）；凡是代码无法确认的，都标为「需要真机验证」。
+- **结论**：Capiday 是「完全本地」的 WebView 持久化架构（分类 D：浏览器本地存储 / WKWebView 持久化），没有云端、没有账号服务器、没有第三方 SDK。日记数据和媒体文件分别存放在两个 IndexedDB 数据库里。
+
+#### 1. 数据存在哪里（证据）
+
+| 数据 | 位置与技术 | 写入 | 读取 | 网络 | 持久性与风险 |
+|---|---|---|---|---|---|
+| 日记正文、标题、页面布局、图层（文字 / 贴纸 / 照片框 / 手绘引用）、书本与封面配置、日历关联（`entries[].date`、`moment.bookId`）、计划、习惯、Captain（`state.keeper`） | 都在同一个 JSON 状态 `little-days.v1` 里：IndexedDB `little-days-meta` / `kv`（`Public/js/meta-store.mjs:8-9, 57-59`），同时在 localStorage 保留镜像，镜像放不下时自动关闭（`model.mjs` 的 `update`，约 494-520 行，`MIRROR_OFF_KEY`） | `store.update` 先做整份快照校验（`validateStateSnapshot`）→ 同步写 localStorage → 异步把整份 JSON `put` 进 IndexedDB；`stored()` 等到写入真正完成（`model.mjs:470-492`） | 启动时读 IndexedDB，由 `decideJournalOpen` 决定用哪一份；读不出来时停在救援页，不会生成一个空白手帐（`app.js:12206-12256`） | 不需要 | 留在 App 容器里，App 更新后仍在；卸载即丢失（需要真机确认） |
+| Studio 草稿 | 同一状态里的 `state.drafts[date]` | 编辑后 450 ms 自动保存（`app.js:456-467` 的 `flushDraft`）；切到后台 / `pagehide` 时立即保存（`app.js:2664-2679` 的 `saveBeforeLeaving`） | 同上 | 不需要 | 同上 |
+| 照片（含自己的封面照片、照片编辑前的原图 `sourceRef`） | IndexedDB `little-days-media` / `media`；每条记录是 `{id, bytes: ArrayBuffer, mime, size, kind…}`（`media.mjs:51, 67-97`）；页面里只保存引用 `media:<uuid>` | `imageBlob` **会重新编码**：长边缩到 1200 px，JPEG 质量 0.84，原文件上限 20 MB，EXIF 会丢（`app.js:11311-11335`）→ `media.put` 写入并**回读校验字节数**（`media.mjs:84-93`）→ 之后才写元数据 | 启动时 `hydrate` 为所有图片建立 `blob:` URL（`media.mjs:261`），`resolve` 用 `media:` 引用换出 URL（`media.mjs:244`） | 不需要 | **不保留原始分辨率**（重要：导出不能称为「原图」） |
+| 视频 | 同上（`little-days-media`） | 上限 50 MB（`app.js:11717` 的 `IMPORT_LIMIT`）。流程：`mediaMetadata`（10 秒超时，超时不算失败）→ 读成 ArrayBuffer → `attachClip` → `media.put` 并回读校验 → 生成封面帧（`app.js:11768-11800, 11602-11640, 11678`）。**不转码**，按原字节保存 | 播放时按需建立 `blob:` URL | 不需要 | 内存峰值约为文件大小的 2–3 倍（需要真机验证） |
+| 音频 / 录音 | 同上 | 导入上限 20 MB；录音最长 5 分钟（`app.js:12005-12009`），格式是 WebKit 给的 mp4 / webm；停止录音后保存（V10.50） | 同上 | 不需要 | 同上 |
+| 手绘 | 透明 PNG 作为照片图层（`drawing: true`）存进媒体库 | `draw.mjs` 完成后生成 PNG → `media.put` | 同照片 | 不需要 | — |
+| 贴纸、场景、图库照片、字体 | 随 App 打包的只读资源（`library.json`、`littledays://app/library/...`）；页面只存 ID（`sticker:` / `photo:` / `scene:`） | — | 由外壳的自定义 scheme 提供 | 不需要 | 跟随 App 版本 |
+| 设置 | localStorage 的 `little-days.*` 键：语言、主题、锁、提醒、阅读位置、Labs、本地事件日志 `little-days.events` 等；Captain 的聊天草稿和台词在 `little-days.keeperDraft` / `keeperLines` | 同步写入 | 同步读取 | 不需要 | 卸载即丢失 |
+| 原生层 | iOS 外壳：`WKWebsiteDataStore.default()` 加自定义来源 `littledays://app`（`LittleDaysWebShellView.swift:143-152`、`LittleDaysWebResources.swift:14,26`）；备份和导出文件下载到 App 的 Documents，然后弹出系统分享面板（`LittleDaysWebShellView.swift:329-342`），Files 中可见（工程文件 192、220 行 `UIFileSharingEnabled`） | — | — | — | 旧的 SwiftUI 原型 `NativeStore.swift:27`（`state.json`）**没有被 App 入口使用**：`LittleDaysApp.swift:14` 只加载 WebShell |
+
+#### 2. 媒体专项
+1. **是否完整保存**：照片不完整，会重新压缩到 1200 px；视频和音频按原字节完整保存。
+2. **不是只存临时 URL**：存的是 IndexedDB 里的 ArrayBuffer（V10.21 起从 Blob 改为 bytes，旧记录会原地转换，见 `media.mjs:122` 的 `readable`）；`blob:` URL 只用于显示。
+3. **没有**远程对象存储，也没有使用 iOS 文件系统存媒体。
+4. 保存成功的判据：`put` 后回读，字节数一致；元数据写完后等待 `store.stored()`；V10.51 / V10.54 起，Studio 返回和新建书本还会额外检查 `media.missing`。
+5. **「界面说保存成功但没持久化」**：代码层面已设置多重防线（回读校验、`stored()`、`onPersistError` 提示）。但 WebKit 的 IndexedDB 事务 `oncomplete` 是否等于真正落盘，**需要真机验证**（例如强制结束 App 的时机）。
+6. **删除页面不会删除媒体**：媒体库**没有任何删除接口**（`media.mjs` 只有 put / get / write，没有 delete），所以多个页面共用一份媒体不会被误删。代价是**没有孤儿清理**，空间只增不减；`media-check.mjs` 只统计未被引用的文件，不删除。
+7. **重试安全性**：媒体先写、元数据后写，失败重试最多留下多余的媒体文件，不会产生缺少文件的引用；新建书本用 `pendingId` 防止重复创建。
+8. **10.5 MB 视频的 media-timeout**：已在 V10.50 定位并修复。根因是外壳原来设置了 `mediaTypesRequiringUserActionForPlayback = .all`，没有用户点击时 WebKit 不加载视频元数据，`loadedmetadata` 迟迟不来，10 秒后超时。「重试」本身是一次点击，所以第二次成功。**这不是网络问题。** 现在外壳改为 `[]`（`LittleDaysWebShellView.swift:152`），超时也只记为「时长未知」，继续保存（`app.js:11612-11620`）。
+   - 仍然存在的风险：50 MB 视频会被整份读进内存后再复制写入（`runImport` → `attachClip`），旧机型内存不足时可能失败（需要真机验证）。
+   - 竞态：`busyMedia` 防止同时导入；导入期间按钮不可用；没有发现「UI 已更新、元数据先于媒体写入」的顺序问题。
+
+#### 3. 生命周期（能从代码确认的，和需要真机验证的）
+- **自动保存**：有，450 ms 去抖，切到后台立即保存。
+- **原子写入**：每次保存都是整份状态的单次 IndexedDB `put`（一个事务），不会写一半；媒体每个文件一个事务。
+- **版本与升级**：`schemaVersion: 1`，加上 `normalizeState` / `normalizeMoment` 兼容旧字段，目前没有多版本迁移框架。
+- **多页 / 多窗口覆盖**：localStorage 中的基线不一致时抛出 `stale-state` 并提示冲突（`model.mjs` 的 `update`）。同一个 App 内不同页面共用一份状态，不会互相覆盖。
+- **备份与恢复**：有手动备份。备份是一个 JSON 文件，里面包含 base64 编码的媒体，**媒体总量上限 100 MB**（`media.mjs:433`），恢复文件上限 150 MB（`app.js:9462`）。超过上限会提示，并可以选择「不完整备份」（C2）。有备份提醒。
+- **网络**：完全离线可用。只会请求自己来源下的 `shared/*.json`（`app.js:12179`），`Public/` 里没有任何外部 URL。
+
+| 场景 | 代码结论 | 真机 |
+|---|---|---|
+| 关闭重开、强制结束、重启 | 数据在 IndexedDB，应当保留；切后台时会立即保存 | 强制结束发生在 450 ms 去抖窗口内时，**需要真机验证** |
+| App 更新 / TestFlight 更新 | 来源固定为 `littledays://app`，WebKit 数据目录不变，应当保留 | **需要真机验证**（同一 Bundle ID 覆盖安装） |
+| 卸载重装 | App 容器被删除，**数据全部丢失**，除非事先导出了备份 | 是否随 iCloud 设备备份一起备份 WebKit 数据：**需要真机验证** |
+| 换手机 | 只能用备份文件恢复，或者靠 iCloud / 电脑整机迁移（需要真机验证） | — |
+| 存储空间不足 | localStorage 满时会关闭镜像（IndexedDB 继续工作）；IndexedDB 写入失败时提示 `storage.saveFailed`，草稿显示失败状态 | **需要真机验证** |
+| 清除缓存 | 外壳不是 Safari，用户无法在设置里单独清除；iOS 在空间紧张时是否会清理 WKWebView 数据，以及 ITP 的 7 天清理是否适用于自定义来源：**需要真机验证**（已调用 `navigator.storage.persist()`） | — |
+
+#### 4. 云端与第三方
+- **数据库 / 云存储 / 身份认证 / Analytics / 崩溃上报 / CDN**：都没有。
+  - 「账号」只是 localStorage 里的本地记录（`account.mjs`）。
+  - 社区、好友、协作都是本地演示，没有服务器（Labs 默认关闭）。
+  - 事件日志只写在本地 localStorage（`events.mjs:4`），只有用户点「导出测试记录」才会生成文件。
+- **Captain AI**：`captain-ai.mjs:27` 指向 `http://127.0.0.1:11434`（本机 Ollama），仅供开发使用：默认关闭（`little-days.dev.local-ai`），只有页面本身从本机 localhost 打开时才可用，iPhone 外壳和在线链接都不会用到它。发送的内容只有聊天里打的字，不包括手帐内容。
+- **Vapor 服务器**（`Sources/NotebookApp`）：只在开发时提供本地静态文件，App 不使用。
+- **结论**：目前**没有任何跨境传输或第三方传输私人内容的路径**；在中国大陆网络下没有依赖外网的功能。
+
+#### 5. 风险登记
+- **P0**
+  - **R1 卸载 / 换机即丢失**：没有自动备份，没有云同步，只有手动备份。（已由代码确认；iCloud 整机备份是否覆盖需要真机验证。）
+  - **R2 大体量手帐无法完整备份**：媒体超过 100 MB 只能做不完整备份，而一个视频就可能接近 50 MB。（代码确认。）
+- **P1**
+  - **R3 照片不保留原图**：1200 px、JPEG 0.84，EXIF 丢失。对「导出原图」和打印质量有影响。（代码确认。）
+  - **R4 强制结束落在 450 ms 去抖窗口内**：最后几个字可能丢失。（理论可能，需要真机验证。）
+  - **R5 iOS 存储清理策略**：WKWebView 数据是否可能被系统清除。（需要真机验证。）
+  - **R6 大视频的内存峰值**。（需要真机验证。）
+  - **R7 整份状态 JSON 每次都整体写入**：手帐变大后写入变慢（性能，需要实测）。
+- **P2**
+  - **R8 没有孤儿媒体清理**：空间只增不减。
+  - **R9 `schemaVersion` 没有迁移框架**。
+  - **R10 导出用的 `renderJournalCanvas`（`export.mjs:232`）是另一套绘制代码**，与编辑器的 DOM 渲染可能不一致。
+  - **R11 旧的 `NativeStore` 原型代码**：未使用，但可能让人误解数据在哪里。
+
+#### 6. 建议（最小改动优先，等批准）
+- **立即（美国版上线前）**
+  1. 备份改成分卷或流式：媒体逐个写进 zip 或文件夹，去掉 100 MB 上限（解决 R2）。
+  2. 在设置里明确写出「数据只在这台 iPhone 上，卸载会删除」，并在首次大量添加媒体后引导用户做一次备份（缓解 R1）。
+  3. 照片额外保存原文件，或者把长边上限提高到 2048–4096 并保留原 JPEG 字节（为 R3 和导出功能铺路；要评估空间占用）。
+  4. 真机验证清单：卸载 / 更新 / 强制结束 / iCloud 备份恢复 / 空间不足。
+- **之后**
+  - 原生层做 iCloud Drive 文件备份，或者 CloudKit 私有库同步（local-first + 同步；中国区要单独评估）。
+  - 孤儿媒体清理（只清理未被任何页面、草稿或备份引用的文件，并且先提示）。
+  - 状态分片写入；增加迁移框架。
+- **中美双市场**
+  - 现在完全本地，美国上架在数据存储上没有阻碍（隐私清单需如实声明「不收集」）。
+  - 中国大陆如果将来做云同步或 AI，需要境内服务和备案，并按地区切换服务。
+  - 建议继续采用 local-first。
+  - AI Captain 接入时：只发送用户明确选择的内容；默认不读取日记；服务端不保留内容；分区域部署。法律合规事项**需要专业确认**。
+
 ### 2026-11-14 — V10.59：首页中文字标改用「照片手帐」的字体
 
 - **需求**：用户在真机截图中反馈，首页左上角「开铺手帐」的字体（站酷小薇 LD-zh-xiaowei）不好看，希望和「照片手帐」一致。
