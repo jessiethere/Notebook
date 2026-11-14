@@ -207,7 +207,7 @@ const LONG = Array.from({ length: 14 }, (_, i) => `第 ${i + 1} 行：今天的�
     await page.waitForSelector(".reader-start");
     assert.match(await page.locator(".reader-start").innerText(), /继续翻阅 · 第 3 页/);
     assert.equal(await page.locator(".book-view-switch, .flip-book").count(), 0, "no list / flip switch, no reader inside the page");
-    assert.match(await page.locator(".book-actions").innerText(), /记录新的一页[\s\S]*分享给家人看/);
+    assert.match(await page.locator(".book-actions").innerText(), /记录新的一页[\s\S]*分享/);
     await shot("08-detail");
     await page.reload();
     await page.waitForSelector(".hero");

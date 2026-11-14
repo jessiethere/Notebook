@@ -1400,7 +1400,7 @@
     "en": "Add today's list to exports"
   },
   "privacy.shareListHint": {
-    "zh": "默认不附：打卡的习惯和做完的事是私人的。打开后，导出的图片和分享给家人的 PDF 会在当天第一页下面带上它。",
+    "zh": "默认不附：打卡的习惯和做完的事是私人的。打开后，导出的图片和分享的 PDF 会在当天第一页下面带上它。",
     "en": "Off by default: habits and things done are private. Turn on to add it under a day's first page in exported pictures and shared PDFs."
   },
   "privacy.hiddenTitle": {
@@ -5460,8 +5460,8 @@
     "en": "Couple"
   },
   "bookShare.button": {
-    "zh": "分享给家人看（PDF）",
-    "en": "Share with family (PDF)"
+    "zh": "分享",
+    "en": "Share"
   },
   "bookShare.help": {
     "zh": "把整本书做成一个 PDF：封面 + 每一页，按日期排好。对方在微信、iMessage、WhatsApp 里直接就能翻看，不用装 App。",
@@ -5488,8 +5488,8 @@
     "en": "Shared {count} pages"
   },
   "bookShare.saved": {
-    "zh": "已保存 PDF（{count} 页），可以发给家人",
-    "en": "Saved a PDF ({count} pages) to send to family"
+    "zh": "已保存 PDF（{count} 页），可以发出去了",
+    "en": "Saved a PDF ({count} pages), ready to send"
   },
   "bookShare.skipped": {
     "zh": "（太长了，只放了最近的页，前面 {count} 页没放）",
@@ -5498,42 +5498,6 @@
   "bookShare.failed": {
     "zh": "没能做成 PDF，请再试一次",
     "en": "Couldn't make the PDF — please try again"
-  },
-  "bookShare.thanks": {
-    "zh": "谢谢，你的选择会帮我们决定先做什么",
-    "en": "Thanks — this helps us decide what to build next"
-  },
-  "contribute.title": {
-    "zh": "想让 TA 也能往这本书里加照片吗？",
-    "en": "Would you like them to add photos to this book too?"
-  },
-  "contribute.note": {
-    "zh": "这个功能还在做，现在只能分享给对方看。你的选择只记在这台设备的测试记录里。",
-    "en": "This isn't built yet — for now they can look. Your answer is kept only in this device's test log."
-  },
-  "contribute.view": {
-    "zh": "只给 TA 看就够了",
-    "en": "Just let them look"
-  },
-  "contribute.viewHint": {
-    "zh": "我来记，家人看",
-    "en": "I keep it, family looks"
-  },
-  "contribute.add": {
-    "zh": "想让 TA 也能加照片",
-    "en": "Let them add photos"
-  },
-  "contribute.addHint": {
-    "zh": "比如另一半、爸妈、爷爷奶奶",
-    "en": "My partner, parents or grandparents"
-  },
-  "contribute.unsure": {
-    "zh": "还不确定",
-    "en": "Not sure yet"
-  },
-  "contribute.unsureHint": {
-    "zh": "先用用看",
-    "en": "I'll see"
   },
   "suggest.title": {
     "zh": "和家人一起的书",

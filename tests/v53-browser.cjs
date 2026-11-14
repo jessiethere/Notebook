@@ -79,19 +79,15 @@ const pics = ["beach-sunset", "latte-art", "coffee-cheers"].map((id) => path.joi
     assert.match(pdf, /\/Title <FEFF6211.*>/, "the book's name is the PDF title");
     passed.push("share with family: the whole book as one PDF (title page + every page)");
 
-    // 4. The honest question afterwards, kept only in the test log.
-    await page.waitForSelector("#choose-dialog[open] .contribute-sheet");
-    assert.match(await page.locator(".contribute-sheet").innerText(), /还在做/);
-    if (shots) await page.screenshot({ path: `${shots}/v53-ask.png` });
-    await page.locator('[data-action="contribute-interest"][data-kind="view"]').tap();
-    await page.waitForSelector("#choose-dialog:not([open])", { state: "attached" });
+    // 4. V10.48: no question after sharing (the owner found it unnecessary).
+    await page.waitForTimeout(600);
+    assert.equal(await page.locator("#choose-dialog[open]").count(), 0, "no sheet opens after sharing");
     const events = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.events")).filter((e) => /book_|contribute/.test(e.e)));
     assert.deepEqual(events.map((e) => [e.e, e.kind || "", e.pages ?? ""]), [
       ["book_create", "", ""],
       ["book_share", "saved", 2],
-      ["contribute_interest", "view", ""],
     ]);
-    passed.push("would family add photos too? — asked honestly, answer kept in the local test log");
+    passed.push("after sharing: no follow-up question");
 
     assert.deepEqual(errors, []);
     console.log(`V5.4 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);

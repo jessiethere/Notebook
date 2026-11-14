@@ -6201,7 +6201,6 @@ async function shareBook(bookId) {
     logEvent("book_share", { pages: pages.length, kind: how });
     if (how === "cancelled") return;
     toast(t(how === "shared" ? "bookShare.shared" : "bookShare.saved", { count: pages.length }) + (skipped ? ` ${t("bookShare.skipped", { count: skipped })}` : ""));
-    openContributeQuestion();
   } catch (error) {
     if (error?.code === "cancelled") toast(t("export.cancelled"));
     else {
@@ -6212,13 +6211,6 @@ async function shareBook(bookId) {
     if (dialog.open) dialog.close();
     busyMedia = false;
   }
-}
-// An honest question (not a feature yet): would family add photos too?
-function openContributeQuestion() {
-  const dialog = $("#choose-dialog");
-  const option = (kind) => `<button class="contribute-option" data-action="contribute-interest" data-kind="${kind}"><b>${t(`contribute.${kind}`)}</b><small>${t(`contribute.${kind}Hint`)}</small></button>`;
-  dialog.innerHTML = `<div class="choose-sheet contribute-sheet"><div class="choose-grabber" aria-hidden="true"></div><h2>${t("contribute.title")}</h2><p class="save-help">${t("contribute.note")}</p>${option("view")}${option("add")}${option("unsure")}</div>`;
-  dialog.showModal();
 }
 // ---------- A gentle streak and the stamp moment ----------
 // Days in a row with a page; one missed day a week is a rest day. After
@@ -7492,11 +7484,6 @@ async function action(target) {
   }
   if (actionName === "book-share") await shareBook(target.dataset.book);
   if (actionName === "book-suggest") openSuggestedBook(target.dataset.preset);
-  if (actionName === "contribute-interest") {
-    logEvent("contribute_interest", { kind: target.dataset.kind });
-    $("#choose-dialog").close();
-    toast(t("bookShare.thanks"));
-  }
   if (actionName === "greeting-name") return openNameSheet();
   if (actionName === "greeting-save") {
     const name = ($("[data-greeting-name]")?.value || "").trim().slice(0, 20);

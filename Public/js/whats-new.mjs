@@ -4,6 +4,24 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.48",
+    date: "2026-11-14",
+    zh: {
+      title: "分享更简单",
+      items: [
+        "书里的「分享给家人看（PDF）」改成「分享」，分享给谁都可以。",
+        "分享完不再弹出「想让 TA 也能往这本书里加照片吗？」的问题。",
+      ],
+    },
+    en: {
+      title: "Simpler sharing",
+      items: [
+        "“Share with family (PDF)” in a book is now just “Share” — share it with anyone.",
+        "No more question about letting someone add photos after you share.",
+      ],
+    },
+  },
+  {
     version: "10.47",
     date: "2026-11-14",
     zh: {
