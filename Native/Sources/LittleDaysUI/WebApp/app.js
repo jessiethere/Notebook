@@ -47,6 +47,7 @@ import * as Keeper from "./js/keeper.mjs";
 import { understand as understandChat, REQUEST_INTENTS } from "./js/keeper-chat.mjs";
 import * as Rich from "./js/rich-text.mjs";
 import * as Reader from "./js/reader.mjs";
+import * as Wall from "./js/photo-wall.mjs";
 import * as Guide from "./js/studio-guide.mjs";
 import * as PM from "./js/profile-mark.mjs";
 import * as CaptainAI from "./js/captain-ai.mjs";
@@ -1035,32 +1036,180 @@ function calendarBookChips() {
   const chip = (id, label) => `<button data-action="calendar-book" data-book="${esc(id)}" class="${calendarBook === id ? "selected" : ""}" aria-pressed="${calendarBook === id}">${esc(label)}</button>`;
   return `<div class="calendar-books" role="group" aria-label="${t("home.books")}">${chip("", t("calendar.allBooks"))}${state().books.map((b) => chip(b.id, b.title)).join("")}</div>`;
 }
-function calendarWallHTML() {
-  const year = month.getFullYear(),
-    monthIndex = month.getMonth(),
-    count = new Date(year, monthIndex + 1, 0).getDate(),
-    offset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
-  const weekdays = languageCode() === "en" ? ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] : ["一", "二", "三", "四", "五", "六", "日"];
-  let days = 0,
-    pictures = 0,
-    backdrop = "";
-  const only = calendarBookDays();
-  const cells = Array.from({ length: count }, (_, i) => {
-    const key = dateKey(new Date(year, monthIndex, i + 1));
-    const entry = only ? (only.has(key) ? dayOf(state(), key) : null) : dayOf(state(), key);
-    const photo = only ? (only.get(key)?.photos[0] ? safePhoto(only.get(key).photos[0]) : "") : entry ? safePhoto(coverPhoto(entry)) : "";
-    const has = entry && (only ? true : hasDayPageContent(entry) || entry.moments?.length);
-    if (has) days++;
-    if (photo) {
-      pictures++;
-      backdrop ||= photo;
-    }
-    return photo
-      ? `<button class="wall-day has-photo ${key === dateKey() ? "today" : ""}" data-action="open-day" data-date="${key}" aria-label="${key}"><img src="${esc(photo)}" alt="" loading="lazy"><b>${i + 1}</b></button>`
-      : `<button class="wall-day ${has ? "has-words" : ""} ${key === dateKey() ? "today" : ""}" data-action="${has ? "open-day" : "edit-date"}" data-date="${key}" aria-label="${key}"><span>${i + 1}</span>${has ? "<i>✎</i>" : ""}</button>`;
-  }).join("");
-  const title = month.toLocaleDateString(locale(), { month: "long" });
-  return `<section class="cal-wall">${backdrop ? `<img class="cal-wall-backdrop" src="${esc(backdrop)}" alt="" aria-hidden="true">` : ""}<div class="cal-wall-glow" aria-hidden="true"></div><div class="cal-wall-head"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><div><h2>${esc(title)}</h2><small>${t("calendar.wrapped", { year })}</small></div><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="cal-wall-grid">${weekdays.map((d) => `<span class="wall-weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div><p class="cal-wall-stats">${t("calendar.wallStats", { days, pictures })}</p></section>`;
+// ---------- V10.55 · 照片墙 (Phase 1): the photos of my life, as one wall ----------
+// No calendar grid: every photo kept on a saved page (photo-wall.mjs says
+// which), newest first, in natural shapes on a masonry of 2 (3 on a wide
+// screen) columns, with a quiet month line between. Small copies are made in
+// memory only (never stored), one at a time as a photo comes near the screen;
+// the original stays the one the page uses. A photo whose file can't be read
+// is left out. The wall is drawn from the journal each time, so new pages add
+// photos and deleted pages take them away.
+const wallRatios = new Map(); // ref → height / width (memory)
+const wallThumbs = new Map(); // ref → small object URL (memory)
+let wallItems = [];
+let wallReturn = null;
+function wallBookId() {
+  return calendarBook && state().books.some((b) => b.id === calendarBook) ? calendarBook : null;
+}
+function photoWallHTML() {
+  const bookId = wallBookId();
+  const items = Wall.wallPhotos(state(), { bookId }).filter((item) => media.resolve(item.ref));
+  wallItems = items;
+  // Small copies of photos no longer on any page are let go.
+  const live = new Set(Wall.wallPhotos(state()).map((item) => item.ref));
+  for (const [ref, url] of wallThumbs) if (!live.has(ref)) {
+    if (url.startsWith("blob:") && url !== media.resolve(ref)) URL.revokeObjectURL(url);
+    wallThumbs.delete(ref);
+  }
+  if (!items.length)
+    return `<section class="photo-wall pw-empty-wall"><div class="pw-empty"><div class="pw-empty-art" aria-hidden="true"><i></i><i></i><i></i></div><b>${t(bookId ? "wall.emptyBook" : "wall.emptyTitle")}</b><p>${t("wall.emptyText")}</p><button class="primary" data-action="quick-open" data-way="photo">${t("wall.emptyGo")}</button></div></section>`;
+  const cols = innerWidth >= 700 ? 3 : 2;
+  const tile = (item) => {
+    const ratio = wallRatios.get(item.ref);
+    const thumb = wallThumbs.get(item.ref);
+    const label = t("wall.photoOf", { date: shortDate(item.date) });
+    return `<button class="pw-tile ${thumb ? "ready" : ""}" data-action="wall-photo" data-ref="${esc(item.ref)}" style="aspect-ratio:${ratio ? (1 / ratio).toFixed(4) : "1"}" aria-label="${esc(label)}"><img ${thumb ? `src="${esc(thumb)}"` : ""} alt="" decoding="async"></button>`;
+  };
+  const months = Wall.wallMonths(items)
+    .map(({ month, items: list }) => {
+      const label = new Date(`${month}-01T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" });
+      const columns = Wall.wallColumns(list, cols, (item) => wallRatios.get(item.ref) || 1);
+      return `<section class="pw-month" data-month="${month}"><h3 class="pw-month-label">${esc(label)}<small>${t("wall.monthCount", { count: list.length })}</small></h3><div class="pw-cols" style="--cols:${cols}">${columns.map((col) => `<div class="pw-col">${col.map(tile).join("")}</div>`).join("")}</div></section>`;
+    })
+    .join("");
+  return `<section class="photo-wall" aria-label="${esc(t("calendar.wall"))}"><p class="pw-count">${t("wall.count", { count: items.length })}</p>${months}</section>`;
+}
+// Small copies: made from the original only when a tile comes near.
+let wallObserver = null;
+const wallQueue = [];
+let wallBusy = 0;
+function watchPhotoWall() {
+  wallObserver?.disconnect();
+  const tiles = [...document.querySelectorAll("#app .pw-tile:not(.ready)")];
+  if (!tiles.length) return;
+  if (!("IntersectionObserver" in window)) return tiles.forEach(queueWallTile);
+  wallObserver = new IntersectionObserver(
+    (seen) => {
+      for (const item of seen) {
+        if (!item.isIntersecting) continue;
+        wallObserver.unobserve(item.target);
+        queueWallTile(item.target);
+      }
+    },
+    { root: $("#app-scroll"), rootMargin: "600px 0px" },
+  );
+  tiles.forEach((tile) => wallObserver.observe(tile));
+}
+function queueWallTile(tile) {
+  wallQueue.push(tile);
+  pumpWall();
+}
+function pumpWall() {
+  while (wallBusy < 3 && wallQueue.length) {
+    const tile = wallQueue.shift();
+    if (!tile.isConnected) continue;
+    wallBusy++;
+    wallThumb(tile.dataset.ref)
+      .then((url) => {
+        const img = tile.querySelector("img");
+        const ratio = wallRatios.get(tile.dataset.ref);
+        if (ratio) tile.style.aspectRatio = (1 / ratio).toFixed(4);
+        img.onload = () => tile.classList.add("ready");
+        img.src = url;
+      })
+      .catch(() => {
+        // A file that can't be read: the tile steps out of the wall.
+        tile.classList.add("pw-broken");
+        logEvent("wall_photo_unreadable", {});
+      })
+      .finally(() => {
+        wallBusy--;
+        pumpWall();
+      });
+  }
+}
+async function wallThumb(ref) {
+  if (wallThumbs.has(ref)) return wallThumbs.get(ref);
+  const src = media.resolve(ref);
+  if (!src) throw new Error("missing");
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  await img.decode();
+  const ratio = img.naturalHeight / Math.max(1, img.naturalWidth);
+  wallRatios.set(ref, ratio);
+  let url = src;
+  const w = Math.min(480, img.naturalWidth);
+  if (img.naturalWidth > 480) {
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = Math.max(1, Math.round(w * ratio));
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    if (blob) url = URL.createObjectURL(blob);
+  }
+  wallThumbs.set(ref, url);
+  return url;
+}
+// The viewer: the photo large, its day and book, the other photos of that
+// day, and a way to the page it lives on. Swipe (or ‹ ›) for the next photo.
+function wallViewer() {
+  let dialog = $("#wall-viewer");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.id = "wall-viewer";
+    dialog.className = "wall-viewer";
+    document.body.append(dialog);
+    dialog.addEventListener("close", () => (dialog.innerHTML = ""));
+    let start = null;
+    dialog.addEventListener("pointerdown", (event) => {
+      if (event.target.closest(".wv-stage")) start = { x: event.clientX, y: event.clientY };
+    });
+    dialog.addEventListener("pointerup", (event) => {
+      if (!start) return;
+      const dx = event.clientX - start.x,
+        dy = event.clientY - start.y;
+      start = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) stepWallViewer(dx < 0 ? 1 : -1);
+    });
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+  return dialog;
+}
+function openWallViewer(ref) {
+  const index = wallItems.findIndex((item) => item.ref === ref);
+  const item = wallItems[index];
+  if (!item) return;
+  const dialog = wallViewer();
+  const book = state().books.find((b) => b.id === item.bookId);
+  const day = Wall.sameDay(wallItems, item);
+  const when = new Date(`${item.date}T12:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+  const strip = day.length > 1 ? `<div class="wv-day"><small>${t("wall.sameDay", { count: day.length })}</small><div class="wv-strip">${day.map((other) => `<button data-action="wall-photo" data-ref="${esc(other.ref)}" class="${other.ref === item.ref ? "selected" : ""}" aria-label="${esc(t("wall.photoOf", { date: shortDate(other.date) }))}" aria-current="${other.ref === item.ref}"><img src="${esc(wallThumbs.get(other.ref) || media.resolve(other.ref))}" alt=""></button>`).join("")}</div></div>` : "";
+  dialog.dataset.ref = item.ref;
+  dialog.innerHTML = `<div class="wv-top"><button class="wv-x" data-action="wall-close" aria-label="${t("close")}">×</button><div class="wv-when"><b>${esc(when)}</b>${book ? `<small>${esc(book.title)}</small>` : ""}</div><span class="wv-n">${index + 1} / ${wallItems.length}</span></div><div class="wv-stage"><button class="wv-step prev" data-action="wall-step" data-dir="-1" aria-label="${t("wall.prev")}" ${index === 0 ? "disabled" : ""}>‹</button><img class="wv-img" src="${esc(media.resolve(item.ref))}" alt="${esc(t("wall.photoOf", { date: shortDate(item.date) }))}"><button class="wv-step next" data-action="wall-step" data-dir="1" aria-label="${t("wall.next")}" ${index === wallItems.length - 1 ? "disabled" : ""}>›</button></div>${strip}<button class="primary wv-open" data-action="wall-open-page">${t("wall.openPage")} →</button>`;
+  if (!dialog.open) dialog.showModal();
+}
+function stepWallViewer(dir) {
+  const dialog = $("#wall-viewer");
+  const index = wallItems.findIndex((item) => item.ref === dialog?.dataset.ref);
+  const next = wallItems[index + dir];
+  if (next) openWallViewer(next.ref);
+}
+function openWallPage() {
+  const dialog = $("#wall-viewer");
+  const item = wallItems.find((x) => x.ref === dialog?.dataset.ref);
+  dialog?.close();
+  if (!item) return;
+  const pages = item.bookId ? flipPages(item.bookId) : [];
+  const at = pages.find((p) => p.date === item.date && (item.momentId ? p.moment?.id === item.momentId : !p.moment));
+  logEvent("wall_open_page", { stage: at ? "reader" : "day" });
+  if (at) {
+    const scroll = $("#app-scroll").scrollTop;
+    openReader(item.bookId, Reader.keyOf(at));
+    wallReturn = { scroll };
+  } else openDay(item.date, item.momentId || undefined);
 }
 function calendarPage() {
   // B5: 成长轨迹 is frozen with Growth (Labs); the calendar shows memories.
@@ -1095,7 +1244,7 @@ function calendarPage() {
   }).join("");
   const top = `<header class="page-top"><div><h1 class="page-title">${t("calendar.title")}</h1><p class="page-subtitle">${t("calendar.subtitle")}</p></div><span class="page-top-actions"><button class="icon-button" data-action="open-search" aria-label="${t("search.open")}">${icon("search")}</button><button class="icon-button" data-action="calendar-today" aria-label="${t("calendar.today")}">${icon("calendar")}</button></span></header>`;
   if (calendarMode === "wall")
-    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${calendarWallHTML()}`;
+    return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="selected">${t("calendar.wall")}</button></div>${calendarBookChips()}${photoWallHTML()}`;
   return `${top}<div class="segmented"><button data-action="calendar-mode" data-mode="memory" class="${calendarMode === "memory" ? "selected" : ""}">${t("calendar.memory")}</button>${labsOn() ? `<button data-action="calendar-mode" data-mode="growth" class="${calendarMode === "growth" ? "selected" : ""}">${t("calendar.growth")}</button>` : ""}<button data-action="calendar-mode" data-mode="wall" class="${calendarMode === "wall" ? "selected" : ""}">${t("calendar.wall")}</button></div>${calendarMode === "memory" ? calendarBookChips() : ""}<div class="month-controls"><button data-action="month" data-delta="-1" aria-label="${t("calendar.prev")}">${icon("back")}</button><h2>${month.toLocaleDateString(locale(), { month: "long", year: "numeric" })}</h2><button data-action="month" data-delta="1" aria-label="${t("calendar.next")}">${icon("arrow")}</button></div><div class="calendar-grid">${weekdays.map((d) => `<span class="weekday">${d}</span>`).join("")}${"<span></span>".repeat(offset)}${cells}</div>${calendarMode === "memory" ? `<div class="calendar-legend" aria-hidden="true"><span><i class="dot-photo"></i>${t("calendar.markPhoto")}</span><span><i class="dot-video"></i>${t("calendar.markVideo")}</span><span><i class="dot-audio"></i>${t("calendar.markAudio")}</span>${labsOn() ? `<span><i class="dot-growth"></i>${t("calendar.markGrowth")}</span>` : ""}<span><b>3</b>${t("calendar.markMoments")}</span></div>` : ""}<section class="date-summary"><div class="section-heading"><h3>${t(calendarMode === "memory" ? "calendar.dayTitle" : "calendar.growthTitle", { date: shortDate(selectedDate) })}</h3><span class="summary-actions">${entry ? `<button data-action="open-day" data-date="${selectedDate}">${t("calendar.read")}</button>` : ""}${entry || calendarMode !== "memory" ? `<button data-action="edit-date" data-date="${selectedDate}">${t(entry ? "calendar.edit" : "calendar.backfill")}</button>` : ""}${!entry && (clearedDayMemo || clearedDay())?.date === selectedDate ? `<button data-action="day-restore">${t("day.restore")}</button>` : ""}</span></div>${
     calendarMode === "memory"
       ? entry
@@ -2531,6 +2680,7 @@ function readerKey() {
 function openReader(bookId, key = "resume") {
   const book = state().books.find((b) => b.id === bookId);
   if (!book) return;
+  wallReturn = null;
   flushDraft();
   quickResult = null;
   readerBook = bookId;
@@ -2549,6 +2699,16 @@ function closeReader() {
   const at = flipPages(readerBook)[flipIndex];
   if (at?.date) captainRead = { book: readerBook, key: readerKey(), date: at.date, momentId: at.moment?.id || "", at: Date.now() };
   document.querySelectorAll("#app audio, #app video").forEach((m) => m.pause());
+  // V10.55: a page opened from the photo wall goes back to the wall.
+  if (wallReturn) {
+    const back = wallReturn;
+    wallReturn = null;
+    page = "calendar";
+    calendarMode = "wall";
+    render();
+    $("#app-scroll").scrollTop = back.scroll;
+    return;
+  }
   page = "books";
   selectedBook = readerBook;
   render();
@@ -6192,6 +6352,7 @@ function render() {
   navigation();
   applyShellLanguage();
   watchSaveButton();
+  if (page === "calendar" && calendarMode === "wall") watchPhotoWall();
   $("#app-scroll").scrollTop = scrollTop;
   const sheetNow = $(".tool-sheet");
   if (sheetNow) sheetNow.scrollTop = sheetKeep && sheetKeep.id === sheetNow.dataset.toolRow ? sheetKeep.top : 0;
@@ -7455,7 +7616,12 @@ async function action(target) {
   if (actionName === "calendar-mode") {
     calendarMode = target.dataset.mode;
     render();
+    if (calendarMode === "wall") logEvent("wall_open", { count: wallItems.length });
   }
+  if (actionName === "wall-photo") openWallViewer(target.dataset.ref);
+  if (actionName === "wall-step") stepWallViewer(Number(target.dataset.dir) || 1);
+  if (actionName === "wall-close") $("#wall-viewer")?.close();
+  if (actionName === "wall-open-page") openWallPage();
   if (actionName === "select-date") {
     selectedDate = target.dataset.date;
     if (calendarMode === "memory" && target.dataset.hasContent === "true")

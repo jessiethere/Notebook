@@ -100,8 +100,8 @@ const shots = process.env.SHOTS_DIR || "";
     await require("./signed-in.cjs").homeAfterSave(page);
     await menu(page, "calendar");
     const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; });
-    await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
-    await page.locator(`.wall-day[data-date="${today}"]`).tap();
+    // V10.55: a day opens from 生活记忆 (the photo wall has no dates).
+    await page.locator(`.day-cell[data-date="${today}"]`).tap();
     await page.waitForSelector(".day-detail");
     assert.equal(await page.locator('.day-detail [contenteditable]').count(), 0, "reading mode is not editable");
     await page.locator('.day-detail-top [data-action="edit-date"]').tap();

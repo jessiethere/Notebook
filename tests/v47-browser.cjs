@@ -64,7 +64,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     assert.equal(await page.locator(`.day-cell[data-date="${today}"]`).getAttribute("data-has-content"), "true");
     await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
     await page.waitForSelector('.calendar-books [data-book="travel"][aria-pressed="true"]');
-    assert.ok(await page.locator(`.wall-day[data-date="${today}"].has-words, .wall-day[data-date="${today}"].has-photo`).count());
+    // V10.55: the wall shows that book's own photos (or says it has none yet).
+    assert.ok(await page.locator(".photo-wall .pw-tile, .photo-wall .pw-empty").count());
     await page.locator('[data-action="calendar-book"][data-book=""]').tap();
     passed.push("calendar: pick a journal to see only its days (month grid and photo wall)");
 

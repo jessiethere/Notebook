@@ -105,8 +105,8 @@ const shots = process.env.SHOTS_DIR || "";
     assert.equal(saved.backdrop, "photo:starry-lake");
     assert.equal(saved.photo, "photo:latte-art");
     await menu(page, "calendar");
-    await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
-    await page.locator(`.wall-day[data-date="${today}"]`).tap();
+    // V10.55: a day opens from 生活记忆 (the photo wall has no dates).
+    await page.locator(`.day-cell[data-date="${today}"]`).tap();
     await page.waitForSelector(".day-detail .journal-canvas.has-backdrop.dark-backdrop");
     passed.push("library photo + background saved; PNG export; read mode shows the background");
 

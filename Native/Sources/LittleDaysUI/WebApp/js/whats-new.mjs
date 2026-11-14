@@ -4,6 +4,28 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.55",
+    date: "2026-11-14",
+    zh: {
+      title: "照片墙：看见生活的全部",
+      items: [
+        "日历里的「照片墙」不再是第二个月历：你保存在手帐里的生活照片会自动汇成一面瀑布流照片墙，按原本的比例排列，最新的在最前面，月份只是一行小字。",
+        "点一张照片：看大图、所属日期和手帐本、同一天的其他照片，左右滑动看上一张 / 下一张；「打开这一页」直接翻到它所在的那一页，返回时回到照片墙。",
+        "新保存的照片会自动出现，删除的页面会带走它的照片；照片墙不会另外保存任何照片，图库示例图、贴纸和手绘也不会混进来。",
+        "「生活记忆」还是原来的月历，用来找回某一天。",
+      ],
+    },
+    en: {
+      title: "Photo wall: all your days at a glance",
+      items: [
+        "The Photo wall in Calendar is no longer a second calendar: the photos you kept in your journal gather into a masonry wall in their own shapes, newest first, with just a quiet month line.",
+        "Tap a photo to see it large with its date and book, the other photos from that day, and swipe for the next one. Open this page goes straight to the page it lives on; back returns to the wall.",
+        "New photos appear by themselves and a deleted page takes its photos away. The wall stores no copies, and library samples, stickers and drawings stay out.",
+        "Memories is still the month calendar, for finding a day.",
+      ],
+    },
+  },
+  {
     version: "10.54",
     date: "2026-11-14",
     zh: {

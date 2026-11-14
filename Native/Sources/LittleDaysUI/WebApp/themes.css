@@ -13,6 +13,7 @@
   --c-00000024: #00000024;
   --c-00000026: #00000026;
   --c-0000002e: #0000002e;
+  --c-00000033: #00000033;
   --c-00000040: #00000040;
   --c-00000055: #00000055;
   --c-00000059: #00000059;
@@ -28,6 +29,8 @@
   --c-12101e8c: #1717178c;
   --c-141210: #121212;
   --c-161412: #141414;
+  --c-1f1b18: #1c1c1c;
+  --c-1f1b18f2: #1c1c1cf2;
   --c-1f1c19: #1c1c1c;
   --c-1f1c19cc: #1c1c1ccc;
   --c-26221e: #222222;
@@ -73,6 +76,8 @@
   --c-3c2d1e66: #2b2c2f66;
   --c-3c4035ed: #3b3b3bed;
   --c-3c4a5b: #494b4e;
+  --c-3f362c14: #36363614;
+  --c-3f362c1f: #3636361f;
   --c-3f362c26: #36363626;
   --c-3f362c30: #36363630;
   --c-3f3a33: #393939;
@@ -300,6 +305,7 @@
   --c-e3ebdc: #e3e3e3;
   --c-e3ece4: #e8e8e8;
   --c-e4d5bb: #ccced3;
+  --c-e4dccd: #d7d8da;
   --c-e4ded4: #dcdcdc;
   --c-e4e8e9: #e6e6e6;
   --c-e4ecf3: #ececec;
@@ -393,6 +399,7 @@
   --c-efe6d7: #e1e2e5;
   --c-efe7da: #e4e4e4;
   --c-efe8da: #e4e4e4;
+  --c-efe8db: #e5e5e5;
   --c-efe9de: #e6e6e6;
   --c-efe9df: #e7e7e7;
   --c-efeae1: #e8e8e8;
@@ -491,6 +498,8 @@
   --c-fffdf6: #fbfbfb;
   --c-fffdf7: #fbfbfb;
   --c-fffdf8: #fcfcfc;
+  --c-fffdf81a: #fcfcfc1a;
+  --c-fffdf81f: #fcfcfc1f;
   --c-fffdf866: #fcfcfc66;
   --c-fffdf8b3: #fcfcfcb3;
   --c-fffdf8cc: #fcfcfccc;
@@ -611,6 +620,7 @@
   --t-8a7a64: #74767a;
   --t-8a7c66: #75777b;
   --t-8a7e6e: #7a7b7e;
+  --t-8a7f70: #7b7c7f;
   --t-8a8073: #7d7e80;
   --t-8a8172: #7c7d80;
   --t-8a8177: #808080;
@@ -673,6 +683,7 @@
   --t-a59a88: #949699;
   --t-a69b88: #959699;
   --t-a8443a: #696e79;
+  --t-a89d8d: #989a9d;
   --t-a99b87: #95979b;
   --t-a99c87: #95979b;
   --t-a9c79a: #b0b0b0;
@@ -717,6 +728,7 @@
   --t-fffcf6: #fbfbfb;
   --t-fffdf6: #fbfbfb;
   --t-fffdf8: #fcfcfc;
+  --t-fffdf8b3: #fcfcfcb3;
   --t-fffdfa: #fcfcfc;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;
@@ -754,6 +766,7 @@
   --c-00000024: #00000024;
   --c-00000026: #00000026;
   --c-0000002e: #0000002e;
+  --c-00000033: #00000033;
   --c-00000040: #00000040;
   --c-00000055: #00000055;
   --c-00000059: #00000059;
@@ -769,6 +782,8 @@
   --c-12101e8c: #1b18138c;
   --c-141210: #16130e;
   --c-161412: #181510;
+  --c-1f1b18: #1f1d18;
+  --c-1f1b18f2: #1f1d18f2;
   --c-1f1c19: #201d18;
   --c-1f1c19cc: #201d18cc;
   --c-26221e: #26231e;
@@ -814,6 +829,8 @@
   --c-3c2d1e66: #362e2466;
   --c-3c4035ed: #3e3c37ed;
   --c-3c4a5b: #425544;
+  --c-3f362c14: #39373214;
+  --c-3f362c1f: #3937321f;
   --c-3f362c26: #39373226;
   --c-3f362c30: #39373230;
   --c-3f3a33: #3d3a35;
@@ -1041,6 +1058,7 @@
   --c-e3ebdc: #e7e5e0;
   --c-e3ece4: #ebe9e4;
   --c-e4d5bb: #dcd3c3;
+  --c-e4dccd: #dfdbd2;
   --c-e4ded4: #e0ddd8;
   --c-e4e8e9: #eae8e3;
   --c-e4ecf3: #efede8;
@@ -1134,6 +1152,7 @@
   --c-efe6d7: #eae5dc;
   --c-efe7da: #e8e6e1;
   --c-efe8da: #e8e6e1;
+  --c-efe8db: #e9e6e1;
   --c-efe9de: #eae8e3;
   --c-efe9df: #ebe8e3;
   --c-efeae1: #ece9e4;
@@ -1232,6 +1251,8 @@
   --c-fffdf6: #fefcf7;
   --c-fffdf7: #fffcf7;
   --c-fffdf8: #fffdf8;
+  --c-fffdf81a: #fffdf81a;
+  --c-fffdf81f: #fffdf81f;
   --c-fffdf866: #fffdf866;
   --c-fffdf8b3: #fffdf8b3;
   --c-fffdf8cc: #fffdf8cc;
@@ -1352,6 +1373,7 @@
   --t-8a7a64: #827a6c;
   --t-8a7c66: #837b6d;
   --t-8a7e6e: #847e74;
+  --t-8a7f70: #857f75;
   --t-8a8073: #858078;
   --t-8a8172: #858077;
   --t-8a8177: #84827d;
@@ -1414,6 +1436,7 @@
   --t-a59a88: #9f998e;
   --t-a69b88: #a09a8e;
   --t-a8443a: #926950;
+  --t-a89d8d: #a39d92;
   --t-a99b87: #a29b8e;
   --t-a99c87: #a29b8e;
   --t-a9c79a: #92a6cf;
@@ -1458,6 +1481,7 @@
   --t-fffcf6: #fefcf7;
   --t-fffdf6: #fefcf7;
   --t-fffdf8: #fffdf8;
+  --t-fffdf8b3: #fffdf8b3;
   --t-fffdfa: #fffdfa;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;
@@ -1495,6 +1519,7 @@
   --c-00000024: #00000024;
   --c-00000026: #00000026;
   --c-0000002e: #0000002e;
+  --c-00000033: #00000033;
   --c-00000040: #00000040;
   --c-00000055: #00000055;
   --c-00000059: #00000059;
@@ -1510,6 +1535,8 @@
   --c-12101e8c: #111d1d8c;
   --c-141210: #0c1818;
   --c-161412: #0e1a1a;
+  --c-1f1b18: #152221;
+  --c-1f1b18f2: #152221f2;
   --c-1f1c19: #162222;
   --c-1f1c19cc: #162222cc;
   --c-26221e: #1c2828;
@@ -1555,6 +1582,8 @@
   --c-3c2d1e66: #1f3b2966;
   --c-3c4035ed: #344140ed;
   --c-3c4a5b: #3d575a;
+  --c-3f362c14: #2f3c3b14;
+  --c-3f362c1f: #2f3c3b1f;
   --c-3f362c26: #2f3c3b26;
   --c-3f362c30: #2f3c3b30;
   --c-3f3a33: #333f3f;
@@ -1782,6 +1811,7 @@
   --c-e3ebdc: #ddeae9;
   --c-e3ece4: #e1eeed;
   --c-e4d5bb: #bce3cb;
+  --c-e4dccd: #cee3d6;
   --c-e4ded4: #d6e2e2;
   --c-e4e8e9: #e0edec;
   --c-e4ecf3: #e5f2f1;
@@ -1875,6 +1905,7 @@
   --c-efe6d7: #d8eee0;
   --c-efe7da: #deebea;
   --c-efe8da: #deebea;
+  --c-efe8db: #dfebeb;
   --c-efe9de: #e0edec;
   --c-efe9df: #e1eded;
   --c-efeae1: #e2eeee;
@@ -1973,6 +2004,8 @@
   --c-fffdf6: #f6ffff;
   --c-fffdf7: #f7ffff;
   --c-fffdf8: #f8ffff;
+  --c-fffdf81a: #f8ffff1a;
+  --c-fffdf81f: #f8ffff1f;
   --c-fffdf866: #f8ffff66;
   --c-fffdf8b3: #f8ffffb3;
   --c-fffdf8cc: #f8ffffcc;
@@ -2093,6 +2126,7 @@
   --t-8a7a64: #658972;
   --t-8a7c66: #678974;
   --t-8a7e6e: #6f8978;
+  --t-8a7f70: #71897a;
   --t-8a8073: #74897c;
   --t-8a8172: #73897b;
   --t-8a8177: #7a8786;
@@ -2155,6 +2189,7 @@
   --t-a59a88: #89a493;
   --t-a69b88: #89a594;
   --t-a8443a: #3da557;
+  --t-a89d8d: #8ea797;
   --t-a99b87: #88a894;
   --t-a99c87: #88a894;
   --t-a9c79a: #86dbd8;
@@ -2199,6 +2234,7 @@
   --t-fffcf6: #f6ffff;
   --t-fffdf6: #f6ffff;
   --t-fffdf8: #f8ffff;
+  --t-fffdf8b3: #f8ffffb3;
   --t-fffdfa: #faffff;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;
@@ -2236,6 +2272,7 @@
   --c-00000024: #00000024;
   --c-00000026: #00000026;
   --c-0000002e: #0000002e;
+  --c-00000033: #00000033;
   --c-00000040: #00000040;
   --c-00000055: #00000055;
   --c-00000059: #00000059;
@@ -2251,6 +2288,8 @@
   --c-12101e8c: #1f0f138c;
   --c-141210: #1a0a0e;
   --c-161412: #1c0c10;
+  --c-1f1b18: #231418;
+  --c-1f1b18f2: #231418f2;
   --c-1f1c19: #241418;
   --c-1f1c19cc: #241418cc;
   --c-26221e: #2a1a1e;
@@ -2296,6 +2335,8 @@
   --c-3c2d1e66: #3d1d1e66;
   --c-3c4035ed: #423337ed;
   --c-3c4a5b: #5c3b59;
+  --c-3f362c14: #3d2e3214;
+  --c-3f362c1f: #3d2e321f;
   --c-3f362c26: #3d2e3226;
   --c-3f362c30: #3d2e3230;
   --c-3f3a33: #413135;
@@ -2523,6 +2564,7 @@
   --c-e3ebdc: #ebdce0;
   --c-e3ece4: #efe0e4;
   --c-e4d5bb: #e5bbba;
+  --c-e4dccd: #e5cdcc;
   --c-e4ded4: #e4d4d8;
   --c-e4e8e9: #eedfe3;
   --c-e4ecf3: #f3e4e8;
@@ -2616,6 +2658,7 @@
   --c-efe6d7: #f0d7d6;
   --c-efe7da: #ecdde1;
   --c-efe8da: #ecdde1;
+  --c-efe8db: #eddde1;
   --c-efe9de: #eedfe3;
   --c-efe9df: #efdfe3;
   --c-efeae1: #f0e0e4;
@@ -2714,6 +2757,8 @@
   --c-fffdf6: #fff6f8;
   --c-fffdf7: #fff7f9;
   --c-fffdf8: #fff8fa;
+  --c-fffdf81a: #fff8fa1a;
+  --c-fffdf81f: #fff8fa1f;
   --c-fffdf866: #fff8fa66;
   --c-fffdf8b3: #fff8fab3;
   --c-fffdf8cc: #fff8facc;
@@ -2834,6 +2879,7 @@
   --t-8a7a64: #8b6363;
   --t-8a7c66: #8b6565;
   --t-8a7e6e: #8b6d6d;
+  --t-8a7f70: #8b6f6f;
   --t-8a8073: #8b7273;
   --t-8a8172: #8b7271;
   --t-8a8177: #88797d;
@@ -2896,6 +2942,7 @@
   --t-a59a88: #a68887;
   --t-a69b88: #a78887;
   --t-a8443a: #ab3748;
+  --t-a89d8d: #a98c8c;
   --t-a99b87: #aa8686;
   --t-a99c87: #aa8786;
   --t-a9c79a: #e08197;
@@ -2940,6 +2987,7 @@
   --t-fffcf6: #fff6f8;
   --t-fffdf6: #fff6f8;
   --t-fffdf8: #fff8fa;
+  --t-fffdf8b3: #fff8fab3;
   --t-fffdfa: #fffafb;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;
@@ -2977,6 +3025,7 @@
   --c-00000024: #0000003a;
   --c-00000026: #0000003d;
   --c-0000002e: #0000004a;
+  --c-00000033: #00000052;
   --c-00000040: #00000066;
   --c-00000055: #00000088;
   --c-00000059: #0000008e;
@@ -2992,6 +3041,8 @@
   --c-12101e8c: #d1cbdb8c;
   --c-141210: #d5cfdf;
   --c-161412: #d3cedd;
+  --c-1f1b18: #cdc8d7;
+  --c-1f1b18f2: #cdc8d7f2;
   --c-1f1c19: #cdc7d7;
   --c-1f1c19cc: #cdc7d7cc;
   --c-26221e: #c8c3d2;
@@ -3037,6 +3088,8 @@
   --c-3c2d1e66: #000000a3;
   --c-3c4035ed: #b5afbeed;
   --c-3c4a5b: #9b94be;
+  --c-3f362c14: #00000020;
+  --c-3f362c1f: #00000032;
   --c-3f362c26: #0000003d;
   --c-3f362c30: #0000004d;
   --c-3f3a33: #b6b0c0;
@@ -3264,6 +3317,7 @@
   --c-e3ebdc: #2d2837;
   --c-e3ece4: #2a2534;
   --c-e4d5bb: #57245b;
+  --c-e4dccd: #462948;
   --c-e4ded4: #332e3d;
   --c-e4e8e9: #2b2535;
   --c-e4ecf3: #272131;
@@ -3357,6 +3411,7 @@
   --c-efe6d7: #3e2040;
   --c-efe7da: #2d2736;
   --c-efe8da: #2d2736;
+  --c-efe8db: #2c2736;
   --c-efe9de: #2b2535;
   --c-efe9df: #2b2534;
   --c-efeae1: #2a2434;
@@ -3455,6 +3510,8 @@
   --c-fffdf6: #1b1525;
   --c-fffdf7: #1b1524;
   --c-fffdf8: #1a1524;
+  --c-fffdf81a: #1a15241a;
+  --c-fffdf81f: #1a15241f;
   --c-fffdf866: #1a152466;
   --c-fffdf8b3: #1a1524b3;
   --c-fffdf8cc: #1a1524cc;
@@ -3575,6 +3632,7 @@
   --t-8a7a64: #d4c0d6;
   --t-8a7c66: #d3c0d5;
   --t-8a7e6e: #d0c1d1;
+  --t-8a7f70: #cfc1d1;
   --t-8a8073: #cec2cf;
   --t-8a8172: #cfc2d0;
   --t-8a8177: #c7c5cb;
@@ -3637,6 +3695,7 @@
   --t-a59a88: #cab5cc;
   --t-a69b88: #cbb5cc;
   --t-a8443a: #ddb1e8;
+  --t-a89d8d: #c8b4ca;
   --t-a99b87: #cbb3cd;
   --t-a99c87: #ccb3cd;
   --t-a9c79a: #a491df;
@@ -3681,6 +3740,7 @@
   --t-fffcf6: #fffcf6;
   --t-fffdf6: #fffdf6;
   --t-fffdf8: #fffdf8;
+  --t-fffdf8b3: #fffdf8b3;
   --t-fffdfa: #fffdfa;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;
@@ -3718,6 +3778,7 @@
   --c-00000024: #00000024;
   --c-00000026: #00000026;
   --c-0000002e: #0000002e;
+  --c-00000033: #00000033;
   --c-00000040: #00000040;
   --c-00000055: #00000055;
   --c-00000059: #00000059;
@@ -3733,6 +3794,8 @@
   --c-12101e8c: #12101e8c;
   --c-141210: #141210;
   --c-161412: #161412;
+  --c-1f1b18: #1f1b18;
+  --c-1f1b18f2: #1f1b18f2;
   --c-1f1c19: #1f1c19;
   --c-1f1c19cc: #1f1c19cc;
   --c-26221e: #26221e;
@@ -3778,6 +3841,8 @@
   --c-3c2d1e66: #3c2d1e66;
   --c-3c4035ed: #3c4035ed;
   --c-3c4a5b: #3c4a5b;
+  --c-3f362c14: #3f362c14;
+  --c-3f362c1f: #3f362c1f;
   --c-3f362c26: #3f362c26;
   --c-3f362c30: #3f362c30;
   --c-3f3a33: #3f3a33;
@@ -4005,6 +4070,7 @@
   --c-e3ebdc: #e3ebdc;
   --c-e3ece4: #e3ece4;
   --c-e4d5bb: #e4d5bb;
+  --c-e4dccd: #e4dccd;
   --c-e4ded4: #e4ded4;
   --c-e4e8e9: #e4e8e9;
   --c-e4ecf3: #e4ecf3;
@@ -4098,6 +4164,7 @@
   --c-efe6d7: #efe6d7;
   --c-efe7da: #efe7da;
   --c-efe8da: #efe8da;
+  --c-efe8db: #efe8db;
   --c-efe9de: #efe9de;
   --c-efe9df: #efe9df;
   --c-efeae1: #efeae1;
@@ -4196,6 +4263,8 @@
   --c-fffdf6: #fffdf6;
   --c-fffdf7: #fffdf7;
   --c-fffdf8: #fffdf8;
+  --c-fffdf81a: #fffdf81a;
+  --c-fffdf81f: #fffdf81f;
   --c-fffdf866: #fffdf866;
   --c-fffdf8b3: #fffdf8b3;
   --c-fffdf8cc: #fffdf8cc;
@@ -4316,6 +4385,7 @@
   --t-8a7a64: #8a7a64;
   --t-8a7c66: #8a7c66;
   --t-8a7e6e: #8a7e6e;
+  --t-8a7f70: #8a7f70;
   --t-8a8073: #8a8073;
   --t-8a8172: #8a8172;
   --t-8a8177: #8a8177;
@@ -4378,6 +4448,7 @@
   --t-a59a88: #a59a88;
   --t-a69b88: #a69b88;
   --t-a8443a: #a8443a;
+  --t-a89d8d: #a89d8d;
   --t-a99b87: #a99b87;
   --t-a99c87: #a99c87;
   --t-a9c79a: #a9c79a;
@@ -4422,6 +4493,7 @@
   --t-fffcf6: #fffcf6;
   --t-fffdf6: #fffdf6;
   --t-fffdf8: #fffdf8;
+  --t-fffdf8b3: #fffdf8b3;
   --t-fffdfa: #fffdfa;
   --t-ffffff: #ffffff;
   --t-ffffff66: #ffffff66;

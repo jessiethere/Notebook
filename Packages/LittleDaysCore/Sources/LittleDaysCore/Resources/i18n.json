@@ -9478,5 +9478,49 @@
   "books.moreCoversShort": {
     "zh": "更多封面",
     "en": "More covers"
+  },
+  "wall.count": {
+    "zh": "{count} 张生活照片",
+    "en": "{count} photos of your days"
+  },
+  "wall.monthCount": {
+    "zh": "{count} 张",
+    "en": "{count}"
+  },
+  "wall.photoOf": {
+    "zh": "{date} 的照片",
+    "en": "A photo from {date}"
+  },
+  "wall.emptyTitle": {
+    "zh": "你的照片墙还空着。",
+    "en": "Your photo wall is still empty."
+  },
+  "wall.emptyBook": {
+    "zh": "这本手帐里还没有照片。",
+    "en": "No photos in this book yet."
+  },
+  "wall.emptyText": {
+    "zh": "从第一张生活照片开始吧。",
+    "en": "Start with a first photo of your day."
+  },
+  "wall.emptyGo": {
+    "zh": "放进第一张照片",
+    "en": "Add your first photo"
+  },
+  "wall.sameDay": {
+    "zh": "这一天的照片 · {count}",
+    "en": "From this day · {count}"
+  },
+  "wall.openPage": {
+    "zh": "打开这一页",
+    "en": "Open this page"
+  },
+  "wall.prev": {
+    "zh": "上一张",
+    "en": "Previous photo"
+  },
+  "wall.next": {
+    "zh": "下一张",
+    "en": "Next photo"
   }
 }

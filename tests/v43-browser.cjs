@@ -100,14 +100,15 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8080";
     await page.locator('[data-action="save-entry"]').tap();
     await require("./signed-in.cjs").homeAfterSave(page);
     await menu(page, "calendar");
+    // V10.55: the photo wall is a wall of my own photos (no month grid); a
+    // day opens from 生活记忆.
     await page.locator('[data-action="calendar-mode"][data-mode="wall"]').tap();
-    await page.waitForSelector(".cal-wall");
-    assert.ok((await page.locator(".wall-day.has-photo").count()) >= 1, "today's picture on the wall");
-    assert.notEqual(await page.locator(".cal-wall").evaluate((el) => getComputedStyle(el).animationName), "none");
-    assert.match(await page.locator(".cal-wall-stats").innerText(), /\d+ 天 · \d+ 张照片/);
-    await page.locator(`.wall-day[data-date="${today}"]`).tap();
+    await page.waitForSelector(".photo-wall");
+    assert.equal(await page.locator(".cal-wall-grid, .wall-day").count(), 0, "no month grid on the wall");
+    await page.locator('[data-action="calendar-mode"][data-mode="memory"]').tap();
+    await page.locator(`.day-cell[data-date="${today}"]`).tap();
     await page.waitForSelector(".day-detail");
-    passed.push("calendar photo wall with moving background; a tile opens that day");
+    passed.push("calendar: the photo wall has no month grid; the day opens from 生活记忆");
 
     assert.deepEqual(errors, []);
     console.log(`V3.13 E2E passed (${passed.length} groups):\n - ${passed.join("\n - ")}\nNo page errors.`);
