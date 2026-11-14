@@ -4,6 +4,36 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.51",
+    date: "2026-11-14",
+    zh: {
+      title: "返回就保存；写字时看得见；书架可以直接管理",
+      items: [
+        "编辑页左上角的返回：直接保存并退出，不再问「要先收好这一页吗？」。草稿还是草稿，已完成的还是已完成（改动会保存）；要完成就点右上角「完成」。真的保存好了才退出，没保存好会提示并可以再试一次。",
+        "新建文字框：直接出现光标可以打字，不再把默认文字选中（iPhone 上会弹出剪切 / 拷贝 / 粘贴）；什么都没写就离开，这个空的文字框会自动去掉。",
+        "在文字框里打字时，键盘上方只留一行：「样式 · B I U S · 完成」；字体、字号、颜色和对齐在「样式」里打开（键盘会先收起）。",
+        "今天的故事：写字面板顶部有一个实时的页面小窗，对准你正在写的那句话；换字体、A+ / A−、颜色和对齐，立刻就能看到效果。面板会贴在键盘上方。",
+        "今天的故事点「保存」后，会等真正保存好，再直接打开刚做好的那一页（不是这一天的第一页）。",
+        "首页左上角：中文界面显示「开铺手帐」，英文界面显示 Capiday。杂志封面上的旧名字也改成了 capiday。",
+        "书架：展开的书右上角有「···」，可以直接编辑书本资料；空的书可以删除（会先确认），有页面的书不会被删除。",
+        "标签改成胶囊：输入后按回车（或逗号）就变成一个标签，点 × 删除；带空格的标签不用再加 #。展开的书下面会显示前 2 个标签。",
+      ],
+    },
+    en: {
+      title: "Back saves; see what you type; manage books from the shelf",
+      items: [
+        "Back in the editor now saves and leaves — no more “Put this page away first?”. A draft stays a draft and a finished page stays finished (with your changes); tap Done to finish. It leaves only once it is really saved, and tells you (with Try again) if it is not.",
+        "A new text box opens with the caret ready (no selected words, so no Cut / Copy / Paste popping up); a new box you leave empty goes away.",
+        "While typing in a text box, one short row sits above the keyboard: Style · B I U S · Done. Fonts, size, colour and alignment open from Style.",
+        "Today's story: the words sheet now shows the real page live at its top, centred on the line you are writing — fonts, A+ / A−, colours and alignment show at once. The sheet sits above the keyboard.",
+        "Save in Today's story waits until it is really saved, then opens the page you just made (not the day's first page).",
+        "Home's wordmark reads 开铺手帐 in Chinese and Capiday in English; magazine covers no longer show the old name.",
+        "Shelf: the pulled-out book has a ··· to edit its details right there; an empty book can be deleted (after asking); a book with pages is never deleted.",
+        "Tags are chips: type one and press return (or a comma); × removes it; tags with spaces need no #. The pulled-out book shows its first 2 tags.",
+      ],
+    },
+  },
+  {
     version: "10.50",
     date: "2026-11-14",
     zh: {

@@ -94,10 +94,24 @@ function coverPhotoPicks(book, catalog) {
   const others = photos.filter((photo, k) => photo.collection !== coverCollection(book) && k % 6 === 0);
   return [...suited, ...others].slice(0, 14);
 }
+// V10.51 · Tags as chips: type a tag and press return (or a comma) — it
+// becomes a chip with ×. Chinese, English and tags with spaces need no "#".
+// The form still sends one "tags" value in the stored format ("#a#b c"),
+// read by the same parseTags, so older tags load and save unchanged.
+export const TAGS_MAX = 8;
+export function tagsValue(tags) {
+  return (tags || []).map((tag) => `#${tag}`).join("");
+}
+export function tagChipsHTML(tags, t) {
+  const list = (tags || []).slice(0, TAGS_MAX);
+  const chips = list.map((tag) => `<span class="tag-chip"><span>${esc(tag)}</span><button type="button" data-action="tag-remove" data-tag="${esc(tag)}" aria-label="${esc(t("tags.remove", { tag }))}">×</button></span>`).join("");
+  const full = list.length >= TAGS_MAX;
+  return `<div class="field tag-field"><span class="field-label" id="tag-label">${t("books.tags")}</span><div class="tag-chips" data-tag-chips role="group" aria-labelledby="tag-label">${chips}<input class="tag-entry" data-tag-entry maxlength="16" enterkeyhint="done" autocomplete="off" placeholder="${esc(t(full ? "tags.full" : list.length ? "tags.more" : "tags.placeholder"))}" aria-label="${esc(t("tags.add"))}" ${full ? "disabled" : ""}></div><input type="hidden" name="tags" value="${esc(tagsValue(list))}"><small class="field-hint">${t("tags.hint", { max: TAGS_MAX })}</small></div>`;
+}
 export function bookDialogHTML(book, ctx) {
   const { catalog, t, tokens } = ctx;
   return `<h2>${t(book.id ? "books.dialogEdit" : "books.dialogNew")}</h2><p class="dialog-description">${t("books.dialogDescription")}</p><div id="book-cover-preview" class="book-cover-preview">${coverHTML(book, ctx)}</div><div class="dialog-fields">
- <label class="field">${t("books.name")}<input name="title" required maxlength="60" placeholder="${t("books.namePlaceholder")}" value="${esc(book.title || "")}"></label><label class="field">${t("books.description")}<textarea name="description" maxlength="300">${esc(book.description || "")}</textarea></label><label class="field">${t("books.tags")}<input name="tags" maxlength="120" placeholder="${t("books.tagsPlaceholder")}" value="${esc((book.tags || []).map((tag) => (/\s/.test(tag) ? `#${tag}` : tag)).join(" "))}"><small class="field-hint">${t("books.tagsHint")}</small></label><label class="field">${t("books.category")}<input name="category" required maxlength="40" value="${esc(book.category || "Daily Life")}"></label>
+ <label class="field">${t("books.name")}<input name="title" required maxlength="60" placeholder="${t("books.namePlaceholder")}" value="${esc(book.title || "")}"></label><label class="field">${t("books.description")}<textarea name="description" maxlength="300">${esc(book.description || "")}</textarea></label>${tagChipsHTML(book.tags || [], t)}<label class="field">${t("books.category")}<input name="category" required maxlength="40" value="${esc(book.category || "Daily Life")}"></label>
  <label class="field">${t("books.cover")}</label><input name="coverTemplate" type="hidden" value="${esc(book.coverTemplate || "minimal-linen")}"><div class="cover-template-grid">${catalog.coverTemplates.map((template) => `<button type="button" data-action="cover-template" data-template="${template.id}" class="cover-option ${(book.coverTemplate || "minimal-linen") === template.id ? "selected" : ""}">${coverHTML({ ...book, coverTemplate: template.id, coverImage: MAGAZINE_COVERS.includes(template.id) ? book.coverImage : "" }, ctx)}<span>${t("cover." + template.id)}</span></button>`).join("")}</div>
  <label class="field">${t("books.coverPhotoPick")}</label><div class="cover-photo-picks">${coverPhotoPicks(book, catalog)
    .map((photo) => `<button type="button" data-action="cover-library-photo" data-photo="${esc(photo.id)}" class="${book.coverImage === `photo:${photo.id}` ? "selected" : ""}" aria-label="${esc(ctx.language === "en" ? photo.nameEn : photo.nameZh)}"><img src="${esc(ctx.media.resolve(`photo:${photo.id}`))}" alt="" loading="lazy"></button>`)

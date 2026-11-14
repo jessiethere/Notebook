@@ -24,6 +24,8 @@ import {
   mediaPanelHTML,
   voiceRecorderHTML,
   clockText,
+  tagChipsHTML,
+  tagsValue,
   fieldLabel,
 } from "./js/personal-ui.mjs";
 import { loadImage, exportJournalImage, exportJournalVideo, shareStory, renderJournalCanvas, renderBookTitleCanvas } from "./js/export.mjs";
@@ -2970,7 +2972,10 @@ function shelfHTML(books = state().books, canAdd = true) {
     ? (() => {
         const count = bookCounts(state(), pulled.id).pages, countDays = bookCounts(state(), pulled.id).days;
         const shown = Community.isShowcased(social(), pulled.id);
-        return `<section class="pulled-book" aria-live="polite">${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${daysPagesLabel(countDays, count)}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><div class="shelf-move" role="group" aria-label="${t("shelf.moveLabel")}"><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="-1" ${state().books[0]?.id === pulled.id ? "disabled" : ""}>‹ ${t("shelf.moveEarlier")}</button><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="1" ${state().books.at(-1)?.id === pulled.id ? "disabled" : ""}>${t("shelf.moveLater")} ›</button></div></div></section>`;
+        // V10.51: a quiet ··· for managing the book (only when tapped), and its tags (2 + N).
+        const tags = pulled.tags || [];
+        const tagLine = tags.length ? `<p class="pulled-tags">${tags.slice(0, 2).map((tag) => `<span>#${esc(tag)}</span>`).join("")}${tags.length > 2 ? `<span class="more">+${tags.length - 2}</span>` : ""}</p>` : "";
+        return `<section class="pulled-book" aria-live="polite"><button class="pulled-more" data-action="shelf-menu" data-book="${esc(pulled.id)}" aria-label="${esc(t("shelf.manage"))} · ${esc(pulled.title)}" aria-haspopup="dialog"><span aria-hidden="true">···</span></button>${coverHTML(pulled, ctx())}<div class="pulled-copy"><small>${esc(presetLabel("category", pulled.category || ""))}</small><h2>${esc(pulled.title)}</h2>${tagLine}${pulled.description ? `<p>${esc(pulled.description)}</p>` : ""}<span class="badge">${shown ? `🖼 ${t("who.coverShown")}` : `🔒 ${t("private")}`} · ${daysPagesLabel(countDays, count)}</span><div class="pulled-actions"><button class="primary" data-action="book" data-book="${esc(pulled.id)}">${t("shelf.open")} ›</button><button class="secondary" data-action="shelf-write" data-book="${esc(pulled.id)}">✎ ${t("shelf.write")}</button></div><div class="shelf-move" role="group" aria-label="${t("shelf.moveLabel")}"><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="-1" ${state().books[0]?.id === pulled.id ? "disabled" : ""}>‹ ${t("shelf.moveEarlier")}</button><button class="text-button" data-action="put-back">${t("shelf.putBack")}</button><button class="text-button" data-action="book-step" data-book="${esc(pulled.id)}" data-dir="1" ${state().books.at(-1)?.id === pulled.id ? "disabled" : ""}>${t("shelf.moveLater")} ›</button></div></div></section>`;
       })()
     : `<p class="shelf-hint">${t("shelf.hint")}</p>`;
   return `${stage}<div class="bookshelf">${rows.map((row) => `<div class="shelf-row"><div class="shelf-books">${row.join("")}</div><div class="shelf-plank"></div></div>`).join("")}</div>`;
@@ -6612,6 +6617,74 @@ document.addEventListener(
 
 /* ---------- Sign in (this device) and the welcome tour ---------- */
 
+// V10.51 · ··· on the shelf card: the same editor as the book page (no
+// second editing system). A book is deleted only when it is empty, so no
+// page is ever left without a book.
+function openShelfMenu(bookId) {
+  const book = state().books.find((b) => b.id === bookId);
+  if (!book) return;
+  const pages = bookCounts(state(), bookId).pages;
+  const dialog = $("#choose-dialog");
+  const del = pages
+    ? `<div class="shelf-menu-danger"><p>${esc(t("shelf.deleteHasPages", { count: pages }))}</p></div>`
+    : `<button class="contribute-option danger-option" data-action="shelf-delete" data-book="${esc(bookId)}"><b>${t("shelf.deleteBook")}</b><small>${t("shelf.deleteEmptyHint")}</small></button>`;
+  dialog.innerHTML = `<div class="choose-sheet page-menu-sheet shelf-menu"><div class="choose-grabber" aria-hidden="true"></div><h2>${esc(book.title)}</h2><button class="contribute-option" data-action="edit-book" data-book="${esc(bookId)}"><b>✎ ${t("shelf.editBook")}</b><small>${t("shelf.editBookHint")}</small></button><p class="shelf-menu-note">${t("shelf.moveHint")}</p>${del}<button class="choose-cancel" data-action="choose-close">${t("cancel")}</button></div>`;
+  if (!dialog.open) dialog.showModal();
+}
+async function deleteEmptyBook(bookId) {
+  const book = state().books.find((b) => b.id === bookId);
+  if (!book || bookCounts(state(), bookId).pages) return;
+  if ($("#choose-dialog").open) $("#choose-dialog").close();
+  if (!(await askConfirm(t("shelf.deleteAsk", { name: book.title }), { ok: t("delete") }))) return;
+  // Only an empty book: nothing in the journal points at it any more.
+  if (state().entries.some((e) => e.bookId === bookId || (e.moments || []).some((m) => m.bookId === bookId)) || Object.values(state().drafts || {}).some((d) => d.bookId === bookId || (d.moments || []).some((m) => m.bookId === bookId))) return toast(t("shelf.deleteHasPages", { count: 1 }));
+  store.update((s) => {
+    s.books = s.books.filter((b) => b.id !== bookId);
+  });
+  if (pulledBook === bookId) pulledBook = null;
+  logEvent("book_deleted", { pages: 0 });
+  render();
+  toast(t("shelf.deleted", { name: book.title }));
+}
+// Tag chips: return / a comma / leaving the field turns the words into chips.
+let tagsBusy = false;
+function addTagsFrom(entry, refocus = true) {
+  const field = entry.closest(".tag-field");
+  const hidden = field?.querySelector('input[name="tags"]');
+  if (!hidden || tagsBusy || !field.isConnected) return;
+  const words = String(entry.value || "").split(/[,，、;；\n]/).map((w) => w.replace(/^[#＃]+/, "").trim()).filter(Boolean);
+  if (!words.length) return;
+  // Taking the field out of the page blurs it: emptied first, and guarded, so
+  // that blur does not add the same words again.
+  entry.value = "";
+  tagsBusy = true;
+  try {
+    const next = parseTags(tagsValue([...parseTags(hidden.value), ...words]));
+    field.outerHTML = tagChipsHTML(next, t);
+  } finally {
+    tagsBusy = false;
+  }
+  if (refocus) $(".tag-field [data-tag-entry]")?.focus({ preventScroll: true });
+}
+document.addEventListener("keydown", (event) => {
+  const entry = event.target.closest?.("[data-tag-entry]");
+  if (!entry || event.isComposing || event.keyCode === 229) return;
+  if (event.key === "Enter" || event.key === "," || event.key === "，") {
+    event.preventDefault();
+    addTagsFrom(entry);
+  } else if (event.key === "Backspace" && !entry.value) {
+    const last = [...entry.closest(".tag-chips").querySelectorAll('[data-action="tag-remove"]')].at(-1);
+    last?.click();
+  }
+});
+document.addEventListener("input", (event) => {
+  const entry = event.target.closest?.("[data-tag-entry]");
+  if (entry && !event.isComposing && /[,，、;；]/.test(entry.value)) addTagsFrom(entry);
+});
+document.addEventListener("focusout", (event) => {
+  const entry = event.target.closest?.("[data-tag-entry]");
+  if (entry && entry.value.trim()) addTagsFrom(entry, false);
+});
 // The sprout beside the Capiday wordmark (Home, the welcome page).
 const BRAND_SPROUT = '<svg class="brand-sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9"/><path d="M12 13c-1-4-4-6-8-6 0 4 3 6 8 6Z"/><path d="M12 11c1-4 4-6 8-6 0 4-3 6-8 6Z"/></svg>';
 function loginHTML() {
@@ -7457,6 +7530,24 @@ async function action(target) {
       // Keep roughly the same width; the height follows the shape.
       Object.assign(layer, shapeSize(shape, Math.min(Number(layer.w) || 42, 60)));
     });
+  }
+  if (actionName === "shelf-menu") return openShelfMenu(target.dataset.book);
+  if (actionName === "shelf-delete") return deleteEmptyBook(target.dataset.book);
+  if (actionName === "tag-remove") {
+    const field = target.closest(".tag-field");
+    const hidden = field?.querySelector('input[name="tags"]');
+    if (!hidden) return;
+    const next = parseTags(hidden.value).filter((tag) => tag !== target.dataset.tag);
+    const entry = field.querySelector("[data-tag-entry]");
+    if (entry) entry.value = "";
+    tagsBusy = true;
+    try {
+      field.outerHTML = tagChipsHTML(next, t);
+    } finally {
+      tagsBusy = false;
+    }
+    $(".tag-field [data-tag-entry]")?.focus({ preventScroll: true });
+    return;
   }
   if (actionName === "pull-book") {
     // Tap a spine to pull the book out; tap the pulled one again to open it.
@@ -8366,8 +8457,10 @@ $("#dialog-form").addEventListener("submit", (event) => {
       validateFieldDefinitions(book.fields);
       book.id ||= id();
       if (dialogKind === "book") logEvent("book_create");
+      // V10.51: edited from the shelf's ··· → back on the shelf with the card still out.
+      const fromShelf = dialogKind === "edit-book" && page === "books" && !selectedBook && pulledBook === book.id;
       store.update((next) => saveBook(next, book));
-      selectedBook = book.id;
+      if (!fromShelf) selectedBook = book.id;
       page = "books";
       $("#form-dialog").close();
       render();

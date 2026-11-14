@@ -74,7 +74,12 @@ const shots = process.env.SHOTS_DIR || "";
     await page.locator('#navigation [data-page="books"]').click();
     await page.locator('[data-action="new-book"]').first().click();
     await page.locator('#dialog-form [name="title"]').fill("感恩小书");
-    await page.locator('#dialog-form [name="tags"]').fill("阅读 感恩 #self awareness");
+    // V10.51: tags are chips — type one, press return (no "#" needed for spaces).
+    for (const tag of ["阅读", "感恩", "self awareness"]) {
+      await page.locator("#dialog-form [data-tag-entry]").fill(tag);
+      await page.locator("#dialog-form [data-tag-entry]").press("Enter");
+    }
+    assert.equal(await page.locator("#dialog-form .tag-chip").count(), 3);
     await page.locator('#dialog-form [type="submit"]').click();
     await page.waitForFunction(() => JSON.parse(localStorage.getItem("little-days.v1")).books.some((b) => b.title === "感恩小书"));
     const book = await page.evaluate(() => JSON.parse(localStorage.getItem("little-days.v1")).books.find((b) => b.title === "感恩小书"));

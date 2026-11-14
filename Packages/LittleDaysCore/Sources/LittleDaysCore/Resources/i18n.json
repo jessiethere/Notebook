@@ -9226,5 +9226,65 @@
   "brand.wordmark": {
     "zh": "开铺手帐",
     "en": "Capiday"
+  },
+  "tags.placeholder": {
+    "zh": "输入标签，按回车添加",
+    "en": "Type a tag, then return"
+  },
+  "tags.more": {
+    "zh": "再加一个…",
+    "en": "Add another…"
+  },
+  "tags.full": {
+    "zh": "最多 8 个标签",
+    "en": "Up to 8 tags"
+  },
+  "tags.add": {
+    "zh": "添加标签",
+    "en": "Add a tag"
+  },
+  "tags.remove": {
+    "zh": "删除标签 {tag}",
+    "en": "Remove tag {tag}"
+  },
+  "tags.hint": {
+    "zh": "最多 {max} 个。中文、英文和带空格的标签都可以，不用加 #。书架上可以按标签找书。",
+    "en": "Up to {max}. Any language, spaces welcome, no # needed. Find books by tag on the shelf."
+  },
+  "shelf.manage": {
+    "zh": "管理这本书",
+    "en": "Manage this book"
+  },
+  "shelf.editBook": {
+    "zh": "编辑书本资料",
+    "en": "Edit book details"
+  },
+  "shelf.editBookHint": {
+    "zh": "名称、描述、标签、封面",
+    "en": "Name, description, tags, cover"
+  },
+  "shelf.moveHint": {
+    "zh": "在下面用「往前 / 往后」调整书架位置",
+    "en": "Use ‹ › below to move it on the shelf"
+  },
+  "shelf.deleteBook": {
+    "zh": "删除这本书",
+    "en": "Delete this book"
+  },
+  "shelf.deleteEmptyHint": {
+    "zh": "这本书还没有页面，可以删除",
+    "en": "This book has no pages yet and can be deleted"
+  },
+  "shelf.deleteHasPages": {
+    "zh": "这本书里有 {count} 页。为了不丢失记录，请先把这些页面删除或换到别的书，再删除这本书。",
+    "en": "This book has {count} pages. So nothing is lost, delete them or move them to another book first."
+  },
+  "shelf.deleteAsk": {
+    "zh": "删除《{name}》？这本书是空的，删除后不能恢复。",
+    "en": "Delete “{name}”? It is empty; this can't be undone."
+  },
+  "shelf.deleted": {
+    "zh": "已删除《{name}》",
+    "en": "Deleted “{name}”"
   }
 }
