@@ -14,7 +14,7 @@ final class DrawUITests: XCTestCase {
     }
     func log(_ step: String) {
         let s = state()
-        let keys = ["dlg", "studio", "reader", "ctx", "drawing", "saved", "draftDrawings", "dayInk", "down", "up"]
+        let keys = ["dlg", "studio", "reader", "ctx", "drawing", "saved", "draftDrawings", "dayInk", "bgmPlaying", "bgmGain", "volOut", "down", "up"]
         print("LDSTEP \(step) | " + keys.map { "\($0)=\(s[$0].map { "\($0)" }?.replacingOccurrences(of: "\n", with: "") ?? "-")" }.joined(separator: " "))
         try? XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: "/tmp/ld-uitest/shots/\(step).png"))
     }
@@ -179,5 +179,33 @@ final class DrawUITests: XCTestCase {
         tap("restore", wait: 2)
         log("c5-restored")
         XCTAssertEqual(state()["saved"] as? Int, 2, "恢复 brings both pages back")
+    }
+
+    // V10.49 · the music volume on iPhone: <audio>.volume does nothing on iOS,
+    // so the music goes through a Web Audio gain. Real taps: play a piece from
+    // a book's music sheet, then drag the volume slider.
+    func testMusicVolume() throws {
+        try? FileManager.default.createDirectory(atPath: "/tmp/ld-uitest/shots", withIntermediateDirectories: true)
+        launch()
+        if rect("skip") != nil { tap("skip") }
+        tap("navBooks", wait: 1.5)
+        tap("shelfBook", wait: 2)
+        tap("bookMusic", wait: 1.5)
+        tap("musicPreview", 0.5, 0.5, wait: 3)
+        log("m1-playing")
+        XCTAssertEqual(state()["bgmPlaying"] as? Bool, true, "the piece plays")
+        XCTAssertEqual(state()["bgmGain"] as? String, "1", "through the gain")
+        guard let v = rect("musicVolume") else { XCTFail("slider"); return }
+        point(v, 0.5, 0.5).press(forDuration: 0.1, thenDragTo: point(v, 0.05, 0.5))
+        Thread.sleep(forTimeInterval: 1)
+        log("m2-quiet")
+        let quiet = state()["volOut"] as? String ?? ""
+        point(v, 0.05, 0.5).press(forDuration: 0.1, thenDragTo: point(v, 0.95, 0.5))
+        Thread.sleep(forTimeInterval: 1)
+        log("m3-loud")
+        let loud = state()["volOut"] as? String ?? ""
+        print("LDSTEP volume \(quiet) -> \(loud)")
+        XCTAssertNotEqual(quiet, loud, "the slider moves")
+        XCTAssertEqual(state()["bgmPlaying"] as? Bool, true, "still playing after changing the volume")
     }
 }

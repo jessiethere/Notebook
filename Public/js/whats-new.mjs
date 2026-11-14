@@ -4,6 +4,22 @@
 // languages, not user content.
 export const UPDATES = [
   {
+    version: "10.49",
+    date: "2026-11-14",
+    zh: {
+      title: "iPhone 上的音乐音量可以调了",
+      items: [
+        "修好了：「这本书的音乐」里的音量滑块在 iPhone 上没有作用（iPhone 不让网页直接改声音大小）。现在在 iPhone 和 iPad 上换了一种方式调音量，拖动滑块就会变大变小。",
+      ],
+    },
+    en: {
+      title: "Music volume works on iPhone",
+      items: [
+        "Fixed: the volume slider in a book's music did nothing on iPhone (iOS ignores a web page's own volume setting). On iPhone and iPad the music now plays through a volume control that iOS honours.",
+      ],
+    },
+  },
+  {
     version: "10.48",
     date: "2026-11-14",
     zh: {

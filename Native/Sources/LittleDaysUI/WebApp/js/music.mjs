@@ -68,11 +68,69 @@ export function musicChipHTML(track, ctx, extra = "") {
 
 // The shared player. The file is fetched once and played from a blob URL, so
 // it also plays inside the iPhone shell (its custom scheme cannot stream).
-export function createMusicPlayer({ doc = globalThis.document, fetcher = globalThis.fetch?.bind(globalThis), volume = MUSIC_VOLUME } = {}) {
+// iPhone / iPad (also inside the app's shell) ignore <audio>.volume: it always
+// reads back 1 and plays at full loudness. There the music goes through a Web
+// Audio gain instead, which iOS does honour (V10.49).
+export function ignoresVolume(el) {
+  try {
+    const before = el.volume;
+    el.volume = before === 0.5 ? 0.25 : 0.5;
+    const ignored = Math.abs(el.volume - (before === 0.5 ? 0.25 : 0.5)) > 0.01;
+    el.volume = before;
+    return ignored;
+  } catch {
+    return false;
+  }
+}
+// iPhone / iPad (iPadOS reports a Mac with touch). Their <audio>.volume does
+// nothing even when it reads back the value it was given, so it is not enough
+// to test the element alone.
+export function appleMobile(nav = globalThis.navigator) {
+  const ua = String(nav?.userAgent || "");
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && Number(nav?.maxTouchPoints) > 1);
+}
+export function createMusicPlayer({ doc = globalThis.document, fetcher = globalThis.fetch?.bind(globalThis), volume = MUSIC_VOLUME, AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext } = {}) {
   let audio = null,
     current = "",
-    level = volume;
+    level = volume,
+    useGain = false,
+    graph = null; // { ctx, gain, attached }
   const urls = new Map();
+  // The gain is made on the first play (a tap), and the <audio> is routed
+  // through it only once the context really runs, so the music is never
+  // silenced by a context iOS has not started yet.
+  function gainGraph() {
+    if (!useGain || !AudioContextClass) return null;
+    if (!graph) {
+      try {
+        const ctx = new AudioContextClass();
+        const gain = ctx.createGain();
+        gain.gain.value = level;
+        gain.connect(ctx.destination);
+        graph = { ctx, gain, attached: false };
+        try {
+          // Plays like media (not muted by the ring / silent switch).
+          if (globalThis.navigator?.audioSession) globalThis.navigator.audioSession.type = "playback";
+        } catch {}
+      } catch {
+        useGain = false;
+        return null;
+      }
+    }
+    const attach = () => {
+      if (graph.attached || graph.ctx.state !== "running") return;
+      try {
+        graph.ctx.createMediaElementSource(audio).connect(graph.gain);
+        graph.attached = true;
+        audio.dataset.gain = "1";
+      } catch {
+        useGain = false;
+      }
+    };
+    if (graph.ctx.state === "running") attach();
+    else graph.ctx.resume?.().then(attach, () => {});
+    return graph;
+  }
   const listeners = new Set();
   const notify = () => listeners.forEach((fn) => fn());
   function element() {
@@ -83,6 +141,7 @@ export function createMusicPlayer({ doc = globalThis.document, fetcher = globalT
       audio.preload = "auto";
       audio.hidden = true;
       audio.volume = level;
+      useGain = appleMobile() || ignoresVolume(audio);
       audio.dataset.music = "";
       for (const type of ["play", "playing", "pause", "ended"]) audio.addEventListener(type, notify);
       doc.body.append(audio);
@@ -102,6 +161,7 @@ export function createMusicPlayer({ doc = globalThis.document, fetcher = globalT
   async function play(track) {
     if (!track) return false;
     const el = element();
+    gainGraph(); // before any await: iOS starts audio only from the tap itself
     if (current !== track.id || !el.getAttribute("src")) {
       current = track.id;
       el.dataset.music = track.id;
@@ -142,7 +202,12 @@ export function createMusicPlayer({ doc = globalThis.document, fetcher = globalT
     setVolume(value) {
       level = Math.min(1, Math.max(0, Number(value) || 0));
       if (audio) audio.volume = level;
+      if (graph) {
+        graph.gain.gain.value = level;
+        if (graph.ctx.state !== "running") gainGraph();
+      }
     },
+    usesGain: () => Boolean(graph?.attached),
     playing: () => Boolean(audio && current && !audio.paused),
     onChange: (fn) => listeners.add(fn),
   };
